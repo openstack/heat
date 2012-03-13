@@ -581,13 +581,12 @@ class BaseClient(object):
                                reduced to
         :retval subset of 'params' dict
         """
-        #result = {}
+        result = {}
 
-        #for allowed_param in allowed_params:
-        #    if allowed_param in actual_params:
-        #        result[allowed_param] = actual_params[allowed_param]
+        for param in actual_params:
+            if param in allowed_params:
+                result[param] = actual_params[param]
+            elif 'Parameters.member.' in param:
+                result[param] = actual_params[param]
 
-        #return result
-
-        # allow user parameters
-        return actual_params
+        return result

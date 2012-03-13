@@ -105,9 +105,12 @@ def stack_create(options, arguments):
         return FAILURE
 
     if options.parameters:
+        count=1
         for p in options.parameters.split(';'):
             (n, v) = p.split('=')
-            parameters[n] = v
+            parameters['Parameters.member.%d.ParameterKey' % count] = n
+            parameters['Parameters.member.%d.ParameterValue' % count] = v
+            count = count + 1
 
     if options.template_file:
         parameters['TemplateBody'] = open(options.template_file).read()
@@ -132,6 +135,19 @@ def stack_update(options, arguments):
         print "Please specify the stack name you wish to update "
         print "as the first argument"
         return FAILURE
+
+    if options.template_file:
+        parameters['TemplateBody'] = open(options.template_file).read()
+    elif options.template_url:
+        parameters['TemplateUrl'] = options.template_url
+
+    if options.parameters:
+        count=1
+        for p in options.parameters.split(';'):
+            (n, v) = p.split('=')
+            parameters['Parameters.member.%d.ParameterKey' % count] = n
+            parameters['Parameters.member.%d.ParameterValue' % count] = v
+            count = count + 1
 
     c = get_client(options)
     result = c.update_stack(parameters)

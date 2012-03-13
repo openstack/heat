@@ -69,7 +69,7 @@ class StackController(object):
                     }
                     ]}]}]}
 
- 
+
     def describe(self, req):
 
         return {'stack': [
@@ -77,7 +77,7 @@ class StackController(object):
                  'name': '<stack NAME',
                  'disk_format': '<DISK_FORMAT>',
                  'container_format': '<CONTAINER_FORMAT>' } ] }
- 
+
 
     def create(self, req):
         for p in req.params:
@@ -110,7 +110,7 @@ class StackController(object):
         :raises HttpNotAuthorized if image or any chunk is not
                 deleteable by the requesting user
         """
-    
+
 
 class StackDeserializer(wsgi.JSONRequestDeserializer):
     """Handles deserialization of specific controller method requests."""
