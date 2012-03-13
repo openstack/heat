@@ -1,0 +1,17 @@
+
+This is the beginings of a AWS Cloudformation API written
+in the style of an openstack project.
+
+
+Why heat? It makes the clouds raise and keeps them there.
+
+try:
+./bin/heat-api
+
+and in another shell
+./bin/heat create my_stack --template-file=./templates/getting_started.template  --parameters "param1=foo;param2=bar"
+
+References:
+http://docs.amazonwebservices.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html
+http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/create-stack.html
+
