@@ -34,6 +34,8 @@ from heat.common import wsgi
 
 logger = logging.getLogger('heat.api.v1.stacks')
 
+stack_db = {}
+
 class StackController(object):
 
     """
@@ -43,115 +45,129 @@ class StackController(object):
 
     def __init__(self, options):
         self.options = options
+        self.stack_id = 1
 
     def list(self, req):
         """
         Returns the following information for all stacks:
         """
-        return {'ListStacksResponse': [
-            {'ListStacksResult': [
-                {'StackSummaries': [
-                    {'member': [
-                        {'StackId': 'arn:aws:cloudformation:us-east-1:1234567:stack/TestCreate1/aaaaa',
-                            'StackStatus': 'CREATE_IN_PROGRESS',
-                            'StackName': 'vpc1',
-                            'CreationTime': '2011-05-23T15:47:44Z',
-                            'TemplateDescription': 'Creates one EC2 instance and a load balancer.',
-                        }]
-                    },
-                    {'member': [
-                        {'StackId': 'arn:aws:cloudformation:us-east-1:1234567:stack/TestDelete2/bbbbb',
-                            'StackStatus': 'DELETE_COMPLETE',
-                            'StackName': 'WP1',
-                            'CreationTime': '2011-03-05T19:57:58Z',
-                            'TemplateDescription': 'A simple basic Cloudformation Template.',
-                        }]
-                    }
-                    ]}]}]}
+        res = {'ListStacksResponse': {'ListStacksResult': {'StackSummaries': [] } } }
+        summaries = res['ListStacksResponse']['ListStacksResult']['StackSummaries']
+        for s in stack_db:
+            mem = {}
+            mem['StackId'] = stack_db[s]['StackId']
+            mem['StackStatus'] = 'happy'
+            mem['StackName'] = s
+            mem['CreationTime'] = 'now'
+            try:
+                mem['TemplateDescription'] = stack_db[s]['Description']
+            except:
+                mem['TemplateDescription'] = 'No description'
+            summaries.append(mem)
 
+        return res
 
     def describe(self, req):
 
-        return {'stack': [
-                {'id': 'id',
-                 'name': '<stack NAME',
-                 'disk_format': '<DISK_FORMAT>',
-                 'container_format': '<CONTAINER_FORMAT>' } ] }
+        stack_name = None
+        if req.params.has_key('StackName'):
+            stack_name = req.params['StackName']
+            if not stack_db.has_key(stack_name):
+                msg = _("Stack does not exist with that name.")
+                return webob.exc.HTTPNotFound(msg)
 
+        res = {'DescribeStacksResult': {'Stacks': [] } }
+        summaries = res['DescribeStacksResult']['Stacks']
+        for s in stack_db:
+            if stack_name is None or s == stack_name:
+                mem = {}
+                mem['StackId'] = stack_db[s]['StackId']
+                mem['StackStatus'] = stack_db[s]['StackStatus']
+                mem['StackName'] = s
+                mem['CreationTime'] = 'now'
+                mem['DisableRollback'] = 'false'
+                mem['Outputs'] = '[]'
+                summaries.append(mem)
+
+        return res
+
+    def _get_template(self, req):
+        if req.params.has_key('TemplateBody'):
+            return req.params['TemplateBody']
+        elif req.params.has_key('TemplateUrl'):
+            # TODO _do_request() ...
+            pass
+
+        return None
+
+    def _apply_user_parameters(self, req, stack):
+        # TODO
+        pass
 
     def create(self, req):
-        for p in req.params:
-            print 'create %s=%s' % (p, req.params[p])
-
-        return {'CreateStackResult': [{'StackId': '007'}]}
-
-    def update(self, req, id, image_meta, image_data):
         """
-        Updates an existing image with the registry.
+        :param req: The WSGI/Webob Request object
 
-        :param request: The WSGI/Webob Request object
-        :param id: The opaque image identifier
-
-        :retval Returns the updated image information as a mapping
+        :raises HttpBadRequest if not template is given
+        :raises HttpConflict if object already exists
         """
+        if stack_db.has_key(req.params['StackName']):
+            msg = _("Stack already exists with that name.")
+            return exc.HTTPConflict(msg)
 
-        return {'image_meta': 'bla'}
+        templ = self._get_template(req)
+        if templ is None:
+            msg = _("TemplateBody or TemplateUrl were not given.")
+            return exc.HTTPBadRequest(explanation=msg)
 
+        stack = json.loads(templ)
+        my_id = '%s-%d' % (req.params['StackName'], self.stack_id)
+        self.stack_id = self.stack_id + 1
+        stack['StackId'] = my_id
+        stack['StackStatus'] = 'CREATE_COMPLETE'
+        self._apply_user_parameters(req, stack)
+        stack_db[req.params['StackName']] = stack
 
-    def delete(self, req, id):
+        return {'CreateStackResult': {'StackId': my_id}}
+
+    def update(self, req):
         """
-        Deletes the image and all its chunks from heat
+        :param req: The WSGI/Webob Request object
+
+        :raises HttpNotFound if object is not available
+        """
+        if not stack_db.has_key(req.params['StackName']):
+            msg = _("Stack does not exist with that name.")
+            return exc.HTTPNotFound(msg)
+
+        stack = stack_db[req.params['StackName']]
+        my_id = stack['StackId']
+        templ = self._get_template(req)
+        if templ:
+            stack = json.loads(templ)
+            stack['StackId'] = my_id
+            stack_db[req.params['StackName']] = stack
+
+        self._apply_user_parameters(req, stack)
+        stack['StackStatus'] = 'UPDATE_COMPLETE'
+
+        return {'UpdateStackResult': {'StackId': my_id}}
+
+
+    def delete(self, req):
+        """
+        Deletes the object and all its resources
 
         :param req: The WSGI/Webob Request object
-        :param id: The opaque image identifier
 
-        :raises HttpBadRequest if image registry is invalid
-        :raises HttpNotFound if image or any chunk is not available
-        :raises HttpNotAuthorized if image or any chunk is not
+        :raises HttpBadRequest if the request is invalid
+        :raises HttpNotFound if object is not available
+        :raises HttpNotAuthorized if object is not
                 deleteable by the requesting user
         """
 
-
-class StackDeserializer(wsgi.JSONRequestDeserializer):
-    """Handles deserialization of specific controller method requests."""
-
-    def _deserialize(self, request):
-        result = {}
-        return result
-
-    def create(self, request):
-        return self._deserialize(request)
-
-    def update(self, request):
-        return self._deserialize(request)
-
-
-class StackSerializer(wsgi.JSONResponseSerializer):
-    """Handles serialization of specific controller method responses."""
-
-    def _inject_location_header(self, response, image_meta):
-        response.headers['Location'] = 'location'
-
-    def _inject_checksum_header(self, response, image_meta):
-        response.headers['ETag'] = 'checksum'
-
-    def update(self, response, result):
-        return
-
-    def create(self, response, result):
-        """ Create """
-        response.status = 201
-        response.headers['Content-Type'] = 'application/json'
-        response.body = self.to_json(dict(CreateStackResult=result))
-        self._inject_location_header(response, result)
-        self._inject_checksum_header(response, result)
-        return response
-
-def handle_stack(self, req, id):
-    return {'got-stack-id': id}
-
 def create_resource(options):
     """Stacks resource factory method"""
-    deserializer = StackDeserializer()
-    serializer = StackSerializer()
+    deserializer = wsgi.JSONRequestDeserializer()
+    serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(StackController(options), deserializer, serializer)

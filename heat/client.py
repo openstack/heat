@@ -49,14 +49,14 @@ class V1Client(base_client.BaseClient):
         params['SignatureMethod'] = 'HmacSHA256'
 
     def list_stacks(self, **kwargs):
-        params = self._extract_params({}, SUPPORTED_PARAMS)
+        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         self._insert_common_parameters(params)
 
         res = self.do_request("GET", "/ListStacks", params=params)
         data = json.loads(res.read())
         return data
 
-    def show_stack(self, **kwargs):
+    def describe_stacks(self, **kwargs):
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         self._insert_common_parameters(params)
 

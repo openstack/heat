@@ -150,7 +150,7 @@ def stack_update(options, arguments):
             count = count + 1
 
     c = get_client(options)
-    result = c.update_stack(parameters)
+    result = c.update_stack(**parameters)
     print json.dumps(result, indent=2)
 
 @catch_error('delete')
@@ -166,7 +166,7 @@ def stack_delete(options, arguments):
         return FAILURE
 
     c = get_client(options)
-    result = c.delete_stack(parameters)
+    result = c.delete_stack(**parameters)
     print json.dumps(result, indent=2)
 
 @catch_error('describe')
@@ -180,7 +180,7 @@ def stack_describe(options, arguments):
         print "Describing all stacks"
 
     c = get_client(options)
-    result = c.describe_stacks(parameters)
+    result = c.describe_stacks(**parameters)
     print json.dumps(result, indent=2)
 
 @catch_error('list')

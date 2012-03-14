@@ -49,6 +49,6 @@ class API(wsgi.Router):
         mapper.connect("/ListStacks", controller=stacks_resource,
                        action="list", conditions=dict(method=["GET"]))
         mapper.connect("/DescribeStacks", controller=stacks_resource,
-                       action="show", conditions=dict(method=["GET"]))
+                       action="describe", conditions=dict(method=["GET"]))
 
         super(API, self).__init__(mapper)
