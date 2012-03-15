@@ -16,7 +16,7 @@
 """
 /stack endpoint for heat v1 API
 """
-
+import dbus
 import httplib
 import json
 import libxml2
@@ -231,6 +231,30 @@ class Json2CapeXml:
                 s[index] = self.resolve_base64(item)
         return s
 
+def systemctl(method, name, instance=None):
+
+    bus = dbus.SystemBus()
+
+    sysd = bus.get_object('org.freedesktop.systemd1',
+                         '/org/freedesktop/systemd1')
+
+    actual_method = ''
+    if method == 'start':
+        actual_method = 'StartUnit'
+    elif method == 'stop':
+        actual_method = 'StopUnit'
+    else:
+        raise
+
+    m = sysd.get_dbus_method(actual_method, 'org.freedesktop.systemd1.Manager')
+
+    if instance == None:
+        service = '%s.service' % (name)
+    else:
+        service = '%s@%s.service' % (name, instance)
+
+    result = m(service, 'replace')
+    return result
 
 
 class StackController(object):
@@ -343,6 +367,8 @@ class StackController(object):
         cape_transformer = Json2CapeXml(stack, req.params['StackName'])
         cape_transformer.convert_and_write()
 
+        systemctl('start', 'pcloud-cape-sshd', req.params['StackName'])
+
         return {'CreateStackResult': {'StackId': my_id}}
 
     def update(self, req):
@@ -386,6 +412,8 @@ class StackController(object):
             return webob.exc.HTTPNotFound(msg)
 
         del stack_db[req.params['StackName']]
+
+        systemctl('stop', 'pcloud-cape-sshd', req.params['StackName'])
 
 def create_resource(options):
     """Stacks resource factory method"""
