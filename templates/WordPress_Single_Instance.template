@@ -108,8 +108,8 @@
             },
             "services" : {
               "systemd" : {
-                "httpd.service"    : { "enabled" : "false", "ensureRunning" : "true" },
-                "mysqld.service"   : { "enabled" : "false", "ensureRunning" : "true" }
+                "httpd"    : { "enabled" : "false", "ensureRunning" : "false" },
+                "mysqld"   : { "enabled" : "false", "ensureRunning" : "false" }
               }
             }
           }
