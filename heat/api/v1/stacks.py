@@ -406,7 +406,7 @@ class StackController(object):
         :raises HttpNotAuthorized if object is not
                 deleteable by the requesting user
         """
-        logger.info('in delete %s ' % req.params['StackName']
+        logger.info('in delete %s ' % req.params['StackName'])
         if not stack_db.has_key(req.params['StackName']):
             msg = _("Stack does not exist with that name.")
             return webob.exc.HTTPNotFound(msg)
