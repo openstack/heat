@@ -51,6 +51,7 @@
     },
 
     "DBRootPassword": {
+      "Default": "admin",
       "NoEcho": "true",
       "Description" : "Root password for MySQL",
       "Type": "String",
@@ -87,28 +88,6 @@
 
   "Resources" : {
 
-    "CfnUser" : {
-      "Type" : "AWS::IAM::User",
-      "Properties" : {
-        "Path": "/",
-        "Policies": [{
-          "PolicyName": "root",
-          "PolicyDocument": { "Statement":[{
-            "Effect":"Allow",
-            "Action":"cloudformation:DescribeStackResource",
-            "Resource":"*"
-          }]}
-        }]
-      }
-    },
-
-    "HostKeys" : {
-      "Type" : "AWS::IAM::AccessKey",
-      "Properties" : {
-        "UserName" : {"Ref": "CfnUser"}
-      }
-    },
-
     "WebServer": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
@@ -117,66 +96,15 @@
             "packages" : {
               "yum" : {
                 "httpd"        : [],
-                "php"          : [],
-                "php-mysql"    : [],
                 "mysql"        : [],
                 "mysql-server" : [],
-                "mysql-devel"  : [],
-                "mysql-libs"   : []
-              }
-            },
-
-            "sources" : {
-              "/var/www/html" : "http://wordpress.org/latest.tar.gz"
-            },
-
-            "files" : {
-              "/tmp/setup.mysql" : {
-                "content" : { "Fn::Join" : ["", [
-                  "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
-                  "CREATE USER '", { "Ref" : "DBUsername" }, "'@'localhost' IDENTIFIED BY '", { "Ref" : "DBPassword" }, "';\n",
-                  "GRANT ALL ON ", { "Ref" : "DBName" }, ".* TO '", { "Ref" : "DBUsername" }, "'@'localhost';\n",
-                  "FLUSH PRIVILEGES;\n"
-                  ]]},
-                "mode"  : "000644",
-                "owner" : "root",
-                "group" : "root"
-              },
-
-              "/var/www/html/wordpress/wp-config.php" : {
-                "content" : { "Fn::Join" : ["", [
-                  "<?php\n",
-                  "define('DB_NAME',          '", {"Ref" : "DBName"}, "');\n",
-                  "define('DB_USER',          '", {"Ref" : "DBUsername"}, "');\n",
-                  "define('DB_PASSWORD',      '", {"Ref" : "DBPassword" }, "');\n",
-                  "define('DB_HOST',          'localhost');\n",
-                  "define('DB_CHARSET',       'utf8');\n",
-                  "define('DB_COLLATE',       '');\n",
-                  "define('AUTH_KEY',         'f@A17vs{ mO0}:&I,6SB.QzV`E?!`/tN5:~GZX%=@ZA%!_T0-]9>g]4ll6~,6G|R');\n",
-                  "define('SECURE_AUTH_KEY',  'gTFTI|~rYHY)|mlu:Cv7RN]GQ^3ngyUbw;L0o!12]0c-ispR<-yt3qj]xjquz^&9');\n",
-                  "define('LOGGED_IN_KEY',    'Jd:HG9M)1p5t2<v~+R-vd{p-Q*|*RB^&PUI{vIrydAEEiV!{HS{jN:nErCmLv`p}');\n",
-                  "define('NONCE_KEY',        '4aMj4KZV;,Gu7(B|qOCve[c5?*J5x1+x93i:Ey6hh/6jXh+V_{V4+hw!qE^d*U,-');\n",
-                  "define('AUTH_SALT',        '_Y_&8m)FH)Cns)8}Yb8b88KDSn:p1#p(qBa<~VW&Y1v}P.*9/8S8@P`{mkNxV lC');\n",
-                  "define('SECURE_AUTH_SALT', '%nG3Ag41^Lew5c86,#zbN:yPFs.GA5a)z5*:Oce1>v6uF~D`,.o1pzS)F8[bM9i[');\n",
-                  "define('LOGGED_IN_SALT',   '~K<y+Ly+_Ww1~dtq>;rSQ^+{P5/k|=!]k%RXAF-Y@XMY6GSp+wJ5{(|rCzaWjZ%/');\n",
-                  "define('NONCE_SALT',       ',Bs_*Y9:b/1Z:apVLHtz35uim|okkA,b|Jt[-&Nla=T{<l_#D?~6Tj-.2.]FonI~');\n",
-                  "define('WPLANG'            , '');\n",
-                  "define('WP_DEBUG'          , false);\n",
-                  "$table_prefix  = 'wp_';\n",
-                  "if ( !defined('ABSPATH') )\n",
-                  "    define('ABSPATH', dirname(__FILE__) . '/');\n",
-                  "require_once(ABSPATH . 'wp-settings.php');\n"
-                ]] },
-                "mode" : "000644",
-                "owner" : "root",
-                "group" : "root"
+                "wordpress"    : []
               }
             },
             "services" : {
-              "sysvinit" : {
-                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" },
-                "mysqld"   : { "enabled" : "true", "ensureRunning" : "true" },
-                "sendmail" : { "enabled" : "false", "ensureRunning" : "false" }
+              "systemd" : {
+                "httpd.service"    : { "enabled" : "false", "ensureRunning" : "true" },
+                "mysqld.service"   : { "enabled" : "false", "ensureRunning" : "true" }
               }
             }
           }
@@ -186,68 +114,26 @@
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType"   : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-          "yum update -y aws-cfn-bootstrap\n",
 
-          "# Helper function\n",
-          "function error_exit\n",
-          "{\n",
-          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandle" }, "'\n",
-          "  exit 1\n",
-          "}\n",
-
-          "# Install Apache Web Server, MySQL, PHP and WordPress\n",
-          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r WebServer ",
-          "    --access-key ",  { "Ref" : "HostKeys" },
-          "    --secret-key ", {"Fn::GetAtt": ["HostKeys", "SecretAccessKey"]},
-          "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
-
+          "systemctl start mysqld.service\n",
           "# Setup MySQL root password and create a user\n",
-          "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "' || error_exit 'Failed to initialize root password'\n",
-          "mysql -u root --password='", { "Ref" : "DBRootPassword" }, "' < /tmp/setup.mysql || error_exit 'Failed to create database user'\n",
-
-          "# Setup correct file ownership\n",
-          "chown -R apache:apache /var/www/html/wordpress\n",
-
-          "# All is well so signal success\n",
-          "/opt/aws/bin/cfn-signal -e 0 -r \"WordPress setup complete\" '", { "Ref" : "WaitHandle" }, "'\n"
-
+          "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
+          "cat >> /tmp/mysql-wordpress-config &lt;&lt; EOF\n",
+          "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
+          "GRANT ALL PRIVILEGES ON ", { "Ref" : "DBName" }, ".* TO ", { "Ref" : "DBUsername" }, "@localhost\n",
+          "IDENTIFIED BY ", { "Ref" : "DBPassword" }, ";\n",
+          "FLUSH PRIVILEGES;\n",
+          "EXIT\n",
+          "EOF\n",
+          "cat /tmp/mysql-wordpress-config | mysql -u root --password='", { "Ref" : "DBRootPassword" }, "' < /tmp/mysql-wordpress-config\n",
+          "systemctl stop mysqld.service\n",
+          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n",
+          "cp /usr/share/wordpress/wp-config.php /usr/share/wordpress/wp-config.orig\n"
         ]]}}
       }
-    },
-
-    "WaitHandle" : {
-      "Type" : "AWS::CloudFormation::WaitConditionHandle"
-    },
-
-    "WaitCondition" : {
-      "Type" : "AWS::CloudFormation::WaitCondition",
-      "DependsOn" : "WebServer",
-      "Properties" : {
-        "Handle" : {"Ref" : "WaitHandle"},
-        "Timeout" : "300"
-      }
-    },
-
-    "WebServerSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "GroupDescription" : "Enable HTTP access via port 80 and SSH access",
-        "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
-          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
-        ]
-      }
-    }
-  },
-
-  "Outputs" : {
-    "WebsiteURL" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicDnsName" ]}, "/wordpress"]] },
-      "Description" : "WordPress Website"
     }
   }
 }
