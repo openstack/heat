@@ -525,6 +525,8 @@ class BaseClient(object):
                 raise exception.MultipleChoices(body=res.read())
             elif status_code == httplib.INTERNAL_SERVER_ERROR:
                 raise Exception("Internal Server error: %s" % res.read())
+            elif status_code == httplib.REQUEST_URI_TOO_LONG:
+                raise exception.RequestUriTooLong(body=res.read())
             else:
                 raise Exception("Unknown error occurred! %s" % res.read())
 

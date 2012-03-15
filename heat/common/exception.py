@@ -141,6 +141,8 @@ class MultipleChoices(HeatException):
                 "means that you have not included a version indicator in a "
                 "request URI.\n\nThe body of response returned:\n%(body)s")
 
+class RequestUriTooLong(HeatException):
+    message = _("The URI was too long.")
 
 class InvalidContentType(HeatException):
     message = _("Invalid content type %(content_type)s")
