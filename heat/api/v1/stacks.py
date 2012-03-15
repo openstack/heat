@@ -21,6 +21,7 @@ import httplib
 import json
 import logging
 import sys
+import urlparse
 
 import webob
 from webob.exc import (HTTPNotFound,
@@ -91,10 +92,24 @@ class StackController(object):
 
     def _get_template(self, req):
         if req.params.has_key('TemplateBody'):
+            logger.info('TemplateBody ...')
             return req.params['TemplateBody']
         elif req.params.has_key('TemplateUrl'):
-            # TODO _do_request() ...
-            pass
+            logger.info('TemplateUrl %s' % req.params['TemplateUrl'])
+            url = urlparse.urlparse(req.params['TemplateUrl'])
+            if url.scheme == 'https':
+                conn = httplib.HTTPSConnection(url.netloc)
+            else:
+                conn = httplib.HTTPConnection(url.netloc)
+            conn.request("GET", url.path)
+            r1 = conn.getresponse()
+            logger.info('status %d' % r1.status)
+            if r1.status == 200:
+                data = r1.read()
+                conn.close()
+            else:
+                data = None
+            return data
 
         return None
 
@@ -111,12 +126,12 @@ class StackController(object):
         """
         if stack_db.has_key(req.params['StackName']):
             msg = _("Stack already exists with that name.")
-            return exc.HTTPConflict(msg)
+            return webob.exc.HTTPConflict(msg)
 
         templ = self._get_template(req)
         if templ is None:
             msg = _("TemplateBody or TemplateUrl were not given.")
-            return exc.HTTPBadRequest(explanation=msg)
+            return webob.exc.HTTPBadRequest(explanation=msg)
 
         stack = json.loads(templ)
         my_id = '%s-%d' % (req.params['StackName'], self.stack_id)
@@ -136,7 +151,7 @@ class StackController(object):
         """
         if not stack_db.has_key(req.params['StackName']):
             msg = _("Stack does not exist with that name.")
-            return exc.HTTPNotFound(msg)
+            return webob.exc.HTTPNotFound(msg)
 
         stack = stack_db[req.params['StackName']]
         my_id = stack['StackId']
