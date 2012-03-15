@@ -24,7 +24,7 @@ The schema for each option is defined using the Opt sub-classes e.g.
                    default='0.0.0.0',
                    help='IP address to listen on'),
         cfg.IntOpt('bind_port',
-                   default=9292,
+                   default=DEFAULT_PORT,
                    help='Port number to listen on')
     ]
 
@@ -103,14 +103,14 @@ The config manager has a single CLI option defined by default, --config-file:
             self.register_cli_opt(self.config_file_opt)
 
 Option values are parsed from any supplied config files using SafeConfigParser.
-If none are specified, a default set is used e.g. glance-api.conf and
-glance-common.conf:
+If none are specified, a default set is used e.g. heat-api.conf and
+heat-common.conf:
 
-    glance-api.conf:
+    heat-api.conf:
       [DEFAULT]
-      bind_port = 9292
+      bind_port = 8000
 
-    glance-common.conf:
+    heat-common.conf:
       [DEFAULT]
       bind_host = 0.0.0.0
 
@@ -156,9 +156,9 @@ Options can be registered as belonging to a group:
 If no group is specified, options belong to the 'DEFAULT' section of config
 files:
 
-    glance-api.conf:
+    heat-api.conf:
       [DEFAULT]
-      bind_port = 9292
+      bind_port = 8000
       ...
 
       [rabbit]
