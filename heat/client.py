@@ -38,7 +38,6 @@ class V1Client(base_client.BaseClient):
 
     """Main client class for accessing heat resources"""
 
-    DEFAULT_PORT = 8000
     DEFAULT_DOC_ROOT = "/v1"
 
     def _insert_common_parameters(self, params):

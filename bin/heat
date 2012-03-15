@@ -44,13 +44,12 @@ gettext.install('heat', unicode=1)
 
 from heat import client as heat_client
 from heat.common import exception
+from heat.common import config
 from heat import version
 
 
 SUCCESS = 0
 FAILURE = 1
-
-DEFAULT_PORT = 8000
 
 def catch_error(action):
     """Decorator to provide sensible default error handling for actions."""
@@ -223,14 +222,14 @@ def create_options(parser):
                       help="Address of heat API host. "
                            "Default: %default")
     parser.add_option('-p', '--port', dest="port", metavar="PORT",
-                      type=int, default=DEFAULT_PORT,
+                      type=int, default=config.DEFAULT_PORT,
                       help="Port the heat API host listens on. "
                            "Default: %default")
     parser.add_option('-U', '--url', metavar="URL", default=None,
                       help="URL of heat service. This option can be used "
                            "to specify the hostname, port and protocol "
                            "(http/https) of the heat server, for example "
-                           "-U https://localhost:" + str(DEFAULT_PORT) +
+                           "-U https://localhost:" + str(config.DEFAULT_PORT) +
                            "/v1 Default: No<F3>ne")
     parser.add_option('-k', '--insecure', dest="insecure",
                       default=False, action="store_true",

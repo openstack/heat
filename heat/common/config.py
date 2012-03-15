@@ -28,6 +28,7 @@ from heat import version
 from heat.common import cfg
 from heat.common import wsgi
 
+DEFAULT_PORT = 8000
 
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
