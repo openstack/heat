@@ -253,13 +253,14 @@ class StackController(object):
         for s in stack_db:
             mem = {}
             mem['StackId'] = stack_db[s]['StackId']
-            mem['StackStatus'] = 'happy'
             mem['StackName'] = s
             mem['CreationTime'] = 'now'
             try:
                 mem['TemplateDescription'] = stack_db[s]['Description']
+                mem['StackStatus'] = stack_db[s]['StackStatus']
             except:
                 mem['TemplateDescription'] = 'No description'
+                mem['StackStatus'] = 'unknown'
             summaries.append(mem)
 
         return res
@@ -379,6 +380,12 @@ class StackController(object):
         :raises HttpNotAuthorized if object is not
                 deleteable by the requesting user
         """
+        logger.info('in delete %s ' % req.params['StackName']
+        if not stack_db.has_key(req.params['StackName']):
+            msg = _("Stack does not exist with that name.")
+            return webob.exc.HTTPNotFound(msg)
+
+        del stack_db[req.params['StackName']]
 
 def create_resource(options):
     """Stacks resource factory method"""

@@ -25,12 +25,7 @@ logger = logging.getLogger(__name__)
 class API(wsgi.Router):
 
     """WSGI router for Heat v1 API requests."""
-    #TODO
-    #DeleteStack
-    #GetTemplate
-    #UpdateStack
-    #ValidateTemplate
-
+    #TODO GetTemplate, ValidateTemplate
 
     def __init__(self, conf, **local_conf):
         self.conf = conf
@@ -48,5 +43,9 @@ class API(wsgi.Router):
                        action="list", conditions=dict(method=["GET"]))
         mapper.connect("/DescribeStacks", controller=stacks_resource,
                        action="describe", conditions=dict(method=["GET"]))
+        mapper.connect("/DeleteStack", controller=stacks_resource,
+                       action="delete", conditions=dict(method=["DELETE"]))
+        mapper.connect("/UpdateStack", controller=stacks_resource,
+                       action="update", conditions=dict(method=["PUT"]))
 
         super(API, self).__init__(mapper)

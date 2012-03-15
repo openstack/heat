@@ -72,11 +72,16 @@ class V1Client(base_client.BaseClient):
         return data
 
     def update_stack(self, **kwargs):
-        return
+        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        self._insert_common_parameters(params)
+        res = self.do_request("PUT", "/UpdateStack", params=params)
+
+        data = json.loads(res.read())
+        return data
 
     def delete_stack(self, **kwargs):
-        self._insert_common_parameters(params)
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        self._insert_common_parameters(params)
         self.do_request("DELETE", "/DeleteStack", params)
         return True
 
