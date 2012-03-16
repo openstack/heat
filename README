@@ -5,6 +5,9 @@ in the style of an openstack project.
 
 Why heat? It makes the clouds raise and keeps them there.
 
+Set up config:
+cp ./etc/heat-api ./etc/heat-api.conf
+
 try:
 ./bin/heat-api
 
