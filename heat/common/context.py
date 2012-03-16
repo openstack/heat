@@ -13,10 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import cfg
 from heat.common import exception
 from heat.common import utils
 from heat.common import wsgi
+from heat.openstack.common import cfg
 
 
 class RequestContext(object):
