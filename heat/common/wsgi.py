@@ -39,9 +39,9 @@ import routes.middleware
 import webob.dec
 import webob.exc
 
-from heat.common import cfg
 from heat.common import exception
 from heat.common import utils
+from heat.openstack.common import cfg
 
 
 bind_opts = [

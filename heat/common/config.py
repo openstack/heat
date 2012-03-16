@@ -25,8 +25,8 @@ import os
 import sys
 
 from heat import version
-from heat.common import cfg
 from heat.common import wsgi
+from heat.openstack.common import cfg
 
 DEFAULT_PORT = 8000
 
