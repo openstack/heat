@@ -22,9 +22,6 @@ return
 import logging
 import re
 
-import routes
-
-from heat.api import v1
 from heat.api import versions
 from heat.common import wsgi
 

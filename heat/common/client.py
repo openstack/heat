@@ -127,10 +127,23 @@ class SendFileIterator:
                 return self.len
 
         while self.sending:
-            sent = sendfile.sendfile(self.connection.sock.fileno(),
-                                     self.body.fileno(),
-                                     self.offset,
-                                     CHUNKSIZE)
+            try:
+                sent = sendfile.sendfile(self.connection.sock.fileno(),
+                                         self.body.fileno(),
+                                         self.offset,
+                                         CHUNKSIZE)
+            except OSError as e:
+                # suprisingly, sendfile may fail transiently instead of
+                # blocking, in which case we select on the socket in order
+                # to wait on its return to a writeable state before resuming
+                # the send loop
+                if e.errno in (errno.EAGAIN, errno.EBUSY):
+                    wlist = [self.connection.sock.fileno()]
+                    rfds, wfds, efds = select.select([], wlist, [])
+                    if wfds:
+                        continue
+                raise
+
             self.sending = (sent != 0)
             self.offset += sent
             yield OfLength(sent)
@@ -224,19 +237,19 @@ class BaseClient(object):
                          key.
                          If use_ssl is True, and this param is None (the
                          default), then an environ variable
-                         heat_CLIENT_KEY_FILE is looked for. If no such
+                         HEAT_CLIENT_KEY_FILE is looked for. If no such
                          environ variable is found, ClientConnectionError
                          will be raised.
         :param cert_file: Optional PEM-formatted certificate chain file.
                           If use_ssl is True, and this param is None (the
                           default), then an environ variable
-                          heat_CLIENT_CERT_FILE is looked for. If no such
+                          HEAT_CLIENT_CERT_FILE is looked for. If no such
                           environ variable is found, ClientConnectionError
                           will be raised.
         :param ca_file: Optional CA cert file to use in SSL connections
                         If use_ssl is True, and this param is None (the
                         default), then an environ variable
-                        heat_CLIENT_CA_FILE is looked for.
+                        HEAT_CLIENT_CA_FILE is looked for.
         :param insecure: Optional. If set then the server's certificate
                          will not be verified.
         """
@@ -263,11 +276,11 @@ class BaseClient(object):
         connect_kwargs = {}
         if self.use_ssl:
             if self.key_file is None:
-                self.key_file = os.environ.get('heat_CLIENT_KEY_FILE')
+                self.key_file = os.environ.get('HEAT_CLIENT_KEY_FILE')
             if self.cert_file is None:
-                self.cert_file = os.environ.get('heat_CLIENT_CERT_FILE')
+                self.cert_file = os.environ.get('HEAT_CLIENT_CERT_FILE')
             if self.ca_file is None:
-                self.ca_file = os.environ.get('heat_CLIENT_CA_FILE')
+                self.ca_file = os.environ.get('HEAT_CLIENT_CA_FILE')
 
             # Check that key_file/cert_file are either both set or both unset
             if self.cert_file is not None and self.key_file is None:
@@ -275,7 +288,7 @@ class BaseClient(object):
                         "and you have supplied a cert, "
                         "however you have failed to supply either a "
                         "key_file parameter or set the "
-                        "heat_CLIENT_KEY_FILE environ variable")
+                        "HEAT_CLIENT_KEY_FILE environ variable")
                 raise exception.ClientConnectionError(msg)
 
             if self.key_file is not None and self.cert_file is None:
@@ -283,7 +296,7 @@ class BaseClient(object):
                         "and you have supplied a key, "
                         "however you have failed to supply either a "
                         "cert_file parameter or set the "
-                        "heat_CLIENT_CERT_FILE environ variable")
+                        "HEAT_CLIENT_CERT_FILE environ variable")
                 raise exception.ClientConnectionError(msg)
 
             if (self.key_file is not None and
@@ -506,6 +519,10 @@ class BaseClient(object):
                 raise TypeError('Unsupported image type: %s' % body.__class__)
 
             res = c.getresponse()
+
+            def _retry(res):
+                return res.getheader('Retry-After')
+
             status_code = self.get_status_code(res)
             if status_code in self.OK_RESPONSE_CODES:
                 return res
@@ -523,8 +540,13 @@ class BaseClient(object):
                 raise exception.Invalid(res.read())
             elif status_code == httplib.MULTIPLE_CHOICES:
                 raise exception.MultipleChoices(body=res.read())
+            elif status_code == httplib.REQUEST_ENTITY_TOO_LARGE:
+                raise exception.LimitExceeded(retry=_retry(res),
+                                              body=res.read())
             elif status_code == httplib.INTERNAL_SERVER_ERROR:
                 raise Exception("Internal Server error: %s" % res.read())
+            elif status_code == httplib.SERVICE_UNAVAILABLE:
+                raise exception.ServiceUnavailable(retry=_retry(res))
             elif status_code == httplib.REQUEST_URI_TOO_LONG:
                 raise exception.RequestUriTooLong(body=res.read())
             else:

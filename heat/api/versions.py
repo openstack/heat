@@ -22,8 +22,6 @@ import json
 
 import webob.dec
 
-from heat.common import wsgi
-
 
 class Controller(object):
 

@@ -22,13 +22,10 @@ System-level utilities and helper functions.
 
 import datetime
 import errno
-import inspect
 import logging
 import os
 import platform
-import random
 import subprocess
-import socket
 import sys
 import uuid
 
@@ -327,9 +324,11 @@ def get_terminal_size():
         if not height_width:
             try:
                 p = subprocess.Popen(['stty', 'size'],
-                                    shell=false,
+                                    shell=False,
                                     stdout=subprocess.PIPE)
-                return tuple(int(x) for x in p.communicate()[0].split())
+                result = p.communicate()
+                if p.returncode == 0:
+                    return tuple(int(x) for x in result[0].split())
             except:
                 pass
 

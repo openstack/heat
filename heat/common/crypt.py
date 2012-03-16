@@ -19,8 +19,6 @@ Routines for URL-safe encrypting/decrypting
 """
 
 import base64
-import string
-import os
 
 from Crypto.Cipher import AES
 from Crypto import Random

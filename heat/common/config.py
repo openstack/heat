@@ -168,8 +168,6 @@ def load_paste_app(conf, app_name=None):
         # Setup logging early
         setup_logging(conf)
 
-        logger = logging.getLogger(app_name)
-
         app = wsgi.paste_deploy_app(conf_file, app_name, conf)
 
         # Log the options used when starting if we're in debug mode...
