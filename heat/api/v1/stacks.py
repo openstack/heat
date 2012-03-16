@@ -17,10 +17,16 @@
 /stack endpoint for heat v1 API
 """
 import dbus
+import errno
+import eventlet
+from eventlet.green import socket
+import fcntl
 import httplib
 import json
 import libxml2
 import logging
+import os
+import stat
 import sys
 import urlparse
 
@@ -270,6 +276,43 @@ def systemctl(method, name, instance=None):
     return result
 
 
+class CapeEventListener:
+
+    def __init__(self):
+        self.backlog = 50
+        self.file = 'pacemaker-cloud-cped'
+
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        flags = fcntl.fcntl(sock, fcntl.F_GETFD)
+        fcntl.fcntl(sock, fcntl.F_SETFD, flags | fcntl.FD_CLOEXEC)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            st = os.stat(self.file)
+        except OSError, err:
+            if err.errno != errno.ENOENT:
+                raise
+        else:
+            if stat.S_ISSOCK(st.st_mode):
+                os.remove(self.file)
+            else:
+                raise ValueError("File %s exists and is not a socket", self.file)
+        sock.bind(self.file)
+        sock.listen(self.backlog)
+        os.chmod(self.file, 0600)
+
+        eventlet.spawn_n(self.cape_event_listner, sock)
+
+    def cape_event_listner(self, sock):
+        eventlet.serve(sock, self.cape_event_handle)
+
+    def cape_event_handle(self, sock, client_addr):
+        while True:
+            x = sock.recv(4096)
+            # TODO(asalkeld) format this event "nicely"
+            logger.info('%s' % x.strip('\n'))
+            if not x: break
+
+
 class StackController(object):
 
     """
@@ -280,6 +323,7 @@ class StackController(object):
     def __init__(self, options):
         self.options = options
         self.stack_id = 1
+        self.event_listener = CapeEventListener()
 
     def list(self, req):
         """
