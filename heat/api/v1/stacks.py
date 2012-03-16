@@ -121,9 +121,12 @@ class Json2CapeXml:
                 # if there is no config then no services.
                 pass
 
-        filename = '/var/run/%s.xml' % name
-        open(filename, 'w').write(doc.serialize(None, 1))
-        doc.freeDoc()
+        try:
+            filename = '/var/run/%s.xml' % name
+            open(filename, 'w').write(doc.serialize(None, 1))
+            doc.freeDoc()
+        except IOError as e:
+            logger.error('couldn\'t write to /var/run/ error %s' % e)
 
     def insert_package_and_services(self, r, new_script):
 
@@ -259,7 +262,11 @@ def systemctl(method, name, instance=None):
     else:
         service = '%s@%s.service' % (name, instance)
 
-    result = m(service, 'replace')
+    try:
+        result = m(service, 'replace')
+    except dbus.DBusException as e:
+        logger.error('couldn\'t %s %s error: %s' % (method, name, e))
+        return None
     return result
 
 
