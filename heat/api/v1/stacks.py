@@ -104,19 +104,22 @@ class Json2CapeXml:
                     startup = n_ass.newChild(None, 'startup', '\n'.join(new_script))
 
 
-            con = self.t['Resources'][r]['Metadata']["AWS::CloudFormation::Init"]['config']
-
-            n_services = n_ass.newChild(None, 'services', None)
-            for st in con['services']:
-                for s in con['services'][st]:
-                    n_service = n_services.newChild(None, 'service', None)
-                    n_service.setProp("name", '%s_%s' % (r, s))
-                    n_service.setProp("type", s)
-                    n_service.setProp("provider", 'pacemaker')
-                    n_service.setProp("class", 'lsb')
-                    n_service.setProp("monitor_interval", '30s')
-                    n_service.setProp("escalation_period", '1000')
-                    n_service.setProp("escalation_failures", '3')
+            try:
+                con = self.t['Resources'][r]['Metadata']["AWS::CloudFormation::Init"]['config']
+                n_services = n_ass.newChild(None, 'services', None)
+                for st in con['services']:
+                    for s in con['services'][st]:
+                        n_service = n_services.newChild(None, 'service', None)
+                        n_service.setProp("name", '%s_%s' % (r, s))
+                        n_service.setProp("type", s)
+                        n_service.setProp("provider", 'pacemaker')
+                        n_service.setProp("class", 'lsb')
+                        n_service.setProp("monitor_interval", '30s')
+                        n_service.setProp("escalation_period", '1000')
+                        n_service.setProp("escalation_failures", '3')
+            except KeyError as e:
+                # if there is no config then no services.
+                pass
 
         filename = '/var/run/%s.xml' % name
         open(filename, 'w').write(doc.serialize(None, 1))
@@ -124,7 +127,10 @@ class Json2CapeXml:
 
     def insert_package_and_services(self, r, new_script):
 
-        con = r['Metadata']["AWS::CloudFormation::Init"]['config']
+        try:
+            con = r['Metadata']["AWS::CloudFormation::Init"]['config']
+        except KeyError as e:
+            return
 
         for pt in con['packages']:
             if pt == 'yum':
