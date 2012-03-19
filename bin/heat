@@ -30,6 +30,7 @@ import sys
 import time
 import json
 
+
 from urlparse import urlparse
 
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
@@ -46,7 +47,9 @@ from heat import client as heat_client
 from heat.common import exception
 from heat.common import config
 from heat import version
+from glance import client as glance_client
 
+from distutils.sysconfig import get_python_lib
 
 SUCCESS = 0
 FAILURE = 1
@@ -190,6 +193,97 @@ def stack_list(options, arguments):
     result = c.list_stacks()
     print json.dumps(result, indent=2)
 
+@catch_error('jeos_create')
+def jeos_create(options, arguments):
+    '''
+    '''
+    # if not running as root, return EPERM to command line
+    if os.geteuid() != 0:
+        print "jeos_create must be run as root"
+        sys.exit(1)
+    distro = arguments.pop(0)
+    arch = arguments.pop(0)
+
+    tdl_path = '%s/heat/jeos/%s-%s-gold-jeos.tdl' % (get_python_lib(), distro, arch)
+    dsk_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.dsk' % (distro, arch)
+    qcow2_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.qcow2' % (distro, arch)
+
+    iso = None
+    if distro == 'F16':
+        iso = '/var/lib/libvirt/images/Fedora-16-x86_64-DVD.iso'
+    if distro == 'F15':
+        iso = '/var/lib/libvirt/images/Fedora-15-x86_64-DVD.iso'
+    if distro == 'F14':
+        iso = '/var/lib/libvirt/images/Fedora-14-x86_64-DVD.iso'
+    if distro == 'U10':
+        iso = '/var/lib/libvirt/images/ubutnu-10.04.3-server-amd64.iso'
+    if iso:
+        if not os.access(iso, os.R_OK):
+            print '*** %s does not exist.' % (iso)
+            sys.exit(1)
+
+    print 'Creating JEOS image - this takes approximately 10 minutes.'
+    res = os.system("oz-install -t 50000 -u %s" % tdl_path)
+    if res == 256:
+        sys.exit(1)
+
+    print 'Converting raw disk image to a qcow2 image.'
+    os.system("qemu-img convert -O qcow2 %s %s" % (dsk_filename, qcow2_filename))
+
+    print 'Registering JEOS image with OpenStack Glance.'
+
+    creds = dict(username=os.getenv('OS_AUTH_USER'),
+            password=os.getenv('OS_AUTH_KEY'),
+            tenant=os.getenv('OS_AUTH_TENANT'),
+            auth_url=os.getenv('OS_AUTH_URL'),
+            strategy=os.getenv('OS_AUTH_STRATEGY', 'noauth'))
+
+    c = glance_client.Client(host="0.0.0.0", port=9292,
+            use_ssl=False, auth_tok=None, creds=creds)
+
+    parameters = {
+        "filters": {},
+        "limit": 10,
+    }
+
+    image_meta = {'name': distro,
+                  'is_public': True,
+                  'disk_format': 'qcow2',
+                  'min_disk': 0,
+                  'min_ram': 0,
+                  'owner': os.getenv('OS_AUTH_USER'),
+                  'container_format': 'bare'}
+
+    images = c.get_images(**parameters)
+    for image in images:
+        if image['name'] == name:
+            print ' *** image already in glance: %s > %s' % (image['name'], image['id'])
+            sys.exit(1)
+
+    try:
+        with open(qcow2_filename) as ifile:
+            image_meta = c.add_image(image_meta, ifile)
+        image_id = image_meta['id']
+        print " Added new image with ID: %s" % image_id
+        print " Returned the following metadata for the new image:"
+        for k, v in sorted(image_meta.items()):
+            print " %(k)30s => %(v)s" % locals()
+    except exception.ClientConnectionError, e:
+        print (" Failed to connect to the Glance API server."
+               " Is the server running?" % locals())
+        pieces = unicode(e).split('\n')
+        for piece in pieces:
+            print piece
+            sys.exit(1)
+    except Exception, e:
+        print " Failed to add image. Got error:"
+        pieces = unicode(e).split('\n')
+        for piece in pieces:
+            print piece
+        print (" Note: Your image metadata may still be in the registry, "
+               "but the image's status will likely be 'killed'.")
+
+
 def get_client(options):
     """
     Returns a new client object to a heat server
@@ -269,6 +363,7 @@ def create_options(parser):
     parser.add_option('-P', '--parameters', metavar="parameters", default=None,
                       help="Parameter values used to create the stack.")
 
+
 def parse_options(parser, cli_args):
     """
     Returns the parsed CLI options, command to run and its arguments, merged
@@ -327,7 +422,8 @@ def lookup_command(parser, command_name):
                 'list': stack_list,
                 'validate': template_validate,
                 'gettemplate': get_template,
-                'describe': stack_describe}
+                'describe': stack_describe,
+                'jeos_create': jeos_create}
 
     commands = {}
     for command_set in (base_commands, image_commands):
@@ -364,6 +460,8 @@ Commands:
     gettemplate     Get the template
 
     validate        Validate a template
+
+    jeos_create     Create a JEOS image
 
 """
 
