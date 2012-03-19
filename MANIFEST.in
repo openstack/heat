@@ -5,3 +5,4 @@ include openstack-common.conf
 include babel.cfg
 graft templates
 include heat/jeos/F16-x86_64-gold-jeos.tdl
+graft etc
