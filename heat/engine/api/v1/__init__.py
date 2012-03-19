@@ -13,39 +13,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 import routes
 
-from heat.api.v1 import stacks
 from heat.common import wsgi
-
-logger = logging.getLogger(__name__)
+from heat.engine.api.v1 import stacks
 
 class API(wsgi.Router):
-
-    """WSGI router for Heat v1 API requests."""
-    #TODO GetTemplate, ValidateTemplate
+    """WSGI entry point for all stac requests."""
 
     def __init__(self, conf, **local_conf):
-        self.conf = conf
         mapper = routes.Mapper()
 
         stacks_resource = stacks.create_resource(conf)
-
         mapper.resource("stack", "stacks", controller=stacks_resource,
                         collection={'detail': 'GET'})
-        
-        mapper.connect("/CreateStack", controller=stacks_resource,
-                       action="create", conditions=dict(method=["POST"]))
         mapper.connect("/", controller=stacks_resource, action="index")
-        mapper.connect("/ListStacks", controller=stacks_resource,
-                       action="list", conditions=dict(method=["GET"]))
-        mapper.connect("/DescribeStacks", controller=stacks_resource,
-                       action="describe", conditions=dict(method=["GET"]))
-        mapper.connect("/DeleteStack", controller=stacks_resource,
-                       action="delete", conditions=dict(method=["DELETE"]))
-        mapper.connect("/UpdateStack", controller=stacks_resource,
-                       action="update", conditions=dict(method=["PUT"]))
 
         super(API, self).__init__(mapper)

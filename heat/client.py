@@ -17,21 +17,16 @@
 Client classes for callers of a heat system
 """
 
-import errno
-import httplib
 import json
 import logging
 import os
-import socket
-import sys
 
-import heat.api.v1
 from heat.common import client as base_client
 from heat.common import exception
-from heat.common import utils
+
+from heat.cloudformations import *
 
 logger = logging.getLogger(__name__)
-SUPPORTED_PARAMS = heat.api.v1.SUPPORTED_PARAMS
 
 
 class V1Client(base_client.BaseClient):
@@ -81,8 +76,9 @@ class V1Client(base_client.BaseClient):
     def delete_stack(self, **kwargs):
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         self._insert_common_parameters(params)
-        self.do_request("DELETE", "/DeleteStack", params=params)
-        return True
+        res = self.do_request("DELETE", "/DeleteStack", params=params)
+        data = json.loads(res.read())
+        return data
 
 Client = V1Client
 

@@ -48,22 +48,7 @@ version_info = {
 }
 """ % (branch_nick, revid, revno))
 
-
-class local_sdist(sdist):
-    """Customized sdist hook - builds the ChangeLog file from VC first"""
-
-    def run(self):
-        if os.path.isdir('.bzr'):
-            # We're in a bzr branch
-
-            log_cmd = subprocess.Popen(["bzr", "log", "--gnu"],
-                                       stdout=subprocess.PIPE)
-            changelog = log_cmd.communicate()[0]
-            with open("ChangeLog", "w") as changelog_file:
-                changelog_file.write(changelog)
-        sdist.run(self)
-
-cmdclass = {'sdist': local_sdist}
+cmdclass = {}
 
 # If Sphinx is installed on the box running setup.py,
 # enable setup.py to build the documentation, otherwise,
@@ -103,6 +88,10 @@ setup(
         'Environment :: No Input/Output (Daemon)',
     ],
     scripts=['bin/heat',
-             'bin/heat-api'],
-    data_files=[('/etc/heat', ['etc/heat-api.conf', 'etc/heat-api-paste.ini'])],
+             'bin/heat-api',
+             'bin/heat-engine'],
+    data_files=[('/etc/heat', ['etc/heat-api.conf',
+                               'etc/heat-api-paste.ini',
+                               'etc/heat-engine.conf',
+                               'etc/heat-engine-paste.ini'])],
     py_modules=[])
