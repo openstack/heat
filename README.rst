@@ -3,18 +3,18 @@ HEAT
 ====
 
 This is the beginings of an OpenStack project that provides a programmable
-interface to orchestrate1 multiple cloud applications implementing well
-known standards such as CloudFormations and Tosca.
+interface to orchestrate multiple cloud applications implementing well
+known standards such as CloudFormation and TOSCA.
 
-Currently we are focusing on CloudFormations but are watching the development
-of the Tosca specification.
+Currently we are focusing on CloudFormation but are watching the development
+of the TOSCA specification.
 
 Why heat? It makes the clouds raise and keeps them there.
 
 Quick Start
 -----------
 
-If you'd like to run trunk, you can clone the git repo:
+If you'd like to run from the master branch, you can clone the git repo:
 
     git clone git@github.com:heat-api/heat.git
 
