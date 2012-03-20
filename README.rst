@@ -1,11 +1,13 @@
-
 ====
 HEAT
 ====
 
-This is the beginings of a AWS Cloudformation API written
-in the style of an openstack project.
+This is the beginings of an OpenStack project that provides a programmable
+interface to orchestrate1 multiple cloud applications implementing well
+known standards such as CloudFormations and Tosca.
 
+Currently we are focusing on CloudFormations but are watching the development
+of the Tosca specification.
 
 Why heat? It makes the clouds raise and keeps them there.
 
@@ -37,4 +39,11 @@ shell3:
 References:
 http://docs.amazonwebservices.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html
 http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/create-stack.html
+http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=tosca
+
+Related projects:
+http://wiki.openstack.org/Donabe
+http://wiki.openstack.org/DatabaseAsAService (could be used to provide AWS::RDS::DBInstance)
+http://wiki.openstack.org/QueueService (could be used to provide AWS::SQS::Queue)
 
