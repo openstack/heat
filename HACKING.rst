@@ -13,7 +13,7 @@ General
 - Do not write "except:", use "except Exception:" at the very least
 - Include your name with TODOs as in "#TODO(termie)"
 - Do not name anything the same name as a built-in or reserved word
-
+- Do declare variable names that conflict with the debugger, such as the letter 'c'
 
 Imports
 -------
