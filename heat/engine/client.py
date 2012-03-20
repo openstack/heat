@@ -22,7 +22,7 @@ import json
 from heat.common.client import BaseClient
 from heat.common import crypt
 from heat.common import config
-from openstack.common import cfg
+from heat.openstack.common import cfg
 
 from heat.cloudformations import *
 
