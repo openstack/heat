@@ -256,7 +256,7 @@ def jeos_create(options, arguments):
 
     images = c.get_images(**parameters)
     for image in images:
-        if image['name'] == name:
+        if image['name'] == distro:
             print ' *** image already in glance: %s > %s' % (image['name'], image['id'])
             sys.exit(1)
 

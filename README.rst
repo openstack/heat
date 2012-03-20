@@ -19,7 +19,6 @@ If you'd like to run trunk, you can clone the git repo:
 
 Install Heat by running::
 
-    python setup.py build
     sudo python setup.py install
 
 try:
