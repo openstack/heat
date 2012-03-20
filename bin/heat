@@ -240,7 +240,7 @@ def jeos_create(options, arguments):
             auth_url=os.getenv('OS_AUTH_URL'),
             strategy=os.getenv('OS_AUTH_STRATEGY', 'noauth'))
 
-    c = glance_client.Client(host="0.0.0.0", port=9292,
+    client = glance_client.Client(host="0.0.0.0", port=9292,
             use_ssl=False, auth_tok=None, creds=creds)
 
     parameters = {
@@ -256,7 +256,7 @@ def jeos_create(options, arguments):
                   'owner': os.getenv('OS_AUTH_USER'),
                   'container_format': 'bare'}
 
-    images = c.get_images(**parameters)
+    images = client.get_images(**parameters)
     for image in images:
         if image['name'] == distro:
             print ' *** image already in glance: %s > %s' % (image['name'], image['id'])
@@ -264,7 +264,7 @@ def jeos_create(options, arguments):
 
     try:
         with open(qcow2_filename) as ifile:
-            image_meta = c.add_image(image_meta, ifile)
+            image_meta = client.add_image(image_meta, ifile)
         image_id = image_meta['id']
         print " Added new image with ID: %s" % image_id
         print " Returned the following metadata for the new image:"

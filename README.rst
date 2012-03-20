@@ -34,8 +34,7 @@ shell2:
 
 shell3:
 
-    heat create my_stack --template-url=https://raw.github.com/heat-api/heat/blob/master/templates/WordPress_Single_Instance.template
-
+    heat create my_stack --template-url=https://raw.github.com/heat-api/heat/master/templates/WordPress_Single_Instance.template
 References
 ----------
 * http://docs.amazonwebservices.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html
