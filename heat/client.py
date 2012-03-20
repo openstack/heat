@@ -81,7 +81,7 @@ class V1Client(base_client.BaseClient):
     def delete_stack(self, **kwargs):
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         self._insert_common_parameters(params)
-        self.do_request("DELETE", "/DeleteStack", params)
+        self.do_request("DELETE", "/DeleteStack", params=params)
         return True
 
 Client = V1Client
