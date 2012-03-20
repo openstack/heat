@@ -104,4 +104,5 @@ setup(
     ],
     scripts=['bin/heat',
              'bin/heat-api'],
+    data_files=[('/etc/heat', ['etc/heat-api.conf', 'etc/heat-api-paste.ini'])],
     py_modules=[])
