@@ -203,30 +203,53 @@ def jeos_create(options, arguments):
     if os.geteuid() != 0:
         print "jeos_create must be run as root"
         sys.exit(1)
+    if len(arguments) < 2:
+        print '\n  Please provide the distro and arch'
+        print '  Usage:\n    heat jeos_create <distro> <arch>'
+        sys.exit(1)
+
     distro = arguments.pop(0)
     arch = arguments.pop(0)
 
-    tdl_path = '%s/heat/jeos/%s-%s-gold-jeos.tdl' % (get_python_lib(), distro, arch)
-    dsk_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.dsk' % (distro, arch)
-    qcow2_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.qcow2' % (distro, arch)
+    if not arch in ['x86_64', 'i686']:
+        print 'arch %s not supported' % arch
+        print 'try: x86_64 os i686'
+        sys.exit(1)
 
     iso = None
     if distro == 'F16':
         iso = '/var/lib/libvirt/images/Fedora-16-x86_64-DVD.iso'
-    if distro == 'F15':
+    elif distro == 'F15':
         iso = '/var/lib/libvirt/images/Fedora-15-x86_64-DVD.iso'
-    if distro == 'F14':
-        iso = '/var/lib/libvirt/images/Fedora-14-x86_64-DVD.iso'
-    if distro == 'U10':
+    elif distro == 'F17':
+        iso = '/var/lib/libvirt/images/Fedora-17-x86_64-DVD.iso'
+    elif distro == 'U10':
         iso = '/var/lib/libvirt/images/ubutnu-10.04.3-server-amd64.iso'
+    else:
+        print 'distro %s not supported' % distro
+        print 'try: F15, F16, F17 or U10'
+        sys.exit(1)
+
     if iso:
         if not os.access(iso, os.R_OK):
             print '*** %s does not exist.' % (iso)
             sys.exit(1)
 
+    tdl_path = '%s/heat/jeos/%s-%s-gold-jeos.tdl' % (get_python_lib(), distro, arch)
+    dsk_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.dsk' % (distro, arch)
+    qcow2_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.qcow2' % (distro, arch)
+    images_name = '%s-%s' % (distro, arch)
+
+    if not os.access(tdl_path, os.R_OK):
+        print 'The tdl for that disto/arch is not available'
+        sys.exit(1)
+
     print 'Creating JEOS image - this takes approximately 10 minutes.'
     res = os.system("oz-install -t 50000 -u %s" % tdl_path)
     if res == 256:
+        sys.exit(1)
+    if not os.access(dsk_filename, os.R_OK):
+        print 'oz-install did not create the image, check your oz installation.'
         sys.exit(1)
 
     print 'Converting raw disk image to a qcow2 image.'
@@ -417,7 +440,7 @@ def print_help(options, args):
 def lookup_command(parser, command_name):
     base_commands = {'help': print_help}
 
-    image_commands = {
+    stack_commands = {
                 'create': stack_create,
                 'update': stack_update,
                 'delete': stack_delete,
@@ -428,7 +451,7 @@ def lookup_command(parser, command_name):
                 'jeos_create': jeos_create}
 
     commands = {}
-    for command_set in (base_commands, image_commands):
+    for command_set in (base_commands, stack_commands):
         commands.update(command_set)
 
     try:
