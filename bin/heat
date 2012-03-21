@@ -238,7 +238,7 @@ def jeos_create(options, arguments):
     tdl_path = '%s/heat/jeos/%s-%s-gold-jeos.tdl' % (get_python_lib(), distro, arch)
     dsk_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.dsk' % (distro, arch)
     qcow2_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.qcow2' % (distro, arch)
-    images_name = '%s-%s' % (distro, arch)
+    image_name = '%s-%s' % (distro, arch)
 
     if not os.access(tdl_path, os.R_OK):
         print 'The tdl for that disto/arch is not available'
@@ -275,7 +275,7 @@ def jeos_create(options, arguments):
         "limit": 10,
     }
 
-    image_meta = {'name': distro,
+    image_meta = {'name': image_name,
                   'is_public': True,
                   'disk_format': 'qcow2',
                   'min_disk': 0,
