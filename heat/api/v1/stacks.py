@@ -114,7 +114,11 @@ class StackController(object):
             msg = _("TemplateBody or TemplateUrl were not given.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
-        stack = json.loads(templ)
+        try:
+            stack = json.loads(templ)
+        except ValueError:
+            msg = _("The Template must be a JSON document.")
+            return webob.exc.HTTPBadRequest(explanation=msg)
         stack['StackName'] = req.params['StackName']
 
         return c.create_stack(stack)
