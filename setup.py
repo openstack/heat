@@ -93,5 +93,7 @@ setup(
     data_files=[('/etc/heat', ['etc/heat-api.conf',
                                'etc/heat-api-paste.ini',
                                'etc/heat-engine.conf',
-                               'etc/heat-engine-paste.ini'])],
+                               'etc/heat-engine-paste.ini']),
+                ('/var/log/heat', ['var/log/heat/api.log',
+                                   'var/log/heat/engine.log'])],
     py_modules=[])

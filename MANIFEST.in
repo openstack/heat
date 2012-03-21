@@ -1,8 +1,11 @@
 include HACKING.rst
 include LICENSE
+include README.rst
 include MANIFEST.in pylintrc
 include openstack-common.conf
 include babel.cfg
 graft templates
 include heat/jeos/F16-x86_64-gold-jeos.tdl
 graft etc
+graft docs
+graft var
