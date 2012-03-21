@@ -245,7 +245,11 @@ def jeos_create(options, arguments):
         sys.exit(1)
 
     print 'Creating JEOS image - this takes approximately 10 minutes.'
-    res = os.system("oz-install -t 50000 -u %s" % tdl_path)
+    extra_opts = ' '
+    if options.debug:
+        extra_opts = ' -d 3 '
+
+    res = os.system("oz-install %s -t 50000 -u %s" % (extra_opts, tdl_path))
     if res == 256:
         sys.exit(1)
     if not os.access(dsk_filename, os.R_OK):
