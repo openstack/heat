@@ -20,6 +20,7 @@ import httplib
 import json
 import logging
 import os
+import socket
 import sys
 import urlparse
 
@@ -104,7 +105,11 @@ class StackController(object):
         """
         c = engine.get_engine_client(req.context)
 
-        templ = self._get_template(req)
+        try:
+            templ = self._get_template(req)
+        except socket.gaierror:
+            msg = _('Invalid Template URL')
+            return webob.exc.HTTPBadRequest(explanation=msg)
         if templ is None:
             msg = _("TemplateBody or TemplateUrl were not given.")
             return webob.exc.HTTPBadRequest(explanation=msg)
