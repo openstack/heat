@@ -17,11 +17,16 @@ import errno
 import eventlet
 from eventlet.green import socket
 import fcntl
+import libxml2
 import logging
 import os
 import stat
+from heat.engine import simpledb
 
-class CapeEventListener:
+
+logger = logging.getLogger('heat.engine.capelistener')
+
+class CapeEventListener(object):
 
     def __init__(self):
         self.backlog = 50
@@ -40,7 +45,8 @@ class CapeEventListener:
             if stat.S_ISSOCK(st.st_mode):
                 os.remove(self.file)
             else:
-                raise ValueError("File %s exists and is not a socket", self.file)
+                raise ValueError("File %s exists and is not a socket",
+                                 self.file)
         sock.bind(self.file)
         sock.listen(self.backlog)
         os.chmod(self.file, 0600)
@@ -50,12 +56,48 @@ class CapeEventListener:
     def cape_event_listner(self, sock):
         eventlet.serve(sock, self.cape_event_handle)
 
+    def store(self, xml_event):
+
+        try:
+            doc = libxml2.parseDoc(xml_event)
+        except:
+            return
+
+        event = {'EventId': ''}
+        root = doc.getRootElement()
+        child = root.children
+        while child is not None:
+            if child.type != "element":
+                child = child.next
+            elif child.name == 'event':
+                child = child.children
+            elif child.name == 'application':
+                event['StackId'] = child.prop('name')
+                event['StackName'] = child.prop('name')
+                child = child.children
+            elif child.name == 'node':
+                event['ResourceType'] = 'AWS::EC2::Instance'
+                event['LogicalResourceId'] = child.prop('name')
+                child = child.children
+            elif child.name == 'resource':
+                event['ResourceType'] = 'ORG::HA::Service'
+                event['LogicalResourceId'] = child.prop('name')
+                child = child.children
+            elif child.name == 'state':
+                event['ResourceStatus'] = child.content
+                child = child.next
+            elif child.name == 'reason':
+                event['ResourceStatusReason'] = child.content
+                child = child.next
+            else:
+                child = child.next
+
+        simpledb.event_append(event)
+        doc.freeDoc()
+
     def cape_event_handle(self, sock, client_addr):
         while True:
             x = sock.recv(4096)
-            # TODO(asalkeld) format this event "nicely"
-            logger.info('%s' % x.strip('\n'))
+            self.store(x.strip('\n'))
             if not x: break
-
-
 

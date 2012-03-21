@@ -110,12 +110,18 @@ class EngineClient(BaseClient):
         stack = data['stack']
         return stack
 
-    def delete_stack(self, stack_name):
+    def delete_stack(self, stack_id):
         """
         Deletes Engine's information about an stack
         """
-        res = self.do_request("DELETE", "/stacks/%s" % stack_name)
+        res = self.do_request("DELETE", "/stacks/%s" % stack_id)
         return res
+
+    def get_stack_events(self, **kwargs):
+        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        res = self.do_request("GET", "/stacks/%s/events" % (params['StackName']),
+                              params=params)
+        return json.loads(res.read())['events']
 
 def get_engine_addr(conf):
     conf.register_opts(engine_addr_opts)

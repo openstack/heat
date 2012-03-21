@@ -36,7 +36,7 @@ logger = logging.getLogger('heat.engine.api.v1.stacks')
 
 stack_db = {}
 
-class Controller(object):
+class StacksController(object):
     '''
     bla
     '''
@@ -92,7 +92,7 @@ class Controller(object):
     def create(self, req, body=None):
 
         if body is None:
-            msg = _("TemplateBody or TemplateUrl were not given.")
+            msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
         if stack_db.has_key(body['StackName']):
@@ -125,4 +125,4 @@ def create_resource(conf):
     """Stacks resource factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
-    return wsgi.Resource(Controller(conf), deserializer, serializer)
+    return wsgi.Resource(StacksController(conf), deserializer, serializer)

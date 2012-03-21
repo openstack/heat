@@ -187,6 +187,22 @@ def stack_describe(options, arguments):
     result = c.describe_stacks(**parameters)
     print json.dumps(result, indent=2)
 
+@catch_error('events_list')
+def stack_events_list(options, arguments):
+    '''
+    '''
+    parameters = {}
+    try:
+        parameters['StackName'] = arguments.pop(0)
+    except IndexError:
+        print "Please specify the stack name "
+        print "as the first argument"
+        return FAILURE
+
+    c = get_client(options)
+    result = c.list_stack_events(**parameters)
+    print json.dumps(result, indent=2)
+
 @catch_error('list')
 def stack_list(options, arguments):
     '''
@@ -449,6 +465,7 @@ def lookup_command(parser, command_name):
                 'update': stack_update,
                 'delete': stack_delete,
                 'list': stack_list,
+                'events_list': stack_events_list,
                 'validate': template_validate,
                 'gettemplate': get_template,
                 'describe': stack_describe,
@@ -491,6 +508,8 @@ Commands:
     validate        Validate a template
 
     jeos_create     Create a JEOS image
+
+    events_list     List events for a stack
 
 """
 

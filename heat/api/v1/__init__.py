@@ -46,5 +46,7 @@ class API(wsgi.Router):
                        action="delete", conditions=dict(method=["DELETE"]))
         mapper.connect("/UpdateStack", controller=stacks_resource,
                        action="update", conditions=dict(method=["PUT"]))
+        mapper.connect("/DescribeStackEvents", controller=stacks_resource,
+                       action="events_list", conditions=dict(method=["GET"]))
 
         super(API, self).__init__(mapper)

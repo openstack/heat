@@ -17,6 +17,7 @@ import routes
 
 from heat.common import wsgi
 from heat.engine.api.v1 import stacks
+from heat.engine.api.v1 import events
 
 class API(wsgi.Router):
     """WSGI entry point for all stac requests."""
@@ -28,5 +29,10 @@ class API(wsgi.Router):
         mapper.resource("stack", "stacks", controller=stacks_resource,
                         collection={'detail': 'GET'})
         mapper.connect("/", controller=stacks_resource, action="index")
+
+        events_resource = events.create_resource(conf)
+        mapper.resource("event", "events", controller=events_resource,
+                        parent_resource=dict(member_name='stack',
+                                             collection_name='stacks'))
 
         super(API, self).__init__(mapper)

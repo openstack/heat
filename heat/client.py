@@ -80,6 +80,14 @@ class V1Client(base_client.BaseClient):
         data = json.loads(res.read())
         return data
 
+    def list_stack_events(self, **kwargs):
+        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        self._insert_common_parameters(params)
+
+        res = self.do_request("GET", "/DescribeStackEvents", params=params)
+        data = json.loads(res.read())
+        return data
+
 Client = V1Client
 
 

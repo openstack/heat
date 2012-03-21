@@ -136,6 +136,20 @@ class StackController(object):
             return webob.exc.HTTPNotFound()
 
 
+    def events_list(self, req):
+        """
+        Returns the following information for all stacks:
+        """
+        c = engine.get_engine_client(req.context)
+        stack_list = c.get_stack_events(**req.params)
+
+        res = {'DescribeStackEventsResult': {'StackEvents': [] } }
+        summaries = res['DescribeStackEventsResult']['StackEvents']
+        for s in stack_list:
+            summaries.append(s)
+
+        return res
+
 def create_resource(options):
     """Stacks resource factory method."""
     deserializer = wsgi.JSONRequestDeserializer()
