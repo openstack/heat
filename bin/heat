@@ -277,9 +277,9 @@ def jeos_create(options, arguments):
 
     print 'Registering JEOS image with OpenStack Glance.'
 
-    creds = dict(username=os.getenv('OS_AUTH_USER'),
-            password=os.getenv('OS_AUTH_KEY'),
-            tenant=os.getenv('OS_AUTH_TENANT'),
+    creds = dict(username=os.getenv('OS_USERNAME'),
+            password=os.getenv('OS_PASSWORD'),
+            tenant=os.getenv('OS_TENANT_NAME'),
             auth_url=os.getenv('OS_AUTH_URL'),
             strategy=os.getenv('OS_AUTH_STRATEGY', 'noauth'))
 
@@ -296,7 +296,7 @@ def jeos_create(options, arguments):
                   'disk_format': 'qcow2',
                   'min_disk': 0,
                   'min_ram': 0,
-                  'owner': os.getenv('OS_AUTH_USER'),
+                  'owner': os.getenv('OS_USERNAME'),
                   'container_format': 'bare'}
 
     images = client.get_images(**parameters)
