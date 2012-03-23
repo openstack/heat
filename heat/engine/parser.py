@@ -18,8 +18,8 @@ import logging
 
 logger = logging.getLogger('heat.engine.parser')
 
-#parse_debug = False
-parse_debug = True
+parse_debug = False
+#parse_debug = True
 
 
 class Resource(object):
@@ -89,6 +89,58 @@ class GenericResource(Resource):
         super(GenericResource, self).start()
         print 'Starting GenericResource %s' % self.name
 
+
+class ElasticIp(Resource):
+    def __init__(self, name, json_snippet, stack):
+        super(ElasticIp, self).__init__(name, json_snippet, stack)
+        self.instance_id = ''
+
+        if self.t.has_key('Properties') and self.t['Properties'].has_key('Domain'):
+            print '*** can\'t support Domain %s yet' % (self.t['Properties']['Domain'])
+
+    def start(self):
+        if self.state != None:
+            return
+        self.state = Resource.CREATE_IN_PROGRESS
+        super(ElasticIp, self).start()
+        self.instance_id = 'eip-000003'
+
+    def FnGetRefId(self):
+        return unicode('0.0.0.0')
+
+    def FnGetAtt(self, key):
+        return unicode(self.instance_id)
+
+class ElasticIpAssociation(Resource):
+    def __init__(self, name, json_snippet, stack):
+        super(ElasticIpAssociation, self).__init__(name, json_snippet, stack)
+
+        # note we only support already assigned ipaddress
+        #
+        # Done with:
+        # nova-manage floating create 172.31.0.224/28
+        # euca-allocate-address
+        #
+
+        if not self.t['Properties'].has_key('EIP'):
+            print '*** can\'t support this yet'
+        if self.t['Properties'].has_key('AllocationId'):
+            print '*** can\'t support AllocationId %s yet' % (self.t['Properties']['AllocationId'])
+
+    def FnGetRefId(self):
+        if not self.t['Properties'].has_key('EIP'):
+            return unicode('0.0.0.0')
+        else:
+            return unicode(self.t['Properties']['EIP'])
+
+    def start(self):
+
+        if self.state != None:
+            return
+        self.state = Resource.CREATE_IN_PROGRESS
+        super(ElasticIpAssociation, self).start()
+        print '$ euca-associate-address -i %s %s' % (self.t['Properties']['InstanceId'],
+                                                     self.t['Properties']['EIP'])
 
 class Volume(Resource):
     def __init__(self, name, json_snippet, stack):
@@ -256,6 +308,10 @@ class Stack:
                 self.resources[r] = Volume(r, self.t['Resources'][r], self)
             elif type == 'AWS::EC2::VolumeAttachment':
                 self.resources[r] = VolumeAttachment(r, self.t['Resources'][r], self)
+            elif type == 'AWS::EC2::EIP':
+                self.resources[r] = ElasticIp(r, self.t['Resources'][r], self)
+            elif type == 'AWS::EC2::EIPAssociation':
+                self.resources[r] = ElasticIpAssociation(r, self.t['Resources'][r], self)
             else:
                 self.resources[r] = GenericResource(r, self.t['Resources'][r], self)
 
