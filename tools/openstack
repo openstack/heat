@@ -96,13 +96,15 @@ export OS_AUTH_STRATEGY=keystone
 EOF
 	os_stop
 	sleep 1
-	source $HOME/.openstack/keystonerc
+	. $HOME/.openstack/keystonerc
 	sudo openstack-config-set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
 	os_start
 	sleep 1
-	sudo ADMIN_PASSWORD=$OS_PASSWORD openstack-keystone-sample-data
-	sudo sed -i -e 's/# \(pipeline = .*\keystone\)/\1/g' /etc/nova/api-paste.ini
-	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_token $ADMIN_TOKEN
+	sudo ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass openstack-keystone-sample-data
+	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
+	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_user nova
+	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
+	sudo openstack-config-set /etc/nova/nova.conf DEFAULT auth_strategy keystone
 	sudo openstack-config-set /etc/glance/glance-api.conf paste_deploy flavor keystone
 	sudo openstack-config-set /etc/glance/glance-registry.conf paste_deploy flavor keystone
 	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_token $ADMIN_TOKEN
