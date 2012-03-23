@@ -88,7 +88,7 @@ class V1Client(base_client.BaseClient):
         data = json.loads(res.read())
         return data
 
-Client = V1Client
+HeatClient = V1Client
 
 
 def get_client(host, port=None, username=None,
@@ -128,7 +128,7 @@ def get_client(host, port=None, username=None,
     use_ssl = (creds['auth_url'] is not None and
         creds['auth_url'].find('https') != -1)
 
-    client = Client
+    client = HeatClient
 
     return client(host=host,
                 port=port,

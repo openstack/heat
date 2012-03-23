@@ -19,7 +19,9 @@
 #    under the License.
 
 """
-Heat API Server
+Heat API Server.  This implements an approximation of the Amazon
+CloudFormations API and translates it into a native representation.  It then
+calls the heat-engine via REST to implement them.
 """
 
 import gettext

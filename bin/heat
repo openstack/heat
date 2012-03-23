@@ -19,7 +19,8 @@
 """
 This is the administration program for heat. It is simply a command-line
 interface for adding, modifying, and retrieving information about the stacks
-belonging to a user.
+belonging to a user.  It is a convenience application that talks to the heat
+API server.
 """
 
 import functools
@@ -107,7 +108,7 @@ def stack_create(options, arguments):
         return FAILURE
 
     if options.parameters:
-        count=1
+        count = 1
         for p in options.parameters.split(';'):
             (n, v) = p.split('=')
             parameters['Parameters.member.%d.ParameterKey' % count] = n
@@ -144,7 +145,7 @@ def stack_update(options, arguments):
         parameters['TemplateUrl'] = options.template_url
 
     if options.parameters:
-        count=1
+        count = 1
         for p in options.parameters.split(';'):
             (n, v) = p.split('=')
             parameters['Parameters.member.%d.ParameterKey' % count] = n
