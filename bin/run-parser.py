@@ -30,9 +30,12 @@ with open(filename) as f:
     (stack_name, tmp) = os.path.splitext(os.path.basename(filename))
     setparam(blob, 'AWS::StackName', stack_name)
 
+# Don't immediately see a way to have key name as a parameter and also
+# file injection and monitoring
+# need to insert key on creation and know what private key is
     setparam(blob, 'KeyName', '309842309484') # <- that gets inserted into image
 
-    setparam(blob, 'InstanceType', 'm1.large')
+    setparam(blob, 'InstanceType', 't1.micro')
     setparam(blob, 'DBUsername', 'eddie.jones')
     setparam(blob, 'DBPassword', 'adm1n')
     setparam(blob, 'DBRootPassword', 'admone')
