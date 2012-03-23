@@ -43,6 +43,8 @@ class Resource(object):
         self.name = name
         self.instance_id = None
 
+
+
         stack.resolve_static_refs(self.t)
         stack.resolve_find_in_map(self.t)
 
@@ -185,6 +187,17 @@ class Instance(Resource):
 
         if not self.t['Properties'].has_key('AvailabilityZone'):
             self.t['Properties']['AvailabilityZone'] = 'nova'
+        self.itype_oflavor = {'t1.micro': 'm1.tiny', 
+            'm1.small': 'm1.small',
+            'm1.medium': 'm1.medium',
+            'm1.large': 'm1.large',
+            'm2.xlarge': 'm1.large',
+            'm2.2xlarge': 'm1.large',
+            'm2.4xlarge': 'm1.large',
+            'c1.medium': 'm1.medium',
+            'c1.4xlarge': 'm1.large',
+            'cc2.8xlarge': 'm1.large',
+            'cg1.4xlarge': 'm1.large'}
 
     def FnGetAtt(self, key):
         print '%s.GetAtt(%s)' % (self.name, key)
@@ -247,6 +260,12 @@ class Instance(Resource):
         print '$ euca-run-instances -k %s -t %s %s' % (self.t['Properties']['KeyName'],
                                                        self.t['Properties']['InstanceType'],
                                                        self.t['Properties']['ImageId'])
+
+        # Convert AWS instance type to OpenStack flavor
+        # TODO(sdake)
+        # heat API should take care of these conversions and feed them into
+        # heat engine in an openstack specific json format
+        flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
         self.instance_id = 'i-734509008'
 
     def insert_package_and_services(self, r, new_script):
