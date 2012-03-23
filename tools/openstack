@@ -1,0 +1,128 @@
+#!/bin/bash
+
+
+action=$1
+if [ -z "$action" ]
+then
+    action="start"
+fi
+
+function os_start() {
+	action=start
+	sudo systemctl $action qpidd.service mysqld.service
+	for svc in api registry
+	do
+		sudo systemctl $action openstack-glance-$svc.service
+	done
+	sudo dd if=/dev/zero of=/var/lib/nova/nova-volumes.img bs=1M seek=20k count=0
+	sudo vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
+	for svc in api objectstore compute network volume scheduler cert
+	do
+	       sudo systemctl $action openstack-nova-$svc.service
+	done
+	sudo systemctl $action openstack-keystone.service
+}
+
+function os_stop() {
+	action=stop
+	sudo systemctl $action openstack-keystone.service
+	for svc in api objectstore compute network volume scheduler cert
+	do
+	       sudo systemctl $action openstack-nova-$svc.service
+	done
+	for svc in api registry
+	do
+		sudo systemctl $action openstack-glance-$svc.service
+	done
+}
+
+function os_erase() {
+	sudo rm -f /var/lib/libvirt/qemu/save/instance-00000*
+	for iii in /usr/lib/systemd/system/openstack-*.service; do sudo systemctl stop $(basename $iii); done
+	sudo yum erase -y python-glance python-nova* python-keystone* openstack-swift*
+
+	sudo systemctl start mysqld.service
+	mysql -u root -p -e 'drop database nova;'
+	mysql -u root -p -e 'drop database keystone;'
+	sudo vgchange -an nova-volumes
+	sudo losetup -d /dev/loop0
+	sudo rm -f /var/lib/nova/nova-volumes.img
+	sudo rm -rf /etc/{glance,nova,swift,keystone,openstack-dashboard} /var/lib/{glance,nova,swift,keystone} /var/log/{glance,nova,swift,keystone} /var/run/{glance,nova,swift,keystone}
+	rm -f $HOME/.keystonerc
+}
+
+
+
+function os_install() {
+	sudo yum install -y openstack-nova openstack-glance openstack-keystone 
+	sudo systemctl start mysqld.service
+	sudo openstack-nova-db-setup
+	
+	os_start
+	sudo systemctl stop openstack-keystone.service
+
+	sudo nova-manage user admin $USERNAME
+	sudo nova-manage project create hotproject $USERNAME
+	sudo nova-manage network create hotnet 192.168.155.0/24 1 256 --bridge=hotbr0
+
+	pushd $HOME/
+		sudo nova-manage project zipfile hotproject $USERNAME
+		sudo chmod 600 nova.zip
+		sudo chown $USERNAME:$USERNAME nova.zip
+	popd
+
+	mkdir -p $HOME/.openstack
+	pushd $HOME/.openstack
+		unzip ../nova.zip
+		rm ../nova.zip
+		. ./novarc
+		euca-add-keypair nova_key > nova_key.priv
+		chmod 600 nova*
+	popd
+	cd -
+
+	sudo openstack-keystone-db-setup
+
+	cat > $HOME/.openstack/keystonerc <<EOF
+export ADMIN_TOKEN=$(openssl rand -hex 10)
+export OS_USERNAME=$USERNAME
+export OS_PASSWORD=heater
+export OS_TENANT_NAME=hotproject
+export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
+EOF
+	. $HOME/.openstack/keystonerc
+	sudo openstack-config-set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
+	sudo systemctl start openstack-keystone.service
+	sudo ADMIN_PASSWORD=$OS_PASSWORD openstack-keystone-sample-data
+	keystone user-list
+	sudo sed -i -e 's/# \(pipeline = .*\keystone\)/\1/g' /etc/nova/api-paste.ini
+	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_token $ADMIN_TOKEN
+	sudo systemctl restart openstack-nova-api.service
+	nova flavor-list
+	sudo openstack-config-set /etc/glance/glance-api.conf paste_deploy flavor keystone
+	sudo openstack-config-set /etc/glance/glance-registry.conf paste_deploy flavor keystone
+	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_token $ADMIN_TOKEN
+	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_token $ADMIN_TOKEN
+	sudo systemctl restart openstack-glance-api.service
+	sudo systemctl restart openstack-glance-registry.service
+	glance index
+}
+
+case $action in
+	start)
+		os_start
+		;;
+	stop)
+		os_stop
+		;;
+	erase)
+		os_erase
+		;;
+	install)
+		os_install
+		;;
+	*)
+		echo "no action $action"
+	;;
+esac
+
