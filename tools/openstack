@@ -106,7 +106,7 @@ EOF
 	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_user nova
 	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_password OS_SERVICE_PASS
 	sudo openstack-config-set /etc/nova/nova.conf DEFAULT auth_strategy keystone
-sudo openstack-config-set /etc/glance/glance-api.conf paste_deploy flavor keystone
+	sudo openstack-config-set /etc/glance/glance-api.conf paste_deploy flavor keystone
 	sudo openstack-config-set /etc/glance/glance-registry.conf paste_deploy flavor keystone
 	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_tenant_name service
 	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_user glance
