@@ -11,7 +11,14 @@
 action=$1
 if [ -z "$action" ]
 then
-    action="start"
+	echo "openstack [start|stop|install|erase]"
+	echo ""
+        echo "This tool is designed to control OpenStack on a Fedora 16/17 system"
+	echo ""
+        echo "start - Starts OpenStack"
+	echo "stop - Stops OpenStack"
+	echo "install - Installs a fresh OpenStack system with Keystone from your repos"
+	echo "erase - permanently destroys an existing installation of OpenStack"
 fi
 
 function os_start() {
@@ -125,6 +132,8 @@ EOF
 }
 
 case $action in
+	"")
+		;;
 	start)
 		os_start
 		;;
@@ -138,7 +147,7 @@ case $action in
 		os_install
 		;;
 	*)
-		echo "no action $action"
+		echo "The action \"$action\" is not supported."
 	;;
 esac
 
