@@ -27,9 +27,7 @@ from webob.exc import (HTTPNotFound,
 from heat.common import exception
 from heat.common import wsgi
 
-from heat.engine import capelistener
-from heat.engine import json2capexml
-from heat.engine import systemctl
+from heat.engine import parser
 
 
 logger = logging.getLogger('heat.engine.api.v1.stacks')
@@ -43,8 +41,6 @@ class StacksController(object):
 
     def __init__(self, conf):
         self.conf = conf
-        self.listener = capelistener.CapeEventListener()
-
 
     def index(self, req, format='json'):
         logger.info('format is %s' % format)
@@ -99,16 +95,8 @@ class StacksController(object):
             msg = _("Stack already exists with that name.")
             return webob.exc.HTTPConflict(msg)
 
-        stack = body
-        stack['StackId'] = body['StackName']
-        stack['StackStatus'] = 'CREATE_COMPLETE'
-        # TODO self._apply_user_parameters(req, stack)
-        stack_db[body['StackName']] = stack
-
-        cape_transformer = json2capexml.Json2CapeXml(stack, body['StackName'])
-        cape_transformer.convert_and_write()
-
-        systemctl.systemctl('start', 'pcloud-cape-sshd', body['StackName'])
+        stack_db[body['StackName']] = parser.Stack(body['StackName'], body)
+        stack_db[body['StackName']].start()
 
         return {'stack': {'id': body['StackName']}}
 
@@ -117,7 +105,6 @@ class StacksController(object):
             return webob.exc.HTTPNotFound('No stack by that name')
 
         logger.info('deleting stack %s' % id)
-        systemctl.systemctl('stop', 'pcloud-cape-sshd', id)
         del stack_db[id]
         return None
 

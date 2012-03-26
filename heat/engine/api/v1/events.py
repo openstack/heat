@@ -27,7 +27,7 @@ from webob.exc import (HTTPNotFound,
 from heat.common import exception
 from heat.common import wsgi
 
-from heat.engine import capelistener
+from heat.engine import parser
 from heat.engine import simpledb
 
 logger = logging.getLogger('heat.engine.api.v1.events')
@@ -41,8 +41,6 @@ class EventsController(object):
 
     def __init__(self, conf):
         self.conf = conf
-        self.event_db = {}
-        self.listener = capelistener.CapeEventListener()
 
     def index(self, req, stack_id):
         return simpledb.events_get(stack_id)

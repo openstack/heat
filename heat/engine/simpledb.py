@@ -17,6 +17,10 @@ import anydbm
 import json
 
 def event_append(event):
+    '''
+    EventId	The unique ID of this event.
+    Timestamp	Time the status was updated.
+    '''
     name = event['StackName']
     d = anydbm.open('/var/lib/heat/%s.events.db' % name, 'c')
     if d.has_key('lastid'):
