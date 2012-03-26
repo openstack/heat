@@ -102,22 +102,17 @@ def get_client(host, port=None, username=None,
     defaults.
     """
 
-    if auth_url or os.getenv('OS_AUTH_URL'):
+    if auth_url:
         force_strategy = 'keystone'
     else:
         force_strategy = None
 
-    creds = dict(username=username or
-                         os.getenv('OS_AUTH_USER', os.getenv('OS_USERNAME')),
-                 password=password or
-                         os.getenv('OS_AUTH_KEY', os.getenv('OS_PASSWORD')),
-                 tenant=tenant or
-                         os.getenv('OS_AUTH_TENANT',
-                                 os.getenv('OS_TENANT_NAME')),
-                 auth_url=auth_url or os.getenv('OS_AUTH_URL'),
-                 strategy=force_strategy or auth_strategy or
-                          os.getenv('OS_AUTH_STRATEGY', 'noauth'),
-                 region=region or os.getenv('OS_REGION_NAME'),
+    creds = dict(username=username,
+                 password=password,
+                 tenant=tenant,
+                 auth_url=auth_url,
+                 strategy=force_strategy or auth_strategy,
+                 region=region,
     )
 
     if creds['strategy'] == 'keystone' and not creds['auth_url']:
@@ -133,7 +128,6 @@ def get_client(host, port=None, username=None,
     return client(host=host,
                 port=port,
                 use_ssl=use_ssl,
-                auth_tok=auth_token or
-                os.getenv('OS_TOKEN'),
+                auth_tok=auth_token,
                 creds=creds,
                 insecure=insecure)

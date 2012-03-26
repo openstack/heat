@@ -65,7 +65,8 @@ def catch_error(action):
                 return SUCCESS if ret is None else ret
             except exception.NotAuthorized:
                 print "Not authorized to make this request. Check "\
-                      "your credentials (OS_AUTH_USER, OS_AUTH_KEY, ...)."
+                      "your credentials (OS_USERNAME, OS_PASSWORD, "\
+                      "OS_TENANT_NAME, OS_AUTH_URL and OS_AUTH_STRATEGY)."
                 return FAILURE
             except exception.ClientConfigurationError:
                 raise
@@ -278,11 +279,11 @@ def jeos_create(options, arguments):
 
     print 'Registering JEOS image with OpenStack Glance.'
 
-    creds = dict(username=os.getenv('OS_USERNAME'),
-            password=os.getenv('OS_PASSWORD'),
-            tenant=os.getenv('OS_TENANT_NAME'),
-            auth_url=os.getenv('OS_AUTH_URL'),
-            strategy=os.getenv('OS_AUTH_STRATEGY', 'noauth'))
+    creds = dict(username=options.username,
+                 password=options.password,
+                 tenant=options.tenant,
+                 auth_url=options.auth_url,
+                 strategy=options.auth_strategy)
 
     client = glance_client.Client(host="0.0.0.0", port=9292,
             use_ssl=False, auth_tok=None, creds=creds)
@@ -297,7 +298,7 @@ def jeos_create(options, arguments):
                   'disk_format': 'qcow2',
                   'min_disk': 0,
                   'min_ram': 0,
-                  'owner': os.getenv('OS_USERNAME'),
+                  'owner': options.username,
                   'container_format': 'bare'}
 
     images = client.get_images(**parameters)
@@ -340,6 +341,7 @@ def get_client(options):
                                   port=options.port,
                                   username=options.username,
                                   password=options.password,
+                                  tenant=options.tenant,
                                   auth_url=options.auth_url,
                                   auth_strategy=options.auth_strategy,
                                   auth_token=options.auth_token,
@@ -387,6 +389,9 @@ def create_options(parser):
     parser.add_option('-K', '--password', dest="password",
                       metavar="PASSWORD", default=None,
                       help="Password used to acquire an authentication token")
+    parser.add_option('-T', '--tenant', dest="tenant",
+                      metavar="TENANT", default=None,
+                      help="Tenant name used for Keystone authentication")
     parser.add_option('-R', '--region', dest="region",
                       metavar="REGION", default=None,
                       help="Region name. When using keystone authentication "
@@ -409,6 +414,12 @@ def create_options(parser):
     parser.add_option('-P', '--parameters', metavar="parameters", default=None,
                       help="Parameter values used to create the stack.")
 
+def credentials_from_env():
+    return dict(username=os.getenv('OS_USERNAME'),
+                password=os.getenv('OS_PASSWORD'),
+                tenant=os.getenv('OS_TENANT_NAME'),
+                auth_url=os.getenv('OS_AUTH_URL'),
+                auth_strategy=os.getenv('OS_AUTH_STRATEGY'))
 
 def parse_options(parser, cli_args):
     """
@@ -421,10 +432,18 @@ def parse_options(parser, cli_args):
         cli_args.append('-h')  # Show options in usage output...
 
     (options, args) = parser.parse_args(cli_args)
+    env_opts = credentials_from_env()
+    for option, env_val in env_opts.items():
+        if not getattr(options, option):
+            setattr(options, option, env_val)
+
     if options.url is not None:
         u = urlparse(options.url)
         options.port = u.port
         options.host = u.hostname
+
+    if not options.auth_strategy:
+        options.auth_strategy = 'noauth'
 
     options.use_ssl = (options.url is not None and u.scheme == 'https')
 
