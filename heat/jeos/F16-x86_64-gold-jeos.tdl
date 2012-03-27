@@ -12,7 +12,7 @@
   <description>Fedora 16</description>
   <commands>
     <command name='commands'>
-yum -y update;yum -y install matahari-core matahari-host matahari-service;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local
+yum -y update;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local
 #!/bin/bash
 setenforce 0
 while true; do
