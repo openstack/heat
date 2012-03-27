@@ -1,0 +1,21 @@
+Files in this directory are general developer tools or examples of how
+to do certain activities.
+
+-----
+Tools
+-----
+
++ experimental_create.py
+     - Example of creating an keypair and instantiating an instance after
+        one has been registered with JEOS create
+
++ openstack - WARNING COULD DESTROY DATA
+    - Installs, Uninstalls, starts, and stops openstack from the RPM repoistory
+      on F16 or F17.  This provides a consistent way for developers to deploy
+      openstack in a consistent painless way.
+
+      THIS IS NOT INTENDED FOR END USERS AS IT COULD PERMANENTLY DESTROY DATA
+      AND DOES NOT PROPERLY SECURE THE INSTALLATION.
+
++ experimental_ssh_eventlet.py
+     - Example of using ssh inside python with eventlets.
