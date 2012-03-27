@@ -22,6 +22,7 @@ import logging
 import logging.config
 import logging.handlers
 import os
+import socket
 import sys
 
 from heat import version
@@ -37,6 +38,7 @@ paste_deploy_opts = [
     ]
 
 
+
 class HeatConfigOpts(cfg.CommonConfigOpts):
 
     def __init__(self, default_config_files=None, **kwargs):
@@ -46,13 +48,27 @@ class HeatConfigOpts(cfg.CommonConfigOpts):
             default_config_files=default_config_files,
             **kwargs)
 
+class HeatEngineConfigOpts(cfg.CommonConfigOpts):
+    engine_opts = [
+        cfg.StrOpt('host',
+                   default=socket.gethostname(),
+                   help='Name of this node.  This can be an opaque identifier.  '
+                        'It is not necessarily a hostname, FQDN, or IP address.'),
+        cfg.StrOpt('instance_driver',
+                   default='heat.engine.nova',
+                   help='Driver to use for controlling instances'),
+    ]
 
-class HeatCacheConfigOpts(HeatConfigOpts):
-
-    def __init__(self, **kwargs):
+    def __init__(self, default_config_files=None, **kwargs):
+        super(HeatEngineConfigOpts, self).__init__(
+            project='heat',
+            version='%%prog %s' % version.version_string(),
+            **kwargs)
         config_files = cfg.find_config_files(project='heat',
-                                             prog='heat-cache')
-        super(HeatCacheConfigOpts, self).__init__(config_files, **kwargs)
+                                             prog='heat-engine')
+        self.register_cli_opts(self.engine_opts)
+
+FLAGS = HeatEngineConfigOpts()
 
 
 def setup_logging(conf):

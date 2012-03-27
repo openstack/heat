@@ -21,34 +21,37 @@ which then calls into this engine.
 """
 
 import gettext
+import eventlet
+eventlet.monkey_patch()
+
 import os
 import sys
+import logging
 
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
-possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
+POSSIBLE_TOPDIR = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
                                    os.pardir,
                                    os.pardir))
-if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
-    sys.path.insert(0, possible_topdir)
+if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
+    sys.path.insert(0, POSSIBLE_TOPDIR)
 
 gettext.install('heat', unicode=1)
 
+from heat import service
+from heat.common import utils
 from heat.common import config
-from heat.common import wsgi
 
+logger = logging.getLogger('heat.engine')
 
 if __name__ == '__main__':
-    try:
-        conf = config.HeatConfigOpts()
-        conf()
 
-        app = config.load_paste_app(conf)
+    config.FLAGS(sys.argv)
+    config.setup_logging(config.FLAGS)
 
-        port = config.DEFAULT_PORT+1
-        print 'Starting Heat Engine on port %s' % port
-        server = wsgi.Server()
-        server.start(app, conf, default_port=port)
-        server.wait()
-    except RuntimeError, e:
-        sys.exit("ERROR: %s" % e)
+    #utils.monkey_patch()
+    server = service.Service.create(binary='heat-engine',
+                                    topic='engine',
+                                    manager='heat.engine.manager.EngineManager')
+    service.serve(server)
+    service.wait()

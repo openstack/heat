@@ -20,6 +20,7 @@
 System-level utilities and helper functions.
 """
 
+import datetime
 import sys
 import uuid
 
@@ -75,3 +76,14 @@ def import_object(import_str):
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+def gen_uuid():
+    return uuid.uuid4()
+
+def utcnow():
+    """Overridable version of utils.utcnow."""
+    if utcnow.override_time:
+        return utcnow.override_time
+    return datetime.datetime.utcnow()
+
+utcnow.override_time = None
