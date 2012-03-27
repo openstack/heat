@@ -46,7 +46,7 @@ import logging
 from eventlet import greenthread
 
 import heat.context
-from heat import exception
+from heat.common import exception
 from heat import manager
 from heat.openstack.common import cfg
 from heat import rpc

@@ -30,9 +30,9 @@ from heat.openstack.common import cfg
 
 from heat.common import utils
 from heat.common import config
+from heat.common import exception
 
 from heat import context
-from heat import exception
 from heat import rpc
 from heat import version
 
