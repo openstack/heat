@@ -41,5 +41,5 @@ with open(filename) as f:
     setparam(blob, 'DBRootPassword', 'admone')
     setparam(blob, 'LinuxDistribution', 'F16')
 
-    stack = parser.Stack(blob, stack_name)
+    stack = parser.Stack(stack_name, blob)
     stack.start()
