@@ -16,7 +16,6 @@ import sys
 import time
 import json
 
-
 from urlparse import urlparse
 
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
@@ -81,8 +80,8 @@ def template_validate(options, arguments):
         print 'Please specify a template file or url'
         return FAILURE
 
-    c = get_client(options)
-    result = c.validate_template(**parameters)
+    client = get_client(options)
+    result = client.validate_template(**parameters)
     print json.dumps(result, indent=2)
 
 @catch_error('gettemplate')

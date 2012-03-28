@@ -125,7 +125,7 @@ class StackController(object):
 
     def validate_template(self, req):
 
-        c = engine.get_engine_client(req.context)
+        client = engine.get_engine_client(req.context)
 
         try:
             templ = self._get_template(req)
@@ -143,7 +143,7 @@ class StackController(object):
             return webob.exc.HTTPBadRequest(explanation=msg)
 
         logger.info('validate_template')
-        return c.validate_template(stack, **req.params)
+        return client.validate_template(stack, **req.params)
 
     def delete(self, req):
         """

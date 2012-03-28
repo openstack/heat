@@ -33,7 +33,8 @@ shell2:
     sudo heat-engine
 
 shell3:
-
+    
+    heat create_jeos F16 x86_64
     heat create my_stack --template-url=https://raw.github.com/heat-api/heat/master/templates/WordPress_Single_Instance.template
 
 References
