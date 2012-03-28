@@ -26,10 +26,12 @@ python setup.py build
 %install
 python setup.py install -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 mkdir -p $RPM_BUILD_ROOT/var/log/heat/
+mkdir -p $RPM_BUILD_ROOT/var/lib/heat/
 mkdir -p $RPM_BUILD_ROOT/etc/heat/
 cp etc/* $RPM_BUILD_ROOT/etc/heat/
 mkdir -p $RPM_BUILD_ROOT/%{_mandir}/man1/ 
 cp -v docs/man/man1/heat.1 $RPM_BUILD_ROOT/%{_mandir}/man1/
+rm -rf $RPM_BUILD_ROOT/var/lib/heat/.dummy
 rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/heat/tests
 rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/heat-0.0.1-py2.7.egg-info
 
@@ -125,19 +127,21 @@ This package contains the OpenStack integration for the Heat project
 %files engine
 %defattr(-,root,root,-)
 %{_bindir}/heat-engine
-%{python_sitelib}/heat/engine/capelistener.*
 %{python_sitelib}/heat/engine/client.*
+%{python_sitelib}/heat/engine/parser.*
+%{python_sitelib}/heat/engine/resources.*
+%{python_sitelib}/heat/engine/simpledb.*
 %{python_sitelib}/heat/engine/__init__.*
-%{python_sitelib}/heat/engine/json2capexml.*
-%{python_sitelib}/heat/engine/systemctl.*
 %{python_sitelib}/heat/engine/api/__init__.*
 %{python_sitelib}/heat/engine/api/v1/__init__.*
 %{python_sitelib}/heat/engine/api/v1/stacks.*
+%{python_sitelib}/heat/engine/api/v1/events.*
 %{_localstatedir}/log/heat/engine.log
 
 %files jeos
 %defattr(-,root,root,-)
 %{python_sitelib}/heat/jeos/F16-x86_64-gold-jeos.tdl
+%{python_sitelib}/heat/jeos/F17-x86_64-gold-jeos.tdl
 
 %files openstack
 %defattr(-,root,root,-)
