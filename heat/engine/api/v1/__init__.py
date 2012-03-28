@@ -29,6 +29,9 @@ class API(wsgi.Router):
         mapper.resource("stack", "stacks", controller=stacks_resource,
                         collection={'detail': 'GET'})
         mapper.connect("/", controller=stacks_resource, action="index")
+        mapper.connect("/validate_template", controller=stacks_resource,
+                       action="validate_template", conditions=dict(method=["POST"]))
+
 
         events_resource = events.create_resource(conf)
         mapper.resource("event", "events", controller=events_resource,

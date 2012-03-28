@@ -100,6 +100,18 @@ class StacksController(object):
 
         return {'stack': {'id': body['StackName']}}
 
+    def validate_template(self, req, body=None):
+
+        logger.info('validate_template')
+        if body is None:
+            msg = _("No Template provided.")
+            return webob.exc.HTTPBadRequest(explanation=msg)
+
+        s = parser.Stack('validate', body, req.params)
+        res = s.validate()
+
+        return res
+
     def delete(self, req, id):
         if not stack_db.has_key(id):
             return webob.exc.HTTPNotFound('No stack by that name')

@@ -87,7 +87,18 @@ def catch_error(action):
 def template_validate(options, arguments):
     '''
     '''
-    pass
+    parameters = {}
+    if options.template_file:
+        parameters['TemplateBody'] = open(options.template_file).read()
+    elif options.template_url:
+        parameters['TemplateUrl'] = options.template_url
+    else:
+        print 'Please specify a template file or url'
+        return FAILURE
+
+    c = get_client(options)
+    result = c.validate_template(**parameters)
+    print json.dumps(result, indent=2)
 
 @catch_error('gettemplate')
 def get_template(options, arguments):

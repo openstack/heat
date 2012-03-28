@@ -123,6 +123,28 @@ class StackController(object):
 
         return c.create_stack(stack, **req.params)
 
+    def validate_template(self, req):
+
+        c = engine.get_engine_client(req.context)
+
+        try:
+            templ = self._get_template(req)
+        except socket.gaierror:
+            msg = _('Invalid Template URL')
+            return webob.exc.HTTPBadRequest(explanation=msg)
+        if templ is None:
+            msg = _("TemplateBody or TemplateUrl were not given.")
+            return webob.exc.HTTPBadRequest(explanation=msg)
+
+        try:
+            stack = json.loads(templ)
+        except ValueError:
+            msg = _("The Template must be a JSON document.")
+            return webob.exc.HTTPBadRequest(explanation=msg)
+
+        logger.info('validate_template')
+        return c.validate_template(stack, **req.params)
+
     def delete(self, req):
         """
         Returns the following information for all stacks:

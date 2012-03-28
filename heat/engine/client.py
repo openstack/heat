@@ -87,6 +87,20 @@ class EngineClient(BaseClient):
         data = json.loads(res.read())['stacks']
         return data
 
+    def validate_template(self, template, **kwargs):
+        """
+        Validate the template
+        """
+        headers = {
+            'Content-Type': 'application/json',
+        }
+
+        logger.info(template)
+        res = self.do_request("POST", "/validate_template", body=json.dumps(template),
+                              headers=headers, params=kwargs)
+        data = json.loads(res.read())
+        logger.info(data)
+        return data
 
     def create_stack(self, template, **kwargs):
         """

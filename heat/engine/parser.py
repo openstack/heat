@@ -20,7 +20,6 @@ from heat.engine import resources
 
 logger = logging.getLogger('heat.engine.parser')
 
-
 class Stack:
     def __init__(self, stack_name, template, parms=None):
 
@@ -62,6 +61,34 @@ class Stack:
 
             self.calulate_dependancies(self.t['Resources'][r], self.resources[r])
 
+    def validate(self):
+        '''
+            If you are wondering where the actual validation is, me too.
+            it is just not obvious how to respond to validation failures.
+            http://docs.amazonwebservices.com/AWSCloudFormation/latest/APIReference/API_ValidateTemplate.html
+        '''
+        response = { 'ValidateTemplateResult': {
+                    'Description': 'bla',
+                    'Parameters': []
+                    }
+              }
+
+        for p in self.parms:
+            jp = {'member': {}}
+            res = jp['member']
+            res['NoEcho'] = 'false'
+            res['ParameterKey'] = p
+            if self.parms[p].has_key('Description'):
+                res['Description'] = self.parms[p]['Description']
+            else:
+                res['Description'] = ''
+            if self.parms[p].has_key('Default'):
+                res['DefaultValue'] = self.parms[p]['Default']
+            else:
+                res['DefaultValue'] = ''
+            response['ValidateTemplateResult']['Parameters'].append(res)
+        return response
+
     def start(self):
         # start Volumes first.
         for r in self.t['Resources']:
@@ -91,16 +118,12 @@ class Stack:
             for index, item in enumerate(s):
                 self.calulate_dependancies(item, r)
 
-
     def _apply_user_parameter(self, key, value):
-        logger.info('_apply_user_parameter %s=%s ' % (key, value))
-        if not self.t.has_key('Parameters'):
-            self.t['Parameters'] = {}
+        logger.debug('appling user parameter %s=%s ' % (key, value))
 
-        if not self.t['Parameters'].has_key(key):
-            self.t['Parameters'][key] = {}
-
-        self.t['Parameters'][key]['Value'] = value
+        if not self.parms.has_key(key):
+            self.parms[key] = {}
+        self.parms[key]['Value'] = value
 
     def _apply_user_parameters(self, parms):
         for p in parms:
@@ -111,21 +134,19 @@ class Stack:
                     value_name = 'Parameters.member.%s.ParameterValue' % s[2]
                     self._apply_user_parameter(parms[key_name], parms[value_name])
                 except:
-                    logger.error('could not apply parameter %s' % p)
-
+                    logger.error('Could not apply parameter %s' % p)
 
     def parameter_get(self, key):
         if self.parms[key] == None:
-            #print 'None Ref: %s' % key
-            return '=EMPTY='
+            logger.warn('Trying to reference parameter: %s, but it is empty' % key)
+            return ''
         elif self.parms[key].has_key('Value'):
             return self.parms[key]['Value']
         elif self.parms[key].has_key('Default'):
             return self.parms[key]['Default']
         else:
-            #print 'Missing Ref: %s' % key
-            return '=EMPTY='
-
+            logger.warn('Trying to reference parameter: %s, but no Value or Default' % key)
+            return ''
 
     def resolve_static_refs(self, s):
         '''
