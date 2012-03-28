@@ -292,9 +292,11 @@ class Instance(Resource):
 
         flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
         arch_name = self.ami_arch[self.t['Properties']['ImageId']]
+        distro_name = self.stack.parameter_get('LinuxDistribution')
         key_name = self.t['Properties']['KeyName']
+        image_name = '%s-%s' % (distro_name, arch_name)
 	
-        print 'Running instance with key %s flavor %s arch %s' % (key_name, flavor, arch_name)
+        print 'Running instance with key %s flavor %s arch %s' % (key_name, flavor, image_name)
 
         self.instance_id = 'i-734509008'
 
