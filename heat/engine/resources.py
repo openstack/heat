@@ -212,6 +212,22 @@ class Instance(Resource):
             'c1.4xlarge': 'm1.large',
             'cc2.8xlarge': 'm1.large',
             'cg1.4xlarge': 'm1.large'}
+        self.ami_arch = {'ami-31814f58': 'i686',
+            'ami-38fe7308': 'i686',
+            'ami-11d68a54': 'i686',
+            'ami-973b06e3': 'i686',
+            'ami-b4b0cae6': 'i686',
+            'ami-0644f007': 'i686',
+            'ami-3e3be423': 'i686',
+            'ami-1b814f72': 'x86_64',
+            'ami-30fe7300': 'x86_64',
+            'ami-1bd68a5e': 'x86_64',
+            'ami-953b06e1': 'x86_64',
+            'ami-beb0caec': 'x86_64',
+            'ami-0a44f00b': 'x86_64',
+            'ami-3c3be421': 'x86_64',
+            'ami-0da96764': 'x86_64'}
+
 
     def FnGetAtt(self, key):
         print '%s.GetAtt(%s)' % (self.name, key)
@@ -268,17 +284,18 @@ class Instance(Resource):
             pass
 
 
-        # TODO start the instance here.
-        # and set self.instance_id
-        logger.info('$ euca-run-instances -k %s -t %s %s' % (self.t['Properties']['KeyName'],
-                                                             self.t['Properties']['InstanceType'],
-                                                             self.t['Properties']['ImageId']))
-
-        # Convert AWS instance type to OpenStack flavor
         # TODO(sdake)
         # heat API should take care of these conversions and feed them into
         # heat engine in an openstack specific json format
+        # start the instance here.
+        # and set self.instance_id
+
         flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
+        arch_name = self.ami_arch[self.t['Properties']['ImageId']]
+	key_name = self.t['Properties']['KeyName']
+	
+	print 'Running instance with key %s flavor %s arch %s' % (key_name, flavor, arch_name)
+
         self.instance_id = 'i-734509008'
 
     def insert_package_and_services(self, r, new_script):
