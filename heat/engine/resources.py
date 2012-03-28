@@ -39,6 +39,10 @@ class Resource(object):
         self.stack = stack
         self.name = name
         self.instance_id = None
+        if not self.t.has_key('Properties'):
+            # make a dummy entry to prevent having to check all over the
+            # place for it.
+            self.t['Properties'] = {}
 
         stack.resolve_static_refs(self.t)
         stack.resolve_find_in_map(self.t)
