@@ -292,9 +292,9 @@ class Instance(Resource):
 
         flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
         arch_name = self.ami_arch[self.t['Properties']['ImageId']]
-	key_name = self.t['Properties']['KeyName']
+        key_name = self.t['Properties']['KeyName']
 	
-	print 'Running instance with key %s flavor %s arch %s' % (key_name, flavor, arch_name)
+        print 'Running instance with key %s flavor %s arch %s' % (key_name, flavor, arch_name)
 
         self.instance_id = 'i-734509008'
 
