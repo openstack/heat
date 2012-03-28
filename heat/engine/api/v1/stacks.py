@@ -95,7 +95,7 @@ class StacksController(object):
             msg = _("Stack already exists with that name.")
             return webob.exc.HTTPConflict(msg)
 
-        stack_db[body['StackName']] = parser.Stack(body['StackName'], body)
+        stack_db[body['StackName']] = parser.Stack(body['StackName'], body, req.params)
         stack_db[body['StackName']].start()
 
         return {'stack': {'id': body['StackName']}}

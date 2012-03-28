@@ -22,7 +22,7 @@ logger = logging.getLogger('heat.engine.parser')
 
 
 class Stack:
-    def __init__(self, stack_name, template):
+    def __init__(self, stack_name, template, parms=None):
 
         self.t = template
         if self.t.has_key('Parameters'):
@@ -41,13 +41,8 @@ class Stack:
               "AllowedValues" : ["us-east-1","us-west-1","us-west-2","sa-east-1","eu-west-1","ap-southeast-1","ap-northeast-1"],
               "ConstraintDescription" : "must be a valid EC2 instance type." }
 
-
-######
-#        stack['StackId'] = body['StackName']
-#        stack['StackStatus'] = 'CREATE_COMPLETE'
-#        # TODO self._apply_user_parameters(req, stack)
-#        stack_db[body['StackName']] = stack
-######
+        if parms != None:
+            self._apply_user_parameters(parms)
 
         self.resources = {}
         for r in self.t['Resources']:
@@ -95,6 +90,29 @@ class Stack:
         elif isinstance(s, list):
             for index, item in enumerate(s):
                 self.calulate_dependancies(item, r)
+
+
+    def _apply_user_parameter(self, key, value):
+        logger.info('_apply_user_parameter %s=%s ' % (key, value))
+        if not self.t.has_key('Parameters'):
+            self.t['Parameters'] = {}
+
+        if not self.t['Parameters'].has_key(key):
+            self.t['Parameters'][key] = {}
+
+        self.t['Parameters'][key]['Value'] = value
+
+    def _apply_user_parameters(self, parms):
+        for p in parms:
+            if 'Parameters.member.' in p and 'ParameterKey' in p:
+                s = p.split('.')
+                try:
+                    key_name = 'Parameters.member.%s.ParameterKey' % s[2]
+                    value_name = 'Parameters.member.%s.ParameterValue' % s[2]
+                    self._apply_user_parameter(parms[key_name], parms[value_name])
+                except:
+                    logger.error('could not apply parameter %s' % p)
+
 
     def parameter_get(self, key):
         if self.parms[key] == None:

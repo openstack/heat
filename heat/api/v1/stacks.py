@@ -121,7 +121,7 @@ class StackController(object):
             return webob.exc.HTTPBadRequest(explanation=msg)
         stack['StackName'] = req.params['StackName']
 
-        return c.create_stack(stack)
+        return c.create_stack(stack, **req.params)
 
     def delete(self, req):
         """

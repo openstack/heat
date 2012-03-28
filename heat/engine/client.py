@@ -18,6 +18,7 @@ the heat Engine API
 """
 
 import json
+import logging
 
 from heat.common.client import BaseClient
 from heat.common import crypt
@@ -25,6 +26,8 @@ from heat.common import config
 from heat.openstack.common import cfg
 
 from heat.cloudformations import *
+
+logger = logging.getLogger(__name__)
 
 _CLIENT_CREDS = None
 _CLIENT_HOST = None
@@ -85,7 +88,7 @@ class EngineClient(BaseClient):
         return data
 
 
-    def create_stack(self, template):
+    def create_stack(self, template, **kwargs):
         """
         Tells engine about an stack's metadata
         """
@@ -93,7 +96,8 @@ class EngineClient(BaseClient):
             'Content-Type': 'application/json',
         }
 
-        res = self.do_request("POST", "/stacks", json.dumps(template), headers=headers)
+        res = self.do_request("POST", "/stacks", json.dumps(template),
+                              headers=headers, params=kwargs)
         data = json.loads(res.read())
         return data
 
