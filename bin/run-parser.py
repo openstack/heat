@@ -12,34 +12,40 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 from heat.engine import parser
 
+parameter_count = 1
+
 
 def setparam(t, key, value):
-    if not t.has_key('Parameters'):
-        t['Parameters'] = {}
+    global parameter_count
+    key_name = 'Parameters.member.%d.ParameterKey' % parameter_count
+    value_name = 'Parameters.member.%d.ParameterValue' % parameter_count
+    print 'key_name %s' % key_name
 
-    if not t['Parameters'].has_key(key):
-        t['Parameters'][key] = {}
-
-    t['Parameters'][key]['Value'] = value
+    t[key_name] = key
+    t[value_name] = value
+    parameter_count += 1
 
 
 filename = sys.argv[1]
 with open(filename) as f:
-    blob = json.load(f)
+    json_blob = json.load(f)
 
     (stack_name, tmp) = os.path.splitext(os.path.basename(filename))
-    setparam(blob, 'AWS::StackName', stack_name)
+
+    params_dict = {}
+    setparam(params_dict, 'AWS::StackName', stack_name)
 
 # Don't immediately see a way to have key name as a parameter and also
 # file injection and monitoring
 # need to insert key on creation and know what private key is
-    setparam(blob, 'KeyName', '309842309484') # <- that gets inserted into image
+    setparam(params_dict, 'KeyName', '309842309484') # <- that gets inserted into image
 
-    setparam(blob, 'InstanceType', 't1.micro')
-    setparam(blob, 'DBUsername', 'eddie.jones')
-    setparam(blob, 'DBPassword', 'adm1n')
-    setparam(blob, 'DBRootPassword', 'admone')
-    setparam(blob, 'LinuxDistribution', 'F16')
+    setparam(params_dict, 'AWS::StackName', stack_name)
+    setparam(params_dict, 'InstanceType', 't1.micro')
+    setparam(params_dict, 'DBUsername', 'eddie.jones')
+    setparam(params_dict, 'DBPassword', 'adm1n')
+    setparam(params_dict, 'DBRootPassword', 'admone')
+    setparam(params_dict, 'LinuxDistribution', 'F16')
 
-    stack = parser.Stack(stack_name, blob)
+    stack = parser.Stack(stack_name, json_blob, params_dict)
     stack.start()
