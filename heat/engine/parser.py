@@ -59,7 +59,7 @@ class Stack:
             else:
                 self.resources[r] = resources.GenericResource(r, self.t['Resources'][r], self)
 
-            self.calulate_dependancies(self.t['Resources'][r], self.resources[r])
+            self.calulate_dependencies(self.t['Resources'][r], self.resources[r])
 
     def validate(self):
         '''
@@ -99,7 +99,7 @@ class Stack:
             #print 'calling start [stack->%s]' % (self.resources[r].name)
             self.resources[r].start()
 
-    def calulate_dependancies(self, s, r):
+    def calulate_dependencies(self, s, r):
         if isinstance(s, dict):
             for i in s:
                 if i == 'Fn::GetAtt':
@@ -113,10 +113,10 @@ class Stack:
                     #print '%s DependsOn on %s' % (r.name, s[i])
                     r.depends_on.append(s[i])
                 else:
-                    self.calulate_dependancies(s[i], r)
+                    self.calulate_dependencies(s[i], r)
         elif isinstance(s, list):
             for index, item in enumerate(s):
-                self.calulate_dependancies(item, r)
+                self.calulate_dependencies(item, r)
 
     def _apply_user_parameter(self, key, value):
         logger.debug('appling user parameter %s=%s ' % (key, value))
