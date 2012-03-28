@@ -267,7 +267,7 @@ def jeos_create(options, arguments):
     if options.debug:
         extra_opts = ' -d 3 '
 
-    res = os.system("oz-install %s -t 50000 -u %s" % (extra_opts, tdl_path))
+    res = os.system("oz-install %s -t 50000 -u %s -x /dev/null" % (extra_opts, tdl_path))
     if res == 256:
         sys.exit(1)
     if not os.access(dsk_filename, os.R_OK):
