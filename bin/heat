@@ -242,7 +242,7 @@ def jeos_create(options, arguments):
     elif distro == 'F17':
         iso = '/var/lib/libvirt/images/Fedora-17-x86_64-DVD.iso'
     elif distro == 'U10':
-        iso = '/var/lib/libvirt/images/ubutnu-10.04.3-server-amd64.iso'
+        iso = '/var/lib/libvirt/images/ubuntu-10.04.3-server-amd64.iso'
     else:
         print 'distro %s not supported' % distro
         print 'try: F15, F16, F17 or U10'
