@@ -95,5 +95,6 @@ setup(
                                'etc/heat-engine.conf',
                                'etc/heat-engine-paste.ini']),
                 ('/var/log/heat', ['var/log/heat/api.log',
-                                   'var/log/heat/engine.log'])],
+                                   'var/log/heat/engine.log']),
+                ('/var/lib/heat', ['var/lib/heat/.dummy'])],
     py_modules=[])
