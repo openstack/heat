@@ -307,10 +307,14 @@ class Instance(Resource):
                 flavor_id = o.id
 
         server = nova_client.servers.create(name=self.name, image=image_id, flavor=flavor_id, key_name=key_name)
-        # TODO(sdake)
-        #  wait for server to start then send event
-        self.instance_id = server.id
-        self.state_set(self.CREATE_COMPLETE)
+        while server.status == 'BUILD':
+            server.get()
+            time.sleep(0.1)
+        if server.status == 'ACTIVE':
+            self.state_set(self.CREATE_COMPLETE)
+            self.instance_id = server.id
+        else:
+            self.state_set(self.CREATE_FAILED)
 
     def insert_package_and_services(self, r, new_script):
 
