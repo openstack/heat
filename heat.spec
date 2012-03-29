@@ -92,6 +92,8 @@ This package contains the OpenStack integration for the Heat project
 %defattr(-,root,root,-)
 %{_mandir}/man1/*.gz
 %{_bindir}/heat
+%{_bindir}/heat-db-setup-fedora
+%{python_sitelib}/heat/db/*
 %{python_sitelib}/heat/__init__.*
 %{python_sitelib}/heat/client.*
 %{python_sitelib}/heat/cloudformations.*
@@ -130,7 +132,7 @@ This package contains the OpenStack integration for the Heat project
 %{python_sitelib}/heat/engine/client.*
 %{python_sitelib}/heat/engine/parser.*
 %{python_sitelib}/heat/engine/resources.*
-%{python_sitelib}/heat/engine/simpledb.*
+%{python_sitelib}/heat/.*
 %{python_sitelib}/heat/engine/__init__.*
 %{python_sitelib}/heat/engine/api/__init__.*
 %{python_sitelib}/heat/engine/api/v1/__init__.*
