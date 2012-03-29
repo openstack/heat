@@ -151,7 +151,7 @@ class KeystoneStrategy(BaseStrategy):
         resp, resp_body = self._do_request(token_url, 'GET', headers=headers)
 
         def _management_url(self, resp):
-            for url_header in ('x-image-management-url',
+            for url_header in ('x-heat-management-url',
                                'x-server-management-url',
                                'x-heat'):
                 try:
@@ -184,7 +184,7 @@ class KeystoneStrategy(BaseStrategy):
 
             We search the full service catalog for services
             matching both type and region. If the client
-            supplied no region then any 'image' endpoint
+            supplied no region then any 'heat' endpoint
             is considered a match. There must be one -- and
             only one -- successful match in the catalog,
             otherwise we will raise an exception.
@@ -200,7 +200,7 @@ class KeystoneStrategy(BaseStrategy):
                     logger.warn(msg)
                     continue
 
-                if service_type == 'image':
+                if service_type == 'heat':
                     for ep in service['endpoints']:
                         if region is None or region == ep['region']:
                             if endpoint is not None:
