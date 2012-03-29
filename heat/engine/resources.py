@@ -14,6 +14,9 @@
 #    under the License.
 
 import logging
+import os
+import time
+from novaclient.v1_1 import client
 
 from heat.engine import simpledb
 
@@ -205,28 +208,14 @@ class Instance(Resource):
             'm1.small': 'm1.small',
             'm1.medium': 'm1.medium',
             'm1.large': 'm1.large',
-            'm2.xlarge': 'm1.large',
+            'm1.xlarge': 'm1.tiny', # TODO(sdake)
+            'm2.xlarge': 'm1.xlarge',
             'm2.2xlarge': 'm1.large',
             'm2.4xlarge': 'm1.large',
             'c1.medium': 'm1.medium',
             'c1.4xlarge': 'm1.large',
             'cc2.8xlarge': 'm1.large',
             'cg1.4xlarge': 'm1.large'}
-        self.ami_arch = {'ami-31814f58': 'i686',
-            'ami-38fe7308': 'i686',
-            'ami-11d68a54': 'i686',
-            'ami-973b06e3': 'i686',
-            'ami-b4b0cae6': 'i686',
-            'ami-0644f007': 'i686',
-            'ami-3e3be423': 'i686',
-            'ami-1b814f72': 'x86_64',
-            'ami-30fe7300': 'x86_64',
-            'ami-1bd68a5e': 'x86_64',
-            'ami-953b06e1': 'x86_64',
-            'ami-beb0caec': 'x86_64',
-            'ami-0a44f00b': 'x86_64',
-            'ami-3c3be421': 'x86_64',
-            'ami-0da96764': 'x86_64'}
 
 
     def FnGetAtt(self, key):
@@ -240,6 +229,11 @@ class Instance(Resource):
 
 
     def start(self):
+        def _null_callback(p, n, out):
+            """
+            Method to silence the default M2Crypto.RSA.gen_key output.
+            """
+            pass
 
         if self.state != None:
             return
@@ -283,22 +277,40 @@ class Instance(Resource):
             # if there is no config then no services.
             pass
 
-
         # TODO(sdake)
         # heat API should take care of these conversions and feed them into
         # heat engine in an openstack specific json format
-        # start the instance here.
-        # and set self.instance_id
 
         flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
-        arch_name = self.ami_arch[self.t['Properties']['ImageId']]
         distro_name = self.stack.parameter_get('LinuxDistribution')
         key_name = self.t['Properties']['KeyName']
-        image_name = '%s-%s' % (distro_name, arch_name)
+        image_name = self.t['Properties']['ImageId']
 	
-        print 'Running instance with key %s flavor %s arch %s' % (key_name, flavor, image_name)
+        # TODO(sdake)
+        #  self.stack.parameter_get('KeyStoneCreds')
+        #  parse the keystone credentials and set the os variables
+        #  note this works with bin/run-parser.py ;)
+        username = os.environ['OS_USERNAME']
+        password = os.environ['OS_PASSWORD']
+        tenant = os.environ['OS_TENANT_NAME']
+        auth_url = os.environ['OS_AUTH_URL']
 
-        self.instance_id = 'i-734509008'
+        nova_client = client.Client(username, password, tenant, auth_url, service_type='compute', service_name='nova')
+        image_list = nova_client.images.list()
+        for o in image_list:
+            if o.name == image_name:
+                image_id = o.id
+
+        flavor_list = nova_client.flavors.list()
+        for o in flavor_list:
+            if o.name == flavor:
+                flavor_id = o.id
+
+        server = nova_client.servers.create(name=self.name, image=image_id, flavor=flavor_id, key_name=key_name)
+        # TODO(sdake)
+        #  wait for server to start then send event
+        self.instance_id = server.id
+        self.state_set(self.CREATE_COMPLETE)
 
     def insert_package_and_services(self, r, new_script):
 
