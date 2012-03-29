@@ -108,11 +108,14 @@ class AuthorizationFailure(HeatException):
     message = _("Authorization failed.")
 
 
-class NotAuthorized(HeatException):
+class NotAuthenticated(HeatException):
+    message = _("You are not authenticated.")
+
+class Forbidden(HeatException):
     message = _("You are not authorized to complete this action.")
 
-
-class NotAuthorizedPublicImage(NotAuthorized):
+#NOTE(bcwaldon): here for backwards-compatability, need to deprecate.
+class NotAuthorized(Forbidden):
     message = _("You are not authorized to complete this action.")
 
 
@@ -164,6 +167,17 @@ class ServiceUnavailable(HeatException):
 
 class RequestUriTooLong(HeatException):
     message = _("The URI was too long.")
+
+
+class ServerError(HeatException):
+    message = _("The request returned 500 Internal Server Error"
+                "\n\nThe response body:\n%(body)s")
+
+
+class UnexpectedStatus(HeatException):
+    message = _("The request returned an unexpected status: %(status)s."
+                "\n\nThe response body:\n%(body)s")
+
 
 class InvalidContentType(HeatException):
     message = _("Invalid content type %(content_type)s")

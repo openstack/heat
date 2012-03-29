@@ -54,6 +54,7 @@ class ContextMiddleware(wsgi.Middleware):
 
     opts = [
         cfg.BoolOpt('owner_is_tenant', default=True),
+        cfg.StrOpt('admin_role', default='admin'),
         ]
 
     def __init__(self, app, conf, **local_conf):
@@ -86,30 +87,27 @@ class ContextMiddleware(wsgi.Middleware):
            to determine permissions.
 
         2. An X-Auth-Token was passed in, but the Identity-Status is not
-           confirmed. For now, just raising a NotAuthorized exception.
+           confirmed. For now, just raising a NotAuthenticated exception.
 
         3. X-Auth-Token is omitted. If we were using Keystone, then the
            tokenauth middleware would have rejected the request, so we must be
            using NoAuth. In that case, assume that is_admin=True.
         """
-        # TODO(sirp): should we be using the heat_tokeauth shim from
-        # Keystone here? If we do, we need to make sure it handles the NoAuth
-        # case
         auth_tok = req.headers.get('X-Auth-Token',
                                    req.headers.get('X-Storage-Token'))
         if auth_tok:
             if req.headers.get('X-Identity-Status') == 'Confirmed':
                 # 1. Auth-token is passed, check other headers
-                user = req.headers.get('X-User')
-                tenant = req.headers.get('X-Tenant')
+                user = req.headers.get('X-User-Id')
+                tenant = req.headers.get('X-Tenant-Id')
                 roles = [r.strip()
-                         for r in req.headers.get('X-Role', '').split(',')]
-                is_admin = 'Admin' in roles
+                         for r in req.headers.get('X-Roles', '').split(',')]
+                is_admin = self.conf.admin_role in roles
             else:
                 # 2. Indentity-Status not confirmed
                 # FIXME(sirp): not sure what the correct behavior in this case
-                # is; just raising NotAuthorized for now
-                raise exception.NotAuthorized()
+                # is; just raising NotAuthenticated for now
+                raise exception.NotAuthenticated()
         else:
             # 3. Auth-token is ommited, assume NoAuth
             user = None
