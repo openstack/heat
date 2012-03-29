@@ -23,6 +23,12 @@ Install Heat by running::
 
     sudo python setup.py install
 
+Setup Heat:
+
+    source ~/.openstack/keystonerc
+    heat jeos_create F16 x86_64
+    nova keypair-add --pub ~/.ssh/.id_rsa.pub my_key
+
 try:
 shell1:
 
@@ -34,7 +40,6 @@ shell2:
 
 shell3:
     
-    heat create_jeos F16 x86_64
     heat create my_stack --template-url=https://raw.github.com/heat-api/heat/master/templates/WordPress_Single_Instance.template
 
 References
