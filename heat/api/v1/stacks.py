@@ -55,7 +55,7 @@ class StackController(object):
         """
         con = context.get_admin_context()
 
-        return rpc.call(con, 'engine', {'method': 'list'})
+        return rpc.call(con, 'engine', {'method': 'list_stacks'})
 
     def describe(self, req):
         """

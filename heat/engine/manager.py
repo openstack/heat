@@ -60,6 +60,9 @@ class EngineManager(manager.Manager):
     def __init__(self, *args, **kwargs):
         """Load configuration options and connect to the hypervisor."""
 
+    def list_stacks(self, context):
+        return {'stack_list': 'yay'}
+
     def create_stack(self, context, stack_name):
         return {'state': 'woot -> %s' % stack_name}
 
