@@ -27,7 +27,7 @@ Setup Heat:
 
     source ~/.openstack/keystonerc
     heat jeos_create F16 x86_64
-    nova keypair-add --pub ~/.ssh/.id_rsa.pub my_key
+    nova keypair-add --pub ~/.ssh/id_rsa.pub my_key
 
 try:
 shell1:
