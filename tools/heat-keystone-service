@@ -1,0 +1,40 @@
+#!/bin/sh
+
+set +e
+
+function get_id () {
+    echo `"$@" | grep ' id ' | awk '{print $4}'`
+}
+
+ADMIN_ROLE=$(keystone user-list | grep True | cut -d\| -f2,5 | grep admin | cut -d\| -f1)
+SERVICE_TENANT=$(keystone tenant-list | grep service | cut -d\| -f2)
+SERVICE_PASSWORD=${SERVICE_PASSWORD:-$OS_PASSWORD}
+if [[ "$SERVICE_PASSWORD" == "$OS_PASSWORD" ]]; then
+    echo "Using the OS_PASSWORD for the SERVICE_PASSWORD."
+    echo "I hope this works"
+fi
+
+echo ADMIN_ROLE $ADMIN_ROLE
+echo SERVICE_TENANT $SERVICE_TENANT
+echo SERVICE_PASSWORD $SERVICE_PASSWORD
+
+
+# Services
+HEAT_SERVICE=$(get_id \
+keystone service-create --name=heat \
+                        --type=heat \
+                        --description="Heat Service")
+HEAT_USER=$(get_id keystone user-create --name=heat \
+                                        --pass="$SERVICE_PASSWORD" \
+                                        --tenant_id $SERVICE_TENANT \
+                                        --email=heat@example.com)
+echo HEAT_USER $HEAT_USER
+keystone user-role-add --tenant_id $SERVICE_TENANT \
+                       --user $HEAT_USER \
+                       --role $ADMIN_ROLE
+
+keystone endpoint-create --region RegionOne --service_id $HEAT_SERVICE \
+    --publicurl 'http://localhost:8000/v1' \
+    --adminurl 'http://localhost:8000/v1' \
+    --internalurl 'http://localhost:8000/v1'
+
