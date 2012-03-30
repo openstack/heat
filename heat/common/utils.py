@@ -25,6 +25,55 @@ import uuid
 
 from heat.common import exception
 
+def import_class(import_str):
+    """Returns a class from a string including module and class."""
+    mod_str, _sep, class_str = import_str.rpartition('.')
+    try:
+        __import__(mod_str)
+        return getattr(sys.modules[mod_str], class_str)
+    except (ImportError, ValueError, AttributeError), exc:
+        #LOG.debug(_('Inner Exception: %s'), exc)
+        raise exception.ClassNotFound(class_name=class_str, exception=exc)
+
+
+def import_object(import_str):
+    """Returns an object including a module or module and class."""
+    try:
+        __import__(import_str)
+        return sys.modules[import_str]
+    except ImportError:
+        cls = import_class(import_str)
+        return cls()
+
+class LazyPluggable(object):
+    """A pluggable backend loaded lazily based on some value."""
+
+    def __init__(self, pivot, **backends):
+        self.__backends = backends
+        self.__pivot = pivot
+        self.__backend = None
+
+    def __get_backend(self):
+        if not self.__backend:
+            backend_name = FLAGS[self.__pivot]
+            if backend_name not in self.__backends:
+                raise exception.Error(_('Invalid backend: %s') % backend_name)
+
+            backend = self.__backends[backend_name]
+            if isinstance(backend, tuple):
+                name = backend[0]
+                fromlist = backend[1]
+            else:
+                name = backend
+                fromlist = backend
+
+            self.__backend = __import__(name, None, None, fromlist)
+            #LOG.debug(_('backend %s'), self.__backend)
+        return self.__backend
+
+    def __getattr__(self, key):
+        backend = self.__get_backend()
+        return getattr(backend, key)
 
 def chunkreadable(iter, chunk_size=65536):
     """

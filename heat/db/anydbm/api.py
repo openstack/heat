@@ -13,64 +13,73 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-'''
-Interface for database access.
-
-Usage:
-
-    >>> from heat import db
-    >>> db.event_get(context, event_id)
-    # Event object received
-
-The underlying driver is loaded as a :class:`LazyPluggable`. SQLAlchemy is
-currently the only supported backend.
-'''
-
-from heat.openstack.common import cfg
-from heat.common import utils
-
-def configure(conf):
-    global IMPL
-    IMPL = utils.import_object(conf.db_backend)
+import anydbm
+import json
 
 def raw_template_get(context, template_id):
-    return IMPL.raw_template_get(context, template_id)
+    return 'test return value'
 
 def raw_template_get_all(context):
-    return IMPL.raw_template_get_all(context)
+    pass
 
 def raw_template_create(context, values):
-    return IMPL.raw_template_create(context, values)
+    pass
 
 
 def parsed_template_get(context, template_id):
-    return IMPL.parsed_template_get(context, template_id)
+    pass
 
 def parsed_template_get_all(context):
-    return IMPL.parsed_template_get_all(context)
+    pass
 
 def parsed_template_create(context, values):
-    return IMPL.parsed_template_create(context, values)
+    pass
 
 
 def state_get(context, state_id):
-    return IMPL.state_get(context, state_id)
+    pass
 
 def state_get_all(context):
-    return IMPL.state_get_all(context)
+    pass
 
 def state_create(context, values):
-    return IMPL.state_create(context, values)
+    pass
 
 
 def event_get(context, event_id):
-    return IMPL.event_get(context, event_id)
+    pass
 
 def event_get_all(context):
-    return IMPL.event_get_all(context)
+    pass
 
 def event_get_all_by_stack(context, stack_id):
-    return IMPL.event_get_all_by_stack(context, stack_id)
+    events = {'events': []}
+    try:
+        d = anydbm.open('/var/lib/heat/%s.events.db' % stack_id, 'r')
+    except:
+        return events
 
-def event_create(context, values):
-    return IMPL.event_create(context, values)
+    for k, v in d.iteritems():
+        if k != 'lastid':
+            events['events'].append(json.loads(v))
+
+    d.close()
+    return events
+
+def event_create(context, event):
+    '''
+    EventId	The unique ID of this event.
+    Timestamp	Time the status was updated.
+    '''
+    name = event['StackName']
+    d = anydbm.open('/var/lib/heat/%s.events.db' % name, 'c')
+    if d.has_key('lastid'):
+        newid = int(d['lastid']) + 1
+    else:
+        newid = 1
+    event['EventId'] = '%d' % newid
+    d['lastid'] = event['EventId']
+    d[event['EventId']] = json.dumps(event)
+
+    d.close()
+

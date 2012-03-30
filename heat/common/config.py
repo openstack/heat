@@ -47,13 +47,17 @@ class HeatConfigOpts(cfg.CommonConfigOpts):
             **kwargs)
 
 
-class HeatCacheConfigOpts(HeatConfigOpts):
+class HeatEngineConfigOpts(HeatConfigOpts):
+
+    db_opts = [
+    cfg.StrOpt('db_backend', default='heat.db.anydbm.api', help='The backend to use for db'),
+    ]
 
     def __init__(self, **kwargs):
         config_files = cfg.find_config_files(project='heat',
-                                             prog='heat-cache')
-        super(HeatCacheConfigOpts, self).__init__(config_files, **kwargs)
-
+                                             prog='heat-engine')
+        super(HeatEngineConfigOpts, self).__init__(config_files, **kwargs)
+        self.register_cli_opts(self.db_opts)
 
 def setup_logging(conf):
     """

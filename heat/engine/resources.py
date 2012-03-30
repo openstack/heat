@@ -18,7 +18,7 @@ import os
 import time
 from novaclient.v1_1 import client
 
-from heat.engine import simpledb
+from heat.db import api as db_api
 
 logger = logging.getLogger('heat.engine.resources')
 
@@ -72,7 +72,7 @@ class Resource(object):
             ev['ResourceType'] = self.t['Type']
             ev['ResourceProperties'] = self.t['Properties']
 
-            simpledb.event_append(ev)
+            db_api.event_create(None, ev)
             self.state = new_state
 
     def stop(self):

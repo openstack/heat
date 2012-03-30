@@ -28,7 +28,7 @@ from heat.common import exception
 from heat.common import wsgi
 
 from heat.engine import parser
-from heat.engine import simpledb
+from heat.db import api as db_api
 
 logger = logging.getLogger('heat.engine.api.v1.events')
 
@@ -43,7 +43,7 @@ class EventsController(object):
         self.conf = conf
 
     def index(self, req, stack_id):
-        return simpledb.events_get(stack_id)
+        return db_api.event_get_all_by_stack(None, stack_id)
 
 def create_resource(conf):
     """Events resource factory method."""

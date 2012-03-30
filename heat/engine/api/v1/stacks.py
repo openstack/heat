@@ -28,6 +28,7 @@ from heat.common import exception
 from heat.common import wsgi
 
 from heat.engine import parser
+from heat.db import api as db_api
 
 
 logger = logging.getLogger('heat.engine.api.v1.stacks')
@@ -41,6 +42,7 @@ class StacksController(object):
 
     def __init__(self, conf):
         self.conf = conf
+        db_api.configure(conf)
 
     def index(self, req, format='json'):
         logger.info('format is %s' % format)

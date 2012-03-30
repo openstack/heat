@@ -40,7 +40,7 @@ from heat.common import wsgi
 
 if __name__ == '__main__':
     try:
-        conf = config.HeatConfigOpts()
+        conf = config.HeatEngineConfigOpts()
         conf()
 
         app = config.load_paste_app(conf)
