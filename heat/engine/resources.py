@@ -19,6 +19,9 @@ import time
 from novaclient.v1_1 import client
 
 from heat.db import api as db_api
+from heat.common.config import HeatEngineConfigOpts
+
+db_api.configure(HeatEngineConfigOpts())
 
 logger = logging.getLogger('heat.engine.resources')
 
