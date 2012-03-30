@@ -20,7 +20,7 @@
 import copy
 import logging
 
-from heat import exception
+from heat.common import exception
 from heat.openstack.common import cfg
 from heat.common import config
 
