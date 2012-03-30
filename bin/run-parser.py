@@ -22,7 +22,6 @@ def setparam(t, key, value):
     global parameter_count
     key_name = 'Parameters.member.%d.ParameterKey' % parameter_count
     value_name = 'Parameters.member.%d.ParameterValue' % parameter_count
-    print 'key_name %s' % key_name
 
     t[key_name] = key
     t[value_name] = value
