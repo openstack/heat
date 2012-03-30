@@ -89,11 +89,13 @@ function os_install() {
 	sudo dd if=/dev/zero of=/var/lib/nova/nova-volumes.img bs=1M seek=20k count=0
 	sudo systemctl start mysqld.service
 	sleep 1
+	# Configure the databases
 	sudo openstack-nova-db-setup
 	sudo openstack-glance-db-setup
 	sudo openstack-keystone-db-setup
-	mkdir -p $HOME/.openstack
 
+	# Create a keystone RC file
+	mkdir -p $HOME/.openstack
 	cat > $HOME/.openstack/keystonerc <<EOF
 export ADMIN_TOKEN=$(openssl rand -hex 10)
 export OS_USERNAME=admin
@@ -102,27 +104,32 @@ export OS_TENANT_NAME=admin
 export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
 export OS_AUTH_STRATEGY=keystone
 EOF
-	. $HOME/.openstack/keystonerc
+	# Install keystone catalog
+	source $HOME/.openstack/keystonerc
 	sudo openstack-config-set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
-
-	os_start
+	sudo systemctl start openstack-keystone.service
 	sleep 1
-	sudo ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=OS_SERVICE_PASS openstack-keystone-sample-data
+
+	sudo ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass openstack-keystone-sample-data
+
+	# Configure nova to use keystone
 	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
 	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_user nova
 	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
 	sudo openstack-config-set /etc/nova/nova.conf DEFAULT auth_strategy keystone
+	# Configure glance to use keystone
 	sudo openstack-config-set /etc/glance/glance-api.conf paste_deploy flavor keystone
+	sudo openstack-config-set /etc/glance/glance-registry.conf paste_deploy flavor keystone
 	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_tenant_name service
 	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_user glance
 	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_password servicepass
-	sudo openstack-config-set /etc/glance/glance-registry.conf paste_deploy flavor keystone
 	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_tenant_name service
 	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
 	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
 
 	os_stop
 	sleep 1
+	sudo rm -rf /var/log/{glance,nova,swift,keystone}/*
 	os_start
 	sleep 1
 	echo IF ERRORS RETURNED HERE THE INSTALL DID NOT WORK PROPERLY
