@@ -67,8 +67,11 @@ DROP USER 'nova'@'localhost';
 DROP USER 'nova'@'%';
 DROP USER 'keystone'@'localhost';
 DROP USER 'keystone'@'%';
+DROP USER 'glance'@'localhost';
+DROP USER 'glance'@'%';
 DROP DATABASE nova;
 DROP DATABASE keystone;
+DROP DATABASE glance;
 flush privileges;
 EOF
 
@@ -87,40 +90,36 @@ function os_install() {
 	sudo systemctl start mysqld.service
 	sleep 1
 	sudo openstack-nova-db-setup
-	os_start
-	sleep 1
-	mkdir -p $HOME/.openstack
-
+	sudo openstack-glance-db-setup
 	sudo openstack-keystone-db-setup
+	mkdir -p $HOME/.openstack
 
 	cat > $HOME/.openstack/keystonerc <<EOF
 export ADMIN_TOKEN=$(openssl rand -hex 10)
 export OS_USERNAME=admin
 export OS_PASSWORD=verybadpass
 export OS_TENANT_NAME=admin
-export OS_SERVICE_PASS=verybadpass
 export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
 export OS_AUTH_STRATEGY=keystone
 EOF
-	os_stop
-	sleep 1
 	. $HOME/.openstack/keystonerc
 	sudo openstack-config-set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
+
 	os_start
 	sleep 1
 	sudo ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=OS_SERVICE_PASS openstack-keystone-sample-data
 	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
 	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_user nova
-	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_password OS_SERVICE_PASS
+	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
 	sudo openstack-config-set /etc/nova/nova.conf DEFAULT auth_strategy keystone
 	sudo openstack-config-set /etc/glance/glance-api.conf paste_deploy flavor keystone
-	sudo openstack-config-set /etc/glance/glance-registry.conf paste_deploy flavor keystone
 	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_tenant_name service
 	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_user glance
-	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_password OS_SERVICE_PASS
+	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_password servicepass
+	sudo openstack-config-set /etc/glance/glance-registry.conf paste_deploy flavor keystone
 	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_tenant_name service
 	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
-	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password OS_SERVICE_PASS
+	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
 
 	os_stop
 	sleep 1
