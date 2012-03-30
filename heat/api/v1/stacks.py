@@ -31,6 +31,8 @@ from webob.exc import (HTTPNotFound,
 
 from heat.common import wsgi
 from heat.engine import client as engine
+from heat import rpc
+from heat import context
 
 logger = logging.getLogger('heat.api.v1.stacks')
 
@@ -103,8 +105,10 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        c = engine.get_engine_client(req.context)
+        con = context.get_admin_context()
 
+        return rpc.call(con, 'engine', {'method': 'create_stack',
+                  'args': {'stack_name': req.params['StackName']}})
         try:
             templ = self._get_template(req)
         except socket.gaierror:

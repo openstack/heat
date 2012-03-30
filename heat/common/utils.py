@@ -93,6 +93,34 @@ def strtime(at=None, fmt=PERFECT_TIME_FORMAT):
         at = utcnow()
     return at.strftime(fmt)
 
+def parse_strtime(timestr, fmt=PERFECT_TIME_FORMAT):
+    """Turn a formatted time back into a datetime."""
+    return datetime.datetime.strptime(timestr, fmt)
+
+
+def isotime(at=None):
+    """Stringify time in ISO 8601 format"""
+    if not at:
+        at = datetime.datetime.utcnow()
+    str = at.strftime(ISO_TIME_FORMAT)
+    tz = at.tzinfo.tzname(None) if at.tzinfo else 'UTC'
+    str += ('Z' if tz == 'UTC' else tz)
+    return str
+
+
+def parse_isotime(timestr):
+    """Turn an iso formatted time back into a datetime."""
+    try:
+        return iso8601.parse_date(timestr)
+    except (iso8601.ParseError, TypeError) as e:
+        raise ValueError(e.message)
+
+
+def normalize_time(timestamp):
+    """Normalize time in arbitrary timezone to UTC"""
+    offset = timestamp.utcoffset()
+    return timestamp.replace(tzinfo=None) - offset if offset else timestamp
+
 def utcnow():
     """Overridable version of utils.utcnow."""
     if utcnow.override_time:
