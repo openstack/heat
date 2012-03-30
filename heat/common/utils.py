@@ -31,6 +31,7 @@ from eventlet.green import subprocess
 
 from heat.common import exception
 
+PERFECT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
 def chunkreadable(iter, chunk_size=65536):
     """
@@ -84,6 +85,13 @@ def generate_uuid():
 
 def gen_uuid():
     return uuid.uuid4()
+
+
+def strtime(at=None, fmt=PERFECT_TIME_FORMAT):
+    """Returns formatted utcnow."""
+    if not at:
+        at = utcnow()
+    return at.strftime(fmt)
 
 def utcnow():
     """Overridable version of utils.utcnow."""
