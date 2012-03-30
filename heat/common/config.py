@@ -88,7 +88,7 @@ class HeatEngineConfigOpts(cfg.CommonConfigOpts):
                help='maximum retries with trying to connect to RabbitMQ '
                     '(the default of 0 implies an infinite retry count)'),
     cfg.StrOpt('control_exchange',
-               default='nova',
+               default='heat-engine',
                help='the main RabbitMQ exchange to connect to'),
 
     ]

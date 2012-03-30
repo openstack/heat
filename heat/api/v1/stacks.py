@@ -31,6 +31,7 @@ from webob.exc import (HTTPNotFound,
 
 from heat.common import wsgi
 from heat.engine import client as engine
+from heat.common import config
 from heat import rpc
 from heat import context
 
@@ -52,15 +53,9 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        c = engine.get_engine_client(req.context)
-        stack_list = c.get_stacks(**req.params)
+        con = context.get_admin_context()
 
-        res = {'ListStacksResponse': {'ListStacksResult': {'StackSummaries': [] } } }
-        summaries = res['ListStacksResponse']['ListStacksResult']['StackSummaries']
-        for s in stack_list:
-            summaries.append(s)
-
-        return res
+        return rpc.call(con, 'engine', {'method': 'list'})
 
     def describe(self, req):
         """
