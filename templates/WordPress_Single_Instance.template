@@ -126,7 +126,7 @@
           "systemctl start mysqld.service\n",
           "# Setup MySQL root password and create a user\n",
           "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
-          "cat >> /tmp/mysql-wordpress-config &lt;&lt; EOF\n",
+          "cat >> /tmp/mysql-wordpress-config << EOF\n",
           "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
           "GRANT ALL PRIVILEGES ON ", { "Ref" : "DBName" }, ".* TO ", { "Ref" : "DBUsername" }, "@localhost\n",
           "IDENTIFIED BY ", { "Ref" : "DBPassword" }, ";\n",
