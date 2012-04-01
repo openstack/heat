@@ -12,7 +12,7 @@
   <description>Fedora 17</description>
   <commands>
     <command name='commands'>
-yum -y update;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local
+yum -y update;yum -y install cloud-init;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local
 #!/bin/bash
 setenforce 0
 while true; do
@@ -23,8 +23,6 @@ break
 fi
 sleep 1
 done
-systemctl start matahari-host.service
-systemctl start matahari-service.service
 
 if [ ! -d /root/.ssh ]; then
   mkdir -p /root/.ssh
