@@ -16,6 +16,8 @@
 import logging
 import os
 import time
+import base64
+import string
 from novaclient.v1_1 import client
 
 from heat.db import api as db_api
@@ -99,6 +101,12 @@ http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/intrinsic-f
         '''
         print '%s.GetAtt(%s)' % (self.name, key)
         return unicode('not-this-surely')
+
+    def FnBase64(self, data):
+        '''
+http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-base64.html
+        '''
+        return base64.b64encode(data)
 
 class GenericResource(Resource):
     def __init__(self, name, json_snippet, stack):
@@ -262,14 +270,7 @@ class Instance(Resource):
                         self.insert_package_and_services(self.t, new_script)
                     else:
                         new_script.append(l)
-
-                print '----------------------'
-                try:
-                    print '\n'.join(new_script)
-                except:
-                    print str(new_script)
-                    raise
-                print '----------------------'
+                userdata = '\n'.join(new_script)
 
         try:
             con = self.t['Metadata']["AWS::CloudFormation::Init"]['config']
@@ -298,6 +299,7 @@ class Instance(Resource):
         tenant = os.environ['OS_TENANT_NAME']
         auth_url = os.environ['OS_AUTH_URL']
 
+
         nova_client = client.Client(username, password, tenant, auth_url, service_type='compute', service_name='nova')
         image_list = nova_client.images.list()
         for o in image_list:
@@ -309,7 +311,7 @@ class Instance(Resource):
             if o.name == flavor:
                 flavor_id = o.id
 
-        server = nova_client.servers.create(name=self.name, image=image_id, flavor=flavor_id, key_name=key_name)
+        server = nova_client.servers.create(name=self.name, image=image_id, flavor=flavor_id, key_name=key_name, userdata=self.FnBase64(userdata))
         while server.status == 'BUILD':
             server.get()
             time.sleep(0.1)
