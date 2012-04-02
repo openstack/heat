@@ -316,6 +316,29 @@ class Instance(Resource):
         else:
             self.state_set(self.CREATE_FAILED)
 
+    def stop(self):
+
+        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+            return
+        self.state_set(self.DELETE_IN_PROGRESS)
+        Resource.stop(self)
+
+        if self.instance_id == None:
+            self.state_set(self.DELETE_COMPLETE)
+            return
+
+        username = self.stack.creds['username']
+        password = self.stack.creds['password']
+        tenant = self.stack.creds['tenant']
+        auth_url = self.stack.creds['auth_url']
+
+        nova_client = client.Client(username, password, tenant, auth_url, service_type='compute', service_name='nova')
+        server = nova_client.servers.get(self.instance_id)
+        server.delete()
+        self.instance_id = None
+        self.state_set(self.DELETE_COMPLETE)
+
+
     def insert_package_and_services(self, r, new_script):
 
         try:

@@ -103,6 +103,10 @@ class Stack:
             #print 'calling start [stack->%s]' % (self.resources[r].name)
             self.resources[r].start()
 
+    def stop(self):
+        for r in self.t['Resources']:
+            self.resources[r].stop()
+
     def calulate_dependencies(self, s, r):
         if isinstance(s, dict):
             for i in s:

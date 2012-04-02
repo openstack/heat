@@ -119,6 +119,7 @@ class StacksController(object):
             return webob.exc.HTTPNotFound('No stack by that name')
 
         logger.info('deleting stack %s' % id)
+        stack_db[id].stop()
         del stack_db[id]
         return None
 
