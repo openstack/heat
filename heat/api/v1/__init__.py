@@ -49,6 +49,6 @@ class API(wsgi.Router):
         mapper.connect("/DescribeStackEvents", controller=stacks_resource,
                        action="events_list", conditions=dict(method=["GET"]))
         mapper.connect("/ValidateTemplate", controller=stacks_resource,
-                       action="validate_template", conditions=dict(method=["GET"]))
+                       action="validate_template", conditions=dict(method=["POST"]))
 
         super(API, self).__init__(mapper)

@@ -91,13 +91,9 @@ class EngineClient(BaseClient):
         """
         Validate the template
         """
-        headers = {
-            'Content-Type': 'application/json',
-        }
-
         logger.info(template)
-        res = self.do_request("POST", "/validate_template", body=json.dumps(template),
-                              headers=headers, params=kwargs)
+        res = self.do_request("POST", "/validate_template", template,
+                              params=kwargs)
         data = json.loads(res.read())
         logger.info(data)
         return data
@@ -106,12 +102,7 @@ class EngineClient(BaseClient):
         """
         Tells engine about an stack's metadata
         """
-        headers = {
-            'Content-Type': 'application/json',
-        }
-
-        res = self.do_request("POST", "/stacks", json.dumps(template),
-                              headers=headers, params=kwargs)
+        res = self.do_request("POST", "/stacks", template, params=kwargs)
         data = json.loads(res.read())
         return data
 
@@ -119,11 +110,7 @@ class EngineClient(BaseClient):
         """
         Updates Engine's information about an stack
         """
-        headers = {
-            'Content-Type': 'application/json',
-        }
-
-        res = self.do_request("PUT", "/stacks/%s" % (stack_id), json.dumps(template), headers)
+        res = self.do_request("PUT", "/stacks/%s" % (stack_id), template)
         data = json.loads(res.read())
         stack = data['stack']
         return stack

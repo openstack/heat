@@ -58,25 +58,27 @@ class V1Client(base_client.BaseClient):
         return data
 
     def create_stack(self, **kwargs):
-
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        body = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        params = {}
         self._insert_common_parameters(params)
-        res = self.do_request("POST", "/CreateStack", params=params)
 
+        res = self.do_request("POST", "/CreateStack", params=params, body=body)
         data = json.loads(res.read())
         return data
 
     def update_stack(self, **kwargs):
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        body = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        params = {}
         self._insert_common_parameters(params)
-        res = self.do_request("PUT", "/UpdateStack", params=params)
 
+        res = self.do_request("PUT", "/UpdateStack", params=params, body=body)
         data = json.loads(res.read())
         return data
 
     def delete_stack(self, **kwargs):
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         self._insert_common_parameters(params)
+
         res = self.do_request("DELETE", "/DeleteStack", params=params)
         data = json.loads(res.read())
         return data
@@ -90,10 +92,12 @@ class V1Client(base_client.BaseClient):
         return data
 
     def validate_template(self, **kwargs):
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        body = self._extract_params(kwargs, SUPPORTED_PARAMS)
+        params = {}
         self._insert_common_parameters(params)
-        
-        res = self.do_request("GET", "/ValidateTemplate", params=params)
+
+        res = self.do_request("POST", "/ValidateTemplate", params=params,
+                              body=body)
         data = json.loads(res.read())
         return data
 

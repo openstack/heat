@@ -75,13 +75,13 @@ class StackController(object):
 
         return res
 
-    def _get_template(self, req):
-        if req.params.has_key('TemplateBody'):
+    def _get_template(self, body):
+        if body.has_key('TemplateBody'):
             logger.info('TemplateBody ...')
-            return req.params['TemplateBody']
-        elif req.params.has_key('TemplateUrl'):
-            logger.info('TemplateUrl %s' % req.params['TemplateUrl'])
-            url = urlparse.urlparse(req.params['TemplateUrl'])
+            return body['TemplateBody']
+        elif body.has_key('TemplateUrl'):
+            logger.info('TemplateUrl %s' % body['TemplateUrl'])
+            url = urlparse.urlparse(body['TemplateUrl'])
             if url.scheme == 'https':
                 conn = httplib.HTTPSConnection(url.netloc)
             else:
@@ -99,14 +99,14 @@ class StackController(object):
         return None
 
 
-    def create(self, req):
+    def create(self, req, body):
         """
         Returns the following information for all stacks:
         """
         c = engine.get_engine_client(req.context)
 
         try:
-            templ = self._get_template(req)
+            templ = self._get_template(body)
         except socket.gaierror:
             msg = _('Invalid Template URL')
             return webob.exc.HTTPBadRequest(explanation=msg)
@@ -119,16 +119,16 @@ class StackController(object):
         except ValueError:
             msg = _("The Template must be a JSON document.")
             return webob.exc.HTTPBadRequest(explanation=msg)
-        stack['StackName'] = req.params['StackName']
+        stack['StackName'] = body['StackName']
 
         return c.create_stack(stack, **req.params)
 
-    def validate_template(self, req):
+    def validate_template(self, req, body):
 
         client = engine.get_engine_client(req.context)
 
         try:
-            templ = self._get_template(req)
+            templ = self._get_template(body)
         except socket.gaierror:
             msg = _('Invalid Template URL')
             return webob.exc.HTTPBadRequest(explanation=msg)
