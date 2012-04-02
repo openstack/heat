@@ -108,8 +108,8 @@
             },
             "services" : {
               "systemd" : {
-                "httpd"    : { "enabled" : "false", "ensureRunning" : "false" },
-                "mysqld"   : { "enabled" : "false", "ensureRunning" : "false" }
+                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" },
+                "mysqld"   : { "enabled" : "true", "ensureRunning" : "true" }
               }
             }
           }
@@ -122,8 +122,6 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-
-          "systemctl start mysqld.service\n",
           "# Setup MySQL root password and create a user\n",
           "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
           "cat >> /tmp/mysql-wordpress-config << EOF\n",
@@ -134,7 +132,6 @@
           "EXIT\n",
           "EOF\n",
           "cat /tmp/mysql-wordpress-config | mysql -u root --password='", { "Ref" : "DBRootPassword" }, "' < /tmp/mysql-wordpress-config\n",
-          "systemctl stop mysqld.service\n",
           "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n",
           "cp /usr/share/wordpress/wp-config.php /usr/share/wordpress/wp-config.orig\n"
         ]]}}
