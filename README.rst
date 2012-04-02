@@ -29,6 +29,11 @@ Setup Heat:
     heat jeos_create F16 x86_64
     nova keypair-add --pub ~/.ssh/id_rsa.pub my_key
 
+Heat must be registered as a Keystone service. As root run:
+
+    # source keystonerc
+    # ./tools/heat-keystone-service
+
 try:
 shell1:
 
