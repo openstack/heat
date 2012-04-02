@@ -17,7 +17,7 @@ then
 	echo ""
         echo "start - Starts OpenStack"
 	echo "stop - Stops OpenStack"
-	echo "install - Installs a fresh OpenStack system with Keystone from your repos"
+	echo "install - Installs a fresh OpenStack system with Keystone from RPM repostories"
 	echo "erase - permanently destroys an existing installation of OpenStack"
 fi
 
@@ -132,9 +132,13 @@ EOF
 	sudo rm -rf /var/log/{glance,nova,swift,keystone}/*
 	os_start
 	sleep 1
-	echo IF ERRORS RETURNED HERE THE INSTALL DID NOT WORK PROPERLY
+	echo "Installation Complete."
+	echo "Testing nova and glance.  If any errors are displayed, the install failed."
 	nova flavor-list
 	glance index
+	echo "note: This tool does not create a network.  Creating a network"
+	echo "depends on your environment.  An example network create operation"
+	echo "sudo nova-manage network create demonet 10.0.0.0/24 1 256 --bridge=demonetbr0"
 }
 
 case $action in
