@@ -49,7 +49,7 @@ class StacksController(object):
         res = {'stacks': [] }
         for s in stack_db:
             mem = {}
-            mem['StackId'] = stack_db[s]['StackId']
+            mem['StackId'] = s
             mem['StackName'] = s
             mem['CreationTime'] = 'now'
             try:
@@ -66,7 +66,7 @@ class StacksController(object):
         res = {'stacks': [] }
         if stack_db.has_key(id):
             mem = {}
-            mem['StackId'] = stack_db[id]['StackId']
+            mem['StackId'] = id
             mem['StackName'] = id
             mem['CreationTime'] = 'TODO'
             mem['LastUpdatedTime'] = 'TODO'
