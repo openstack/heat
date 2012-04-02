@@ -49,5 +49,17 @@ with open(filename) as f:
     setparam(params_dict, 'DBRootPassword', 'admone')
     setparam(params_dict, 'LinuxDistribution', 'F16')
 
+    # set the keystone auth environs up
+    username = os.environ['OS_USERNAME']
+    password = os.environ['OS_PASSWORD']
+    tenant = os.environ['OS_TENANT_NAME']
+    auth_url = os.environ['OS_AUTH_URL']
+
+    params_dict['KeyStoneCreds'] = dict(username=username,
+                                        password=password,
+                                        tenant=tenant,
+                                        auth_url=auth_url,
+                                        strategy='keystone')
+
     stack = parser.Stack(stack_name, json_blob, params_dict)
     stack.start()

@@ -289,16 +289,11 @@ class Instance(Resource):
         distro_name = self.stack.parameter_get('LinuxDistribution')
         key_name = self.t['Properties']['KeyName']
         image_name = self.t['Properties']['ImageId']
-	
-        # TODO(sdake)
-        #  self.stack.parameter_get('KeyStoneCreds')
-        #  parse the keystone credentials and set the os variables
-        #  note this works with bin/run-parser.py ;)
-        username = os.environ['OS_USERNAME']
-        password = os.environ['OS_PASSWORD']
-        tenant = os.environ['OS_TENANT_NAME']
-        auth_url = os.environ['OS_AUTH_URL']
 
+        username = self.stack.creds['username']
+        password = self.stack.creds['password']
+        tenant = self.stack.creds['tenant']
+        auth_url = self.stack.creds['auth_url']
 
         nova_client = client.Client(username, password, tenant, auth_url, service_type='compute', service_name='nova')
         image_list = nova_client.images.list()

@@ -42,6 +42,7 @@ class Stack:
 
         if parms != None:
             self._apply_user_parameters(parms)
+        self.creds = parms['KeyStoneCreds']
 
         self.resources = {}
         for r in self.t['Resources']:
