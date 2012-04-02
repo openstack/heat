@@ -47,6 +47,7 @@ class Resource(object):
         self.stack = stack
         self.name = name
         self.instance_id = None
+        self._nova = None
         if not self.t.has_key('Properties'):
             # make a dummy entry to prevent having to check all over the
             # place for it.
@@ -54,6 +55,19 @@ class Resource(object):
 
         stack.resolve_static_refs(self.t)
         stack.resolve_find_in_map(self.t)
+
+    def nova(self):
+        if self._nova:
+            return self._nova
+
+        username = self.stack.creds['username']
+        password = self.stack.creds['password']
+        tenant = self.stack.creds['tenant']
+        auth_url = self.stack.creds['auth_url']
+
+        self._nova = client.Client(username, password, tenant, auth_url,
+                                   service_type='compute', service_name='nova')
+        return self._nova
 
     def start(self):
         for c in self.depends_on:
@@ -177,16 +191,25 @@ class Volume(Resource):
         super(Volume, self).__init__(name, json_snippet, stack)
 
     def start(self):
-
         if self.state != None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(Volume, self).start()
-        # TODO start the volume here
-        # of size -> self.t['Properties']['Size']
-        # and set self.instance_id to the volume id
-        logger.info('$ euca-create-volume -s %s -z nova' % self.t['Properties']['Size'])
-        self.instance_id = 'vol-4509854'
+
+        vol = self.nova().volumes.create(self.t['Properties']['Size'],
+                                         display_name=self.name,
+                                         display_description=self.name)
+        self.instance_id = vol.id
+
+    def stop(self):
+        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+            return
+        self.state_set(self.DELETE_IN_PROGRESS)
+        Resource.stop(self)
+
+        if self.instance_id != None:
+            self.nova().volumes.delete(self.instance_id)
+        self.state_set(self.DELETE_COMPLETE)
 
 class VolumeAttachment(Resource):
     def __init__(self, name, json_snippet, stack):
@@ -198,15 +221,23 @@ class VolumeAttachment(Resource):
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(VolumeAttachment, self).start()
-        # TODO attach the volume with an id of:
-        # self.t['Properties']['VolumeId']
-        # to the vm of instance:
-        # self.t['Properties']['InstanceId']
-        # and make sure that the mountpoint is:
-        # self.t['Properties']['Device']
-        logger.info('$ euca-attach-volume %s -i %s -d %s' % (self.t['Properties']['VolumeId'],
-                                                             self.t['Properties']['InstanceId'],
-                                                             self.t['Properties']['Device']))
+
+        att = self.nova().volumes.create_server_volume(self.t['Properties']['InstanceId'],
+                                                       self.t['Properties']['VolumeId'],
+                                                       self.t['Properties']['Device'])
+        self.instance_id = att.id
+        self.state_set(self.CREATE_COMPLETE)
+
+    def stop(self):
+        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+            return
+        self.state_set(self.DELETE_IN_PROGRESS)
+        Resource.stop(self)
+
+        if self.instance_id == None:
+            self.nova().volumes.delete_server_volume(self.t['Properties']['InstanceId'],
+                                                     self.instance_id)
+        self.state_set(self.DELETE_COMPLETE)
 
 class Instance(Resource):
 
@@ -290,23 +321,19 @@ class Instance(Resource):
         key_name = self.t['Properties']['KeyName']
         image_name = self.t['Properties']['ImageId']
 
-        username = self.stack.creds['username']
-        password = self.stack.creds['password']
-        tenant = self.stack.creds['tenant']
-        auth_url = self.stack.creds['auth_url']
-
-        nova_client = client.Client(username, password, tenant, auth_url, service_type='compute', service_name='nova')
-        image_list = nova_client.images.list()
+        image_list = self.nova().images.list()
         for o in image_list:
             if o.name == image_name:
                 image_id = o.id
 
-        flavor_list = nova_client.flavors.list()
+        flavor_list = self.nova().flavors.list()
         for o in flavor_list:
             if o.name == flavor:
                 flavor_id = o.id
 
-        server = nova_client.servers.create(name=self.name, image=image_id, flavor=flavor_id, key_name=key_name, userdata=self.FnBase64(userdata))
+        server = self.nova().servers.create(name=self.name, image=image_id,
+                                            flavor=flavor_id, key_name=key_name,
+                                            userdata=self.FnBase64(userdata))
         while server.status == 'BUILD':
             server.get()
             time.sleep(0.1)
@@ -327,13 +354,7 @@ class Instance(Resource):
             self.state_set(self.DELETE_COMPLETE)
             return
 
-        username = self.stack.creds['username']
-        password = self.stack.creds['password']
-        tenant = self.stack.creds['tenant']
-        auth_url = self.stack.creds['auth_url']
-
-        nova_client = client.Client(username, password, tenant, auth_url, service_type='compute', service_name='nova')
-        server = nova_client.servers.get(self.instance_id)
+        server = self.nova().servers.get(self.instance_id)
         server.delete()
         self.instance_id = None
         self.state_set(self.DELETE_COMPLETE)

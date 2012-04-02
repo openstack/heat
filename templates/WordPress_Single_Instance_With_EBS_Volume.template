@@ -1,0 +1,125 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation Sample Template WordPress_Single_Instance: WordPress is web software you can use to create a beautiful website or blog. This template installs a single-instance WordPress deployment using a local MySQL database to store the data.",
+
+  "Parameters" : {
+
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String"
+    },
+
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "m1.large",
+      "AllowedValues" : [ "t1.micro", "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "c1.medium", "c1.xlarge", "cc1.4xlarge" ],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "VolumeSize" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "Number",
+      "Default" : "1",
+      "MinValue" : "1",
+      "MaxValue" : "1024",
+      "ConstraintDescription" : "must be between 1 and 1024 Gb."
+    },
+
+    "LinuxDistribution": {
+      "Default": "F16",
+      "Description" : "Distribution of choice",
+      "Type": "String",
+      "AllowedValues" : [ "F16", "F17", "U10", "RHEL-6.1", "RHEL-6.2", "RHEL-6.3" ]
+    }
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "t1.micro"    : { "Arch" : "32" },
+      "m1.small"    : { "Arch" : "32" },
+      "m1.large"    : { "Arch" : "64" },
+      "m1.xlarge"   : { "Arch" : "64" },
+      "m2.xlarge"   : { "Arch" : "64" },
+      "m2.2xlarge"  : { "Arch" : "64" },
+      "m2.4xlarge"  : { "Arch" : "64" },
+      "c1.medium"   : { "Arch" : "32" },
+      "c1.xlarge"   : { "Arch" : "64" },
+      "cc1.4xlarge" : { "Arch" : "64" }
+    },
+    "DistroArch2AMI": {
+      "F16"      : { "32" : "F16-i686", "64" : "F16-x86_64" },
+      "F17"      : { "32" : "F17-i686", "64" : "F17-x86_64" },
+      "U10"      : { "32" : "U10-i686", "64" : "U10-x86_64" },
+      "RHEL-6.1" : { "32" : "rhel61-i686", "64" : "rhel61-x86_64" },
+      "RHEL-6.2" : { "32" : "rhel62-i686", "64" : "rhel62-x86_64" },
+      "RHEL-6.3" : { "32" : "rhel63-i686", "64" : "rhel63-x86_64" }
+    }
+  },
+
+  "Resources" : {
+
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+              "yum" : {
+                "httpd"        : [],
+                "mysql"        : [],
+                "mysql-server" : [],
+                "wordpress"    : []
+              }
+            },
+            "services" : {
+              "systemd" : {
+                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" },
+                "mysqld"   : { "enabled" : "true", "ensureRunning" : "true" }
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "# Wait for the EBS volume to show up\n",
+          "while [ ! -e /dev/sdh ]; do echo Waiting for EBS volume to attach; sleep 5; done\n",
+
+          "# Format the EBS volume and mount it\n",
+          "mkdir /var/wikidata\n",
+          "/sbin/mkfs -t ext3 /dev/sdh1\n",
+          "mount /dev/sdh1 /var/wikidata\n",
+
+          "# Initialize the wiki and fire up the server\n",
+          "cd /var/wikidata\n",
+		  "touch /var/wikidata/hello\n"
+        ]]}}
+      }
+    },
+
+    "DataVolume" : {
+      "Type" : "AWS::EC2::Volume",
+      "Properties" : {
+        "Size" : { "Ref" : "VolumeSize" },
+        "AvailabilityZone" : { "Fn::GetAtt" : [ "WebServer", "AvailabilityZone" ]},
+        "Tags" : [{ "Key" : "Usage", "Value" : "Wiki Data Volume" }]
+      }
+    },
+
+    "MountPoint" : {
+      "Type" : "AWS::EC2::VolumeAttachment",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "WebServer" },
+        "VolumeId"  : { "Ref" : "DataVolume" },
+        "Device" : "/dev/sdh"
+      }
+    }
+  }
+}
