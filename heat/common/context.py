@@ -94,7 +94,10 @@ class ContextMiddleware(wsgi.Middleware):
            using NoAuth. In that case, assume that is_admin=True.
         """
         auth_tok = req.headers.get('X-Auth-Token')
-        if auth_tok:
+        #
+        # hack alert, this is for POC only FIXME properly!
+        #
+        if False:
             if req.headers.get('X-Identity-Status') == 'Confirmed':
                 # 1. Auth-token is passed, check other headers
                 user = req.headers.get('X-User-Id')
