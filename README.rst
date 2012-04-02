@@ -11,41 +11,15 @@ the development of the TOSCA specification.
 
 Why heat? It makes the clouds rise and keeps them there.
 
-Quick Start
+Getting Started
 -----------
 
 If you'd like to run from the master branch, you can clone the git repo:
 
     git clone git@github.com:heat-api/heat.git
 
-
-Install Heat by running::
-
-    sudo python setup.py install
-
-Setup Heat:
-
-    source ~/.openstack/keystonerc
-    heat jeos_create F16 x86_64
-    nova keypair-add --pub ~/.ssh/id_rsa.pub my_key
-
-Heat must be registered as a Keystone service. As root run:
-
-    # source keystonerc
-    # ./tools/heat-keystone-service
-
-try:
-shell1:
-
-    heat-api
-
-shell2:
-
-    sudo heat-engine
-
-shell3:
-    
-    heat create my_stack --template-url=https://raw.github.com/heat-api/heat/master/templates/WordPress_Single_Instance.template
+Follow the steps:
+https://github.com/heat-api/heat/wiki/HeatGettingStarted
 
 References
 ----------
