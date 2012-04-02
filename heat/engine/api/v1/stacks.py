@@ -49,15 +49,15 @@ class StacksController(object):
         res = {'stacks': [] }
         for s in stack_db:
             mem = {}
-            mem['StackId'] = s
-            mem['StackName'] = s
-            mem['CreationTime'] = 'now'
+            mem['stack_id'] = s
+            mem['stack_name'] = s
+            mem['created_at'] = 'now'
             try:
-                mem['TemplateDescription'] = stack_db[s]['Description']
-                mem['StackStatus'] = stack_db[s]['StackStatus']
+                mem['template_description'] = stack_db[s]['Description']
+                mem['stack_status'] = stack_db[s]['StackStatus']
             except:
-                mem['TemplateDescription'] = 'No description'
-                mem['StackStatus'] = 'unknown'
+                mem['template_description'] = 'No description'
+                mem['stack_status'] = 'unknown'
             res['stacks'].append(mem)
 
         return res
@@ -66,10 +66,10 @@ class StacksController(object):
         res = {'stacks': [] }
         if stack_db.has_key(id):
             mem = {}
-            mem['StackId'] = id
-            mem['StackName'] = id
-            mem['CreationTime'] = 'TODO'
-            mem['LastUpdatedTime'] = 'TODO'
+            mem['stack_id'] = id
+            mem['stack_name'] = id
+            mem['creation_at'] = 'TODO'
+            mem['updated_at'] = 'TODO'
             mem['NotificationARNs'] = 'TODO'
             mem['Outputs'] = [{'Description': 'TODO', 'OutputKey': 'TODO', 'OutputValue': 'TODO' }]
             mem['Parameters'] = stack_db[id]['Parameters']

@@ -15,11 +15,9 @@
 
 '''Implementation of SQLAlchemy backend.'''
 
-from nova.db.sqlalchemy.session import get_session
-from nova import flags
 from nova import utils
-
-FLAGS = flags.FLAGS
+from heat.db.sqlalchemy import models
+from heat.db.sqlalchemy.session import get_session
 
 def model_query(context, *args, **kwargs):
     """Query helper that accounts for context's `read_deleted` field.
@@ -51,45 +49,126 @@ def model_query(context, *args, **kwargs):
 
     return query
 
-# a big TODO
 def raw_template_get(context, template_id):
-    return 'test return value'
+    result = model_query(context, models.RawTemplate).\
+                        filter_by(id=template_id).first()
+
+    if not result:
+        raise Exception("raw template with id %s not found" % template_id)
+
+    return result
 
 def raw_template_get_all(context):
-    pass
+    results = model_query(context, models.RawTemplate).all()
+
+    if not results:
+        raise Exception('no raw templates were found')
+    
+    return results
 
 def raw_template_create(context, values):
-    pass
-
+    raw_template_ref = models.RawTemplate()
+    raw_template_ref.update(values)
+    raw_template_ref.save()
+    return raw_template_ref
 
 def parsed_template_get(context, template_id):
-    pass
+    result = model_query(context, models.ParsedTemplate).\
+                        filter_by(id=template_id).first()
+
+    if not result:
+        raise Exception("parsed template with id %s not found" % template_id)
+
+    return result
 
 def parsed_template_get_all(context):
-    pass
+    results = model_query(context, models.ParsedTemplate).all()
+
+    if not results:
+        raise Exception('no parsed templates were found')
+    
+    return results
 
 def parsed_template_create(context, values):
-    pass
+    parsed_template_ref = models.ParsedTemplate()
+    parsed_template_ref.update(values)
+    parsed_template_ref.save()
+    return parsed_template_ref
 
+def resource_get(context, resource_id):
+    result = model_query(context, models.Resource).\
+                        filter_by(id=resource_id).first()
 
-def state_get(context, state_id):
-    pass
+    if not result:
+        raise Exception("resource with id %s not found" % resource_id)
 
-def state_get_all(context):
-    pass
+    return result
 
-def state_create(context, values):
-    pass
+def resource_get_all(context):
+    results = model_query(context, models.Resource).all()
 
+    if not results:
+        raise Exception('no resources were found')
+    
+    return results
+
+def resource_create(context, values):
+    resource_ref = models.Resource()
+    resource_ref.update(values)
+    resource_ref.save()
+    return resource_ref
+
+def stack_get(context, stack_id):
+    result = model_query(context, models.Stack).\
+                        filter_by(id=stack_id).first()
+
+    if not result:
+        raise Exception("stack with id %s not found" % stack_id)
+
+    return result
+
+def stack_get_all(context):
+    results = model_query(context, models.Stack).all()
+
+    if not results:
+        raise Exception('no stacks were found')
+    
+    return results
+
+def stack_create(context, values):
+    stack_ref = models.Stack()
+    stack_ref.update(values)
+    stack_ref.save()
+    return stack_ref
 
 def event_get(context, event_id):
-    pass
+    result = model_query(context, models.Event).\
+                        filter_by(id=event_id).first()
+
+    if not result:
+        raise Exception("event with id %s not found" % event_id)
+
+    return result
 
 def event_get_all(context):
-    pass
+    results = model_query(context, models.Event).all()
+
+    if not results:
+        raise Exception('no events were found')
+    
+    return results
 
 def event_get_all_by_stack(context, stack_id):
-    pass
+    results = model_query(context, models.Event).\
+                        filter_by(stack_id).all()
+
+    if not results:
+        raise Exception("no events for stack_id %s were found" % stack_id)
+    
+    return results
 
 def event_create(context, values):
-    pass
+    event_ref = models.Event()
+    event_ref.update(values)
+    event_ref.save()
+    return event_ref

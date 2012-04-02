@@ -1,6 +1,9 @@
 Files in this directory are general developer tools or examples of how
 to do certain activities.
 
+If you're running on F16, make sure you first enable the preview yum repository
+http://fedoraproject.org/wiki/Getting_started_with_OpenStack_on_Fedora_17#Preview_Repository_for_Fedora_16
+
 -----
 Tools
 -----

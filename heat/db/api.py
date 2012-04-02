@@ -26,12 +26,15 @@ The underlying driver is loaded as a :class:`LazyPluggable`. SQLAlchemy is
 currently the only supported backend.
 '''
 
-from heat.openstack.common import cfg
 from heat.common import utils
 
 def configure(conf):
     global IMPL
+    global SQL_CONNECTION
+    global SQL_IDLE_TIMEOUT
     IMPL = utils.import_object(conf.db_backend)
+    SQL_CONNECTION = conf.sql_connection
+    SQL_IDLE_TIMEOUT = conf.sql_idle_timeout
 
 def raw_template_get(context, template_id):
     return IMPL.raw_template_get(context, template_id)
@@ -53,14 +56,24 @@ def parsed_template_create(context, values):
     return IMPL.parsed_template_create(context, values)
 
 
-def state_get(context, state_id):
-    return IMPL.state_get(context, state_id)
+def resource_get(context, resource_id):
+    return IMPL.resource_get(context, resource_id)
 
-def state_get_all(context):
-    return IMPL.state_get_all(context)
+def resource_get_all(context):
+    return IMPL.resource_get_all(context)
 
-def state_create(context, values):
-    return IMPL.state_create(context, values)
+def resource_create(context, values):
+    return IMPL.resource_create(context, values)
+
+
+def stack_get(context, stack_id):
+    return IMPL.resource_get(context, resource_id)
+
+def stack_get_all(context):
+    return IMPL.stack_get_all(context)
+
+def stack_create(context, values):
+    return IMPL.stack_create(context, values)
 
 
 def event_get(context, event_id):

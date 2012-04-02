@@ -51,6 +51,13 @@ class HeatEngineConfigOpts(HeatConfigOpts):
 
     db_opts = [
     cfg.StrOpt('db_backend', default='heat.db.anydbm.api', help='The backend to use for db'),
+    cfg.StrOpt('sql_connection',
+               default='mysql://heat:heat@localhost/heat',
+               help='The SQLAlchemy connection string used to connect to the '
+                    'database'),
+    cfg.IntOpt('sql_idle_timeout',
+               default=3600,
+               help='timeout before idle sql connections are reaped'),
     ]
 
     def __init__(self, **kwargs):

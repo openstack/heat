@@ -22,7 +22,7 @@ from novaclient.v1_1 import client
 
 from heat.db import api as db_api
 from heat.common.config import HeatEngineConfigOpts
-
+import pdb
 db_api.configure(HeatEngineConfigOpts())
 
 logger = logging.getLogger('heat.engine.resources')
@@ -82,15 +82,16 @@ class Resource(object):
     def state_set(self, new_state, reason="state changed"):
         if new_state != self.state:
             ev = {}
-            ev['LogicalResourceId'] = self.name
-            ev['PhysicalResourceId'] = self.name
-            ev['StackId'] = self.stack.name
-            ev['StackName'] = self.stack.name
-            ev['ResourceStatus'] = new_state
-            ev['ResourceStatusReason'] = reason
-            ev['ResourceType'] = self.t['Type']
-            ev['ResourceProperties'] = self.t['Properties']
-
+            ev['logical_resource_id'] = self.name
+            ev['physical_resource_id'] = self.name
+            ev['stack_id'] = self.stack.id
+            ev['stack_name'] = self.stack.name
+            ev['resource_status'] = new_state
+            ev['resource_status_reason'] = reason
+            ev['resource_type'] = self.t['Type']
+            ev['resource_properties'] = self.t['Properties']
+            new_stack = db_api.stack_create(None, ev)
+            ev['stack_id'] = new_stack.id
             db_api.event_create(None, ev)
             self.state = new_state
 

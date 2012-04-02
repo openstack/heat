@@ -22,7 +22,7 @@ logger = logging.getLogger('heat.engine.parser')
 
 class Stack:
     def __init__(self, stack_name, template, parms=None):
-
+        self.id = 0
         self.t = template
         if self.t.has_key('Parameters'):
             self.parms = self.t['Parameters']
