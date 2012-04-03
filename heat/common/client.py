@@ -21,7 +21,6 @@ import collections
 import errno
 import functools
 import httplib
-import json
 import logging
 import os
 import urllib
@@ -415,10 +414,6 @@ class BaseClient(object):
             self._authenticate()
 
         url = self._construct_url(action, params)
-        headers = headers or {}
-        if body and not isinstance(body, basestring):
-            body = json.dumps(body)
-            headers['Content-Type'] = 'application/json'
         return self._do_request(method=method, url=url, body=body,
                                 headers=headers)
 
