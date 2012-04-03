@@ -32,6 +32,11 @@ class Stack:
             self.maps = self.t['Mappings']
         else:
             self.maps = {}
+        if self.t.has_key('Outputs'):
+            self.outputs = self.t['Outputs']
+        else:
+            self.outputs = {}
+
         self.res = {}
         self.doc = None
         self.name = stack_name
@@ -106,6 +111,28 @@ class Stack:
     def stop(self):
         for r in self.t['Resources']:
             self.resources[r].stop()
+
+    def get_outputs(self):
+        self.resolve_static_refs(self.outputs)
+        self.resolve_find_in_map(self.outputs)
+        self.resolve_attributes(self.outputs)
+        self.resolve_joins(self.outputs)
+
+        outs = []
+        for o in self.outputs:
+            out = {}
+            if self.outputs[o].has_key('Description'):
+                out['Description'] = self.outputs[o]['Description']
+            else:
+                out['Description'] = 'No description given'
+            out['OutputKey'] = o
+            if self.outputs[o].has_key('Value'):
+                out['OutputValue'] = self.outputs[o]['Value']
+            else:
+                out['OutputValue'] = ''
+            outs.append(out)
+
+        return outs
 
     def calulate_dependencies(self, s, r):
         if isinstance(s, dict):

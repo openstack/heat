@@ -244,6 +244,7 @@ class Instance(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
+        self.ipaddress = '0.0.0.0'
 
         if not self.t['Properties'].has_key('AvailabilityZone'):
             self.t['Properties']['AvailabilityZone'] = 'nova'
@@ -262,14 +263,18 @@ class Instance(Resource):
 
 
     def FnGetAtt(self, key):
-        print '%s.GetAtt(%s)' % (self.name, key)
 
+        res = 'not-this-surely'
         if key == 'AvailabilityZone':
-            return unicode(self.t['Properties']['AvailabilityZone'])
+            res = self.t['Properties']['AvailabilityZone']
+        elif key == 'PublicIp':
+            res = self.ipaddress
         else:
-            # TODO PrivateDnsName, PublicDnsName, PrivateIp, PublicIp
-            return unicode('not-this-surely')
+            logger.warn('%s.GetAtt(%s) is not handled' % (self.name, key))
 
+        # TODO(asalkeld) PrivateDnsName, PublicDnsName & PrivateIp
+
+        return unicode(res)
 
     def start(self):
         def _null_callback(p, n, out):
@@ -341,6 +346,11 @@ class Instance(Resource):
         if server.status == 'ACTIVE':
             self.state_set(self.CREATE_COMPLETE)
             self.instance_id = server.id
+
+            # just record the first ipaddress
+            for n in server.networks:
+                self.ipaddress = server.networks[n][0]
+                break
         else:
             self.state_set(self.CREATE_FAILED)
 

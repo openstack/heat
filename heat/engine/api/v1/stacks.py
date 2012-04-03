@@ -53,8 +53,8 @@ class StacksController(object):
             mem['stack_name'] = s
             mem['created_at'] = 'now'
             try:
-                mem['template_description'] = stack_db[s]['Description']
-                mem['stack_status'] = stack_db[s]['StackStatus']
+                mem['template_description'] = stack_db[s].t['Description']
+                mem['stack_status'] = stack_db[s].t['StackStatus']
             except:
                 mem['template_description'] = 'No description'
                 mem['stack_status'] = 'unknown'
@@ -71,13 +71,13 @@ class StacksController(object):
             mem['creation_at'] = 'TODO'
             mem['updated_at'] = 'TODO'
             mem['NotificationARNs'] = 'TODO'
-            mem['Outputs'] = [{'Description': 'TODO', 'OutputKey': 'TODO', 'OutputValue': 'TODO' }]
-            mem['Parameters'] = stack_db[id]['Parameters']
+            mem['Outputs'] = stack_db[id].get_outputs()
+            mem['Parameters'] = stack_db[id].t['Parameters']
             mem['StackStatusReason'] = 'TODO'
             mem['TimeoutInMinutes'] = 'TODO'
             try:
-                mem['TemplateDescription'] = stack_db[id]['Description']
-                mem['StackStatus'] = stack_db[id]['StackStatus']
+                mem['TemplateDescription'] = stack_db[id].t['Description']
+                mem['StackStatus'] = stack_db[id].t['StackStatus']
             except:
                 mem['TemplateDescription'] = 'No description'
                 mem['StackStatus'] = 'unknown'
