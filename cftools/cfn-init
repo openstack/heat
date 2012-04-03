@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,4 +14,583 @@
 
 """
 Implements cfn-init CloudFormations functionality
+
+Resource metadata currently implemented:
+    * config/packages
+    * config/services
+
+Not implemented yet:
+    * config sets
+    * config/sources
+    * config/commands
+    * config/files
+    * config/users
+    * config/groups
+    * command line args
+      - placeholders are ignored
 """
+
+import argparse
+import json
+import logging
+import os
+import rpmUtils.updates as rpmupdates
+import rpmUtils.miscutils as rpmutils
+import subprocess
+import sys
+
+
+logging.basicConfig(level=logging.INFO)
+
+class CommandRunner(object):
+    """
+    Helper class to run a command and store the output.
+    """
+
+    def __init__(self, command):
+        self._command = command
+        self._stdout = None
+        self._stderr = None
+        self._status = None
+
+
+    def __str__(self):
+        s = "CommandRunner:"
+        s += "\n\tcommand: %s" % self._command
+        if self._status:
+            s += "\n\tstatus: %s" % self._status
+        if self._stdout:
+            s += "\n\tstdout: %s" % self._stdout
+        if self._stderr:
+            s += "\n\tstderr: %s" % self._stderr
+        return s
+
+
+    def run(self):
+        """
+        Run the Command and return the output.
+
+        Returns:
+            self
+        """
+        logging.debug("Running command: %s" % self._command)
+        cmd = self._command.split()
+        subproc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output = subproc.communicate()
+
+        self._status = subproc.returncode
+        self._stdout = output[0]
+        self._stderr = output[1]
+
+        return self
+
+    @property
+    def stdout(self):
+        return self._stdout
+
+    @property
+    def stderr(self):
+        return self._stderr
+
+    @property
+    def status(self):
+        return self._status
+
+
+class RpmHelper(object):
+
+    _rpm_util = rpmupdates.Updates([], [])
+
+    @classmethod
+    def prepcache(cls):
+        """
+        Prepare the yum cache
+        """
+        CommandRunner("yum -y makecache").run()
+
+
+    @classmethod
+    def compare_rpm_versions(cls, v1, v2):
+        """
+        Compare two RPM version strings.
+
+        Arguments:
+            v1 -- a version string
+            v2 -- a version string
+
+        Returns:
+            0 -- the versions are equal
+            1 -- v1 is greater
+           -1 -- v2 is greater
+        """
+        if v1 and v2:
+            return rpmutils.compareVerOnly(v1, v2)
+        elif v1:
+            return 1
+        elif v2:
+            return -1
+        else:
+            return 0
+
+
+    @classmethod
+    def newest_rpm_version(cls, versions):
+        """
+        Returns the highest (newest) version from a list of versions.
+
+        Arguments:
+            versions -- A list of version strings
+                        e.g., ['2.0', '2.2', '2.2-1.fc16', '2.2.22-1.fc16']
+        """
+        if versions:
+            if isinstance(versions, basestring):
+                return versions
+            versions = sorted(versions, rpmutils.compareVerOnly,
+                    reverse=True)
+            return versions[0]
+        else:
+            return None
+
+
+    @classmethod
+    def rpm_package_version(cls, pkg):
+        """
+        Returns the version of an installed RPM.
+
+        Arguments:
+            pkg -- A package name
+        """
+        cmd = "rpm -q --queryformat '%{VERSION}-%{RELEASE}' %s" % pkg
+        command = CommandRunner(cmd).run()
+        return command.stdout
+
+
+    @classmethod
+    def rpm_package_installed(cls, pkg):
+        """
+        Indicates whether pkg is in rpm database.
+
+        Arguments:
+            pkg -- A package name (with optional version and release spec).
+                   e.g., httpd
+                   e.g., httpd-2.2.22
+                   e.g., httpd-2.2.22-1.fc16
+        """
+        command = CommandRunner("rpm -q %s" % pkg).run()
+        return command.status == 0
+
+
+    @classmethod
+    def yum_package_available(cls, pkg):
+        """
+        Indicates whether pkg is available via yum
+
+        Arguments:
+            pkg -- A package name (with optional version and release spec).
+                   e.g., httpd
+                   e.g., httpd-2.2.22
+                   e.g., httpd-2.2.22-1.fc16
+        """
+        command = CommandRunner("yum -C -y --showduplicates list available %s" % pkg).run()
+        return command.status == 0
+
+
+    @classmethod
+    def install(cls, packages, rpms=True):
+        """
+        Installs (or upgrades) a set of packages via RPM or via Yum.
+
+        Arguments:
+            packages -- a list of packages to install
+            rpms     -- if True:
+                        * use RPM to install the packages
+                        * packages must be a list of URLs to retrieve RPMs
+                        if False:
+                        * use Yum to install packages
+                        * packages is a list of:
+                          - pkg name (httpd), or
+                          - pkg name with version spec (httpd-2.2.22), or
+                          - pkg name with version-release spec (httpd-2.2.22-1.fc16)
+        """
+        if rpms:
+            cmd = "rpm -U --force --nosignature "
+            cmd += " ".join(packages)
+            logging.info("Installing packages: %s" % cmd)
+        else:
+            cmd = "yum -y install "
+            cmd += " ".join(packages)
+            logging.info("Installing packages: %s" % cmd)
+        command = CommandRunner(cmd).run()
+        if command.status:
+            logging.warn("Failed to install packages: %s" % cmd)
+
+
+    @classmethod
+    def downgrade(cls, packages, rpms=True):
+        """
+        Downgrades a set of packages via RPM or via Yum.
+
+        Arguments:
+            packages -- a list of packages to downgrade
+            rpms     -- if True:
+                        * use RPM to downgrade (replace) the packages
+                        * packages must be a list of URLs to retrieve the RPMs
+                        if False:
+                        * use Yum to downgrade packages
+                        * packages is a list of:
+                          - pkg name with version spec (httpd-2.2.22), or
+                          - pkg name with version-release spec (httpd-2.2.22-1.fc16)
+        """
+        if rpms:
+            cls.install(packages)
+        else:
+            cmd = "yum -y downgrade "
+            cmd += " ".join(packages)
+            logging.info("Downgrading packages: %s" % cmd)
+            command = Command(cmd).run()
+            if command.status:
+                logging.warn("Failed to downgrade packages: %s" % cmd)
+
+
+class PackagesHandler(object):
+    _packages = {}
+
+    _package_order = ["dpkg", "rpm", "apt", "yum"]
+
+    @staticmethod
+    def _pkgsort(pkg1, pkg2):
+        order = PackagesHandler._package_order
+        p1_name = pkg1[0]
+        p2_name = pkg2[0]
+        if p1_name in order and p2_name in order:
+            return cmp(order.index(p1_name), order.index(p2_name))
+        elif p1_name in order:
+            return -1
+        elif p2_name in order:
+            return 1
+        else:
+            return cmp(p1_name.lower(), p2_name.lower())
+
+
+    def __init__(self, packages):
+        self._packages = packages
+
+
+    def _handle_gem_packages(self, packages):
+        #FIXME: handle rubygems
+        pass
+
+
+    def _handle_python_packages(self, packages):
+        #FIXME: handle python easyinstall
+        pass
+
+
+    def _handle_yum_packages(self, packages):
+        """
+        Handle installation, upgrade, or downgrade of a set of packages via yum.
+
+        Arguments:
+        packages -- a package entries map of the form:
+                      "pkg_name" : "version",
+                      "pkg_name" : ["v1", "v2"],
+                      "pkg_name" : []
+
+        For each package entry:
+          * if no version is supplied and the package is already installed, do
+            nothing
+          * if no version is supplied and the package is _not_ already
+            installed, install it
+          * if a version string is supplied, and the package is already
+            installed, determine whether to downgrade or upgrade (or do nothing
+            if version matches installed package)
+          * if a version array is supplied, choose the highest version from the
+            array and follow same logic for version string above
+        """
+        # collect pkgs for batch processing at end
+        installs = []
+        downgrades = []
+        # update yum cache
+        RpmHelper.prepcache()
+        for pkg_name, versions in packages.iteritems():
+            ver = RpmHelper.newest_rpm_version(versions)
+            pkg = "%s-%s" % (pkg_name, ver) if ver else pkg_name
+            if RpmHelper.rpm_package_installed(pkg):
+                pass # FIXME:print non-error, but skipping pkg
+            elif not RpmHelper.yum_package_available(pkg):
+                logging.warn("Skipping package '%s'. Not available via yum" % pkg)
+            elif not ver:
+                installs.append(pkg)
+            else:
+                current_ver = RpmHelper.rpm_package_version(pkg)
+                rc = RpmHelper.compare_rpm_versions(current_ver, ver)
+                if rc < 0:
+                    installs.append(pkg)
+                elif rc > 0:
+                    downgrades.append(pkg)
+            if installs:
+                RpmHelper.install(installs, rpms=False)
+            if downgrades:
+                RpmHelper.downgrade(downgrades)
+
+
+    def _handle_rpm_packages(sef, packages):
+        """
+        Handle installation, upgrade, or downgrade of a set of packages via rpm.
+
+        Arguments:
+        packages -- a package entries map of the form:
+                      "pkg_name" : "url"
+
+        For each package entry:
+          * if the EXACT package is already installed, skip it
+          * if a different version of the package is installed, overwrite it
+          * if the package isn't installed, install it
+        """
+        #FIXME: handle rpm installs
+        pass
+
+
+    def _handle_apt_packages(self, packages):
+        #FIXME: handle apt-get
+        pass
+
+
+    # map of function pionters to handle different package managers
+    _package_handlers = {
+            "yum" : _handle_yum_packages,
+            "rpm" : _handle_rpm_packages,
+            "apt" : _handle_apt_packages,
+            "rubygems" : _handle_gem_packages,
+            "python" : _handle_python_packages
+    }
+
+    def _package_handler(self, manager_name):
+        handler = None
+        if manager_name in self._package_handlers:
+            handler = self._package_handlers[manager_name]
+        return handler
+
+
+    def apply_packages(self):
+        """
+        Install, upgrade, or downgrade packages listed
+        Each package is a dict containing package name and a list of versions
+        Install order:
+          * dpkg
+          * rpm
+          * apt
+          * yum
+        """
+        packages = sorted(self._packages.iteritems(), PackagesHandler._pkgsort)
+
+        for manager, package_entries in packages:
+            handler = self._package_handler(manager)
+            if not handler:
+                logging.warn("Skipping invalid package type: %s" % manager)
+            else:
+                handler(self, package_entries)
+
+
+class ServicesHandler(object):
+    _services = {}
+
+
+    def __init__(self, services):
+        self._services = services
+
+
+    def _handle_sysv_command(self, service, command):
+        service_exe = "/sbin/service"
+        enable_exe = "/sbin/chkconfig"
+        cmd = ""
+        if "enable" == command:
+            cmd = "%s %s on" % (enable_exe, service)
+        elif "disable" == command:
+            cmd = "%s %s off" % (enable_exe, service)
+        elif "start" == command:
+            cmd = "%s %s start" % (service_exe, service)
+        elif "stop" == command:
+            cmd = "%s %s stop" % (service_exe, service)
+        elif "status" == command:
+            cmd = "%s %s status" % (service_exe, service)
+        command = CommandRunner(cmd)
+        command.run()
+        return command
+
+
+    def _handle_systemd_command(self, service, command):
+        exe = "/bin/systemctl"
+        cmd = ""
+        if "enable" == command:
+            cmd = "%s enable %s" % (exe, service)
+        elif "disable" == command:
+            cmd = "%s disable %s" % (exe, service)
+        elif "start" == command:
+            cmd = "%s start %s" % (exe, service)
+        elif "stop" == command:
+            cmd = "%s stop %s" % (exe, service)
+        elif "status" == command:
+            cmd = "%s status %s" % (exe, service)
+        command = CommandRunner(cmd)
+        command.run()
+        return command
+
+
+    def _handle_service(self, handler, service, properties):
+        if "enabled" in properties:
+            enable = to_boolean(properties["enabled"])
+            if enable:
+                logging.info("Enabling service %s" % service)
+                handler(self, service, "enable")
+            else:
+                logging.info("Disabling service %s" % service)
+                handler(self, service, "disable")
+
+        if "ensureRunning" in properties:
+            ensure_running = to_boolean(properties["ensureRunning"])
+            command = handler(self, service, "status")
+            running = command.status == 0
+            if ensure_running and not running:
+                logging.info("Starting service %s" % service)
+                handler(self, service, "start")
+            elif not ensure_running and running:
+                logging.info("Stopping service %s" % service)
+                handler(self, service, "stop")
+
+
+    def _handle_services(self, handler, services):
+        for service, properties in services.iteritems():
+            self._handle_service(handler, service, properties)
+
+
+    # map of function pointers to various service handlers
+    _service_handlers = {
+        "sysvinit" : _handle_sysv_command,
+        "systemd" : _handle_systemd_command
+    }
+
+
+    def _service_handler(self, manager_name):
+        handler = None
+        if manager_name in self._service_handlers:
+            handler = self._service_handlers[manager_name]
+        return handler
+
+
+    def apply_services(self):
+        """
+        Starts, stops, enables, disables services
+        """
+        for manager, service_entries in self._services.iteritems():
+            handler = self._service_handler(manager)
+            if not handler:
+                logging.warn("Skipping invalid service type: %s" % manager)
+            else:
+                self._handle_services(handler, service_entries)
+
+
+class Metadata(object):
+    _metadata = None
+    _init_key = "AWS::CloudFormation::Init"
+
+    def __init__(self, metadata):
+        self._metadata = json.loads(metadata)
+
+
+    def _is_valid_metadata(self):
+        """
+        Should find the AWS::CloudFormation::Init json key
+        """
+        is_valid = self._metadata and self._init_key in self._metadata and self._metadata[self._init_key]
+        if is_valid:
+            self._metadata = self._metadata[self._init_key]
+        return is_valid
+
+
+    def _process_config(self):
+        """
+        Parse and process a config section
+          * packages
+          * sources (not yet)
+          * users (not yet)
+          * groups (not yet)
+          * files (not yet)
+          * commands (not yet)
+          * services
+        """
+
+        self._config = self._metadata["config"]
+        PackagesHandler(self._config.get("packages")).apply_packages()
+        #FIXME: handle sources
+        #FIXME: handle users
+        #FIXME: handle groups
+        #FIXME: handle files
+        #FIXME: handle commands
+        ServicesHandler(self._config.get("services")).apply_services()
+
+
+    def process(self):
+        """
+        Process the resource metadata
+        """
+        # FIXME: when config sets are implemented, this should select the correct
+        # config set from the metadata, and send each config in the config set to
+        # process_config
+        if not self._is_valid_metadata():
+            raise Exception("invalid metadata")
+        else:
+            self._process_config()
+
+
+def to_boolean(b):
+    val = b.lower().strip() if isinstance(b, basestring) else b
+    return b in [True, 'true', 'yes', '1', 1]
+
+
+def get_metadata(fname):
+    """
+    Read the metadata from the given filename and return the string
+    """
+    f = open(fname)
+    meta = f.read()
+    f.close()
+    return meta
+
+
+## Main
+description = " "
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument("-f", "--metadata-file",
+        dest="metafile",
+        help="File containing the resource metadata to process",
+        required=True)
+parser.add_argument('-s', '--stack',
+        dest="stack_name",
+        help="A Heat stack name",
+        required=False)
+parser.add_argument('-r', '--resource',
+        dest="logical_resource_id",
+        help="A Heat logical resource ID",
+        required=False)
+parser.add_argument('--access-key',
+        dest="access_key",
+        help="A Keystone access key",
+        required=False)
+parser.add_argument('--secret-key',
+        dest="secret_key",
+        help="A Keystone secret key",
+        required=False)
+parser.add_argument('--region',
+        dest="region",
+        help="Openstack region",
+        required=False)
+args = parser.parse_args()
+# FIXME: implement real arg
+
+metadata = Metadata(get_metadata(args.metafile))
+try:
+    metadata.process()
+except Exception as e:
+    logging.exception("Error processing metadata")
+    exit(1)
