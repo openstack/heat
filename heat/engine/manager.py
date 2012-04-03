@@ -120,7 +120,7 @@ class EngineManager(manager.Manager):
 
         return {'stack': {'id': stack_name}}
 
-    def delete_stack(self, req, stack_name):
+    def delete_stack(self, context, stack_name):
         if not stack_db.has_key(stack_name):
             return {'Error': 'No stack by that name'}
 
