@@ -16,6 +16,9 @@
 import anydbm
 import json
 
+class Dummy:
+    id = 0
+
 def raw_template_get(context, template_id):
     return 'test return value'
 
@@ -25,16 +28,11 @@ def raw_template_get_all(context):
 def raw_template_create(context, values):
     pass
 
-
-def parsed_template_get(context, template_id):
-    pass
-
 def parsed_template_get_all(context):
     pass
 
 def parsed_template_create(context, values):
     pass
-
 
 def state_get(context, state_id):
     pass
@@ -45,6 +43,23 @@ def state_get_all(context):
 def state_create(context, values):
     pass
 
+def resource_get(context, resource_id):
+    pass
+
+def resource_get_all(context):
+    pass
+
+def resource_create(context, values):
+    pass
+
+def stack_get(context, stack_id):
+    pass
+
+def stack_get_all(context):
+    pass
+
+def stack_create(context, values):
+    return Dummy()
 
 def event_get(context, event_id):
     pass
@@ -71,15 +86,15 @@ def event_create(context, event):
     EventId	The unique ID of this event.
     Timestamp	Time the status was updated.
     '''
-    name = event['StackName']
+    name = event['stack_name']
     d = anydbm.open('/var/lib/heat/%s.events.db' % name, 'c')
     if d.has_key('lastid'):
         newid = int(d['lastid']) + 1
     else:
         newid = 1
-    event['EventId'] = '%d' % newid
-    d['lastid'] = event['EventId']
-    d[event['EventId']] = json.dumps(event)
+    event['event_id'] = '%d' % newid
+    d['lastid'] = event['event_id']
+    d[event['event_id']] = json.dumps(event)
 
     d.close()
 
