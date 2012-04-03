@@ -50,8 +50,11 @@ from heat.common import exception
 from heat import manager
 from heat.openstack.common import cfg
 from heat import rpc
+from heat.engine import parser
+from heat.engine import simpledb
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger('heat.engine.api.manager')
+stack_db = {}
 
 
 class EngineManager(manager.Manager):
@@ -61,8 +64,67 @@ class EngineManager(manager.Manager):
         """Load configuration options and connect to the hypervisor."""
 
     def list_stacks(self, context):
-        return {'stack_list': 'yay'}
+        logger.info('context is %s' % context)
+        res = {'stacks': [] }
+        for s in stack_db:
+            mem = {}
+            mem['StackId'] = stack_db[s]['StackId']
+            mem['StackName'] = s
+            mem['CreationTime'] = 'now'
+            try:
+                mem['TemplateDescription'] = stack_db[s]['Description']
+                mem['StackStatus'] = stack_db[s]['StackStatus']
+            except:
+                mem['TemplateDescription'] = 'No description'
+                mem['StackStatus'] = 'unknown'
+            res['stacks'].append(mem)
 
-    def create_stack(self, context, stack_name):
-        return {'state': 'woot -> %s' % stack_name}
+        return res
+
+    def show_stack(self, context, stack_name):
+
+        res = {'stacks': [] }
+        if stack_db.has_key(stack_name):
+            mem = {}
+            mem['StackId'] = stack_db[stack_name]['StackId']
+            mem['StackName'] = stack_name
+            mem['CreationTime'] = 'TODO'
+            mem['LastUpdatedTime'] = 'TODO'
+            mem['NotificationARNs'] = 'TODO'
+            mem['Outputs'] = [{'Description': 'TODO', 'OutputKey': 'TODO', 'OutputValue': 'TODO' }]
+            mem['Parameters'] = stack_db[stack_name]['Parameters']
+            mem['StackStatusReason'] = 'TODO'
+            mem['TimeoutInMinutes'] = 'TODO'
+            try:
+                mem['TemplateDescription'] = stack_db[stack_name]['Description']
+                mem['StackStatus'] = stack_db[stack_name]['StackStatus']
+            except:
+                mem['TemplateDescription'] = 'No description'
+                mem['StackStatus'] = 'unknown'
+            res['stacks'].append(mem)
+        else:
+            # XXX: Not sure how to handle this case here.. original returned NOT FOUND error.
+            return {'Error': 'No stack by that name'}
+
+        return res
+
+    def create_stack(self, context, stack_name, template):
+        if stack_db.has_key(stack_name):
+            return {'Error': 'Stack already exists with that name.'}
+
+        stack_db[stack_name] = template
+        stack_db[stack_name].start()
+
+        return {'stack': {'id': stack_name}}
+
+    def delete_stack(self, req, stack_name):
+        if not stack_db.has_key(stack_name):
+            return {'Error': 'No stack by that name'}
+
+        logger.info('deleting stack %s' % stack_name)
+        del stack_db[stack_name]
+        return None
+
+    def list_events(self, context, stack_name):
+        return simpledb.events_get(stack_name)
 
