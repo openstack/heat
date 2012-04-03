@@ -216,17 +216,27 @@ def jeos_create(options, arguments):
     if os.geteuid() != 0:
         print "jeos_create must be run as root"
         sys.exit(1)
-    if len(arguments) < 2:
-        print '\n  Please provide the distro and arch'
-        print '  Usage:\n    heat jeos_create <distro> <arch>'
+    if len(arguments) < 3:
+        print '\n  Please provide the distro, arch, and instance type.'
+        print '  Usage:'
+        print '   heat jeos_create <distro> <arch> <instancetype>'
+        print '     instance type can be:'
+        print '     gold builds a base image where userdata is used to initialize the instance'
+        print '     cftools builds a base image where AWS CloudFormations tools are present'
         sys.exit(1)
 
     distro = arguments.pop(0)
     arch = arguments.pop(0)
+    instance_type = arguments.pop(0)
 
     if not arch in ['x86_64', 'i686']:
         print 'arch %s not supported' % arch
         print 'try: x86_64 os i686'
+        sys.exit(1)
+
+    if not instance_type in ('gold', 'cftools'):
+        print 'A JEOS instance type of %s not supported' % instance_type
+        print 'try: gold or cftools'
         sys.exit(1)
 
     iso = None
@@ -248,16 +258,16 @@ def jeos_create(options, arguments):
             print '*** %s does not exist.' % (iso)
             sys.exit(1)
 
-    tdl_path = '%s/heat/jeos/%s-%s-gold-jeos.tdl' % (get_python_lib(), distro, arch)
-    dsk_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.dsk' % (distro, arch)
-    qcow2_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.qcow2' % (distro, arch)
-    image_name = '%s-%s' % (distro, arch)
+    tdl_path = '%s/heat/jeos/%s-%s-%s-jeos.tdl' % (get_python_lib(), distro, arch, instance_type)
+    dsk_filename = '/var/lib/libvirt/images/%s-%s-%s-jeos.dsk' % (distro, arch, instance_type)
+    qcow2_filename = '/var/lib/libvirt/images/%s-%s-%s-jeos.qcow2' % (distro, arch, instance_type)
+    image_name = '%s-%s-%s' % (distro, arch, instance_type)
 
     if not os.access(tdl_path, os.R_OK):
         print 'The tdl for that disto/arch is not available'
         sys.exit(1)
 
-    print 'Creating JEOS image - this takes approximately 10 minutes.'
+    print 'Creating JEOS image (%s) - this takes approximately 10 minutes.' % image_name
     extra_opts = ' '
     if options.debug:
         extra_opts = ' -d 3 '
@@ -272,7 +282,7 @@ def jeos_create(options, arguments):
     print 'Converting raw disk image to a qcow2 image.'
     os.system("qemu-img convert -O qcow2 %s %s" % (dsk_filename, qcow2_filename))
 
-    print 'Registering JEOS image with OpenStack Glance.'
+    print 'Registering JEOS image (%s) with OpenStack Glance.' % image_name
 
     creds = dict(username=options.username,
                  password=options.password,

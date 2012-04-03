@@ -144,6 +144,7 @@ This package contains the OpenStack integration for the Heat project
 %defattr(-,root,root,-)
 %{python_sitelib}/heat/jeos/F16-x86_64-gold-jeos.tdl
 %{python_sitelib}/heat/jeos/F17-x86_64-gold-jeos.tdl
+%{python_sitelib}/heat/jeos/F16-x86_64-cftools-jeos.tdl
 
 %files openstack
 %defattr(-,root,root,-)
