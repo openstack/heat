@@ -137,5 +137,12 @@
         ]]}}
       }
     }
+  },
+
+  "Outputs" : {
+    "WebsiteURL" : {
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicIp" ]}, "/wordpress"]] },
+      "Description" : "URL for Wordpress wiki"
+    }
   }
 }
