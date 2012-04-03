@@ -68,7 +68,7 @@ class EngineManager(manager.Manager):
         res = {'stacks': [] }
         for s in stack_db:
             mem = {}
-            mem['StackId'] = stack_db[s]['StackId']
+            #mem['StackId'] = stack_db[s]['StackId']
             mem['StackName'] = s
             mem['CreationTime'] = 'now'
             try:
@@ -86,13 +86,15 @@ class EngineManager(manager.Manager):
         res = {'stacks': [] }
         if stack_db.has_key(stack_name):
             mem = {}
-            mem['StackId'] = stack_db[stack_name]['StackId']
+            # XXX Broken.. need to figure out the ID stuff.
+            # Actually all attributes about stack_db are broken..
+            # mem['StackId'] = stack_db[stack_name]['StackId']
             mem['StackName'] = stack_name
             mem['CreationTime'] = 'TODO'
             mem['LastUpdatedTime'] = 'TODO'
             mem['NotificationARNs'] = 'TODO'
             mem['Outputs'] = [{'Description': 'TODO', 'OutputKey': 'TODO', 'OutputValue': 'TODO' }]
-            mem['Parameters'] = stack_db[stack_name]['Parameters']
+            #mem['Parameters'] = stack_db[stack_name]['Parameters']
             mem['StackStatusReason'] = 'TODO'
             mem['TimeoutInMinutes'] = 'TODO'
             try:
@@ -112,6 +114,7 @@ class EngineManager(manager.Manager):
         if stack_db.has_key(stack_name):
             return {'Error': 'Stack already exists with that name.'}
 
+        logger.info('template is %s' % template)
         stack_db[stack_name] = parser.Stack(stack_name, template)
         stack_db[stack_name].start()
 
