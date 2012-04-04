@@ -30,7 +30,6 @@ from webob.exc import (HTTPNotFound,
                        HTTPBadRequest)
 
 from heat.common import wsgi
-from heat.engine import client as engine
 from heat.common import config
 from heat import rpc
 from heat import context
@@ -47,7 +46,6 @@ class StackController(object):
 
     def __init__(self, options):
         self.options = options
-        engine.configure_engine_client(options)
 
     def list(self, req):
         """
