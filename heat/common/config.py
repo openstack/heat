@@ -22,6 +22,8 @@ import logging
 import logging.config
 import logging.handlers
 import os
+import socket
+# TODO ^ eventlet.socket ?
 import sys
 
 from heat import version
@@ -46,9 +48,7 @@ class HeatConfigOpts(cfg.CommonConfigOpts):
             default_config_files=default_config_files,
             **kwargs)
 
-
-class HeatEngineConfigOpts(HeatConfigOpts):
-
+class HeatEngineConfigOpts(cfg.CommonConfigOpts):
     db_opts = [
     cfg.StrOpt('db_backend', default='heat.db.anydbm.api', help='The backend to use for db'),
     cfg.StrOpt('sql_connection',
@@ -59,12 +59,61 @@ class HeatEngineConfigOpts(HeatConfigOpts):
                default=3600,
                help='timeout before idle sql connections are reaped'),
     ]
+    engine_opts = [
+    cfg.StrOpt('host',
+               default=socket.gethostname(),
+               help='Name of this node.  This can be an opaque identifier.  '
+                    'It is not necessarily a hostname, FQDN, or IP address.'),
+    cfg.StrOpt('instance_driver',
+               default='heat.engine.nova',
+               help='Driver to use for controlling instances'),
+    cfg.StrOpt('rabbit_host',
+               default='localhost',
+               help='the RabbitMQ host'),
+    cfg.IntOpt('rabbit_port',
+               default=5672,
+               help='the RabbitMQ port'),
+    cfg.BoolOpt('rabbit_use_ssl',
+                default=False,
+                help='connect over SSL for RabbitMQ'),
+    cfg.StrOpt('rabbit_userid',
+               default='guest',
+               help='the RabbitMQ userid'),
+    cfg.StrOpt('rabbit_password',
+               default='guest',
+               help='the RabbitMQ password'),
+    cfg.StrOpt('rabbit_virtual_host',
+               default='/',
+               help='the RabbitMQ virtual host'),
+    cfg.IntOpt('rabbit_retry_interval',
+               default=1,
+               help='how frequently to retry connecting with RabbitMQ'),
+    cfg.IntOpt('rabbit_retry_backoff',
+               default=2,
+               help='how long to backoff for between retries when connecting '
+                    'to RabbitMQ'),
+    cfg.IntOpt('rabbit_max_retries',
+               default=0,
+               help='maximum retries with trying to connect to RabbitMQ '
+                    '(the default of 0 implies an infinite retry count)'),
+    cfg.StrOpt('control_exchange',
+               default='heat-engine',
+               help='the main RabbitMQ exchange to connect to'),
 
-    def __init__(self, **kwargs):
+    ]
+
+    def __init__(self, default_config_files=None, **kwargs):
+        super(HeatEngineConfigOpts, self).__init__(
+            project='heat',
+            version='%%prog %s' % version.version_string(),
+            **kwargs)
         config_files = cfg.find_config_files(project='heat',
                                              prog='heat-engine')
-        super(HeatEngineConfigOpts, self).__init__(config_files, **kwargs)
+        self.register_cli_opts(self.engine_opts)
         self.register_cli_opts(self.db_opts)
+
+FLAGS = HeatEngineConfigOpts()
+
 
 def setup_logging(conf):
     """

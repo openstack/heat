@@ -13,39 +13,40 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""
-Reference implementation stacks server WSGI controller
-"""
-import json
+
+import contextlib
+import functools
+import os
+import socket
+import sys
+import tempfile
+import time
+import traceback
 import logging
 
-import webob
-from webob.exc import (HTTPNotFound,
-                       HTTPConflict,
-                       HTTPBadRequest)
+from eventlet import greenthread
 
+import heat.context
 from heat.common import exception
-from heat.common import wsgi
-
+from heat import manager
+from heat.openstack.common import cfg
+from heat import rpc
 from heat.engine import parser
 from heat.db import api as db_api
 
-
-logger = logging.getLogger('heat.engine.api.v1.stacks')
+logger = logging.getLogger('heat.engine.manager')
 
 stack_db = {}
 
-class StacksController(object):
-    '''
-    bla
-    '''
+class EngineManager(manager.Manager):
+    """Manages the running instances from creation to destruction."""
 
-    def __init__(self, conf):
-        self.conf = conf
-        db_api.configure(conf)
+    def __init__(self, *args, **kwargs):
+        """Load configuration options and connect to the hypervisor."""
+        pass
 
-    def index(self, req, format='json'):
-        logger.info('format is %s' % format)
+    def list_stacks(self, context):
+        logger.info('context is %s' % context)
         res = {'stacks': [] }
         for s in stack_db:
             mem = {}
@@ -62,45 +63,43 @@ class StacksController(object):
 
         return res
 
-    def show(self, req, id):
+    def show_stack(self, context, stack_name):
+
         res = {'stacks': [] }
-        if stack_db.has_key(id):
+        if stack_db.has_key(stack_name):
             mem = {}
-            mem['stack_id'] = id
-            mem['stack_name'] = id
+            mem['stack_id'] = stack_name
+            mem['stack_name'] = stack_name
             mem['creation_at'] = 'TODO'
             mem['updated_at'] = 'TODO'
             mem['NotificationARNs'] = 'TODO'
-            mem['Outputs'] = stack_db[id].get_outputs()
-            mem['Parameters'] = stack_db[id].t['Parameters']
+            mem['Outputs'] = stack_db[stack_name].get_outputs()
+            mem['Parameters'] = stack_db[stack_name].t['Parameters']
             mem['StackStatusReason'] = 'TODO'
             mem['TimeoutInMinutes'] = 'TODO'
             try:
-                mem['TemplateDescription'] = stack_db[id].t['Description']
-                mem['StackStatus'] = stack_db[id].t['StackStatus']
+                mem['TemplateDescription'] = stack_db[stack_name].t['Description']
+                mem['StackStatus'] = stack_db[stack_name].t['StackStatus']
             except:
                 mem['TemplateDescription'] = 'No description'
                 mem['StackStatus'] = 'unknown'
             res['stacks'].append(mem)
         else:
-            return webob.exc.HTTPNotFound('No stack by that name')
+            #return webob.exc.HTTPNotFound('No stack by that name')
+			#TODO
+			pass
 
         return res
 
-    def create(self, req, body=None):
+    def create_stack(self, context, stack_name, template):
+        if stack_db.has_key(stack_name):
+            return {'Error': 'Stack already exists with that name.'}
 
-        if body is None:
-            msg = _("No Template provided.")
-            return webob.exc.HTTPBadRequest(explanation=msg)
+        logger.info('template is %s' % template)
+        stack_db[stack_name] = parser.Stack(stack_name, template)
+        stack_db[stack_name].start()
 
-        if stack_db.has_key(body['StackName']):
-            msg = _("Stack already exists with that name.")
-            return webob.exc.HTTPConflict(msg)
-
-        stack_db[body['StackName']] = parser.Stack(body['StackName'], body, req.params)
-        stack_db[body['StackName']].start()
-
-        return {'stack': {'id': body['StackName']}}
+        return {'stack': {'id': stack_name}}
 
     def validate_template(self, req, body=None):
 
@@ -114,17 +113,14 @@ class StacksController(object):
 
         return res
 
-    def delete(self, req, id):
-        if not stack_db.has_key(id):
-            return webob.exc.HTTPNotFound('No stack by that name')
+    def delete_stack(self, context, stack_name):
+        if not stack_db.has_key(stack_name):
+            return {'Error': 'No stack by that name'}
 
-        logger.info('deleting stack %s' % id)
-        stack_db[id].stop()
-        del stack_db[id]
+        logger.info('deleting stack %s' % stack_name)
+        stack_db[stack_name].stop()
+        del stack_db[stack_name]
         return None
 
-def create_resource(conf):
-    """Stacks resource factory method."""
-    deserializer = wsgi.JSONRequestDeserializer()
-    serializer = wsgi.JSONResponseSerializer()
-    return wsgi.Resource(StacksController(conf), deserializer, serializer)
+    def list_events(self, context, stack_name):
+        return db_api.event_get_all_by_stack(None, stack_name)

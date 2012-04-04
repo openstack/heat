@@ -30,7 +30,9 @@ from webob.exc import (HTTPNotFound,
                        HTTPBadRequest)
 
 from heat.common import wsgi
-from heat.engine import client as engine
+from heat.common import config
+from heat import rpc
+from heat import context
 
 logger = logging.getLogger('heat.api.v1.stacks')
 
@@ -44,14 +46,13 @@ class StackController(object):
 
     def __init__(self, options):
         self.options = options
-        engine.configure_engine_client(options)
 
     def list(self, req):
         """
         Returns the following information for all stacks:
         """
-        c = engine.get_engine_client(req.context)
-        stack_list = c.get_stacks(**req.params)
+        con = context.get_admin_context()
+        stack_list = rpc.call(con, 'engine', {'method': 'list_stacks'})
 
         res = {'ListStacksResponse': {'ListStacksResult': {'StackSummaries': [] } } }
         summaries = res['ListStacksResponse']['ListStacksResult']['StackSummaries']
@@ -64,8 +65,11 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        c = engine.get_engine_client(req.context)
+        con = context.get_admin_context()
 
+        stack_list = rpc.call(con, 'engine',
+                              {'method': 'show_stack',
+                               'args': {'stack_name': req.params['StackName']}})
         stack_list = c.show_stack(req.params['StackName'])
         res = {'DescribeStacksResult': {'Stacks': [] } }
         stacks = res['DescribeStacksResult']['Stacks']
@@ -103,7 +107,7 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        c = engine.get_engine_client(req.context)
+        con = context.get_admin_context()
 
         try:
             templ = self._get_template(req)
@@ -121,11 +125,14 @@ class StackController(object):
             return webob.exc.HTTPBadRequest(explanation=msg)
         stack['StackName'] = req.params['StackName']
 
-        return c.create_stack(stack, **req.params)
+        return rpc.call(con, 'engine',
+                        {'method': 'create_stack',
+                         'args': {'stack_name': req.params['StackName'],
+                                  'template': stack}})
 
     def validate_template(self, req):
 
-        client = engine.get_engine_client(req.context)
+        con = context.get_admin_context()
 
         try:
             templ = self._get_template(req)
@@ -143,27 +150,27 @@ class StackController(object):
             return webob.exc.HTTPBadRequest(explanation=msg)
 
         logger.info('validate_template')
-        return client.validate_template(stack, **req.params)
+        return con.validate_template(stack, **req.params)
 
     def delete(self, req):
         """
         Returns the following information for all stacks:
         """
         logger.info('in api delete ')
-        c = engine.get_engine_client(req.context)
-        res = c.delete_stack(req.params['StackName'])
-        if res.status == 200:
-            return {'DeleteStackResult': ''}
-        else:
-            return webob.exc.HTTPNotFound()
+        con = context.get_admin_context()
 
+        return rpc.call(con, 'engine',
+                        {'method': 'delete_stack',
+                         'args': {'stack_name': req.params['StackName']}})
 
     def events_list(self, req):
         """
         Returns the following information for all stacks:
         """
-        c = engine.get_engine_client(req.context)
-        stack_list = c.get_stack_events(**req.params)
+        con = context.get_admin_context()
+        stack_list = rpc.call(con, 'engine',
+                        {'method': 'list_events',
+                         'args': {'stack_name': req.params['StackName']}})
 
         res = {'DescribeStackEventsResult': {'StackEvents': [] } }
         summaries = res['DescribeStackEventsResult']['StackEvents']

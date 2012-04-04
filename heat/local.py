@@ -1,5 +1,7 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
+# Copyright 2011 OpenStack LLC.
+# All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,3 +15,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""Greenthread local storage of variables using weak references"""
+
+import weakref
+
+from eventlet import corolocal
+
+
+class WeakLocal(corolocal.local):
+    def __getattribute__(self, attr):
+        rval = corolocal.local.__getattribute__(self, attr)
+        if rval:
+            rval = rval()
+        return rval
+
+    def __setattr__(self, attr, value):
+        value = weakref.ref(value)
+        return corolocal.local.__setattr__(self, attr, value)
+
+
+store = WeakLocal()
