@@ -25,6 +25,9 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
                                    os.pardir))
 if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
     sys.path.insert(0, possible_topdir)
+    jeos_path = '%s/heat/%s/' % (possible_topdir, "jeos")
+else:
+    jeos_path = '%s/heat/%s/' % (sys.path[1], "jeos")
 
 gettext.install('heat', unicode=1)
 
@@ -212,6 +215,8 @@ def stack_list(options, arguments):
 def jeos_create(options, arguments):
     '''
     '''
+    global jeos_path
+
     # if not running as root, return EPERM to command line
     if os.geteuid() != 0:
         print "jeos_create must be run as root"
@@ -258,7 +263,7 @@ def jeos_create(options, arguments):
             print '*** %s does not exist.' % (iso)
             sys.exit(1)
 
-    tdl_path = '%s/heat/jeos/%s-%s-%s-jeos.tdl' % (get_python_lib(), distro, arch, instance_type)
+    tdl_path = '%s%s-%s-%s-jeos.tdl' % (jeos_path, distro, arch, instance_type)
     dsk_filename = '/var/lib/libvirt/images/%s-%s-%s-jeos.dsk' % (distro, arch, instance_type)
     qcow2_filename = '/var/lib/libvirt/images/%s-%s-%s-jeos.qcow2' % (distro, arch, instance_type)
     image_name = '%s-%s-%s' % (distro, arch, instance_type)
