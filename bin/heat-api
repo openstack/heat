@@ -23,6 +23,7 @@ gettext.install('heat', unicode=1)
 
 from heat.common import config
 from heat.common import wsgi
+from paste import httpserver
 
 
 if __name__ == '__main__':
@@ -34,8 +35,6 @@ if __name__ == '__main__':
 
         port = config.DEFAULT_PORT
         print 'Starting Heat API on port %s' % port
-        server = wsgi.Server()
-        server.start(app, conf, default_port=port)
-        server.wait()
+        httpserver.serve(app, port=port)
     except RuntimeError, e:
         sys.exit("ERROR: %s" % e)
