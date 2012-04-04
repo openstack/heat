@@ -39,8 +39,8 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
 gettext.install('heat', unicode=1)
 
 from heat import service
-from heat.common import utils
 from heat.common import config
+from heat.common import utils
 from heat.db import api as db_api
 
 logger = logging.getLogger('heat.engine')

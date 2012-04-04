@@ -91,12 +91,12 @@ class EngineManager(manager.Manager):
 
         return res
 
-    def create_stack(self, context, stack_name, template):
+    def create_stack(self, context, stack_name, template, params):
         if stack_db.has_key(stack_name):
             return {'Error': 'Stack already exists with that name.'}
 
         logger.info('template is %s' % template)
-        stack_db[stack_name] = parser.Stack(stack_name, template)
+        stack_db[stack_name] = parser.Stack(stack_name, template, params)
         stack_db[stack_name].start()
 
         return {'stack': {'id': stack_name}}

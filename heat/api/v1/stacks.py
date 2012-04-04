@@ -128,7 +128,8 @@ class StackController(object):
         return rpc.call(con, 'engine',
                         {'method': 'create_stack',
                          'args': {'stack_name': req.params['StackName'],
-                                  'template': stack}})
+                                  'template': stack,
+                                  'params': dict(req.params)}})
 
     def validate_template(self, req):
 
