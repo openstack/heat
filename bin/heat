@@ -216,6 +216,7 @@ def jeos_create(options, arguments):
     '''
     '''
     global jeos_path
+    print 'jeos_path %s' % jeos_path
 
     # if not running as root, return EPERM to command line
     if os.geteuid() != 0:
@@ -253,9 +254,9 @@ def jeos_create(options, arguments):
             print '*** %s does not exist.' % (iso)
             sys.exit(1)
 
-    tdl_path = '%s%s-%s-jeos.tdl' % (jeos_path, distro, arch)
-    dsk_filename = '/var/lib/libvirt/images/%s-%s-jeos.dsk' % (distro, arch)
-    qcow2_filename = '/var/lib/libvirt/images/%s-%s-jeos.qcow2' % (distro, arch)
+    tdl_path = '%s%s-%s-gold-jeos.tdl' % (jeos_path, distro, arch)
+    dsk_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.dsk' % (distro, arch)
+    qcow2_filename = '/var/lib/libvirt/images/%s-%s-gold-jeos.qcow2' % (distro, arch)
     image_name = '%s-%s' % (distro, arch)
 
     if not os.access(tdl_path, os.R_OK):
