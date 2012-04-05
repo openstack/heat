@@ -23,17 +23,14 @@ import os
 import socket
 import sys
 import urlparse
-
 import webob
 from webob.exc import (HTTPNotFound,
                        HTTPConflict,
                        HTTPBadRequest)
-
 from heat.common import wsgi
 from heat.common import config
 from heat import rpc
 from heat import context
-
 logger = logging.getLogger('heat.api.v1.stacks')
 
 
@@ -52,7 +49,9 @@ class StackController(object):
         Returns the following information for all stacks:
         """
         con = context.get_admin_context()
-        stack_list = rpc.call(con, 'engine', {'method': 'list_stacks'})
+        stack_list = rpc.call(con, 'engine', 
+                            {'method': 'list_stacks',
+                            'args': {'params': dict(req.params)}})
 
         res = {'ListStacksResponse': {'ListStacksResult': {'StackSummaries': [] } } }
         summaries = res['ListStacksResponse']['ListStacksResult']['StackSummaries']
@@ -69,7 +68,8 @@ class StackController(object):
 
         stack_list = rpc.call(con, 'engine',
                               {'method': 'show_stack',
-                               'args': {'stack_name': req.params['StackName']}})
+                               'args': {'stack_name': req.params['StackName'],
+                                'params': dict(req.params)}})
         res = {'DescribeStacksResult': {'Stacks': [] } }
         stacks = res['DescribeStacksResult']['Stacks']
         for s in stack_list['stacks']:
@@ -160,7 +160,8 @@ class StackController(object):
 
         res = rpc.call(con, 'engine',
                        {'method': 'delete_stack',
-                        'args': {'stack_name': req.params['StackName']}})
+                        'args': {'stack_name': req.params['StackName'],
+                        'params': dict(req.params)}})
 
         if res == None:
             return {'DeleteStackResult': ''}

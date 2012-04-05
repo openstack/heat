@@ -20,32 +20,12 @@ from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy.session import get_session
 
 def model_query(context, *args, **kwargs):
-    """Query helper that accounts for context's `read_deleted` field.
-
-    :param context: context to query under
+    """ 
     :param session: if present, the session to use
-    :param read_deleted: if present, overrides context's read_deleted field.
-    :param project_only: if present and context is user-type, then restrict
-            query to match the context's project_id.
     """
     session = kwargs.get('session') or get_session()
-    read_deleted = kwargs.get('read_deleted') or context.read_deleted
-    project_only = kwargs.get('project_only')
 
     query = session.query(*args)
-
-    if read_deleted == 'no':
-        query = query.filter_by(deleted=False)
-    elif read_deleted == 'yes':
-        pass  # omit the filter to include deleted and active
-    elif read_deleted == 'only':
-        query = query.filter_by(deleted=True)
-    else:
-        raise Exception(
-                _("Unrecognized read_deleted value '%s'") % read_deleted)
-
-    if project_only and is_user_context(context):
-        query = query.filter_by(project_id=context.project_id)
 
     return query
 
@@ -120,19 +100,11 @@ def resource_create(context, values):
 
 def stack_get(context, stack_id):
     result = model_query(context, models.Stack).\
-                        filter_by(id=stack_id).first()
-
-    if not result:
-        raise Exception("stack with id %s not found" % stack_id)
-
+                        filter_by(name=stack_id).first()
     return result
 
 def stack_get_all(context):
     results = model_query(context, models.Stack).all()
-
-    if not results:
-        raise Exception('no stacks were found')
-    
     return results
 
 def stack_create(context, values):
@@ -140,6 +112,15 @@ def stack_create(context, values):
     stack_ref.update(values)
     stack_ref.save()
     return stack_ref
+    
+def stack_delete(context, stack_name):
+    s = stack_get(context, stack_name)
+    if not s:
+        raise Exception('Attempt to delete a stack with id: %s that does not exist' % stack_name)
+
+    for e in s.events:
+        e.delete()
+    s.delete()
 
 def event_get(context, event_id):
     result = model_query(context, models.Event).\

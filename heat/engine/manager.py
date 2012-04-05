@@ -23,20 +23,11 @@ import tempfile
 import time
 import traceback
 import logging
-
-from eventlet import greenthread
-
-import heat.context
-from heat.common import exception
+import webob
 from heat import manager
-from heat.openstack.common import cfg
-from heat import rpc
 from heat.engine import parser
 from heat.db import api as db_api
-
 logger = logging.getLogger('heat.engine.manager')
-
-stack_db = {}
 
 class EngineManager(manager.Manager):
     """Manages the running instances from creation to destruction."""
@@ -45,57 +36,69 @@ class EngineManager(manager.Manager):
         """Load configuration options and connect to the hypervisor."""
         pass
 
-    def list_stacks(self, context):
+    def list_stacks(self, context, params):
         logger.info('context is %s' % context)
         res = {'stacks': [] }
-        for s in stack_db:
+        stacks = db_api.stack_get_all(None)
+        for s in stacks:
+            ps = parser.Stack(s.name, s.raw_template.template, params)
             mem = {}
-            mem['stack_id'] = s
-            mem['stack_name'] = s
-            mem['created_at'] = 'now'
+            mem['stack_id'] = s.id
+            mem['stack_name'] = s.name
+            mem['created_at'] = str(s.created_at)
             try:
-                mem['template_description'] = stack_db[s].t['Description']
-                mem['stack_status'] = stack_db[s].t['StackStatus']
+                mem['template_description'] = s.template.description
+                mem['stack_status'] = ps.t['StackStatus']
             except:
                 mem['template_description'] = 'No description'
                 mem['stack_status'] = 'unknown'
             res['stacks'].append(mem)
 
         return res
-
-    def show_stack(self, context, stack_name):
-
+           
+    def show_stack(self, context, stack_name, params):
         res = {'stacks': [] }
-        if stack_db.has_key(stack_name):
+        s = db_api.stack_get(None, id)
+        if s:
+            ps = parser.Stack(s.name, s.raw_template.template, params)
             mem = {}
-            mem['stack_id'] = stack_name
-            mem['stack_name'] = stack_name
-            mem['creation_at'] = 'TODO'
-            mem['updated_at'] = 'TODO'
+            mem['stack_id'] = s.id
+            mem['stack_name'] = s.name
+            mem['creation_at'] = s.created_at
+            mem['updated_at'] = s.updated_at
             mem['NotificationARNs'] = 'TODO'
-            mem['Outputs'] = stack_db[stack_name].get_outputs()
-            mem['Parameters'] = stack_db[stack_name].t['Parameters']
+            mem['Outputs'] = ps.get_outputs()
+            mem['Parameters'] = ps.t['Parameters']
             mem['StackStatusReason'] = 'TODO'
             mem['TimeoutInMinutes'] = 'TODO'
             try:
-                mem['TemplateDescription'] = stack_db[stack_name].t['Description']
-                mem['StackStatus'] = stack_db[stack_name].t['StackStatus']
+                mem['TemplateDescription'] = ps.t['Description']
+                mem['StackStatus'] = ps.t['StackStatus']
             except:
                 mem['TemplateDescription'] = 'No description'
                 mem['StackStatus'] = 'unknown'
             res['stacks'].append(mem)
 
         return res
-
+   
     def create_stack(self, context, stack_name, template, params):
-        if stack_db.has_key(stack_name):
+        logger.info('template is %s' % template)
+        if db_api.stack_get(None, stack_name):
             return {'Error': 'Stack already exists with that name.'}
 
-        logger.info('template is %s' % template)
-        stack_db[stack_name] = parser.Stack(stack_name, template, params)
-        stack_db[stack_name].create()
-
-        return {'stack': {'id': stack_name}}
+        stack = parser.Stack(stack_name, template, params)
+        rt = {}
+        rt['template'] = template
+        new_rt = db_api.raw_template_create(None, rt)
+        s = {}
+        s['name'] = stack_name 
+        s['raw_template_id'] = new_rt.id
+        new_s = db_api.stack_create(None, s)
+        stack.id = new_s.id
+        stack.start()
+       
+        return {'stack': {'id': new_s.id, 'name': new_s.name,\
+                'created_at': new_s.created_at}}
 
     def validate_template(self, req, body=None):
 
@@ -109,13 +112,16 @@ class EngineManager(manager.Manager):
 
         return res
 
-    def delete_stack(self, context, stack_name):
-        if not stack_db.has_key(stack_name):
-            return {'Error': 'No stack by that name'}
+    def delete_stack(self, context, stack_name, params):
+        s = db_api.stack_get(None, stack_name)
+        if not s:
+            return {'Error': 'No stack by that name'} 
 
         logger.info('deleting stack %s' % stack_name)
-        stack_db[stack_name].delete()
-        del stack_db[stack_name]
+
+        ps = parser.Stack(s.name, s.raw_template.template, params)
+        ps.stop()
+        db_api.stack_delete(None, stack_name)
         return None
 
     def list_events(self, context, stack_name):

@@ -23,6 +23,7 @@ from novaclient.v1_1 import client
 
 from heat.common import exception
 from heat.db import api as db_api
+from heat.common.config import HeatEngineConfigOpts
 
 logger = logging.getLogger('heat.engine.resources')
 
@@ -88,11 +89,10 @@ class Resource(object):
             ev['stack_id'] = self.stack.id
             ev['stack_name'] = self.stack.name
             ev['resource_status'] = new_state
+            ev['name'] = new_state
             ev['resource_status_reason'] = reason
             ev['resource_type'] = self.t['Type']
             ev['resource_properties'] = self.t['Properties']
-            new_stack = db_api.stack_create(None, ev)
-            ev['stack_id'] = new_stack.id
             db_api.event_create(None, ev)
             self.state = new_state
 
@@ -412,21 +412,10 @@ class Instance(Resource):
             self.state_set(self.CREATE_FAILED)
 
     def delete(self):
-
-        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
-            return
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-
-        if self.instance_id == None:
-            self.state_set(self.DELETE_COMPLETE)
-            return
-
+        Resource.stop(self)
         server = self.nova().servers.get(self.instance_id)
         server.delete()
         self.instance_id = None
-        self.state_set(self.DELETE_COMPLETE)
-
 
     def insert_package_and_services(self, r, new_script):
 

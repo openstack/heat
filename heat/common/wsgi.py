@@ -43,7 +43,6 @@ from heat.common import exception
 from heat.openstack.common import cfg
 from heat.openstack.common import utils
 
-
 bind_opts = [
     cfg.StrOpt('bind_host', default='0.0.0.0'),
     cfg.IntOpt('bind_port'),
@@ -489,7 +488,6 @@ class Resource(object):
             method = getattr(obj, action)
         except AttributeError:
             method = getattr(obj, 'default')
-
         return method(*args, **kwargs)
 
     def get_action_args(self, request_environment):

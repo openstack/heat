@@ -97,4 +97,3 @@ def event_create(context, event):
     d[event['event_id']] = json.dumps(event)
 
     d.close()
-

@@ -21,6 +21,7 @@ def upgrade(migrate_engine):
         Column('name', String(length=255, convert_unicode=False,
                       assert_unicode=None,
                       unicode_error=None, _warn_on_bytestring=False)),
+        Column('raw_template_id', Integer, ForeignKey("raw_template.id"), nullable=False),
     )
 
     event = Table(
@@ -47,17 +48,17 @@ def upgrade(migrate_engine):
                                            assert_unicode=None,
                                            unicode_error=None, 
                                            _warn_on_bytestring=False)),
+        Column('parsed_template_id', Integer, ForeignKey("parsed_template.id"), nullable=False),
     )
 
     parsedtemplate = Table(
         'parsed_template', meta,
         Column('id', Integer, primary_key=True),
-        Column('resource_id', Integer, ForeignKey("resource.id"),\
-              nullable=False),
+        Column('raw_template_id', Integer, ForeignKey("raw_template.id"), nullable=False),
         Column('template', Text()),
     )
 
-    tables = [rawtemplate, stack, event, resource, parsedtemplate]
+    tables = [rawtemplate, stack, event, parsedtemplate, resource]
     for table in tables:
         try:      
             table.create()
@@ -73,6 +74,7 @@ def downgrade(migrate_engine):
     event = Table('event', meta, autoload=True)
     resource = Table('resource', meta, autoload=True)
     parsedtemplate = Table('parsed_template', meta, autoload=True)
+    stack = Table('stack', meta, autoload=True)
 
-    for table in (rawtemplate, event, stack, parsedtemplate, resource):
+    for table in (event, stack, resource, parsedtemplate, rawtemplate):
         table.drop()

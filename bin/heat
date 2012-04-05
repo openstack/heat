@@ -19,7 +19,6 @@ import base64
 import libxml2
 
 from urlparse import urlparse
-
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
 possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),

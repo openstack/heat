@@ -20,12 +20,10 @@ Client classes for callers of a heat system
 import json
 import logging
 import os
-
 from heat.common import client as base_client
 from heat.common import exception
 
 from heat.cloudformations import *
-
 logger = logging.getLogger(__name__)
 
 
