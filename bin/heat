@@ -214,6 +214,17 @@ def stack_list(options, arguments):
 @catch_error('jeos_create')
 def jeos_create(options, arguments):
     '''
+    The jeos_create option must be run as root.  This command takes three
+    arguments that are popped from the arguments parameter.
+    arg0 -> Distribution such as 'F16', 'F17', 'U10', 'D6'
+    arg1 -> Architecture such as 'i386' 'i686' or 'x86_64'
+    arg2 -> Image type such as 'gold' or 'cftools'
+
+    gold is a basic gold JEOS
+    cftools contains the cfntools helper scripts
+
+    The command must be run as root in order for libvirt to have permissions
+    to create virtual machines and read the raw DVDs.
     '''
     global jeos_path
 
