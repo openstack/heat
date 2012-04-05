@@ -70,10 +70,9 @@ class StackController(object):
         stack_list = rpc.call(con, 'engine',
                               {'method': 'show_stack',
                                'args': {'stack_name': req.params['StackName']}})
-        stack_list = c.show_stack(req.params['StackName'])
         res = {'DescribeStacksResult': {'Stacks': [] } }
         stacks = res['DescribeStacksResult']['Stacks']
-        for s in stack_list:
+        for s in stack_list['stacks']:
             mem = {'member': s}
             stacks.append(mem)
 
@@ -157,12 +156,17 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        logger.info('in api delete ')
         con = context.get_admin_context()
 
-        return rpc.call(con, 'engine',
-                        {'method': 'delete_stack',
-                         'args': {'stack_name': req.params['StackName']}})
+        res = rpc.call(con, 'engine',
+                       {'method': 'delete_stack',
+                        'args': {'stack_name': req.params['StackName']}})
+
+        if res == None:
+            return {'DeleteStackResult': ''}
+        else:
+            return {'DeleteStackResult': res['Error']}
+
 
     def events_list(self, req):
         """

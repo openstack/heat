@@ -84,10 +84,6 @@ class EngineManager(manager.Manager):
                 mem['TemplateDescription'] = 'No description'
                 mem['StackStatus'] = 'unknown'
             res['stacks'].append(mem)
-        else:
-            #return webob.exc.HTTPNotFound('No stack by that name')
-			#TODO
-			pass
 
         return res
 
