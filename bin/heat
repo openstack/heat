@@ -236,7 +236,7 @@ def jeos_create(options, arguments):
 
     if not arch in ['x86_64', 'i686']:
         print 'arch %s not supported' % arch
-        print 'try: x86_64 os i686'
+        print 'try: x86_64 or i686'
         sys.exit(1)
 
     if not instance_type in ('gold', 'cftools'):
