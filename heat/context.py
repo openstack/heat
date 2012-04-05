@@ -23,14 +23,15 @@ import copy
 import logging
 
 from heat.openstack.common import local
-from heat.common import utils
+from heat.openstack.common import utils
 
+from heat.common import utils as heat_utils
 
 LOG = logging.getLogger(__name__)
 
 
 def generate_request_id():
-    return 'req-' + str(utils.gen_uuid())
+    return 'req-' + str(heat_utils.gen_uuid())
 
 
 class RequestContext(object):
@@ -74,7 +75,7 @@ class RequestContext(object):
         if not timestamp:
             timestamp = utils.utcnow()
         if isinstance(timestamp, basestring):
-            timestamp = utils.parse_strtime(timestamp)
+            timestamp = heat_utils.parse_strtime(timestamp)
         self.timestamp = timestamp
         if not request_id:
             request_id = generate_request_id()
@@ -93,7 +94,7 @@ class RequestContext(object):
                 'read_deleted': self.read_deleted,
                 'roles': self.roles,
                 'remote_address': self.remote_address,
-                'timestamp': utils.strtime(self.timestamp),
+                'timestamp': heat_utils.strtime(self.timestamp),
                 'request_id': self.request_id,
                 'auth_token': self.auth_token}
 

@@ -38,35 +38,63 @@ paste_deploy_opts = [
     cfg.StrOpt('config_file'),
     ]
 
+FLAGS = None
 
-class HeatConfigOpts(cfg.CommonConfigOpts):
-
-    def __init__(self, default_config_files=None, **kwargs):
-        super(HeatConfigOpts, self).__init__(
-            project='heat',
-            version='%%prog %s' % version.version_string(),
-            default_config_files=default_config_files,
-            **kwargs)
-
-class HeatEngineConfigOpts(cfg.CommonConfigOpts):
-    db_opts = [
-    cfg.StrOpt('db_backend', default='heat.db.anydbm.api', help='The backend to use for db'),
-    cfg.StrOpt('sql_connection',
-               default='mysql://heat:heat@localhost/heat',
-               help='The SQLAlchemy connection string used to connect to the '
-                    'database'),
-    cfg.IntOpt('sql_idle_timeout',
-               default=3600,
-               help='timeout before idle sql connections are reaped'),
-    ]
-    engine_opts = [
-    cfg.StrOpt('host',
-               default=socket.gethostname(),
-               help='Name of this node.  This can be an opaque identifier.  '
-                    'It is not necessarily a hostname, FQDN, or IP address.'),
-    cfg.StrOpt('instance_driver',
-               default='heat.engine.nova',
-               help='Driver to use for controlling instances'),
+rpc_opts = [
+    cfg.StrOpt('rpc_backend',
+        default='heat.rpc.impl_qpid',
+        help="The messaging module to use, defaults to kombu."),
+    cfg.IntOpt('rpc_thread_pool_size',
+               default=1024,
+               help='Size of RPC thread pool'),
+    cfg.IntOpt('rpc_conn_pool_size',
+               default=30,
+               help='Size of RPC connection pool'),
+    cfg.IntOpt('rpc_response_timeout',
+               default=60,
+               help='Seconds to wait for a response from call or multicall'),
+    cfg.StrOpt('qpid_hostname',
+               default='localhost',
+               help='Qpid broker hostname'),
+    cfg.StrOpt('qpid_port',
+               default='5672',
+               help='Qpid broker port'),
+    cfg.StrOpt('qpid_username',
+               default='',
+               help='Username for qpid connection'),
+    cfg.StrOpt('qpid_password',
+               default='',
+               help='Password for qpid connection'),
+    cfg.StrOpt('qpid_sasl_mechanisms',
+               default='',
+               help='Space separated list of SASL mechanisms to use for auth'),
+    cfg.BoolOpt('qpid_reconnect',
+                default=True,
+                help='Automatically reconnect'),
+    cfg.IntOpt('qpid_reconnect_timeout',
+               default=0,
+               help='Reconnection timeout in seconds'),
+    cfg.IntOpt('qpid_reconnect_limit',
+               default=0,
+               help='Max reconnections before giving up'),
+    cfg.IntOpt('qpid_reconnect_interval_min',
+               default=0,
+               help='Minimum seconds between reconnection attempts'),
+    cfg.IntOpt('qpid_reconnect_interval_max',
+               default=0,
+               help='Maximum seconds between reconnection attempts'),
+    cfg.IntOpt('qpid_reconnect_interval',
+               default=0,
+               help='Equivalent to setting max and min to the same value'),
+    cfg.IntOpt('qpid_heartbeat',
+               default=5,
+               help='Seconds between connection keepalive heartbeats'),
+    cfg.StrOpt('qpid_protocol',
+               default='tcp',
+               help="Transport to use, either 'tcp' or 'ssl'"),
+    cfg.BoolOpt('qpid_tcp_nodelay',
+                default=True,
+                help='Disable Nagle algorithm'),
     cfg.StrOpt('rabbit_host',
                default='localhost',
                help='the RabbitMQ host'),
@@ -102,6 +130,73 @@ class HeatEngineConfigOpts(cfg.CommonConfigOpts):
 
     ]
 
+
+class HeatConfigOpts(cfg.CommonConfigOpts):
+    def __init__(self, default_config_files=None, **kwargs):
+        super(HeatConfigOpts, self).__init__(
+            project='heat',
+            version='%%prog %s' % version.version_string(),
+            default_config_files=default_config_files,
+            **kwargs)
+        self.register_cli_opts(rpc_opts)
+
+class HeatEngineConfigOpts(cfg.CommonConfigOpts):
+
+    service_opts = [
+    cfg.IntOpt('report_interval',
+               default=10,
+               help='seconds between nodes reporting state to datastore'),
+    cfg.IntOpt('periodic_interval',
+               default=60,
+               help='seconds between running periodic tasks'),
+    cfg.StrOpt('ec2_listen',
+               default="0.0.0.0",
+               help='IP address for EC2 API to listen'),
+    cfg.IntOpt('ec2_listen_port',
+               default=8773,
+               help='port for ec2 api to listen'),
+    cfg.StrOpt('osapi_compute_listen',
+               default="0.0.0.0",
+               help='IP address for OpenStack API to listen'),
+    cfg.IntOpt('osapi_compute_listen_port',
+               default=8774,
+               help='list port for osapi compute'),
+    cfg.StrOpt('metadata_manager',
+               default='nova.api.manager.MetadataManager',
+               help='OpenStack metadata service manager'),
+    cfg.StrOpt('metadata_listen',
+               default="0.0.0.0",
+               help='IP address for metadata api to listen'),
+    cfg.IntOpt('metadata_listen_port',
+               default=8775,
+               help='port for metadata api to listen'),
+    cfg.StrOpt('osapi_volume_listen',
+               default="0.0.0.0",
+               help='IP address for OpenStack Volume API to listen'),
+    cfg.IntOpt('osapi_volume_listen_port',
+               default=8776,
+               help='port for os volume api to listen'),
+    ]
+    db_opts = [
+    cfg.StrOpt('db_backend', default='heat.db.anydbm.api', help='The backend to use for db'),
+    cfg.StrOpt('sql_connection',
+               default='mysql://heat:heat@localhost/heat',
+               help='The SQLAlchemy connection string used to connect to the '
+                    'database'),
+    cfg.IntOpt('sql_idle_timeout',
+               default=3600,
+               help='timeout before idle sql connections are reaped'),
+    ]
+    engine_opts = [
+    cfg.StrOpt('host',
+               default=socket.gethostname(),
+               help='Name of this node.  This can be an opaque identifier.  '
+                    'It is not necessarily a hostname, FQDN, or IP address.'),
+    cfg.StrOpt('instance_driver',
+               default='heat.engine.nova',
+               help='Driver to use for controlling instances'),
+    ]
+
     def __init__(self, default_config_files=None, **kwargs):
         super(HeatEngineConfigOpts, self).__init__(
             project='heat',
@@ -111,9 +206,8 @@ class HeatEngineConfigOpts(cfg.CommonConfigOpts):
                                              prog='heat-engine')
         self.register_cli_opts(self.engine_opts)
         self.register_cli_opts(self.db_opts)
-
-FLAGS = HeatEngineConfigOpts()
-
+        self.register_cli_opts(self.service_opts)
+        self.register_cli_opts(rpc_opts)
 
 def setup_logging(conf):
     """

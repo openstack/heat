@@ -20,29 +20,15 @@
 import copy
 import logging
 
-from heat.common import exception
 from heat.openstack.common import cfg
+from heat.openstack.common import exception
 from heat.common import config
 
 
 LOG = logging.getLogger(__name__)
 
-rpc_opts = [
-    cfg.IntOpt('rpc_thread_pool_size',
-               default=1024,
-               help='Size of RPC thread pool'),
-    cfg.IntOpt('rpc_conn_pool_size',
-               default=30,
-               help='Size of RPC connection pool'),
-    cfg.IntOpt('rpc_response_timeout',
-               default=60,
-               help='Seconds to wait for a response from call or multicall'),
-    ]
 
-config.FLAGS.register_opts(rpc_opts)
-
-
-class RemoteError(exception.NovaException):
+class RemoteError(exception.OpenstackException):
     """Signifies that a remote class has raised an exception.
 
     Contains a string representation of the type of the original exception,
@@ -62,7 +48,7 @@ class RemoteError(exception.NovaException):
                                           traceback=traceback)
 
 
-class Timeout(exception.NovaException):
+class Timeout(exception.OpenstackException):
     """Signifies that a timeout has occurred.
 
     This exception is raised if the rpc_response_timeout is reached while

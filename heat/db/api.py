@@ -22,11 +22,11 @@ Usage:
     >>> db.event_get(context, event_id)
     # Event object received
 
-The underlying driver is loaded as a :class:`LazyPluggable`. SQLAlchemy is
-currently the only supported backend.
+The underlying driver is loaded . SQLAlchemy is currently the only
+supported backend.
 '''
 
-from heat.common import utils
+from heat.openstack.common import utils
 
 def configure(conf):
     global IMPL

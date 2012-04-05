@@ -38,6 +38,7 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
 
 gettext.install('heat', unicode=1)
 
+from heat import rpc
 from heat import service
 from heat.common import config
 from heat.common import utils
@@ -47,13 +48,18 @@ logger = logging.getLogger('heat.engine')
 
 if __name__ == '__main__':
 
-    config.FLAGS(sys.argv)
-    config.setup_logging(config.FLAGS)
-    db_api.configure(config.FLAGS)
+    conf = config.HeatEngineConfigOpts()
+    conf()
+    config.FLAGS = conf
+
+    config.setup_logging(conf)
+    rpc.configure(conf)
+    db_api.configure(conf)
 
     #utils.monkey_patch()
     server = service.Service.create(binary='heat-engine',
                                     topic='engine',
-                                    manager='heat.engine.manager.EngineManager')
+                                    manager='heat.engine.manager.EngineManager',
+                                    config=conf)
     service.serve(server)
     service.wait()

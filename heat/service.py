@@ -27,9 +27,9 @@ import logging
 import greenlet
 
 from heat.openstack.common import cfg
+from heat.openstack.common import utils
 
-from heat.common import utils
-from heat.common import config
+from heat.common import utils as heat_utils
 from heat.common import exception
 
 from heat import context
@@ -37,46 +37,6 @@ from heat import rpc
 from heat import version
 
 LOG = logging.getLogger(__name__)
-
-service_opts = [
-    cfg.IntOpt('report_interval',
-               default=10,
-               help='seconds between nodes reporting state to datastore'),
-    cfg.IntOpt('periodic_interval',
-               default=60,
-               help='seconds between running periodic tasks'),
-    cfg.StrOpt('ec2_listen',
-               default="0.0.0.0",
-               help='IP address for EC2 API to listen'),
-    cfg.IntOpt('ec2_listen_port',
-               default=8773,
-               help='port for ec2 api to listen'),
-    cfg.StrOpt('osapi_compute_listen',
-               default="0.0.0.0",
-               help='IP address for OpenStack API to listen'),
-    cfg.IntOpt('osapi_compute_listen_port',
-               default=8774,
-               help='list port for osapi compute'),
-    cfg.StrOpt('metadata_manager',
-               default='nova.api.manager.MetadataManager',
-               help='OpenStack metadata service manager'),
-    cfg.StrOpt('metadata_listen',
-               default="0.0.0.0",
-               help='IP address for metadata api to listen'),
-    cfg.IntOpt('metadata_listen_port',
-               default=8775,
-               help='port for metadata api to listen'),
-    cfg.StrOpt('osapi_volume_listen',
-               default="0.0.0.0",
-               help='IP address for OpenStack Volume API to listen'),
-    cfg.IntOpt('osapi_volume_listen_port',
-               default=8776,
-               help='port for os volume api to listen'),
-    ]
-
-FLAGS = config.FLAGS
-FLAGS.register_opts(service_opts)
-
 
 class Launcher(object):
     """Launch one or more services and wait for them to complete."""
@@ -178,7 +138,7 @@ class Service(object):
         self.conn.consume_in_thread()
 
         if self.periodic_interval:
-            periodic = utils.LoopingCall(self.periodic_tasks)
+            periodic = heat_utils.LoopingCall(self.periodic_tasks)
             periodic.start(interval=self.periodic_interval, now=False)
             self.timers.append(periodic)
 
@@ -188,7 +148,7 @@ class Service(object):
 
     @classmethod
     def create(cls, host=None, binary=None, topic=None, manager=None,
-               periodic_interval=None):
+               periodic_interval=None, config=None):
         """Instantiates class and passes back application object.
 
         :param host: defaults to FLAGS.host
@@ -198,6 +158,8 @@ class Service(object):
         :param periodic_interval: defaults to FLAGS.periodic_interval
 
         """
+        global FLAGS
+        FLAGS = config
         if not host:
             host = FLAGS.host
         if not binary:

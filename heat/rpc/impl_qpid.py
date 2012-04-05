@@ -33,55 +33,6 @@ from heat.rpc import common as rpc_common
 
 LOG = logging.getLogger(__name__)
 
-qpid_opts = [
-    cfg.StrOpt('qpid_hostname',
-               default='localhost',
-               help='Qpid broker hostname'),
-    cfg.StrOpt('qpid_port',
-               default='5672',
-               help='Qpid broker port'),
-    cfg.StrOpt('qpid_username',
-               default='',
-               help='Username for qpid connection'),
-    cfg.StrOpt('qpid_password',
-               default='',
-               help='Password for qpid connection'),
-    cfg.StrOpt('qpid_sasl_mechanisms',
-               default='',
-               help='Space separated list of SASL mechanisms to use for auth'),
-    cfg.BoolOpt('qpid_reconnect',
-                default=True,
-                help='Automatically reconnect'),
-    cfg.IntOpt('qpid_reconnect_timeout',
-               default=0,
-               help='Reconnection timeout in seconds'),
-    cfg.IntOpt('qpid_reconnect_limit',
-               default=0,
-               help='Max reconnections before giving up'),
-    cfg.IntOpt('qpid_reconnect_interval_min',
-               default=0,
-               help='Minimum seconds between reconnection attempts'),
-    cfg.IntOpt('qpid_reconnect_interval_max',
-               default=0,
-               help='Maximum seconds between reconnection attempts'),
-    cfg.IntOpt('qpid_reconnect_interval',
-               default=0,
-               help='Equivalent to setting max and min to the same value'),
-    cfg.IntOpt('qpid_heartbeat',
-               default=5,
-               help='Seconds between connection keepalive heartbeats'),
-    cfg.StrOpt('qpid_protocol',
-               default='tcp',
-               help="Transport to use, either 'tcp' or 'ssl'"),
-    cfg.BoolOpt('qpid_tcp_nodelay',
-                default=True,
-                help='Disable Nagle algorithm'),
-    ]
-
-FLAGS = config.FLAGS
-FLAGS.register_opts(qpid_opts)
-
-
 class ConsumerBase(object):
     """Consumer base class."""
 
@@ -174,7 +125,7 @@ class TopicConsumer(ConsumerBase):
         """
 
         super(TopicConsumer, self).__init__(session, callback,
-                        "%s/%s" % (FLAGS.control_exchange, topic), {},
+                        "%s/%s" % (config.FLAGS.control_exchange, topic), {},
                         topic, {})
 
 
@@ -248,7 +199,7 @@ class TopicPublisher(Publisher):
         """init a 'topic' publisher.
         """
         super(TopicPublisher, self).__init__(session,
-                                "%s/%s" % (FLAGS.control_exchange, topic))
+                                "%s/%s" % (config.FLAGS.control_exchange, topic))
 
 
 class FanoutPublisher(Publisher):
@@ -266,7 +217,7 @@ class NotifyPublisher(Publisher):
         """init a 'topic' publisher.
         """
         super(NotifyPublisher, self).__init__(session,
-                                "%s/%s" % (FLAGS.control_exchange, topic),
+                                "%s/%s" % (config.FLAGS.control_exchange, topic),
                                 {"durable": True})
 
 
@@ -281,10 +232,10 @@ class Connection(object):
         if server_params is None:
             server_params = {}
 
-        default_params = dict(hostname=FLAGS.qpid_hostname,
-                port=FLAGS.qpid_port,
-                username=FLAGS.qpid_username,
-                password=FLAGS.qpid_password)
+        default_params = dict(hostname=config.FLAGS.qpid_hostname,
+                port=config.FLAGS.qpid_port,
+                username=config.FLAGS.qpid_username,
+                password=config.FLAGS.qpid_password)
 
         params = server_params
         for key in default_params.keys():
@@ -298,23 +249,23 @@ class Connection(object):
         # before we call open
         self.connection.username = params['username']
         self.connection.password = params['password']
-        self.connection.sasl_mechanisms = FLAGS.qpid_sasl_mechanisms
-        self.connection.reconnect = FLAGS.qpid_reconnect
-        if FLAGS.qpid_reconnect_timeout:
-            self.connection.reconnect_timeout = FLAGS.qpid_reconnect_timeout
-        if FLAGS.qpid_reconnect_limit:
-            self.connection.reconnect_limit = FLAGS.qpid_reconnect_limit
-        if FLAGS.qpid_reconnect_interval_max:
+        self.connection.sasl_mechanisms = config.FLAGS.qpid_sasl_mechanisms
+        self.connection.reconnect = config.FLAGS.qpid_reconnect
+        if config.FLAGS.qpid_reconnect_timeout:
+            self.connection.reconnect_timeout = config.FLAGS.qpid_reconnect_timeout
+        if config.FLAGS.qpid_reconnect_limit:
+            self.connection.reconnect_limit = config.FLAGS.qpid_reconnect_limit
+        if config.FLAGS.qpid_reconnect_interval_max:
             self.connection.reconnect_interval_max = (
-                    FLAGS.qpid_reconnect_interval_max)
-        if FLAGS.qpid_reconnect_interval_min:
+                    config.FLAGS.qpid_reconnect_interval_max)
+        if config.FLAGS.qpid_reconnect_interval_min:
             self.connection.reconnect_interval_min = (
-                    FLAGS.qpid_reconnect_interval_min)
-        if FLAGS.qpid_reconnect_interval:
-            self.connection.reconnect_interval = FLAGS.qpid_reconnect_interval
-        self.connection.hearbeat = FLAGS.qpid_heartbeat
-        self.connection.protocol = FLAGS.qpid_protocol
-        self.connection.tcp_nodelay = FLAGS.qpid_tcp_nodelay
+                    config.FLAGS.qpid_reconnect_interval_min)
+        if config.FLAGS.qpid_reconnect_interval:
+            self.connection.reconnect_interval = config.FLAGS.qpid_reconnect_interval
+        self.connection.hearbeat = config.FLAGS.qpid_heartbeat
+        self.connection.protocol = config.FLAGS.qpid_protocol
+        self.connection.tcp_nodelay = config.FLAGS.qpid_tcp_nodelay
 
         # Open is part of reconnect -
         # NOTE(WGH) not sure we need this with the reconnect flags
@@ -339,7 +290,7 @@ class Connection(object):
                 self.connection.open()
             except qpid.messaging.exceptions.ConnectionError, e:
                 LOG.error(_('Unable to connect to AMQP server: %s ') % e)
-                time.sleep(FLAGS.qpid_reconnect_interval or 1)
+                time.sleep(config.FLAGS.qpid_reconnect_interval or 1)
             else:
                 break
 

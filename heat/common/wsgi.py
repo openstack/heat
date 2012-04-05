@@ -40,8 +40,8 @@ import webob.dec
 import webob.exc
 
 from heat.common import exception
-from heat.common import utils
 from heat.openstack.common import cfg
+from heat.openstack.common import utils
 
 
 bind_opts = [

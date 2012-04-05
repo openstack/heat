@@ -18,16 +18,7 @@
 #    under the License.
 
 from heat.openstack.common import cfg
-from heat.common import utils
-from heat.common import config
-
-
-rpc_backend_opt = cfg.StrOpt('rpc_backend',
-        default='heat.rpc.impl_qpid',
-        help="The messaging module to use, defaults to kombu.")
-
-FLAGS = config.FLAGS
-FLAGS.register_opt(rpc_backend_opt)
+from heat.openstack.common import utils
 
 
 def create_connection(new=True):
@@ -193,10 +184,17 @@ def fanout_cast_to_server(context, server_params, topic, msg):
 
 _RPCIMPL = None
 
+def configure(conf):
+    """Delay import of rpc_backend until FLAGS are loaded."""
+    print 'configuring rpc %s' % conf.rpc_backend
+    global _RPCIMPL
+    _RPCIMPL = utils.import_object(conf.rpc_backend)
 
 def _get_impl():
     """Delay import of rpc_backend until FLAGS are loaded."""
     global _RPCIMPL
     if _RPCIMPL is None:
-        _RPCIMPL = utils.import_object(FLAGS.rpc_backend)
+        print 'rpc not configured'
+
     return _RPCIMPL
+

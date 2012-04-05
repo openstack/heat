@@ -21,6 +21,7 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 gettext.install('heat', unicode=1)
 
+from heat import rpc
 from heat.common import config
 from heat.common import wsgi
 from paste import httpserver
@@ -30,6 +31,8 @@ if __name__ == '__main__':
     try:
         conf = config.HeatConfigOpts()
         conf()
+        config.FLAGS = conf
+        rpc.configure(conf)
 
         app = config.load_paste_app(conf)
 
