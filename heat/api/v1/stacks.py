@@ -179,7 +179,7 @@ class StackController(object):
 
         res = {'DescribeStackEventsResult': {'StackEvents': [] } }
         summaries = res['DescribeStackEventsResult']['StackEvents']
-        for s in stack_list:
+        for s in stack_list['events']:
             summaries.append(s)
 
         return res
