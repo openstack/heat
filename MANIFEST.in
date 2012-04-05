@@ -8,6 +8,7 @@ graft templates
 include heat/jeos/F16-x86_64-gold-jeos.tdl
 include heat/jeos/F17-x86_64-gold-jeos.tdl
 include heat/jeos/F16-x86_64-cftools-jeos.tdl
+include heat/jeos/F17-x86_64-cftools-jeos.tdl
 include heat/db/sqlalchemy/migrate_repo/migrate.cfg
 graft etc
 graft docs
