@@ -22,7 +22,7 @@
 import copy
 import logging
 
-from heat import local
+from heat.openstack.common import local
 from heat.common import utils
 
 

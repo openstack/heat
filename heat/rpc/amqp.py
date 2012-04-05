@@ -37,18 +37,18 @@ from eventlet import pools
 from heat import context
 from heat.common import exception
 from heat.common import config
-from heat import local
+from heat.openstack.common import local
+
 import heat.rpc.common as rpc_common
 
 LOG = logging.getLogger(__name__)
-FLAGS = config.FLAGS
 
 
 class Pool(pools.Pool):
     """Class that implements a Pool of Connections."""
     def __init__(self, *args, **kwargs):
         self.connection_cls = kwargs.pop("connection_cls", None)
-        kwargs.setdefault("max_size", FLAGS.rpc_conn_pool_size)
+        kwargs.setdefault("max_size", config.FLAGS.rpc_conn_pool_size)
         kwargs.setdefault("order_as_stack", True)
         super(Pool, self).__init__(*args, **kwargs)
 
@@ -206,7 +206,7 @@ class ProxyCallback(object):
 
     def __init__(self, proxy, connection_pool):
         self.proxy = proxy
-        self.pool = greenpool.GreenPool(FLAGS.rpc_thread_pool_size)
+        self.pool = greenpool.GreenPool(config.FLAGS.rpc_thread_pool_size)
         self.connection_pool = connection_pool
 
     def __call__(self, message_data):
@@ -267,7 +267,7 @@ class MulticallWaiter(object):
     def __init__(self, connection, timeout):
         self._connection = connection
         self._iterator = connection.iterconsume(
-                                timeout=timeout or FLAGS.rpc_response_timeout)
+                                timeout=timeout or config.FLAGS.rpc_response_timeout)
         self._result = None
         self._done = False
         self._got_ending = False
