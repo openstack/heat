@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import base64
+import eventlet
 import logging
 import os
-import time
-import base64
 import string
+
 from novaclient.v1_1 import client
 
 from heat.db import api as db_api
@@ -39,12 +40,11 @@ class Resource(object):
         self.t = json_snippet
         self.depends_on = []
         self.references = []
-        self.references_resolved = False
         self.state = None
         self.stack = stack
         self.name = name
         self.instance_id = None
-        self._nova = None
+        self._nova = {}
         if not self.t.has_key('Properties'):
             # make a dummy entry to prevent having to check all over the
             # place for it.
@@ -53,18 +53,23 @@ class Resource(object):
         stack.resolve_static_refs(self.t)
         stack.resolve_find_in_map(self.t)
 
-    def nova(self):
-        if self._nova:
-            return self._nova
+    def nova(self, service_type='compute'):
+        if self._nova.has_key(service_type):
+            return self._nova[service_type]
 
         username = self.stack.creds['username']
         password = self.stack.creds['password']
         tenant = self.stack.creds['tenant']
         auth_url = self.stack.creds['auth_url']
+        if service_type == 'compute':
+            service_name = 'nova'
+        else:
+            service_name = None
 
-        self._nova = client.Client(username, password, tenant, auth_url,
-                                   service_type='compute', service_name='nova')
-        return self._nova
+
+        self._nova[service_type] = client.Client(username, password, tenant, auth_url,
+                                   service_type=service_type, service_name=service_name)
+        return self._nova[service_type]
 
     def start(self):
         for c in self.depends_on:
@@ -93,7 +98,7 @@ class Resource(object):
             self.state = new_state
 
     def stop(self):
-        pass
+        print 'stopping %s id:%s' % (self.name, self.instance_id)
 
     def reload(self):
         pass
@@ -194,19 +199,34 @@ class Volume(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         super(Volume, self).start()
 
-        vol = self.nova().volumes.create(self.t['Properties']['Size'],
-                                         display_name=self.name,
-                                         display_description=self.name)
-        self.instance_id = vol.id
+        vol = self.nova('volume').volumes.create(self.t['Properties']['Size'],
+                                                 display_name=self.name,
+                                                 display_description=self.name)
+
+        while vol.status == 'creating':
+            eventlet.sleep(1)
+            vol.get()
+        if vol.status == 'available':
+            self.state_set(self.CREATE_COMPLETE)
+            self.instance_id = vol.id
+        else:
+            self.state_set(self.CREATE_FAILED)
 
     def stop(self):
         if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
             return
+
+        if self.instance_id != None:
+            vol = self.nova('volume').volumes.get(self.instance_id)
+            if vol.status == 'in-use':
+                print 'cant delete volume when in-use'
+                return
+
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.stop(self)
 
         if self.instance_id != None:
-            self.nova().volumes.delete(self.instance_id)
+            self.nova('volume').volumes.delete(self.instance_id)
         self.state_set(self.DELETE_COMPLETE)
 
 class VolumeAttachment(Resource):
@@ -220,11 +240,22 @@ class VolumeAttachment(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         super(VolumeAttachment, self).start()
 
-        att = self.nova().volumes.create_server_volume(self.t['Properties']['InstanceId'],
-                                                       self.t['Properties']['VolumeId'],
-                                                       self.t['Properties']['Device'])
-        self.instance_id = att.id
-        self.state_set(self.CREATE_COMPLETE)
+        print 'InstanceId %s' % self.t['Properties']['InstanceId']
+        print 'VolumeId %s' % self.t['Properties']['VolumeId']
+        print 'Device %s' % self.t['Properties']['Device']
+        va = self.nova().volumes.create_server_volume(server_id=self.t['Properties']['InstanceId'],
+                                                       volume_id=self.t['Properties']['VolumeId'],
+                                                       device=self.t['Properties']['Device'])
+
+        vol = self.nova('volume').volumes.get(va.id)
+        while vol.status == 'available' or vol.status == 'attaching':
+            eventlet.sleep(1)
+            vol.get()
+        if vol.status == 'in-use':
+            self.state_set(self.CREATE_COMPLETE)
+            self.instance_id = va.id
+        else:
+            self.state_set(self.CREATE_FAILED)
 
     def stop(self):
         if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
@@ -232,9 +263,17 @@ class VolumeAttachment(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.stop(self)
 
-        if self.instance_id == None:
-            self.nova().volumes.delete_server_volume(self.t['Properties']['InstanceId'],
-                                                     self.instance_id)
+        print 'VolumeAttachment un-attaching %s %s' % (self.instance_id, self.t['Properties']['VolumeId'])
+
+        self.nova().volumes.delete_server_volume(self.t['Properties']['InstanceId'],
+                                                 self.t['Properties']['VolumeId'])
+
+        vol = self.nova('volume').volumes.get(self.t['Properties']['VolumeId'])
+        while vol.status == 'in-use':
+            print 'trying to un-attach %s, but still in-use' % self.instance_id
+            eventlet.sleep(1)
+            vol.get()
+
         self.state_set(self.DELETE_COMPLETE)
 
 class Instance(Resource):
@@ -324,10 +363,15 @@ class Instance(Resource):
         key_name = self.t['Properties']['KeyName']
         image_name = self.t['Properties']['ImageId']
 
+        image_id = None
         image_list = self.nova().images.list()
         for o in image_list:
             if o.name == image_name:
                 image_id = o.id
+
+        # TODO(asalkeld) we need to test earlier whether the image_id exists.
+        if image_id is None:
+            raise 
 
         flavor_list = self.nova().flavors.list()
         for o in flavor_list:
@@ -339,7 +383,7 @@ class Instance(Resource):
                                             userdata=self.FnBase64(userdata))
         while server.status == 'BUILD':
             server.get()
-            time.sleep(0.1)
+            eventlet.sleep(1)
         if server.status == 'ACTIVE':
             self.state_set(self.CREATE_COMPLETE)
             self.instance_id = server.id

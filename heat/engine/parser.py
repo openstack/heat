@@ -109,6 +109,11 @@ class Stack:
             self.resources[r].start()
 
     def stop(self):
+        # stop VolumeAttachment's first
+        for r in self.t['Resources']:
+            if self.t['Resources'][r]['Type'] == 'AWS::EC2::VolumeAttachment':
+                self.resources[r].stop()
+
         for r in self.t['Resources']:
             self.resources[r].stop()
 
