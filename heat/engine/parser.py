@@ -72,9 +72,9 @@ class Stack:
 
     def validate(self):
         '''
-            If you are wondering where the actual validation is, me too.
-            it is just not obvious how to respond to validation failures.
-            http://docs.amazonwebservices.com/AWSCloudFormation/latest/APIReference/API_ValidateTemplate.html
+        If you are wondering where the actual validation is, me too.
+        it is just not obvious how to respond to validation failures.
+        http://docs.amazonwebservices.com/AWSCloudFormation/latest/APIReference/API_ValidateTemplate.html
         '''
         response = { 'ValidateTemplateResult': {
                     'Description': 'bla',
@@ -98,23 +98,48 @@ class Stack:
             response['ValidateTemplateResult']['Parameters'].append(res)
         return response
 
-    def start(self):
-        # start Volumes first.
+    def resource_append_deps(self, resource, order_list):
+        '''
+        For the given resource first append it's dependancies then
+        it's self to order_list.
+        '''
+        for r in resource.depends_on:
+            self.resource_append_deps(self.resources[r], order_list)
+        if not resource.name in order_list:
+            order_list.append(resource.name)
+
+    def get_start_order(self):
+        '''
+        return a list of Resource names in the correct order
+        for startup.
+        '''
+        order = []
         for r in self.t['Resources']:
-            if self.t['Resources'][r]['Type'] == 'AWS::EC2::Volume':
-                self.resources[r].start()
+            if self.t['Resources'][r]['Type'] == 'AWS::EC2::Volume' or \
+               self.t['Resources'][r]['Type'] == 'AWS::EC2::EIP':
+                if len(self.resources[r].depends_on) == 0:
+                    order.append(r)
 
         for r in self.t['Resources']:
-            #print 'calling start [stack->%s]' % (self.resources[r].name)
+            self.resource_append_deps(self.resources[r], order)
+
+        return order
+
+    def start(self):
+        '''
+        start all the resources in the order specified by get_start_order
+        '''
+        order = self.get_start_order()
+        for r in order:
             self.resources[r].start()
 
     def stop(self):
-        # stop VolumeAttachment's first
-        for r in self.t['Resources']:
-            if self.t['Resources'][r]['Type'] == 'AWS::EC2::VolumeAttachment':
-                self.resources[r].stop()
-
-        for r in self.t['Resources']:
+        '''
+        stop all the resources in the reverse order specified by get_start_order
+        '''
+        order = self.get_start_order()
+        order.reverse()
+        for r in order:
             self.resources[r].stop()
 
     def get_outputs(self):
