@@ -113,16 +113,19 @@ class EngineManager(manager.Manager):
         return res
 
     def delete_stack(self, context, stack_name, params):
-        s = db_api.stack_get(None, stack_name)
-        if not s:
+        st = db_api.stack_get(None, stack_name)
+        if not st:
             return {'Error': 'No stack by that name'} 
 
         logger.info('deleting stack %s' % stack_name)
 
-        ps = parser.Stack(s.name, s.raw_template.template, params)
-        ps.stop()
+        rt = db_api.raw_template_get(None, st.raw_template_id)
+        ps = parser.Stack(st.name, rt.template, params)
+        resources = db_api.resource_get_all_by_stack(None, st.id)
+        for r in ps.resources:
+            ps.resources[r].stop()
         db_api.stack_delete(None, stack_name)
-        return None
-
+        return list_stacks(context, stack_name, params)
+        
     def list_events(self, context, stack_name):
         return db_api.event_get_all_by_stack(None, stack_name)

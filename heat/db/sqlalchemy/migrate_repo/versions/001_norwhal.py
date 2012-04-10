@@ -38,17 +38,26 @@ def upgrade(migrate_engine):
     resource = Table(
         'resource', meta,
         Column('id', Integer, primary_key=True),
-        Column('instance_id', String(length=255, convert_unicode=False,
+        Column('nova_instance', String(length=255, convert_unicode=False,
               assert_unicode=None,
               unicode_error=None, _warn_on_bytestring=False)),
+        Column('name', String(length=255, convert_unicode=False,
+              assert_unicode=None,
+              unicode_error=None, _warn_on_bytestring=False)),
+
         Column('created_at', DateTime(timezone=False)),
         Column('updated_at', DateTime(timezone=False)),
-        Column('state', Integer()),
+        Column('state', String(length=255, convert_unicode=False,
+                                           assert_unicode=None,
+                                           unicode_error=None, 
+                                           _warn_on_bytestring=False)),
         Column('state_description', String(length=255, convert_unicode=False,
                                            assert_unicode=None,
                                            unicode_error=None, 
                                            _warn_on_bytestring=False)),
-        Column('parsed_template_id', Integer, ForeignKey("parsed_template.id"), nullable=False),
+        Column('parsed_template_id', Integer, ForeignKey("parsed_template.id"), nullable=True),
+        Column('stack_id', Integer, ForeignKey("stack.id"), nullable=False),
+        Column('depends_on', Integer),
     )
 
     parsedtemplate = Table(

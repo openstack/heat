@@ -64,6 +64,11 @@ def resource_get_all(context):
 def resource_create(context, values):
     return IMPL.resource_create(context, values)
 
+def resource_get_all_by_stack(context, stack_id):
+    return IMPL.resource_get_all_by_stack(context, stack_id)
+
+def resource_get_by_name_and_stack(context, resource_name, stack_id):
+    return IMPL.resource_get_by_name_and_stack(context, resource_name, stack_id)
 
 def stack_get(context, stack_id):
     return IMPL.stack_get(context, stack_id)

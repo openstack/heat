@@ -16,7 +16,7 @@ SQLAlchemy models for heat data.
 """
 
 from sqlalchemy import *
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, object_mapper
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import ForeignKeyConstraint
@@ -143,10 +143,17 @@ class Resource(BASE, HeatBase):
     __tablename__ = 'resource'
 
     id = Column(Integer, primary_key=True)
-    state = Column(String)
+    state = Column('state', String)
+    name = Column('name', String, nullable=False)
+    nova_instance = Column('nova_instance', String)
     state_description = Column('state_description', String)
     parsed_template_id = Column(Integer, ForeignKey('parsed_template.id'),\
-                                 nullable=False)
+                                 nullable=True)
     parsed_template = relationship(ParsedTemplate,        
         backref=backref('resources'))
 
+    stack_id = Column(Integer, ForeignKey('stack.id'),\
+                                 nullable=False)
+    stack = relationship(Stack, backref=backref('resources'), cascade="all, delete", passive_deletes=True)
+
+    depends_on = Column(Integer)

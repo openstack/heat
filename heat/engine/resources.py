@@ -46,6 +46,11 @@ class Resource(object):
         self.stack = stack
         self.name = name
         self.instance_id = None
+        resource = db_api.resource_get_by_name_and_stack(None, name, stack.id)
+        if resource:
+            self.instance_id = resource.nova_instance
+            self.stack_id = stack.id
+
         self._nova = {}
         if not self.t.has_key('Properties'):
             # make a dummy entry to prevent having to check all over the
@@ -403,7 +408,13 @@ class Instance(Resource):
         if server.status == 'ACTIVE':
             self.state_set(self.CREATE_COMPLETE)
             self.instance_id = server.id
-
+            rs = {}
+            rs['state'] = 'ACTIVE'
+            rs['nova_instance'] = self.instance_id
+            rs['stack_id'] = self.stack.id
+            rs['name'] = self.name
+            new_rs = db_api.resource_create(None, rs)
+            self.id = new_rs.id
             # just record the first ipaddress
             for n in server.networks:
                 self.ipaddress = server.networks[n][0]

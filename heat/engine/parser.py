@@ -18,10 +18,11 @@ import json
 import logging
 
 from heat.engine import resources
+from heat.db import api as db_api
 
 logger = logging.getLogger('heat.engine.parser')
 
-class Stack:
+class Stack(object):
     def __init__(self, stack_name, template, parms=None):
         self.id = 0
         self.t = template
@@ -41,7 +42,7 @@ class Stack:
         self.res = {}
         self.doc = None
         self.name = stack_name
-
+   
         self.parms['AWS::Region'] = {"Description" : "AWS Regions", "Type" : "String", "Default" : "ap-southeast-1",
               "AllowedValues" : ["us-east-1","us-west-1","us-west-2","sa-east-1","eu-west-1","ap-southeast-1","ap-northeast-1"],
               "ConstraintDescription" : "must be a valid EC2 instance type." }
@@ -52,6 +53,10 @@ class Stack:
             self.creds = eval(parms['KeyStoneCreds'])
         else:
             self.creds = parms['KeyStoneCreds']
+
+        stack = db_api.stack_get(None, stack_name)
+        if stack:
+            self.id = stack.id
 
         self.resources = {}
         for r in self.t['Resources']:
@@ -155,9 +160,11 @@ class Stack:
         '''
         order = self.get_create_order()
         order.reverse()
+        
         for r in order:
             try:
                 self.resources[r].delete()
+                db_api.resource_get(None, self.resources[r].id).delete()
             except Exception as ex:
                 logger.error('delete: %s' % str(ex))
                 self.resources[r].state_set(self.resources[r].DELETE_FAILED, str(ex))

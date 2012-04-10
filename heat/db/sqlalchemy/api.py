@@ -84,6 +84,13 @@ def resource_get(context, resource_id):
 
     return result
 
+def resource_get_by_name_and_stack(context, resource_name, stack_id):
+    result = model_query(context, models.Resource).\
+                        filter_by(name=resource_name).\
+                        filter_by(stack_id=stack_id).first()
+
+    return result
+
 def resource_get_all(context):
     results = model_query(context, models.Resource).all()
 
@@ -97,6 +104,15 @@ def resource_create(context, values):
     resource_ref.update(values)
     resource_ref.save()
     return resource_ref
+
+def resource_get_all_by_stack(context, stack_id):
+    results = model_query(context, models.Resource).\
+                filter_by(stack_id=stack_id).all()
+
+    if not results:
+        raise Exception("no resources for stack_id %s were found" % stack_id)
+    
+    return results
 
 def stack_get(context, stack_id):
     result = model_query(context, models.Stack).\
@@ -118,8 +134,8 @@ def stack_delete(context, stack_name):
     if not s:
         raise Exception('Attempt to delete a stack with id: %s that does not exist' % stack_name)
 
-    for e in s.events:
-        e.delete()
+    #for e in s.events:
+    #    e.delete()
     s.delete()
 
 def event_get(context, event_id):
