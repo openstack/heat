@@ -15,6 +15,8 @@ import os
 import sys
 import time
 import json
+import base64
+import libxml2
 
 from urlparse import urlparse
 
@@ -26,8 +28,10 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
     sys.path.insert(0, possible_topdir)
     jeos_path = '%s/heat/%s/' % (possible_topdir, "jeos")
+    cfntools_path = '%s/heat/%s/' % (possible_topdir, "cfntools")
 else:
     jeos_path = '%s/heat/%s/' % (sys.path[1], "jeos")
+    cfntools_path = '%s/heat/%s/' % (sys.path[1], "cfntools")
 
 gettext.install('heat', unicode=1)
 
@@ -227,6 +231,7 @@ def jeos_create(options, arguments):
     to create virtual machines and read the raw DVDs.
     '''
     global jeos_path
+    global cfntools_path
 
     # if not running as root, return EPERM to command line
     if os.geteuid() != 0:
@@ -275,6 +280,21 @@ def jeos_create(options, arguments):
             sys.exit(1)
 
     tdl_path = '%s%s-%s-%s-jeos.tdl' % (jeos_path, distro, arch, instance_type)
+
+    # Load the cfntools into the cfntool image by encoding them in base64
+    # and injecting them into the TDL at the appropriate place
+    if instance_type == 'cfntools':
+        tdl_xml = libxml2.parseFile(tdl_path)
+        for cfnname in ['cfn-init', 'cfn-hup', 'cfn-signal']:
+            f = open('%s/%s' % (cfntools_path, cfnname), 'r')
+            cfscript_e64 = base64.b64encode(f.read())
+            f.close()
+            tdl_xml.xpathEval("/template/files/file[@name='/opt/aws/bin/%s']" % cfnname)[0].setContent(cfscript_e64)
+
+        # TODO(sdake) INSECURE
+        tdl_xml.saveFormatFile('/tmp/tdl', format=1)
+        tdl_path = '/tmp/tdl'
+
     dsk_filename = '/var/lib/libvirt/images/%s-%s-%s-jeos.dsk' % (distro, arch, instance_type)
     qcow2_filename = '/var/lib/libvirt/images/%s-%s-%s-jeos.qcow2' % (distro, arch, instance_type)
     image_name = '%s-%s-%s' % (distro, arch, instance_type)
