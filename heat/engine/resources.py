@@ -265,12 +265,17 @@ class VolumeAttachment(Resource):
                                                        self.instance_id)
 
         self.nova().volumes.delete_server_volume(self.t['Properties']['InstanceId'],
-                                                 self.t['Properties']['VolumeId'])
+                                                 self.instance_id)
 
         vol = self.nova('volume').volumes.get(self.t['Properties']['VolumeId'])
         while vol.status == 'in-use':
             print 'trying to un-attach %s, but still %s' % (self.instance_id, vol.status)
             eventlet.sleep(1)
+            try:
+                self.nova().volumes.delete_server_volume(self.t['Properties']['InstanceId'],
+                                                         self.instance_id)
+            except:
+                pass
             vol.get()
 
         self.state_set(self.DELETE_COMPLETE)
