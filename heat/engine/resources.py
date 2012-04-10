@@ -73,8 +73,8 @@ class Resource(object):
 
     def start(self):
         for c in self.depends_on:
-            #print '%s->%s.start()' % (self.name, self.stack.resources[c].name)
             self.stack.resources[c].start()
+        print 'starting %s name:%s' % (self.t['Type'], self.name)
 
         self.stack.resolve_attributes(self.t)
         self.stack.resolve_joins(self.t)
@@ -98,7 +98,7 @@ class Resource(object):
             self.state = new_state
 
     def stop(self):
-        print 'stopping %s id:%s' % (self.name, self.instance_id)
+        print 'stopping %s name:%s id:%s' % (self.t['Type'], self.name, self.instance_id)
 
     def reload(self):
         pass
@@ -240,9 +240,9 @@ class VolumeAttachment(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         super(VolumeAttachment, self).start()
 
-        print 'InstanceId %s' % self.t['Properties']['InstanceId']
-        print 'VolumeId %s' % self.t['Properties']['VolumeId']
-        print 'Device %s' % self.t['Properties']['Device']
+        print 'Attaching InstanceId %s VolumeId %s Device %s' % (self.t['Properties']['InstanceId'],
+                                                                 self.t['Properties']['VolumeId'],
+                                                                 self.t['Properties']['Device'])
         va = self.nova().volumes.create_server_volume(server_id=self.t['Properties']['InstanceId'],
                                                        volume_id=self.t['Properties']['VolumeId'],
                                                        device=self.t['Properties']['Device'])
@@ -263,14 +263,15 @@ class VolumeAttachment(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.stop(self)
 
-        print 'VolumeAttachment un-attaching %s %s' % (self.instance_id, self.t['Properties']['VolumeId'])
+        print 'VolumeAttachment un-attaching %s %s' % (self.t['Properties']['InstanceId'],
+                                                       self.instance_id)
 
         self.nova().volumes.delete_server_volume(self.t['Properties']['InstanceId'],
                                                  self.t['Properties']['VolumeId'])
 
         vol = self.nova('volume').volumes.get(self.t['Properties']['VolumeId'])
         while vol.status == 'in-use':
-            print 'trying to un-attach %s, but still in-use' % self.instance_id
+            print 'trying to un-attach %s, but still %s' % (self.instance_id, vol.status)
             eventlet.sleep(1)
             vol.get()
 
@@ -345,11 +346,13 @@ class Instance(Resource):
                         new_script.append(l)
                 userdata = '\n'.join(new_script)
 
+        # TODO(asalkeld) this needs to go into the metadata server.
         try:
             con = self.t['Metadata']["AWS::CloudFormation::Init"]['config']
             for st in con['services']:
                 for s in con['services'][st]:
-                    print 'service start %s_%s' % (self.name, s)
+                    pass
+                    #print 'service start %s_%s' % (self.name, s)
         except KeyError as e:
             # if there is no config then no services.
             pass
