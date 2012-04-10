@@ -9,6 +9,9 @@ include heat/jeos/F16-x86_64-gold-jeos.tdl
 include heat/jeos/F17-x86_64-gold-jeos.tdl
 include heat/jeos/F16-x86_64-cftools-jeos.tdl
 include heat/jeos/F17-x86_64-cftools-jeos.tdl
+include heat/cfntools/cfn-init
+include heat/cfntools/cfn-hup
+include heat/cfntools/cfn-signal
 include heat/db/sqlalchemy/migrate_repo/migrate.cfg
 graft etc
 graft docs
