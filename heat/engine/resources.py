@@ -72,8 +72,6 @@ class Resource(object):
         return self._nova[service_type]
 
     def start(self):
-        for c in self.depends_on:
-            self.stack.resources[c].start()
         print 'starting %s name:%s' % (self.t['Type'], self.name)
 
         self.stack.resolve_attributes(self.t)
