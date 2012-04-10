@@ -64,8 +64,8 @@ class EngineManager(manager.Manager):
             mem = {}
             mem['stack_id'] = s.id
             mem['stack_name'] = s.name
-            mem['creation_at'] = s.created_at
-            mem['updated_at'] = s.updated_at
+            mem['creation_at'] = str(s.created_at)
+            mem['updated_at'] = str(s.updated_at)
             mem['NotificationARNs'] = 'TODO'
             mem['Outputs'] = ps.get_outputs()
             mem['Parameters'] = ps.t['Parameters']
@@ -98,7 +98,7 @@ class EngineManager(manager.Manager):
         stack.start()
        
         return {'stack': {'id': new_s.id, 'name': new_s.name,\
-                'created_at': new_s.created_at}}
+                'created_at': str(new_s.created_at)}}
 
     def validate_template(self, req, body=None):
 

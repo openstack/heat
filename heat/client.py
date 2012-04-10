@@ -22,7 +22,7 @@ import logging
 import os
 from heat.common import client as base_client
 from heat.common import exception
-
+import pdb
 from heat.cloudformations import *
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class V1Client(base_client.BaseClient):
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         self._insert_common_parameters(params)
         res = self.do_request("POST", "/CreateStack", params=params)
-
+        pdb.set_trace()
         data = json.loads(res.read())
         return data
 
