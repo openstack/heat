@@ -218,10 +218,10 @@ def jeos_create(options, arguments):
     arguments that are popped from the arguments parameter.
     arg0 -> Distribution such as 'F16', 'F17', 'U10', 'D6'
     arg1 -> Architecture such as 'i386' 'i686' or 'x86_64'
-    arg2 -> Image type such as 'gold' or 'cftools'
+    arg2 -> Image type such as 'gold' or 'cfntools'
 
     gold is a basic gold JEOS
-    cftools contains the cfntools helper scripts
+    cfntools contains the cfntools helper scripts
 
     The command must be run as root in order for libvirt to have permissions
     to create virtual machines and read the raw DVDs.
@@ -238,7 +238,7 @@ def jeos_create(options, arguments):
         print '   heat jeos_create <distro> <arch> <instancetype>'
         print '     instance type can be:'
         print '     gold builds a base image where userdata is used to initialize the instance'
-        print '     cftools builds a base image where AWS CloudFormations tools are present'
+        print '     cfntools builds a base image where AWS CloudFormations tools are present'
         sys.exit(1)
 
     distro = arguments.pop(0)
@@ -250,9 +250,9 @@ def jeos_create(options, arguments):
         print 'try: x86_64 or i686'
         sys.exit(1)
 
-    if not instance_type in ('gold', 'cftools'):
+    if not instance_type in ('gold', 'cfntools'):
         print 'A JEOS instance type of %s not supported' % instance_type
-        print 'try: gold or cftools'
+        print 'try: gold or cfntools'
         sys.exit(1)
 
     iso = None

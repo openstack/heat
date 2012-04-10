@@ -1,5 +1,5 @@
 <template>
-  <name>F16-x86_64-cftools-jeos</name>
+  <name>F16-x86_64-cfntools-jeos</name>
   <os>
     <name>Fedora</name>
     <version>16</version>
