@@ -22,7 +22,7 @@ if [[ -z "$SERVICE_TOKEN" ]]; then
     exit 1
 fi
 
-ADMIN_ROLE=$(keystone user-list | grep True | cut -d\| -f2,5 | grep admin | cut -d\| -f1)
+ADMIN_ROLE=$(keystone role-list | awk -F\| '($3 ~ "^ admin *$") { print $2 }')
 SERVICE_TENANT=$(keystone tenant-list | grep service | cut -d\| -f2)
 SERVICE_PASSWORD=${SERVICE_PASSWORD:-$OS_PASSWORD}
 if [[ "$SERVICE_PASSWORD" == "$OS_PASSWORD" ]]; then
