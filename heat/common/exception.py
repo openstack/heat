@@ -19,7 +19,7 @@
 
 import functools
 import urlparse
-from heat.openstack.common.exception import OpenstackException
+from heat.openstack.common.exception import *
 
 class RedirectException(Exception):
     def __init__(self, url):
