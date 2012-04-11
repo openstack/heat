@@ -79,7 +79,7 @@ EOF
 	sudo losetup -d /dev/loop0
 	sudo rm -f /var/lib/nova/nova-volumes.img
 	sudo rm -rf /etc/{glance,nova,swift,keystone,openstack-dashboard} /var/lib/{glance,nova,swift,keystone} /var/log/{glance,nova,swift,keystone} /var/run/{glance,nova,swift,keystone}
-	rm -f $HOME/.keystonerc
+	rm -f $HOME/.openstack/.keystonerc
 }
 
 
