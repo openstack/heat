@@ -93,7 +93,7 @@ class EngineManager(manager.Manager):
 
         logger.info('template is %s' % template)
         stack_db[stack_name] = parser.Stack(stack_name, template, params)
-        stack_db[stack_name].start()
+        stack_db[stack_name].create()
 
         return {'stack': {'id': stack_name}}
 
@@ -114,7 +114,7 @@ class EngineManager(manager.Manager):
             return {'Error': 'No stack by that name'}
 
         logger.info('deleting stack %s' % stack_name)
-        stack_db[stack_name].stop()
+        stack_db[stack_name].delete()
         del stack_db[stack_name]
         return None
 

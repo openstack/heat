@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import eventlet
 import json
 import logging
 
@@ -108,7 +109,7 @@ class Stack:
         if not resource.name in order_list:
             order_list.append(resource.name)
 
-    def get_start_order(self):
+    def get_create_order(self):
         '''
         return a list of Resource names in the correct order
         for startup.
@@ -125,22 +126,43 @@ class Stack:
 
         return order
 
-    def start(self):
+    def create_blocking(self):
         '''
-        start all the resources in the order specified by get_start_order
+        create all the resources in the order specified by get_create_order
         '''
-        order = self.get_start_order()
+        order = self.get_create_order()
+        failed = False
         for r in order:
-            self.resources[r].start()
+            if not failed:
+                try:
+                    self.resources[r].create()
+                except:
+                    failed = True
+                    self.resources[r].state_set(self.resources[r].CREATE_FAILED)
+            else:
+                self.resources[r].state_set(self.resources[r].CREATE_FAILED)
 
-    def stop(self):
+
+    def create(self):
+
+        pool = eventlet.GreenPool()
+        pool.spawn_n(self.create_blocking)
+
+    def delete_blocking(self):
         '''
-        stop all the resources in the reverse order specified by get_start_order
+        delete all the resources in the reverse order specified by get_create_order
         '''
-        order = self.get_start_order()
+        order = self.get_create_order()
         order.reverse()
         for r in order:
-            self.resources[r].stop()
+            try:
+                self.resources[r].delete()
+            except:
+                self.resources[r].state_set(self.resources[r].DELETE_FAILED)
+
+    def delete(self):
+        pool = eventlet.GreenPool()
+        pool.spawn_n(self.delete_blocking)
 
     def get_outputs(self):
         self.resolve_static_refs(self.outputs)

@@ -71,8 +71,8 @@ class Resource(object):
                                    service_type=service_type, service_name=service_name)
         return self._nova[service_type]
 
-    def start(self):
-        print 'starting %s name:%s' % (self.t['Type'], self.name)
+    def create(self):
+        print 'createing %s name:%s' % (self.t['Type'], self.name)
 
         self.stack.resolve_attributes(self.t)
         self.stack.resolve_joins(self.t)
@@ -95,8 +95,8 @@ class Resource(object):
             db_api.event_create(None, ev)
             self.state = new_state
 
-    def stop(self):
-        print 'stopping %s name:%s id:%s' % (self.t['Type'], self.name, self.instance_id)
+    def delete(self):
+        print 'deleteping %s name:%s id:%s' % (self.t['Type'], self.name, self.instance_id)
 
     def reload(self):
         pass
@@ -127,12 +127,12 @@ class GenericResource(Resource):
     def __init__(self, name, json_snippet, stack):
         super(GenericResource, self).__init__(name, json_snippet, stack)
 
-    def start(self):
+    def create(self):
         if self.state != None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
-        super(GenericResource, self).start()
-        print 'Starting GenericResource %s' % self.name
+        super(GenericResource, self).create()
+        print 'createing GenericResource %s' % self.name
 
 
 class ElasticIp(Resource):
@@ -143,11 +143,11 @@ class ElasticIp(Resource):
         if self.t.has_key('Properties') and self.t['Properties'].has_key('Domain'):
             logger.warn('*** can\'t support Domain %s yet' % (self.t['Properties']['Domain']))
 
-    def start(self):
+    def create(self):
         if self.state != None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
-        super(ElasticIp, self).start()
+        super(ElasticIp, self).create()
         self.instance_id = 'eip-000003'
 
     def FnGetRefId(self):
@@ -178,12 +178,12 @@ class ElasticIpAssociation(Resource):
         else:
             return unicode(self.t['Properties']['EIP'])
 
-    def start(self):
+    def create(self):
 
         if self.state != None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
-        super(ElasticIpAssociation, self).start()
+        super(ElasticIpAssociation, self).create()
         logger.info('$ euca-associate-address -i %s %s' % (self.t['Properties']['InstanceId'],
                                                            self.t['Properties']['EIP']))
 
@@ -191,11 +191,11 @@ class Volume(Resource):
     def __init__(self, name, json_snippet, stack):
         super(Volume, self).__init__(name, json_snippet, stack)
 
-    def start(self):
+    def create(self):
         if self.state != None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
-        super(Volume, self).start()
+        super(Volume, self).create()
 
         vol = self.nova('volume').volumes.create(self.t['Properties']['Size'],
                                                  display_name=self.name,
@@ -210,7 +210,7 @@ class Volume(Resource):
         else:
             self.state_set(self.CREATE_FAILED)
 
-    def stop(self):
+    def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
             return
 
@@ -221,7 +221,7 @@ class Volume(Resource):
                 return
 
         self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.stop(self)
+        Resource.delete(self)
 
         if self.instance_id != None:
             self.nova('volume').volumes.delete(self.instance_id)
@@ -231,12 +231,12 @@ class VolumeAttachment(Resource):
     def __init__(self, name, json_snippet, stack):
         super(VolumeAttachment, self).__init__(name, json_snippet, stack)
 
-    def start(self):
+    def create(self):
 
         if self.state != None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
-        super(VolumeAttachment, self).start()
+        super(VolumeAttachment, self).create()
 
         print 'Attaching InstanceId %s VolumeId %s Device %s' % (self.t['Properties']['InstanceId'],
                                                                  self.t['Properties']['VolumeId'],
@@ -255,11 +255,11 @@ class VolumeAttachment(Resource):
         else:
             self.state_set(self.CREATE_FAILED)
 
-    def stop(self):
+    def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
             return
         self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.stop(self)
+        Resource.delete(self)
 
         print 'VolumeAttachment un-attaching %s %s' % (self.t['Properties']['InstanceId'],
                                                        self.instance_id)
@@ -316,7 +316,7 @@ class Instance(Resource):
 
         return unicode(res)
 
-    def start(self):
+    def create(self):
         def _null_callback(p, n, out):
             """
             Method to silence the default M2Crypto.RSA.gen_key output.
@@ -326,7 +326,7 @@ class Instance(Resource):
         if self.state != None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
-        Resource.start(self)
+        Resource.create(self)
 
         props = self.t['Properties']
         if not props.has_key('KeyName'):
@@ -355,7 +355,7 @@ class Instance(Resource):
             for st in con['services']:
                 for s in con['services'][st]:
                     pass
-                    #print 'service start %s_%s' % (self.name, s)
+                    #print 'service create %s_%s' % (self.name, s)
         except KeyError as e:
             # if there is no config then no services.
             pass
@@ -401,12 +401,12 @@ class Instance(Resource):
         else:
             self.state_set(self.CREATE_FAILED)
 
-    def stop(self):
+    def delete(self):
 
         if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
             return
         self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.stop(self)
+        Resource.delete(self)
 
         if self.instance_id == None:
             self.state_set(self.DELETE_COMPLETE)
