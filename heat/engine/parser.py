@@ -16,7 +16,6 @@
 import eventlet
 import json
 import logging
-
 from heat.engine import resources
 from heat.db import api as db_api
 
@@ -160,14 +159,12 @@ class Stack(object):
         '''
         order = self.get_create_order()
         order.reverse()
-        
         for r in order:
             try:
                 self.resources[r].delete()
                 db_api.resource_get(None, self.resources[r].id).delete()
             except Exception as ex:
                 logger.error('delete: %s' % str(ex))
-                self.resources[r].state_set(self.resources[r].DELETE_FAILED, str(ex))
 
     def delete(self):
         pool = eventlet.GreenPool()

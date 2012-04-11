@@ -96,8 +96,7 @@ class EngineManager(manager.Manager):
         s['raw_template_id'] = new_rt.id
         new_s = db_api.stack_create(None, s)
         stack.id = new_s.id
-        stack.start()
-       
+        stack.create() 
         return {'stack': {'id': new_s.id, 'name': new_s.name,\
                 'created_at': str(new_s.created_at)}}
 
@@ -122,10 +121,8 @@ class EngineManager(manager.Manager):
 
         rt = db_api.raw_template_get(None, st.raw_template_id)
         ps = parser.Stack(st.name, rt.template, params)
-        resources = db_api.resource_get_all_by_stack(None, st.id)
-        for r in ps.resources:
-            ps.resources[r].stop()
         db_api.stack_delete(None, stack_name)
+        ps.delete()
         return None 
         
     def list_events(self, context, stack_name):

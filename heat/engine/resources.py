@@ -424,7 +424,7 @@ class Instance(Resource):
             self.state_set(self.CREATE_FAILED)
 
     def delete(self):
-        Resource.stop(self)
+        Resource.delete(self)
         server = self.nova().servers.get(self.instance_id)
         server.delete()
         self.instance_id = None
