@@ -12,7 +12,7 @@
   <description>Fedora 17</description>
   <commands>
     <command name='commands'>
-rm -f /etc/yum.repos.d/fedora-updates*;yum -y install cloud-init;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local
+yum -y update --skip-broken;yum -y install cloud-init;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local
 #!/bin/bash
 setenforce 0
 while true; do
@@ -49,11 +49,6 @@ while [ ! -f /root/.ssh/authorized_keys ]; do
         sleep 5
     fi
 done
-while [ ! -f /var/lib/cloud/instance/user-data.txt ]; do
-        sleep 1
-done
-base64 -d /var/lib/cloud/instance/user-data.txt > /tmp/startup
-chmod +x /tmp/startup
 chmod +x /opt/aws/bin/cfn-*
 /tmp/startup
 EOF
