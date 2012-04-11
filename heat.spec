@@ -129,22 +129,21 @@ This package contains the OpenStack integration for the Heat project
 %files engine
 %defattr(-,root,root,-)
 %{_bindir}/heat-engine
-%{python_sitelib}/heat/engine/client.*
-%{python_sitelib}/heat/engine/parser.*
-%{python_sitelib}/heat/engine/resources.*
-%{python_sitelib}/heat/.*
-%{python_sitelib}/heat/engine/__init__.*
-%{python_sitelib}/heat/engine/api/__init__.*
-%{python_sitelib}/heat/engine/api/v1/__init__.*
-%{python_sitelib}/heat/engine/api/v1/stacks.*
-%{python_sitelib}/heat/engine/api/v1/events.*
+%{python_sitelib}/heat/engine/*
+%{python_sitelib}/heat/openstack/*
+%{python_sitelib}/heat/cfntools/*
+%{python_sitelib}/heat/rpc/*
+%{python_sitelib}/heat/context.*
+%{python_sitelib}/heat/manager.*
+%{python_sitelib}/heat/service.*
 %{_localstatedir}/log/heat/engine.log
 
 %files jeos
 %defattr(-,root,root,-)
 %{python_sitelib}/heat/jeos/F16-x86_64-gold-jeos.tdl
 %{python_sitelib}/heat/jeos/F17-x86_64-gold-jeos.tdl
-%{python_sitelib}/heat/jeos/F16-x86_64-cftools-jeos.tdl
+%{python_sitelib}/heat/jeos/F16-x86_64-cfntools-jeos.tdl
+%{python_sitelib}/heat/jeos/F17-x86_64-cfntools-jeos.tdl
 
 %files openstack
 %defattr(-,root,root,-)
