@@ -165,7 +165,7 @@ def event_get_all(context):
 
 def event_get_all_by_stack(context, stack_id):
     results = model_query(context, models.Event).\
-                        filter_by(stack_id).all()
+                        filter_by(stack_id=stack_id).all()
 
     if not results:
         raise Exception("no events for stack_id %s were found" % stack_id)
