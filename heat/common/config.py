@@ -288,9 +288,12 @@ def _get_deployment_config_file(conf):
     _register_paste_deploy_opts(conf)
     config_file = conf.paste_deploy.config_file
     if not config_file:
-        # Assume paste config is in a paste.ini file corresponding
-        # to the last config file
-        path = conf.config_file[-1].replace(".conf", "-paste.ini")
+        if conf.config_file:
+            # Assume paste config is in a paste.ini file corresponding
+            # to the last config file
+            path = os.path.splitext(conf.config_file[-1])[0] + "-paste.ini"
+        else:
+            return None
     else:
         path = config_file
     return os.path.abspath(path)
@@ -317,6 +320,8 @@ def load_paste_app(conf, app_name=None):
     app_name += _get_deployment_flavor(conf)
 
     conf_file = _get_deployment_config_file(conf)
+    if conf_file is None:
+        raise RuntimeError("Unable to locate config file")
 
     try:
         # Setup logging early
