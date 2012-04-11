@@ -14,6 +14,7 @@
 #    under the License.
 
 '''Implementation of SQLAlchemy backend.'''
+from sqlalchemy.orm.session import Session
 
 from nova import utils
 from heat.db.sqlalchemy import models
@@ -134,9 +135,16 @@ def stack_delete(context, stack_name):
     if not s:
         raise Exception('Attempt to delete a stack with id: %s that does not exist' % stack_name)
 
-    #for e in s.events:
-    #    e.delete()
-    s.delete()
+    session = Session.object_session(s)
+
+    for e in s.events:
+        session.delete(e)
+
+    for r in s.resources:
+        session.delete(r)
+
+    session.delete(s)
+    session.flush()
 
 def event_get(context, event_id):
     result = model_query(context, models.Event).\

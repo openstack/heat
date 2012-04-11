@@ -125,7 +125,7 @@ class EngineManager(manager.Manager):
         for r in ps.resources:
             ps.resources[r].stop()
         db_api.stack_delete(None, stack_name)
-        return list_stacks(context, stack_name, params)
+        return None 
         
     def list_events(self, context, stack_name):
         return db_api.event_get_all_by_stack(None, stack_name)
