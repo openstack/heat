@@ -73,7 +73,7 @@ class Resource(object):
         return self._nova[service_type]
 
     def create(self):
-        print 'createing %s name:%s' % (self.t['Type'], self.name)
+        print 'creating %s name:%s' % (self.t['Type'], self.name)
 
         self.stack.resolve_attributes(self.t)
         self.stack.resolve_joins(self.t)
@@ -97,7 +97,7 @@ class Resource(object):
             self.state = new_state
 
     def delete(self):
-        print 'deleteping %s name:%s id:%s' % (self.t['Type'], self.name, self.instance_id)
+        print 'deleting %s name:%s id:%s' % (self.t['Type'], self.name, self.instance_id)
 
     def reload(self):
         pass
@@ -133,7 +133,7 @@ class GenericResource(Resource):
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(GenericResource, self).create()
-        print 'createing GenericResource %s' % self.name
+        print 'creating GenericResource %s' % self.name
 
 
 class ElasticIp(Resource):
