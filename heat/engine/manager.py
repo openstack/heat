@@ -89,6 +89,7 @@ class EngineManager(manager.Manager):
         stack = parser.Stack(stack_name, template, params)
         rt = {}
         rt['template'] = template
+        rt['stack_name'] = stack_name
         new_rt = db_api.raw_template_create(None, rt)
         s = {}
         s['name'] = stack_name 

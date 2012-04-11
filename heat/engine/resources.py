@@ -413,6 +413,7 @@ class Instance(Resource):
             rs['nova_instance'] = self.instance_id
             rs['stack_id'] = self.stack.id
             rs['name'] = self.name
+            rs['stack_name'] = self.stack.name
             new_rs = db_api.resource_create(None, rs)
             self.id = new_rs.id
             # just record the first ipaddress

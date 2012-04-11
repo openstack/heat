@@ -178,7 +178,7 @@ class HeatEngineConfigOpts(cfg.CommonConfigOpts):
                help='port for os volume api to listen'),
     ]
     db_opts = [
-    cfg.StrOpt('db_backend', default='heat.db.anydbm.api', help='The backend to use for db'),
+    cfg.StrOpt('db_backend', default='heat.db.sqlalchemy.api', help='The backend to use for db'),
     cfg.StrOpt('sql_connection',
                default='mysql://heat:heat@localhost/heat',
                help='The SQLAlchemy connection string used to connect to the '
