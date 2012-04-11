@@ -141,7 +141,7 @@ def msg_reply(msg_id, connection_pool, reply=None, failure=None, ending=False):
     with ConnectionContext(connection_pool) as conn:
         if failure:
             message = str(failure[1])
-            tb = traceback.format_exception(*failure)
+            tb = ''.join(traceback.format_exception(*failure))
             LOG.error(_("Returning exception %s to caller"), message)
             LOG.error(tb)
             failure = (failure[0].__name__, str(failure[1]), tb)
