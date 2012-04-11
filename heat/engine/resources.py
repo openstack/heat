@@ -21,6 +21,7 @@ import string
 
 from novaclient.v1_1 import client
 
+from heat.common import exception
 from heat.db import api as db_api
 
 logger = logging.getLogger('heat.engine.resources')
@@ -330,11 +331,11 @@ class Instance(Resource):
 
         props = self.t['Properties']
         if not props.has_key('KeyName'):
-            props['KeyName'] = 'default-key-name'
+            raise exception.UserParameterMissing(key='KeyName')
         if not props.has_key('InstanceType'):
-            props['InstanceType'] = 's1.large'
+            raise exception.UserParameterMissing(key='InstanceType')
         if not props.has_key('ImageId'):
-            props['ImageId'] = 'F16-x86_64'
+            raise exception.UserParameterMissing(key='ImageId')
 
         for p in props:
             if p == 'UserData':
@@ -367,17 +368,26 @@ class Instance(Resource):
         flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
         distro_name = self.stack.parameter_get('LinuxDistribution')
         key_name = self.t['Properties']['KeyName']
-        image_name = self.t['Properties']['ImageId']
 
+        keypairs = self.nova().keypairs.list()
+        key_exists = False
+        for k in keypairs:
+            if k.name == key_name:
+                # cool it exists
+                key_exists = True
+                break
+        if not key_exists:
+            raise exception.UserKeyPairMissing(key_name=key_name)
+
+        image_name = self.t['Properties']['ImageId']
         image_id = None
         image_list = self.nova().images.list()
         for o in image_list:
             if o.name == image_name:
                 image_id = o.id
 
-        # TODO(asalkeld) we need to test earlier whether the image_id exists.
         if image_id is None:
-            raise 
+            raise exception.ImageNotFound(image_name=image_name)
 
         flavor_list = self.nova().flavors.list()
         for o in flavor_list:

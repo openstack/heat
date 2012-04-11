@@ -136,9 +136,10 @@ class Stack:
             if not failed:
                 try:
                     self.resources[r].create()
-                except:
+                except Exception as ex:
+                    logger.error('create: %s' % str(ex))
                     failed = True
-                    self.resources[r].state_set(self.resources[r].CREATE_FAILED)
+                    self.resources[r].state_set(self.resources[r].CREATE_FAILED, str(ex))
             else:
                 self.resources[r].state_set(self.resources[r].CREATE_FAILED)
 
@@ -157,8 +158,9 @@ class Stack:
         for r in order:
             try:
                 self.resources[r].delete()
-            except:
-                self.resources[r].state_set(self.resources[r].DELETE_FAILED)
+            except Exception as ex:
+                logger.error('delete: %s' % str(ex))
+                self.resources[r].state_set(self.resources[r].DELETE_FAILED, str(ex))
 
     def delete(self):
         pool = eventlet.GreenPool()

@@ -164,3 +164,14 @@ class RegionAmbiguity(OpenstackException):
     message = _("Multiple 'image' service matches for region %(region)s. This "
                 "generally means that a region is required and you have not "
                 "supplied one.")
+
+class UserParameterMissing(OpenstackException):
+    message = _("The Parameter (%(key)s) was not provided.")
+
+
+class UserKeyPairMissing(OpenstackException):
+    message = _("The Key (%(key_name)s) could not be found.")
+
+
+class ImageNotFound(OpenstackException):
+    message = _("The Image (%(image_name)s) could not be found.")
