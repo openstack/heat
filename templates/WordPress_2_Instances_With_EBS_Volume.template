@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "AWS CloudFormation Sample Template WordPress_Single_Instance: WordPress is web software you can use to create a beautiful website or blog. This template installs a single-instance WordPress deployment using a local MySQL database to store the data.",
+  "Description" : "AWS CloudFormation Sample Template WordPress_Multi_Instance: WordPress is web software you can use to create a beautiful website or blog. This template installs two instances: one running a WordPress deployment and the other using a  MySQL database with EBS volume to store the data.",
 
   "Parameters" : {
 
@@ -25,6 +25,49 @@
       "MinValue" : "1",
       "MaxValue" : "1024",
       "ConstraintDescription" : "must be between 1 and 1024 Gb."
+    },
+
+    "DBName": {
+      "Default": "wordpress",
+      "Description" : "The WordPress database name",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBUsername": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "The WordPress database admin account username",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "The WordPress database admin account password",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    },
+
+    "DBRootPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "Root password for MySQL",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
     },
 
     "LinuxDistribution": {
@@ -60,6 +103,30 @@
 
   "Resources" : {
 
+    "WebServerIPAddress" : {
+      "Type" : "AWS::EC2::EIP"
+    },
+
+    "WebServerIPAssoc" : {
+      "Type" : "AWS::EC2::EIPAssociation",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "WebServer" },
+        "EIP" : { "Ref" : "WebServerIPAddress" }
+      }
+    },
+
+    "WikiDatabaseIPAddress" : {
+      "Type" : "AWS::EC2::EIP"
+    },
+
+    "WikiDatabaseIPAssoc" : {
+      "Type" : "AWS::EC2::EIPAssociation",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "WikiDatabase" },
+        "EIP" : { "Ref" : "WikiDatabaseIPAddress" }
+      }
+    },
+
     "WebServer": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
@@ -70,7 +137,7 @@
                 "httpd"        : [],
                 "wordpress"    : []
               }
-            },
+           },
             "services" : {
               "systemd" : {
                 "httpd"    : { "enabled" : "true", "ensureRunning" : "true" }
@@ -86,10 +153,13 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-			"#\n"
+          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ --e s/DB_HOST/", "/ /usr/share/wordpress/wp-config.php\n",
+          "set --in-place --e \"s/DB_HOST\\s*',\\s*'localhost/DB_HOST', '", { "Ref": "WikiDatabaseIPAddress" },  "/\" /usr/share/wordpress/wp-config.php\n",
+          "cp /usr/share/wordpress/wp-config.php /usr/share/wordpress/wp-config.orig\n"
         ]]}}
       }
     },
+
     "WikiDatabase": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
@@ -126,7 +196,22 @@
 
           "# Initialize the wiki and fire up the server\n",
           "cd /var/wikidata\n",
-		  "touch /var/wikidata/hello\n"
+          "touch /var/wikidata/hello\n",
+
+          "# Setup MySQL root password and create a user\n",
+          "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
+          "cat >> /tmp/mysql-wordpress-config << EOF\n",
+          "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
+          "GRANT ALL PRIVILEGES ON ", { "Ref" : "DBName" }, ".* TO \"", { "Ref" : "DBUsername" }, "\"@\"localhost\"\n",
+          "IDENTIFIED BY \"", { "Ref" : "DBPassword" }, "\";\n",
+          "FLUSH PRIVILEGES;\n",
+          "EXIT\n",
+          "EOF\n",
+          "cat /tmp/mysql-wordpress-config | mysql -u root --password='", { "Ref" : "DBRootPassword" }, "' < /tmp/mysql-wordpress-config\n",
+          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n",
+          "cp /usr/share/wordpress/wp-config.php /usr/share/wordpress/wp-config.orig\n",
+
+          "# TODO: enable sql access from this IP:", { "Ref" : "WebServerIPAddress" }, "\n"
         ]]}}
       }
     },
@@ -151,6 +236,14 @@
   },
 
   "Outputs" : {
+    "WebServerElasticIP" : {
+      "Value" : { "Ref" : "WebServerIPAddress" },
+      "Description" : "The Elastic IP Address of the Wordpress server."
+    },
+    "WikiDatabaseElasticIP" : {
+      "Value" : { "Ref" : "WikiDatabaseIPAddress" },
+      "Description" : "The Elastic IP Address of the MySQL server."
+    },
     "WebsiteURL" : {
       "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicIp" ]}, "/wordpress"]] },
       "Description" : "URL for Wordpress wiki"
