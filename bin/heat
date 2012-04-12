@@ -304,23 +304,6 @@ def jeos_create(options, arguments):
         print 'The tdl for that disto/arch is not available'
         sys.exit(1)
 
-    print 'Creating JEOS image (%s) - this takes approximately 10 minutes.' % image_name
-    extra_opts = ' '
-    if options.debug:
-        extra_opts = ' -d 3 '
-
-    res = os.system("oz-install %s -t 50000 -u %s -x /dev/null" % (extra_opts, tdl_path))
-    if res == 256:
-        sys.exit(1)
-    if not os.access(dsk_filename, os.R_OK):
-        print 'oz-install did not create the image, check your oz installation.'
-        sys.exit(1)
-
-    print 'Converting raw disk image to a qcow2 image.'
-    os.system("qemu-img convert -O qcow2 %s %s" % (dsk_filename, qcow2_filename))
-
-    print 'Registering JEOS image (%s) with OpenStack Glance.' % image_name
-
     creds = dict(username=options.username,
                  password=options.password,
                  tenant=options.tenant,
@@ -334,6 +317,57 @@ def jeos_create(options, arguments):
         "filters": {},
         "limit": 10,
     }
+    images = client.get_images(**parameters)
+
+    image_registered = False
+    for image in images:
+        if image['name'] == distro + '-' + arch + '-' + instance_type:
+            image_registered = True
+            #print ' *** image already in glance: %s > %s' % (image['name'], image['id'])
+
+    runoz = None
+    if os.access(qcow2_filename, os.R_OK):
+        while runoz not in ('y', 'n'):
+            runoz = raw_input('An existing JEOS was found on disk. Do you want to build a fresh JEOS? (y/n) ').lower()
+        if runoz == 'y':
+            os.remove(qcow2_filename)
+            os.remove(dsk_filename)
+            if image_registered:
+                client.delete_image(image['id'])
+        elif runoz == 'n':
+            answer = None
+            while answer not in ('y', 'n'):
+                answer = raw_input('Do you want to register your existing JEOS file with glance? (y/n) ').lower()
+                if answer == 'n':
+                    print 'No action taken'
+                    sys.exit(0)
+                elif answer == 'y' and image_registered:
+                    answer = None
+                    while answer not in ('y', 'n'):
+                        answer = raw_input('Do you want to delete the existing JEOS in glance? (y/n) ').lower()
+                    if answer == 'n':
+                        print 'No action taken'
+                        sys.exit(0)
+                    elif answer == 'y':
+                        client.delete_image(image['id'])
+
+    if runoz == None or runoz == 'y':
+        print 'Creating JEOS image (%s) - this takes approximately 10 minutes.' % image_name
+        extra_opts = ' '
+        if options.debug:
+            extra_opts = ' -d 3 '
+
+        res = os.system("oz-install %s -t 50000 -u %s -x /dev/null" % (extra_opts, tdl_path))
+        if res == 256:
+            sys.exit(1)
+        if not os.access(dsk_filename, os.R_OK):
+            print 'oz-install did not create the image, check your oz installation.'
+            sys.exit(1)
+
+        print 'Converting raw disk image to a qcow2 image.'
+        os.system("qemu-img convert -O qcow2 %s %s" % (dsk_filename, qcow2_filename))
+
+    print 'Registering JEOS image (%s) with OpenStack Glance.' % image_name
 
     image_meta = {'name': image_name,
                   'is_public': True,
@@ -342,12 +376,6 @@ def jeos_create(options, arguments):
                   'min_ram': 0,
                   'owner': options.username,
                   'container_format': 'bare'}
-
-    images = client.get_images(**parameters)
-    for image in images:
-        if image['name'] == distro:
-            print ' *** image already in glance: %s > %s' % (image['name'], image['id'])
-            sys.exit(1)
 
     try:
         with open(qcow2_filename) as ifile:
