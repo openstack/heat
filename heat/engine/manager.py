@@ -126,4 +126,16 @@ class EngineManager(manager.Manager):
         return None 
         
     def list_events(self, context, stack_name):
-        return db_api.event_get_all_by_stack(None, stack_name)
+        st = db_api.stack_get(None, stack_name)
+        events = db_api.event_get_all_by_stack(None, st.id)
+        def parse_event(e):
+            s = e.stack
+            # TODO Missing LogicalResourceId, PhysicalResourceId, ResourceType,
+            # ResourceStatusReason
+            return {'EventId': e.id,
+                     'StackId': e.stack_id,
+                     'StackName': s.name,
+                     'Timestamp': str(e.created_at),
+                     'ResourceStatus': str(e.name)}
+ 
+        return {'events': [parse_event(e) for e in events]}
