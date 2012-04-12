@@ -12,45 +12,9 @@
   <description>Fedora 17</description>
   <commands>
     <command name='commands'>
-yum -y update --skip-broken;yum -y install cloud-init;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local
+yum -y update --skip-broken;yum -y update; yum -y install cloud-init;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local; chmod +x /opt/aws/bin/cfn-*
 #!/bin/bash
 setenforce 0
-while true; do
-gdbus introspect --system --dest org.freedesktop.NetworkManager --object-path /org/freedesktop/NetworkManager/Devices/0 | grep "State = 100"
-if [ \$? -eq 0 ]
-then
-break
-fi
-sleep 1
-done
-
-if [ ! -d /root/.ssh ]; then
-  mkdir -p /root/.ssh
-  chmod 700 /root/.ssh
-fi
- 
-# Fetch public key using HTTP
-ATTEMPTS=10
-while [ ! -f /root/.ssh/authorized_keys ]; do
-    curl -f http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key > /tmp/aws-key 2>/dev/null
-    if [ \$? -eq 0 ]; then
-        cat /tmp/aws-key >> /root/.ssh/authorized_keys
-        chmod 0600 /root/.ssh/authorized_keys
-        restorecon /root/.ssh/authorized_keys
-        rm -f /tmp/aws-key
-        echo "Successfully retrieved AWS public key from instance metadata"
-    else
-        FAILED=\$((\$FAILED + 1))
-        if [ \$FAILED -ge \$ATTEMPTS ]; then
-            echo "Failed to retrieve AWS public key after \$FAILED attempts, quitting"
-            break
-        fi
-        echo "Could not retrieve AWS public key (attempt #\$FAILED/\$ATTEMPTS), retrying in 5 seconds..."
-        sleep 5
-    fi
-done
-chmod +x /opt/aws/bin/cfn-*
-/tmp/startup
 EOF
     </command>
   </commands>
