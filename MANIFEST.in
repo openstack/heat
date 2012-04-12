@@ -5,6 +5,10 @@ include MANIFEST.in pylintrc
 include openstack-common.conf
 include babel.cfg
 graft templates
+include heat/jeos/F16-i386-gold-jeos.tdl
+include heat/jeos/F17-i386-gold-jeos.tdl
+include heat/jeos/F16-i386-cfntools-jeos.tdl
+include heat/jeos/F17-i386-cfntools-jeos.tdl
 include heat/jeos/F16-x86_64-gold-jeos.tdl
 include heat/jeos/F17-x86_64-gold-jeos.tdl
 include heat/jeos/F16-x86_64-cfntools-jeos.tdl
