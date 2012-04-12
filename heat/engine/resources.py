@@ -392,6 +392,7 @@ class Instance(Resource):
                 image_id = o.id
 
         if image_id is None:
+            print "Image %s was not found in glance" % image_name
             raise exception.ImageNotFound(image_name=image_name)
 
         flavor_list = self.nova().flavors.list()

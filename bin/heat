@@ -17,6 +17,7 @@ import time
 import json
 import base64
 import libxml2
+import re
 
 from urlparse import urlparse
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
@@ -249,34 +250,35 @@ def jeos_create(options, arguments):
     arch = arguments.pop(0)
     instance_type = arguments.pop(0)
 
-    if not arch in ['x86_64', 'i686']:
+    arches = ('x86_64', 'i386', 'amd64')
+    arches_str = " | ".join(arches)
+    instance_types = ('gold', 'cfntools')
+    instances_str = " | ".join(instance_types)
+
+    if not arch in arches:
         print 'arch %s not supported' % arch
-        print 'try: x86_64 or i686'
+        print 'try: heat jeos_create %s [ %s ]' % (distro, arches_str)
         sys.exit(1)
 
-    if not instance_type in ('gold', 'cfntools'):
+    if not instance_type in instance_types:
         print 'A JEOS instance type of %s not supported' % instance_type
-        print 'try: gold or cfntools'
+        print 'try: heat jeos_create %s %s [ %s ]' % (distro, arch, instances_str)
         sys.exit(1)
 
-    iso = None
-    if distro == 'F16':
-        iso = '/var/lib/libvirt/images/Fedora-16-x86_64-DVD.iso'
-    elif distro == 'F15':
-        iso = '/var/lib/libvirt/images/Fedora-15-x86_64-DVD.iso'
-    elif distro == 'F17':
-        iso = '/var/lib/libvirt/images/Fedora-17-x86_64-DVD.iso'
+    fedora_match = re.match('F(1[6-7])', distro)
+    if fedora_match:
+        version = fedora_match.group(1)
+        iso = '/var/lib/libvirt/images/Fedora-%s-%s-DVD.iso' % (version, arch)
     elif distro == 'U10':
-        iso = '/var/lib/libvirt/images/ubuntu-10.04.3-server-amd64.iso'
+        iso = '/var/lib/libvirt/images/ubuntu-10.04.3-server-%s.iso' % arch
     else:
         print 'distro %s not supported' % distro
-        print 'try: F15, F16, F17 or U10'
+        print 'try: F16, F17 or U10'
         sys.exit(1)
 
-    if iso:
-        if not os.access(iso, os.R_OK):
-            print '*** %s does not exist.' % (iso)
-            sys.exit(1)
+    if not os.access(iso, os.R_OK):
+        print '*** %s does not exist.' % (iso)
+        sys.exit(1)
 
     tdl_path = '%s%s-%s-%s-jeos.tdl' % (jeos_path, distro, arch, instance_type)
 
