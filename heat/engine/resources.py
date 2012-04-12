@@ -145,38 +145,50 @@ class ElasticIp(Resource):
     def __init__(self, name, json_snippet, stack):
         super(ElasticIp, self).__init__(name, json_snippet, stack)
         self.instance_id = ''
+        self.ipaddress = ''
 
         if self.t.has_key('Properties') and self.t['Properties'].has_key('Domain'):
             logger.warn('*** can\'t support Domain %s yet' % (self.t['Properties']['Domain']))
 
     def create(self):
+        """Allocate a floating IP for the current tenant."""
         if self.state != None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(ElasticIp, self).create()
-        self.instance_id = 'eip-000003'
+
+        ips = self.nova().floating_ips.create()
+        print 'ElasticIp create %s' % str(ips)
+        self.ipaddress = ips.ip
+        self.instance_id = ips.id
+
+    def delete(self):
+        """De-allocate a floating IP."""
+        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+            return
+
+        self.state_set(self.DELETE_IN_PROGRESS)
+        Resource.delete(self)
+
+        if self.instance_id != None:
+            print 'ElasticIp delete %s:%s' % (self.ipaddress, self.instance_id)
+            self.nova().floating_ips.delete(self.instance_id)
+
+        self.state_set(self.DELETE_COMPLETE)
 
     def FnGetRefId(self):
-        return unicode('0.0.0.0')
+        return unicode(self.ipaddress)
 
     def FnGetAtt(self, key):
-        return unicode(self.instance_id)
+        if key == 'AllocationId':
+            return unicode(self.instance_id)
+        else:
+            logger.warn('%s.GetAtt(%s) is not handled' % (self.name, key))
+            return unicode('')
 
 class ElasticIpAssociation(Resource):
     def __init__(self, name, json_snippet, stack):
         super(ElasticIpAssociation, self).__init__(name, json_snippet, stack)
-
-        # note we only support already assigned ipaddress
-        #
-        # Done with:
-        # nova-manage floating create 172.31.0.224/28
-        # euca-allocate-address
-        #
-
-        if not self.t['Properties'].has_key('EIP'):
-            logger.warn('*** can\'t support this yet')
-        if self.t['Properties'].has_key('AllocationId'):
-            logger.warn('*** can\'t support AllocationId %s yet' % (self.t['Properties']['AllocationId']))
 
     def FnGetRefId(self):
         if not self.t['Properties'].has_key('EIP'):
@@ -185,13 +197,31 @@ class ElasticIpAssociation(Resource):
             return unicode(self.t['Properties']['EIP'])
 
     def create(self):
+        """Add a floating IP address to a server."""
 
         if self.state != None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(ElasticIpAssociation, self).create()
-        logger.info('$ euca-associate-address -i %s %s' % (self.t['Properties']['InstanceId'],
-                                                           self.t['Properties']['EIP']))
+        print 'ElasticIpAssociation %s.add_floating_ip(%s)' % (self.t['Properties']['InstanceId'],
+                                                               self.t['Properties']['EIP'])
+
+        server = self.nova().servers.get(self.t['Properties']['InstanceId'])
+        server.add_floating_ip(self.t['Properties']['EIP'])
+
+    def delete(self):
+        """Remove a floating IP address from a server."""
+        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+            return
+
+        self.state_set(self.DELETE_IN_PROGRESS)
+        Resource.delete(self)
+
+        server = self.nova().servers.get(self.t['Properties']['InstanceId'])
+        server.remove_floating_ip(self.t['Properties']['EIP'])
+
+        self.state_set(self.DELETE_COMPLETE)
+
 
 class Volume(Resource):
     def __init__(self, name, json_snippet, stack):

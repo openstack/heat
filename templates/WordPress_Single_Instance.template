@@ -93,6 +93,18 @@
 
   "Resources" : {
 
+    "IPAddress" : {
+      "Type" : "AWS::EC2::EIP"
+    },
+
+    "IPAssoc" : {
+      "Type" : "AWS::EC2::EIPAssociation",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "WebServer" },
+        "EIP" : { "Ref" : "IPAddress" }
+      }
+    },
+
     "WebServer": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
@@ -143,6 +155,9 @@
     "WebsiteURL" : {
       "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicIp" ]}, "/wordpress"]] },
       "Description" : "URL for Wordpress wiki"
+    },
+    "InstanceIPAddress" : {
+      "Value" : { "Ref" : "IPAddress" }
     }
   }
 }
