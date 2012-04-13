@@ -30,18 +30,20 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
     jeos_path = '%s/heat/%s/' % (possible_topdir, "jeos")
     cfntools_path = '%s/heat/%s/' % (possible_topdir, "cfntools")
 else:
-    jeos_path = '%s/heat/%s/' % (sys.path[1], "jeos")
-    cfntools_path = '%s/heat/%s/' % (sys.path[1], "cfntools")
+    for p in sys.path:
+        if 'heat' in p:
+            jeos_path = '%s/heat/%s/' % (p, "jeos")
+            cfntools_path = '%s/heat/%s/' % (p, "cfntools")
+            break
 
 gettext.install('heat', unicode=1)
 
-from heat import client as heat_client
-from heat.common import exception
-from heat.common import config
-from heat import version
 from glance import client as glance_client
+from heat import client as heat_client
+from heat import version
+from heat.common import config
+from heat.common import exception
 
-from distutils.sysconfig import get_python_lib
 
 SUCCESS = 0
 FAILURE = 1
