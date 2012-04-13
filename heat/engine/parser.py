@@ -70,6 +70,8 @@ class Stack(object):
                 self.resources[r] = resources.ElasticIp(r, self.t['Resources'][r], self)
             elif type == 'AWS::EC2::EIPAssociation':
                 self.resources[r] = resources.ElasticIpAssociation(r, self.t['Resources'][r], self)
+            elif type == 'AWS::EC2::SecurityGroup':
+                self.resources[r] = resources.SecurityGroup(r, self.t['Resources'][r], self)
             else:
                 self.resources[r] = resources.GenericResource(r, self.t['Resources'][r], self)
 

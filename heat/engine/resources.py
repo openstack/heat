@@ -140,6 +140,54 @@ class GenericResource(Resource):
         super(GenericResource, self).create()
         print 'creating GenericResource %s' % self.name
 
+class SecurityGroup(Resource):
+
+    def __init__(self, name, json_snippet, stack):
+        super(SecurityGroup, self).__init__(name, json_snippet, stack)
+        self.instance_id = ''
+
+        if self.t['Properties'].has_key('GroupDescription'):
+            self.description = self.t['Properties']['GroupDescription']
+        else:
+            self.description = ''
+
+    def create(self):
+        if self.state != None:
+            return
+        self.state_set(self.CREATE_IN_PROGRESS)
+        Resource.create(self)
+
+        sec = self.nova().security_groups.create(self.name, self.description)
+        self.instance_id = sec.id
+
+        if self.t['Properties'].has_key('SecurityGroupIngress'):
+            for i in self.t['Properties']['SecurityGroupIngress']:
+                rule = self.nova().security_group_rules.create(sec.id,
+                                                               i['IpProtocol'],
+                                                               i['FromPort'],
+                                                               i['ToPort'],
+                                                               i['CidrIp'])
+
+    def delete(self):
+        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+            return
+
+        self.state_set(self.DELETE_IN_PROGRESS)
+        Resource.delete(self)
+
+        if self.instance_id != None:
+            sec = self.nova().security_groups.get(self.instance_id)
+
+            for rule in sec.rules:
+                self.nova().security_group_rules.delete(rule['id'])
+
+            self.nova().security_groups.delete(sec)
+            self.instance_id = None
+
+        self.state_set(self.DELETE_COMPLETE)
+
+    def FnGetRefId(self):
+        return unicode(self.name)
 
 class ElasticIp(Resource):
     def __init__(self, name, json_snippet, stack):

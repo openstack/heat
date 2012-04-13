@@ -132,6 +132,7 @@
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType"   : { "Ref" : "InstanceType" },
         "KeyName"        : { "Ref" : "KeyName" },
+        "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
           "# Setup MySQL root password and create a user\n",
@@ -147,6 +148,17 @@
           "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n",
           "cp /usr/share/wordpress/wp-config.php /usr/share/wordpress/wp-config.orig\n"
         ]]}}
+      }
+    },
+    "WebServerSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable HTTP access via port 80 plus SSH access",
+        "SecurityGroupIngress" : [
+          {"IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"}
+        ]
       }
     }
   },
