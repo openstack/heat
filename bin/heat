@@ -201,9 +201,7 @@ def stack_events_list(options, arguments):
     try:
         parameters['StackName'] = arguments.pop(0)
     except IndexError:
-        print "Please specify the stack name "
-        print "as the first argument"
-        return FAILURE
+        pass
 
     c = get_client(options)
     result = c.list_stack_events(**parameters)

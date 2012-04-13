@@ -123,8 +123,12 @@ class EngineManager(manager.Manager):
         return None
 
     def list_events(self, context, stack_name):
-        st = db_api.stack_get(None, stack_name)
-        events = db_api.event_get_all_by_stack(None, st.id)
+        if stack_name is not None:
+            st = db_api.stack_get(None, stack_name)
+            events = db_api.event_get_all_by_stack(None, st.id)
+        else:
+            events = db_api.event_get_all(None)
+
         def parse_event(e):
             s = e.stack
             # TODO Missing LogicalResourceId, PhysicalResourceId, ResourceType,

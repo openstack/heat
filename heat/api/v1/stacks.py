@@ -175,9 +175,10 @@ class StackController(object):
         Returns the following information for all stacks:
         """
         con = context.get_admin_context()
+        stack_name = req.params.get('StackName', None)
         stack_list = rpc.call(con, 'engine',
                         {'method': 'list_events',
-                         'args': {'stack_name': req.params['StackName']}})
+                         'args': {'stack_name': stack_name}})
 
         res = {'DescribeStackEventsResult': {'StackEvents': [] } }
         summaries = res['DescribeStackEventsResult']['StackEvents']
