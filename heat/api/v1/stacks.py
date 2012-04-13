@@ -176,16 +176,12 @@ class StackController(object):
         """
         con = context.get_admin_context()
         stack_name = req.params.get('StackName', None)
-        stack_list = rpc.call(con, 'engine',
-                        {'method': 'list_events',
-                         'args': {'stack_name': stack_name}})
+        event_res = rpc.call(con, 'engine',
+                             {'method': 'list_events',
+                              'args': {'stack_name': stack_name}})
+        events = 'Error' not in event_res and event_res['events'] or []
 
-        res = {'DescribeStackEventsResult': {'StackEvents': [] } }
-        summaries = res['DescribeStackEventsResult']['StackEvents']
-        for s in stack_list['events']:
-            summaries.append(s)
-
-        return res
+        return {'DescribeStackEventsResult': {'StackEvents': events}}
 
 def create_resource(options):
     """Stacks resource factory method."""

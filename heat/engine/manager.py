@@ -121,6 +121,9 @@ class EngineManager(manager.Manager):
     def list_events(self, context, stack_name):
         if stack_name is not None:
             st = db_api.stack_get(None, stack_name)
+            if not st:
+                return {'Error': 'No stack by that name'}
+
             events = db_api.event_get_all_by_stack(None, st.id)
         else:
             events = db_api.event_get_all(None)

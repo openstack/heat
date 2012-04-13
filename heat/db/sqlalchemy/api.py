@@ -149,26 +149,17 @@ def event_get(context, event_id):
     result = model_query(context, models.Event).\
                         filter_by(id=event_id).first()
 
-    if not result:
-        raise Exception("event with id %s not found" % event_id)
-
     return result
 
 def event_get_all(context):
     results = model_query(context, models.Event).all()
 
-    if not results:
-        raise Exception('no events were found')
-    
     return results
 
 def event_get_all_by_stack(context, stack_id):
     results = model_query(context, models.Event).\
                         filter_by(stack_id=stack_id).all()
 
-    if not results:
-        raise Exception("no events for stack_id %s were found" % stack_id)
-    
     return results
 
 def event_create(context, values):
