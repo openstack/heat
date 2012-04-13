@@ -7,7 +7,7 @@ function usage {
   echo "  -V, --virtual-env        Always use virtualenv.  Install automatically if not present"
   echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment"
   echo "  -f, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
-  echo "  --unittests-only         Run unit tests only, exclude functional tests."
+  echo "  --unittests-only         Run unit tests only."
   echo "  -p, --pep8               Just run pep8"
   echo "  -h, --help               Print this usage message"
   echo ""
@@ -19,11 +19,12 @@ function usage {
 
 function process_option {
   case "$1" in
-    -h|--help) usage;;
     -V|--virtual-env) let always_venv=1; let never_venv=0;;
     -N|--no-virtual-env) let always_venv=0; let never_venv=1;;
     -f|--force) let force=1;;
-    --unittests-only) noseargs="$noseargs --exclude-dir=heat/tests/functional";;
+    --unittests-only) noseargs="$noseargs -a tag=unit";;
+    -p|--pep8) let just_pep8=1;;
+    -h|--help) usage;;
     *) noseargs="$noseargs $1"
   esac
 }
@@ -41,13 +42,19 @@ for arg in "$@"; do
   process_option $arg
 done
 
+NOSETESTS="python run_tests.py $noseargs"
+
 function run_tests {
   # Just run the test suites in current environment
-  ${wrapper} rm -f tests.sqlite
   ${wrapper} $NOSETESTS 2> run_tests.err.log
 }
 
-NOSETESTS="python run_tests.py $noseargs"
+function run_pep8 {
+  echo "Running pep8 ..."
+  PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat"
+  PEP8_INCLUDE="bin/*.py heat tools setup.py run_tests.py"
+  ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
+}
 
 if [ $never_venv -eq 0 ]
 then
@@ -69,11 +76,20 @@ then
       if [ "x$use_ve" = "xY" -o "x$use_ve" = "x" -o "x$use_ve" = "xy" ]; then
         # Install the virtualenv and run the test suite in it
         python tools/install_venv.py
-		    wrapper=${with_venv}
+        wrapper=${with_venv}
       fi
     fi
   fi
 fi
 
+if [ $just_pep8 -eq 1 ]; then
+  run_pep8
+  exit
+fi
+
 run_tests || exit
+
+if [ -z "$noseargs" ]; then
+  run_pep8
+fi
 

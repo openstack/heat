@@ -1,0 +1,16 @@
+# The greenlet package must be compiled with gcc and needs
+# the Python.h headers. Make sure you install the python-dev
+# package to get the right headers...
+greenlet>=0.3.1
+
+eventlet>=0.9.12
+PasteDeploy
+routes
+webob==1.0.8
+argparse
+swift
+sqlalchemy-migrate>=0.7
+httplib2
+kombu
+iso8601>=0.1.4
+python-novaclient
