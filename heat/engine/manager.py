@@ -123,7 +123,6 @@ class EngineManager(manager.Manager):
 
         rt = db_api.raw_template_get(None, st.raw_template_id)
         ps = parser.Stack(st.name, rt.template, params)
-        db_api.stack_delete(None, stack_name)
         ps.delete()
         return None
 

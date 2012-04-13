@@ -168,6 +168,8 @@ class Stack(object):
             except Exception as ex:
                 logger.error('delete: %s' % str(ex))
 
+        db_api.stack_delete(None, self.name)
+
     def delete(self):
         pool = eventlet.GreenPool()
         pool.spawn_n(self.delete_blocking)
