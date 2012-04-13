@@ -48,12 +48,8 @@ class EngineManager(manager.Manager):
             mem['stack_id'] = s.id
             mem['stack_name'] = s.name
             mem['created_at'] = str(s.created_at)
-            try:
-                mem['template_description'] = s.template.description
-                mem['stack_status'] = ps.t['StackStatus']
-            except KeyError:
-                mem['template_description'] = 'No description'
-                mem['stack_status'] = 'unknown'
+            mem['template_description'] = ps.t.get('Description', 'No description')
+            mem['stack_status'] = ps.t.get('StackStatus', 'unknown')
             res['stacks'].append(mem)
 
         return res
