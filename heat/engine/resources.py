@@ -42,15 +42,17 @@ class Resource(object):
         self.t = json_snippet
         self.depends_on = []
         self.references = []
-        self.state = None
         self.stack = stack
         self.name = name
-        self.id = None
-        self.instance_id = None
         resource = db_api.resource_get_by_name_and_stack(None, name, stack.id)
         if resource:
             self.instance_id = resource.nova_instance
-            self.stack_id = stack.id
+            self.state = resource.state
+            self.id = resource.id
+        else:
+            self.instance_id = None
+            self.state = None
+            self.id = None
 
         self._nova = {}
         if not self.t.has_key('Properties'):
@@ -86,21 +88,24 @@ class Resource(object):
         self.stack.resolve_joins(self.t)
         self.stack.resolve_base64(self.t)
 
-        rs = {}
-        rs['state'] = self.CREATE_IN_PROGRESS
-        rs['nova_instance'] = None
-        rs['stack_id'] = self.stack.id
-        rs['name'] = self.name
-        rs['stack_name'] = self.stack.name
-        new_rs = db_api.resource_create(None, rs)
-        self.id = new_rs.id
-
     def instance_id_set(self, inst):
-        rsc = db_api.resource_get(None, self.id)
-        rsc.nova_instance = inst
         self.instance_id = inst
 
     def state_set(self, new_state, reason="state changed"):
+        if new_state is self.CREATE_COMPLETE:
+            try:
+                rs = {}
+                rs['state'] = new_state
+                rs['stack_id'] = self.stack.id
+                rs['nova_instance'] = self.instance_id
+                rs['name'] = self.name
+                rs['stack_name'] = self.stack.name
+                new_rs = db_api.resource_create(None, rs)
+                self.id = new_rs.id
+
+            except Exception as ex:
+                print 'db error %s' % str(ex)
+
         if new_state != self.state:
             ev = {}
             ev['logical_resource_id'] = self.name
@@ -112,11 +117,15 @@ class Resource(object):
             ev['resource_status_reason'] = reason
             ev['resource_type'] = self.t['Type']
             ev['resource_properties'] = self.t['Properties']
-            db_api.event_create(None, ev)
+            try:
+                db_api.event_create(None, ev)
+            except Exception as ex:
+                print 'db error %s' % str(ex)
             self.state = new_state
 
     def delete(self):
-        print 'deleting %s name:%s id:%s' % (self.t['Type'], self.name, self.instance_id)
+        print 'deleting %s name:%s inst:%s db_id:%s' % (self.t['Type'], self.name,
+                                                     self.instance_id, str(self.id))
 
     def reload(self):
         pass
@@ -236,7 +245,6 @@ class ElasticIp(Resource):
         Resource.delete(self)
 
         if self.instance_id != None:
-            print 'ElasticIp delete %s:%s' % (self.ipaddress, self.instance_id)
             self.nova().floating_ips.delete(self.instance_id)
 
         self.state_set(self.DELETE_COMPLETE)
@@ -514,10 +522,14 @@ class Instance(Resource):
             self.state_set(self.CREATE_FAILED)
 
     def delete(self):
+        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+            return
+        self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
         server = self.nova().servers.get(self.instance_id)
         server.delete()
         self.instance_id = None
+        self.state_set(self.DELETE_COMPLETE)
 
     def insert_package_and_services(self, r, new_script):
 
