@@ -132,6 +132,7 @@ This package contains the OpenStack integration for the Heat project
 %{python_sitelib}/heat/engine/*
 %{python_sitelib}/heat/openstack/*
 %{python_sitelib}/heat/cfntools/*
+%{python_sitelib}/heat/cloudinit/*
 %{python_sitelib}/heat/rpc/*
 %{python_sitelib}/heat/context.*
 %{python_sitelib}/heat/manager.*
@@ -141,9 +142,13 @@ This package contains the OpenStack integration for the Heat project
 %files jeos
 %defattr(-,root,root,-)
 %{python_sitelib}/heat/jeos/F16-x86_64-gold-jeos.tdl
+%{python_sitelib}/heat/jeos/F16-i386-gold-jeos.tdl
 %{python_sitelib}/heat/jeos/F17-x86_64-gold-jeos.tdl
+%{python_sitelib}/heat/jeos/F17-i386-gold-jeos.tdl
 %{python_sitelib}/heat/jeos/F16-x86_64-cfntools-jeos.tdl
+%{python_sitelib}/heat/jeos/F16-i386-cfntools-jeos.tdl
 %{python_sitelib}/heat/jeos/F17-x86_64-cfntools-jeos.tdl
+%{python_sitelib}/heat/jeos/F17-i386-cfntools-jeos.tdl
 
 %files openstack
 %defattr(-,root,root,-)
