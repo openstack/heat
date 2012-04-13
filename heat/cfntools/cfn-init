@@ -422,6 +422,7 @@ class ServicesHandler(object):
     def _handle_systemd_command(self, service, command):
         exe = "/bin/systemctl"
         cmd = ""
+        service = '%s.service' % service
         if "enable" == command:
             cmd = "%s enable %s" % (exe, service)
         elif "disable" == command:
