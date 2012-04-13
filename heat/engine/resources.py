@@ -45,6 +45,7 @@ class Resource(object):
         self.state = None
         self.stack = stack
         self.name = name
+        self.id = None
         self.instance_id = None
         resource = db_api.resource_get_by_name_and_stack(None, name, stack.id)
         if resource:
@@ -85,6 +86,19 @@ class Resource(object):
         self.stack.resolve_joins(self.t)
         self.stack.resolve_base64(self.t)
 
+        rs = {}
+        rs['state'] = self.CREATE_IN_PROGRESS
+        rs['nova_instance'] = None
+        rs['stack_id'] = self.stack.id
+        rs['name'] = self.name
+        rs['stack_name'] = self.stack.name
+        new_rs = db_api.resource_create(None, rs)
+        self.id = new_rs.id
+
+    def instance_id_set(self, inst):
+        rsc = db_api.resource_get(None, self.id)
+        rsc.nova_instance = inst
+        self.instance_id = inst
 
     def state_set(self, new_state, reason="state changed"):
         if new_state != self.state:
@@ -139,6 +153,7 @@ class GenericResource(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         super(GenericResource, self).create()
         print 'creating GenericResource %s' % self.name
+        self.state_set(self.CREATE_COMPLETE)
 
 class SecurityGroup(Resource):
 
@@ -158,7 +173,7 @@ class SecurityGroup(Resource):
         Resource.create(self)
 
         sec = self.nova().security_groups.create(self.name, self.description)
-        self.instance_id = sec.id
+        self.instance_id_set(sec.id)
 
         if self.t['Properties'].has_key('SecurityGroupIngress'):
             for i in self.t['Properties']['SecurityGroupIngress']:
@@ -167,6 +182,7 @@ class SecurityGroup(Resource):
                                                                i['FromPort'],
                                                                i['ToPort'],
                                                                i['CidrIp'])
+        self.state_set(self.CREATE_COMPLETE)
 
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
@@ -208,7 +224,8 @@ class ElasticIp(Resource):
         ips = self.nova().floating_ips.create()
         print 'ElasticIp create %s' % str(ips)
         self.ipaddress = ips.ip
-        self.instance_id = ips.id
+        self.instance_id_set(ips.id)
+        self.state_set(self.CREATE_COMPLETE)
 
     def delete(self):
         """De-allocate a floating IP."""
@@ -256,6 +273,8 @@ class ElasticIpAssociation(Resource):
 
         server = self.nova().servers.get(self.t['Properties']['InstanceId'])
         server.add_floating_ip(self.t['Properties']['EIP'])
+        self.instance_id_set(self.t['Properties']['EIP'])
+        self.state_set(self.CREATE_COMPLETE)
 
     def delete(self):
         """Remove a floating IP address from a server."""
@@ -289,8 +308,8 @@ class Volume(Resource):
             eventlet.sleep(1)
             vol.get()
         if vol.status == 'available':
+            self.instance_id_set(vol.id)
             self.state_set(self.CREATE_COMPLETE)
-            self.instance_id = vol.id
         else:
             self.state_set(self.CREATE_FAILED)
 
@@ -334,8 +353,8 @@ class VolumeAttachment(Resource):
             eventlet.sleep(1)
             vol.get()
         if vol.status == 'in-use':
+            self.instance_id_set(va.id)
             self.state_set(self.CREATE_COMPLETE)
-            self.instance_id = va.id
         else:
             self.state_set(self.CREATE_FAILED)
 
@@ -485,16 +504,8 @@ class Instance(Resource):
             server.get()
             eventlet.sleep(1)
         if server.status == 'ACTIVE':
+            self.instance_id_set(server.id)
             self.state_set(self.CREATE_COMPLETE)
-            self.instance_id = server.id
-            rs = {}
-            rs['state'] = 'ACTIVE'
-            rs['nova_instance'] = self.instance_id
-            rs['stack_id'] = self.stack.id
-            rs['name'] = self.name
-            rs['stack_name'] = self.stack.name
-            new_rs = db_api.resource_create(None, rs)
-            self.id = new_rs.id
             # just record the first ipaddress
             for n in server.networks:
                 self.ipaddress = server.networks[n][0]
