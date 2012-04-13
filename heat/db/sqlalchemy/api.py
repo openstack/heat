@@ -16,7 +16,6 @@
 '''Implementation of SQLAlchemy backend.'''
 from sqlalchemy.orm.session import Session
 
-from nova import utils
 from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy.session import get_session
 

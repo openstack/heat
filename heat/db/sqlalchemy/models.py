@@ -22,7 +22,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import ForeignKeyConstraint
 from sqlalchemy import types as types
 from json import dumps, loads
-from nova import utils
+from heat.openstack.common import utils
 from heat.db.sqlalchemy.session import get_session
 
 BASE = declarative_base()
