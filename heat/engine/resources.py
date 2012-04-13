@@ -310,7 +310,7 @@ class VolumeAttachment(Resource):
             try:
                 self.nova().volumes.delete_server_volume(self.t['Properties']['InstanceId'],
                                                          self.instance_id)
-            except:
+            except Exception:
                 pass
             vol.get()
 

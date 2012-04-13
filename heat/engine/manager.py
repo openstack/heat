@@ -51,7 +51,7 @@ class EngineManager(manager.Manager):
             try:
                 mem['template_description'] = s.template.description
                 mem['stack_status'] = ps.t['StackStatus']
-            except:
+            except KeyError:
                 mem['template_description'] = 'No description'
                 mem['stack_status'] = 'unknown'
             res['stacks'].append(mem)
@@ -76,7 +76,7 @@ class EngineManager(manager.Manager):
             try:
                 mem['TemplateDescription'] = ps.t['Description']
                 mem['StackStatus'] = ps.t['StackStatus']
-            except:
+            except KeyError:
                 mem['TemplateDescription'] = 'No description'
                 mem['StackStatus'] = 'unknown'
             res['stacks'].append(mem)

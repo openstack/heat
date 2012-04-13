@@ -226,7 +226,7 @@ class Stack(object):
                     key_name = 'Parameters.member.%s.ParameterKey' % s[2]
                     value_name = 'Parameters.member.%s.ParameterValue' % s[2]
                     self._apply_user_parameter(parms[key_name], parms[value_name])
-                except:
+                except Exception:
                     logger.error('Could not apply parameter %s' % p)
 
     def parameter_get(self, key):
@@ -317,8 +317,8 @@ class Stack(object):
                     j = None
                     try:
                         j = s[i][0].join(s[i][1])
-                    except:
-                        print '*** could not join %s' % s[i]
+                    except Exception:
+                        logger.error('Could not join %s' % str(s[i]))
                     return j
                 else:
                     s[i] = self.resolve_joins(s[i])
