@@ -69,12 +69,8 @@ class EngineManager(manager.Manager):
             mem['Parameters'] = ps.t['Parameters']
             mem['StackStatusReason'] = 'TODO'
             mem['TimeoutInMinutes'] = 'TODO'
-            try:
-                mem['TemplateDescription'] = ps.t['Description']
-                mem['StackStatus'] = ps.t['StackStatus']
-            except KeyError:
-                mem['TemplateDescription'] = 'No description'
-                mem['StackStatus'] = 'unknown'
+            mem['TemplateDescription'] = ps.t.get('Description', 'No description')
+            mem['StackStatus'] = ps.t.get('StackStatus', 'unknown')
             res['stacks'].append(mem)
 
         return res
