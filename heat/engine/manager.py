@@ -40,6 +40,8 @@ class EngineManager(manager.Manager):
         logger.info('context is %s' % context)
         res = {'stacks': [] }
         stacks = db_api.stack_get_all(None)
+        if stacks == None:
+            return res
         for s in stacks:
             ps = parser.Stack(s.name, s.raw_template.template, params)
             mem = {}

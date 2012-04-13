@@ -55,8 +55,9 @@ class StackController(object):
 
         res = {'ListStacksResponse': {'ListStacksResult': {'StackSummaries': [] } } }
         summaries = res['ListStacksResponse']['ListStacksResult']['StackSummaries']
-        for s in stack_list['stacks']:
-            summaries.append(s)
+        if stack_list != None:
+            for s in stack_list['stacks']:
+                summaries.append(s)
 
         return res
 
