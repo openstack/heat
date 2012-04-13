@@ -30,13 +30,27 @@ from heat.db import api as db_api
 logger = logging.getLogger('heat.engine.manager')
 
 class EngineManager(manager.Manager):
-    """Manages the running instances from creation to destruction."""
+    """
+    Manages the running instances from creation to destruction.
+    All the methods in here are called from the RPC backend.  This is
+    all done dynamically so if a call is made via RPC that does not
+    have a corresponding method here, an exception will be thrown when
+    it attempts to call into this class.  Arguments to these methods
+    are also dynamically added and will be named as keyword arguments
+    by the RPC caller.
+    """
 
     def __init__(self, *args, **kwargs):
         """Load configuration options and connect to the hypervisor."""
         pass
 
     def list_stacks(self, context, params):
+        """
+        The list_stacks method is the end point that actually implements
+        the 'list' command of the heat API.
+        arg1 -> RPC context.
+        arg2 -> Dict of http request parameters passed in from API side.
+        """
         logger.info('context is %s' % context)
         res = {'stacks': [] }
         stacks = db_api.stack_get_all(None)
@@ -55,6 +69,12 @@ class EngineManager(manager.Manager):
         return res
 
     def show_stack(self, context, stack_name, params):
+        """
+        The show_stack method returns the attributes of one stack.
+        arg1 -> RPC context.
+        arg2 -> Name of the stack you want to see.
+        arg3 -> Dict of http request parameters passed in from API side.
+        """
         res = {'stacks': [] }
         s = db_api.stack_get(None, id)
         if s:
@@ -76,6 +96,15 @@ class EngineManager(manager.Manager):
         return res
 
     def create_stack(self, context, stack_name, template, params):
+        """
+        The create_stack method creates a new stack using the template provided.
+        Note that at this stage the template has already been fetched from the
+        heat-api process if using a template-url.
+        arg1 -> RPC context.
+        arg2 -> Name of the stack you want to create.
+        arg3 -> Template of stack you want to create.
+        arg4 -> Params passed from API.
+        """
         logger.info('template is %s' % template)
         if db_api.stack_get(None, stack_name):
             return {'Error': 'Stack already exists with that name.'}
@@ -95,6 +124,13 @@ class EngineManager(manager.Manager):
                 'created_at': str(new_s.created_at)}}
 
     def validate_template(self, req, body=None):
+        """
+        The validate_template method uses the stack parser to check
+        the validity of a template.
+
+        arg1 -> http request params.
+        arg2 -> Template body.
+        """
 
         logger.info('validate_template')
         if body is None:
@@ -107,6 +143,12 @@ class EngineManager(manager.Manager):
         return res
 
     def delete_stack(self, context, stack_name, params):
+        """
+        The delete_stack method deletes a given stack.
+        arg1 -> RPC context.
+        arg2 -> Name of the stack you want to delete.
+        arg3 -> Params passed from API.
+        """
         st = db_api.stack_get(None, stack_name)
         if not st:
             return {'Error': 'No stack by that name'}
@@ -119,6 +161,11 @@ class EngineManager(manager.Manager):
         return None
 
     def list_events(self, context, stack_name):
+        """
+        The list_events method lists all events associated with a given stack.
+        arg1 -> RPC context.
+        arg2 -> Name of the stack you want to get events for.
+        """
         if stack_name is not None:
             st = db_api.stack_get(None, stack_name)
             if not st:
