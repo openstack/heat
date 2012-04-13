@@ -49,7 +49,7 @@ class StackController(object):
         Returns the following information for all stacks:
         """
         con = context.get_admin_context()
-        stack_list = rpc.call(con, 'engine', 
+        stack_list = rpc.call(con, 'engine',
                             {'method': 'list_stacks',
                             'args': {'params': dict(req.params)}})
 

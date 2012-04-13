@@ -88,7 +88,7 @@ class V1Client(base_client.BaseClient):
     def validate_template(self, **kwargs):
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         self._insert_common_parameters(params)
-        
+
         res = self.do_request("GET", "/ValidateTemplate", params=params)
         data = json.loads(res.read())
         return data

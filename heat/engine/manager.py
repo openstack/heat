@@ -57,7 +57,7 @@ class EngineManager(manager.Manager):
             res['stacks'].append(mem)
 
         return res
-           
+
     def show_stack(self, context, stack_name, params):
         res = {'stacks': [] }
         s = db_api.stack_get(None, id)
@@ -82,7 +82,7 @@ class EngineManager(manager.Manager):
             res['stacks'].append(mem)
 
         return res
-   
+
     def create_stack(self, context, stack_name, template, params):
         logger.info('template is %s' % template)
         if db_api.stack_get(None, stack_name):
@@ -94,11 +94,11 @@ class EngineManager(manager.Manager):
         rt['stack_name'] = stack_name
         new_rt = db_api.raw_template_create(None, rt)
         s = {}
-        s['name'] = stack_name 
+        s['name'] = stack_name
         s['raw_template_id'] = new_rt.id
         new_s = db_api.stack_create(None, s)
         stack.id = new_s.id
-        stack.create() 
+        stack.create()
         return {'stack': {'id': new_s.id, 'name': new_s.name,\
                 'created_at': str(new_s.created_at)}}
 
@@ -117,7 +117,7 @@ class EngineManager(manager.Manager):
     def delete_stack(self, context, stack_name, params):
         st = db_api.stack_get(None, stack_name)
         if not st:
-            return {'Error': 'No stack by that name'} 
+            return {'Error': 'No stack by that name'}
 
         logger.info('deleting stack %s' % stack_name)
 
@@ -125,8 +125,8 @@ class EngineManager(manager.Manager):
         ps = parser.Stack(st.name, rt.template, params)
         db_api.stack_delete(None, stack_name)
         ps.delete()
-        return None 
-        
+        return None
+
     def list_events(self, context, stack_name):
         st = db_api.stack_get(None, stack_name)
         events = db_api.event_get_all_by_stack(None, st.id)
@@ -139,5 +139,5 @@ class EngineManager(manager.Manager):
                      'StackName': s.name,
                      'Timestamp': str(e.created_at),
                      'ResourceStatus': str(e.name)}
- 
+
         return {'events': [parse_event(e) for e in events]}
