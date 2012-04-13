@@ -12,5 +12,5 @@
 #    under the License.
 
 """
-Implements cfn-signal CloudFormations functionality
+Implements cfn-signal CloudFormation functionality
 """

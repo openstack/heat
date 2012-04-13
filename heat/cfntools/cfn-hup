@@ -12,5 +12,5 @@
 #    under the License.
 
 """
-Implements cfn-hup CloudFormations functionality
+Implements cfn-hup CloudFormation functionality
 """

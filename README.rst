@@ -6,7 +6,7 @@ This is an OpenStack style project that provides a REST API to orchestrate
 multiple cloud applications implementing well-known standards such as AWS
 CloudFormation and TOSCA.
 
-Currently the developers are focusing on AWS CloudFormations but are watching
+Currently the developers are focusing on AWS CloudFormation but are watching
 the development of the TOSCA specification.
 
 Why heat? It makes the clouds rise and keeps them there.

@@ -13,7 +13,7 @@
 #    under the License.
 
 """
-Implements cfn-init CloudFormations functionality
+Implements cfn-init CloudFormation functionality
 
 Resource metadata currently implemented:
     * config/packages

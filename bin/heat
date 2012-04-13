@@ -243,7 +243,7 @@ def jeos_create(options, arguments):
         print '   heat jeos_create <distro> <arch> <instancetype>'
         print '     instance type can be:'
         print '     gold builds a base image where userdata is used to initialize the instance'
-        print '     cfntools builds a base image where AWS CloudFormations tools are present'
+        print '     cfntools builds a base image where AWS CloudFormation tools are present'
         sys.exit(1)
 
     distro = arguments.pop(0)

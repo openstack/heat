@@ -3,7 +3,7 @@
 
 """
 Heat API Server.  This implements an approximation of the Amazon
-CloudFormations API and translates it into a native representation.  It then
+CloudFormation API and translates it into a native representation.  It then
 calls the heat-engine via REST to implement them.
 """
 
