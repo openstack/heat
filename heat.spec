@@ -32,6 +32,7 @@ cp etc/* $RPM_BUILD_ROOT/etc/heat/
 mkdir -p $RPM_BUILD_ROOT/%{_mandir}/man1/ 
 cp -v docs/man/man1/heat.1 $RPM_BUILD_ROOT/%{_mandir}/man1/
 rm -rf $RPM_BUILD_ROOT/var/lib/heat/.dummy
+rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/heat/vcsversion.*
 rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/heat/tests
 rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/heat-0.0.1-py2.7.egg-info
 
@@ -88,7 +89,7 @@ This package contains the OpenStack integration for the Heat project
 
 
 %files
-%doc README.rst PKG-INFO
+%doc README.rst
 %defattr(-,root,root,-)
 %{_mandir}/man1/*.gz
 %{_bindir}/heat
@@ -97,7 +98,6 @@ This package contains the OpenStack integration for the Heat project
 %{python_sitelib}/heat/__init__.*
 %{python_sitelib}/heat/client.*
 %{python_sitelib}/heat/cloudformations.*
-%{python_sitelib}/heat/vcsversion.*
 %{python_sitelib}/heat/version.*
 %config(noreplace) /etc/heat
 
