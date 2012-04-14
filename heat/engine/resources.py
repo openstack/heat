@@ -18,6 +18,14 @@ import eventlet
 import logging
 import os
 import string
+import json
+import sys
+
+from email import encoders
+from email.message import Message
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from novaclient.v1_1 import client
 
@@ -26,6 +34,20 @@ from heat.db import api as db_api
 from heat.common.config import HeatEngineConfigOpts
 
 logger = logging.getLogger('heat.engine.resources')
+
+# If ../heat/__init__.py exists, add ../ to Python search path, so that
+# it will override what happens to be installed in /usr/(local/)lib/python...
+possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
+                                   os.pardir,
+                                   os.pardir))
+if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
+    sys.path.insert(0, possible_topdir)
+    cloudinit_path = '%s/heat/%s/' % (possible_topdir, "cloudinit")
+else:
+    for p in sys.path:
+        if 'heat' in p:
+            cloudinit_path = '%s/heat/%s/' % (p, "cloudinit")
+            break
 
 class Resource(object):
     CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
@@ -455,7 +477,7 @@ class Instance(Resource):
                 for l in script_lines:
                     if '#!/' in l:
                         new_script.append(l)
-                        self.insert_package_and_services(self.t, new_script)
+#                        self.insert_package_and_services(self.t, new_script)
                     else:
                         new_script.append(l)
                 userdata = '\n'.join(new_script)
@@ -505,9 +527,31 @@ class Instance(Resource):
             if o.name == flavor:
                 flavor_id = o.id
 
+        # Build mime multipart data blob for cloudinit userdata
+        mime_blob = MIMEMultipart()
+        fp = open('%s/%s' % (cloudinit_path, 'config'), 'r')
+        msg = MIMEText(fp.read(), _subtype='cloud-config')
+        fp.close()
+        msg.add_header('Content-Disposition', 'attachment', filename='cloud-config')
+        mime_blob.attach(msg)
+
+        fp = open('%s/%s' % (cloudinit_path, 'part-handler.py'), 'r')
+        msg = MIMEText(fp.read(), _subtype='part-handler')
+        fp.close()
+        msg.add_header('Content-Disposition', 'attachment', filename='part-handler.py')
+        mime_blob.attach(msg)
+
+        msg = MIMEText(json.dumps(self.t['Metadata']), _subtype='x-cfninitdata')
+        msg.add_header('Content-Disposition', 'attachment', filename='cfn-init-data')
+        mime_blob.attach(msg)
+
+        msg = MIMEText(userdata, _subtype='x-shellscript')
+        msg.add_header('Content-Disposition', 'attachment', filename='startup')
+        mime_blob.attach(msg)
+
         server = self.nova().servers.create(name=self.name, image=image_id,
                                             flavor=flavor_id, key_name=key_name,
-                                            userdata=self.FnBase64(userdata))
+                                            userdata=mime_blob.as_string())
         while server.status == 'BUILD':
             server.get()
             eventlet.sleep(1)
