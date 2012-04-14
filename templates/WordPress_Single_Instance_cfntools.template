@@ -122,7 +122,7 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-          "/opt/aws/bin/cfn-init -f /var/lib/cloud/cfn-init-data\n",
+          "/opt/aws/bin/cfn-init -f /var/lib/cloud/data/cfn-init-data\n",
           "# Setup MySQL root password and create a user\n",
           "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
           "cat >> /tmp/mysql-wordpress-config << EOF\n",
