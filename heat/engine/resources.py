@@ -469,33 +469,7 @@ class Instance(Resource):
         if not props.has_key('ImageId'):
             raise exception.UserParameterMissing(key='ImageId')
 
-        for p in props:
-            if p == 'UserData':
-                new_script = []
-                script_lines = props[p].split('\n')
-
-                for l in script_lines:
-                    if '#!/' in l:
-                        new_script.append(l)
-#                        self.insert_package_and_services(self.t, new_script)
-                    else:
-                        new_script.append(l)
-                userdata = '\n'.join(new_script)
-
-        # TODO(asalkeld) this needs to go into the metadata server.
-        try:
-            con = self.t['Metadata']["AWS::CloudFormation::Init"]['config']
-            for st in con['services']:
-                for s in con['services'][st]:
-                    pass
-                    #print 'service create %s_%s' % (self.name, s)
-        except KeyError as e:
-            # if there is no config then no services.
-            pass
-
-        # TODO(sdake)
-        # heat API should take care of these conversions and feed them into
-        # heat engine in an openstack specific json format
+        userdata = self.t['Properties']['UserData']
 
         flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
         distro_name = self.stack.parameter_get('LinuxDistribution')
@@ -574,33 +548,3 @@ class Instance(Resource):
         server.delete()
         self.instance_id = None
         self.state_set(self.DELETE_COMPLETE)
-
-    def insert_package_and_services(self, r, new_script):
-
-        try:
-            con = r['Metadata']["AWS::CloudFormation::Init"]['config']
-        except KeyError as e:
-            return
-
-        if con.has_key('packages'):
-            for pt in con['packages']:
-                if pt == 'yum':
-                    for p in con['packages']['yum']:
-                        new_script.append('yum install -y %s' % p)
-
-        if con.has_key('services'):
-            for st in con['services']:
-                if st == 'systemd':
-                    for s in con['services']['systemd']:
-                        v = con['services']['systemd'][s]
-                        if v['enabled'] == 'true':
-                            new_script.append('systemctl enable %s.service' % s)
-                        if v['ensureRunning'] == 'true':
-                            new_script.append('systemctl start %s.service' % s)
-                elif st == 'sysvinit':
-                    for s in con['services']['sysvinit']:
-                        v = con['services']['sysvinit'][s]
-                        if v['enabled'] == 'true':
-                            new_script.append('chkconfig %s on' % s)
-                        if v['ensureRunning'] == 'true':
-                            new_script.append('/etc/init.d/start %s' % s)
