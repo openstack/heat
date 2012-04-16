@@ -92,42 +92,6 @@
   },
 
   "Resources" : {
-
-    "WebServer": {
-      "Type": "AWS::EC2::Instance",
-      "DependsOn": "DatabaseServer",
-      "Metadata" : {
-        "AWS::CloudFormation::Init" : {
-          "config" : {
-            "packages" : {
-              "yum" : {
-                "httpd"        : [],
-                "wordpress"    : []
-              }
-            },
-            "services" : {
-              "systemd" : {
-                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" }
-              }
-            }
-          }
-        }
-      },
-      "Properties": {
-        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
-                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
-        "InstanceType"   : { "Ref" : "InstanceType" },
-        "KeyName"        : { "Ref" : "KeyName" },
-        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
-          "#!/bin/bash -v\n",
-          "/opt/aws/bin/cfn-init -f /var/lib/cloud/data/cfn-init-data\n",
-          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ --e s/DB_HOST/", "/ /usr/share/wordpress/wp-config.php\n",
-          "set --in-place --e \"s/DB_HOST\\s*',\\s*'localhost/DB_HOST', '", { "Fn::GetAtt": ["DatabaseServer", "PrivateIp"] },  "/\" /usr/share/wordpress/wp-config.php\n",
-          "cp /usr/share/wordpress/wp-config.php /usr/share/wordpress/wp-config.orig\n"
-        ]]}}
-      }
-    },
-
     "DatabaseServer": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
@@ -159,17 +123,49 @@
           "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
           "cat >> /tmp/mysql-wordpress-config << EOF\n",
           "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
-          "GRANT ALL PRIVILEGES ON ", { "Ref" : "DBName" }, ".* TO \"", { "Ref" : "DBUsername" }, "\"@\"localhost\"\n",
+          "GRANT ALL PRIVILEGES ON ", { "Ref" : "DBName" }, ".* TO \"", { "Ref" : "DBUsername" }, "\"@\"%\"\n",
           "IDENTIFIED BY \"", { "Ref" : "DBPassword" }, "\";\n",
           "FLUSH PRIVILEGES;\n",
           "EXIT\n",
           "EOF\n",
-          "cat /tmp/mysql-wordpress-config | mysql -u root --password='", { "Ref" : "DBRootPassword" }, "' < /tmp/mysql-wordpress-config\n",
-          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n",
-          "cp /usr/share/wordpress/wp-config.php /usr/share/wordpress/wp-config.orig\n"
+          "cat /tmp/mysql-wordpress-config | mysql -u root --password='", { "Ref" : "DBRootPassword" }, "' < /tmp/mysql-wordpress-config\n"
+        ]]}}
+      }
+    },
+
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "DatabaseServer",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+              "yum" : {
+                "httpd"        : [],
+                "wordpress"    : []
+              }
+            },
+            "services" : {
+              "systemd" : {
+                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" }
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "/opt/aws/bin/cfn-init -f /var/lib/cloud/data/cfn-init-data\n",
+          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ --e s/localhost/", { "Fn::GetAtt" : [ "DatabaseServer", "PublicIp" ]}, "/ /usr/share/wordpress/wp-config.php\n"
         ]]}}
       }
     }
+
   },
 
   "Outputs" : {
