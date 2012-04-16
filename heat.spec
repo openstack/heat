@@ -7,8 +7,8 @@ Release: 1
 License: ASL 2.0
 Prefix: %{_prefix}
 Group: System Environment/Base
-URL: http://www.heat-project.org
-Source0: http://heat-project.org/downloads/%{name}-%{version}/%{name}-%{version}.tar.gz
+URL: http://www.heat-api.org
+Source0: http://heat-api.org/downloads/%{name}-%{version}/%{name}-%{version}.tar.gz
 
 Requires: pacemaker-cloud
 
@@ -30,7 +30,7 @@ mkdir -p $RPM_BUILD_ROOT/var/lib/heat/
 mkdir -p $RPM_BUILD_ROOT/etc/heat/
 cp etc/* $RPM_BUILD_ROOT/etc/heat/
 mkdir -p $RPM_BUILD_ROOT/%{_mandir}/man1/ 
-cp -v docs/man/man1/heat.1 $RPM_BUILD_ROOT/%{_mandir}/man1/
+cp -v docs/man/man1/* $RPM_BUILD_ROOT/%{_mandir}/man1/
 rm -rf $RPM_BUILD_ROOT/var/lib/heat/.dummy
 rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/heat/vcsversion.*
 rm -rf $RPM_BUILD_ROOT/%{python_sitelib}/heat/tests
@@ -76,7 +76,7 @@ Group: System Environment/Base
 Requires: %{name} = %{version}-%{release}
 
 %description jeos 
-This package contains the Just Enough OS configuration files supported by the Heat project
+This package contains the Just Enough OS configuration files
 
 %package openstack 
 License: ASL 2.0
@@ -102,7 +102,9 @@ This package contains the OpenStack integration for the Heat project
 %config(noreplace) /etc/heat
 
 %files api
+%doc README.rst
 %defattr(-,root,root,-)
+%{_mandir}/man1/*.gz
 %{_bindir}/heat-api
 %{python_sitelib}/heat/api/__init__.*
 %{python_sitelib}/heat/api/versions.*
@@ -114,6 +116,7 @@ This package contains the OpenStack integration for the Heat project
 %{_localstatedir}/log/heat/api.log
 
 %files common
+%doc README.rst
 %defattr(-,root,root,-)
 %{python_sitelib}/heat/common/auth.*
 %{python_sitelib}/heat/common/client.*
@@ -127,7 +130,9 @@ This package contains the OpenStack integration for the Heat project
 %{python_sitelib}/heat/common/wsgi.*
 
 %files engine
+%doc README.rst
 %defattr(-,root,root,-)
+%{_mandir}/man1/*.gz
 %{_bindir}/heat-engine
 %{python_sitelib}/heat/engine/*
 %{python_sitelib}/heat/openstack/*
@@ -140,6 +145,7 @@ This package contains the OpenStack integration for the Heat project
 %{_localstatedir}/log/heat/engine.log
 
 %files jeos
+%doc README.rst
 %defattr(-,root,root,-)
 %{python_sitelib}/heat/jeos/F16-x86_64-gold-jeos.tdl
 %{python_sitelib}/heat/jeos/F16-i386-gold-jeos.tdl
@@ -151,7 +157,12 @@ This package contains the OpenStack integration for the Heat project
 %{python_sitelib}/heat/jeos/F17-i386-cfntools-jeos.tdl
 
 %files openstack
+%doc README.rst
 %defattr(-,root,root,-)
 %{python_sitelib}/heat/openstack/__init__.*
 %{python_sitelib}/heat/openstack/common/cfg.*
 %{python_sitelib}/heat/openstack/common/__init__.*
+
+%changelog heat api common engine jeos openstack
+* Mon Apr 16 2012 Chris Alfonso <calfonso@redhat.com> - {%version}
+- initial openstack package log

@@ -19,29 +19,18 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-heat \- run a command somewhere else
+heat-api \- The external api to the heat engine
 .SH "SYNOPSIS"
 .sp
-heat <command>
+heat-engine
 .SH "DESCRIPTION"
 .sp
-\fBHeat\fR is a tool to orchestrate the setup of multiple cloud applications\&.
-.SH "ARGUMENTS"
-.PP
-\fBcommand\fR
-.RS 4
-heat command\&.
-.RE
-.SH "OPTIONS"
-.PP
-\fB\-t\fR, \fB\-\-template\fR
-.RS 4
-The template to use set up a stack\&.
+\fBHeat\fR is the external api to the heat project\&.
 .RE
 .PP
 .SH "INVENTORY"
 .sp
-Heat orchestrates the setup of multiple cloud applications\&.
+The heat api is a services that exposes an external api to the heat-engine service.  The communication between the heat-api and heat-engine uses RPC\&.
 .SH "AUTHOR"
 .sp
 See the AUTHORS file for a complete list of contributors\&.
@@ -51,4 +40,4 @@ Copyright \(co 2012, Red Hat Inc
 .sp
 Heat is released under the terms of the ASL 2 License\&.
 .sp
-Extensive documentation as well as IRC and mailing list info is available on the heat home page: https://heat\&-api\&.org/
+Extensive documentation as well as IRC and mailing list info is available on the heat home page: http://heat\&-api\&.org/
