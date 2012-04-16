@@ -40,7 +40,14 @@ import subprocess
 import sys
 
 
-logging.basicConfig(level=logging.INFO)
+log_file_name = "/var/log/cfn-init.log"
+log_format = '%(levelname)s [%(asctime)s] %(message)s'
+# setup stdout logging
+logging.basicConfig(format=log_format, level=logging.INFO)
+# setup file logging
+file_handler = logging.FileHandler(log_file_name)
+file_handler.setFormatter(logging.Formatter(log_format))
+logging.getLogger().addHandler(file_handler)
 
 class CommandRunner(object):
     """
@@ -560,12 +567,10 @@ def get_metadata(fname):
 
 
 ## Main
+metadata_file = "/var/lib/cloud/data-cfn-init-data"
+
 description = " "
 parser = argparse.ArgumentParser(description=description)
-parser.add_argument("-f", "--metadata-file",
-        dest="metafile",
-        help="File containing the resource metadata to process",
-        required=True)
 parser.add_argument('-s', '--stack',
         dest="stack_name",
         help="A Heat stack name",
@@ -589,7 +594,7 @@ parser.add_argument('--region',
 args = parser.parse_args()
 # FIXME: implement real arg
 
-metadata = Metadata(get_metadata(args.metafile))
+metadata = Metadata(get_metadata(metadata_file))
 try:
     metadata.process()
 except Exception as e:
