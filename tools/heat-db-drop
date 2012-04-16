@@ -1,0 +1,8 @@
+#!/bin/bash
+cat << EOF | mysql -u root -p
+DROP USER 'heat'@'localhost';
+DROP USER 'heat'@'%';
+DROP DATABASE heat;
+flush privileges;
+EOF
+
