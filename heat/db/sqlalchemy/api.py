@@ -19,8 +19,9 @@ from sqlalchemy.orm.session import Session
 from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy.session import get_session
 
+
 def model_query(context, *args, **kwargs):
-    """ 
+    """
     :param session: if present, the session to use
     """
     session = kwargs.get('session') or get_session()
@@ -28,6 +29,7 @@ def model_query(context, *args, **kwargs):
     query = session.query(*args)
 
     return query
+
 
 def raw_template_get(context, template_id):
     result = model_query(context, models.RawTemplate).\
@@ -38,19 +40,22 @@ def raw_template_get(context, template_id):
 
     return result
 
+
 def raw_template_get_all(context):
     results = model_query(context, models.RawTemplate).all()
 
     if not results:
         raise Exception('no raw templates were found')
-    
+
     return results
+
 
 def raw_template_create(context, values):
     raw_template_ref = models.RawTemplate()
     raw_template_ref.update(values)
     raw_template_ref.save()
     return raw_template_ref
+
 
 def parsed_template_get(context, template_id):
     result = model_query(context, models.ParsedTemplate).\
@@ -61,19 +66,22 @@ def parsed_template_get(context, template_id):
 
     return result
 
+
 def parsed_template_get_all(context):
     results = model_query(context, models.ParsedTemplate).all()
 
     if not results:
         raise Exception('no parsed templates were found')
-    
+
     return results
+
 
 def parsed_template_create(context, values):
     parsed_template_ref = models.ParsedTemplate()
     parsed_template_ref.update(values)
     parsed_template_ref.save()
     return parsed_template_ref
+
 
 def resource_get(context, resource_id):
     result = model_query(context, models.Resource).\
@@ -84,6 +92,7 @@ def resource_get(context, resource_id):
 
     return result
 
+
 def resource_get_by_name_and_stack(context, resource_name, stack_id):
     result = model_query(context, models.Resource).\
                         filter_by(name=resource_name).\
@@ -91,13 +100,15 @@ def resource_get_by_name_and_stack(context, resource_name, stack_id):
 
     return result
 
+
 def resource_get_all(context):
     results = model_query(context, models.Resource).all()
 
     if not results:
         raise Exception('no resources were found')
-    
+
     return results
+
 
 def resource_create(context, values):
     resource_ref = models.Resource()
@@ -105,30 +116,35 @@ def resource_create(context, values):
     resource_ref.save()
     return resource_ref
 
+
 def resource_get_all_by_stack(context, stack_id):
     results = model_query(context, models.Resource).\
                 filter_by(stack_id=stack_id).all()
 
     if not results:
         raise Exception("no resources for stack_id %s were found" % stack_id)
-    
+
     return results
+
 
 def stack_get(context, stack_id):
     result = model_query(context, models.Stack).\
                         filter_by(name=stack_id).first()
     return result
 
+
 def stack_get_all(context):
     results = model_query(context, models.Stack).all()
     return results
+
 
 def stack_create(context, values):
     stack_ref = models.Stack()
     stack_ref.update(values)
     stack_ref.save()
     return stack_ref
-    
+
+
 def stack_delete(context, stack_name):
     s = stack_get(context, stack_name)
     if not s:
@@ -145,22 +161,26 @@ def stack_delete(context, stack_name):
     session.delete(s)
     session.flush()
 
+
 def event_get(context, event_id):
     result = model_query(context, models.Event).\
                         filter_by(id=event_id).first()
 
     return result
 
+
 def event_get_all(context):
     results = model_query(context, models.Event).all()
 
     return results
+
 
 def event_get_all_by_stack(context, stack_id):
     results = model_query(context, models.Event).\
                         filter_by(stack_id=stack_id).all()
 
     return results
+
 
 def event_create(context, values):
     event_ref = models.Event()

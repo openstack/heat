@@ -21,9 +21,11 @@ import functools
 import urlparse
 from heat.openstack.common.exception import *
 
+
 class RedirectException(Exception):
     def __init__(self, url):
         self.url = urlparse.urlparse(url)
+
 
 def wrap_exception(notifier=None, publisher_id=None, event_type=None,
                    level=None):
@@ -71,6 +73,7 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
         return functools.wraps(f)(wrapped)
     return inner
 
+
 class MissingCredentialError(OpenstackException):
     message = _("Missing required credential: %(required)s")
 
@@ -78,6 +81,7 @@ class MissingCredentialError(OpenstackException):
 class BadAuthStrategy(OpenstackException):
     message = _("Incorrect auth strategy, expected \"%(expected)s\" but "
                 "received \"%(received)s\"")
+
 
 class AuthBadRequest(OpenstackException):
     message = _("Connect error/bad request to Auth service at URL %(url)s.")
@@ -94,8 +98,10 @@ class AuthorizationFailure(OpenstackException):
 class NotAuthenticated(OpenstackException):
     message = _("You are not authenticated.")
 
+
 class Forbidden(OpenstackException):
     message = _("You are not authorized to complete this action.")
+
 
 #NOTE(bcwaldon): here for backwards-compatability, need to deprecate.
 class NotAuthorized(Forbidden):
@@ -119,6 +125,7 @@ class MultipleChoices(OpenstackException):
                 "means that you have not included a version indicator in a "
                 "request URI.\n\nThe body of response returned:\n%(body)s")
 
+
 class LimitExceeded(OpenstackException):
     message = _("The request returned a 413 Request Entity Too Large. This "
                 "generally means that rate limiting or a quota threshold was "
@@ -140,6 +147,7 @@ class ServiceUnavailable(OpenstackException):
                             else None)
         super(ServiceUnavailable, self).__init__(*args, **kwargs)
 
+
 class RequestUriTooLong(OpenstackException):
     message = _("The URI was too long.")
 
@@ -147,6 +155,7 @@ class RequestUriTooLong(OpenstackException):
 class ServerError(OpenstackException):
     message = _("The request returned 500 Internal Server Error"
                 "\n\nThe response body:\n%(body)s")
+
 
 class MaxRedirectsExceeded(OpenstackException):
     message = _("Maximum redirects (%(redirects)s) was exceeded.")
@@ -165,11 +174,15 @@ class RegionAmbiguity(OpenstackException):
                 "generally means that a region is required and you have not "
                 "supplied one.")
 
+
 class UserParameterMissing(OpenstackException):
     message = _("The Parameter (%(key)s) was not provided.")
 
+
 class InvalidTemplateAttribute(OpenstackException):
-    message = _("The Referenced Attribute (%(resource)s %(key)s) is incorrect.")
+    message = _("The Referenced Attribute (%(resource)s %(key)s)"
+                " is incorrect.")
+
 
 class UserKeyPairMissing(OpenstackException):
     message = _("The Key (%(key_name)s) could not be found.")

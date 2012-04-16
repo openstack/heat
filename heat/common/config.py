@@ -140,6 +140,7 @@ class HeatConfigOpts(cfg.CommonConfigOpts):
             **kwargs)
         self.register_cli_opts(rpc_opts)
 
+
 class HeatEngineConfigOpts(cfg.CommonConfigOpts):
 
     service_opts = [
@@ -178,7 +179,8 @@ class HeatEngineConfigOpts(cfg.CommonConfigOpts):
                help='port for os volume api to listen'),
     ]
     db_opts = [
-    cfg.StrOpt('db_backend', default='heat.db.sqlalchemy.api', help='The backend to use for db'),
+    cfg.StrOpt('db_backend', default='heat.db.sqlalchemy.api',
+               help='The backend to use for db'),
     cfg.StrOpt('sql_connection',
                default='mysql://heat:heat@localhost/heat',
                help='The SQLAlchemy connection string used to connect to the '
@@ -208,6 +210,7 @@ class HeatEngineConfigOpts(cfg.CommonConfigOpts):
         self.register_cli_opts(self.db_opts)
         self.register_cli_opts(self.service_opts)
         self.register_cli_opts(rpc_opts)
+
 
 def setup_logging(conf):
     """

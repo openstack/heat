@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-SUPPORTED_PARAMS = ('StackName', 'TemplateBody', 'TemplateUrl','NotificationARNs', 'Parameters',
-                    'Version', 'SignatureVersion', 'Timestamp', 'AWSAccessKeyId',
+SUPPORTED_PARAMS = ('StackName', 'TemplateBody', 'TemplateUrl',
+                    'NotificationARNs', 'Parameters', 'Version',
+                    'SignatureVersion', 'Timestamp', 'AWSAccessKeyId',
                     'Signature', 'KeyStoneCreds')
-

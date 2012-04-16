@@ -33,6 +33,7 @@ from heat.openstack.common import exception
 
 PERFECT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
+
 def chunkreadable(iter, chunk_size=65536):
     """
     Wrap a readable iterator with a reader yielding chunks of
@@ -62,6 +63,7 @@ def chunkiter(fp, chunk_size=65536):
 def generate_uuid():
     return str(uuid.uuid4())
 
+
 def gen_uuid():
     return uuid.uuid4()
 
@@ -71,6 +73,7 @@ def strtime(at=None, fmt=PERFECT_TIME_FORMAT):
     if not at:
         at = utcnow()
     return at.strftime(fmt)
+
 
 def parse_strtime(timestr, fmt=PERFECT_TIME_FORMAT):
     """Turn a formatted time back into a datetime."""
@@ -85,6 +88,7 @@ def isotime(at=None):
     tz = at.tzinfo.tzname(None) if at.tzinfo else 'UTC'
     str += ('Z' if tz == 'UTC' else tz)
     return str
+
 
 class LoopingCallDone(Exception):
     """Exception to break out and stop a LoopingCall.
@@ -143,4 +147,3 @@ class LoopingCall(object):
 
     def wait(self):
         return self.done.wait()
-

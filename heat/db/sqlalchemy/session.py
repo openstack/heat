@@ -90,8 +90,10 @@ def get_maker(engine, autocommit=True, expire_on_commit=False):
                                        autocommit=autocommit,
                                        expire_on_commit=expire_on_commit)
 
+
 def _get_sql_connection():
     return db_api.SQL_CONNECTION
+
 
 def _get_sql_idle_timeout():
     return db_api.SQL_IDLE_TIMEOUT

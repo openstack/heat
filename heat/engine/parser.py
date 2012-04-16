@@ -23,30 +23,25 @@ from heat.db import api as db_api
 
 logger = logging.getLogger('heat.engine.parser')
 
+
 class Stack(object):
     def __init__(self, stack_name, template, parms=None):
         self.id = 0
         self.t = template
-        if self.t.has_key('Parameters'):
-            self.parms = self.t['Parameters']
-        else:
-            self.parms = {}
-        if self.t.has_key('Mappings'):
-            self.maps = self.t['Mappings']
-        else:
-            self.maps = {}
-        if self.t.has_key('Outputs'):
-            self.outputs = self.t['Outputs']
-        else:
-            self.outputs = {}
-
+        self.parms = self.t.get('Parameters', {})
+        self.maps = self.t.get('Mappings', {})
+        self.outputs = self.t.get('Outputs', {})
         self.res = {}
         self.doc = None
         self.name = stack_name
-   
-        self.parms['AWS::Region'] = {"Description" : "AWS Regions", "Type" : "String", "Default" : "ap-southeast-1",
-              "AllowedValues" : ["us-east-1","us-west-1","us-west-2","sa-east-1","eu-west-1","ap-southeast-1","ap-northeast-1"],
-              "ConstraintDescription" : "must be a valid EC2 instance type." }
+
+        self.parms['AWS::Region'] = {"Description": "AWS Regions",
+            "Type": "String",
+            "Default": "ap-southeast-1",
+            "AllowedValues": ["us-east-1", "us-west-1", "us-west-2",
+                              "sa-east-1", "eu-west-1", "ap-southeast-1",
+                              "ap-northeast-1"],
+            "ConstraintDescription": "must be a valid EC2 instance type." }
 
         if parms != None:
             self._apply_user_parameters(parms)
@@ -63,19 +58,26 @@ class Stack(object):
         for r in self.t['Resources']:
             type = self.t['Resources'][r]['Type']
             if type == 'AWS::EC2::Instance':
-                self.resources[r] = resources.Instance(r, self.t['Resources'][r], self)
+                self.resources[r] = resources.Instance(r,
+                                                self.t['Resources'][r], self)
             elif type == 'AWS::EC2::Volume':
-                self.resources[r] = resources.Volume(r, self.t['Resources'][r], self)
+                self.resources[r] = resources.Volume(r,
+                                                self.t['Resources'][r], self)
             elif type == 'AWS::EC2::VolumeAttachment':
-                self.resources[r] = resources.VolumeAttachment(r, self.t['Resources'][r], self)
+                self.resources[r] = resources.VolumeAttachment(r,
+                                                self.t['Resources'][r], self)
             elif type == 'AWS::EC2::EIP':
-                self.resources[r] = resources.ElasticIp(r, self.t['Resources'][r], self)
+                self.resources[r] = resources.ElasticIp(r,
+                                                self.t['Resources'][r], self)
             elif type == 'AWS::EC2::EIPAssociation':
-                self.resources[r] = resources.ElasticIpAssociation(r, self.t['Resources'][r], self)
+                self.resources[r] = resources.ElasticIpAssociation(r,
+                                                self.t['Resources'][r], self)
             elif type == 'AWS::EC2::SecurityGroup':
-                self.resources[r] = resources.SecurityGroup(r, self.t['Resources'][r], self)
+                self.resources[r] = resources.SecurityGroup(r,
+                                                self.t['Resources'][r], self)
             else:
-                self.resources[r] = resources.GenericResource(r, self.t['Resources'][r], self)
+                self.resources[r] = resources.GenericResource(r,
+                                                self.t['Resources'][r], self)
 
             self.calulate_dependencies(self.t['Resources'][r], self.resources[r])
 
@@ -96,14 +98,8 @@ class Stack(object):
             res = jp['member']
             res['NoEcho'] = 'false'
             res['ParameterKey'] = p
-            if self.parms[p].has_key('Description'):
-                res['Description'] = self.parms[p]['Description']
-            else:
-                res['Description'] = ''
-            if self.parms[p].has_key('Default'):
-                res['DefaultValue'] = self.parms[p]['Default']
-            else:
-                res['DefaultValue'] = ''
+            res['Description'] = self.parms[p].get('Description', '')
+            res['DefaultValue'] = self.parms[p].get('Default', '')
             response['ValidateTemplateResult']['Parameters'].append(res)
         return response
 
@@ -185,15 +181,10 @@ class Stack(object):
         outs = []
         for o in self.outputs:
             out = {}
-            if self.outputs[o].has_key('Description'):
-                out['Description'] = self.outputs[o]['Description']
-            else:
-                out['Description'] = 'No description given'
+            out['Description'] = self.outputs[o].get('Description',
+                                                     'No description given')
             out['OutputKey'] = o
-            if self.outputs[o].has_key('Value'):
-                out['OutputValue'] = self.outputs[o]['Value']
-            else:
-                out['OutputValue'] = ''
+            out['OutputValue'] = self.outputs[o].get('Value', '')
             outs.append(out)
 
         return outs
@@ -220,7 +211,7 @@ class Stack(object):
     def _apply_user_parameter(self, key, value):
         logger.debug('appling user parameter %s=%s ' % (key, value))
 
-        if not self.parms.has_key(key):
+        if not key in self.parms:
             self.parms[key] = {}
         self.parms[key]['Value'] = value
 
@@ -231,16 +222,17 @@ class Stack(object):
                 try:
                     key_name = 'Parameters.member.%s.ParameterKey' % s[2]
                     value_name = 'Parameters.member.%s.ParameterValue' % s[2]
-                    self._apply_user_parameter(parms[key_name], parms[value_name])
+                    self._apply_user_parameter(parms[key_name],
+                                               parms[value_name])
                 except Exception:
                     logger.error('Could not apply parameter %s' % p)
 
     def parameter_get(self, key):
         if self.parms[key] == None:
             raise exception.UserParameterMissing(key=key)
-        elif self.parms[key].has_key('Value'):
+        elif 'Value' in self.parms[key]:
             return self.parms[key]['Value']
-        elif self.parms[key].has_key('Default'):
+        elif 'Default' in self.parms[key]:
             return self.parms[key]['Default']
         else:
             raise exception.UserParameterMissing(key=key)
@@ -253,7 +245,7 @@ class Stack(object):
             for i in s:
                 if i == 'Ref' and \
                       isinstance(s[i], (basestring, unicode)) and \
-                      self.parms.has_key(s[i]):
+                      s[i] in self.parms:
                     return self.parameter_get(s[i])
                 else:
                     s[i] = self.resolve_static_refs(s[i])
@@ -298,7 +290,7 @@ class Stack(object):
         '''
         if isinstance(s, dict):
             for i in s:
-                if i == 'Ref' and self.resources.has_key(s[i]):
+                if i == 'Ref' and s[i] in self.resources:
                     return self.resources[s[i]].FnGetRefId()
                 elif i == 'Fn::GetAtt':
                     resource_name = s[i][0]
@@ -351,5 +343,3 @@ class Stack(object):
             for index, item in enumerate(s):
                 s[index] = self.resolve_base64(item)
         return s
-
-

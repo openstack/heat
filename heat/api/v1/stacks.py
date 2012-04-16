@@ -56,8 +56,10 @@ class StackController(object):
                             {'method': 'list_stacks',
                             'args': {'params': dict(req.params)}})
 
-        res = {'ListStacksResponse': {'ListStacksResult': {'StackSummaries': [] } } }
-        summaries = res['ListStacksResponse']['ListStacksResult']['StackSummaries']
+        res = {'ListStacksResponse': {
+                'ListStacksResult': {'StackSummaries': []}}}
+        results = res['ListStacksResponse']['ListStacksResult']
+        summaries = results['StackSummaries']
         if stack_list != None:
             for s in stack_list['stacks']:
                 summaries.append(s)
@@ -79,7 +81,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
-        res = {'DescribeStacksResult': {'Stacks': [] } }
+        res = {'DescribeStacksResult': {'Stacks': []}}
         stacks = res['DescribeStacksResult']['Stacks']
         for s in stack_list['stacks']:
             mem = {'member': s}
@@ -88,10 +90,10 @@ class StackController(object):
         return res
 
     def _get_template(self, req):
-        if req.params.has_key('TemplateBody'):
+        if 'TemplateBody' in req.params:
             logger.info('TemplateBody ...')
             return req.params['TemplateBody']
-        elif req.params.has_key('TemplateUrl'):
+        elif 'TemplateUrl' in req.params:
             logger.info('TemplateUrl %s' % req.params['TemplateUrl'])
             url = urlparse.urlparse(req.params['TemplateUrl'])
             if url.scheme == 'https':
@@ -109,7 +111,6 @@ class StackController(object):
             return data
 
         return None
-
 
     def create(self, req):
         """
@@ -141,7 +142,6 @@ class StackController(object):
                                       'params': dict(req.params)}})
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
-
 
     def validate_template(self, req):
 
@@ -187,7 +187,6 @@ class StackController(object):
         else:
             return {'DeleteStackResult': res['Error']}
 
-
     def events_list(self, req):
         """
         Returns the following information for all stacks:
@@ -205,8 +204,11 @@ class StackController(object):
 
         return {'DescribeStackEventsResult': {'StackEvents': events}}
 
+
 def create_resource(options):
-    """Stacks resource factory method."""
+    """
+    Stacks resource factory method.
+    """
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(StackController(options), deserializer, serializer)

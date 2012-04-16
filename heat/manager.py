@@ -171,5 +171,3 @@ class Manager(object):
         for key in FLAGS:
             config[key] = FLAGS.get(key, None)
         return config
-
-

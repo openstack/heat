@@ -9,13 +9,17 @@ import unittest
 from nose.plugins.attrib import attr
 
 # sets attribute on all test methods
+
+
 @attr(tag=['example', 'unittest'])
 @attr(speed='fast')
 class ExampleTest(unittest.TestCase):
     def test_a(self):
         self.assert_(1 == 1)
+
     def setUp(self):
         print "test3 setup complete"
+
     def tearDown(self):
         print "test3 teardown complete"
 

@@ -1,6 +1,7 @@
 from sqlalchemy import *
 from migrate import *
 
+
 def upgrade(migrate_engine):
     meta = MetaData()
     meta.bind = migrate_engine
@@ -21,7 +22,8 @@ def upgrade(migrate_engine):
         Column('name', String(length=255, convert_unicode=False,
                       assert_unicode=None,
                       unicode_error=None, _warn_on_bytestring=False)),
-        Column('raw_template_id', Integer, ForeignKey("raw_template.id"), nullable=False),
+        Column('raw_template_id', Integer, ForeignKey("raw_template.id"),
+               nullable=False),
     )
 
     event = Table(
@@ -49,13 +51,14 @@ def upgrade(migrate_engine):
         Column('updated_at', DateTime(timezone=False)),
         Column('state', String(length=255, convert_unicode=False,
                                            assert_unicode=None,
-                                           unicode_error=None, 
+                                           unicode_error=None,
                                            _warn_on_bytestring=False)),
         Column('state_description', String(length=255, convert_unicode=False,
                                            assert_unicode=None,
-                                           unicode_error=None, 
+                                           unicode_error=None,
                                            _warn_on_bytestring=False)),
-        Column('parsed_template_id', Integer, ForeignKey("parsed_template.id"), nullable=True),
+        Column('parsed_template_id', Integer, ForeignKey("parsed_template.id"),
+               nullable=True),
         Column('stack_id', Integer, ForeignKey("stack.id"), nullable=False),
         Column('depends_on', Integer),
     )
@@ -63,17 +66,19 @@ def upgrade(migrate_engine):
     parsedtemplate = Table(
         'parsed_template', meta,
         Column('id', Integer, primary_key=True),
-        Column('raw_template_id', Integer, ForeignKey("raw_template.id"), nullable=False),
+        Column('raw_template_id', Integer, ForeignKey("raw_template.id"),
+               nullable=False),
         Column('template', Text()),
     )
 
     tables = [rawtemplate, stack, event, parsedtemplate, resource]
     for table in tables:
-        try:      
+        try:
             table.create()
         except Exception:
             meta.drop_all(tables=tables)
             raise
+
 
 def downgrade(migrate_engine):
     meta = MetaData()

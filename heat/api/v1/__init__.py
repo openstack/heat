@@ -21,10 +21,12 @@ from heat.common import wsgi
 
 logger = logging.getLogger(__name__)
 
+
 class API(wsgi.Router):
 
-    """WSGI router for Heat v1 API requests."""
-    #TODO GetTemplate, ValidateTemplate
+    """
+    WSGI router for Heat v1 API requests.
+    """
 
     def __init__(self, conf, **local_conf):
         self.conf = conf
@@ -49,6 +51,7 @@ class API(wsgi.Router):
         mapper.connect("/DescribeStackEvents", controller=stacks_resource,
                        action="events_list", conditions=dict(method=["GET"]))
         mapper.connect("/ValidateTemplate", controller=stacks_resource,
-                       action="validate_template", conditions=dict(method=["GET"]))
+                       action="validate_template",
+                       conditions=dict(method=["GET"]))
 
         super(API, self).__init__(mapper)

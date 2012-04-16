@@ -9,14 +9,18 @@ import nose
 from nose.plugins.attrib import attr
 
 # sets attribute on all test methods
+
+
 @attr(tag=['example', 'class'])
 @attr(speed='fast')
 class TestClass:
     def test2(self):
         assert 'b' == 'b'
         print "assert b"
+
     def setUp(self):
         print "test2 setup complete"
+
     def tearDown(self):
         print "test2 teardown complete"
 

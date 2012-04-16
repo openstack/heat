@@ -33,6 +33,7 @@ from heat.rpc import common as rpc_common
 
 LOG = logging.getLogger(__name__)
 
+
 class ConsumerBase(object):
     """Consumer base class."""
 
@@ -199,7 +200,7 @@ class TopicPublisher(Publisher):
         """init a 'topic' publisher.
         """
         super(TopicPublisher, self).__init__(session,
-                                "%s/%s" % (config.FLAGS.control_exchange, topic))
+                               "%s/%s" % (config.FLAGS.control_exchange, topic))
 
 
 class FanoutPublisher(Publisher):
@@ -217,7 +218,7 @@ class NotifyPublisher(Publisher):
         """init a 'topic' publisher.
         """
         super(NotifyPublisher, self).__init__(session,
-                                "%s/%s" % (config.FLAGS.control_exchange, topic),
+                               "%s/%s" % (config.FLAGS.control_exchange, topic),
                                 {"durable": True})
 
 

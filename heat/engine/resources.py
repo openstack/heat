@@ -49,6 +49,7 @@ else:
             cloudinit_path = '%s/heat/%s/' % (p, "cloudinit")
             break
 
+
 class Resource(object):
     CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
     CREATE_FAILED = 'CREATE_FAILED'
@@ -77,7 +78,7 @@ class Resource(object):
             self.id = None
 
         self._nova = {}
-        if not self.t.has_key('Properties'):
+        if not 'Properties' in self.t:
             # make a dummy entry to prevent having to check all over the
             # place for it.
             self.t['Properties'] = {}
@@ -86,7 +87,7 @@ class Resource(object):
         stack.resolve_find_in_map(self.t)
 
     def nova(self, service_type='compute'):
-        if self._nova.has_key(service_type):
+        if service_type in self._nova:
             return self._nova[service_type]
 
         username = self.stack.creds['username']
@@ -98,9 +99,10 @@ class Resource(object):
         else:
             service_name = None
 
-
-        self._nova[service_type] = client.Client(username, password, tenant, auth_url,
-                                   service_type=service_type, service_name=service_name)
+        self._nova[service_type] = client.Client(username, password, tenant,
+                                                 auth_url,
+                                                 service_type=service_type,
+                                                 service_name=service_name)
         return self._nova[service_type]
 
     def create(self):
@@ -146,8 +148,10 @@ class Resource(object):
             self.state = new_state
 
     def delete(self):
-        print 'deleting %s name:%s inst:%s db_id:%s' % (self.t['Type'], self.name,
-                                                     self.instance_id, str(self.id))
+        print 'deleting %s name:%s inst:%s db_id:%s' % (self.t['Type'],
+                                                        self.name,
+                                                        self.instance_id,
+                                                        str(self.id))
 
     def reload(self):
         pass
@@ -173,6 +177,7 @@ http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/intrinsic-f
         '''
         return base64.b64encode(data)
 
+
 class GenericResource(Resource):
     def __init__(self, name, json_snippet, stack):
         super(GenericResource, self).__init__(name, json_snippet, stack)
@@ -185,13 +190,14 @@ class GenericResource(Resource):
         print 'creating GenericResource %s' % self.name
         self.state_set(self.CREATE_COMPLETE)
 
+
 class SecurityGroup(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)
         self.instance_id = ''
 
-        if self.t['Properties'].has_key('GroupDescription'):
+        if 'GroupDescription' in self.t['Properties']:
             self.description = self.t['Properties']['GroupDescription']
         else:
             self.description = ''
@@ -205,7 +211,7 @@ class SecurityGroup(Resource):
         sec = self.nova().security_groups.create(self.name, self.description)
         self.instance_id_set(sec.id)
 
-        if self.t['Properties'].has_key('SecurityGroupIngress'):
+        if 'SecurityGroupIngress' in self.t['Properties']:
             for i in self.t['Properties']['SecurityGroupIngress']:
                 rule = self.nova().security_group_rules.create(sec.id,
                                                                i['IpProtocol'],
@@ -215,7 +221,8 @@ class SecurityGroup(Resource):
         self.state_set(self.CREATE_COMPLETE)
 
     def delete(self):
-        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+        if self.state == self.DELETE_IN_PROGRESS or \
+           self.state == self.DELETE_COMPLETE:
             return
 
         self.state_set(self.DELETE_IN_PROGRESS)
@@ -235,13 +242,14 @@ class SecurityGroup(Resource):
     def FnGetRefId(self):
         return unicode(self.name)
 
+
 class ElasticIp(Resource):
     def __init__(self, name, json_snippet, stack):
         super(ElasticIp, self).__init__(name, json_snippet, stack)
         self.instance_id = ''
         self.ipaddress = ''
 
-        if self.t.has_key('Properties') and self.t['Properties'].has_key('Domain'):
+        if 'Domain' in self.t['Properties']:
             logger.warn('*** can\'t support Domain %s yet' % (self.t['Properties']['Domain']))
 
     def create(self):
@@ -259,7 +267,8 @@ class ElasticIp(Resource):
 
     def delete(self):
         """De-allocate a floating IP."""
-        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+        if self.state == self.DELETE_IN_PROGRESS or \
+           self.state == self.DELETE_COMPLETE:
             return
 
         self.state_set(self.DELETE_IN_PROGRESS)
@@ -279,12 +288,13 @@ class ElasticIp(Resource):
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
 
+
 class ElasticIpAssociation(Resource):
     def __init__(self, name, json_snippet, stack):
         super(ElasticIpAssociation, self).__init__(name, json_snippet, stack)
 
     def FnGetRefId(self):
-        if not self.t['Properties'].has_key('EIP'):
+        if not 'EIP' in self.t['Properties']:
             return unicode('0.0.0.0')
         else:
             return unicode(self.t['Properties']['EIP'])
@@ -306,7 +316,8 @@ class ElasticIpAssociation(Resource):
 
     def delete(self):
         """Remove a floating IP address from a server."""
-        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+        if self.state == self.DELETE_IN_PROGRESS or \
+           self.state == self.DELETE_COMPLETE:
             return
 
         self.state_set(self.DELETE_IN_PROGRESS)
@@ -342,7 +353,8 @@ class Volume(Resource):
             self.state_set(self.CREATE_FAILED)
 
     def delete(self):
-        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+        if self.state == self.DELETE_IN_PROGRESS or \
+           self.state == self.DELETE_COMPLETE:
             return
 
         if self.instance_id != None:
@@ -358,6 +370,7 @@ class Volume(Resource):
             self.nova('volume').volumes.delete(self.instance_id)
         self.state_set(self.DELETE_COMPLETE)
 
+
 class VolumeAttachment(Resource):
     def __init__(self, name, json_snippet, stack):
         super(VolumeAttachment, self).__init__(name, json_snippet, stack)
@@ -369,9 +382,10 @@ class VolumeAttachment(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         super(VolumeAttachment, self).create()
 
-        print 'Attaching InstanceId %s VolumeId %s Device %s' % (self.t['Properties']['InstanceId'],
-                                                                 self.t['Properties']['VolumeId'],
-                                                                 self.t['Properties']['Device'])
+        print 'Attaching InstanceId %s VolumeId %s Device %s' % \
+            (self.t['Properties']['InstanceId'],
+             self.t['Properties']['VolumeId'],
+             self.t['Properties']['Device'])
         va = self.nova().volumes.create_server_volume(server_id=self.t['Properties']['InstanceId'],
                                                        volume_id=self.t['Properties']['VolumeId'],
                                                        device=self.t['Properties']['Device'])
@@ -387,7 +401,8 @@ class VolumeAttachment(Resource):
             self.state_set(self.CREATE_FAILED)
 
     def delete(self):
-        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+        if self.state == self.DELETE_IN_PROGRESS or \
+           self.state == self.DELETE_COMPLETE:
             return
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
@@ -411,19 +426,20 @@ class VolumeAttachment(Resource):
 
         self.state_set(self.DELETE_COMPLETE)
 
+
 class Instance(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = '0.0.0.0'
 
-        if not self.t['Properties'].has_key('AvailabilityZone'):
+        if not 'AvailabilityZone' in self.t['Properties']:
             self.t['Properties']['AvailabilityZone'] = 'nova'
         self.itype_oflavor = {'t1.micro': 'm1.tiny',
             'm1.small': 'm1.small',
             'm1.medium': 'm1.medium',
             'm1.large': 'm1.large',
-            'm1.xlarge': 'm1.tiny', # TODO(sdake)
+            'm1.xlarge': 'm1.tiny',  # TODO(sdake)
             'm2.xlarge': 'm1.xlarge',
             'm2.2xlarge': 'm1.large',
             'm2.4xlarge': 'm1.large',
@@ -431,7 +447,6 @@ class Instance(Resource):
             'c1.4xlarge': 'm1.large',
             'cc2.8xlarge': 'm1.large',
             'cg1.4xlarge': 'm1.large'}
-
 
     def FnGetAtt(self, key):
 
@@ -461,11 +476,11 @@ class Instance(Resource):
         Resource.create(self)
 
         props = self.t['Properties']
-        if not props.has_key('KeyName'):
+        if not 'KeyName' in props:
             raise exception.UserParameterMissing(key='KeyName')
-        if not props.has_key('InstanceType'):
+        if not 'InstanceType' in props:
             raise exception.UserParameterMissing(key='InstanceType')
-        if not props.has_key('ImageId'):
+        if not 'ImageId' in props:
             raise exception.UserParameterMissing(key='ImageId')
 
         userdata = self.t['Properties']['UserData']
@@ -505,17 +520,21 @@ class Instance(Resource):
         fp = open('%s/%s' % (cloudinit_path, 'config'), 'r')
         msg = MIMEText(fp.read(), _subtype='cloud-config')
         fp.close()
-        msg.add_header('Content-Disposition', 'attachment', filename='cloud-config')
+        msg.add_header('Content-Disposition', 'attachment',
+                       filename='cloud-config')
         mime_blob.attach(msg)
 
         fp = open('%s/%s' % (cloudinit_path, 'part-handler.py'), 'r')
         msg = MIMEText(fp.read(), _subtype='part-handler')
         fp.close()
-        msg.add_header('Content-Disposition', 'attachment', filename='part-handler.py')
+        msg.add_header('Content-Disposition', 'attachment',
+                       filename='part-handler.py')
         mime_blob.attach(msg)
 
-        msg = MIMEText(json.dumps(self.t['Metadata']), _subtype='x-cfninitdata')
-        msg.add_header('Content-Disposition', 'attachment', filename='cfn-init-data')
+        msg = MIMEText(json.dumps(self.t['Metadata']),
+                       _subtype='x-cfninitdata')
+        msg.add_header('Content-Disposition', 'attachment',
+                       filename='cfn-init-data')
         mime_blob.attach(msg)
 
         msg = MIMEText(userdata, _subtype='x-shellscript')
@@ -539,7 +558,8 @@ class Instance(Resource):
             self.state_set(self.CREATE_FAILED)
 
     def delete(self):
-        if self.state == self.DELETE_IN_PROGRESS or self.state == self.DELETE_COMPLETE:
+        if self.state == self.DELETE_IN_PROGRESS or \
+           self.state == self.DELETE_COMPLETE:
             return
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)

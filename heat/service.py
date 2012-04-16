@@ -38,8 +38,11 @@ from heat import version
 
 LOG = logging.getLogger(__name__)
 
+
 class Launcher(object):
-    """Launch one or more services and wait for them to complete."""
+    """
+    Launch one or more services and wait for them to complete.
+    """
 
     def __init__(self):
         """Initialize the service launcher.

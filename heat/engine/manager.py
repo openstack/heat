@@ -29,6 +29,7 @@ from heat.engine import parser
 from heat.db import api as db_api
 logger = logging.getLogger('heat.engine.manager')
 
+
 class EngineManager(manager.Manager):
     """
     Manages the running instances from creation to destruction.
@@ -52,7 +53,7 @@ class EngineManager(manager.Manager):
         arg2 -> Dict of http request parameters passed in from API side.
         """
         logger.info('context is %s' % context)
-        res = {'stacks': [] }
+        res = {'stacks': []}
         stacks = db_api.stack_get_all(None)
         if stacks == None:
             return res
@@ -62,7 +63,8 @@ class EngineManager(manager.Manager):
             mem['stack_id'] = s.id
             mem['stack_name'] = s.name
             mem['created_at'] = str(s.created_at)
-            mem['template_description'] = ps.t.get('Description', 'No description')
+            mem['template_description'] = ps.t.get('Description',
+                                                   'No description')
             mem['stack_status'] = ps.t.get('StackStatus', 'unknown')
             res['stacks'].append(mem)
 
@@ -75,7 +77,7 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the stack you want to see.
         arg3 -> Dict of http request parameters passed in from API side.
         """
-        res = {'stacks': [] }
+        res = {'stacks': []}
         s = db_api.stack_get(None, stack_name)
         if s:
             ps = parser.Stack(s.name, s.raw_template.template, params)
@@ -89,7 +91,8 @@ class EngineManager(manager.Manager):
             mem['Parameters'] = ps.t['Parameters']
             mem['StackStatusReason'] = 'TODO'
             mem['TimeoutInMinutes'] = 'TODO'
-            mem['TemplateDescription'] = ps.t.get('Description', 'No description')
+            mem['TemplateDescription'] = ps.t.get('Description',
+                                                  'No description')
             mem['StackStatus'] = ps.t.get('StackStatus', 'unknown')
             res['stacks'].append(mem)
 
@@ -97,7 +100,8 @@ class EngineManager(manager.Manager):
 
     def create_stack(self, context, stack_name, template, params):
         """
-        The create_stack method creates a new stack using the template provided.
+        The create_stack method creates a new stack using the template
+        provided.
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
         arg1 -> RPC context.

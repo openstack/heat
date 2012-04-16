@@ -10,11 +10,15 @@ from nose.plugins.attrib import attr
 from nose import with_setup
 
 # module level
+
+
 def setUp():
     print "test1 setup complete"
 
+
 def tearDown():
     print "test1 teardown complete"
+
 
 @with_setup(setUp, tearDown) # test level
 @attr(tag=['example', 'func'])
@@ -22,6 +26,7 @@ def tearDown():
 def test_a():
     assert 'a' == 'a'
     print "assert a"
+
 
 def test_b():
     assert 'b' == 'b'

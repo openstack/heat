@@ -40,7 +40,8 @@ with open(filename) as f:
 # Don't immediately see a way to have key name as a parameter and also
 # file injection and monitoring
 # need to insert key on creation and know what private key is
-    setparam(params_dict, 'KeyName', 'sdake_key') # <- that gets inserted into image
+    setparam(params_dict, 'KeyName', 'sdake_key')
+    # ^ that gets inserted into image
 
     setparam(params_dict, 'AWS::StackName', stack_name)
     setparam(params_dict, 'InstanceType', 'm1.xlarge')
