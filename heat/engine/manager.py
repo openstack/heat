@@ -76,7 +76,7 @@ class EngineManager(manager.Manager):
         arg3 -> Dict of http request parameters passed in from API side.
         """
         res = {'stacks': [] }
-        s = db_api.stack_get(None, id)
+        s = db_api.stack_get(None, stack_name)
         if s:
             ps = parser.Stack(s.name, s.raw_template.template, params)
             mem = {}
