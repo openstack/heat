@@ -1,12 +1,48 @@
-WordPress_Single_Instance_cfntools.template
- - Creates a single instance wordpress/mysql server (insecure)
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+- The gold templates:                                                         -
+- The gold images contain no cfntools                                         -
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+WordPress_Single_Instance_gold.template
+ - Creates a gold image wordpress single instance - not working
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+- The cfntools templates:                                                     -
+- The CFNTOOLS images contain analogs of AWS cfn tools for full orchestration -
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+*******************************************************************************
+* INSECURE TEMPLATES                                                          *
+* The following templates do not properly secure the mysql server and allow   *
+* any user to connect to the wordpress database.                              *
+*******************************************************************************
 
 WordPress_Single_Instance.template
- - Creates a gold image wordpress single instance - not working
+ - Creates a single instance wordpress/mysql server
 
 WordPress_Single_Instance_With_EBS_Volume.template
  - Creates a single instance wordpress/mysql server with EBS Volume
 
+WordPress_2_Instances.template
+ - Creates a two instance wordpress/mysql server
+   Note: There is an instance for mysql and instance for wordpress
+
+WordPress_2_Instances_With_EBS_Volume.template
+ - Creates a two instance wordpress/mysql server with persistent volume
+   Note: There is an instance for mysql and instance for wordpress
+
+*******************************************************************************
+* SECURE TEMPLATES                                                            *
+* These templates use EIP and security groups to secure the servers           *
+*******************************************************************************
+
 WordPress_Single_Instance_With_EIP.template
- - Creates a single instance wordpress/mysql server with EBS Volume and EIP
-   with full security
+ - Creates a single instance wordpress/mysql server with EIP with full security
+
+-------------------------------------------------------------------------------
+- END OF TEMPLATES                                                            -
+-------------------------------------------------------------------------------
