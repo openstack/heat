@@ -118,7 +118,7 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-          "/opt/aws/bin/cfn-init -f /var/lib/cloud/data/cfn-init-data\n",
+          "/opt/aws/bin/cfn-init\n",
           "# Setup MySQL root password and create a user\n",
           "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
           "cat << EOF | mysql -u root --password='", { "Ref" : "DBRootPassword" }, "'\n",
@@ -159,7 +159,7 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-          "/opt/aws/bin/cfn-init -f /var/lib/cloud/data/cfn-init-data\n",
+          "/opt/aws/bin/cfn-init\n",
           "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ --e s/localhost/", { "Fn::GetAtt" : [ "DatabaseServer", "PublicIp" ]}, "/ /usr/share/wordpress/wp-config.php\n"
         ]]}}
       }
