@@ -127,7 +127,7 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-          "/opt/aws/bin/cfn-init -f /var/lib/cloud/data/cfn-init-data\n",
+          "/opt/aws/bin/cfn-init\n",
 
           "# Wait for the volume to appear\n",
           "while [ ! -e /dev/vdb ]; do echo Waiting for volume to attach; sleep 1; done\n",
@@ -193,7 +193,7 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-          "/opt/aws/bin/cfn-init -f /var/lib/cloud/data/cfn-init-data\n",
+          "/opt/aws/bin/cfn-init\n",
           "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ --e s/localhost/", { "Fn::GetAtt" : [ "WikiDatabase", "PublicIp" ]}, "/ /usr/share/wordpress/wp-config.php\n"
         ]]}}
       }
