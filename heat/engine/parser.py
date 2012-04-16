@@ -16,6 +16,7 @@
 import eventlet
 import json
 import logging
+import traceback
 from heat.engine import resources
 from heat.db import api as db_api
 
@@ -143,6 +144,8 @@ class Stack(object):
                 try:
                     self.resources[r].create()
                 except Exception as ex:
+                    readable = traceback.format_exc()
+                    logger.error('%s', readable)
                     logger.error('create: %s' % str(ex))
                     failed = True
                     self.resources[r].state_set(self.resources[r].CREATE_FAILED, str(ex))
