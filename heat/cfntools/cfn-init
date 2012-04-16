@@ -567,7 +567,7 @@ def get_metadata(fname):
 
 
 ## Main
-metadata_file = "/var/lib/cloud/data-cfn-init-data"
+metadata_file = "/var/lib/cloud/data/cfn-init-data"
 
 description = " "
 parser = argparse.ArgumentParser(description=description)
