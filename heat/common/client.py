@@ -537,7 +537,7 @@ class BaseClient(object):
             elif status_code == httplib.CONFLICT:
                 raise exception.Duplicate(res.read())
             elif status_code == httplib.BAD_REQUEST:
-                raise exception.Invalid(res.read())
+                raise exception.Invalid(reason=res.read())
             elif status_code == httplib.MULTIPLE_CHOICES:
                 raise exception.MultipleChoices(body=res.read())
             elif status_code == httplib.REQUEST_ENTITY_TOO_LARGE:

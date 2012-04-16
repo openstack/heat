@@ -165,8 +165,7 @@ http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/intrinsic-f
         '''
 http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html
         '''
-        print '%s.GetAtt(%s)' % (self.name, key)
-        return unicode('not-this-surely')
+        raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
 
     def FnBase64(self, data):
         '''
@@ -278,8 +277,7 @@ class ElasticIp(Resource):
         if key == 'AllocationId':
             return unicode(self.instance_id)
         else:
-            logger.warn('%s.GetAtt(%s) is not handled' % (self.name, key))
-            return unicode('')
+            raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
 
 class ElasticIpAssociation(Resource):
     def __init__(self, name, json_snippet, stack):
@@ -437,13 +435,13 @@ class Instance(Resource):
 
     def FnGetAtt(self, key):
 
-        res = 'not-this-surely'
+        res = None
         if key == 'AvailabilityZone':
             res = self.t['Properties']['AvailabilityZone']
         elif key == 'PublicIp':
             res = self.ipaddress
         else:
-            logger.warn('%s.GetAtt(%s) is not handled' % (self.name, key))
+            raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
 
         # TODO(asalkeld) PrivateDnsName, PublicDnsName & PrivateIp
 

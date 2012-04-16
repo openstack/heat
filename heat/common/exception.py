@@ -103,7 +103,7 @@ class NotAuthorized(Forbidden):
 
 
 class Invalid(OpenstackException):
-    message = _("Data supplied was not valid.")
+    message = _("Data supplied was not valid: %(reason)s")
 
 
 class AuthorizationRedirect(OpenstackException):
@@ -168,6 +168,8 @@ class RegionAmbiguity(OpenstackException):
 class UserParameterMissing(OpenstackException):
     message = _("The Parameter (%(key)s) was not provided.")
 
+class InvalidTemplateAttribute(OpenstackException):
+    message = _("The Referenced Attribute (%(resource)s %(key)s) is incorrect.")
 
 class UserKeyPairMissing(OpenstackException):
     message = _("The Key (%(key_name)s) could not be found.")

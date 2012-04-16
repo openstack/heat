@@ -16,7 +16,8 @@
 import eventlet
 import json
 import logging
-import traceback
+
+from heat.common import exception
 from heat.engine import resources
 from heat.db import api as db_api
 
@@ -144,9 +145,7 @@ class Stack(object):
                 try:
                     self.resources[r].create()
                 except Exception as ex:
-                    readable = traceback.format_exc()
-                    logger.error('%s', readable)
-                    logger.error('create: %s' % str(ex))
+                    logger.exception('create')
                     failed = True
                     self.resources[r].state_set(self.resources[r].CREATE_FAILED, str(ex))
             else:
@@ -238,15 +237,13 @@ class Stack(object):
 
     def parameter_get(self, key):
         if self.parms[key] == None:
-            logger.warn('Trying to reference parameter: %s, but it is empty' % key)
-            return ''
+            raise exception.UserParameterMissing(key=key)
         elif self.parms[key].has_key('Value'):
             return self.parms[key]['Value']
         elif self.parms[key].has_key('Default'):
             return self.parms[key]['Default']
         else:
-            logger.warn('Trying to reference parameter: %s, but no Value or Default' % key)
-            return ''
+            raise exception.UserParameterMissing(key=key)
 
     def resolve_static_refs(self, s):
         '''
@@ -309,8 +306,9 @@ class Stack(object):
                     res = self.resources.get(resource_name)
                     rc = None
                     if res:
-                        rc = res.FnGetAtt(key_name)
-                        #print 'found attr:%s.%s=%s' % (res.name, key_name, rc)
+                        return res.FnGetAtt(key_name)
+                    else:
+                        raise exception.InvalidTemplateAttribute(resource=resource_name, key=key_name)
                     return rc
                 else:
                     s[i] = self.resolve_attributes(s[i])
