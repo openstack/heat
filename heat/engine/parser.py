@@ -303,7 +303,12 @@ class Stack(object):
                 elif i == 'Fn::GetAtt':
                     resource_name = s[i][0]
                     key_name = s[i][1]
-                    return self.resources[resource_name].FnGetAtt(key_name)
+                    res = self.resources.get(resource_name)
+                    rc = None
+                    if res:
+                        rc = res.FnGetAtt(key_name)
+                        #print 'found attr:%s.%s=%s' % (res.name, key_name, rc)
+                    return rc
                 else:
                     s[i] = self.resolve_attributes(s[i])
         elif isinstance(s, list):

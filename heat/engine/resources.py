@@ -447,6 +447,7 @@ class Instance(Resource):
 
         # TODO(asalkeld) PrivateDnsName, PublicDnsName & PrivateIp
 
+        print '%s.GetAtt(%s) == %s' % (self.name, key, res)
         return unicode(res)
 
     def create(self):
