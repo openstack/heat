@@ -1,0 +1,12 @@
+WordPress_Single_Instance_cfntools.template
+ - Creates a single instance wordpress/mysql server (insecure)
+
+WordPress_Single_Instance.template
+ - Creates a gold image wordpress single instance - not working
+
+WordPress_Single_Instance_With_EBS_Volume.template
+ - Creates a single instance wordpress/mysql server with EBS Volume
+
+WordPress_Single_Instance_With_EIP.template
+ - Creates a single instance wordpress/mysql server with EBS Volume and EIP
+   with full security
