@@ -28,6 +28,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from novaclient.v1_1 import client
+from novaclient.exceptions import BadRequest
 
 from heat.common import exception
 from heat.db import api as db_api
@@ -208,16 +209,31 @@ class SecurityGroup(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
 
-        sec = self.nova().security_groups.create(self.name, self.description)
+        groups = self.nova().security_groups.list()
+        for group in groups:
+            if group.name == self.name:
+                sec = group
+                break
+
+        if not sec:
+            sec = self.nova().security_groups.create(self.name, self.description)
+
         self.instance_id_set(sec.id)
 
         if 'SecurityGroupIngress' in self.t['Properties']:
+            rules_client = self.nova().security_group_rules
             for i in self.t['Properties']['SecurityGroupIngress']:
-                rule = self.nova().security_group_rules.create(sec.id,
-                                                               i['IpProtocol'],
-                                                               i['FromPort'],
-                                                               i['ToPort'],
-                                                               i['CidrIp'])
+                try:
+                    rule = rules_client.create(sec.id,
+                                               i['IpProtocol'],
+                                               i['FromPort'],
+                                               i['ToPort'],
+                                               i['CidrIp'])
+                except BadRequest as ex:
+                    if ex.message.find('already exists') >= 0:
+                        pass # no worries, the rule is already there
+                    else:
+                        raise # unexpected error
         self.state_set(self.CREATE_COMPLETE)
 
     def delete(self):
