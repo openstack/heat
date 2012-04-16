@@ -499,6 +499,8 @@ class Instance(Resource):
         if not 'ImageId' in props:
             raise exception.UserParameterMissing(key='ImageId')
 
+        security_groups = props.get('SecurityGroups')
+
         userdata = self.t['Properties']['UserData']
 
         flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
@@ -559,6 +561,7 @@ class Instance(Resource):
 
         server = self.nova().servers.create(name=self.name, image=image_id,
                                             flavor=flavor_id, key_name=key_name,
+                                            security_groups=security_groups,
                                             userdata=mime_blob.as_string())
         while server.status == 'BUILD':
             server.get()
