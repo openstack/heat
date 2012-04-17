@@ -211,6 +211,7 @@ class SecurityGroup(Resource):
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
+        sec = None
 
         groups = self.nova().security_groups.list()
         for group in groups:
