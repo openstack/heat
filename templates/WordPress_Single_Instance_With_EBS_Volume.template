@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "AWS CloudFormation Sample Template WordPress_Single_Instance: WordPress is web software you can use to create a beautiful website or blog. This template installs a single-instance WordPress deployment using a local MySQL database to store the data.",
+  "Description" : "AWS CloudFormation Sample Template WordPress_Multi_Instance: WordPress is web software you can use to create a beautiful website or blog. This template installs two instances: one running a WordPress deployment and the other using a local MySQL database to store the data.",
 
   "Parameters" : {
 
@@ -19,7 +19,7 @@
     },
 
     "VolumeSize" : {
-      "Description" : "WebServer EC2 instance type",
+      "Description" : "WikiDatabase Volume size",
       "Type" : "Number",
       "Default" : "1",
       "MinValue" : "1",
@@ -27,6 +27,48 @@
       "ConstraintDescription" : "must be between 1 and 1024 Gb."
     },
 
+    "DBName": {
+      "Default": "wordpress",
+      "Description" : "The WordPress database name",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBUsername": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "The WordPress database admin account username",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "The WordPress database admin account password",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    },
+
+    "DBRootPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "Root password for MySQL",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    },
     "LinuxDistribution": {
       "Default": "F16",
       "Description" : "Distribution of choice",
@@ -49,34 +91,33 @@
       "cc1.4xlarge" : { "Arch" : "64" }
     },
     "DistroArch2AMI": {
-      "F16"      : { "32" : "F16-i386-gold", "64" : "F16-x86_64-gold" },
-      "F17"      : { "32" : "F17-i386-gold", "64" : "F17-x86_64-gold" },
-      "U10"      : { "32" : "U10-i386-gold", "64" : "U10-x86_64-gold" },
-      "RHEL-6.1" : { "32" : "rhel61-i386-gold", "64" : "rhel61-x86_64-gold" },
-      "RHEL-6.2" : { "32" : "rhel62-i386-gold", "64" : "rhel62-x86_64-gold" },
-      "RHEL-6.3" : { "32" : "rhel63-i386-gold", "64" : "rhel63-x86_64-gold" }
+      "F16"      : { "32" : "F16-i386-cfntools", "64" : "F16-x86_64-cfntools" },
+      "F17"      : { "32" : "F17-i386-cfntools", "64" : "F17-x86_64-cfntools" },
+      "U10"      : { "32" : "U10-i386-cfntools", "64" : "U10-x86_64-cfntools" },
+      "RHEL-6.1" : { "32" : "rhel61-i386-cfntools", "64" : "rhel61-x86_64-cfntools" },
+      "RHEL-6.2" : { "32" : "rhel62-i386-cfntools", "64" : "rhel62-x86_64-cfntools" },
+      "RHEL-6.3" : { "32" : "rhel63-i386-cfntools", "64" : "rhel63-x86_64-cfntools" }
     }
   },
 
   "Resources" : {
-
-    "WebServer": {
+    "WikiDatabase": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "config" : {
             "packages" : {
               "yum" : {
-                "httpd"        : [],
                 "mysql"        : [],
                 "mysql-server" : [],
+                "httpd"        : [],
                 "wordpress"    : []
               }
             },
             "services" : {
               "systemd" : {
-                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" },
-                "mysqld"   : { "enabled" : "true", "ensureRunning" : "true" }
+                "mysqld"   : { "enabled" : "true", "ensureRunning" : "true" },
+                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" }
               }
             }
           }
@@ -89,17 +130,33 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-          "# Wait for the EBS volume to show up\n",
-          "while [ ! -e /dev/sdh ]; do echo Waiting for EBS volume to attach; sleep 5; done\n",
+          "/opt/aws/bin/cfn-init\n",
 
+          "# Wait for the volume to appear\n",
+          "while [ ! -e /dev/vdb ]; do echo Waiting for volume to attach; sleep 1; done\n",
+          "parted /dev/vdb mklabel msdos\n",
+          "parted /dev/vdb mkpart primary ext3 1 1000\n",
           "# Format the EBS volume and mount it\n",
-          "mkdir /var/wikidata\n",
-          "/sbin/mkfs -t ext3 /dev/sdh1\n",
-          "mount /dev/sdh1 /var/wikidata\n",
-
-          "# Initialize the wiki and fire up the server\n",
-          "cd /var/wikidata\n",
-		  "touch /var/wikidata/hello\n"
+          "systemctl stop mysqld.service\n",
+          "sleep 1\n",
+          "mv /var/lib/mysql /var/lib/mysql.data\n",
+          "/sbin/mkfs -t ext3 /dev/vdb1\n",
+          "mkdir /var/lib/mysql\n",
+          "mount /dev/vdb1 /var/lib/mysql\n",
+          "chown mysql.mysql /var/lib/mysql\n",
+          "mv -n /var/lib/mysql.data/* /var/lib/mysql\n",
+          "systemctl start mysqld.service\n",
+          "sleep 1\n",
+          "# Setup MySQL root password and create a user\n",
+          "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
+          "cat << EOF | mysql -u root --password='", { "Ref" : "DBRootPassword" }, "'\n",
+          "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
+          "GRANT ALL PRIVILEGES ON ", { "Ref" : "DBName" }, ".* TO \"", { "Ref" : "DBUsername" }, "\"@\"localhost\"\n",
+          "IDENTIFIED BY \"", { "Ref" : "DBPassword" }, "\";\n",
+          "FLUSH PRIVILEGES;\n",
+          "EXIT\n",
+          "EOF\n",
+          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n"
         ]]}}
       }
     },
@@ -108,7 +165,7 @@
       "Type" : "AWS::EC2::Volume",
       "Properties" : {
         "Size" : { "Ref" : "VolumeSize" },
-        "AvailabilityZone" : { "Fn::GetAtt" : [ "WebServer", "AvailabilityZone" ]},
+        "AvailabilityZone" : { "Fn::GetAtt" : [ "WikiDatabase", "AvailabilityZone" ]},
         "Tags" : [{ "Key" : "Usage", "Value" : "Wiki Data Volume" }]
       }
     },
@@ -116,10 +173,17 @@
     "MountPoint" : {
       "Type" : "AWS::EC2::VolumeAttachment",
       "Properties" : {
-        "InstanceId" : { "Ref" : "WebServer" },
+        "InstanceId" : { "Ref" : "WikiDatabase" },
         "VolumeId"  : { "Ref" : "DataVolume" },
-        "Device" : "/dev/sdh"
+        "Device" : "/dev/vdb"
       }
+    }
+  },
+
+  "Outputs" : {
+    "WebsiteURL" : {
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicIp" ]}, "/wordpress"]] },
+      "Description" : "URL for Wordpress wiki"
     }
   }
 }
