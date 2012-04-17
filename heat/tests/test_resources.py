@@ -70,7 +70,7 @@ class ResourcesTest(unittest.TestCase):
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.create()
 
-   # allows testing of the test directly, shown below
+    # allows testing of the test directly, shown below
     if __name__ == '__main__':
         sys.argv.append(__file__)
         nose.main()
