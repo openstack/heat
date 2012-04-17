@@ -11,7 +11,7 @@ from nose.plugins.attrib import attr
 # sets attribute on all test methods
 
 
-@attr(tag=['example', 'unittest'])
+@attr(tag=['example', 'unit'])
 @attr(speed='fast')
 class ExampleTest(unittest.TestCase):
     def test_a(self):
