@@ -21,12 +21,6 @@ WordPress_Single_Instance_gold.template
 * any user to connect to the wordpress database.                              *
 *******************************************************************************
 
-WordPress_Single_Instance.template
- - Creates a single instance wordpress/mysql server
-
-WordPress_Single_Instance_With_EBS_Volume.template
- - Creates a single instance wordpress/mysql server with EBS Volume
-
 WordPress_2_Instances.template
  - Creates a two instance wordpress/mysql server
    Note: There is an instance for mysql and instance for wordpress
@@ -37,8 +31,15 @@ WordPress_2_Instances_With_EBS_Volume.template
 
 *******************************************************************************
 * SECURE TEMPLATES                                                            *
-* These templates use EIP and security groups to secure the servers           *
+* These templates either are single vm or use EIP and security groups to      *
+* secure the servers                                                          *
 *******************************************************************************
+
+WordPress_Single_Instance.template
+ - Creates a single instance wordpress/mysql server
+
+WordPress_Single_Instance_With_EBS_Volume.template
+ - Creates a single instance wordpress/mysql server with EBS Volume
 
 WordPress_Single_Instance_With_EIP.template
  - Creates a single instance wordpress/mysql server with EIP with full security
