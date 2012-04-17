@@ -60,7 +60,11 @@ class Pool(pools.Pool):
 
     def empty(self):
         while self.free_items:
-            self.get().close()
+            item = self.get()
+            try:
+                item.close()
+            except Exception:
+                pass
 
 
 class ConnectionContext(rpc_common.Connection):
