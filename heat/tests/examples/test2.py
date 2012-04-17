@@ -1,7 +1,7 @@
 ###
 ### non-unittest derived test -- class is instantiated, then functions
 ### starting with 'test' are executed.
-### http://darcs.idyll.org/~t/projects/nose-demo/simple/tests/test_stuff.py.html
+## http://darcs.idyll.org/~t/projects/nose-demo/simple/tests/test_stuff.py.html
 ###
 
 import sys

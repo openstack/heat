@@ -1,7 +1,7 @@
 ###
 ### an unparented test -- no encapsulating class, just any fn starting with
 ### 'test'.
-### http://darcs.idyll.org/~t/projects/nose-demo/simple/tests/test_stuff.py.html
+## http://darcs.idyll.org/~t/projects/nose-demo/simple/tests/test_stuff.py.html
 ###
 
 import sys
@@ -20,7 +20,7 @@ def tearDown():
     print "test1 teardown complete"
 
 
-@with_setup(setUp, tearDown) # test level
+@with_setup(setUp, tearDown)  # test level
 @attr(tag=['example', 'func'])
 @attr(speed='fast')
 def test_a():

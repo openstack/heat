@@ -200,7 +200,7 @@ class TopicPublisher(Publisher):
         """init a 'topic' publisher.
         """
         super(TopicPublisher, self).__init__(session,
-                               "%s/%s" % (config.FLAGS.control_exchange, topic))
+                            "%s/%s" % (config.FLAGS.control_exchange, topic))
 
 
 class FanoutPublisher(Publisher):
@@ -218,7 +218,7 @@ class NotifyPublisher(Publisher):
         """init a 'topic' publisher.
         """
         super(NotifyPublisher, self).__init__(session,
-                               "%s/%s" % (config.FLAGS.control_exchange, topic),
+                            "%s/%s" % (config.FLAGS.control_exchange, topic),
                                 {"durable": True})
 
 
@@ -253,7 +253,8 @@ class Connection(object):
         self.connection.sasl_mechanisms = config.FLAGS.qpid_sasl_mechanisms
         self.connection.reconnect = config.FLAGS.qpid_reconnect
         if config.FLAGS.qpid_reconnect_timeout:
-            self.connection.reconnect_timeout = config.FLAGS.qpid_reconnect_timeout
+            self.connection.reconnect_timeout = \
+                                config.FLAGS.qpid_reconnect_timeout
         if config.FLAGS.qpid_reconnect_limit:
             self.connection.reconnect_limit = config.FLAGS.qpid_reconnect_limit
         if config.FLAGS.qpid_reconnect_interval_max:
@@ -263,7 +264,8 @@ class Connection(object):
             self.connection.reconnect_interval_min = (
                     config.FLAGS.qpid_reconnect_interval_min)
         if config.FLAGS.qpid_reconnect_interval:
-            self.connection.reconnect_interval = config.FLAGS.qpid_reconnect_interval
+            self.connection.reconnect_interval = \
+                                config.FLAGS.qpid_reconnect_interval
         self.connection.hearbeat = config.FLAGS.qpid_heartbeat
         self.connection.protocol = config.FLAGS.qpid_protocol
         self.connection.tcp_nodelay = config.FLAGS.qpid_tcp_nodelay

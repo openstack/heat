@@ -1,6 +1,6 @@
 ###
 ### the standard unittest-derived test
-### http://darcs.idyll.org/~t/projects/nose-demo/simple/tests/test_stuff.py.html
+## http://darcs.idyll.org/~t/projects/nose-demo/simple/tests/test_stuff.py.html
 ###
 
 import sys

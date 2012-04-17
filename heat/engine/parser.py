@@ -41,7 +41,7 @@ class Stack(object):
             "AllowedValues": ["us-east-1", "us-west-1", "us-west-2",
                               "sa-east-1", "eu-west-1", "ap-southeast-1",
                               "ap-northeast-1"],
-            "ConstraintDescription": "must be a valid EC2 instance type." }
+            "ConstraintDescription": "must be a valid EC2 instance type."}
 
         if parms != None:
             self._apply_user_parameters(parms)
@@ -79,19 +79,19 @@ class Stack(object):
                 self.resources[r] = resources.GenericResource(r,
                                                 self.t['Resources'][r], self)
 
-            self.calulate_dependencies(self.t['Resources'][r], self.resources[r])
+            self.calulate_dependencies(self.t['Resources'][r],
+                                       self.resources[r])
 
     def validate(self):
         '''
         If you are wondering where the actual validation is, me too.
         it is just not obvious how to respond to validation failures.
-        http://docs.amazonwebservices.com/AWSCloudFormation/latest/APIReference/API_ValidateTemplate.html
+        http://docs.amazonwebservices.com/AWSCloudFormation/latest/ \
+            APIReference/API_ValidateTemplate.html
         '''
-        response = { 'ValidateTemplateResult': {
+        response = {'ValidateTemplateResult': {
                     'Description': 'bla',
-                    'Parameters': []
-                    }
-              }
+                    'Parameters': []}}
 
         for p in self.parms:
             jp = {'member': {}}
@@ -137,16 +137,16 @@ class Stack(object):
         order = self.get_create_order()
         failed = False
         for r in order:
+            failed_str = self.resources[r].CREATE_FAILED
             if not failed:
                 try:
                     self.resources[r].create()
                 except Exception as ex:
                     logger.exception('create')
                     failed = True
-                    self.resources[r].state_set(self.resources[r].CREATE_FAILED, str(ex))
+                    self.resources[r].state_set(failed_str, str(ex))
             else:
                 self.resources[r].state_set(self.resources[r].CREATE_FAILED)
-
 
     def create(self):
 
@@ -155,7 +155,8 @@ class Stack(object):
 
     def delete_blocking(self):
         '''
-        delete all the resources in the reverse order specified by get_create_order
+        delete all the resources in the reverse order specified by
+        get_create_order().
         '''
         order = self.get_create_order()
         order.reverse()
@@ -300,7 +301,8 @@ class Stack(object):
                     if res:
                         return res.FnGetAtt(key_name)
                     else:
-                        raise exception.InvalidTemplateAttribute(resource=resource_name, key=key_name)
+                        raise exception.InvalidTemplateAttribute(
+                                        resource=resource_name, key=key_name)
                     return rc
                 else:
                     s[i] = self.resolve_attributes(s[i])
@@ -311,7 +313,7 @@ class Stack(object):
 
     def resolve_joins(self, s):
         '''
-            looking for { "Fn::join": [] }
+            looking for { "Fn::join": []}
         '''
         if isinstance(s, dict):
             for i in s:

@@ -159,7 +159,8 @@ class Resource(object):
 
     def FnGetRefId(self):
         '''
-http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-ref.html
+        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/ \
+            intrinsic-function-reference-ref.html
         '''
         if self.instance_id != None:
             return unicode(self.instance_id)
@@ -168,13 +169,15 @@ http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/intrinsic-f
 
     def FnGetAtt(self, key):
         '''
-http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html
+        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/ \
+        intrinsic-function-reference-getatt.html
         '''
         raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
 
     def FnBase64(self, data):
         '''
-http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-base64.html
+        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/ \
+            intrinsic-function-reference-base64.html
         '''
         return base64.b64encode(data)
 
@@ -216,7 +219,8 @@ class SecurityGroup(Resource):
                 break
 
         if not sec:
-            sec = self.nova().security_groups.create(self.name, self.description)
+            sec = self.nova().security_groups.create(self.name,
+                                                     self.description)
 
         self.instance_id_set(sec.id)
 
@@ -231,9 +235,12 @@ class SecurityGroup(Resource):
                                                i['CidrIp'])
                 except BadRequest as ex:
                     if ex.message.find('already exists') >= 0:
-                        pass # no worries, the rule is already there
+                        # no worries, the rule is already there
+                        pass
                     else:
-                        raise # unexpected error
+                        # unexpected error
+                        raise
+
         self.state_set(self.CREATE_COMPLETE)
 
     def delete(self):
@@ -266,7 +273,8 @@ class ElasticIp(Resource):
         self.ipaddress = ''
 
         if 'Domain' in self.t['Properties']:
-            logger.warn('*** can\'t support Domain %s yet' % (self.t['Properties']['Domain']))
+            logger.warn('*** can\'t support Domain %s yet' % \
+                        (self.t['Properties']['Domain']))
 
     def create(self):
         """Allocate a floating IP for the current tenant."""
@@ -302,7 +310,8 @@ class ElasticIp(Resource):
         if key == 'AllocationId':
             return unicode(self.instance_id)
         else:
-            raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
 
 
 class ElasticIpAssociation(Resource):
@@ -322,8 +331,9 @@ class ElasticIpAssociation(Resource):
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(ElasticIpAssociation, self).create()
-        print 'ElasticIpAssociation %s.add_floating_ip(%s)' % (self.t['Properties']['InstanceId'],
-                                                               self.t['Properties']['EIP'])
+        print 'ElasticIpAssociation %s.add_floating_ip(%s)' % \
+                        (self.t['Properties']['InstanceId'],
+                         self.t['Properties']['EIP'])
 
         server = self.nova().servers.get(self.t['Properties']['InstanceId'])
         server.add_floating_ip(self.t['Properties']['EIP'])
@@ -398,15 +408,16 @@ class VolumeAttachment(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         super(VolumeAttachment, self).create()
 
-        print 'Attaching InstanceId %s VolumeId %s Device %s' % \
-            (self.t['Properties']['InstanceId'],
-             self.t['Properties']['VolumeId'],
-             self.t['Properties']['Device'])
-        va = self.nova().volumes.create_server_volume(server_id=self.t['Properties']['InstanceId'],
-                                                       volume_id=self.t['Properties']['VolumeId'],
-                                                       device=self.t['Properties']['Device'])
+        server_id = self.t['Properties']['InstanceId']
+        volume_id = self.t['Properties']['VolumeId']
+        print 'Attaching InstanceId %s VolumeId %s Device %s' % (server_id,
+                                 volume_id, self.t['Properties']['Device'])
+        volapi = self.nova().volumes
+        va = volapi.create_server_volume(server_id=server_id,
+                                         volume_id=volume_id,
+                                         device=self.t['Properties']['Device'])
 
-        vol = self.nova('volume').volumes.get(va.id)
+        vol = volapi.get(va.id)
         while vol.status == 'available' or vol.status == 'attaching':
             eventlet.sleep(1)
             vol.get()
@@ -423,19 +434,23 @@ class VolumeAttachment(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
 
-        print 'VolumeAttachment un-attaching %s %s' % (self.t['Properties']['InstanceId'],
-                                                       self.instance_id)
+        print 'VolumeAttachment un-attaching %s %s' % \
+            (self.t['Properties']['InstanceId'],
+             self.instance_id)
 
-        self.nova().volumes.delete_server_volume(self.t['Properties']['InstanceId'],
-                                                 self.instance_id)
+        volapi = self.nova().volumes
+        volapi.delete_server_volume(self.t['Properties']['InstanceId'],
+                                    self.instance_id)
 
         vol = self.nova('volume').volumes.get(self.t['Properties']['VolumeId'])
+        print 'un-attaching %s, status %s' % (self.instance_id, vol.status)
         while vol.status == 'in-use':
-            print 'trying to un-attach %s, but still %s' % (self.instance_id, vol.status)
+            print 'trying to un-attach %s, but still %s' % (self.instance_id,
+                                                            vol.status)
             eventlet.sleep(1)
             try:
-                self.nova().volumes.delete_server_volume(self.t['Properties']['InstanceId'],
-                                                         self.instance_id)
+                volapi.delete_server_volume(self.t['Properties']['InstanceId'],
+                                            self.instance_id)
             except Exception:
                 pass
             vol.get()
@@ -472,7 +487,8 @@ class Instance(Resource):
         elif key == 'PublicIp':
             res = self.ipaddress
         else:
-            raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
 
         # TODO(asalkeld) PrivateDnsName, PublicDnsName & PrivateIp
 
@@ -560,7 +576,8 @@ class Instance(Resource):
         mime_blob.attach(msg)
 
         server = self.nova().servers.create(name=self.name, image=image_id,
-                                            flavor=flavor_id, key_name=key_name,
+                                            flavor=flavor_id,
+                                            key_name=key_name,
                                             security_groups=security_groups,
                                             userdata=mime_blob.as_string())
         while server.status == 'BUILD':

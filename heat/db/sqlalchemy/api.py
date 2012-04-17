@@ -148,7 +148,8 @@ def stack_create(context, values):
 def stack_delete(context, stack_name):
     s = stack_get(context, stack_name)
     if not s:
-        raise Exception('Attempt to delete a stack with id: %s that does not exist' % stack_name)
+        raise Exception('Attempt to delete a stack with id: %s %s' % \
+                        (stack_name, 'that does not exist'))
 
     session = Session.object_session(s)
 
