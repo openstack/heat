@@ -213,17 +213,8 @@ if [ "${MYSQL_HEAT_PW}" != "${MYSQL_HEAT_PW_DEFAULT}" ] ; then
 	sed -i -e "s/mysql:\/\/heat:\(.*\)@/mysql:\/\/heat:${MYSQL_HEAT_PW}@/" ${HEAT_CONFIG}
 fi
 
-# Create the schema using sqlalchemy-migrate
-if [ "$1" = "rpm" ]
-then
-  pushd /usr/lib/python2.7/site-packages/heat/db/sqlalchemy
-else
-  pushd /usr/lib/python2.7/site-packages/heat-0.0.1-py2.7.egg/heat/db/sqlalchemy/
-fi
-
-python manage.py version_control
-python manage.py upgrade
-popd
+python -m heat.db.sqlalchemy.manage version_control
+python -m heat.db.sqlalchemy.manage upgrade
 
 
 # Do a final sanity check on the database.
