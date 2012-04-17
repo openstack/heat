@@ -8,10 +8,6 @@ http://fedoraproject.org/wiki/Getting_started_with_OpenStack_on_Fedora_17#Previe
 Tools
 -----
 
-+ experimental_create.py
-     - Example of creating an keypair and instantiating an instance after
-        one has been registered with JEOS create
-
 + experimental_ssh_eventlet.py
      - Example of using ssh inside python with eventlets.
 
