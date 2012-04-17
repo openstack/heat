@@ -221,7 +221,7 @@ else
   pushd /usr/lib/python2.7/site-packages/heat-0.0.1-py2.7.egg/heat/db/sqlalchemy/
 fi
 
-python migrate_repo/manage.py version_control mysql://heat:heat@localhost/heat migrate_repo
+python manage.py version_control
 python manage.py upgrade
 popd
 
