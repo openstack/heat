@@ -20,8 +20,8 @@ except ImportError:
                     'revision_id': 'LOCALREVISION',
                     'revno': 0}
 
-GLANCE_VERSION = ['0.0', '1']
-COUNT, REVSISION = GLANCE_VERSION
+GLANCE_VERSION = ['0.0', '2']
+COUNT, REVISION = GLANCE_VERSION
 
 FINAL = False   # This becomes true at Release Candidate time
 

@@ -144,6 +144,12 @@ class Event(BASE, HeatBase):
         backref=backref('events'), cascade="all, delete", passive_deletes=True)
 
     name = Column(String)
+    logical_resource_id = Column(String)
+    physical_resource_id = Column(String)
+    resource_status_reason = Column(String)
+    resource_type = Column(String)
+    resource_properties = Column(PickleType)
+
 
 
 class Resource(BASE, HeatBase):

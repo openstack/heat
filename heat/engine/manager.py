@@ -181,12 +181,15 @@ class EngineManager(manager.Manager):
 
         def parse_event(e):
             s = e.stack
-            # TODO Missing LogicalResourceId, PhysicalResourceId, ResourceType,
-            # ResourceStatusReason
             return {'EventId': e.id,
-                     'StackId': e.stack_id,
-                     'StackName': s.name,
-                     'Timestamp': str(e.created_at),
-                     'ResourceStatus': str(e.name)}
+                    'StackId': e.stack_id,
+                    'StackName': s.name,
+                    'Timestamp': str(e.created_at),
+                    'LogicalResourceId': e.logical_resource_id,
+                    'PhysicalResourceId': e.physical_resource_id,
+                    'ResourceType': e.resource_type,
+                    'ResourceStatusReason': e.resource_status_reason,
+                    'ResourceProperties': e.resource_properties,
+                    'ResourceStatus': e.name}
 
         return {'events': [parse_event(e) for e in events]}
