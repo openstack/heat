@@ -7,12 +7,11 @@
     <install type='iso'>
       <iso>file:/var/lib/libvirt/images/Fedora-17-x86_64-DVD.iso</iso>
     </install>
-    <rootpw>password</rootpw>
   </os>
   <description>Fedora 17</description>
   <commands>
     <command name='commands'>
-yum -y update --skip-broken;yum -y install yum-plugin-fastestmirror;yum -y update;/usr/sbin/useradd ec2-user;yum -y install cloud-init;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local;chmod +x /opt/aws/bin/cfn-*
+yum -y update --skip-broken;yum -y install yum-plugin-fastestmirror;yum -y update;/usr/sbin/useradd ec2-user;echo -e 'ec2-user\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers;yum -y install cloud-init;cat >> /etc/rc.d/rc.local &lt;&lt; EOF;chmod +x /etc/rc.d/rc.local;chmod +x /opt/aws/bin/cfn-*
 #!/bin/bash
 setenforce 0
 EOF

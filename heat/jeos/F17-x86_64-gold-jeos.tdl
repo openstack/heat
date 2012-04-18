@@ -7,7 +7,6 @@
     <install type='iso'>
       <iso>file:/var/lib/libvirt/images/Fedora-17-x86_64-DVD.iso</iso>
     </install>
-    <rootpw>password</rootpw>
   </os>
   <description>Fedora 17</description>
   <commands>

@@ -281,6 +281,8 @@ def jeos_create(options, arguments):
         sys.exit(1)
 
     tdl_path = '%s%s-%s-%s-jeos.tdl' % (jeos_path, distro, arch, instance_type)
+    if options.debug:
+        print "Using tdl: %s" % tdl_path
 
     # Load the cfntools into the cfntool image by encoding them in base64
     # and injecting them into the TDL at the appropriate place
