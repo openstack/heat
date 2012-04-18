@@ -20,7 +20,7 @@ except ImportError:
                     'revision_id': 'LOCALREVISION',
                     'revno': 0}
 
-HEAT_VERSION = ['0.0', '2']
+HEAT_VERSION = ['0.0', '3']
 COUNT, REVISION = HEAT_VERSION
 
 FINAL = False   # This becomes true at Release Candidate time
