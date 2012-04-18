@@ -137,8 +137,14 @@ EOF
 	nova flavor-list
 	glance index
 	echo "note: This tool does not create a network.  Creating a network"
-	echo "depends on your environment.  An example network create operation"
+	echo "depends on your environment.  An example network create operation:"
+	echo
 	echo "sudo nova-manage network create demonet 10.0.0.0/24 1 256 --bridge=demonetbr0"
+	echo
+	echo "The network range here, should *not* be the one used on your existing physical network."
+	echo "It should be a range dedicated for the network that OpenStack will configure. So if"
+	echo "10.0.0.0/24 clashes with your local network, pick another range."
+
 }
 
 case $action in
