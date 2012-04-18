@@ -119,6 +119,8 @@ class Resource(object):
 
     def state_set(self, new_state, reason="state changed"):
         if new_state is self.CREATE_COMPLETE:
+        if new_state is self.CREATE_COMPLETE or \
+           new_state is self.CREATE_FAILED:
             try:
                 rs = {}
                 rs['state'] = new_state
