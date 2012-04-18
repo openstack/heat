@@ -25,6 +25,7 @@ class ResourcesTest(unittest.TestCase):
 
     def tearDown(self):
         self.m.UnsetStubs()
+        print "ResourcesTest teardown complete"
 
     def test_initialize_instance_from_template(self):
         f = open('../../templates/WordPress_Single_Instance_gold.template')
@@ -52,7 +53,6 @@ class ResourcesTest(unittest.TestCase):
 
         self.m.ReplayAll()
         
-        
         t['Resources']['WebServer']['Properties']['ImageId']  = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = '256 MB Server'
         instance = resources.Instance('test_resource_name',\
@@ -70,6 +70,27 @@ class ResourcesTest(unittest.TestCase):
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.create()
 
+    def test_initialize_instance_from_template(self):
+        f = open('templates/WordPress_Single_Instance_gold.template')
+        t = f.read()
+        f.close()
+
+        stack = self._mox.CreateMockAnything()
+        stack.id().AndReturn(1)
+        
+        self._mox.StubOutWithMock(stack, 'resolve_static_refs')
+        stack.resolve_static_refs(t).AndReturn(t)
+        
+        self._mox.StubOutWithMock(stack, 'resolve_find_in_map')
+        stack.resolve_find_in_map(t).AndReturn(t)
+
+        self._mox.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
+        db_api.resource_get_by_name_and_stack(None, 'test_resource_name', stack).AndReturn(None)
+
+        self._mox.ReplayAll()
+        instance = resources.Instance('test_resource_name', t, stack)
+
+    
     # allows testing of the test directly, shown below
     if __name__ == '__main__':
         sys.argv.append(__file__)
