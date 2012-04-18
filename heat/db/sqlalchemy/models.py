@@ -104,9 +104,7 @@ class RawTemplate(BASE, HeatBase):
     id = Column(Integer, primary_key=True)
     template = Column(Json)
     parsed_template = relationship("ParsedTemplate",\
-                                    uselist=False, backref="raw_template",
-                                    cascade="all, delete",
-                                    passive_deletes=True)
+                                    uselist=False, backref="raw_template")
 
 
 class ParsedTemplate(BASE, HeatBase):
@@ -129,7 +127,7 @@ class Stack(BASE, HeatBase):
     raw_template_id = Column(Integer, ForeignKey('raw_template.id'),\
                             nullable=False)
     raw_template = relationship(RawTemplate,
-        backref=backref('stack'), cascade="all, delete", passive_deletes=True)
+        backref=backref('stack'))
 
 
 class Event(BASE, HeatBase):
@@ -141,7 +139,7 @@ class Event(BASE, HeatBase):
     stack_id = Column(Integer, ForeignKey('stack.id'),\
                         nullable=False)
     stack = relationship(Stack,
-        backref=backref('events'), cascade="all, delete", passive_deletes=True)
+        backref=backref('events'))
 
     name = Column(String)
     logical_resource_id = Column(String)
@@ -169,7 +167,6 @@ class Resource(BASE, HeatBase):
 
     stack_id = Column(Integer, ForeignKey('stack.id'),\
                                  nullable=False)
-    stack = relationship(Stack, backref=backref('resources'),
-                         cascade="all, delete", passive_deletes=True)
+    stack = relationship(Stack, backref=backref('resources'))
 
     depends_on = Column(Integer)

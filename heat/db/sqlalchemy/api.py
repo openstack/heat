@@ -19,7 +19,6 @@ from sqlalchemy.orm.session import Session
 from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy.session import get_session
 
-
 def model_query(context, *args, **kwargs):
     """
     :param session: if present, the session to use
@@ -156,8 +155,19 @@ def stack_delete(context, stack_name):
     for e in s.events:
         session.delete(e)
 
+    rpt = {}
+    rrt = {}
     for r in s.resources:
+        rpt[r.parsed_template.id] = r.parsed_template
+        rrt[r.parsed_template.raw_template.id] = \
+            r.parsed_template.raw_template
         session.delete(r)
+    
+    for pt in rpt.values():
+        session.delete(pt)
+
+    for rt in rrt.values():
+        session.delete(rt)
 
     session.delete(s)
     session.flush()
