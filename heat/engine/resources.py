@@ -135,7 +135,7 @@ class Resource(object):
         if new_state != self.state:
             ev = {}
             ev['logical_resource_id'] = self.name
-            ev['physical_resource_id'] = self.name
+            ev['physical_resource_id'] = self.instance_id
             ev['stack_id'] = self.stack.id
             ev['stack_name'] = self.stack.name
             ev['resource_status'] = new_state
