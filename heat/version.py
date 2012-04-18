@@ -14,20 +14,20 @@
 #    under the License.
 
 try:
-    from glance.vcsversion import version_info
+    from heat.vcsversion import version_info
 except ImportError:
     version_info = {'branch_nick': u'LOCALBRANCH',
                     'revision_id': 'LOCALREVISION',
                     'revno': 0}
 
-GLANCE_VERSION = ['0.0', '2']
-COUNT, REVISION = GLANCE_VERSION
+HEAT_VERSION = ['0.0', '2']
+COUNT, REVISION = HEAT_VERSION
 
 FINAL = False   # This becomes true at Release Candidate time
 
 
 def canonical_version_string():
-    return '.'.join(filter(None, GLANCE_VERSION))
+    return '.'.join(filter(None, HEAT_VERSION))
 
 
 def version_string():
