@@ -91,6 +91,14 @@ def catch_error(action):
 @catch_error('validate')
 def template_validate(options, arguments):
     '''
+    Validate a template.  This command parses a template and verifies that
+    it is in the correct format.
+
+    Usage: heat validate \\
+        [--template-file=<template file>|--template-url=<template URL>]
+
+    --template-file: Specify a local template file.
+    --template-url:  Specify a URL pointing to a stack description template.
     '''
     parameters = {}
     if options.template_file:
@@ -108,12 +116,27 @@ def template_validate(options, arguments):
 @catch_error('gettemplate')
 def get_template(options, arguments):
     '''
+    Gets an existing stack template.
+
+    NOT YET IMPLEMENTED.
     '''
     pass
 
 @catch_error('create')
 def stack_create(options, arguments):
     '''
+    Create a new stack from a template.
+
+    Usage: heat create <stack name> \\
+        [--template-file=<template file>|--template-url=<template URL>] \\
+        [options]
+
+    Stack Name: The user specified name of the stack you wish to create.
+
+    --template-file: Specify a local template file containing a valid
+                     stack description template.
+    --template-url:  Specify a URL pointing to a valid stack description
+                     template.
     '''
 
     parameters = {}
@@ -147,6 +170,22 @@ def stack_create(options, arguments):
 @catch_error('update')
 def stack_update(options, arguments):
     '''
+    Update an existing stack.
+
+    Usage: heat update <stack name> \\
+        [--template-file=<template file>|--template-url=<template URL>] \\
+        [options]
+
+    Stack Name: The name of the stack you wish to modify.
+
+    --template-file: Specify a local template file containing a valid
+                     stack description template.
+    --template-url:  Specify a URL pointing to a valid stack description
+                     template.
+
+    Options:
+        --parameters: A list of key/value pairs separated by ';'s used
+                      to specify allowed values in the template file.
     '''
     parameters = {}
     try:
@@ -176,6 +215,11 @@ def stack_update(options, arguments):
 @catch_error('delete')
 def stack_delete(options, arguments):
     '''
+    Delete an existing stack.  This shuts down all VMs associated with
+    the stack and (perhaps wrongly) also removes all events associated 
+    with the given stack.
+
+    Usage: heat delete <stack name>
     '''
     parameters = {}
     try:
@@ -192,6 +236,9 @@ def stack_delete(options, arguments):
 @catch_error('describe')
 def stack_describe(options, arguments):
     '''
+    Describtes an existing stack.
+
+    Usage: heat describe <stack name>
     '''
     parameters = {}
     try:
@@ -208,6 +255,9 @@ def stack_describe(options, arguments):
 @catch_error('events_list')
 def stack_events_list(options, arguments):
     '''
+    List events associated with the given stack.
+
+    Usage: heat events_list <stack name>
     '''
     parameters = {}
     try:
@@ -222,6 +272,9 @@ def stack_events_list(options, arguments):
 @catch_error('list')
 def stack_list(options, arguments):
     '''
+    List all running stacks.
+
+    Usage: heat list
     '''
     c = get_client(options)
     result = c.list_stacks()
@@ -230,14 +283,15 @@ def stack_list(options, arguments):
 @catch_error('jeos_create')
 def jeos_create(options, arguments):
     '''
-    The jeos_create option must be run as root.  This command takes three
-    arguments that are popped from the arguments parameter.
-    arg0 -> Distribution such as 'F16', 'F17', 'U10', 'D6'
-    arg1 -> Architecture such as 'i386' 'i686' or 'x86_64'
-    arg2 -> Image type such as 'gold' or 'cfntools'
+    Create a new JEOS (Just Enough Operating System) image.
 
-    gold is a basic gold JEOS
-    cfntools contains the cfntools helper scripts
+    Usage: heat jeos_create <distribution> <architecture> <image type>
+
+    Distribution: Distribution such as 'F16', 'F17', 'U10', 'D6'.
+    Architecture: Architecture such as 'i386' 'i686' or 'x86_64'.
+    Image Type: Image type such as 'gold' or 'cfntools'.
+                'gold' is a basic gold JEOS.
+                'cfntools' contains the cfntools helper scripts.
 
     The command must be run as root in order for libvirt to have permissions
     to create virtual machines and read the raw DVDs.
