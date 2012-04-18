@@ -5,3 +5,4 @@ dist
 heat.egg-info
 heat/vcsversion.py
 tags
+*.log
