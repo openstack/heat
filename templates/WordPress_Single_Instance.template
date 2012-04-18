@@ -139,7 +139,7 @@
 
   "Outputs" : {
     "WebsiteURL" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicIp" ]}, "/wordpress"]] },
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WikiDatabase", "PublicIp" ]}, "/wordpress"]] },
       "Description" : "URL for Wordpress wiki"
     }
   }
