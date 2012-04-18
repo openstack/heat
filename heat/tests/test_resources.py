@@ -1,11 +1,13 @@
 import sys
-
 import os
+sys.path.append(os.environ['PYTHON_NOVACLIENT_SRC'])
+
 import nose
 import unittest
 import mox
 from nose.plugins.attrib import attr
 from nose import with_setup
+
 from tests.v1_1 import fakes
 from heat.engine import resources
 from heat.common import config
@@ -24,6 +26,7 @@ class ResourcesTest(unittest.TestCase):
         db_api.configure(conf)
 
     def tearDown(self):
+        self._mox.UnsetStubs()
         print "ResourcesTest teardown complete"
 
     def test_initialize_resource_from_template(self):
@@ -45,9 +48,29 @@ class ResourcesTest(unittest.TestCase):
 
         self._mox.ReplayAll()
         resource = resources.Resource('test_resource_name', t, stack)
-
         assert isinstance(resource, resources.Resource)
 
+    def test_initialize_instance_from_template(self):
+        f = open('templates/WordPress_Single_Instance_gold.template')
+        t = f.read()
+        f.close()
+
+        stack = self._mox.CreateMockAnything()
+        stack.id().AndReturn(1)
+        
+        self._mox.StubOutWithMock(stack, 'resolve_static_refs')
+        stack.resolve_static_refs(t).AndReturn(t)
+        
+        self._mox.StubOutWithMock(stack, 'resolve_find_in_map')
+        stack.resolve_find_in_map(t).AndReturn(t)
+
+        self._mox.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
+        db_api.resource_get_by_name_and_stack(None, 'test_resource_name', stack).AndReturn(None)
+
+        self._mox.ReplayAll()
+        instance = resources.Instance('test_resource_name', t, stack)
+
+    
     # allows testing of the test directly, shown below
     if __name__ == '__main__':
         sys.argv.append(__file__)

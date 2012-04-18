@@ -42,7 +42,6 @@ import os
 import unittest
 import sys
 
-sys.path.append(os.environ['PYTHON_NOVACLIENT_SRC'])
 gettext.install('heat', unicode=1)
 
 from nose import config
