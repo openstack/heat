@@ -151,6 +151,7 @@ class Resource(object):
             self.state = new_state
 
     def delete(self):
+        self.reload()
         print 'deleting %s name:%s inst:%s db_id:%s' % (self.t['Type'],
                                                         self.name,
                                                         self.instance_id,
@@ -165,7 +166,7 @@ class Resource(object):
         might need to override this, but still call it.
         This is currently used by stack.get_outputs()
         '''
-        print 'reloading %s name:%s' % (self.t['Type'], self.name)
+        print 'reloading %s name:%s instance_id:%s' % (self.t['Type'], self.name, self.instance_id)
         self.stack.resolve_attributes(self.t)
 
     def FnGetRefId(self):
@@ -456,23 +457,24 @@ class VolumeAttachment(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
 
+        server_id = self.t['Properties']['InstanceId']
+        volume_id = self.t['Properties']['VolumeId']
         print 'VolumeAttachment un-attaching %s %s' % \
-            (self.t['Properties']['InstanceId'],
-             self.instance_id)
+            (server_id, volume_id)
 
         volapi = self.nova().volumes
-        volapi.delete_server_volume(self.t['Properties']['InstanceId'],
-                                    self.instance_id)
+        volapi.delete_server_volume(server_id,
+                                    volume_id)
 
-        vol = self.nova('volume').volumes.get(self.t['Properties']['VolumeId'])
-        print 'un-attaching %s, status %s' % (self.instance_id, vol.status)
+        vol = self.nova('volume').volumes.get(volume_id)
+        print 'un-attaching %s, status %s' % (volume_id, vol.status)
         while vol.status == 'in-use':
-            print 'trying to un-attach %s, but still %s' % (self.instance_id,
+            print 'trying to un-attach %s, but still %s' % (volume_id,
                                                             vol.status)
             eventlet.sleep(1)
             try:
-                volapi.delete_server_volume(self.t['Properties']['InstanceId'],
-                                            self.instance_id)
+                volapi.delete_server_volume(server_id,
+                                            volume_id)
             except Exception:
                 pass
             vol.get()
@@ -619,7 +621,6 @@ class Instance(Resource):
         '''
         re-read the server's ipaddress so FnGetAtt works.
         '''
-        print 'reloading Instance %s' % self.instance_id
         try:
             server = self.nova().servers.get(self.instance_id)
             for n in server.networks:
