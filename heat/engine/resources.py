@@ -29,6 +29,7 @@ from email.mime.text import MIMEText
 
 from novaclient.v1_1 import client
 from novaclient.exceptions import BadRequest
+from novaclient.exceptions import NotFound
 
 from heat.common import exception
 from heat.db import api as db_api
@@ -156,7 +157,16 @@ class Resource(object):
                                                         str(self.id))
 
     def reload(self):
-        pass
+        '''
+        The point of this function is to get the Resource instance back
+        into the state that it was just after it was created. So we
+        need to retrieve things like ipaddresses and other variables
+        used by FnGetAtt and FnGetRefId. classes inheriting from Resource
+        might need to override this, but still call it.
+        This is currently used by stack.get_outputs()
+        '''
+        print 'reloading %s name:%s' % (self.t['Type'], self.name)
+        self.stack.resolve_attributes(self.t)
 
     def FnGetRefId(self):
         '''
@@ -290,6 +300,16 @@ class ElasticIp(Resource):
         self.ipaddress = ips.ip
         self.instance_id_set(ips.id)
         self.state_set(self.CREATE_COMPLETE)
+
+    def reload(self):
+        '''
+        get the ipaddress here
+        '''
+        if self.instance_id != None:
+            ips = self.nova().floating_ips.get(self.instance_id)
+            self.ipaddress = ips.ip
+
+        Resource.reload(self)
 
     def delete(self):
         """De-allocate a floating IP."""
@@ -594,6 +614,20 @@ class Instance(Resource):
                 break
         else:
             self.state_set(self.CREATE_FAILED)
+
+    def reload(self):
+        '''
+        re-read the server's ipaddress so FnGetAtt works.
+        '''
+        print 'reloading Instance %s' % self.instance_id
+        try:
+            server = self.nova().servers.get(self.instance_id)
+            for n in server.networks:
+                self.ipaddress = server.networks[n][0]
+        except NotFound:
+            self.ipaddress = '0.0.0.0'
+
+        Resource.reload(self)
 
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or \

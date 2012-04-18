@@ -195,8 +195,10 @@ class Stack(object):
         pool.spawn_n(self.delete_blocking)
 
     def get_outputs(self):
-        self.resolve_static_refs(self.outputs)
-        self.resolve_find_in_map(self.outputs)
+
+        for r in self.resources:
+            self.resources[r].reload()
+
         self.resolve_attributes(self.outputs)
         self.resolve_joins(self.outputs)
 
