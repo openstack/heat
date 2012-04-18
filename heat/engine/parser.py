@@ -25,8 +25,8 @@ logger = logging.getLogger('heat.engine.parser')
 
 
 class Stack(object):
-    def __init__(self, stack_name, template, parms=None):
-        self.id = 0
+    def __init__(self, stack_name, template, stack_id=0, parms=None):
+        self.id = stack_id
         self.t = template
         self.parms = self.t.get('Parameters', {})
         self.maps = self.t.get('Mappings', {})
@@ -49,10 +49,6 @@ class Stack(object):
             self.creds = eval(parms['KeyStoneCreds'])
         else:
             self.creds = parms['KeyStoneCreds']
-
-        stack = db_api.stack_get(None, stack_name)
-        if stack:
-            self.id = stack.id
 
         self.resources = {}
         for r in self.t['Resources']:
@@ -130,6 +126,25 @@ class Stack(object):
 
         return order
 
+    def update_parsed_template(self):
+        '''
+        Update the parsed template after each resource has been
+        created, so commands like describe will work.
+        '''
+        if self.parsed_template_id == 0:
+            stack = db_api.stack_get(None, self.name)
+            if stack:
+                self.parsed_template_id = stack.parsed_template_id
+            else:
+                return
+
+        pt = db_api.parsed_template_get(None, self.parsed_template_id)
+        if pt:
+            pt.template = self.t
+        else:
+            print 'cant find parsed template to update %d' % self.parsed_template_id
+
+
     def create_blocking(self):
         '''
         create all the resources in the order specified by get_create_order
@@ -145,6 +160,12 @@ class Stack(object):
                     logger.exception('create')
                     failed = True
                     self.resources[r].state_set(failed_str, str(ex))
+
+                try:
+                    self.update_parsed_template()
+                except Exception as ex:
+                    logger.exception('update_parsed_template')
+
             else:
                 self.resources[r].state_set(self.resources[r].CREATE_FAILED)
 

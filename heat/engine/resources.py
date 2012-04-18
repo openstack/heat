@@ -122,6 +122,7 @@ class Resource(object):
                 rs = {}
                 rs['state'] = new_state
                 rs['stack_id'] = self.stack.id
+                rs['parsed_template_id'] = self.stack.parsed_template_id
                 rs['nova_instance'] = self.instance_id
                 rs['name'] = self.name
                 rs['stack_name'] = self.stack.name

@@ -58,7 +58,7 @@ class EngineManager(manager.Manager):
         if stacks == None:
             return res
         for s in stacks:
-            ps = parser.Stack(s.name, s.raw_template.template, params)
+            ps = parser.Stack(s.name, s.raw_template.parsed_template.template, s.id, params)
             mem = {}
             mem['stack_id'] = s.id
             mem['stack_name'] = s.name
@@ -80,7 +80,7 @@ class EngineManager(manager.Manager):
         res = {'stacks': []}
         s = db_api.stack_get(None, stack_name)
         if s:
-            ps = parser.Stack(s.name, s.raw_template.template, params)
+            ps = parser.Stack(s.name, s.raw_template.parsed_template.template, s.id, params)
             mem = {}
             mem['stack_id'] = s.id
             mem['stack_name'] = s.name
@@ -113,17 +113,28 @@ class EngineManager(manager.Manager):
         if db_api.stack_get(None, stack_name):
             return {'Error': 'Stack already exists with that name.'}
 
-        stack = parser.Stack(stack_name, template, params)
+        stack = parser.Stack(stack_name, template, 0, params)
         rt = {}
         rt['template'] = template
         rt['stack_name'] = stack_name
         new_rt = db_api.raw_template_create(None, rt)
+
         s = {}
         s['name'] = stack_name
         s['raw_template_id'] = new_rt.id
         new_s = db_api.stack_create(None, s)
         stack.id = new_s.id
+
+        pt = {}
+        pt['template'] = stack.t
+        pt['raw_template_id'] = new_rt.id
+        new_pt = db_api.parsed_template_create(None, pt)
+
+        new_s.parsed_template_id = new_pt.id
+
+        stack.parsed_template_id = new_pt.id
         stack.create()
+
         return {'stack': {'id': new_s.id, 'name': new_s.name,\
                 'created_at': str(new_s.created_at)}}
 
@@ -141,7 +152,7 @@ class EngineManager(manager.Manager):
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
-        s = parser.Stack('validate', body, req.params)
+        s = parser.Stack('validate', body, 0, req.params)
         res = s.validate()
 
         return res
@@ -159,8 +170,7 @@ class EngineManager(manager.Manager):
 
         logger.info('deleting stack %s' % stack_name)
 
-        rt = db_api.raw_template_get(None, st.raw_template_id)
-        ps = parser.Stack(st.name, rt.template, params)
+        ps = parser.Stack(st.name, st.raw_template.parsed_template.template, st.id, params)
         ps.delete()
         return None
 
