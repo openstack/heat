@@ -442,7 +442,7 @@ class VolumeAttachment(Resource):
                                          volume_id=volume_id,
                                          device=self.t['Properties']['Device'])
 
-        vol = volapi.get(va.id)
+        vol = self.nova('volume').volumes.get(va.id)
         while vol.status == 'available' or vol.status == 'attaching':
             eventlet.sleep(1)
             vol.get()
