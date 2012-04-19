@@ -20,7 +20,6 @@ import os
 import string
 import json
 import sys
-
 from email import encoders
 from email.message import Message
 from email.mime.base import MIMEBase
@@ -78,7 +77,6 @@ class Resource(object):
             self.instance_id = None
             self.state = None
             self.id = None
-
         self._nova = {}
         if not 'Properties' in self.t:
             # make a dummy entry to prevent having to check all over the
@@ -601,7 +599,6 @@ class Instance(Resource):
         msg = MIMEText(userdata, _subtype='x-shellscript')
         msg.add_header('Content-Disposition', 'attachment', filename='startup')
         mime_blob.attach(msg)
-
         server = self.nova().servers.create(name=self.name, image=image_id,
                                             flavor=flavor_id,
                                             key_name=key_name,
