@@ -283,7 +283,6 @@ class SecurityGroup(Resource):
 class ElasticIp(Resource):
     def __init__(self, name, json_snippet, stack):
         super(ElasticIp, self).__init__(name, json_snippet, stack)
-        self.instance_id = ''
         self.ipaddress = ''
 
         if 'Domain' in self.t['Properties']:
