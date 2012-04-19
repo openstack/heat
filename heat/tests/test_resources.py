@@ -21,7 +21,7 @@ from heat.engine import parser
 class ResourcesTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
-        self.cs = fakes.FakeClient()
+        self.fc = fakes.FakeClient()
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -42,18 +42,30 @@ class ResourcesTest(unittest.TestCase):
                                               stack).AndReturn(None)
 
         self.m.StubOutWithMock(resources.Instance, 'nova')
-        resources.Instance.nova().AndReturn(self.cs)
-        resources.Instance.nova().AndReturn(self.cs)
-        resources.Instance.nova().AndReturn(self.cs)
-        resources.Instance.nova().AndReturn(self.cs)
+        resources.Instance.nova().AndReturn(self.fc)
+        resources.Instance.nova().AndReturn(self.fc)
+        resources.Instance.nova().AndReturn(self.fc)
+        resources.Instance.nova().AndReturn(self.fc)
 
-        
-        print self.cs.flavors.list()[0].name 
+        #Need to find an easier way
+        userdata = t['Resources']['WebServer']['Properties']['UserData']
+
         self.m.ReplayAll()
+        
+        
         t['Resources']['WebServer']['Properties']['ImageId']  = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = '256 MB Server'
         instance = resources.Instance('test_resource_name',\
                                       t['Resources']['WebServer'], stack)
+       
+        server_userdata = instance._build_userdata(json.dumps(userdata))
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(image=1, flavor=1, key_name='test',\
+                name='test_resource_name', security_groups=None,\
+                userdata=server_userdata).\
+                AndReturn(self.fc.servers.list()[1])
+        self.m.ReplayAll()
+        
 
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.create()
