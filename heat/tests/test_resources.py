@@ -70,12 +70,7 @@ class ResourcesTest(unittest.TestCase):
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.create()
         
-        print self.cs.flavors.list()[0].name 
         self.m.ReplayAll()
-        t['Resources']['WebServer']['Properties']['ImageId']  = 'CentOS 5.2'
-        t['Resources']['WebServer']['Properties']['InstanceType'] = '256 MB Server'
-        instance = resources.Instance('test_resource_name',\
-                                      t['Resources']['WebServer'], stack)
 
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.create()
