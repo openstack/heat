@@ -1,0 +1,18 @@
+_heat()
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts=`for i in $(heat --help | grep -A100 "^Commands" | grep -B100 "^Options" | grep "^\s*[a-z]" | awk '{print $1}'); do echo $i; done`
+
+        if [[ ${cur} == * ]]; then
+            if [[ ${#COMP_WORDS[@]} -gt 2 ]]; then
+                return 0
+            else
+                COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+                return 0
+            fi
+        fi
+}
+complete -F _heat heat

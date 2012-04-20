@@ -95,6 +95,7 @@ setup(
                                'etc/heat-api-paste.ini',
                                'etc/heat-engine.conf',
                                'etc/heat-engine-paste.ini']),
+                ('/etc/bash_completion.d', ['etc/bash_completion.d/heat']),
                 ('/var/log/heat', ['var/log/heat/api.log',
                                    'var/log/heat/engine.log']),
                 ('/var/lib/heat', ['var/lib/heat/.dummy'])],
