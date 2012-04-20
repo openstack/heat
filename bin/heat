@@ -236,7 +236,7 @@ def stack_delete(options, arguments):
 @catch_error('describe')
 def stack_describe(options, arguments):
     '''
-    Describtes an existing stack.
+    Describes an existing stack.
 
     Usage: heat describe <stack name>
     '''
