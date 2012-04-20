@@ -307,8 +307,11 @@ class ElasticIp(Resource):
         get the ipaddress here
         '''
         if self.instance_id != None:
-            ips = self.nova().floating_ips.get(self.instance_id)
-            self.ipaddress = ips.ip
+            try:
+                ips = self.nova().floating_ips.get(self.instance_id)
+                self.ipaddress = ips.ip
+            except Exception as ex:
+                logger.warn("Error getting floating IPs: %s" % str(ex))
 
         Resource.reload(self)
 
