@@ -30,6 +30,7 @@ import json
 import base64
 import libxml2
 import re
+import logging
 
 from urlparse import urlparse
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
@@ -69,9 +70,9 @@ def catch_error(action):
                 ret = func(*arguments, **kwargs)
                 return SUCCESS if ret is None else ret
             except exception.NotAuthorized:
-                print "Not authorized to make this request. Check "\
-                      "your credentials (OS_USERNAME, OS_PASSWORD, "\
-                      "OS_TENANT_NAME, OS_AUTH_URL and OS_AUTH_STRATEGY)."
+                logging.error("Not authorized to make this request. Check " +\
+                      "your credentials (OS_USERNAME, OS_PASSWORD, " +\
+                      "OS_TENANT_NAME, OS_AUTH_URL and OS_AUTH_STRATEGY).")
                 return FAILURE
             except exception.ClientConfigurationError:
                 raise
@@ -79,10 +80,10 @@ def catch_error(action):
                 options = arguments[0]
                 if options.debug:
                     raise
-                print "Failed to %s. Got error:" % action
+                logging.error("Failed to %s. Got error:" % action)
                 pieces = unicode(e).split('\n')
                 for piece in pieces:
-                    print piece
+                    logging.error(piece)
                 return FAILURE
 
         return wrapper
@@ -106,7 +107,7 @@ def template_validate(options, arguments):
     elif options.template_url:
         parameters['TemplateUrl'] = options.template_url
     else:
-        print 'Please specify a template file or url'
+        logging.error('Please specify a template file or url')
         return FAILURE
 
     client = get_client(options)
@@ -143,8 +144,8 @@ def stack_create(options, arguments):
     try:
         parameters['StackName'] = arguments.pop(0)
     except IndexError:
-        print "Please specify the stack name you wish to create "
-        print "as the first argument"
+        logging.error("Please specify the stack name you wish to create")
+        logging.error("as the first argument")
         return FAILURE
 
     if options.parameters:
@@ -160,7 +161,7 @@ def stack_create(options, arguments):
     elif options.template_url:
         parameters['TemplateUrl'] = options.template_url
     else:
-        print 'Please specify a template file or url'
+        logging.error('Please specify a template file or url')
         return FAILURE
 
     c = get_client(options)
@@ -191,8 +192,8 @@ def stack_update(options, arguments):
     try:
         parameters['StackName'] = arguments.pop(0)
     except IndexError:
-        print "Please specify the stack name you wish to update "
-        print "as the first argument"
+        logging.error("Please specify the stack name you wish to update")
+        logging.error("as the first argument")
         return FAILURE
 
     if options.template_file:
@@ -225,8 +226,8 @@ def stack_delete(options, arguments):
     try:
         parameters['StackName'] = arguments.pop(0)
     except IndexError:
-        print "Please specify the stack name you wish to delete "
-        print "as the first argument"
+        logging.error("Please specify the stack name you wish to delete")
+        logging.error("as the first argument")
         return FAILURE
 
     c = get_client(options)
@@ -244,8 +245,8 @@ def stack_describe(options, arguments):
     try:
         parameters['StackName'] = arguments.pop(0)
     except IndexError:
-        print "Please specify the stack name you wish to describe "
-        print "as the first argument"
+        logging.error("Please specify the stack name you wish to describe")
+        logging.error("as the first argument")
         return FAILURE
 
     c = get_client(options)
@@ -301,7 +302,7 @@ def jeos_create(options, arguments):
 
     # if not running as root, return EPERM to command line
     if os.geteuid() != 0:
-        print "jeos_create must be run as root"
+        logging.error("jeos_create must be run as root")
         sys.exit(1)
     if len(arguments) < 3:
         print '\n  Please provide the distro, arch, and instance type.'
@@ -322,13 +323,15 @@ def jeos_create(options, arguments):
     instances_str = " | ".join(instance_types)
 
     if not arch in arches:
-        print 'arch %s not supported' % arch
-        print 'try: heat jeos_create %s [ %s ]' % (distro, arches_str)
+        logging.error('arch %s not supported' % arch)
+        logging.error('try: heat jeos_create %s [ %s ]' % (distro, arches_str))
         sys.exit(1)
 
     if not instance_type in instance_types:
-        print 'A JEOS instance type of %s not supported' % instance_type
-        print 'try: heat jeos_create %s %s [ %s ]' % (distro, arch, instances_str)
+        logging.error('A JEOS instance type of %s not supported' %\
+            instance_type)
+        logging.error('try: heat jeos_create %s %s [ %s ]' %\
+            (distro, arch, instances_str))
         sys.exit(1)
 
     fedora_match = re.match('F(1[6-7])', distro)
@@ -338,12 +341,12 @@ def jeos_create(options, arguments):
     elif distro == 'U10':
         iso = '/var/lib/libvirt/images/ubuntu-10.04.3-server-%s.iso' % arch
     else:
-        print 'distro %s not supported' % distro
-        print 'try: F16, F17 or U10'
+        logging.error('distro %s not supported' % distro)
+        logging.error('try: F16, F17 or U10')
         sys.exit(1)
 
     if not os.access(iso, os.R_OK):
-        print '*** %s does not exist.' % (iso)
+        logging.error('*** %s does not exist.' % (iso))
         sys.exit(1)
 
     tdl_path = '%s%s-%s-%s-jeos.tdl' % (jeos_path, distro, arch, instance_type)
@@ -369,7 +372,7 @@ def jeos_create(options, arguments):
     image_name = '%s-%s-%s' % (distro, arch, instance_type)
 
     if not os.access(tdl_path, os.R_OK):
-        print 'The tdl for that disto/arch is not available'
+        logging.error('The tdl for that disto/arch is not available')
         sys.exit(1)
 
     creds = dict(username=options.username,
@@ -391,7 +394,7 @@ def jeos_create(options, arguments):
     for image in images:
         if image['name'] == distro + '-' + arch + '-' + instance_type:
             image_registered = True
-            #print ' *** image already in glance: %s > %s' % (image['name'], image['id'])
+            #logging.warning(' *** image already in glance: %s > %s' % (image['name'], image['id']))
 
     runoz = None
     if os.access(qcow2_filename, os.R_OK):
@@ -407,35 +410,37 @@ def jeos_create(options, arguments):
             while answer not in ('y', 'n'):
                 answer = raw_input('Do you want to register your existing JEOS file with glance? (y/n) ').lower()
                 if answer == 'n':
-                    print 'No action taken'
+                    logging.info('No action taken')
                     sys.exit(0)
                 elif answer == 'y' and image_registered:
                     answer = None
                     while answer not in ('y', 'n'):
                         answer = raw_input('Do you want to delete the existing JEOS in glance? (y/n) ').lower()
                     if answer == 'n':
-                        print 'No action taken'
+                        logging.info('No action taken')
                         sys.exit(0)
                     elif answer == 'y':
                         client.delete_image(image['id'])
 
     if runoz == None or runoz == 'y':
-        print 'Creating JEOS image (%s) - this takes approximately 10 minutes.' % image_name
+        logging.info('Creating JEOS image (%s) - this takes approximately 10 minutes.' % image_name)
         extra_opts = ' '
         if options.debug:
             extra_opts = ' -d 3 '
 
-        res = os.system("oz-install %s -t 50000 -u %s -x /dev/null" % (extra_opts, tdl_path))
+        ozcmd="oz-install %s -t 50000 -u %s -x /dev/null" % (extra_opts, tdl_path)
+        logging.debug("Running : %s" % ozcmd)
+        res = os.system(ozcmd)
         if res == 256:
             sys.exit(1)
         if not os.access(dsk_filename, os.R_OK):
-            print 'oz-install did not create the image, check your oz installation.'
+            logging.error('oz-install did not create the image, check your oz installation.')
             sys.exit(1)
 
-        print 'Converting raw disk image to a qcow2 image.'
+        logging.info('Converting raw disk image to a qcow2 image.')
         os.system("qemu-img convert -O qcow2 %s %s" % (dsk_filename, qcow2_filename))
 
-    print 'Registering JEOS image (%s) with OpenStack Glance.' % image_name
+    logging.info('Registering JEOS image (%s) with OpenStack Glance.' % image_name)
 
     image_meta = {'name': image_name,
                   'is_public': True,
@@ -449,24 +454,24 @@ def jeos_create(options, arguments):
         with open(qcow2_filename) as ifile:
             image_meta = client.add_image(image_meta, ifile)
         image_id = image_meta['id']
-        print " Added new image with ID: %s" % image_id
-        print " Returned the following metadata for the new image:"
+        logging.debug(" Added new image with ID: %s" % image_id)
+        logging.debug(" Returned the following metadata for the new image:")
         for k, v in sorted(image_meta.items()):
-            print " %(k)30s => %(v)s" % locals()
+            logging.debug(" %(k)30s => %(v)s" % locals())
     except exception.ClientConnectionError, e:
-        print (" Failed to connect to the Glance API server."
-               " Is the server running?" % locals())
+        logging.error((" Failed to connect to the Glance API server." +\
+               " Is the server running?" % locals()))
         pieces = unicode(e).split('\n')
         for piece in pieces:
-            print piece
+            logging.error(piece)
             sys.exit(1)
     except Exception, e:
-        print " Failed to add image. Got error:"
+        logging.error(" Failed to add image. Got error:")
         pieces = unicode(e).split('\n')
         for piece in pieces:
-            print piece
-        print (" Note: Your image metadata may still be in the registry, "
-               "but the image's status will likely be 'killed'.")
+            logging.error(piece)
+        logging.warning(" Note: Your image metadata may still be in the " +\
+               "registry, but the image's status will likely be 'killed'.")
 
 
 def get_client(options):
@@ -598,6 +603,17 @@ def parse_options(parser, cli_args):
     command_name = args.pop(0)
     command = lookup_command(parser, command_name)
 
+    if options.debug:
+        logging.basicConfig(format='%(levelname)s:%(message)s',\
+            level=logging.DEBUG)
+        logging.debug("Debug level logging enabled")
+    elif options.verbose:
+        logging.basicConfig(format='%(levelname)s:%(message)s',\
+            level=logging.INFO)
+    else:
+        logging.basicConfig(format='%(levelname)s:%(message)s',\
+            level=logging.WARNING)
+
     return (options, command, args)
 
 
@@ -681,14 +697,13 @@ Commands:
         start_time = time.time()
         result = cmd(opts, args)
         end_time = time.time()
-        if opts.verbose:
-            print "Completed in %-0.4f sec." % (end_time - start_time)
+        logging.debug("Completed in %-0.4f sec." % (end_time - start_time))
         sys.exit(result)
     except (RuntimeError,
             NotImplementedError,
             exception.ClientConfigurationError), ex:
         oparser.print_usage()
-        print >> sys.stderr, "ERROR: ", ex
+        logging.error("ERROR: " % ex)
         sys.exit(1)
 
 
