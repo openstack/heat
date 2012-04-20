@@ -74,8 +74,8 @@ setup(
     description='The heat project provides services for provisioning '
                 'virtual machines',
     license='Apache License (2.0)',
-    author='OpenStack',
-    author_email='openstack@lists.launchpad.net',
+    author='Heat API Developers',
+    author_email='discuss@heat-api.org',
     url='http://heat.openstack.org/',
     packages=find_packages(exclude=['bin']),
     cmdclass=cmdclass,
