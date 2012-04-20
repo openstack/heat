@@ -108,7 +108,7 @@ class Resource(object):
         return self._nova[service_type]
 
     def create(self):
-        print 'creating %s name:%s' % (self.t['Type'], self.name)
+        logger.info('creating %s name:%s' % (self.t['Type'], self.name))
 
         self.stack.resolve_attributes(self.t)
         self.stack.resolve_joins(self.t)
@@ -132,7 +132,7 @@ class Resource(object):
                 self.id = new_rs.id
 
             except Exception as ex:
-                print 'db error %s' % str(ex)
+                logger.warn('db error %s' % str(ex))
 
         if new_state != self.state:
             ev = {}
@@ -148,15 +148,14 @@ class Resource(object):
             try:
                 db_api.event_create(None, ev)
             except Exception as ex:
-                print 'db error %s' % str(ex)
+                logger.warn('db error %s' % str(ex))
             self.state = new_state
 
     def delete(self):
         self.reload()
-        print 'deleting %s name:%s inst:%s db_id:%s' % (self.t['Type'],
-                                                        self.name,
-                                                        self.instance_id,
-                                                        str(self.id))
+        logger.info('deleting %s name:%s inst:%s db_id:%s' %
+                    (self.t['Type'], self.name,
+                     self.instance_id, str(self.id)))
 
     def reload(self):
         '''
@@ -167,7 +166,8 @@ class Resource(object):
         might need to override this, but still call it.
         This is currently used by stack.get_outputs()
         '''
-        print 'reloading %s name:%s instance_id:%s' % (self.t['Type'], self.name, self.instance_id)
+        logger.info('reloading %s name:%s instance_id:%s' %
+                    (self.t['Type'], self.name, self.instance_id))
         self.stack.resolve_attributes(self.t)
 
     def FnGetRefId(self):
@@ -204,7 +204,7 @@ class GenericResource(Resource):
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(GenericResource, self).create()
-        print 'creating GenericResource %s' % self.name
+        logger.info('creating GenericResource %s' % self.name)
         self.state_set(self.CREATE_COMPLETE)
 
 
@@ -297,7 +297,7 @@ class ElasticIp(Resource):
         super(ElasticIp, self).create()
 
         ips = self.nova().floating_ips.create()
-        print 'ElasticIp create %s' % str(ips)
+        logger.info('ElasticIp create %s' % str(ips))
         self.ipaddress = ips.ip
         self.instance_id_set(ips.id)
         self.state_set(self.CREATE_COMPLETE)
@@ -357,9 +357,9 @@ class ElasticIpAssociation(Resource):
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(ElasticIpAssociation, self).create()
-        print 'ElasticIpAssociation %s.add_floating_ip(%s)' % \
-                        (self.t['Properties']['InstanceId'],
-                         self.t['Properties']['EIP'])
+        logger.debug('ElasticIpAssociation %s.add_floating_ip(%s)' % \
+                     (self.t['Properties']['InstanceId'],
+                      self.t['Properties']['EIP']))
 
         server = self.nova().servers.get(self.t['Properties']['InstanceId'])
         server.add_floating_ip(self.t['Properties']['EIP'])
@@ -412,7 +412,7 @@ class Volume(Resource):
         if self.instance_id != None:
             vol = self.nova('volume').volumes.get(self.instance_id)
             if vol.status == 'in-use':
-                print 'cant delete volume when in-use'
+                logger.warn('cant delete volume when in-use')
                 return
 
         self.state_set(self.DELETE_IN_PROGRESS)
@@ -436,8 +436,8 @@ class VolumeAttachment(Resource):
 
         server_id = self.t['Properties']['InstanceId']
         volume_id = self.t['Properties']['VolumeId']
-        print 'Attaching InstanceId %s VolumeId %s Device %s' % (server_id,
-                                 volume_id, self.t['Properties']['Device'])
+        logger.warn('Attaching InstanceId %s VolumeId %s Device %s' %
+                    (server_id, volume_id, self.t['Properties']['Device']))
         volapi = self.nova().volumes
         va = volapi.create_server_volume(server_id=server_id,
                                          volume_id=volume_id,
@@ -462,18 +462,18 @@ class VolumeAttachment(Resource):
 
         server_id = self.t['Properties']['InstanceId']
         volume_id = self.t['Properties']['VolumeId']
-        print 'VolumeAttachment un-attaching %s %s' % \
-            (server_id, volume_id)
+        logger.info('VolumeAttachment un-attaching %s %s' % \
+                    (server_id, volume_id))
 
         volapi = self.nova().volumes
         volapi.delete_server_volume(server_id,
                                     volume_id)
 
         vol = self.nova('volume').volumes.get(volume_id)
-        print 'un-attaching %s, status %s' % (volume_id, vol.status)
+        logger.info('un-attaching %s, status %s' % (volume_id, vol.status))
         while vol.status == 'in-use':
-            print 'trying to un-attach %s, but still %s' % (volume_id,
-                                                            vol.status)
+            logger.info('trying to un-attach %s, but still %s' %
+                        (volume_id, vol.status))
             eventlet.sleep(1)
             try:
                 volapi.delete_server_volume(server_id,
@@ -519,7 +519,7 @@ class Instance(Resource):
 
         # TODO(asalkeld) PrivateDnsName, PublicDnsName & PrivateIp
 
-        print '%s.GetAtt(%s) == %s' % (self.name, key, res)
+        logger.info('%s.GetAtt(%s) == %s' % (self.name, key, res))
         return unicode(res)
 
     def create(self):
@@ -568,7 +568,7 @@ class Instance(Resource):
                 image_id = o.id
 
         if image_id is None:
-            print "Image %s was not found in glance" % image_name
+            logger.info("Image %s was not found in glance" % image_name)
             raise exception.ImageNotFound(image_name=image_name)
 
         flavor_list = self.nova().flavors.list()
