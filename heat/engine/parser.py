@@ -25,6 +25,13 @@ logger = logging.getLogger('heat.engine.parser')
 
 
 class Stack(object):
+    IN_PROGRESS = 'IN_PROGRESS'
+    CREATE_FAILED = 'CREATE_FAILED'
+    CREATE_COMPLETE = 'CREATE_COMPLETE'
+    DELETE_IN_PROGRESS = 'DELETE_IN_PROGRESS'
+    DELETE_FAILED = 'DELETE_FAILED'
+    DELETE_COMPLETE = 'DELETE_COMPLETE'
+
     def __init__(self, stack_name, template, stack_id=0, parms=None):
         self.id = stack_id
         self.t = template
@@ -34,6 +41,7 @@ class Stack(object):
         self.res = {}
         self.doc = None
         self.name = stack_name
+        self.parsed_template_id = 0
 
         self.parms['AWS::Region'] = {"Description": "AWS Regions",
             "Type": "String",
@@ -134,16 +142,23 @@ class Stack(object):
         if self.parsed_template_id == 0:
             stack = db_api.stack_get(None, self.name)
             if stack:
-                self.parsed_template_id = stack.parsed_template_id
+                self.parsed_template_id = stack.raw_template.parsed_template.id
             else:
                 return
 
         pt = db_api.parsed_template_get(None, self.parsed_template_id)
         if pt:
             pt.template = self.t
+            pt.save()
         else:
             logger.warn('Cant find parsed template to update %d' % \
                         self.parsed_template_id)
+
+    def status_set(self, new_status, reason='change in resource state'):
+
+        self.t['stack_status'] = new_status
+        self.update_parsed_template()
+
 
     def create_blocking(self):
         '''
@@ -151,6 +166,8 @@ class Stack(object):
         '''
         order = self.get_create_order()
         failed = False
+        self.status_set(self.IN_PROGRESS)
+
         for r in order:
             failed_str = self.resources[r].CREATE_FAILED
             if not failed:
@@ -167,7 +184,13 @@ class Stack(object):
                     logger.exception('update_parsed_template')
 
             else:
-                self.resources[r].state_set(self.resources[r].CREATE_FAILED)
+                self.resources[r].state_set(failed_str)
+        if failed:
+            self.status_set(self.CREATE_FAILED)
+        else:
+            self.status_set(self.CREATE_COMPLETE)
+
+        self.update_parsed_template()
 
     def create(self):
 
@@ -179,6 +202,8 @@ class Stack(object):
         delete all the resources in the reverse order specified by
         get_create_order().
         '''
+        self.status_set(self.DELETE_IN_PROGRESS)
+
         order = self.get_create_order()
         order.reverse()
         for r in order:

@@ -66,7 +66,7 @@ class EngineManager(manager.Manager):
             mem['created_at'] = str(s.created_at)
             mem['template_description'] = ps.t.get('Description',
                                                    'No description')
-            mem['stack_status'] = ps.t.get('StackStatus', 'unknown')
+            mem['StackStatus'] = ps.t.get('stack_status', 'unknown')
             res['stacks'].append(mem)
 
         return res
@@ -95,7 +95,7 @@ class EngineManager(manager.Manager):
             mem['TimeoutInMinutes'] = 'TODO'
             mem['TemplateDescription'] = ps.t.get('Description',
                                                   'No description')
-            mem['StackStatus'] = ps.t.get('StackStatus', 'unknown')
+            mem['StackStatus'] = ps.t.get('stack_status', 'unknown')
             res['stacks'].append(mem)
 
         return res
@@ -131,8 +131,6 @@ class EngineManager(manager.Manager):
         pt['template'] = stack.t
         pt['raw_template_id'] = new_rt.id
         new_pt = db_api.parsed_template_create(None, pt)
-
-        new_s.parsed_template_id = new_pt.id
 
         stack.parsed_template_id = new_pt.id
         stack.create()
