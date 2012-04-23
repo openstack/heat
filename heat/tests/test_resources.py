@@ -75,6 +75,9 @@ class ResourcesTest(unittest.TestCase):
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.create()
 
+        # this makes sure the auto increment worked on instance creation
+        assert(instance.id > 0)
+
    # allows testing of the test directly, shown below
     if __name__ == '__main__':
         sys.argv.append(__file__)
