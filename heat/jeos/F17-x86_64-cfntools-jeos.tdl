@@ -21,6 +21,7 @@ EOF
     <file name='/opt/aws/bin/cfn-init'  type='base64'></file>
     <file name='/opt/aws/bin/cfn-hup'  type='base64'></file>
     <file name='/opt/aws/bin/cfn-signal'  type='base64'></file>
+    <file name='/opt/aws/bin/cfn_helper.py'  type='base64'></file>
   </files>
 
 </template>
