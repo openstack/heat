@@ -41,7 +41,7 @@ import sys
 
 def to_boolean(b):
     val = b.lower().strip() if isinstance(b, basestring) else b
-    return b in [True, 'true', 'yes', '1', 1]
+    return val in [True, 'true', 'yes', '1', 1]
 
 
 class HupConfig(object):
