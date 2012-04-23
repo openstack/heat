@@ -29,6 +29,7 @@ Not implemented yet:
       - placeholders are ignored
 """
 
+import ConfigParser
 import json
 import logging
 import os
@@ -41,6 +42,82 @@ import sys
 def to_boolean(b):
     val = b.lower().strip() if isinstance(b, basestring) else b
     return b in [True, 'true', 'yes', '1', 1]
+
+
+class HupConfig(object):
+    def __init__(self, fp_list):
+        self.config = ConfigParser.SafeConfigParser(allow_no_value=True)
+        for fp in fp_list:
+            self.config.readfp(fp)
+
+        self.hooks = {}
+        for s in self.config.sections():
+            if s == 'main':
+                self.get_main_section()
+            else:
+                self.hooks[s] = Hook(s,
+                                     self.config.get(s, 'triggers'),
+                                     self.config.get(s, 'path'),
+                                     self.config.get(s, 'runas'),
+                                     self.config.get(s, 'action'))
+
+    def get_main_section(self):
+        # required values
+        self.stack = self.config.get('main', 'stack')
+        self.credential_file = self.config.get('main', 'credential-file')
+
+        # optional values
+        try:
+            self.region = self.config.get('main', 'region')
+        except ConfigParser.NoOptionError:
+            self.region = 'nova'
+
+        try:
+            self.interval = self.config.getint('main', 'interval')
+        except ConfigParser.NoOptionError:
+            self.interval = 10
+
+    def __str__(self):
+        return '{stack: %s, credential_file: %s, region: %s, interval:%d}' % \
+            (self.stack, self.credential_file, self.region, self.interval)
+
+    def unique_resources_get(self):
+        resources = []
+        for h in self.hooks:
+            r = self.hooks[h].resource_name_get()
+            if not r in resources:
+                resources.append(self.hooks[h].resource_name_get())
+        return resources
+
+
+class Hook(object):
+    def __init__(self, name, triggers, path, runas, action):
+        self.name = name
+        self.triggers = triggers
+        self.path = path
+        self.runas = runas
+        self.action = action
+
+    def resource_name_get(self):
+        sp = self.path.split('.')
+        return sp[1]
+
+    def event(self, ev_name, ev_object, ev_resource):
+        if self.resource_name_get() != ev_resource:
+            return
+        if ev_name in self.triggers:
+            print 'su %s -c %s' % (self.runas, self.action)
+            #CommandRunner(self.action).run()
+        else:
+            print 'miss: %s %s' % (ev_name, ev_object)
+
+    def __str__(self):
+        return '{%s, %s, %s, %s, %s}' % \
+            (self.name,
+             self.triggers,
+             self.path,
+             self.runas,
+             self.action)
 
 
 class CommandRunner(object):
@@ -382,8 +459,10 @@ class PackagesHandler(object):
 class ServicesHandler(object):
     _services = {}
 
-    def __init__(self, services):
+    def __init__(self, services, resource=None, hooks=None):
         self._services = services
+        self.resource = resource
+        self.hooks = hooks
 
     def _handle_sysv_command(self, service, command):
         service_exe = "/sbin/service"
@@ -421,7 +500,7 @@ class ServicesHandler(object):
         command.run()
         return command
 
-    def _initialize_service(self, handler, service, properties):
+    def _handle_service(self, handler, service, properties):
         if "enabled" in properties:
             enable = to_boolean(properties["enabled"])
             if enable:
@@ -438,6 +517,9 @@ class ServicesHandler(object):
             if ensure_running and not running:
                 logging.info("Starting service %s" % service)
                 handler(self, service, "start")
+                for h in self.hooks:
+                    self.hooks[h].event('service.restarted',
+                                        service, self.resource)
             elif not ensure_running and running:
                 logging.info("Stopping service %s" % service)
                 handler(self, service, "stop")
@@ -491,6 +573,8 @@ class Metadata(object):
         self.credentials_file = credentials_file
         self.region = region
 
+        # TODO(asalkeld) is this metadata for the local resource?
+        self._is_local_metadata = True
         self._metadata = None
 
     def retrieve(self):
@@ -498,8 +582,12 @@ class Metadata(object):
         Read the metadata from the given filename and return the string
         """
         f = open("/var/lib/cloud/data/cfn-init-data")
-        self._metadata = f.read()
+        self._data = f.read()
         f.close()
+        if isinstance(self._data, str):
+            self._metadata = json.loads(self._data)
+        else:
+            self._metadata = self._data
 
     def _is_valid_metadata(self):
         """
@@ -544,3 +632,16 @@ class Metadata(object):
             raise Exception("invalid metadata")
         else:
             self._process_config()
+
+    def cfn_hup(self, hooks):
+        """
+        Process the resource metadata
+        """
+        if not self._is_valid_metadata():
+            raise Exception("invalid metadata")
+        else:
+            if self._is_local_metadata:
+                self._config = self._metadata["config"]
+                s = self._config.get("services")
+                sh = ServicesHandler(s, resource=self.resource, hooks=hooks)
+                sh.apply_services()

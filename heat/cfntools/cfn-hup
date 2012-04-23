@@ -15,3 +15,68 @@
 """
 Implements cfn-hup CloudFormation functionality
 """
+import argparse
+import io
+import logging
+import os
+import os.path
+import sys
+
+if os.path.exists('/opt/aws/bin'):
+    sys.path.insert(0, '/opt/aws/bin')
+    from cfn_helper import *
+else:
+    from heat.cfntools.cfn_helper import *
+
+log_format = '%(levelname)s [%(asctime)s] %(message)s'
+# setup stdout logging
+logging.basicConfig(format=log_format, level=logging.INFO)
+
+description = " "
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('-c', '--config',
+        dest="config_dir",
+        help="Hook Config Directory",
+        required=False,
+        default=None)
+parser.add_argument('-f', '--no-daemon',
+        dest="no_deamon",
+        help="Do not run as a deamon",
+        required=False)
+parser.add_argument('-v', '--verbose',
+        dest="verbose",
+        help="Verbose logging",
+        required=False)
+args = parser.parse_args()
+# FIXME: implement real arg
+
+config_files = []
+try:
+    config_files.append(open(os.path.join('/etc', 'cfn-hup.conf')))
+except OSError as exc:
+    logging.exception(exc)
+    pass
+
+if args.config_dir:
+    try:
+        for f in os.listdir(args.config_dir):
+            config_files.append(open(os.path.join(args.config_dir, f)))
+
+    except OSError as exc:
+        logging.exception(exc)
+        pass
+
+mainconfig = HupConfig(config_files)
+
+for r in mainconfig.unique_resources_get():
+    print r
+    metadata = Metadata(mainconfig.stack,
+                        r,
+                        credentials_file=mainconfig.credential_file,
+                        region=mainconfig.region)
+    metadata.retrieve()
+    try:
+        metadata.cfn_hup(mainconfig.hooks)
+    except Exception as e:
+        logging.exception("Error processing metadata")
+        exit(1)

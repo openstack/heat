@@ -70,8 +70,11 @@ parser.add_argument('--region',
 args = parser.parse_args()
 # FIXME: implement real arg
 
-metadata = Metadata(stack, resource, access_key=access_key,
-                    secret_key=secret_key, region=region)
+metadata = Metadata(args.stack_name,
+                    args.logical_resource_id,
+                    access_key=args.access_key,
+                    secret_key=args.secret_key,
+                    region=args.region)
 metadata.retrieve()
 try:
     metadata.cfn_init()
