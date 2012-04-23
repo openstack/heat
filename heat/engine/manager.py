@@ -58,7 +58,8 @@ class EngineManager(manager.Manager):
         if stacks == None:
             return res
         for s in stacks:
-            ps = parser.Stack(s.name, s.raw_template.parsed_template.template, s.id, params)
+            ps = parser.Stack(s.name, s.raw_template.parsed_template.template,
+                              s.id, params)
             mem = {}
             mem['stack_id'] = s.id
             mem['stack_name'] = s.name
@@ -80,7 +81,8 @@ class EngineManager(manager.Manager):
         res = {'stacks': []}
         s = db_api.stack_get(None, stack_name)
         if s:
-            ps = parser.Stack(s.name, s.raw_template.parsed_template.template, s.id, params)
+            ps = parser.Stack(s.name, s.raw_template.parsed_template.template,
+                              s.id, params)
             mem = {}
             mem['stack_id'] = s.id
             mem['stack_name'] = s.name
@@ -170,7 +172,8 @@ class EngineManager(manager.Manager):
 
         logger.info('deleting stack %s' % stack_name)
 
-        ps = parser.Stack(st.name, st.raw_template.parsed_template.template, st.id, params)
+        ps = parser.Stack(st.name, st.raw_template.parsed_template.template,
+                          st.id, params)
         ps.delete()
         return None
 

@@ -149,7 +149,6 @@ class Event(BASE, HeatBase):
     resource_properties = Column(PickleType)
 
 
-
 class Resource(BASE, HeatBase):
     """Represents a resource created by the heat engine."""
 

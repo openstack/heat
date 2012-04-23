@@ -142,8 +142,8 @@ class Stack(object):
         if pt:
             pt.template = self.t
         else:
-            logger.warn('Cant find parsed template to update %d' % self.parsed_template_id)
-
+            logger.warn('Cant find parsed template to update %d' % \
+                        self.parsed_template_id)
 
     def create_blocking(self):
         '''

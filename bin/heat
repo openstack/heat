@@ -61,6 +61,7 @@ from heat.common import exception
 SUCCESS = 0
 FAILURE = 1
 
+
 def catch_error(action):
     """Decorator to provide sensible default error handling for actions."""
     def wrap(func):
@@ -89,6 +90,7 @@ def catch_error(action):
         return wrapper
     return wrap
 
+
 @catch_error('validate')
 def template_validate(options, arguments):
     '''
@@ -114,6 +116,7 @@ def template_validate(options, arguments):
     result = client.validate_template(**parameters)
     print json.dumps(result, indent=2)
 
+
 @catch_error('gettemplate')
 def get_template(options, arguments):
     '''
@@ -122,6 +125,7 @@ def get_template(options, arguments):
     NOT YET IMPLEMENTED.
     '''
     pass
+
 
 @catch_error('create')
 def stack_create(options, arguments):
@@ -168,6 +172,7 @@ def stack_create(options, arguments):
     result = c.create_stack(**parameters)
     print json.dumps(result, indent=2)
 
+
 @catch_error('update')
 def stack_update(options, arguments):
     '''
@@ -213,11 +218,12 @@ def stack_update(options, arguments):
     result = c.update_stack(**parameters)
     print json.dumps(result, indent=2)
 
+
 @catch_error('delete')
 def stack_delete(options, arguments):
     '''
     Delete an existing stack.  This shuts down all VMs associated with
-    the stack and (perhaps wrongly) also removes all events associated 
+    the stack and (perhaps wrongly) also removes all events associated
     with the given stack.
 
     Usage: heat delete <stack name>
@@ -233,6 +239,7 @@ def stack_delete(options, arguments):
     c = get_client(options)
     result = c.delete_stack(**parameters)
     print json.dumps(result, indent=2)
+
 
 @catch_error('describe')
 def stack_describe(options, arguments):
@@ -253,6 +260,7 @@ def stack_describe(options, arguments):
     result = c.describe_stacks(**parameters)
     print json.dumps(result, indent=2)
 
+
 @catch_error('events_list')
 def stack_events_list(options, arguments):
     '''
@@ -270,6 +278,7 @@ def stack_events_list(options, arguments):
     result = c.list_stack_events(**parameters)
     print json.dumps(result, indent=2)
 
+
 @catch_error('list')
 def stack_list(options, arguments):
     '''
@@ -280,6 +289,7 @@ def stack_list(options, arguments):
     c = get_client(options)
     result = c.list_stacks()
     print json.dumps(result, indent=2)
+
 
 @catch_error('jeos_create')
 def jeos_create(options, arguments):
@@ -309,13 +319,16 @@ def jeos_create(options, arguments):
         print '  Usage:'
         print '   heat jeos_create <distro> <arch> <instancetype>'
         print '     instance type can be:'
-        print '     gold builds a base image where userdata is used to initialize the instance'
-        print '     cfntools builds a base image where AWS CloudFormation tools are present'
+        print '     gold builds a base image where userdata is used to' \
+              ' initialize the instance'
+        print '     cfntools builds a base image where AWS CloudFormation' \
+              ' tools are present'
         sys.exit(1)
 
     distro = arguments.pop(0)
     arch = arguments.pop(0)
     instance_type = arguments.pop(0)
+    images_dir = '/var/lib/libvirt/images'
 
     arches = ('x86_64', 'i386', 'amd64')
     arches_str = " | ".join(arches)
@@ -337,9 +350,9 @@ def jeos_create(options, arguments):
     fedora_match = re.match('F(1[6-7])', distro)
     if fedora_match:
         version = fedora_match.group(1)
-        iso = '/var/lib/libvirt/images/Fedora-%s-%s-DVD.iso' % (version, arch)
+        iso = '%s/Fedora-%s-%s-DVD.iso' % (images_dir, version, arch)
     elif distro == 'U10':
-        iso = '/var/lib/libvirt/images/ubuntu-10.04.3-server-%s.iso' % arch
+        iso = '%s/ubuntu-10.04.3-server-%s.iso' % (images_dir, arch)
     else:
         logging.error('distro %s not supported' % distro)
         logging.error('try: F16, F17 or U10')
@@ -361,14 +374,17 @@ def jeos_create(options, arguments):
             f = open('%s/%s' % (cfntools_path, cfnname), 'r')
             cfscript_e64 = base64.b64encode(f.read())
             f.close()
-            tdl_xml.xpathEval("/template/files/file[@name='/opt/aws/bin/%s']" % cfnname)[0].setContent(cfscript_e64)
+            cfnpath = "/template/files/file[@name='/opt/aws/bin/%s']" % cfnname
+            tdl_xml.xpathEval(cfnpath)[0].setContent(cfscript_e64)
 
         # TODO(sdake) INSECURE
         tdl_xml.saveFormatFile('/tmp/tdl', format=1)
         tdl_path = '/tmp/tdl'
 
-    dsk_filename = '/var/lib/libvirt/images/%s-%s-%s-jeos.dsk' % (distro, arch, instance_type)
-    qcow2_filename = '/var/lib/libvirt/images/%s-%s-%s-jeos.qcow2' % (distro, arch, instance_type)
+    dsk_filename = '%s/%s-%s-%s-jeos.dsk' % (images_dir, distro,
+                                             arch, instance_type)
+    qcow2_filename = '%s/%s-%s-%s-jeos.qcow2' % (images_dir, distro,
+                                                 arch, instance_type)
     image_name = '%s-%s-%s' % (distro, arch, instance_type)
 
     if not os.access(tdl_path, os.R_OK):
@@ -394,12 +410,13 @@ def jeos_create(options, arguments):
     for image in images:
         if image['name'] == distro + '-' + arch + '-' + instance_type:
             image_registered = True
-            #logging.warning(' *** image already in glance: %s > %s' % (image['name'], image['id']))
 
     runoz = None
     if os.access(qcow2_filename, os.R_OK):
         while runoz not in ('y', 'n'):
-            runoz = raw_input('An existing JEOS was found on disk. Do you want to build a fresh JEOS? (y/n) ').lower()
+            runoz = raw_input('An existing JEOS was found on disk.' \
+                              ' Do you want to build a fresh JEOS?' \
+                              ' (y/n) ').lower()
         if runoz == 'y':
             os.remove(qcow2_filename)
             os.remove(dsk_filename)
@@ -408,14 +425,17 @@ def jeos_create(options, arguments):
         elif runoz == 'n':
             answer = None
             while answer not in ('y', 'n'):
-                answer = raw_input('Do you want to register your existing JEOS file with glance? (y/n) ').lower()
+                answer = raw_input('Do you want to register your existing' \
+                                   ' JEOS file with glance? (y/n) ').lower()
                 if answer == 'n':
                     logging.info('No action taken')
                     sys.exit(0)
                 elif answer == 'y' and image_registered:
                     answer = None
                     while answer not in ('y', 'n'):
-                        answer = raw_input('Do you want to delete the existing JEOS in glance? (y/n) ').lower()
+                        answer = raw_input('Do you want to delete the ' \
+                                           'existing JEOS in glance?' \
+                                           ' (y/n) ').lower()
                     if answer == 'n':
                         logging.info('No action taken')
                         sys.exit(0)
@@ -423,24 +443,29 @@ def jeos_create(options, arguments):
                         client.delete_image(image['id'])
 
     if runoz == None or runoz == 'y':
-        logging.info('Creating JEOS image (%s) - this takes approximately 10 minutes.' % image_name)
+        logging.info('Creating JEOS image (%s) - '\
+                     'this takes approximately 10 minutes.' % image_name)
         extra_opts = ' '
         if options.debug:
             extra_opts = ' -d 3 '
 
-        ozcmd="oz-install %s -t 50000 -u %s -x /dev/null" % (extra_opts, tdl_path)
+        ozcmd = "oz-install %s -t 50000 -u %s -x /dev/null" % (extra_opts,
+                                                               tdl_path)
         logging.debug("Running : %s" % ozcmd)
         res = os.system(ozcmd)
         if res == 256:
             sys.exit(1)
         if not os.access(dsk_filename, os.R_OK):
-            logging.error('oz-install did not create the image, check your oz installation.')
+            logging.error('oz-install did not create the image,' \
+                          ' check your oz installation.')
             sys.exit(1)
 
         logging.info('Converting raw disk image to a qcow2 image.')
-        os.system("qemu-img convert -O qcow2 %s %s" % (dsk_filename, qcow2_filename))
+        os.system("qemu-img convert -O qcow2 %s %s" % (dsk_filename,
+                                                       qcow2_filename))
 
-    logging.info('Registering JEOS image (%s) with OpenStack Glance.' % image_name)
+    logging.info('Registering JEOS image (%s) ' \
+                 'with OpenStack Glance.' % image_name)
 
     image_meta = {'name': image_name,
                   'is_public': True,
@@ -549,13 +574,14 @@ def create_options(parser):
                       metavar="STRATEGY", default=None,
                       help="Authentication strategy (keystone or noauth)")
 
-    parser.add_option('-u', '--template-url', metavar="template_url", default=None,
-                      help="URL of template. Default: None")
-    parser.add_option('-t', '--template-file', metavar="template_file", default=None,
-                      help="Path to the template. Default: None")
+    parser.add_option('-u', '--template-url', metavar="template_url",
+                      default=None, help="URL of template. Default: None")
+    parser.add_option('-t', '--template-file', metavar="template_file",
+                      default=None, help="Path to the template. Default: None")
 
     parser.add_option('-P', '--parameters', metavar="parameters", default=None,
                       help="Parameter values used to create the stack.")
+
 
 def credentials_from_env():
     return dict(username=os.getenv('OS_USERNAME'),
@@ -563,6 +589,7 @@ def credentials_from_env():
                 tenant=os.getenv('OS_TENANT_NAME'),
                 auth_url=os.getenv('OS_AUTH_URL'),
                 auth_strategy=os.getenv('OS_AUTH_STRATEGY'))
+
 
 def parse_options(parser, cli_args):
     """
@@ -656,6 +683,7 @@ def lookup_command(parser, command_name):
         sys.exit("Unknown command: %s" % command_name)
 
     return command
+
 
 def main():
     '''

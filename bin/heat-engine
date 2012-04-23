@@ -48,6 +48,7 @@ logger = logging.getLogger('heat.engine')
 
 if __name__ == '__main__':
 
+    default_manager = 'heat.engine.manager.EngineManager'
     conf = config.HeatEngineConfigOpts()
     conf()
     config.FLAGS = conf
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     #utils.monkey_patch()
     server = service.Service.create(binary='heat-engine',
                                     topic='engine',
-                                    manager='heat.engine.manager.EngineManager',
+                                    manager=default_manager,
                                     config=conf)
     service.serve(server)
     service.wait()

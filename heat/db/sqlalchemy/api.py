@@ -19,6 +19,7 @@ from sqlalchemy.orm.session import Session
 from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy.session import get_session
 
+
 def model_query(context, *args, **kwargs):
     """
     :param session: if present, the session to use
@@ -162,7 +163,7 @@ def stack_delete(context, stack_name):
         rrt[r.parsed_template.raw_template.id] = \
             r.parsed_template.raw_template
         session.delete(r)
-    
+
     for pt in rpt.values():
         session.delete(pt)
 
