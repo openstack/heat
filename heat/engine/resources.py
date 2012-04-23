@@ -20,7 +20,6 @@ import os
 import string
 import json
 import sys
-
 from email import encoders
 from email.message import Message
 from email.mime.base import MIMEBase
@@ -36,7 +35,6 @@ from heat.db import api as db_api
 from heat.common.config import HeatEngineConfigOpts
 
 logger = logging.getLogger('heat.engine.resources')
-
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
 possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
@@ -78,7 +76,6 @@ class Resource(object):
             self.instance_id = None
             self.state = None
             self.id = None
-
         self._nova = {}
         if not 'Properties' in self.t:
             # make a dummy entry to prevent having to check all over the
@@ -522,6 +519,33 @@ class Instance(Resource):
         logger.info('%s.GetAtt(%s) == %s' % (self.name, key, res))
         return unicode(res)
 
+    def _build_userdata(self, userdata):
+        # Build mime multipart data blob for cloudinit userdata
+        mime_blob = MIMEMultipart()
+        fp = open('%s/%s' % (cloudinit_path, 'config'), 'r')
+        msg = MIMEText(fp.read(), _subtype='cloud-config')
+        fp.close()
+        msg.add_header('Content-Disposition', 'attachment',
+                       filename='cloud-config')
+        mime_blob.attach(msg)
+
+        fp = open('%s/%s' % (cloudinit_path, 'part-handler.py'), 'r')
+        msg = MIMEText(fp.read(), _subtype='part-handler')
+        fp.close()
+        msg.add_header('Content-Disposition', 'attachment',
+                       filename='part-handler.py')
+        mime_blob.attach(msg)
+
+        msg = MIMEText(json.dumps(self.t['Metadata']),
+                       _subtype='x-cfninitdata')
+        msg.add_header('Content-Disposition', 'attachment',
+                       filename='cfn-init-data')
+        mime_blob.attach(msg)
+
+        msg = MIMEText(userdata, _subtype='x-shellscript')
+        msg.add_header('Content-Disposition', 'attachment', filename='startup')
+        return mime_blob.attach(msg)
+
     def create(self):
         def _null_callback(p, n, out):
             """
@@ -533,7 +557,6 @@ class Instance(Resource):
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
-
         props = self.t['Properties']
         if not 'KeyName' in props:
             raise exception.UserParameterMissing(key='KeyName')
@@ -576,37 +599,12 @@ class Instance(Resource):
             if o.name == flavor:
                 flavor_id = o.id
 
-        # Build mime multipart data blob for cloudinit userdata
-        mime_blob = MIMEMultipart()
-        fp = open('%s/%s' % (cloudinit_path, 'config'), 'r')
-        msg = MIMEText(fp.read(), _subtype='cloud-config')
-        fp.close()
-        msg.add_header('Content-Disposition', 'attachment',
-                       filename='cloud-config')
-        mime_blob.attach(msg)
-
-        fp = open('%s/%s' % (cloudinit_path, 'part-handler.py'), 'r')
-        msg = MIMEText(fp.read(), _subtype='part-handler')
-        fp.close()
-        msg.add_header('Content-Disposition', 'attachment',
-                       filename='part-handler.py')
-        mime_blob.attach(msg)
-
-        msg = MIMEText(json.dumps(self.t['Metadata']),
-                       _subtype='x-cfninitdata')
-        msg.add_header('Content-Disposition', 'attachment',
-                       filename='cfn-init-data')
-        mime_blob.attach(msg)
-
-        msg = MIMEText(userdata, _subtype='x-shellscript')
-        msg.add_header('Content-Disposition', 'attachment', filename='startup')
-        mime_blob.attach(msg)
-
+        server_userdata = self._build_userdata(userdata) 
         server = self.nova().servers.create(name=self.name, image=image_id,
                                             flavor=flavor_id,
                                             key_name=key_name,
                                             security_groups=security_groups,
-                                            userdata=mime_blob.as_string())
+                                            userdata=server_userdata)
         while server.status == 'BUILD':
             server.get()
             eventlet.sleep(1)
