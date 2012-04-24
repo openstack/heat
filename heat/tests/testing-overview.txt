@@ -99,6 +99,10 @@ include the tag attribute with at least these values: <test type>,
 either slow, normal, or fast. Following this convention allows for finer
 granular testing without having to find the specific tests to run.
 
+If new dependencies are introduced upon the development of a test, the
+tools/test-requires file needs to be updated so that the virtual
+environment will be able to successfully execute all tests.
+
 Running the tests
 -----------------
 

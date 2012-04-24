@@ -18,7 +18,6 @@ import sqlalchemy.interfaces
 import sqlalchemy.orm
 from sqlalchemy.exc import DisconnectionError
 
-import nova.exception
 from heat.openstack.common import cfg
 from heat.db import api as db_api
 

@@ -1,4 +1,4 @@
-# Packages needed for dev testing
+# this file lists dependencies required for the testing of heat
 distribute>=0.6.24
 
 coverage
@@ -6,3 +6,4 @@ nose
 nosexcover
 openstack.nose_plugin
 pep8==0.6.1
+python-mox

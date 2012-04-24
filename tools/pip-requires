@@ -1,3 +1,5 @@
+# this file lists all the dependencies needed for running heat
+
 # The greenlet package must be compiled with gcc and needs
 # the Python.h headers. Make sure you install the python-dev
 # package to get the right headers...
