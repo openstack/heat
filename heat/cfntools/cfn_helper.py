@@ -103,13 +103,12 @@ class Hook(object):
         return sp[1]
 
     def event(self, ev_name, ev_object, ev_resource):
-        if self.resource_name_get() != ev_resource:
-            return
-        if ev_name in self.triggers:
-            print 'su %s -c %s' % (self.runas, self.action)
-            #CommandRunner(self.action).run()
+        if self.resource_name_get() == ev_resource and \
+           ev_name in self.triggers:
+            CommandRunner(self.action).run(user=self.runas)
         else:
-            print 'miss: %s %s' % (ev_name, ev_object)
+            logging.debug('event: {%s, %s, %s} did not match %s' % \
+                          (ev_name, ev_object, ev_resource, self.__str__()))
 
     def __str__(self):
         return '{%s, %s, %s, %s, %s}' % \
@@ -142,7 +141,7 @@ class CommandRunner(object):
             s += "\n\tstderr: %s" % self._stderr
         return s
 
-    def run(self):
+    def run(self, user='root'):
         """
         Run the Command and return the output.
 
@@ -500,7 +499,7 @@ class ServicesHandler(object):
         command.run()
         return command
 
-    def _handle_service(self, handler, service, properties):
+    def _initialize_service(self, handler, service, properties):
         if "enabled" in properties:
             enable = to_boolean(properties["enabled"])
             if enable:
@@ -517,17 +516,25 @@ class ServicesHandler(object):
             if ensure_running and not running:
                 logging.info("Starting service %s" % service)
                 handler(self, service, "start")
-                for h in self.hooks:
-                    self.hooks[h].event('service.restarted',
-                                        service, self.resource)
             elif not ensure_running and running:
                 logging.info("Stopping service %s" % service)
                 handler(self, service, "stop")
 
+    def _monitor_service(self, handler, service, properties):
+        if "ensureRunning" in properties:
+            ensure_running = to_boolean(properties["ensureRunning"])
+            command = handler(self, service, "status")
+            running = command.status == 0
+            if ensure_running and not running:
+                logging.info("Restarting service %s" % service)
+                handler(self, service, "start")
+                for h in self.hooks:
+                    self.hooks[h].event('service.restarted',
+                                        service, self.resource)
 
-    def _handle_services(self, handler, services):
+    def _monitor_services(self, handler, services):
         for service, properties in services.iteritems():
-            self._handle_service(handler, service, properties)
+            self._monitor_service(handler, service, properties)
 
     def _initialize_services(self, handler, services):
         for service, properties in services.iteritems():
@@ -539,13 +546,11 @@ class ServicesHandler(object):
         "systemd": _handle_systemd_command
     }
 
-
     def _service_handler(self, manager_name):
         handler = None
         if manager_name in self._service_handlers:
             handler = self._service_handlers[manager_name]
         return handler
-
 
     def apply_services(self):
         """
@@ -556,7 +561,18 @@ class ServicesHandler(object):
             if not handler:
                 logging.warn("Skipping invalid service type: %s" % manager)
             else:
-                self._handle_services(handler, service_entries)
+                self._initialize_services(handler, service_entries)
+
+    def monitor_services(self):
+        """
+        Restarts failed services, and runs hooks.
+        """
+        for manager, service_entries in self._services.iteritems():
+            handler = self._service_handler(manager)
+            if not handler:
+                logging.warn("Skipping invalid service type: %s" % manager)
+            else:
+                self._monitor_services(handler, service_entries)
 
 
 class Metadata(object):
@@ -644,4 +660,4 @@ class Metadata(object):
                 self._config = self._metadata["config"]
                 s = self._config.get("services")
                 sh = ServicesHandler(s, resource=self.resource, hooks=hooks)
-                sh.apply_services()
+                sh.monitor_services()

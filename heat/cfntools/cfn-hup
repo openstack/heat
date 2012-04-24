@@ -28,17 +28,13 @@ if os.path.exists('/opt/aws/bin'):
 else:
     from heat.cfntools.cfn_helper import *
 
-log_format = '%(levelname)s [%(asctime)s] %(message)s'
-# setup stdout logging
-logging.basicConfig(format=log_format, level=logging.INFO)
-
 description = " "
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('-c', '--config',
         dest="config_dir",
         help="Hook Config Directory",
         required=False,
-        default=None)
+        default='/etc/cfn/hooks.d')
 parser.add_argument('-f', '--no-daemon',
         dest="no_deamon",
         help="Do not run as a deamon",
@@ -50,12 +46,23 @@ parser.add_argument('-v', '--verbose',
 args = parser.parse_args()
 # FIXME: implement real arg
 
+log_format = '%(levelname)s [%(asctime)s] %(message)s'
+# setup stdout logging
+if args.verbose:
+    logging.basicConfig(format=log_format, level=logging.DEBUG)
+else:
+    logging.basicConfig(format=log_format, level=logging.INFO)
+
 config_files = []
 try:
-    config_files.append(open(os.path.join('/etc', 'cfn-hup.conf')))
-except OSError as exc:
+    config_files.append(open('/etc/cfn/cfn-hup.conf'))
+except IOError as exc:
     logging.exception(exc)
-    pass
+
+try:
+    config_files.append(open('/etc/cfn/hooks.conf'))
+except IOError as exc:
+    logging.exception(exc)
 
 if args.config_dir:
     try:
@@ -64,7 +71,6 @@ if args.config_dir:
 
     except OSError as exc:
         logging.exception(exc)
-        pass
 
 mainconfig = HupConfig(config_files)
 

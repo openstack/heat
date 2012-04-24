@@ -13,7 +13,7 @@ from nose import with_setup
 from heat.cfntools.cfn_helper import *
 
 
-@attr(tag=['cfn_helper'])
+@attr(tag=['unit', 'cfn_helper'])
 @attr(speed='fast')
 def test_boolean():
 
@@ -39,7 +39,7 @@ def test_boolean():
     assert(not to_boolean(56))
 
 
-@attr(tag=['cfn-hup'])
+@attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
 def test_hup_conf1():
     good= """
@@ -56,7 +56,7 @@ interval=3
     assert(c.interval == 3)
 
 
-@attr(tag=['cfn-hup'])
+@attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
 def test_hup_default():
     good= """
@@ -71,7 +71,7 @@ credential-file=/path/to/creds_file
     assert(c.interval == 10)
 
 
-@attr(tag=['cfn-hup'])
+@attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
 def test_hup_hook():
     good= """
@@ -95,6 +95,7 @@ runas=root
     assert(c.hooks['bla'].path == 'Resources.webserver')
     assert(c.hooks['bla'].action == 'systemctl reload httpd.service')
     assert(c.hooks['bla'].runas == 'root')
+
 
 if __name__ == '__main__':
     sys.argv.append(__file__)
