@@ -23,8 +23,10 @@ Set up a local MySQL database for use with heat.
 This script will create a 'heat' database that is accessible
 only on localhost by user 'heat' with password 'heat'.
 
-Usage: heat-db-setup [options]
+Usage: heat-db-setup <rpm|deb> [options]
 Options:
+	select a distro type (rpm or debian)
+
 	--help        | -h
 		Print usage information.
 	--heatpw <pw> | -n <pw>
@@ -49,20 +51,46 @@ EOF
 
 install_mysql_server() {
 	if [ -z "${ASSUME_YES}" ] ; then
-		yum install mysql-server
+		$PACKAGE_INSTALL mysql-server
 	else
-		yum install -y mysql-server
+		$PACKAGE_INSTALL -y mysql-server
 	fi
 }
 
 start_mysql_server() {
-	systemctl start mysqld.service
+	$SERVICE_START
 }
 
 MYSQL_HEAT_PW_DEFAULT="heat"
 MYSQL_HEAT_PW=${MYSQL_HEAT_PW_DEFAULT}
 HEAT_CONFIG="/etc/heat/heat-engine.conf"
 ASSUME_YES=""
+
+if [ $# -eq 0 ]
+then
+	usage
+fi
+
+case "$1" in
+	rpm)
+		echo "Installing on an RPM system."
+		PACKAGE_INSTALL="yum install"
+		PACKAGE_STATUS="rpm -q"
+		SERVICE_MYSQLD="mysqld"
+		SERVICE_START="service $SERVICE_MYSQLD start"
+		SERVICE_STATUS="service $SERVICE_MYSQLD status"
+		SERVICE_ENABLE="chkconfig"
+		;;
+	deb)
+		echo "Installing on a Debian system."
+		PACKAGE_INSTALL="apt-get install"
+		PACKAGE_STATUS="dpkg-query -s"
+		SERVICE_MYSQLD="mysql"
+		SERVICE_START="service $SERVICE_MYSQLD start"
+		SERVICE_STATUS="service $SERVICE_MYSQLD status"
+		SERVICE_ENABLE=""
+		;;
+esac
 
 while [ $# -gt 0 ]
 do
@@ -93,7 +121,7 @@ done
 # Make sure MySQL is installed.
 
 NEW_MYSQL_INSTALL=0
-if ! rpm -q mysql-server > /dev/null
+if ! $PACKAGE_STATUS mysql-server > /dev/null
 then
 	if [ -z "${ASSUME_YES}" ] ; then
 		printf "mysql-server is not installed.  Would you like to install it now? (y/n): "
@@ -118,16 +146,16 @@ fi
 
 # Make sure mysqld is running.
 
-if ! systemctl status mysqld.service > /dev/null
+if ! $SERVICE_STATUS > /dev/null
 then
 	if [ -z "${ASSUME_YES}" ] ; then
-		printf "mysqld is not running.  Would you like to start it now? (y/n): "
+		printf "$MYSQL_SERVICE is not running.  Would you like to start it now? (y/n): "
 		read response
 		case "$response" in
 			y|Y)
 				;;
 			n|N)
-				echo "mysqld must be running.  Please start it before proceeding."
+				echo "$MYSQL_SERVICE must be running.  Please start it before proceeding."
 				exit 0
 				;;
 			*)
@@ -139,7 +167,7 @@ then
 	start_mysql_server
 
 	# If we both installed and started, ensure it starts at boot
-	[ $NEW_MYSQL_INSTALL -eq 1 ] && chkconfig mysqld on
+	[ $NEW_MYSQL_INSTALL -eq 1 ] && $SERVICE_ENABLE $SERVICE_MYSQLD on
 fi
 
 

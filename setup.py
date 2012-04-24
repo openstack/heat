@@ -90,7 +90,7 @@ setup(
     scripts=['bin/heat',
              'bin/heat-api',
              'bin/heat-engine',
-             'bin/heat-db-setup-fedora'],
+             'bin/heat-db-setup'],
     data_files=[('/etc/heat', ['etc/heat-api.conf',
                                'etc/heat-api-paste.ini',
                                'etc/heat-engine.conf',
