@@ -28,7 +28,7 @@ supported backend.
 import heat.utils
 from heat.openstack.common import utils
 from heat.openstack.common import cfg
-from heat.common import config
+#from heat.common import config
 import heat.utils
 
 SQL_CONNECTION = 'sqlite:///heat-test.db/'
@@ -39,8 +39,8 @@ db_opts = [
                help='The backend to use for db'),
     ]
 
-conf = config.HeatEngineConfigOpts()
-conf.db_backend = 'heat.db.sqlalchemy.api'
+#conf = config.HeatEngineConfigOpts()
+#conf.db_backend = 'heat.db.sqlalchemy.api'
 IMPL = heat.utils.LazyPluggable('db_backend',
                            sqlalchemy='heat.db.sqlalchemy.api')
 def configure(conf):
