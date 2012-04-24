@@ -25,17 +25,30 @@ Usage:
 The underlying driver is loaded . SQLAlchemy is currently the only
 supported backend.
 '''
-
+import heat.utils
 from heat.openstack.common import utils
+from heat.openstack.common import cfg
+from heat.common import config
+import heat.utils
 
+SQL_CONNECTION = 'sqlite:///heat-test.db/'
+SQL_IDLE_TIMEOUT = 3600
+db_opts = [
+    cfg.StrOpt('db_backend',
+               default='sqlalchemy',
+               help='The backend to use for db'),
+    ]
 
+conf = config.HeatEngineConfigOpts()
+conf.db_backend = 'heat.db.sqlalchemy.api'
+IMPL = heat.utils.LazyPluggable('db_backend',
+                           sqlalchemy='heat.db.sqlalchemy.api')
 def configure(conf):
-    global IMPL
     global SQL_CONNECTION
     global SQL_IDLE_TIMEOUT
-    IMPL = utils.import_object(conf.db_backend)
     SQL_CONNECTION = conf.sql_connection
     SQL_IDLE_TIMEOUT = conf.sql_idle_timeout
+
 
 
 def raw_template_get(context, template_id):

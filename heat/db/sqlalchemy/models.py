@@ -24,6 +24,7 @@ from sqlalchemy import types as types
 from json import dumps, loads
 from heat.openstack.common import utils
 from heat.db.sqlalchemy.session import get_session
+from sqlalchemy.orm.session import Session
 
 BASE = declarative_base()
 
@@ -48,7 +49,9 @@ class HeatBase(object):
     def save(self, session=None):
         """Save this object."""
         if not session:
-            session = get_session()
+            session = Session.object_session(self)
+            if not session:
+                session = get_session()
         session.add(self)
         try:
             session.flush()

@@ -42,9 +42,10 @@ for arg in "$@"; do
   process_option $arg
 done
 
-NOSETESTS="python run_tests.py $noseargs"
+NOSETESTS="python heat/testing/runner.py $noseopts $noseargs"
 
 function run_tests {
+  echo 'Running tests'
   # Just run the test suites in current environment
   ${wrapper} $NOSETESTS 2> run_tests.err.log
 }
@@ -52,7 +53,7 @@ function run_tests {
 function run_pep8 {
   echo "Running pep8 ..."
   PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat"
-  PEP8_INCLUDE="bin/heat bin/heat-api bin/heat-engine heat tools setup.py run_tests.py"
+  PEP8_INCLUDE="bin/heat bin/heat-api bin/heat-engine heat tools setup.py heat/testing/runner.py"
   ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
 }
 
@@ -87,9 +88,9 @@ if [ $just_pep8 -eq 1 ]; then
   exit
 fi
 
-run_tests || exit
+run_tests
 
-if [ -z "$noseargs" ]; then
-  run_pep8
-fi
+#if [ -z "$noseargs" ]; then
+#  run_pep8
+#fi
 

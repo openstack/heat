@@ -1,6 +1,18 @@
 #!/usr/bin/env python
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
 # Colorizer Code is borrowed from Twisted:
 # Copyright (c) 2001-2010 Twisted Matrix Laboratories.
 #
@@ -22,31 +34,39 @@
 #    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 #    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 #    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"""Unittest runner for Heat.
 
-"""
-Unittest runner for heat
+To run all tests
+    python heat/testing/runner.py
 
-To run all test::
-    python run_tests.py
+To run a single test module:
+    python heat/testing/runner.py test_resources
 
-To run a single test::
-    python run_tests.py test_stores:TestSwiftBackend.test_get
 
-To run a single test module::
-    python run_tests.py test_stores
+To run a single test:
+    python heat/testing/runner.py
+        test_resources:ResourceTestCase.test_resource_from_template
+
 """
 
 import gettext
-import logging
+import heapq
 import os
 import unittest
 import sys
+import time
+
+import eventlet
+from nose import config
+from nose import core
+from nose import result
 
 gettext.install('heat', unicode=1)
+reldir = os.path.join(os.path.dirname(__file__), '..', '..')
+absdir = os.path.abspath(reldir)
+sys.path.insert(0, absdir)
 
-from nose import config
-from nose import result
-from nose import core
+from heat.openstack.common import cfg
 
 
 class _AnsiColorizer(object):
@@ -80,7 +100,7 @@ class _AnsiColorizer(object):
                 except curses.error:
                     curses.setupterm()
                     return curses.tigetnum("colors") > 2
-            except:
+            except Exception:
                 raise
                 # guess false in case of error
                 return False
@@ -103,13 +123,11 @@ class _Win32Colorizer(object):
     See _AnsiColorizer docstring.
     """
     def __init__(self, stream):
-        from win32console import GetStdHandle, STD_OUT_HANDLE, \
-             FOREGROUND_RED, FOREGROUND_BLUE, FOREGROUND_GREEN, \
-             FOREGROUND_INTENSITY
-        red, green, blue, bold = (FOREGROUND_RED, FOREGROUND_GREEN,
-                                  FOREGROUND_BLUE, FOREGROUND_INTENSITY)
+        import win32console as win
+        red, green, blue, bold = (win.FOREGROUND_RED, win.FOREGROUND_GREEN,
+                                 win.FOREGROUND_BLUE, win.FOREGROUND_INTENSITY)
         self.stream = stream
-        self.screenBuffer = GetStdHandle(STD_OUT_HANDLE)
+        self.screenBuffer = win.GetStdHandle(win.STD_OUT_HANDLE)
         self._colors = {
             'normal': red | green | blue,
             'red': red | bold,
@@ -118,7 +136,8 @@ class _Win32Colorizer(object):
             'yellow': red | green | bold,
             'magenta': red | blue | bold,
             'cyan': green | blue | bold,
-            'white': red | green | blue | bold}
+            'white': red | green | blue | bold
+            }
 
     def supported(cls, stream=sys.stdout):
         try:
@@ -161,12 +180,24 @@ class _NullColorizer(object):
         self.stream.write(text)
 
 
+def get_elapsed_time_color(elapsed_time):
+    if elapsed_time > 1.0:
+        return 'red'
+    elif elapsed_time > 0.25:
+        return 'yellow'
+    else:
+        return 'green'
+
+
 class HeatTestResult(result.TextTestResult):
     def __init__(self, *args, **kw):
+        self.show_elapsed = kw.pop('show_elapsed')
         result.TextTestResult.__init__(self, *args, **kw)
+        self.num_slow_tests = 5
+        self.slow_tests = []  # this is a fixed-sized heap
         self._last_case = None
         self.colorizer = None
-        # NOTE(vish, tfukushima): reset stdout for the terminal check
+        # NOTE(vish): reset stdout for the terminal check
         stdout = sys.stdout
         sys.stdout = sys.__stdout__
         for colorizer in [_Win32Colorizer, _AnsiColorizer, _NullColorizer]:
@@ -175,47 +206,68 @@ class HeatTestResult(result.TextTestResult):
                 break
         sys.stdout = stdout
 
+        # NOTE(lorinh): Initialize start_time in case a sqlalchemy-migrate
+        # error results in it failing to be initialized later. Otherwise,
+        # _handleElapsedTime will fail, causing the wrong error message to
+        # be outputted.
+        self.start_time = time.time()
+
     def getDescription(self, test):
         return str(test)
 
-    # NOTE(vish, tfukushima): copied from unittest with edit to add color
+    def _handleElapsedTime(self, test):
+        self.elapsed_time = time.time() - self.start_time
+        item = (self.elapsed_time, test)
+        # Record only the n-slowest tests using heap
+        if len(self.slow_tests) >= self.num_slow_tests:
+            heapq.heappushpop(self.slow_tests, item)
+        else:
+            heapq.heappush(self.slow_tests, item)
+
+    def _writeElapsedTime(self, test):
+        color = get_elapsed_time_color(self.elapsed_time)
+        self.colorizer.write("  %.2f" % self.elapsed_time, color)
+
+    def _writeResult(self, test, long_result, color, short_result, success):
+        if self.showAll:
+            self.colorizer.write(long_result, color)
+            if self.show_elapsed and success:
+                self._writeElapsedTime(test)
+            self.stream.writeln()
+        elif self.dots:
+            self.stream.write(short_result)
+            self.stream.flush()
+
+    # NOTE(vish): copied from unittest with edit to add color
     def addSuccess(self, test):
         unittest.TestResult.addSuccess(self, test)
-        if self.showAll:
-            self.colorizer.write("OK", 'green')
-            self.stream.writeln()
-        elif self.dots:
-            self.stream.write('.')
-            self.stream.flush()
+        self._handleElapsedTime(test)
+        self._writeResult(test, 'OK', 'green', '.', True)
 
-    # NOTE(vish, tfukushima): copied from unittest with edit to add color
+    # NOTE(vish): copied from unittest with edit to add color
     def addFailure(self, test, err):
         unittest.TestResult.addFailure(self, test, err)
-        if self.showAll:
-            self.colorizer.write("FAIL", 'red')
-            self.stream.writeln()
-        elif self.dots:
-            self.stream.write('F')
-            self.stream.flush()
+        self._handleElapsedTime(test)
+        self._writeResult(test, 'FAIL', 'red', 'F', False)
 
-    # NOTE(vish, tfukushima): copied from unittest with edit to add color
+    # NOTE(vish): copied from nose with edit to add color
     def addError(self, test, err):
+        """Overrides normal addError to add support for
+        errorClasses. If the exception is a registered class, the
+        error will be added to the list for that class, not errors.
         """
-        Overrides normal addError to add support for errorClasses.
-        If the exception is a registered class, the error will be added
-        to the list for that class, not errors.
-        """
+        self._handleElapsedTime(test)
         stream = getattr(self, 'stream', None)
         ec, ev, tb = err
         try:
             exc_info = self._exc_info_to_string(err, test)
         except TypeError:
-            # This is for compatibility with Python 2.3.
+            # 2.3 compat
             exc_info = self._exc_info_to_string(err)
         for cls, (storage, label, isfail) in self.errorClasses.items():
             if result.isclass(ec) and issubclass(ec, cls):
                 if isfail:
-                    test.passwd = False
+                    test.passed = False
                 storage.append((test, exc_info))
                 # Might get patched into a streamless result
                 if stream is not None:
@@ -231,14 +283,11 @@ class HeatTestResult(result.TextTestResult):
         self.errors.append((test, exc_info))
         test.passed = False
         if stream is not None:
-            if self.showAll:
-                self.colorizer.write("ERROR", 'red')
-                self.stream.writeln()
-            elif self.dots:
-                stream.write('E')
+            self._writeResult(test, 'ERROR', 'red', 'E', False)
 
     def startTest(self, test):
         unittest.TestResult.startTest(self, test)
+        self.start_time = time.time()
         current_case = test.test.__class__.__name__
 
         if self.showAll:
@@ -252,27 +301,62 @@ class HeatTestResult(result.TextTestResult):
 
 
 class HeatTestRunner(core.TextTestRunner):
+    def __init__(self, *args, **kwargs):
+        self.show_elapsed = kwargs.pop('show_elapsed')
+        core.TextTestRunner.__init__(self, *args, **kwargs)
+
     def _makeResult(self):
         return HeatTestResult(self.stream,
                               self.descriptions,
                               self.verbosity,
-                              self.config)
+                              self.config,
+                              show_elapsed=self.show_elapsed)
+
+    def _writeSlowTests(self, result_):
+        # Pare out 'fast' tests
+        slow_tests = [item for item in result_.slow_tests
+                      if get_elapsed_time_color(item[0]) != 'green']
+        if slow_tests:
+            slow_total_time = sum(item[0] for item in slow_tests)
+            self.stream.writeln("Slowest %i tests took %.2f secs:"
+                                % (len(slow_tests), slow_total_time))
+            for elapsed_time, test in sorted(slow_tests, reverse=True):
+                time_str = "%.2f" % elapsed_time
+                self.stream.writeln("    %s %s" % (time_str.ljust(10), test))
+
+    def run(self, test):
+        result_ = core.TextTestRunner.run(self, test)
+        if self.show_elapsed:
+            self._writeSlowTests(result_)
+        return result_
 
 
-if __name__ == '__main__':
-    logger = logging.getLogger()
-    hdlr = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    hdlr.setFormatter(formatter)
-    logger.addHandler(hdlr)
-    logger.setLevel(logging.DEBUG)
+def run():
+    # This is a fix to allow the --hide-elapsed flag while accepting
+    # arbitrary nosetest flags as well
+    argv = [x for x in sys.argv if x != '--hide-elapsed']
+    hide_elapsed = argv != sys.argv
 
+    # If any argument looks like a test name but doesn't have "heat.tests" in
+    # front of it, automatically add that so we don't have to type as much
+    for i, arg in enumerate(argv):
+        if arg.startswith('test_'):
+            argv[i] = 'heat.tests.%s' % arg
+
+    testdir = os.path.abspath(os.path.join("heat", "tests"))
     c = config.Config(stream=sys.stdout,
                       env=os.environ,
                       verbosity=3,
+                      workingDir=testdir,
                       plugins=core.DefaultPluginManager())
 
     runner = HeatTestRunner(stream=c.stream,
                             verbosity=c.verbosity,
-                            config=c)
-    sys.exit(not core.run(config=c, testRunner=runner))
+                            config=c,
+                            show_elapsed=not hide_elapsed)
+    sys.exit(not core.run(config=c, testRunner=runner, argv=argv))
+
+
+if __name__ == '__main__':
+    eventlet.monkey_patch()
+    run()
