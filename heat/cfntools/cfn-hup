@@ -53,18 +53,22 @@ if args.verbose:
 else:
     logging.basicConfig(format=log_format, level=logging.INFO)
 
+main_conf_path = '/etc/cfn/cfn-hup.conf'
+try:
+    main_config_file = open(main_conf_path)
+except IOError as exc:
+    logging.error('Could not open main configuration at %s' % main_conf_path)
+    exit(1)
+
 config_files = []
-try:
-    config_files.append(open('/etc/cfn/cfn-hup.conf'))
-except IOError as exc:
-    logging.exception(exc)
+hooks_conf_path = '/etc/cfn/hooks.conf'
+if os.path.exists(hooks_conf_path):
+    try:
+        config_files.append(open(hooks_conf_path))
+    except IOError as exc:
+        logging.exception(exc)
 
-try:
-    config_files.append(open('/etc/cfn/hooks.conf'))
-except IOError as exc:
-    logging.exception(exc)
-
-if args.config_dir:
+if args.config_dir and os.path.exists(args.config_dir):
     try:
         for f in os.listdir(args.config_dir):
             config_files.append(open(os.path.join(args.config_dir, f)))
@@ -72,7 +76,12 @@ if args.config_dir:
     except OSError as exc:
         logging.exception(exc)
 
-mainconfig = HupConfig(config_files)
+if not config_files:
+    logging.error('No hooks found at %s or %s' % (hooks_conf_path,
+                                                  args.config_dir))
+    exit(1)
+
+mainconfig = HupConfig([main_config_file] + config_files)
 
 for r in mainconfig.unique_resources_get():
     print r
