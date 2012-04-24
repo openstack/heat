@@ -13,6 +13,32 @@ from nose import with_setup
 from heat.cfntools.cfn_helper import *
 
 
+@attr(tag=['cfn_helper'])
+@attr(speed='fast')
+def test_boolean():
+
+    assert(to_boolean('true'))
+    assert(to_boolean(True))
+    assert(to_boolean('TRUE'))
+    assert(to_boolean('True'))
+    assert(to_boolean('Yes'))
+    assert(to_boolean('YES'))
+    assert(to_boolean('yes'))
+    assert(to_boolean('1'))
+    assert(to_boolean(1))
+
+    assert(not to_boolean('tru'))
+    assert(not to_boolean(False))
+    assert(not to_boolean('False'))
+    assert(not to_boolean('FALSE'))
+    assert(not to_boolean('No'))
+    assert(not to_boolean('NO'))
+    assert(not to_boolean('no'))
+    assert(not to_boolean('0334'))
+    assert(not to_boolean(0))
+    assert(not to_boolean(56))
+
+
 @attr(tag=['cfn-hup'])
 @attr(speed='fast')
 def test_hup_conf1():
