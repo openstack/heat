@@ -13,7 +13,7 @@
 #    under the License.
 
 """Session Handling for SQLAlchemy backend."""
-
+import nova.exception
 import sqlalchemy.interfaces
 import sqlalchemy.orm
 from sqlalchemy.exc import DisconnectionError
