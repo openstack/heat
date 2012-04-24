@@ -77,11 +77,20 @@ if args.config_dir and os.path.exists(args.config_dir):
         logging.exception(exc)
 
 if not config_files:
-    logging.error('No hooks found at %s or %s' % (hooks_conf_path,
-                                                  args.config_dir))
+    logging.error('No hook files found at %s or %s' % (hooks_conf_path,
+                                                       args.config_dir))
     exit(1)
 
-mainconfig = HupConfig([main_config_file] + config_files)
+try:
+    mainconfig = HupConfig([main_config_file] + config_files)
+except Exception as ex:
+    logging.error('Cannot load configuration: %s' % str(ex))
+    exit(1)
+
+if not mainconfig.unique_resources_get():
+    logging.error('No hooks were found. Add some to %s or %s' % (hooks_conf_path,
+                                                                 args.config_dir))
+    exit(1)
 
 for r in mainconfig.unique_resources_get():
     print r

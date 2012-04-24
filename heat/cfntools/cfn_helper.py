@@ -50,21 +50,27 @@ class HupConfig(object):
         for fp in fp_list:
             self.config.readfp(fp)
 
+        self.load_main_section()
+
         self.hooks = {}
         for s in self.config.sections():
-            if s == 'main':
-                self.get_main_section()
-            else:
+            if s != 'main':
                 self.hooks[s] = Hook(s,
                                      self.config.get(s, 'triggers'),
                                      self.config.get(s, 'path'),
                                      self.config.get(s, 'runas'),
                                      self.config.get(s, 'action'))
 
-    def get_main_section(self):
+    def load_main_section(self):
         # required values
         self.stack = self.config.get('main', 'stack')
         self.credential_file = self.config.get('main', 'credential-file')
+        try:
+            with open(self.credential_file) as f:
+                self.credentials = f.read()
+        except:
+            raise Exception("invalid credentials file %s" %
+                            self.credential_file)
 
         # optional values
         try:
