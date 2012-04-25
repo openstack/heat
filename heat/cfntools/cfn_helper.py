@@ -533,7 +533,11 @@ class ServicesHandler(object):
             running = command.status == 0
             if ensure_running and not running:
                 logging.info("Restarting service %s" % service)
-                handler(self, service, "start")
+                start_cmd = handler(self, service, "start")
+                if start_cmd.status != 0:
+                    logging.warning('Service %s did not start. STDERR: %s' %
+                                    (service, start_cmd.stderr))
+                    return
                 for h in self.hooks:
                     self.hooks[h].event('service.restarted',
                                         service, self.resource)
