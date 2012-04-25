@@ -15,4 +15,4 @@ sqlalchemy-migrate>=0.7
 httplib2
 kombu
 iso8601>=0.1.4
-ython-novaclient
+python-novaclient
