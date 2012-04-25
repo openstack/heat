@@ -78,6 +78,60 @@ class ResourcesTest(unittest.TestCase):
         # this makes sure the auto increment worked on instance creation
         assert(instance.id > 0)
 
+    def test_initialize_instance_from_template_and_delete(self):
+        f = open('../../templates/WordPress_Single_Instance_gold.template')
+        t = json.loads(f.read())
+        f.close()
+
+        params = {}
+        parameters = {}
+        params['KeyStoneCreds'] =  None
+        t['Parameters']['KeyName']['Value'] = 'test'
+        stack = parser.Stack('test_stack', t, 0, params)
+ 
+        self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
+        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
+                                              stack).AndReturn(None)
+
+        self.m.StubOutWithMock(resources.Instance, 'nova')
+        resources.Instance.nova().AndReturn(self.fc)
+        resources.Instance.nova().AndReturn(self.fc)
+        resources.Instance.nova().AndReturn(self.fc)
+        resources.Instance.nova().AndReturn(self.fc)
+
+        #Need to find an easier way
+        userdata = t['Resources']['WebServer']['Properties']['UserData']
+
+        self.m.ReplayAll()
+        
+        t['Resources']['WebServer']['Properties']['ImageId']  = 'CentOS 5.2'
+        t['Resources']['WebServer']['Properties']['InstanceType'] = '256 MB Server'
+        instance = resources.Instance('test_resource_name',\
+                                      t['Resources']['WebServer'], stack)
+       
+        server_userdata = instance._build_userdata(json.dumps(userdata))
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(image=1, flavor=1, key_name='test',\
+                name='test_resource_name', security_groups=None,\
+                userdata=server_userdata).\
+                AndReturn(self.fc.servers.list()[1])
+        self.m.ReplayAll()
+        
+
+        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
+        instance.create()
+        
+        self.m.ReplayAll()
+        
+        instance.instance_id = 1234
+        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
+        instance.create()
+
+        instance.delete()
+        assert(instance.instance_id == None)
+        assert(instance.state == instance.DELETE_COMPLETE)
+
+
    # allows testing of the test directly, shown below
     if __name__ == '__main__':
         sys.argv.append(__file__)
