@@ -13,7 +13,6 @@
 #    under the License.
 
 """Session Handling for SQLAlchemy backend."""
-import nova.exception
 import sqlalchemy.interfaces
 import sqlalchemy.orm
 from sqlalchemy.exc import DisconnectionError
@@ -34,8 +33,6 @@ def get_session(autocommit=True, expire_on_commit=False):
         _MAKER = get_maker(_ENGINE, autocommit, expire_on_commit)
 
     session = _MAKER()
-    session.query = nova.exception.wrap_db_error(session.query)
-    session.flush = nova.exception.wrap_db_error(session.flush)
     return session
 
 
