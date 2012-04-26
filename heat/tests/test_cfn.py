@@ -121,12 +121,19 @@ class PopenMock:
         return ['', None]
 
 
-@with_setup(None, tearDown_metadata_files)
-@attr(tag=['unit', 'cfn-metadata'])
-@attr(speed='fast')
-def test_metadata_files():
+class MetadataTest(unittest.TestCase):
+    def setUp(self):
+        self.m = mox.Mox()
 
-    j = ''' {
+    def tearDown(self):
+        self.m.UnsetStubs()
+        shutil.rmtree('/tmp/_files_test_', ignore_errors=True)
+
+
+    @attr(tag=['unit', 'cfn-metadata'])
+    @attr(speed='fast')
+    def test_metadata_files(self):
+        j = ''' {
         "AWS::CloudFormation::Init" : {
           "config" : {
             "files" : {
@@ -158,16 +165,30 @@ def test_metadata_files():
     }
 '''
 
-    metadata = Metadata('tester',
-                        'ronald')
-    metadata.retrieve(j)
-    metadata.cfn_init()
+        import subprocess
+        import os
+        self.m.StubOutWithMock(subprocess, 'Popen')
+        self.m.StubOutWithMock(os, 'chown')
+        self.m.StubOutWithMock(os, 'chmod')
 
-    # mask out the file type
-    mask = int('007777', 8)
-    assert(os.stat('/tmp/_files_test_/node.json').st_mode & mask == 0600)
-    assert(os.stat('/tmp/_files_test_/epel.repo').st_mode & mask == 0644)
-    assert(os.stat('/tmp/_files_test_/_with/some/dirs/to/make/small.conf').st_mode & mask == 0777)
+        subprocess.Popen(['su', 'root', '-c',
+                          'wget -O /tmp/_files_test_/epel.repo \
+https://raw.github.com/heat-api/heat/master/README.rst'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE).AndReturn(PopenMock())
+        os.chown('/tmp/_files_test_/node.json', -1, -1)
+        os.chown('/tmp/_files_test_/epel.repo', -1, -1)
+        os.chmod('/tmp/_files_test_/node.json', 384)
+        os.chmod('/tmp/_files_test_/epel.repo', 420)
+        os.chown('/tmp/_files_test_/_with/some/dirs/to/make/small.conf', -1, -1)
+        os.chmod('/tmp/_files_test_/_with/some/dirs/to/make/small.conf', 511)
+        self.m.ReplayAll()
+
+        metadata = Metadata('tester', 'ronald')
+        metadata.retrieve(j)
+        metadata.cfn_init()
+        self.m.VerifyAll()
+
 
 class CommandRunnerTest(unittest.TestCase):
     def setUp(self):
