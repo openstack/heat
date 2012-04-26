@@ -8,7 +8,6 @@ class LazyPluggable(object):
 
     def __get_backend(self):
         if not self.__backend:
-            print self.__backends.values()
             backend_name = 'sqlalchemy'
             backend = self.__backends[backend_name]
             if isinstance(backend, tuple):
