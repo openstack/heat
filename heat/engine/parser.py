@@ -43,6 +43,10 @@ class Stack(object):
         self.name = stack_name
         self.parsed_template_id = 0
 
+        self.parms['AWS::StackName'] = {"Description": "AWS StackName",
+            "Type": "String",
+            "Value": stack_name}
+
         self.parms['AWS::Region'] = {"Description": "AWS Regions",
             "Type": "String",
             "Default": "ap-southeast-1",
