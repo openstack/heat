@@ -221,6 +221,7 @@ log files:
 
 import collections
 import copy
+import functools
 import optparse
 import os
 import string
@@ -318,11 +319,12 @@ class ConfigFileValueError(Error):
     pass
 
 
-def find_config_files(project=None, prog=None):
+def find_config_files(project=None, prog=None, extension='.conf'):
     """Return a list of default configuration files.
 
     :param project: an optional project name
     :param prog: the program name, defaulting to the basename of sys.argv[0]
+    :param extension: the type of the config file
 
     We default to two config files: [${project}.conf, ${prog}.conf]
 
@@ -355,16 +357,16 @@ def find_config_files(project=None, prog=None):
         ]
     cfg_dirs = filter(bool, cfg_dirs)
 
-    def search_dirs(dirs, basename):
+    def search_dirs(dirs, basename, extension):
         for d in dirs:
-            path = os.path.join(d, basename)
+            path = os.path.join(d, '%s%s' % (basename, extension))
             if os.path.exists(path):
                 return path
 
     config_files = []
     if project:
-        config_files.append(search_dirs(cfg_dirs, '%s.conf' % project))
-    config_files.append(search_dirs(cfg_dirs, '%s.conf' % prog))
+        config_files.append(search_dirs(cfg_dirs, project, extension))
+    config_files.append(search_dirs(cfg_dirs, prog, extension))
 
     return filter(bool, config_files)
 
@@ -821,6 +823,8 @@ class ConfigOpts(collections.Mapping):
                                               usage=self.usage)
         self._cparser = None
 
+        self.__cache = {}
+
         self.register_cli_opt(
             MultiStrOpt('config-file',
                         default=self.default_config_files,
@@ -829,6 +833,15 @@ class ConfigOpts(collections.Mapping):
                              'files can be specified, with values in later '
                              'files taking precedence. The default files used '
                              'are: %s' % (self.default_config_files, )))
+
+    def __clear_cache(f):
+        @functools.wraps(f)
+        def __inner(self, *args, **kwargs):
+            if kwargs.pop('clear_cache', True):
+                self.__cache.clear()
+            return f(self, *args, **kwargs)
+
+        return __inner
 
     def __call__(self, args=None):
         """Parse command line arguments and config files.
@@ -864,7 +877,7 @@ class ConfigOpts(collections.Mapping):
         :returns: the option value (after string subsititution) or a GroupAttr
         :raises: NoSuchOptError,ConfigFileValueError,TemplateSubstitutionError
         """
-        return self._substitute(self._get(name))
+        return self._get(name)
 
     def __getitem__(self, key):
         """Look up an option value and perform string substitution."""
@@ -883,12 +896,14 @@ class ConfigOpts(collections.Mapping):
         """Return the number of options and option groups."""
         return len(self._opts) + len(self._groups)
 
+    @__clear_cache
     def reset(self):
         """Reset the state of the object to before it was called."""
         self._args = None
         self._cli_values = None
         self._cparser = None
 
+    @__clear_cache
     def register_opt(self, opt, group=None):
         """Register an option schema.
 
@@ -911,11 +926,13 @@ class ConfigOpts(collections.Mapping):
 
         return True
 
+    @__clear_cache
     def register_opts(self, opts, group=None):
         """Register multiple option schemas at once."""
         for opt in opts:
-            self.register_opt(opt, group)
+            self.register_opt(opt, group, clear_cache=False)
 
+    @__clear_cache
     def register_cli_opt(self, opt, group=None):
         """Register a CLI option schema.
 
@@ -931,7 +948,7 @@ class ConfigOpts(collections.Mapping):
         if self._args is not None:
             raise ArgsAlreadyParsedError("cannot register CLI option")
 
-        if not self.register_opt(opt, group):
+        if not self.register_opt(opt, group, clear_cache=False):
             return False
 
         if group is not None:
@@ -941,10 +958,11 @@ class ConfigOpts(collections.Mapping):
 
         return True
 
+    @__clear_cache
     def register_cli_opts(self, opts, group=None):
         """Register multiple CLI option schemas at once."""
         for opt in opts:
-            self.register_cli_opt(opt, group)
+            self.register_cli_opt(opt, group, clear_cache=False)
 
     def register_group(self, group):
         """Register an option group.
@@ -959,6 +977,7 @@ class ConfigOpts(collections.Mapping):
 
         self._groups[group.name] = copy.copy(group)
 
+    @__clear_cache
     def set_override(self, name, override, group=None):
         """Override an opt value.
 
@@ -973,6 +992,7 @@ class ConfigOpts(collections.Mapping):
         opt_info = self._get_opt_info(name, group)
         opt_info['override'] = override
 
+    @__clear_cache
     def set_default(self, name, default, group=None):
         """Override an opt's default value.
 
@@ -1056,6 +1076,18 @@ class ConfigOpts(collections.Mapping):
         self._oparser.print_help(file)
 
     def _get(self, name, group=None):
+        if isinstance(group, OptGroup):
+            key = (group.name, name)
+        else:
+            key = (group, name)
+        try:
+            return self.__cache[key]
+        except KeyError:
+            value = self._substitute(self._do_get(name, group))
+            self.__cache[key] = value
+            return value
+
+    def _do_get(self, name, group=None):
         """Look up an option value.
 
         :param name: the opt name (or 'dest', more precisely)
@@ -1196,7 +1228,7 @@ class ConfigOpts(collections.Mapping):
 
         def __getattr__(self, name):
             """Look up an option value and perform template substitution."""
-            return self.conf._substitute(self.conf._get(name, self.group))
+            return self.conf._get(name, self.group)
 
         def __getitem__(self, key):
             """Look up an option value and perform string substitution."""
