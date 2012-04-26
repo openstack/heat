@@ -6,4 +6,5 @@ heat.egg-info
 heat/vcsversion.py
 tags
 *.log
-heat/tests/heat-test.db
+heat-test.db
+.venv
