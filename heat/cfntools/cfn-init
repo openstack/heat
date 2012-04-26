@@ -42,8 +42,13 @@ if os.path.exists('/opt/aws/bin'):
 else:
     from heat.cfntools.cfn_helper import *
 
+logger = logging.getLogger('cfn-init')
+log_file_name = "/var/log/cfn-init.log"
 log_format = '%(levelname)s [%(asctime)s] %(message)s'
-logging.basicConfig(format=log_format, level=logging.INFO)
+file_handler = logging.FileHandler(log_file_name)
+file_handler.setFormatter(logging.Formatter(log_format))
+logger.getLogger().addHandler(file_handler)
+logger.basicConfig(format=log_format, level=logging.DEBUG)
 
 description = " "
 parser = argparse.ArgumentParser(description=description)
@@ -79,5 +84,5 @@ metadata.retrieve()
 try:
     metadata.cfn_init()
 except Exception as e:
-    logging.exception("Error processing metadata")
+    logger.exception("Error processing metadata")
     exit(1)
