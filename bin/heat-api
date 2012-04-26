@@ -33,11 +33,13 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 gettext.install('heat', unicode=1)
 
+import logging
 from heat import rpc
 from heat.common import config
 from heat.common import wsgi
 from paste import httpserver
 
+LOG = logging.getLogger('heat.api')
 
 if __name__ == '__main__':
     try:
@@ -45,11 +47,12 @@ if __name__ == '__main__':
         conf()
         config.FLAGS = conf
         rpc.configure(conf)
+        config.setup_logging(conf)
 
         app = config.load_paste_app(conf)
 
         port = config.DEFAULT_PORT
-        print 'Starting Heat API on port %s' % port
+        LOG.info(('Starting Heat API on port %s') % port)
         httpserver.serve(app, port=port)
     except RuntimeError, e:
         sys.exit("ERROR: %s" % e)
