@@ -65,6 +65,11 @@
       "Description" : "Distribution of choice",
       "Type": "String",
       "AllowedValues" : [ "F16", "F17", "U10", "RHEL-6.1", "RHEL-6.2", "RHEL-6.3" ]
+    },
+    "HupPollInterval": {
+      "Default": "1",
+      "Description" : "Interval for cfn-hup",
+      "Type": "String"
     }
   },
 
@@ -97,8 +102,63 @@
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "config" : {
+            "files" : {
+              "/etc/cfn/cfn-credentials" : {
+                "content" : { "Fn::Join" : ["", [
+                  "AWSAccessKeyId=GobbleGobble\n",
+                  "AWSSecretKey=Fn_GetAtt_WebServerKeys_SecretAccessKey\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackName" }, "\n",
+                  "credential-file=/etc/cfn/cfn-credentials\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n",
+                  "interval=", { "Ref" : "HupPollInterval" }, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+
+              "/etc/cfn/notify-on-httpd-restarted" : {
+                "content" : "logger -t cfn-event 'http got restarted'\n",
+                "mode"    : "000500",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+
+              "/tmp/cfn-hup-crontab.txt" : {
+                "content" : { "Fn::Join" : ["", [
+                "MAIL=\n",
+                "* * * * * /opt/aws/bin/cfn-hup -f\n"
+                ]]},
+                "mode"    : "000600",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+
+              "/etc/cfn/hooks.conf" : {
+                "content": { "Fn::Join" : ["", [
+                  "[cfn-http-restarted]\n",
+                  "triggers=service.restarted\n",
+                  "path=Resources.WikiDatabase.Metadata\n",
+                  "action=/etc/cfn/notify-on-httpd-restarted\n",
+                  "runas=root\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              }
+            },
             "packages" : {
               "yum" : {
+                "cronie"       : [],
                 "mysql"        : [],
                 "mysql-server" : [],
                 "httpd"        : [],
@@ -108,7 +168,8 @@
             "services" : {
               "systemd" : {
                 "mysqld"   : { "enabled" : "true", "ensureRunning" : "true" },
-                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" }
+                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" },
+                "crond"    : { "enabled" : "true", "ensureRunning" : "true" }
               }
             }
           }
@@ -131,7 +192,10 @@
           "FLUSH PRIVILEGES;\n",
           "EXIT\n",
           "EOF\n",
-          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n"
+          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n",
+
+          "# install cfn-hup crontab\n",
+          "crontab /tmp/cfn-hup-crontab.txt\n"
         ]]}}
       }
     }
