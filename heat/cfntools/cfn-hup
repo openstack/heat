@@ -55,9 +55,9 @@ file_handler.setFormatter(logging.Formatter(log_format))
 logging.getLogger().addHandler(file_handler)
 
 if args.verbose:
-    logger.basicConfig(format=log_format, level=logging.DEBUG)
+    logging.basicConfig(format=log_format, level=logging.DEBUG)
 else:
-    logger.basicConfig(format=log_format, level=logging.INFO)
+    logging.basicConfig(format=log_format, level=logging.INFO)
 
 main_conf_path = '/etc/cfn/cfn-hup.conf'
 try:

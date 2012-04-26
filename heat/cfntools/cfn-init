@@ -47,8 +47,8 @@ log_file_name = "/var/log/cfn-init.log"
 log_format = '%(levelname)s [%(asctime)s] %(message)s'
 file_handler = logging.FileHandler(log_file_name)
 file_handler.setFormatter(logging.Formatter(log_format))
-logger.getLogger().addHandler(file_handler)
-logger.basicConfig(format=log_format, level=logging.DEBUG)
+logging.getLogger().addHandler(file_handler)
+logging.basicConfig(format=log_format, level=logging.DEBUG)
 
 description = " "
 parser = argparse.ArgumentParser(description=description)
