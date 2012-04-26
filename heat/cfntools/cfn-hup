@@ -15,3 +15,100 @@
 """
 Implements cfn-hup CloudFormation functionality
 """
+import argparse
+import io
+import logging
+import os
+import os.path
+import sys
+
+
+if os.path.exists('/opt/aws/bin'):
+    sys.path.insert(0, '/opt/aws/bin')
+    from cfn_helper import *
+else:
+    from heat.cfntools.cfn_helper import *
+
+description = " "
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('-c', '--config',
+        dest="config_dir",
+        help="Hook Config Directory",
+        required=False,
+        default='/etc/cfn/hooks.d')
+parser.add_argument('-f', '--no-daemon',
+        dest="no_deamon",
+        action="store_true",
+        help="Do not run as a deamon",
+        required=False)
+parser.add_argument('-v', '--verbose',
+        action="store_true",
+        dest="verbose",
+        help="Verbose logging",
+        required=False)
+args = parser.parse_args()
+# FIXME: implement real arg
+
+logger = logging.getLogger('cfn-hup')
+log_file_name = "/var/log/cfn-hup.log"
+log_format = '%(levelname)s [%(asctime)s] %(message)s'
+file_handler = logging.FileHandler(log_file_name)
+file_handler.setFormatter(logging.Formatter(log_format))
+logging.getLogger().addHandler(file_handler)
+
+if args.verbose:
+    logging.basicConfig(format=log_format, level=logging.DEBUG)
+else:
+    logging.basicConfig(format=log_format, level=logging.INFO)
+
+main_conf_path = '/etc/cfn/cfn-hup.conf'
+try:
+    main_config_file = open(main_conf_path)
+except IOError as exc:
+    logger.error('Could not open main configuration at %s' % main_conf_path)
+    exit(1)
+
+config_files = []
+hooks_conf_path = '/etc/cfn/hooks.conf'
+if os.path.exists(hooks_conf_path):
+    try:
+        config_files.append(open(hooks_conf_path))
+    except IOError as exc:
+        logger.exception(exc)
+
+if args.config_dir and os.path.exists(args.config_dir):
+    try:
+        for f in os.listdir(args.config_dir):
+            config_files.append(open(os.path.join(args.config_dir, f)))
+
+    except OSError as exc:
+        logger.exception(exc)
+
+if not config_files:
+    logger.error('No hook files found at %s or %s' % (hooks_conf_path,
+                                                       args.config_dir))
+    exit(1)
+
+try:
+    mainconfig = HupConfig([main_config_file] + config_files)
+except Exception as ex:
+    logger.error('Cannot load configuration: %s' % str(ex))
+    exit(1)
+
+if not mainconfig.unique_resources_get():
+    logger.error('No hooks were found. Add some to %s or %s' % (hooks_conf_path,
+                                                                 args.config_dir))
+    exit(1)
+
+for r in mainconfig.unique_resources_get():
+    print r
+    metadata = Metadata(mainconfig.stack,
+                        r,
+                        credentials_file=mainconfig.credential_file,
+                        region=mainconfig.region)
+    metadata.retrieve()
+    try:
+        metadata.cfn_hup(mainconfig.hooks)
+    except Exception as e:
+        logger.exception("Error processing metadata")
+        exit(1)
