@@ -127,15 +127,19 @@
               },
 
               "/etc/cfn/notify-on-httpd-restarted" : {
-                "content" : "logger -t cfn-event 'http got restarted'\n",
-                "mode"    : "000500",
+                "content" : { "Fn::Join" : ["", [
+		"#!/bin/sh\n",
+		"logger -t cfn-event 'http got restarted'\n"
+                ]]},
+                "mode"    : "000700",
                 "owner"   : "root",
                 "group"   : "root"
               },
 
               "/tmp/cfn-hup-crontab.txt" : {
                 "content" : { "Fn::Join" : ["", [
-                "MAIL=\n",
+                "MAIL=\"\"\n",
+                "\n",
                 "* * * * * /opt/aws/bin/cfn-hup -f\n"
                 ]]},
                 "mode"    : "000600",
