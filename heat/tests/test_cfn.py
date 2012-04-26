@@ -40,45 +40,56 @@ def test_boolean():
     assert(not to_boolean(56))
 
 
+def setUp_credential_file():
+    f = open('/tmp/incredible', 'w')
+    f.write('junk, just junk')
+    f.close()
+
+def tearDown_credential_file():
+    shutil.rmtree('/tmp/incredible', ignore_errors=True)
+
+@with_setup(setUp_credential_file, tearDown_credential_file)
 @attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
 def test_hup_conf1():
     good= """
 [main]
 stack=stack-test
-credential-file=/path/to/creds_file
+credential-file=/tmp/incredible
 region=unit-test-a
 interval=3
 """
     c = HupConfig([io.BytesIO(good)])
     assert(c.stack == 'stack-test')
-    assert(c.credential_file == '/path/to/creds_file')
+    assert(c.credential_file == '/tmp/incredible')
     assert(c.region == 'unit-test-a')
     assert(c.interval == 3)
 
 
+@with_setup(setUp_credential_file, tearDown_credential_file)
 @attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
 def test_hup_default():
     good= """
 [main]
 stack=stack-testr
-credential-file=/path/to/creds_file
+credential-file=/tmp/incredible
 """
     c = HupConfig([io.BytesIO(good)])
     assert(c.stack == 'stack-testr')
-    assert(c.credential_file == '/path/to/creds_file')
+    assert(c.credential_file == '/tmp/incredible')
     assert(c.region == 'nova')
     assert(c.interval == 10)
 
 
+@with_setup(setUp_credential_file, tearDown_credential_file)
 @attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
 def test_hup_hook():
     good= """
 [main]
 stack=stackname_is_fred
-credential-file=/path/to/creds_file
+credential-file=/tmp/incredible
 
 [bla]
 triggers=post.update
@@ -88,7 +99,7 @@ runas=root
 """
     c = HupConfig([io.BytesIO(good)])
     assert(c.stack == 'stackname_is_fred')
-    assert(c.credential_file == '/path/to/creds_file')
+    assert(c.credential_file == '/tmp/incredible')
     assert(c.region == 'nova')
     assert(c.interval == 10)
 
