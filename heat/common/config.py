@@ -233,6 +233,9 @@ def setup_logging(conf):
     else:
         root_logger.setLevel(logging.WARNING)
 
+    # quiet down the qpid logging
+    root_logger.getChild('qpid.messaging').setLevel(logging.INFO)
+
     formatter = logging.Formatter(conf.log_format, conf.log_date_format)
 
     if conf.use_syslog:
