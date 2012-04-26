@@ -544,7 +544,8 @@ class Instance(Resource):
 
         msg = MIMEText(userdata, _subtype='x-shellscript')
         msg.add_header('Content-Disposition', 'attachment', filename='startup')
-        return mime_blob.attach(msg)
+        mime_blob.attach(msg)
+        return mime_blob.as_string()
 
     def create(self):
         def _null_callback(p, n, out):
@@ -599,7 +600,7 @@ class Instance(Resource):
             if o.name == flavor:
                 flavor_id = o.id
 
-        server_userdata = self._build_userdata(userdata) 
+        server_userdata = self._build_userdata(userdata)
         server = self.nova().servers.create(name=self.name, image=image_id,
                                             flavor=flavor_id,
                                             key_name=key_name,
