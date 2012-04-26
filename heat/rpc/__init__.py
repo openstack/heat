@@ -17,9 +17,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
 from heat.openstack.common import cfg
 from heat.openstack.common import utils
 
+LOG = logging.getLogger(__name__)
 
 def create_connection(new=True):
     """Create a connection to the message bus used for rpc.
@@ -187,7 +189,8 @@ _RPCIMPL = None
 
 def configure(conf):
     """Delay import of rpc_backend until FLAGS are loaded."""
-    print 'configuring rpc %s' % conf.rpc_backend
+    LOG.debug(_("Configuring RPC %s") % conf.rpc_backend)
+
     global _RPCIMPL
     _RPCIMPL = utils.import_object(conf.rpc_backend)
 
@@ -196,6 +199,6 @@ def _get_impl():
     """Delay import of rpc_backend until FLAGS are loaded."""
     global _RPCIMPL
     if _RPCIMPL is None:
-        print 'rpc not configured'
+        LOG.error(_("RPC not configured."))
 
     return _RPCIMPL
