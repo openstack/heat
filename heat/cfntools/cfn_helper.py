@@ -30,9 +30,13 @@ Not implemented yet:
 """
 
 import ConfigParser
+import errno
+import grp
 import json
 import logging
 import os
+import os.path
+import pwd
 import rpmUtils.updates as rpmupdates
 import rpmUtils.miscutils as rpmutils
 import subprocess
@@ -451,6 +455,8 @@ class PackagesHandler(object):
           * apt
           * yum
         """
+        if not self._packages:
+            return
         packages = sorted(self._packages.iteritems(), PackagesHandler._pkgsort)
 
         for manager, package_entries in packages:
@@ -459,6 +465,58 @@ class PackagesHandler(object):
                 logging.warn("Skipping invalid package type: %s" % manager)
             else:
                 handler(self, package_entries)
+
+class FilesHandler(object):
+    def __init__(self, files):
+        self._files = files
+
+    def apply_files(self):
+        if not self._files:
+            return
+        for fdest, meta in self._files.iteritems():
+            dest = fdest.encode()
+            try:
+                os.makedirs(os.path.dirname(dest))
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    logging.debug(str(e))
+                else:
+                    logging.exception(e)
+
+            if 'content' in meta:
+                if isinstance(meta['content'], basestring):
+                    f = open(dest, 'w')
+                    f.write(meta['content'])
+                    f.close()
+                else:
+                    f = open(dest, 'w')
+                    f.write(json.dumps(meta['content'], indent=4))
+                    f.close()
+            elif 'source' in meta:
+                CommandRunner('wget -O %s %s' % (dest, meta['source'])).run()
+            else:
+                logging.error('%s %s' % (dest, str(meta)))
+                continue
+
+            uid = -1
+            gid = -1
+            if 'owner' in meta:
+                try:
+                    user_info = pwd.getpwnam(meta['owner'])
+                    uid = user_info[2]
+                except KeyError as ex:
+                    pass
+
+            if 'group' in meta:
+                try:
+                    group_info = grp.getgrnam(meta['group'])
+                    gid = group_info[2]
+                except KeyError as ex:
+                    pass
+
+            os.chown(dest, uid, gid)
+            if 'mode' in meta:
+                os.chmod(dest, int(meta['mode'], 8))
 
 
 class ServicesHandler(object):
@@ -566,6 +624,8 @@ class ServicesHandler(object):
         """
         Starts, stops, enables, disables services
         """
+        if not self._services:
+            return
         for manager, service_entries in self._services.iteritems():
             handler = self._service_handler(manager)
             if not handler:
@@ -577,6 +637,8 @@ class ServicesHandler(object):
         """
         Restarts failed services, and runs hooks.
         """
+        if not self._services:
+            return
         for manager, service_entries in self._services.iteritems():
             handler = self._service_handler(manager)
             if not handler:
@@ -603,13 +665,17 @@ class Metadata(object):
         self._is_local_metadata = True
         self._metadata = None
 
-    def retrieve(self):
+    def retrieve(self, meta_str=None):
         """
-        Read the metadata from the given filename and return the string
+        Read the metadata from the given filename
         """
-        f = open("/var/lib/cloud/data/cfn-init-data")
-        self._data = f.read()
-        f.close()
+        if meta_str:
+            self._data = meta_str
+        else:
+            f = open("/var/lib/cloud/data/cfn-init-data")
+            self._data = f.read()
+            f.close()
+
         if isinstance(self._data, str):
             self._metadata = json.loads(self._data)
         else:
@@ -633,7 +699,7 @@ class Metadata(object):
           * sources (not yet)
           * users (not yet)
           * groups (not yet)
-          * files (not yet)
+          * files
           * commands (not yet)
           * services
         """
@@ -643,7 +709,7 @@ class Metadata(object):
         #FIXME: handle sources
         #FIXME: handle users
         #FIXME: handle groups
-        #FIXME: handle files
+        FilesHandler(self._config.get("files")).apply_files()
         #FIXME: handle commands
         ServicesHandler(self._config.get("services")).apply_services()
 

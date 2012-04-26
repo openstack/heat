@@ -9,6 +9,7 @@ import sys
 import nose
 from nose.plugins.attrib import attr
 from nose import with_setup
+import shutil
 
 from heat.cfntools.cfn_helper import *
 
@@ -96,6 +97,58 @@ runas=root
     assert(c.hooks['bla'].action == 'systemctl reload httpd.service')
     assert(c.hooks['bla'].runas == 'root')
 
+
+def tearDown_metadata_files():
+    shutil.rmtree('/tmp/_files_test_', ignore_errors=True)
+
+
+@with_setup(None, tearDown_metadata_files)
+@attr(tag=['unit', 'cfn-metadata'])
+@attr(speed='fast')
+def test_metadata_files():
+
+    j = ''' {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "files" : {
+              "/tmp/_files_test_/epel.repo" : {
+                "source" : "https://raw.github.com/heat-api/heat/master/README.rst",
+                "mode"   : "000644"
+              },
+              "/tmp/_files_test_/_with/some/dirs/to/make/small.conf" : {
+                "content" : "not much really",
+                "mode"    : "000777"
+              },
+              "/tmp/_files_test_/node.json": {
+                  "content": {
+                      "myapp": {
+                          "db": {
+                              "database": "RefDBName",
+                              "user": "RefDBUser",
+                              "host": "Fn::GetAttDBInstance.Endpoint.Address",
+                              "password": "RefDBPassword"
+                          }
+                      },
+                      "run_list": ["recipe[wordpress]", "bla"]
+                  },
+                  "mode": "000600"
+              }
+            }
+          }
+        }
+    }
+'''
+
+    metadata = Metadata('tester',
+                        'ronald')
+    metadata.retrieve(j)
+    metadata.cfn_init()
+
+    # mask out the file type
+    mask = int('007777', 8)
+    assert(os.stat('/tmp/_files_test_/node.json').st_mode & mask == 0600)
+    assert(os.stat('/tmp/_files_test_/epel.repo').st_mode & mask == 0644)
+    assert(os.stat('/tmp/_files_test_/_with/some/dirs/to/make/small.conf').st_mode & mask == 0777)
 
 if __name__ == '__main__':
     sys.argv.append(__file__)
