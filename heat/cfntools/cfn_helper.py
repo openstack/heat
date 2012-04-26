@@ -159,7 +159,7 @@ class CommandRunner(object):
             self
         """
         logging.debug("Running command: %s" % self._command)
-        cmd = self._command.split()
+        cmd = ['su', user, '-c', self._command]
         subproc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         output = subproc.communicate()

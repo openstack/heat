@@ -6,9 +6,11 @@
 
 import io
 import sys
+import mox
 import nose
 from nose.plugins.attrib import attr
 from nose import with_setup
+import unittest
 import shutil
 
 from heat.cfntools.cfn_helper import *
@@ -113,6 +115,12 @@ def tearDown_metadata_files():
     shutil.rmtree('/tmp/_files_test_', ignore_errors=True)
 
 
+class PopenMock:
+    def communicate(self):
+        self.returncode = 0
+        return ['', None]
+
+
 @with_setup(None, tearDown_metadata_files)
 @attr(tag=['unit', 'cfn-metadata'])
 @attr(speed='fast')
@@ -160,6 +168,40 @@ def test_metadata_files():
     assert(os.stat('/tmp/_files_test_/node.json').st_mode & mask == 0600)
     assert(os.stat('/tmp/_files_test_/epel.repo').st_mode & mask == 0644)
     assert(os.stat('/tmp/_files_test_/_with/some/dirs/to/make/small.conf').st_mode & mask == 0777)
+
+class CommandRunnerTest(unittest.TestCase):
+    def setUp(self):
+        self.m = mox.Mox()
+
+    def tearDown(self):
+        self.m.UnsetStubs()
+
+    @attr(tag=['unit', 'cfn-helper'])
+    @attr(speed='fast')
+    def test_runas(self):
+        import subprocess
+        self.m.StubOutWithMock(subprocess, 'Popen')
+        subprocess.Popen(['su', 'user', '-c', 'some command'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE).AndReturn(PopenMock())
+
+        self.m.ReplayAll()
+        CommandRunner('some command').run('user')
+        self.m.VerifyAll()
+
+    @attr(tag=['unit', 'cfn-helper'])
+    @attr(speed='fast')
+    def test_default_runas(self):
+        import subprocess
+        self.m.StubOutWithMock(subprocess, 'Popen')
+        subprocess.Popen(['su', 'root', '-c', 'some command'],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE).AndReturn(PopenMock())
+
+        self.m.ReplayAll()
+        CommandRunner('some command').run()
+        self.m.VerifyAll()
+
 
 if __name__ == '__main__':
     sys.argv.append(__file__)
