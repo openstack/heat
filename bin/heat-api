@@ -16,7 +16,7 @@
 """
 Heat API Server.  This implements an approximation of the Amazon
 CloudFormation API and translates it into a native representation.  It then
-calls the heat-engine via REST to implement them.
+calls the heat-engine via AMQP RPC to implement them.
 """
 
 import gettext
