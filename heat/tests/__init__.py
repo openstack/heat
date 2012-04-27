@@ -24,11 +24,13 @@ from heat.db.sqlalchemy.session import get_engine
 
 _DB = None
 
+
 def reset_db():
     engine = get_engine()
     engine.dispose()
     conn = engine.connect()
     conn.connection.executescript(_DB)
+
 
 def setup():
     import mox  # Fail fast if you don't have mox. Workaround for bug 810424

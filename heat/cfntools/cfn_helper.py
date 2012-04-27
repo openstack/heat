@@ -291,7 +291,8 @@ class RpmHelper(object):
                         * packages is a list of:
                           - pkg name (httpd), or
                           - pkg name with version spec (httpd-2.2.22), or
-                          - pkg name with version-release spec (httpd-2.2.22-1.fc16)
+                          - pkg name with version-release spec
+                            (httpd-2.2.22-1.fc16)
         """
         if rpms:
             cmd = "rpm -U --force --nosignature "
@@ -319,7 +320,8 @@ class RpmHelper(object):
                         * use Yum to downgrade packages
                         * packages is a list of:
                           - pkg name with version spec (httpd-2.2.22), or
-                          - pkg name with version-release spec (httpd-2.2.22-1.fc16)
+                          - pkg name with version-release spec
+                            (httpd-2.2.22-1.fc16)
         """
         if rpms:
             cls.install(packages)
@@ -364,7 +366,8 @@ class PackagesHandler(object):
 
     def _handle_yum_packages(self, packages):
         """
-        Handle installation, upgrade, or downgrade of a set of packages via yum.
+        Handle installation, upgrade, or downgrade of a set of
+        packages via yum.
 
         Arguments:
         packages -- a package entries map of the form:
@@ -395,7 +398,8 @@ class PackagesHandler(object):
                 # FIXME:print non-error, but skipping pkg
                 pass
             elif not RpmHelper.yum_package_available(pkg):
-                logging.warn("Skipping package '%s'. Not available via yum" % pkg)
+                logging.warn("Skipping package '%s'. Not available via yum" % \
+                             pkg)
             elif not ver:
                 installs.append(pkg)
             else:
@@ -412,7 +416,8 @@ class PackagesHandler(object):
 
     def _handle_rpm_packages(sef, packages):
         """
-        Handle installation, upgrade, or downgrade of a set of packages via rpm.
+        Handle installation, upgrade, or downgrade of a set of
+        packages via rpm.
 
         Arguments:
         packages -- a package entries map of the form:
@@ -465,6 +470,7 @@ class PackagesHandler(object):
                 logging.warn("Skipping invalid package type: %s" % manager)
             else:
                 handler(self, package_entries)
+
 
 class FilesHandler(object):
     def __init__(self, files):
@@ -720,9 +726,9 @@ class Metadata(object):
         """
         Process the resource metadata
         """
-        # FIXME: when config sets are implemented, this should select the correct
-        # config set from the metadata, and send each config in the config set to
-        # process_config
+        # FIXME: when config sets are implemented, this should select the
+        # correct config set from the metadata, and send each config in the
+        # config set to process_config
         if not self._is_valid_metadata():
             raise Exception("invalid metadata")
         else:

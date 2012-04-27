@@ -23,6 +23,7 @@ from heat.openstack.common import importutils
 
 LOG = logging.getLogger(__name__)
 
+
 def create_connection(new=True):
     """Create a connection to the message bus used for rpc.
 

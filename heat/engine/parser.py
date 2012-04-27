@@ -163,7 +163,6 @@ class Stack(object):
         self.t['stack_status'] = new_status
         self.update_parsed_template()
 
-
     def create_blocking(self):
         '''
         create all the resources in the order specified by get_create_order

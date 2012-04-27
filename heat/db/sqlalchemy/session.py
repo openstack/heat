@@ -26,6 +26,7 @@ _MAKER = None
 class Error(Exception):
     pass
 
+
 class DBError(Error):
     """Wraps an implementation specific exception."""
     def __init__(self, inner_exception=None):
@@ -44,6 +45,7 @@ def _wrap_db_error(f):
             raise DBError(e)
     _wrap.func_name = f.func_name
     return _wrap
+
 
 def get_session(autocommit=True, expire_on_commit=False):
     """Return a SQLAlchemy session."""

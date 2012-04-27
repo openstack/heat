@@ -47,14 +47,16 @@ def setUp_credential_file():
     f.write('junk, just junk')
     f.close()
 
+
 def tearDown_credential_file():
     shutil.rmtree('/tmp/incredible', ignore_errors=True)
+
 
 @with_setup(setUp_credential_file, tearDown_credential_file)
 @attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
 def test_hup_conf1():
-    good= """
+    good = """
 [main]
 stack=stack-test
 credential-file=/tmp/incredible
@@ -72,7 +74,7 @@ interval=3
 @attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
 def test_hup_default():
-    good= """
+    good = """
 [main]
 stack=stack-testr
 credential-file=/tmp/incredible
@@ -88,7 +90,7 @@ credential-file=/tmp/incredible
 @attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
 def test_hup_hook():
-    good= """
+    good = """
 [main]
 stack=stackname_is_fred
 credential-file=/tmp/incredible
@@ -129,7 +131,6 @@ class MetadataTest(unittest.TestCase):
         self.m.UnsetStubs()
         shutil.rmtree('/tmp/_files_test_', ignore_errors=True)
 
-
     @attr(tag=['unit', 'cfn-metadata'])
     @attr(speed='fast')
     def test_metadata_files(self):
@@ -138,7 +139,7 @@ class MetadataTest(unittest.TestCase):
           "config" : {
             "files" : {
               "/tmp/_files_test_/epel.repo" : {
-                "source" : "https://raw.github.com/heat-api/heat/master/README.rst",
+          "source" : "https://raw.github.com/heat-api/heat/master/README.rst",
                 "mode"   : "000644"
               },
               "/tmp/_files_test_/_with/some/dirs/to/make/small.conf" : {
@@ -180,7 +181,8 @@ https://raw.github.com/heat-api/heat/master/README.rst'],
         os.chown('/tmp/_files_test_/epel.repo', -1, -1)
         os.chmod('/tmp/_files_test_/node.json', 384)
         os.chmod('/tmp/_files_test_/epel.repo', 420)
-        os.chown('/tmp/_files_test_/_with/some/dirs/to/make/small.conf', -1, -1)
+        os.chown('/tmp/_files_test_/_with/some/dirs/to/make/small.conf',
+                 -1, -1)
         os.chmod('/tmp/_files_test_/_with/some/dirs/to/make/small.conf', 511)
         self.m.ReplayAll()
 

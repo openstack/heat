@@ -43,12 +43,13 @@ db_opts = [
 #conf.db_backend = 'heat.db.sqlalchemy.api'
 IMPL = heat.utils.LazyPluggable('db_backend',
                            sqlalchemy='heat.db.sqlalchemy.api')
+
+
 def configure(conf):
     global SQL_CONNECTION
     global SQL_IDLE_TIMEOUT
     SQL_CONNECTION = conf.sql_connection
     SQL_IDLE_TIMEOUT = conf.sql_idle_timeout
-
 
 
 def raw_template_get(context, template_id):

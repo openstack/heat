@@ -23,6 +23,7 @@ from migrate.versioning import util as migrate_util
 
 _REPOSITORY = None
 
+
 @migrate_util.decorator
 def patched_with_engine(f, *a, **kw):
     url = a[0]
@@ -55,7 +56,7 @@ except ImportError:
         from migrate import exceptions as versioning_exceptions
     except ImportError:
         sys.exit(_("python-migrate is not installed. Exiting."))
-    
+
 #_REPOSITORY = None
 
 
@@ -86,7 +87,7 @@ def db_version():
         engine = get_engine()
         meta.reflect(bind=engine)
         try:
-            for table in ('stack', 'resource', 'event', 
+            for table in ('stack', 'resource', 'event',
                             'parsed_template', 'raw_template'):
                 assert table in meta.tables
             return db_version_control(1)
