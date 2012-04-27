@@ -16,3 +16,10 @@ httplib2
 kombu
 iso8601>=0.1.4
 python-novaclient
+glance
+
+# Note you will need gcc buildtools installed and must
+# have installed libxml headers for lxml to be successfully
+# installed using pip, therefore you will need to install the
+# libxml2-dev(el) and libxslt-dev(el) packages.
+lxml

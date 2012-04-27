@@ -17,7 +17,7 @@ import functools
 import os
 import sys
 import base64
-import libxml2
+from lxml import etree
 import re
 import logging
 
@@ -59,7 +59,7 @@ def catch_error(action):
 
 
 @catch_error('jeos_create')
-def jeos_create(options, arguments):
+def jeos_create(options, arguments, jeos_path, cfntools_path):
     '''
     Create a new JEOS (Just Enough Operating System) image.
 
@@ -74,8 +74,6 @@ def jeos_create(options, arguments):
     The command must be run as root in order for libvirt to have permissions
     to create virtual machines and read the raw DVDs.
     '''
-    global jeos_path
-    global cfntools_path
 
     # if not running as root, return EPERM to command line
     if os.geteuid() != 0:
@@ -136,7 +134,7 @@ def jeos_create(options, arguments):
     # Load the cfntools into the cfntool image by encoding them in base64
     # and injecting them into the TDL at the appropriate place
     if instance_type == 'cfntools':
-        tdl_xml = libxml2.parseFile(tdl_path)
+        tdl_xml = etree.parse(tdl_path)
         cfn_tools = ['cfn-init', 'cfn-hup', 'cfn-signal', \
                     'cfn-get-metadata', 'cfn_helper.py']
         for cfnname in cfn_tools:
@@ -144,10 +142,10 @@ def jeos_create(options, arguments):
             cfscript_e64 = base64.b64encode(f.read())
             f.close()
             cfnpath = "/template/files/file[@name='/opt/aws/bin/%s']" % cfnname
-            tdl_xml.xpathEval(cfnpath)[0].setContent(cfscript_e64)
+            tdl_xml.xpath(cfnpath)[0].text = cfscript_e64
 
         # TODO(sdake) INSECURE
-        tdl_xml.saveFormatFile('/tmp/tdl', format=1)
+        tdl_xml.write('/tmp/tdl', xml_declaration=True)
         tdl_path = '/tmp/tdl'
 
     dsk_filename = '%s/%s-%s-%s-jeos.dsk' % (images_dir, distro,

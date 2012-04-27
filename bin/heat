@@ -270,7 +270,7 @@ def jeos_create(options, arguments):
     The command must be run as root in order for libvirt to have permissions
     to create virtual machines and read the raw DVDs.
     '''
-    utils.jeos_create(options, arguments)
+    utils.jeos_create(options, arguments, jeos_path, cfntools_path)
 
 
 def get_client(options):
