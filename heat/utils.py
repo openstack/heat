@@ -137,7 +137,9 @@ def jeos_create(options, arguments):
     # and injecting them into the TDL at the appropriate place
     if instance_type == 'cfntools':
         tdl_xml = libxml2.parseFile(tdl_path)
-        for cfnname in ['cfn-init', 'cfn-hup', 'cfn-signal', 'cfn_helper.py']:
+        cfn_tools = ['cfn-init', 'cfn-hup', 'cfn-signal', \
+                    'cfn-get-metadata', 'cfn_helper.py']
+        for cfnname in cfn_tools:
             f = open('%s/%s' % (cfntools_path, cfnname), 'r')
             cfscript_e64 = base64.b64encode(f.read())
             f.close()

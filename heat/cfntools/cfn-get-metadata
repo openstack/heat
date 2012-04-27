@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,12 +13,13 @@
 #    under the License.
 
 """
-Implements cfn-init CloudFormation functionality
+Implements cfn-get-metadata CloudFormation functionality
 """
-
 import argparse
+import io
 import logging
 import os
+import os.path
 import sys
 
 
@@ -50,13 +51,25 @@ parser.add_argument('--region',
         dest="region",
         help="Openstack region",
         required=False)
+parser.add_argument('--credential-file',
+        dest="credential_file",
+        help="credential-file",
+        required=False)
+parser.add_argument('-u', '--url',
+        dest="url",
+        help="service url",
+        required=False)
+parser.add_argument('-k', '--key',
+        dest="key",
+        help="key",
+        required=False)
 args = parser.parse_args()
 
 log_format = '%(levelname)s [%(asctime)s] %(message)s'
 logging.basicConfig(format=log_format, level=logging.DEBUG)
 
-logger = logging.getLogger('cfn-init')
-log_file_name = "/var/log/cfn-init.log"
+logger = logging.getLogger('cfn-get-metadata')
+log_file_name = "/var/log/cfn-get-metadata.log"
 file_handler = logging.FileHandler(log_file_name)
 file_handler.setFormatter(logging.Formatter(log_format))
 logger.addHandler(file_handler)
@@ -67,8 +80,4 @@ metadata = Metadata(args.stack_name,
                     secret_key=args.secret_key,
                     region=args.region)
 metadata.retrieve()
-try:
-    metadata.cfn_init()
-except Exception as e:
-    logger.exception("Error processing metadata")
-    exit(1)
+print str(metadata)

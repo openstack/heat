@@ -47,19 +47,18 @@ parser.add_argument('-v', '--verbose',
         help="Verbose logging",
         required=False)
 args = parser.parse_args()
-# FIXME: implement real arg
 
-logger = logging.getLogger('cfn-hup')
-log_file_name = "/var/log/cfn-hup.log"
 log_format = '%(levelname)s [%(asctime)s] %(message)s'
-file_handler = logging.FileHandler(log_file_name)
-file_handler.setFormatter(logging.Formatter(log_format))
-logging.getLogger().addHandler(file_handler)
-
 if args.verbose:
     logging.basicConfig(format=log_format, level=logging.DEBUG)
 else:
     logging.basicConfig(format=log_format, level=logging.INFO)
+
+logger = logging.getLogger('cfn-hup')
+log_file_name = "/var/log/cfn-hup.log"
+file_handler = logging.FileHandler(log_file_name)
+file_handler.setFormatter(logging.Formatter(log_format))
+logger.addHandler(file_handler)
 
 main_conf_path = '/etc/cfn/cfn-hup.conf'
 try:

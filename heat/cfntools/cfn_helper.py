@@ -681,6 +681,9 @@ class Metadata(object):
         else:
             self._metadata = self._data
 
+    def __str__(self):
+        return self._metadata
+
     def _is_valid_metadata(self):
         """
         Should find the AWS::CloudFormation::Init json key
