@@ -139,6 +139,17 @@ class HeatConfigOpts(cfg.CommonConfigOpts):
             **kwargs)
         self.register_cli_opts(rpc_opts)
 
+class HeatMetadataConfigOpts(cfg.CommonConfigOpts):
+    def __init__(self, default_config_files=None, **kwargs):
+        config_files = cfg.find_config_files(project='heat',
+                                             prog='heat-metadata')
+        super(HeatMetadataConfigOpts, self).__init__(
+            project='heat',
+            version='%%prog %s' % version.version_string(),
+            default_config_files=default_config_files,
+            **kwargs)
+        self.register_cli_opts([cfg.IntOpt('bind_port', default=8000)])
+
 
 class HeatEngineConfigOpts(cfg.CommonConfigOpts):
 
