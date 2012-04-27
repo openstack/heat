@@ -24,6 +24,7 @@ import logging
 
 from heat.openstack.common import local
 from heat.openstack.common import utils
+from heat.openstack.common import timeutils
 
 from heat.common import utils as heat_utils
 
@@ -73,7 +74,7 @@ class RequestContext(object):
         self.read_deleted = read_deleted
         self.remote_address = remote_address
         if not timestamp:
-            timestamp = utils.utcnow()
+            timestamp = timeutils.utcnow()
         if isinstance(timestamp, basestring):
             timestamp = heat_utils.parse_strtime(timestamp)
         self.timestamp = timestamp

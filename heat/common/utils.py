@@ -30,6 +30,7 @@ from eventlet import semaphore
 from eventlet.green import subprocess
 
 from heat.openstack.common import exception
+from heat.openstack.common import timeutils
 
 PERFECT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
 
@@ -71,23 +72,13 @@ def gen_uuid():
 def strtime(at=None, fmt=PERFECT_TIME_FORMAT):
     """Returns formatted utcnow."""
     if not at:
-        at = utcnow()
+        at = timeutils.utcnow()
     return at.strftime(fmt)
 
 
 def parse_strtime(timestr, fmt=PERFECT_TIME_FORMAT):
     """Turn a formatted time back into a datetime."""
     return datetime.datetime.strptime(timestr, fmt)
-
-
-def isotime(at=None):
-    """Stringify time in ISO 8601 format"""
-    if not at:
-        at = datetime.datetime.utcnow()
-    str = at.strftime(ISO_TIME_FORMAT)
-    tz = at.tzinfo.tzname(None) if at.tzinfo else 'UTC'
-    str += ('Z' if tz == 'UTC' else tz)
-    return str
 
 
 class LoopingCallDone(Exception):

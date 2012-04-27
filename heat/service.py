@@ -27,7 +27,7 @@ import logging
 import greenlet
 
 from heat.openstack.common import cfg
-from heat.openstack.common import utils
+from heat.openstack.common import importutils
 
 from heat.common import utils as heat_utils
 from heat.common import exception
@@ -108,7 +108,7 @@ class Service(object):
         self.binary = binary
         self.topic = topic
         self.manager_class_name = manager
-        manager_class = utils.import_class(self.manager_class_name)
+        manager_class = importutils.import_class(self.manager_class_name)
         self.manager = manager_class(host=self.host, *args, **kwargs)
         self.periodic_interval = periodic_interval
         super(Service, self).__init__(*args, **kwargs)

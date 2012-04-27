@@ -19,7 +19,7 @@
 
 import logging
 from heat.openstack.common import cfg
-from heat.openstack.common import utils
+from heat.openstack.common import importutils
 
 LOG = logging.getLogger(__name__)
 
@@ -192,7 +192,7 @@ def configure(conf):
     LOG.debug(_("Configuring RPC %s") % conf.rpc_backend)
 
     global _RPCIMPL
-    _RPCIMPL = utils.import_object(conf.rpc_backend)
+    _RPCIMPL = importutils.import_module(conf.rpc_backend)
 
 
 def _get_impl():

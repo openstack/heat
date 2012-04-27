@@ -17,7 +17,7 @@
 Middleware that attaches a context to the WSGI request
 """
 
-from heat.common import utils
+from heat.common import importutils
 from heat.common import wsgi
 from heat.common import context
 
@@ -35,7 +35,7 @@ class ContextMiddleware(wsgi.Middleware):
         # Determine the context class to use
         ctxcls = context.RequestContext
         if 'context_class' in self.options:
-            ctxcls = utils.import_class(self.options['context_class'])
+            ctxcls = importutils.import_class(self.options['context_class'])
 
         return ctxcls(*args, **kwargs)
 

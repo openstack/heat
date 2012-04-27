@@ -41,6 +41,7 @@ import webob.exc
 
 from heat.common import exception
 from heat.openstack.common import cfg
+from heat.openstack.common import importutils
 from heat.openstack.common import utils
 
 bind_opts = [
@@ -544,7 +545,7 @@ class BasePasteFactory(object):
         we strip() the value before using it.
         """
         class_name = local_conf[self.KEY].replace(':', '.').strip()
-        return utils.import_class(class_name)
+        return importutils.import_class(class_name)
 
 
 class AppFactory(BasePasteFactory):

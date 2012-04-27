@@ -19,21 +19,17 @@
 System-level utilities and helper functions.
 """
 
-import datetime
 import logging
 import os
 import random
 import shlex
-import sys
 
 from eventlet import greenthread
 from eventlet.green import subprocess
-import iso8601
 
 from heat.openstack.common import exception
 
 
-TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 LOG = logging.getLogger(__name__)
 
 
@@ -142,92 +138,3 @@ def execute(*cmd, **kwargs):
             #               call clean something up in between calls, without
             #               it two execute calls in a row hangs the second one
             greenthread.sleep(0)
-
-
-def import_class(import_str):
-    """Returns a class from a string including module and class"""
-    mod_str, _sep, class_str = import_str.rpartition('.')
-    try:
-        __import__(mod_str)
-        return getattr(sys.modules[mod_str], class_str)
-    except (ImportError, ValueError, AttributeError):
-        raise exception.NotFound('Class %s cannot be found' % class_str)
-
-
-def import_object(import_str):
-    """Returns an object including a module or module and class"""
-    try:
-        __import__(import_str)
-        return sys.modules[import_str]
-    except ImportError:
-        return import_class(import_str)
-
-
-def isotime(at=None):
-    """Stringify time in ISO 8601 format"""
-    if not at:
-        at = datetime.datetime.utcnow()
-    str = at.strftime(TIME_FORMAT)
-    tz = at.tzinfo.tzname(None) if at.tzinfo else 'UTC'
-    str += ('Z' if tz == 'UTC' else tz)
-    return str
-
-
-def parse_isotime(timestr):
-    """Parse time from ISO 8601 format"""
-    try:
-        return iso8601.parse_date(timestr)
-    except iso8601.ParseError as e:
-        raise ValueError(e.message)
-    except TypeError as e:
-        raise ValueError(e.message)
-
-
-def normalize_time(timestamp):
-    """Normalize time in arbitrary timezone to UTC"""
-    offset = timestamp.utcoffset()
-    return timestamp.replace(tzinfo=None) - offset if offset else timestamp
-
-
-def utcnow():
-    """Overridable version of utils.utcnow."""
-    if utcnow.override_time:
-        return utcnow.override_time
-    return datetime.datetime.utcnow()
-
-
-utcnow.override_time = None
-
-
-def set_time_override(override_time=datetime.datetime.utcnow()):
-    """Override utils.utcnow to return a constant time."""
-    utcnow.override_time = override_time
-
-
-def clear_time_override():
-    """Remove the overridden time."""
-    utcnow.override_time = None
-
-
-def auth_str_equal(provided, known):
-    """Constant-time string comparison.
-
-    :params provided: the first string
-    :params known: the second string
-
-    :return: True if the strings are equal.
-
-    This function takes two strings and compares them.  It is intended to be
-    used when doing a comparison for authentication purposes to help guard
-    against timing attacks.  When using the function for this purpose, always
-    provide the user-provided password as the first argument.  The time this
-    function will take is always a factor of the length of this string.
-    """
-    result = 0
-    p_len = len(provided)
-    k_len = len(known)
-    for i in xrange(p_len):
-        a = ord(provided[i]) if i < p_len else 0
-        b = ord(known[i]) if i < k_len else 0
-        result |= a ^ b
-    return (p_len == k_len) & (result == 0)

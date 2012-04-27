@@ -16,7 +16,7 @@
 from heat.common import exception
 from heat.common import wsgi
 from heat.openstack.common import cfg
-from heat.openstack.common import utils
+from heat.openstack.common import importutils
 
 
 class RequestContext(object):
@@ -64,7 +64,7 @@ class ContextMiddleware(wsgi.Middleware):
         # Determine the context class to use
         self.ctxcls = RequestContext
         if 'context_class' in local_conf:
-            self.ctxcls = utils.import_class(local_conf['context_class'])
+            self.ctxcls = importutils.import_class(local_conf['context_class'])
 
         super(ContextMiddleware, self).__init__(app)
 

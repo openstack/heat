@@ -22,7 +22,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import ForeignKeyConstraint
 from sqlalchemy import types as types
 from json import dumps, loads
-from heat.openstack.common import utils
+from heat.openstack.common import timeutils
 from heat.db.sqlalchemy.session import get_session
 from sqlalchemy.orm.session import Session
 
@@ -43,8 +43,8 @@ class HeatBase(object):
     """Base class for Heat Models."""
     __table_args__ = {'mysql_engine': 'InnoDB'}
     __table_initialized__ = False
-    created_at = Column(DateTime, default=utils.utcnow)
-    updated_at = Column(DateTime, onupdate=utils.utcnow)
+    created_at = Column(DateTime, default=timeutils.utcnow)
+    updated_at = Column(DateTime, onupdate=timeutils.utcnow)
 
     def save(self, session=None):
         """Save this object."""
@@ -64,7 +64,7 @@ class HeatBase(object):
     def delete(self, session=None):
         """Delete this object."""
         self.deleted = True
-        self.deleted_at = utils.utcnow()
+        self.deleted_at = timeutils.utcnow()
         self.save(session=session)
 
     def __setitem__(self, key, value):
