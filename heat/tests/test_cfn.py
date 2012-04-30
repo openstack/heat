@@ -12,9 +12,11 @@ from nose.plugins.attrib import attr
 from nose import with_setup
 import unittest
 import shutil
-
-from heat.cfntools.cfn_helper import *
-
+from nose.exc import SkipTest
+try:
+  from heat.cfntools.cfn_helper import *
+except:
+  raise SkipTest("unable to import cfn helper, skipping")
 
 @attr(tag=['unit', 'cfn_helper'])
 @attr(speed='fast')
