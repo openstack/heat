@@ -1,6 +1,5 @@
 import sys
 import os
-sys.path.append(os.environ['PYTHON_NOVACLIENT_SRC'])
 
 import nose
 import unittest
@@ -11,7 +10,7 @@ import sqlalchemy
 from nose.plugins.attrib import attr
 from nose import with_setup
 
-from tests.v1_1 import fakes
+from heat.tests.v1_1 import fakes
 from heat.engine import resources
 import heat.db as db_api
 from heat.engine import parser
