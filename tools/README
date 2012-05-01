@@ -22,4 +22,12 @@ Tools
       note: This tool does not create a network.  Creating a network depends
             on the specific environment, but an example network creation:
 
++ heat-keystone-setup
+    - This tool configures keystone for use with the heat service  the first
+       time openstack is installed.
+
++ heat-db-drop
+    - This script drops the heat database from mysql in the case of developer
+      data corruption or erasing heat.
+
 sudo nova-manage network create demonet 10.0.0.0/24 1 256 --bridge=demonetbr0
