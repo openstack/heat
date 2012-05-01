@@ -39,8 +39,6 @@ db_opts = [
                help='The backend to use for db'),
     ]
 
-#conf = config.HeatEngineConfigOpts()
-#conf.db_backend = 'heat.db.sqlalchemy.api'
 IMPL = heat.utils.LazyPluggable('db_backend',
                            sqlalchemy='heat.db.sqlalchemy.api')
 

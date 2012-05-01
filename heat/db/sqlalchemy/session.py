@@ -106,9 +106,9 @@ def get_engine():
 
 def get_maker(engine, autocommit=True, expire_on_commit=False):
     """Return a SQLAlchemy sessionmaker using the given engine."""
-    return sqlalchemy.orm.sessionmaker(bind=engine,
+    return sqlalchemy.orm.scoped_session(sqlalchemy.orm.sessionmaker(bind=engine,
                                        autocommit=autocommit,
-                                       expire_on_commit=expire_on_commit)
+                                       expire_on_commit=expire_on_commit))
 
 
 def _get_sql_connection():
