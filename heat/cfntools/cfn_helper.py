@@ -551,6 +551,56 @@ class FilesHandler(object):
                 os.chmod(dest, int(meta['mode'], 8))
 
 
+class SourcesHandler(object):
+    '''
+    tar, tar+gzip,tar+bz2 and zip
+    '''
+    _sources = {}
+    def __init__(self, sources):
+        self._sources = sources
+
+    def _url_to_tmp_filename(self, url):
+        sp = url.split('/')
+        if 'https://github.com' in url:
+            if 'zipball' == sp[-2]:
+                return '/tmp/%s-%s.zip' % (sp[-3], sp[-1])
+            elif 'tarball' == sp[-2]:
+                return '/tmp/%s-%s.tar.gz' % (sp[-3], sp[-1])
+            else:
+                pass
+
+        return '/tmp/%s' % (sp[-1])
+
+    def _decompress(self, archive, dest_dir):
+        (r, ext) = os.path.splitext(archive)
+         if ext is 'tar.gz' or ext is 'tgz':
+            cmd_str = 'tar -C %s -xzf %s' % (dest_dir, archive)
+         elif ext is 'tar.bz2' or ext is 'tbz2':
+            cmd_str = 'tar -C %s -xjf %s' % (dest_dir, archive)
+         elif ext is 'zip':
+            cmd_str = 'unzip -d %s %s' % (dest_dir, archive)
+         elif ext is 'tar':
+            cmd_str = 'tar -C %s -xf %s' % (dest_dir, archive)
+         else:
+            pass
+        CommandRunner(cmd_str).run()
+
+    def apply_sources(self):
+        if not self._sources:
+            return
+        for dest, url in self._sources.iteritems():
+            tmp_name = self._url_to_tmp_filename(url)
+            cmd_str = 'wget -O %s %s' % (tmp_name, url)
+            CommandRunner(cmd_str).run()
+            try:
+                os.makedirs(dest)
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    logging.debug(str(e))
+                else:
+                    logging.exception(e)
+            self._decompress(tmp_name, dest)
+
 class ServicesHandler(object):
     _services = {}
 
@@ -731,7 +781,7 @@ class Metadata(object):
         """
         Parse and process a config section
           * packages
-          * sources (not yet)
+          * sources
           * users (not yet)
           * groups (not yet)
           * files
@@ -742,6 +792,7 @@ class Metadata(object):
         self._config = self._metadata["config"]
         PackagesHandler(self._config.get("packages")).apply_packages()
         #FIXME: handle sources
+        SourcesHandler(self._config.get("sources")).apply_sources()
         #FIXME: handle users
         #FIXME: handle groups
         FilesHandler(self._config.get("files")).apply_files()
