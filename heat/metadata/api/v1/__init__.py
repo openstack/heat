@@ -30,7 +30,27 @@ class API(wsgi.Router):
         mapper = routes.Mapper()
         metadata_controller = metadata.create_resource(conf)
 
-        mapper.connect('/', controller=metadata_controller, action='index',
+        mapper.connect('/',
+                       controller=metadata_controller, action='entry_point',
                        conditions=dict(method=['GET']))
+        mapper.connect('/stacks/',
+                       controller=metadata_controller, action='list_stacks',
+                       conditions=dict(method=['GET']))
+        mapper.connect('/stacks/:stack_name/resources/',
+                       controller=metadata_controller, action='list_resources',
+                       conditions=dict(method=['GET']))
+        mapper.connect('/stacks/:stack_name/resources/:resource_id',
+                       controller=metadata_controller, action='get_resource',
+                       conditions=dict(method=['GET']))
+        mapper.connect('/stacks/:stack_name',
+                       controller=metadata_controller, action='create_stack',
+                       conditions=dict(method=['PUT']))
+        mapper.connect('/stacks/:stack_name/resources/:resource_id',
+                       controller=metadata_controller, action='update_metadata',
+                       conditions=dict(method=['PUT']))
+
+        # TODO(shadower): make sure all responses are JSON-encoded
+        # currently, calling an unknown route uses the default handler which
+        # produces a HTML response.
 
         super(API, self).__init__(mapper)

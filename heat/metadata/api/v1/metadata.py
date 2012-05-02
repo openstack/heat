@@ -14,17 +14,76 @@
 #    under the License.
 
 import logging
+import json
+
+from webob.exc import Response
 
 from heat.common import wsgi
+from heat.metadata import db as db_api
+from heat.metadata.db import (ConflictError, StackNotFoundError,
+                              ResourceNotFoundError)
 
+
+def json_response(http_status, data):
+    """Create a JSON response with a specific HTTP code."""
+    response = Response(json.dumps(data))
+    response.status = http_status
+    response.content_type = 'application/json'
+    return response
+
+def json_error(http_status, message):
+    """Create a JSON error response."""
+    body = {'error': message}
+    return json_response(http_status, body)
 
 class MetadataController:
     def __init__(self, options):
         self.options = options
 
-    def index(self, req):
-        return []
+    def entry_point(self, req):
+        return {
+            'name': 'Heat Metadata Server API',
+            'version': '1',
+        }
 
+    def list_stacks(self, req):
+        return db_api.list_stacks()
+
+    def list_resources(self, req, stack_name):
+        try:
+            resources = db_api.list_resources(stack_name)
+        except StackNotFoundError:
+            return json_error(404, 'The stack "%s" does not exist.' % stack_name)
+        return resources
+
+    def get_resource(self, req, stack_name, resource_id):
+        try:
+            resource = db_api.get_resource(stack_name, resource_id)
+        except StackNotFoundError:
+            return json_error(404, 'The stack "%s" does not exist.' % stack_name)
+        except ResourceNotFoundError:
+            return json_error(404, 'The resource "%s" does not exist.' % resource_id)
+        return resource
+
+    def create_stack(self, req, body, stack_name):
+        try:
+            stack = db_api.create_stack(stack_name, body)
+        except ConflictError:
+            return json_error(409, 'The stack "%s" already exists.' % stack_name)
+        return json_response(201, stack)
+
+    def update_metadata(self, req, body, stack_name, resource_id):
+        try:
+            db_api.update_resource_metadata(stack_name, resource_id, body)
+        except StackNotFoundError:
+            return json_error(409, 'The stack "%s" does not exist.' % stack_name)
+        except ResourceNotFoundError:
+            # The resource doesn't exit yet, create it.
+            db_api.create_resource_metadata(stack_name, resource_id, body)
+        return json_response(201, {
+            'resource': resource_id,
+            'metadata': body,
+        })
 
 def create_resource(options):
     """
