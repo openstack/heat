@@ -357,12 +357,30 @@ class PackagesHandler(object):
         self._packages = packages
 
     def _handle_gem_packages(self, packages):
-        #FIXME: handle rubygems
-        pass
+        """
+        very basic support for gems
+        """
+        # TODO(asalkeld) support versions
+        # -b == local & remote install
+        # -y == install deps
+        opts = '-b -y'
+        for pkg_name, versions in packages.iteritems():
+            if len(versions) > 0:
+                cmd_str = 'gem install %s --version %s %s' % (opts,
+                                                              versions[0],
+                                                              pkg_name)
+                CommandRunner(cmd_str).run()
+            else:
+                CommandRunner('gem install %s %s' % (opts, pkg_name)).run()
 
     def _handle_python_packages(self, packages):
-        #FIXME: handle python easyinstall
-        pass
+        """
+        very basic support for easy_install
+        """
+        # TODO(asalkeld) support versions
+        for pkg_name, versions in packages.iteritems():
+            cmd_str = 'easy_install %s' % (pkg_name)
+            CommandRunner(cmd_str).run()
 
     def _handle_yum_packages(self, packages):
         """
@@ -432,8 +450,16 @@ class PackagesHandler(object):
         pass
 
     def _handle_apt_packages(self, packages):
-        #FIXME: handle apt-get
-        pass
+        """
+        very basic support for apt
+        """
+        # TODO(asalkeld) support versions
+        pkg_str = ''
+        for pkg_name, versions in packages.iteritems():
+            pkg_str.append(' %s ' % pkg_name)
+
+        cmd_str = 'apt-get -y %s' % (pkg_str)
+        CommandRunner(cmd_str).run()
 
     # map of function pionters to handle different package managers
     _package_handlers = {
