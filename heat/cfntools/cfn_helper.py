@@ -573,6 +573,7 @@ class SourcesHandler(object):
         return '/tmp/%s' % (sp[-1])
 
     def _decompress(self, archive, dest_dir):
+        cmd_str = ''
         (r, ext) = os.path.splitext(archive)
         if ext is 'tar.gz' or ext is 'tgz':
             cmd_str = 'tar -C %s -xzf %s' % (dest_dir, archive)
