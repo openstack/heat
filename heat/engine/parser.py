@@ -90,6 +90,11 @@ class Stack(object):
             elif type == 'AWS::EC2::SecurityGroup':
                 self.resources[r] = security_group.SecurityGroup(r,
                                                 self.t['Resources'][r], self)
+            elif type == 'AWS::CloudFormation::WaitConditionHandle':
+                self.resources[r] = wait_condition.WaitConditionHandle(r,
+                                                self.t['Resources'][r], self)
+            elif type == 'AWS::CloudFormation::WaitCondition':
+                self.resources[r] = wait_condition.WaitCondition(r,
                                                 self.t['Resources'][r], self)
             else:
                 self.resources[r] = resources.GenericResource(r,
