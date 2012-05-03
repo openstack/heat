@@ -15,3 +15,46 @@
 """
 Implements cfn-signal CloudFormation functionality
 """
+import argparse
+import logging
+import os
+import sys
+
+description = " "
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('-s', '--success',
+        dest="success",
+        help="signal status to report",
+        default='true',
+        required=False)
+parser.add_argument('-r', '--reason',
+        dest="reason",
+        help="The reason for the failure",
+        required=False)
+parser.add_argument('--data',
+        dest="data",
+        help="The data to send",
+        required=False)
+parser.add_argument('-i', '--id',
+        dest="unique_id",
+        help="the unique id to send back to the WaitCondition",
+        required=False)
+parser.add_argument('-e', '--exit',
+        dest="exit_code",
+        help="The exit code from a procecc to interpret",
+        required=False)
+parser.add_argument('url',
+                   help='the url to post to')
+args = parser.parse_args()
+
+log_format = '%(levelname)s [%(asctime)s] %(message)s'
+logging.basicConfig(format=log_format, level=logging.DEBUG)
+
+logger = logging.getLogger('cfn-init')
+#log_file_name = "/var/log/cfn-signal.log"
+#file_handler = logging.FileHandler(log_file_name)
+#file_handler.setFormatter(logging.Formatter(log_format))
+#logger.addHandler(file_handler)
+
+logger.info('cfn-signal called %s ' % (str(args)))
+
