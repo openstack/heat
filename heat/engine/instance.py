@@ -51,6 +51,7 @@ class Instance(Resource):
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = '0.0.0.0'
+        self.mime_string = None
 
         if not 'AvailabilityZone' in self.t['Properties']:
             self.t['Properties']['AvailabilityZone'] = 'nova'
@@ -84,32 +85,36 @@ class Instance(Resource):
         return unicode(res)
 
     def _build_userdata(self, userdata):
-        # Build mime multipart data blob for cloudinit userdata
-        mime_blob = MIMEMultipart()
-        fp = open('%s/%s' % (cloudinit_path, 'config'), 'r')
-        msg = MIMEText(fp.read(), _subtype='cloud-config')
-        fp.close()
-        msg.add_header('Content-Disposition', 'attachment',
-                       filename='cloud-config')
-        mime_blob.attach(msg)
+        if not self.mime_string:
+            # Build mime multipart data blob for cloudinit userdata
+            mime_blob = MIMEMultipart()
+            fp = open('%s/%s' % (cloudinit_path, 'config'), 'r')
+            msg = MIMEText(fp.read(), _subtype='cloud-config')
+            fp.close()
+            msg.add_header('Content-Disposition', 'attachment',
+                           filename='cloud-config')
+            mime_blob.attach(msg)
 
-        fp = open('%s/%s' % (cloudinit_path, 'part-handler.py'), 'r')
-        msg = MIMEText(fp.read(), _subtype='part-handler')
-        fp.close()
-        msg.add_header('Content-Disposition', 'attachment',
-                       filename='part-handler.py')
-        mime_blob.attach(msg)
+            fp = open('%s/%s' % (cloudinit_path, 'part-handler.py'), 'r')
+            msg = MIMEText(fp.read(), _subtype='part-handler')
+            fp.close()
+            msg.add_header('Content-Disposition', 'attachment',
+                           filename='part-handler.py')
+            mime_blob.attach(msg)
 
-        msg = MIMEText(json.dumps(self.t['Metadata']),
-                       _subtype='x-cfninitdata')
-        msg.add_header('Content-Disposition', 'attachment',
-                       filename='cfn-init-data')
-        mime_blob.attach(msg)
+            msg = MIMEText(json.dumps(self.t['Metadata']),
+                           _subtype='x-cfninitdata')
+            msg.add_header('Content-Disposition', 'attachment',
+                           filename='cfn-init-data')
+            mime_blob.attach(msg)
 
-        msg = MIMEText(userdata, _subtype='x-shellscript')
-        msg.add_header('Content-Disposition', 'attachment', filename='startup')
-        mime_blob.attach(msg)
-        return mime_blob.as_string()
+            msg = MIMEText(userdata, _subtype='x-shellscript')
+            msg.add_header('Content-Disposition', 'attachment', filename='startup')
+            mime_blob.attach(msg)
+            self.mime_string = mime_blob.as_string()
+        
+        return self.mime_string
+
 
     def create(self):
         def _null_callback(p, n, out):
