@@ -122,5 +122,3 @@ class ElasticIpAssociation(Resource):
         server.remove_floating_ip(self.t['Properties']['EIP'])
 
         self.state_set(self.DELETE_COMPLETE)
-
-

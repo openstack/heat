@@ -556,6 +556,7 @@ class SourcesHandler(object):
     tar, tar+gzip,tar+bz2 and zip
     '''
     _sources = {}
+
     def __init__(self, sources):
         self._sources = sources
 
@@ -573,15 +574,15 @@ class SourcesHandler(object):
 
     def _decompress(self, archive, dest_dir):
         (r, ext) = os.path.splitext(archive)
-         if ext is 'tar.gz' or ext is 'tgz':
+        if ext is 'tar.gz' or ext is 'tgz':
             cmd_str = 'tar -C %s -xzf %s' % (dest_dir, archive)
-         elif ext is 'tar.bz2' or ext is 'tbz2':
+        elif ext is 'tar.bz2' or ext is 'tbz2':
             cmd_str = 'tar -C %s -xjf %s' % (dest_dir, archive)
-         elif ext is 'zip':
+        elif ext is 'zip':
             cmd_str = 'unzip -d %s %s' % (dest_dir, archive)
-         elif ext is 'tar':
+        elif ext is 'tar':
             cmd_str = 'tar -C %s -xf %s' % (dest_dir, archive)
-         else:
+        else:
             pass
         CommandRunner(cmd_str).run()
 
@@ -600,6 +601,7 @@ class SourcesHandler(object):
                 else:
                     logging.exception(e)
             self._decompress(tmp_name, dest)
+
 
 class ServicesHandler(object):
     _services = {}

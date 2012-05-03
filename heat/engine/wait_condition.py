@@ -22,6 +22,7 @@ from heat.engine.resources import Resource
 
 logger = logging.getLogger(__file__)
 
+
 class WaitConditionHandle(Resource):
     '''
     the main point of this class is to :
@@ -72,6 +73,7 @@ class WaitConditionHandle(Resource):
         '''
         return unicode(self.instance_id)
 
+
 class WaitCondition(Resource):
 
     def __init__(self, name, json_snippet, stack):
@@ -80,7 +82,6 @@ class WaitCondition(Resource):
 
         self.handle_url = self.t['Properties']['Handle']
         self.timeout = self.t['Properties']['Timeout']
-
 
     def create(self):
         if self.state != None:
@@ -99,7 +100,8 @@ class WaitCondition(Resource):
 #                raise # not my timeout
 #            else:
 #                self.state_set(self.CREATE_FAILED,
-#                               '%s Timed out waiting for instance to start' % self.name)
+#                               '%s Timed out waiting for instance' % \
+#                               self.name)
 #        finally:
 #            timeout.cancel()
 

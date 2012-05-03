@@ -14,9 +14,10 @@ import unittest
 import shutil
 from nose.exc import SkipTest
 try:
-  from heat.cfntools.cfn_helper import *
+    from heat.cfntools.cfn_helper import *
 except:
-  raise SkipTest("unable to import cfn helper, skipping")
+    raise SkipTest("unable to import cfn helper, skipping")
+
 
 @attr(tag=['unit', 'cfn_helper'])
 @attr(speed='fast')

@@ -46,7 +46,6 @@ else:
             break
 
 
-
 class Instance(Resource):
 
     def __init__(self, name, json_snippet, stack):

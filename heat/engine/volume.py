@@ -125,4 +125,3 @@ class VolumeAttachment(Resource):
             vol.get()
 
         self.state_set(self.DELETE_COMPLETE)
-

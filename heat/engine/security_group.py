@@ -94,5 +94,3 @@ class SecurityGroup(Resource):
 
     def FnGetRefId(self):
         return unicode(self.name)
-
-
