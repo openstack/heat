@@ -49,7 +49,7 @@ class Stack(object):
         self.name = stack_name
         self.parsed_template_id = 0
         # TODO(shadower) load this from a config file
-        #self.metadata_server = 'http://10.0.0.1'
+        self.metadata_server = 'http://10.0.0.1'
 
         self.parms['AWS::StackName'] = {"Description": "AWS StackName",
             "Type": "String",
