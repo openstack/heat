@@ -26,7 +26,9 @@ import logging
 import webob
 from heat import manager
 from heat.engine import parser
+from heat.engine import resources
 from heat.db import api as db_api
+
 logger = logging.getLogger('heat.engine.manager')
 
 
@@ -120,6 +122,19 @@ class EngineManager(manager.Manager):
             return {'Error': 'Stack already exists with that name.'}
 
         stack = parser.Stack(stack_name, template, 0, params)
+        stack._apply_user_parameters(params)
+        validator = resources.Resource('validate', template, stack)
+        #check validity of key
+        if stack.parms['KeyName']:
+            keypairs = validator.nova().keypairs.list()
+            valid_key = False
+            for k in keypairs:
+                if k.name == stack.parms['KeyName'].get('Value'):
+                    valid_key = True
+            if not valid_key:
+                return {'Error': \
+                        'Provided KeyName is not registered with nova'}
+ 
         rt = {}
         rt['template'] = template
         rt['stack_name'] = stack_name
