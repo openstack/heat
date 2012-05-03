@@ -12,6 +12,7 @@ from nose import with_setup
 
 from heat.tests.v1_1 import fakes
 from heat.engine import resources
+from heat.engine import instance
 import heat.db as db_api
 from heat.engine import parser
 
@@ -42,11 +43,11 @@ class ResourcesTest(unittest.TestCase):
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
                                               stack).AndReturn(None)
 
-        self.m.StubOutWithMock(resources.Instance, 'nova')
-        resources.Instance.nova().AndReturn(self.fc)
-        resources.Instance.nova().AndReturn(self.fc)
-        resources.Instance.nova().AndReturn(self.fc)
-        resources.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(instance.Instance, 'nova')
+        instance.Instance.nova().AndReturn(self.fc)
+        instance.Instance.nova().AndReturn(self.fc)
+        instance.Instance.nova().AndReturn(self.fc)
+        instance.Instance.nova().AndReturn(self.fc)
 
         #Need to find an easier way
         userdata = t['Resources']['WebServer']['Properties']['UserData']
@@ -56,10 +57,10 @@ class ResourcesTest(unittest.TestCase):
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
             '256 MB Server'
-        instance = resources.Instance('test_resource_name',\
-                                      t['Resources']['WebServer'], stack)
+        inst = instance.Instance('test_resource_name',\
+                                 t['Resources']['WebServer'], stack)
 
-        server_userdata = instance._build_userdata(json.dumps(userdata))
+        server_userdata = inst._build_userdata(json.dumps(userdata))
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(image=1, flavor=1, key_name='test',\
                 name='test_resource_name', security_groups=None,\
@@ -67,16 +68,16 @@ class ResourcesTest(unittest.TestCase):
                 AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
 
-        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
-        instance.create()
+        inst.itype_oflavor['256 MB Server'] = '256 MB Server'
+        inst.create()
 
         self.m.ReplayAll()
 
-        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
-        instance.create()
+        inst.itype_oflavor['256 MB Server'] = '256 MB Server'
+        inst.create()
 
         # this makes sure the auto increment worked on instance creation
-        assert(instance.id > 0)
+        assert(inst.id > 0)
 
     def test_initialize_instance_from_template_and_delete(self):
         f = open('../../templates/WordPress_Single_Instance_gold.template')
@@ -93,11 +94,11 @@ class ResourcesTest(unittest.TestCase):
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
                                               stack).AndReturn(None)
 
-        self.m.StubOutWithMock(resources.Instance, 'nova')
-        resources.Instance.nova().AndReturn(self.fc)
-        resources.Instance.nova().AndReturn(self.fc)
-        resources.Instance.nova().AndReturn(self.fc)
-        resources.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(instance.Instance, 'nova')
+        instance.Instance.nova().AndReturn(self.fc)
+        instance.Instance.nova().AndReturn(self.fc)
+        instance.Instance.nova().AndReturn(self.fc)
+        instance.Instance.nova().AndReturn(self.fc)
 
         #Need to find an easier way
         userdata = t['Resources']['WebServer']['Properties']['UserData']
@@ -107,10 +108,10 @@ class ResourcesTest(unittest.TestCase):
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
             '256 MB Server'
-        instance = resources.Instance('test_resource_name',\
-                                      t['Resources']['WebServer'], stack)
+        inst = instance.Instance('test_resource_name',\
+                                 t['Resources']['WebServer'], stack)
 
-        server_userdata = instance._build_userdata(json.dumps(userdata))
+        server_userdata = inst._build_userdata(json.dumps(userdata))
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(image=1, flavor=1, key_name='test',\
                 name='test_resource_name', security_groups=None,\
@@ -118,18 +119,18 @@ class ResourcesTest(unittest.TestCase):
                 AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
 
-        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
-        instance.create()
+        inst.itype_oflavor['256 MB Server'] = '256 MB Server'
+        inst.create()
 
         self.m.ReplayAll()
 
-        instance.instance_id = 1234
-        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
-        instance.create()
+        inst.instance_id = 1234
+        inst.itype_oflavor['256 MB Server'] = '256 MB Server'
+        inst.create()
 
-        instance.delete()
-        assert(instance.instance_id == None)
-        assert(instance.state == instance.DELETE_COMPLETE)
+        inst.delete()
+        assert(inst.instance_id == None)
+        assert(inst.state == inst.DELETE_COMPLETE)
 
    # allows testing of the test directly, shown below
     if __name__ == '__main__':

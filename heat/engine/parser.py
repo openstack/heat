@@ -19,9 +19,15 @@ import logging
 
 from heat.common import exception
 from heat.engine import resources
+from heat.engine import instance
+from heat.engine import volume
+from heat.engine import eip
+from heat.engine import security_group
+from heat.engine import wait_condition
+
 from heat.db import api as db_api
 
-logger = logging.getLogger('heat.engine.parser')
+logger = logging.getLogger(__file__)
 
 
 class Stack(object):
@@ -42,6 +48,7 @@ class Stack(object):
         self.doc = None
         self.name = stack_name
         self.parsed_template_id = 0
+        self.metadata_server = 'http://10.0.0.1'
 
         self.parms['AWS::StackName'] = {"Description": "AWS StackName",
             "Type": "String",
@@ -66,22 +73,23 @@ class Stack(object):
         for r in self.t['Resources']:
             type = self.t['Resources'][r]['Type']
             if type == 'AWS::EC2::Instance':
-                self.resources[r] = resources.Instance(r,
+                self.resources[r] = instance.Instance(r,
                                                 self.t['Resources'][r], self)
             elif type == 'AWS::EC2::Volume':
-                self.resources[r] = resources.Volume(r,
+                self.resources[r] = volume.Volume(r,
                                                 self.t['Resources'][r], self)
             elif type == 'AWS::EC2::VolumeAttachment':
-                self.resources[r] = resources.VolumeAttachment(r,
+                self.resources[r] = volume.VolumeAttachment(r,
                                                 self.t['Resources'][r], self)
             elif type == 'AWS::EC2::EIP':
-                self.resources[r] = resources.ElasticIp(r,
+                self.resources[r] = eip.ElasticIp(r,
                                                 self.t['Resources'][r], self)
             elif type == 'AWS::EC2::EIPAssociation':
-                self.resources[r] = resources.ElasticIpAssociation(r,
+                self.resources[r] = eip.ElasticIpAssociation(r,
                                                 self.t['Resources'][r], self)
             elif type == 'AWS::EC2::SecurityGroup':
-                self.resources[r] = resources.SecurityGroup(r,
+                self.resources[r] = security_group.SecurityGroup(r,
+                                                self.t['Resources'][r], self)
                                                 self.t['Resources'][r], self)
             else:
                 self.resources[r] = resources.GenericResource(r,
