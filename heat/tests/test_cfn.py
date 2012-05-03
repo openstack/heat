@@ -140,6 +140,9 @@ class MetadataTest(unittest.TestCase):
         j = ''' {
         "AWS::CloudFormation::Init" : {
           "config" : {
+            "sources": {
+              "/home/ec2-user/sample" : "https://s3.amazonaws.com/cloudformation-examples/CloudFormationRailsSample.zip"
+             },
             "files" : {
               "/tmp/_files_test_/epel.repo" : {
           "source" : "https://raw.github.com/heat-api/heat/master/README.rst",
@@ -174,6 +177,17 @@ class MetadataTest(unittest.TestCase):
         self.m.StubOutWithMock(subprocess, 'Popen')
         self.m.StubOutWithMock(os, 'chown')
         self.m.StubOutWithMock(os, 'chmod')
+
+        subprocess.Popen(['su', 'root', '-c',
+                          'wget -O /tmp/CloudFormationRailsSample.zip \
+https://s3.amazonaws.com/cloudformation-examples/CloudFormationRailsSample.zip'],
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE).AndReturn(PopenMock())
+
+        subprocess.Popen(['su', 'root', '-c',
+'unzip -d /home/ec2-user/sample /tmp/CloudFormationRailsSample.zip'],
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE).AndReturn(PopenMock())
 
         subprocess.Popen(['su', 'root', '-c',
                           'wget -O /tmp/_files_test_/epel.repo \

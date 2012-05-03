@@ -575,13 +575,13 @@ class SourcesHandler(object):
     def _decompress(self, archive, dest_dir):
         cmd_str = ''
         (r, ext) = os.path.splitext(archive)
-        if ext is 'tar.gz' or ext is 'tgz':
+        if ext == '.tar.gz' or ext == '.tgz':
             cmd_str = 'tar -C %s -xzf %s' % (dest_dir, archive)
-        elif ext is 'tar.bz2' or ext is 'tbz2':
+        elif ext == '.tar.bz2' or ext == '.tbz2':
             cmd_str = 'tar -C %s -xjf %s' % (dest_dir, archive)
-        elif ext is 'zip':
+        elif ext == '.zip':
             cmd_str = 'unzip -d %s %s' % (dest_dir, archive)
-        elif ext is 'tar':
+        elif ext == '.tar':
             cmd_str = 'tar -C %s -xf %s' % (dest_dir, archive)
         else:
             pass
