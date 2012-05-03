@@ -41,7 +41,8 @@ import rpmUtils.updates as rpmupdates
 import rpmUtils.miscutils as rpmutils
 import subprocess
 import sys
-
+from urllib2 import urlopen
+from urlparse import urlparse, urlunparse
 
 def to_boolean(b):
     val = b.lower().strip() if isinstance(b, basestring) else b
@@ -731,6 +732,8 @@ class ServicesHandler(object):
             else:
                 self._monitor_services(handler, service_entries)
 
+class MetadataServerConnectionError(Exception):
+    pass
 
 class Metadata(object):
     _metadata = None
@@ -750,6 +753,35 @@ class Metadata(object):
         self._is_local_metadata = True
         self._metadata = None
 
+
+    def metadata_server_url(self):
+        """
+        Return the url to the metadata server.
+        """
+        try:
+            f = open("/var/lib/cloud/data/cfn-metadata-server")
+            server_url = f.read()
+            f.close()
+        except IOError:
+            return None
+
+        url_parts = list(urlparse(server_url))
+        url_parts[2] = '/stacks/%s/resources/%s' % (self.stack, self.resource)
+        return urlunparse(url_parts)
+
+    def remote_metadata(self):
+        """
+        Connect to the metadata server and retreive the metadata from there.
+        """
+        server_url = self.metadata_server_url()
+        if not server_url:
+            raise MetadataServerConnectionError()
+
+        try:
+            return urlopen(server_url).read()
+        except:
+            raise MetadataServerConnectionError()
+
     def retrieve(self, meta_str=None):
         """
         Read the metadata from the given filename
@@ -757,9 +789,12 @@ class Metadata(object):
         if meta_str:
             self._data = meta_str
         else:
-            f = open("/var/lib/cloud/data/cfn-init-data")
-            self._data = f.read()
-            f.close()
+            try:
+                self._data = self.remote_metadata()
+            except MetadataServerConnectionError:
+                f = open("/var/lib/cloud/data/cfn-init-data")
+                self._data = f.read()
+                f.close()
 
         if isinstance(self._data, str):
             self._metadata = json.loads(self._data)

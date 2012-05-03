@@ -108,13 +108,19 @@ class Instance(Resource):
                            filename='cfn-init-data')
             mime_blob.attach(msg)
 
+            if self.stack.metadata_server:
+                msg = MIMEText(self.stack.metadata_server,
+                               _subtype='x-cfninitdata')
+                msg.add_header('Content-Disposition', 'attachment',
+                               filename='cfn-metadata-server')
+                mime_blob.attach(msg)
+
             msg = MIMEText(userdata, _subtype='x-shellscript')
             msg.add_header('Content-Disposition', 'attachment', filename='startup')
             mime_blob.attach(msg)
             self.mime_string = mime_blob.as_string()
-        
-        return self.mime_string
 
+        return self.mime_string
 
     def create(self):
         def _null_callback(p, n, out):
