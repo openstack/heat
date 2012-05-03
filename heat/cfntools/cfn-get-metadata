@@ -34,11 +34,11 @@ parser = argparse.ArgumentParser(description=description)
 parser.add_argument('-s', '--stack',
         dest="stack_name",
         help="A Heat stack name",
-        required=False)
+        required=True)
 parser.add_argument('-r', '--resource',
         dest="logical_resource_id",
         help="A Heat logical resource ID",
-        required=False)
+        required=True)
 parser.add_argument('--access-key',
         dest="access_key",
         help="A Keystone access key",
@@ -64,6 +64,14 @@ parser.add_argument('-k', '--key',
         help="key",
         required=False)
 args = parser.parse_args()
+
+if not args.stack_name:
+    print 'The Stack name must not be empty.'
+    exit(1)
+
+if not args.logical_resource_id:
+    print 'The Resource ID must not be empty'
+    exit(1)
 
 log_format = '%(levelname)s [%(asctime)s] %(message)s'
 logging.basicConfig(format=log_format, level=logging.DEBUG)
