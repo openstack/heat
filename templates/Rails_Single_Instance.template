@@ -85,7 +85,7 @@
       "us-west-2"      : { "32" : "ami-38fe7308", "64" : "ami-30fe7300", "64HVM" : "NOT_YET_SUPPORTED" },
       "us-west-1"      : { "32" : "ami-11d68a54", "64" : "ami-1bd68a5e", "64HVM" : "NOT_YET_SUPPORTED" },
       "eu-west-1"      : { "32" : "ami-973b06e3", "64" : "ami-953b06e1", "64HVM" : "NOT_YET_SUPPORTED" },
-      "ap-southeast-1" : { "32" : "ami-b4b0cae6", "64" : "ami-beb0caec", "64HVM" : "NOT_YET_SUPPORTED" },
+      "ap-southeast-1" : { "32" : "ami-b4b0cae6", "64" : "F16-x86_64-cfntools", "64HVM" : "NOT_YET_SUPPORTED" },
       "ap-northeast-1" : { "32" : "ami-0644f007", "64" : "ami-0a44f00b", "64HVM" : "NOT_YET_SUPPORTED" },
       "sa-east-1"      : { "32" : "ami-3e3be423", "64" : "ami-3c3be421", "64HVM" : "NOT_YET_SUPPORTED" }
     }
@@ -204,8 +204,8 @@
 
           "# Install Rails packages\n",
           "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r WebServer ",
-          "    --access-key ",  { "Ref" : "HostKeys" },
-          "    --secret-key ", {"Fn::GetAtt": ["HostKeys", "SecretAccessKey"]},
+          "    --access-key Ref_HostKeys",
+          "    --secret-key Fn_GetAtt_HostKeys_SecretAccessKey",
           "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
 
           "# Setup MySQL root password and create a user\n",
@@ -256,7 +256,7 @@
 
   "Outputs" : {
     "WebsiteURL" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicDnsName" ]}, ":3000" ]] },
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicIp" ]}, ":3000" ]] },
       "Description" : "URL for newly created Rails application"
     }
   }
