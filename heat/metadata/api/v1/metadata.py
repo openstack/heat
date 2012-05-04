@@ -19,9 +19,11 @@ import json
 from webob.exc import Response
 
 from heat.common import wsgi
+from heat import context
 from heat.metadata import db as db_api
 from heat.metadata.db import (ConflictError, StackNotFoundError,
                               ResourceNotFoundError)
+from heat import rpc
 
 
 def json_response(http_status, data):
@@ -47,39 +49,46 @@ class MetadataController:
         }
 
     def list_stacks(self, req):
-        return db_api.list_stacks()
+        con = context.get_admin_context()
+        resp = rpc.call(con, 'engine',
+                              {'method': 'metadata_list_stacks'})
+        return resp
 
     def list_resources(self, req, stack_name):
-        try:
-            resources = db_api.list_resources(stack_name)
-        except StackNotFoundError:
+        con = context.get_admin_context()
+        resources = rpc.call(con, 'engine',
+                             {'method': 'metadata_list_resources',
+                              'args': {'stack_name': stack_name}})
+        if resources:
+            return resources
+        else:
             return json_error(404, 'The stack "%s" does not exist.' % stack_name)
-        return resources
 
     def get_resource(self, req, stack_name, resource_id):
-        try:
-            resource = db_api.get_resource(stack_name, resource_id)
-        except StackNotFoundError:
-            return json_error(404, 'The stack "%s" does not exist.' % stack_name)
-        except ResourceNotFoundError:
-            return json_error(404, 'The resource "%s" does not exist.' % resource_id)
-        return resource
-
-    def create_stack(self, req, body, stack_name):
-        try:
-            stack = db_api.create_stack(stack_name, body)
-        except ConflictError:
-            return json_error(409, 'The stack "%s" already exists.' % stack_name)
-        return json_response(201, stack)
+        con = context.get_admin_context()
+        [error, metadata] = rpc.call(con, 'engine',
+                                     {'method': 'metadata_get_resource',
+                                      'args': {'stack_name': stack_name,
+                                               'resource_id': resource_id}})
+        if error:
+            if error == 'stack':
+                return json_error(404, 'The stack "%s" does not exist.' % stack_name)
+            else:
+                return json_error(404, 'The resource "%s" does not exist.' % resource_id)
+        return metadata
 
     def update_metadata(self, req, body, stack_name, resource_id):
-        try:
-            db_api.update_resource_metadata(stack_name, resource_id, body)
-        except StackNotFoundError:
-            return json_error(409, 'The stack "%s" does not exist.' % stack_name)
-        except ResourceNotFoundError:
-            # The resource doesn't exit yet, create it.
-            db_api.create_resource_metadata(stack_name, resource_id, body)
+        con = context.get_admin_context()
+        [error, metadata] = rpc.call(con, 'engine',
+                                     {'method': 'metadata_update',
+                                      'args': {'stack_name': stack_name,
+                                               'resource_id': resource_id,
+                                               'metadata': body}})
+        if error:
+            if error == 'stack':
+                return json_error(404, 'The stack "%s" does not exist.' % stack_name)
+            else:
+                return json_error(404, 'The resource "%s" does not exist.' % resource_id)
         return json_response(201, {
             'resource': resource_id,
             'metadata': body,

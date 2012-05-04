@@ -89,6 +89,16 @@ class HeatBase(object):
         for k, v in values.iteritems():
             setattr(self, k, v)
 
+    def update_and_save(self, values, session=None):
+        if not session:
+            session = Session.object_session(self)
+            if not session:
+                session = get_session()
+        session.begin()
+        for k, v in values.iteritems():
+            setattr(self, k, v)
+        session.commit()
+
     def iteritems(self):
         """Make the model object behave like a dict.
 

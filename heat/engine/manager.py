@@ -15,6 +15,7 @@
 
 
 import contextlib
+from copy import deepcopy
 import functools
 import os
 import socket
@@ -214,3 +215,61 @@ class EngineManager(manager.Manager):
                     'ResourceStatus': e.name}
 
         return {'events': [parse_event(e) for e in events]}
+
+    def metadata_list_stacks(self, context):
+        """
+        Return the names of the stacks registered with Heat.
+        """
+        stacks = db_api.stack_get_all(None)
+        return [s.name for s in stacks]
+
+    def metadata_list_resources(self, context, stack_name):
+        """
+        Return the resource IDs of the given stack.
+        """
+        stack = db_api.stack_get(None, stack_name)
+        if stack:
+            return [r.name for r in stack.resources]
+        else:
+            return None
+
+    def metadata_get_resource(self, context, stack_name, resource_id):
+        """
+        Get the metadata for the given resource.
+        """
+        s = db_api.stack_get(None, stack_name)
+        if not s:
+            return ['stack', None]
+
+        raw_template = db_api.raw_template_get(None, s.raw_template_id)
+        template = raw_template.template
+
+        if not resource_id in template.get('Resources', {}):
+            return ['resource', None]
+
+        metadata = template['Resources'][resource_id].get('Metadata', {})
+        return [None, metadata]
+
+    def metadata_update(self, context, stack_name, resource_id, metadata):
+        """
+        Update the metadata for the given resource.
+        """
+        s = db_api.stack_get(None, stack_name)
+        if not s:
+            return ['stack', None]
+
+        raw_template = db_api.raw_template_get(None, s.raw_template_id)
+
+        if not resource_id in raw_template.template.get('Resources', {}):
+            return ['resource', None]
+
+        # TODO(shadower) deep copy of the template is required here. Without it,
+        # we directly modify raw_template.template by assigning the new
+        # metadata. When we then call raw_template.update_and_save, the session
+        # will detect no changes and thus not update the database.
+        # Just updating the values and calling save didn't seem to work either.
+        # There's probably an idiomatic way I'm missing right now.
+        t = deepcopy(raw_template.template)
+        t['Resources'][resource_id]['Metadata'] = metadata
+        raw_template.update_and_save({'template': t})
+        return [None, metadata]
