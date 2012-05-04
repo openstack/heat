@@ -147,9 +147,11 @@
             "files" : {
               "/tmp/setup.mysql" : {
                 "content" : { "Fn::Join" : ["", [
-                  "CREATE USER '", { "Ref" : "DBUsername" }, "'@'localhost' IDENTIFIED BY '", { "Ref" : "DBPassword" }, "';\n",
-                  "GRANT ALL ON ", { "Ref" : "DBName" }, ".* TO '", { "Ref" : "DBUsername" }, "'@'localhost';\n",
-                  "FLUSH PRIVILEGES;\n"
+		  "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
+		  "GRANT ALL PRIVILEGES ON ", { "Ref" : "DBName" }, ".* TO '", { "Ref" : "DBUsername" }, "'@'localhost'\n",
+		  "IDENTIFIED BY '", { "Ref" : "DBPassword" }, "';\n",
+                  "FLUSH PRIVILEGES;\n",
+		  "EXIT\n"
                   ]]},
                 "mode"  : "000644",
                 "owner" : "root",
