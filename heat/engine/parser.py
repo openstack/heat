@@ -115,16 +115,14 @@ class Stack(object):
         order = self.get_create_order()
 
         response = None
-
         for r in order:
             try:
                 res = self.resources[r].validate()
                 if res:
-                    print 'setting response'
                     response = {'ValidateTemplateResult': {
                            'Description': 'Malformed Query Response [%s]' % res,
                            'Parameters': []}}
-                    break
+                    return response
             except Exception as ex:
                 logger.exception('validate')
                 failed = True

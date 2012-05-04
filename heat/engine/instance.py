@@ -195,8 +195,18 @@ class Instance(Resource):
 
     def validate(self):
         '''
-        Validate the server's ip address
+        Validate any of the provided params
         '''
+        #check validity of key
+        if self.stack.parms['KeyName']:
+            keypairs = self.nova().keypairs.list()
+            valid_key = False
+            for k in keypairs:
+                if k.name == self.stack.parms['KeyName'].get('Value'):
+                    valid_key = True
+            if not valid_key:
+                return {'Error': \
+                        'Provided KeyName is not registered with nova'}
         return None
 
     def reload(self):
