@@ -157,21 +157,22 @@ class EngineManager(manager.Manager):
         return {'stack': {'id': new_s.id, 'name': new_s.name,\
                 'created_at': str(new_s.created_at)}}
 
-    def validate_template(self, req, body=None):
+    def validate_template(self, context, template, params):
         """
         The validate_template method uses the stack parser to check
         the validity of a template.
 
-        arg1 -> http request params.
-        arg2 -> Template body.
+        arg1 -> RPC context.
+        arg3 -> Template of stack you want to create.
+        arg4 -> Params passed from API.
         """
 
         logger.info('validate_template')
-        if body is None:
+        if template is None:
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
-        s = parser.Stack('validate', body, 0, req.params)
+        s = parser.Stack('validate', template, 0, params)
         res = s.validate()
 
         return res

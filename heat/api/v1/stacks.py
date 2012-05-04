@@ -164,7 +164,10 @@ class StackController(object):
 
         logger.info('validate_template')
         try:
-            return con.validate_template(stack, **req.params)
+            return rpc.call(con, 'engine',
+                            {'method': 'validate_template',
+                             'args': {'template': stack,
+                                      'params': dict(req.params)}})
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
@@ -179,6 +182,7 @@ class StackController(object):
                        {'method': 'delete_stack',
                         'args': {'stack_name': req.params['StackName'],
                         'params': dict(req.params)}})
+
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 

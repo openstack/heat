@@ -111,10 +111,28 @@ class Stack(object):
         http://docs.amazonwebservices.com/AWSCloudFormation/latest/ \
             APIReference/API_ValidateTemplate.html
         '''
-        response = {'ValidateTemplateResult': {
-                    'Description': 'bla',
-                    'Parameters': []}}
 
+        order = self.get_create_order()
+
+        response = None
+
+        for r in order:
+            try:
+                res = self.resources[r].validate()
+                if res:
+                    print 'setting response'
+                    response = {'ValidateTemplateResult': {
+                           'Description': 'Malformed Query Response [%s]' % res,
+                           'Parameters': []}}
+                    break
+            except Exception as ex:
+                logger.exception('validate')
+                failed = True
+
+        if response == None:
+            response = {'ValidateTemplateResult': {
+                        'Description': 'Successfully validated',
+                        'Parameters': []}}
         for p in self.parms:
             jp = {'member': {}}
             res = jp['member']

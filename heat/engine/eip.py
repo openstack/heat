@@ -45,6 +45,12 @@ class ElasticIp(Resource):
         self.instance_id_set(ips.id)
         self.state_set(self.CREATE_COMPLETE)
 
+    def validate(self):
+        '''
+        Validate the ip address here
+        '''
+        return None
+
     def reload(self):
         '''
         get the ipaddress here

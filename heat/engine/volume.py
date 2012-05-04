@@ -46,6 +46,12 @@ class Volume(Resource):
         else:
             self.state_set(self.CREATE_FAILED)
 
+    def validate(self):
+        '''
+        Validate the volume
+        '''
+        return None
+
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or \
            self.state == self.DELETE_COMPLETE:

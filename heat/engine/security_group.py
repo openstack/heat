@@ -73,6 +73,12 @@ class SecurityGroup(Resource):
 
         self.state_set(self.CREATE_COMPLETE)
 
+    def validate(self):
+        '''
+        Validate the security group
+        '''
+        return None
+
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or \
            self.state == self.DELETE_COMPLETE:

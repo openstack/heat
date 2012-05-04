@@ -61,7 +61,8 @@ def template_validate(options, arguments):
     it is in the correct format.
 
     Usage: heat validate \\
-        [--template-file=<template file>|--template-url=<template URL>]
+        [--template-file=<template file>|--template-url=<template URL>] \\
+        [options]
 
     --template-file: Specify a local template file.
     --template-url:  Specify a URL pointing to a stack description template.
@@ -74,6 +75,14 @@ def template_validate(options, arguments):
     else:
         logging.error('Please specify a template file or url')
         return utils.FAILURE
+
+    if options.parameters:
+        count = 1
+        for p in options.parameters.split(';'):
+            (n, v) = p.split('=')
+            parameters['Parameters.member.%d.ParameterKey' % count] = n
+            parameters['Parameters.member.%d.ParameterValue' % count] = v
+            count = count + 1
 
     client = get_client(options)
     result = client.validate_template(**parameters)

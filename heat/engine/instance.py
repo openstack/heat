@@ -193,6 +193,12 @@ class Instance(Resource):
         else:
             self.state_set(self.CREATE_FAILED)
 
+    def validate(self):
+        '''
+        Validate the server's ip address
+        '''
+        return None
+
     def reload(self):
         '''
         re-read the server's ipaddress so FnGetAtt works.

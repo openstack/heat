@@ -106,6 +106,13 @@ class Resource(object):
         self.stack.resolve_joins(self.t)
         self.stack.resolve_base64(self.t)
 
+    def validate(self):
+        logger.info('validating %s name:%s' % (self.t['Type'], self.name))
+
+        self.stack.resolve_attributes(self.t)
+        self.stack.resolve_joins(self.t)
+        self.stack.resolve_base64(self.t)
+
     def instance_id_set(self, inst):
         self.instance_id = inst
 
