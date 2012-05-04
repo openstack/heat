@@ -39,7 +39,8 @@ class API(wsgi.Router):
 
         mapper.connect("/CreateStack", controller=stacks_resource,
                        action="create", conditions=dict(method=["POST"]))
-        mapper.connect("/", controller=stacks_resource, action="index")
+        mapper.connect("/", controller=stacks_resource,
+                       action="list", conditions=dict(method=["GET"]))
         mapper.connect("/ListStacks", controller=stacks_resource,
                        action="list", conditions=dict(method=["GET"]))
         mapper.connect("/DescribeStacks", controller=stacks_resource,
