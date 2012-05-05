@@ -20,9 +20,6 @@ from webob.exc import Response
 
 from heat.common import wsgi
 from heat import context
-from heat.metadata import db as db_api
-from heat.metadata.db import (ConflictError, StackNotFoundError,
-                              ResourceNotFoundError)
 from heat import rpc
 
 
