@@ -26,6 +26,7 @@ import traceback
 import logging
 import webob
 from heat import manager
+from heat.common import config
 from heat.engine import parser
 from heat.engine import resources
 from heat.db import api as db_api
@@ -122,7 +123,9 @@ class EngineManager(manager.Manager):
         if db_api.stack_get(None, stack_name):
             return {'Error': 'Stack already exists with that name.'}
 
-        stack = parser.Stack(stack_name, template, 0, params)
+        metadata_server = config.FLAGS.heat_metadata_server_url
+        stack = parser.Stack(stack_name, template, 0, params,
+                             metadata_server=metadata_server)
         response = stack.validate()
         if 'Malformed Query Response' in response['ValidateTemplateResult']['Description']:
             return response['ValidateTemplateResult']['Description']
@@ -215,6 +218,9 @@ class EngineManager(manager.Manager):
                     'ResourceStatus': e.name}
 
         return {'events': [parse_event(e) for e in events]}
+
+    def metadata_register_address(self, context, url):
+        config.FLAGS.heat_metadata_server_url = url
 
     def metadata_list_stacks(self, context):
         """

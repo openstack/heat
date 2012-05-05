@@ -189,6 +189,9 @@ class HeatEngineConfigOpts(cfg.CommonConfigOpts):
     cfg.IntOpt('osapi_volume_listen_port',
                default=8776,
                help='port for os volume api to listen'),
+    cfg.StrOpt('heat_metadata_server_url',
+               default="",
+               help='URL of the Heat metadata server'),
     ]
     db_opts = [
     cfg.StrOpt('sql_connection',

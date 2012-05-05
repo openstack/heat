@@ -38,7 +38,8 @@ class Stack(object):
     DELETE_FAILED = 'DELETE_FAILED'
     DELETE_COMPLETE = 'DELETE_COMPLETE'
 
-    def __init__(self, stack_name, template, stack_id=0, parms=None):
+    def __init__(self, stack_name, template, stack_id=0, parms=None,
+                 metadata_server=None):
         self.id = stack_id
         self.t = template
         self.parms = self.t.get('Parameters', {})
@@ -48,8 +49,7 @@ class Stack(object):
         self.doc = None
         self.name = stack_name
         self.parsed_template_id = 0
-        # TODO(shadower) load this from a config file
-        self.metadata_server = 'http://10.0.0.1'
+        self.metadata_server = metadata_server
 
         self.parms['AWS::StackName'] = {"Description": "AWS StackName",
             "Type": "String",
