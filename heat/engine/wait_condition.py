@@ -42,10 +42,10 @@ class WaitConditionHandle(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
 
-        # generate a unique url
-        self.instance_id = '%s?%s&%s' % (self.stack.metadata_server,
-                                         self.stack.name,
-                                         self.name)
+        self.instance_id = '%s/stacks/:%s/resources/%s' % \
+                           (self.stack.metadata_server,
+                            self.stack.name,
+                            self.name)
 
         self.state_set(self.CREATE_COMPLETE)
 
@@ -66,16 +66,7 @@ class WaitConditionHandle(Resource):
 
     def FnGetRefId(self):
         '''
-        Wait Condition Signal URL
-        example: https://cloudformation-waitcondition-us-east-1.s3.amazonaws.com/arn%3Aaws%3Acloudformation%3Aus-east-1%3A803981987763%3Astack%2Fwaittest%2F054a33d0-bdee-11e0-8816-5081c490a786%2FmyWaitHandle?Expires=1312475488&AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Signature=tUsrW3WvWVT46K69zMmgbEkwVGo%3D
-        so we need:
-        - stackname
-        - region
-        - self.name (WaitCondition name)
-        - Expires
-        - AWSAccessKeyId
-        - Signature
-
+        Return the Wait Condition Signal URL
         '''
         return unicode(self.instance_id)
 
