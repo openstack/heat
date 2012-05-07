@@ -99,7 +99,7 @@ class EngineManager(manager.Manager):
             mem['TemplateDescription'] = ps.t.get('Description',
                                                   'No description')
             mem['StackStatus'] = ps.t.get('stack_status', 'unknown')
-            
+
             # only show the outputs on a completely created stack
             if ps.t['stack_status'] == ps.CREATE_COMPLETE:
                 mem['Outputs'] = ps.get_outputs()
@@ -247,9 +247,7 @@ class EngineManager(manager.Manager):
         if not s:
             return ['stack', None]
 
-        raw_template = db_api.raw_template_get(None, s.raw_template_id)
-        template = raw_template.template
-
+        template = s.raw_template.parsed_template.template
         if not resource_id in template.get('Resources', {}):
             return ['resource', None]
 
@@ -263,19 +261,20 @@ class EngineManager(manager.Manager):
         s = db_api.stack_get(None, stack_name)
         if not s:
             return ['stack', None]
+        pt_id = s.raw_template.parsed_template.id
 
-        raw_template = db_api.raw_template_get(None, s.raw_template_id)
-
-        if not resource_id in raw_template.template.get('Resources', {}):
+        pt = db_api.parsed_template_get(None, pt_id)
+        if not resource_id in pt.template.get('Resources', {}):
             return ['resource', None]
 
-        # TODO(shadower) deep copy of the template is required here. Without it,
-        # we directly modify raw_template.template by assigning the new
-        # metadata. When we then call raw_template.update_and_save, the session
-        # will detect no changes and thus not update the database.
+        # TODO(shadower) deep copy of the template is required here. Without
+        # it, we directly modify parsed_template.template by assigning the new
+        # metadata. When we then call parsed_template.update_and_save, the
+        # session will detect no changes and thus not update the database.
         # Just updating the values and calling save didn't seem to work either.
         # There's probably an idiomatic way I'm missing right now.
-        t = deepcopy(raw_template.template)
+        t = deepcopy(pt.template)
         t['Resources'][resource_id]['Metadata'] = metadata
-        raw_template.update_and_save({'template': t})
+        pt.template = t
+        pt.save()
         return [None, metadata]
