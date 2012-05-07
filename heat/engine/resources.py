@@ -30,19 +30,6 @@ from heat.db import api as db_api
 from heat.common.config import HeatEngineConfigOpts
 
 logger = logging.getLogger(__file__)
-# If ../heat/__init__.py exists, add ../ to Python search path, so that
-# it will override what happens to be installed in /usr/(local/)lib/python...
-possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
-                                   os.pardir,
-                                   os.pardir))
-if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
-    sys.path.insert(0, possible_topdir)
-    cloudinit_path = '%s/heat/%s/' % (possible_topdir, "cloudinit")
-else:
-    for p in sys.path:
-        if 'heat' in p:
-            cloudinit_path = '%s/heat/%s/' % (p, "cloudinit")
-            break
 
 
 class Resource(object):
