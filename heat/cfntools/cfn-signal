@@ -20,6 +20,14 @@ import logging
 import os
 import sys
 
+
+if os.path.exists('/opt/aws/bin'):
+    sys.path.insert(0, '/opt/aws/bin')
+    from cfn_helper import *
+else:
+    from heat.cfntools.cfn_helper import *
+
+
 description = " "
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('-s', '--success',
@@ -30,18 +38,22 @@ parser.add_argument('-s', '--success',
 parser.add_argument('-r', '--reason',
         dest="reason",
         help="The reason for the failure",
+        default="Configuration Complete",
         required=False)
 parser.add_argument('--data',
         dest="data",
+        default="Application has completed configuration.",
         help="The data to send",
         required=False)
 parser.add_argument('-i', '--id',
         dest="unique_id",
         help="the unique id to send back to the WaitCondition",
+        default='00000',
         required=False)
 parser.add_argument('-e', '--exit',
         dest="exit_code",
         help="The exit code from a procecc to interpret",
+        default=None,
         required=False)
 parser.add_argument('url',
                    help='the url to post to')
@@ -51,10 +63,28 @@ log_format = '%(levelname)s [%(asctime)s] %(message)s'
 logging.basicConfig(format=log_format, level=logging.DEBUG)
 
 logger = logging.getLogger('cfn-init')
-#log_file_name = "/var/log/cfn-signal.log"
-#file_handler = logging.FileHandler(log_file_name)
-#file_handler.setFormatter(logging.Formatter(log_format))
-#logger.addHandler(file_handler)
+log_file_name = "/var/log/cfn-signal.log"
+file_handler = logging.FileHandler(log_file_name)
+file_handler.setFormatter(logging.Formatter(log_format))
+logger.addHandler(file_handler)
 
-logger.info('cfn-signal called %s ' % (str(args)))
+logger.debug('cfn-signal called %s ' % (str(args)))
 
+status = 'FAILURE'
+if args.exit_code:
+    # "exit_code" takes presedence over "success".
+    if args.exit_code == '0':
+        status = 'SUCCESS'
+else:
+    if args.success == 'true':
+        status = 'SUCCESS'
+
+body = {
+    "Status" : status,
+    "Reason" : args.reason,
+    "UniqueId" : args.unique_id,
+    "Data" : args.data
+}
+
+cmd_str = "curl -X PUT -H 'Content-Type:' --data-binary '%s' %s" % (json.dumps(body), args.url)
+CommandRunner(cmd_str).run()
