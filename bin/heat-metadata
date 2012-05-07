@@ -39,13 +39,11 @@ from heat.common import config
 from heat.common import wsgi
 from heat import context
 from paste import httpserver
-from socket import gethostbyname, gethostname
 
 LOG = logging.getLogger('heat.metadata')
 
 
-def send_address_to_engine(port):
-    host = gethostbyname(gethostname())
+def send_address_to_engine(host, port):
     con = context.get_admin_context()
     resp = rpc.call(con, 'engine',
                     {'method': 'metadata_register_address',
@@ -63,8 +61,9 @@ if __name__ == '__main__':
         app = config.load_paste_app(conf)
 
         port = conf.bind_port
-        send_address_to_engine(port)
-        LOG.info(('Starting Heat Metadata on port %s') % port)
-        httpserver.serve(app, port=port)
+        host = conf.bind_host
+        send_address_to_engine(host, port)
+        LOG.info(('Starting Heat Metadata on %s:%s') % (host, port))
+        httpserver.serve(app, host=host, port=port)
     except RuntimeError, e:
         sys.exit("ERROR: %s" % e)

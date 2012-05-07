@@ -148,7 +148,8 @@ class HeatMetadataConfigOpts(cfg.CommonConfigOpts):
             version='%%prog %s' % version.version_string(),
             default_config_files=default_config_files,
             **kwargs)
-        opts = [cfg.IntOpt('bind_port', default=8000)]
+        opts = [cfg.IntOpt('bind_port', default=8000),
+                cfg.StrOpt('bind_host', default='127.0.0.1')]
         opts.extend(rpc_opts)
         self.register_cli_opts(opts)
 
