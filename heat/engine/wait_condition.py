@@ -15,12 +15,14 @@
 
 import eventlet
 import logging
+import json
 import os
 
 from heat.common import exception
+from heat.db import api as db_api
 from heat.engine.resources import Resource
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('heat.endine.wait_condition')
 
 
 class WaitConditionHandle(Resource):
@@ -42,7 +44,7 @@ class WaitConditionHandle(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
 
-        self.instance_id = '%s/stacks/:%s/resources/%s' % \
+        self.instance_id = '%s/stacks/%s/resources/%s' % \
                            (self.stack.metadata_server,
                             self.stack.name,
                             self.name)
@@ -76,9 +78,30 @@ class WaitCondition(Resource):
     def __init__(self, name, json_snippet, stack):
         super(WaitCondition, self).__init__(name, json_snippet, stack)
         self.instance_id = ''
+        self.resource_id = None
 
-        self.handle_url = self.t['Properties']['Handle']
-        self.timeout = self.t['Properties']['Timeout']
+        self.timeout = int(self.t['Properties']['Timeout'])
+        self.count = int(self.t['Properties'].get('Count', '1'))
+
+    def validate(self):
+        '''
+        Validate the wait condition
+        '''
+        if not 'Handle' in self.t['Properties']:
+            return {'Error': \
+                    'Handle Property must be provided'}
+        if self.count < 1:
+            return {'Error': \
+                    'Count must be greater than 0'}
+        if self.timeout < 1:
+            return {'Error': \
+                    'Timeout must be greater than 0'}
+
+    def _get_handle_resource_id(self):
+        if self.resource_id == None:
+            self.handle_url = self.t['Properties'].get('Handle', None)
+            self.resource_id = self.handle_url.split('/')[-1]
+            return self.resource_id
 
     def create(self):
         if self.state != None:
@@ -86,23 +109,53 @@ class WaitCondition(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
 
-        eventlet.sleep(int(self.timeout) / 2)
-#        timeout = Timeout(seconds, exception)
-#        try:
-            # keep polling the url of the Handle and get the success/failure
-            # state of it
-            # execution here is limited by timeout
-#        except Timeout, t:
-#            if t is not timeout:
-#                raise # not my timeout
-#            else:
-#                self.state_set(self.CREATE_FAILED,
-#                               '%s Timed out waiting for instance' % \
-#                               self.name)
-#        finally:
-#            timeout.cancel()
+        self._get_handle_resource_id()
 
-        self.state_set(self.CREATE_COMPLETE)
+        # keep polling our Metadata to see if the cfn-signal has written
+        # it yet. The execution here is limited by timeout.
+        print 'timeout %d' % self.timeout
+        tmo = eventlet.Timeout(self.timeout)
+        status = 'WAITING'
+        reason = ''
+        try:
+            while status == 'WAITING':
+                pt = None
+                if self.stack.parsed_template_id:
+                    try:
+                        pt = db_api.parsed_template_get(None,
+                                             self.stack.parsed_template_id)
+                    except Exception as ex:
+                        if 'not found' in ex:
+                            # entry deleted
+                            return
+                        else:
+                            pass
+
+                if pt:
+                    res = pt.template['Resources'][self.resource_id]
+                    metadata = res.get('Metadata', {})
+                    status = metadata.get('Status', 'WAITING')
+                    reason = metadata.get('Reason', 'Reason not provided')
+                    logger.debug('got %s' % json.dumps(metadata))
+                if status == 'WAITING':
+                    logger.debug('Waiting some more for the Metadata[Status]')
+                    eventlet.sleep(30)
+        except eventlet.Timeout, t:
+            if t is not tmo:
+                # not my timeout
+                raise
+            else:
+                status = 'TIMEDOUT'
+                reason = 'Timed out waiting for instance'
+        finally:
+            tmo.cancel()
+
+        if status == 'SUCCESS':
+            self.state_set(self.CREATE_COMPLETE,
+                           '%s: %s' % (self.name, reason))
+        else:
+            self.state_set(self.CREATE_FAILED,
+                           '%s: %s' % (self.name, reason))
 
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or \
@@ -115,3 +168,16 @@ class WaitCondition(Resource):
 
     def FnGetRefId(self):
         return unicode(self.name)
+
+    def FnGetAtt(self, key):
+        res = None
+        self._get_handle_resource_id()
+        if key == 'Data':
+            resource = self.stack.t['Resources'][self.resource_id]
+            res = resource['Metadata']['Data']
+        else:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
+
+        logger.debug('%s.GetAtt(%s) == %s' % (self.name, key, res))
+        return unicode(res)
