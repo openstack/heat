@@ -104,19 +104,25 @@
           "config" : {
             "files" : {
               "/opt/aws/bin/cfn-init" : {
-                "source" : "https://raw.github.com/heat-api/heat/ha/heat/cfntools/cfn-init",
+                "source" : "https://raw.github.com/heat-api/heat/master/heat/cfntools/cfn-init",
                 "mode"   : "000755",
                 "owner"  : "root",
                 "group"  : "root"
               },
               "/opt/aws/bin/cfn-hup" : {
-                "source" : "https://raw.github.com/heat-api/heat/ha/heat/cfntools/cfn-hup",
+                "source" : "https://raw.github.com/heat-api/heat/master/heat/cfntools/cfn-hup",
+                "mode"   : "000755",
+                "owner"  : "root",
+                "group"  : "root"
+              },
+              "/opt/aws/bin/cfn-signal" : {
+                "source" : "https://raw.github.com/heat-api/heat/master/heat/cfntools/cfn-signal",
                 "mode"   : "000755",
                 "owner"  : "root",
                 "group"  : "root"
               },
               "/opt/aws/bin/cfn_helper.py" : {
-                "source" : "https://raw.github.com/heat-api/heat/ha/heat/cfntools/cfn_helper.py",
+                "source" : "https://raw.github.com/heat-api/heat/master/heat/cfntools/cfn_helper.py",
                 "mode"   : "000644",
                 "owner"  : "root",
                 "group"  : "root"
