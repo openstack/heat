@@ -139,6 +139,7 @@ class HeatConfigOpts(cfg.CommonConfigOpts):
             **kwargs)
         self.register_cli_opts(rpc_opts)
 
+
 class HeatMetadataConfigOpts(cfg.CommonConfigOpts):
     def __init__(self, default_config_files=None, **kwargs):
         config_files = cfg.find_config_files(project='heat',

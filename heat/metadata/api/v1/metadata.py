@@ -30,10 +30,12 @@ def json_response(http_status, data):
     response.content_type = 'application/json'
     return response
 
+
 def json_error(http_status, message):
     """Create a JSON error response."""
     body = {'error': message}
     return json_response(http_status, body)
+
 
 class MetadataController:
     def __init__(self, options):
@@ -59,7 +61,8 @@ class MetadataController:
         if resources:
             return resources
         else:
-            return json_error(404, 'The stack "%s" does not exist.' % stack_name)
+            return json_error(404,
+                              'The stack "%s" does not exist.' % stack_name)
 
     def get_resource(self, req, stack_name, resource_id):
         con = context.get_admin_context()
@@ -69,9 +72,11 @@ class MetadataController:
                                                'resource_id': resource_id}})
         if error:
             if error == 'stack':
-                return json_error(404, 'The stack "%s" does not exist.' % stack_name)
+                return json_error(404,
+                                  'The stack "%s" does not exist.' % stack_name)
             else:
-                return json_error(404, 'The resource "%s" does not exist.' % resource_id)
+                return json_error(404,
+                                  'The resource "%s" does not exist.' % resource_id)
         return metadata
 
     def update_metadata(self, req, body, stack_name, resource_id):
@@ -83,13 +88,16 @@ class MetadataController:
                                                'metadata': body}})
         if error:
             if error == 'stack':
-                return json_error(404, 'The stack "%s" does not exist.' % stack_name)
+                return json_error(404,
+                                  'The stack "%s" does not exist.' % stack_name)
             else:
-                return json_error(404, 'The resource "%s" does not exist.' % resource_id)
+                return json_error(404,
+                                  'The resource "%s" does not exist.' % resource_id)
         return json_response(201, {
             'resource': resource_id,
             'metadata': body,
         })
+
 
 def create_resource(options):
     """
@@ -98,4 +106,3 @@ def create_resource(options):
     deserializer = wsgi.JSONRequestDeserializer()
     serializer = wsgi.JSONResponseSerializer()
     return wsgi.Resource(MetadataController(options), deserializer, serializer)
-

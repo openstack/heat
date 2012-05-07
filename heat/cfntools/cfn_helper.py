@@ -44,6 +44,7 @@ import sys
 from urllib2 import urlopen
 from urlparse import urlparse, urlunparse
 
+
 def to_boolean(b):
     val = b.lower().strip() if isinstance(b, basestring) else b
     return val in [True, 'true', 'yes', '1', 1]
@@ -732,8 +733,10 @@ class ServicesHandler(object):
             else:
                 self._monitor_services(handler, service_entries)
 
+
 class MetadataServerConnectionError(Exception):
     pass
+
 
 class Metadata(object):
     _metadata = None
@@ -752,7 +755,6 @@ class Metadata(object):
         # TODO(asalkeld) is this metadata for the local resource?
         self._is_local_metadata = True
         self._metadata = None
-
 
     def metadata_server_url(self):
         """

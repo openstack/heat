@@ -119,9 +119,10 @@ class Stack(object):
             try:
                 res = self.resources[r].validate()
                 if res:
+                    err_str = 'Malformed Query Response [%s]' % (res)
                     response = {'ValidateTemplateResult': {
-                           'Description': 'Malformed Query Response [%s]' % res,
-                           'Parameters': []}}
+                                'Description': err_str,
+                                'Parameters': []}}
                     return response
             except Exception as ex:
                 logger.exception('validate')

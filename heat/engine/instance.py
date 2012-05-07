@@ -116,7 +116,8 @@ class Instance(Resource):
                 mime_blob.attach(msg)
 
             msg = MIMEText(userdata, _subtype='x-shellscript')
-            msg.add_header('Content-Disposition', 'attachment', filename='startup')
+            msg.add_header('Content-Disposition', 'attachment',
+                           filename='startup')
             mime_blob.attach(msg)
             self.mime_string = mime_blob.as_string()
 
