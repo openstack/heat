@@ -13,12 +13,16 @@
 #    under the License.
 
 """Session Handling for SQLAlchemy backend."""
+
+import logging
 import sqlalchemy.interfaces
 import sqlalchemy.orm
 from sqlalchemy.exc import DisconnectionError
-from heat.openstack.common import cfg
-from heat.db import api as db_api
 
+from heat.db import api as db_api
+from heat.openstack.common import cfg
+
+logger = logging.getLogger(__file__)
 _ENGINE = None
 _MAKER = None
 
@@ -41,7 +45,7 @@ def _wrap_db_error(f):
         except UnicodeEncodeError:
             raise InvalidUnicodeParameter()
         except Exception, e:
-            LOG.exception(_('DB exception wrapped.'))
+            logger.exception(_('DB exception wrapped.'))
             raise DBError(e)
     _wrap.func_name = f.func_name
     return _wrap
@@ -83,7 +87,7 @@ class MySQLPingListener(object):
             dbapi_con.cursor().execute('select 1')
         except dbapi_con.OperationalError, ex:
             if ex.args[0] in (2006, 2013, 2014, 2045, 2055):
-                LOG.warn('Got mysql server has gone away: %s', ex)
+                logger.warn('Got mysql server has gone away: %s', ex)
                 raise DisconnectionError("Database server went away")
             else:
                 raise
