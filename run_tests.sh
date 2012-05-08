@@ -9,6 +9,7 @@ function usage {
   echo "  -f, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
   echo "  --unittests-only         Run unit tests only."
   echo "  -p, --pep8               Just run pep8"
+  echo "  -P, --no-pep8            Don't run static code checks"
   echo "  -c, --coverage           Generate coverage report"
   echo "  -h, --help               Print this usage message"
   echo ""
@@ -25,6 +26,7 @@ function process_option {
     -f|--force) let force=1;;
     --unittests-only) noseargs="$noseargs -a tag=unit";;
     -p|--pep8) let just_pep8=1;;
+    -P|--no-pep8) no_pep8=1;;
     -c|--coverage) coverage=1;;
     -h|--help) usage;;
     *) noseargs="$noseargs $1"
@@ -39,6 +41,7 @@ force=0
 noseargs=
 wrapper=""
 just_pep8=0
+no_pep8=0
 coverage=0
 
 for arg in "$@"; do
@@ -96,15 +99,21 @@ if [ $coverage -eq 1 ]; then
     ${wrapper} coverage erase
 fi
 
-run_tests
-
 if [ $just_pep8 -eq 1 ]; then
   run_pep8
   exit
 fi
 
+run_tests
+
+# NOTE(sirp): we only want to run pep8 when we're running the full-test suite,
+# not when we're running tests individually. To handle this, we need to
+# distinguish between options (noseopts), which begin with a '-', and
+# arguments (noseargs).
 if [ -z "$noseargs" ]; then
-  run_pep8
+  if [ $no_pep8 -eq 0 ]; then
+    run_pep8
+  fi
 fi
 
 if [ $coverage -eq 1 ]; then
