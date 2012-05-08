@@ -9,6 +9,7 @@ function usage {
   echo "  -f, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
   echo "  --unittests-only         Run unit tests only."
   echo "  -p, --pep8               Just run pep8"
+  echo "  -c, --coverage           Generate coverage report"
   echo "  -h, --help               Print this usage message"
   echo ""
   echo "Note: with no options specified, the script will try to run the tests in a virtual environment,"
@@ -24,6 +25,7 @@ function process_option {
     -f|--force) let force=1;;
     --unittests-only) noseargs="$noseargs -a tag=unit";;
     -p|--pep8) let just_pep8=1;;
+    -c|--coverage) coverage=1;;
     -h|--help) usage;;
     *) noseargs="$noseargs $1"
   esac
@@ -37,10 +39,16 @@ force=0
 noseargs=
 wrapper=""
 just_pep8=0
+coverage=0
 
 for arg in "$@"; do
   process_option $arg
 done
+
+# If enabled, tell nose to collect coverage data
+if [ $coverage -eq 1 ]; then
+    noseopts="$noseopts --with-coverage --cover-package=heat"
+fi
 
 NOSETESTS="python heat/testing/runner.py $noseopts $noseargs"
 
@@ -83,14 +91,24 @@ then
   fi
 fi
 
+# Delete old coverage data from previous runs
+if [ $coverage -eq 1 ]; then
+    ${wrapper} coverage erase
+fi
+
+run_tests
+
 if [ $just_pep8 -eq 1 ]; then
   run_pep8
   exit
 fi
 
-run_tests
+if [ -z "$noseargs" ]; then
+  run_pep8
+fi
 
-#if [ -z "$noseargs" ]; then
-#  run_pep8
-#fi
-
+if [ $coverage -eq 1 ]; then
+    echo "Generating coverage report in covhtml/"
+    # Don't compute coverage for common code, which is tested elsewhere
+    ${wrapper} coverage html --include='heat/*' --omit='heat/openstack/common/*' -d covhtml -i
+fi
