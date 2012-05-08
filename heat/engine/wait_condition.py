@@ -113,7 +113,6 @@ class WaitCondition(Resource):
 
         # keep polling our Metadata to see if the cfn-signal has written
         # it yet. The execution here is limited by timeout.
-        print 'timeout %d' % self.timeout
         tmo = eventlet.Timeout(self.timeout)
         status = 'WAITING'
         reason = ''
@@ -126,8 +125,8 @@ class WaitCondition(Resource):
                                              self.stack.parsed_template_id)
                     except Exception as ex:
                         if 'not found' in ex:
-                            # entry deleted
-                            return
+                            # it has been deleted
+                            status = 'DELETED'
                         else:
                             pass
 
@@ -153,6 +152,9 @@ class WaitCondition(Resource):
         if status == 'SUCCESS':
             self.state_set(self.CREATE_COMPLETE,
                            '%s: %s' % (self.name, reason))
+        elif status == 'DELETED':
+            # don't try write to the db as it's gone.
+            pass
         else:
             raise exception.Error(reason)
 
