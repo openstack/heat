@@ -98,6 +98,15 @@ class MetadataController:
             'metadata': body,
         })
 
+    def create_event(self, req, body=None):
+        con = context.get_admin_context()
+        [error, event] = rpc.call(con, 'engine',
+                                     {'method': 'event_create',
+                                      'args': {'event': body}})
+        if error:
+            return json_error(400, error)
+        return json_response(201, event)
+
 
 def create_resource(options):
     """

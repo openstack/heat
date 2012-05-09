@@ -223,6 +223,20 @@ class EngineManager(manager.Manager):
 
         return {'events': [parse_event(e) for e in events]}
 
+    def event_create(self, context, event):
+        try:
+            result = db_api.event_create(None, event)
+            event['id'] = result.id
+            return [None, event]
+        except Exception as ex:
+            logger.warn('db error %s' % str(ex))
+            try:
+                # This returns the error message without the entire SQL request
+                msg = ex.inner_exception.orig[1]
+            except:
+                msg = 'Error creating event'
+            return [msg, None]
+
     def metadata_register_address(self, context, url):
         config.FLAGS.heat_metadata_server_url = url
 
