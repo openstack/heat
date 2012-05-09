@@ -22,7 +22,7 @@ from heat.common import exception
 from heat.db import api as db_api
 from heat.engine.resources import Resource
 
-logger = logging.getLogger('heat.endine.wait_condition')
+logger = logging.getLogger('heat.engine.wait_condition')
 
 
 class WaitConditionHandle(Resource):
