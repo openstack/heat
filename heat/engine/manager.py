@@ -126,7 +126,11 @@ class EngineManager(manager.Manager):
         metadata_server = config.FLAGS.heat_metadata_server_url
         stack = parser.Stack(stack_name, template, 0, params,
                              metadata_server=metadata_server)
-        response = stack.validate()
+        # We don't want to reset the stack template, so we are making
+        # an instance just for validation.
+        stack_validator = parser.Stack(stack_name, template, 0, params,
+                             metadata_server=metadata_server)
+        response = stack_validator.validate()
         if 'Malformed Query Response' in response['ValidateTemplateResult']['Description']:
             return response['ValidateTemplateResult']['Description']
         rt = {}

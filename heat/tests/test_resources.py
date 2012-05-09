@@ -64,7 +64,6 @@ class instancesTest(unittest.TestCase):
         # need to resolve the template functions
         server_userdata = instance._build_userdata(\
                                 instance.t['Properties']['UserData'])
-        
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(image=1, flavor=1, key_name='test',\
                 name='test_resource_name', security_groups=None,\
@@ -115,7 +114,6 @@ class instancesTest(unittest.TestCase):
         # need to resolve the template functions
         server_userdata = instance._build_userdata(\
                                 instance.t['Properties']['UserData'])
-        
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(image=1, flavor=1, key_name='test',\
                 name='test_resource_name', security_groups=None,\
@@ -128,7 +126,6 @@ class instancesTest(unittest.TestCase):
         instance.create()
 
         # this makes sure the auto increment worked on instance creation
-        
         assert(instance.id > 0)
 
         instance.delete()
