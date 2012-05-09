@@ -16,6 +16,7 @@
 import eventlet
 import logging
 import os
+import re
 
 from heat.common import exception
 from heat.engine.resources import Resource
@@ -100,6 +101,16 @@ class VolumeAttachment(Resource):
             self.state_set(self.CREATE_COMPLETE)
         else:
             self.state_set(self.CREATE_FAILED)
+
+    def validate(self):
+        '''
+        Validate the mountpoint device
+        '''
+        device_re = re.compile('/dev/vd[b-z]')
+        if re.match(device_re, self.t['Properties']['Device']):
+            return None
+        else:
+            return 'MountPoint.Device must be in format /dev/vd[b-z]'
 
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or \
