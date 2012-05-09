@@ -132,7 +132,8 @@ class FakeHTTPClient(base_client.HTTPClient):
     def get_servers(self, **kw):
         return (200, {"servers": [
             {'id': 1234, 'name': 'sample-server'},
-            {'id': 5678, 'name': 'sample-server2'}
+            {'id': 5678, 'name': 'sample-server2'},
+            {'id': 9999, 'name': 'sample-server3'}
         ]})
 
     def get_servers_detail(self, **kw):
@@ -180,6 +181,37 @@ class FakeHTTPClient(base_client.HTTPClient):
                 "flavor": {
                     "id": 1,
                     "name": "256 MB Server",
+                },
+                "hostId": "9e107d9d372bb6826bd81d3542a419d6",
+                "status": "ACTIVE",
+                "addresses": {
+                    "public": [{
+                        "version": 4,
+                        "addr": "4.5.6.7",
+                    },
+                    {
+                        "version": 4,
+                        "addr": "5.6.9.8",
+                    }],
+                    "private": [{
+                        "version": 4,
+                        "addr": "10.13.12.13",
+                    }],
+                },
+                "metadata": {
+                    "Server Label": "DB 1"
+                }
+            },
+            {
+                "id": 9999, 
+                "name": "sample-server3",
+                "image": {
+                    "id": 3,
+                    "name": "sample image",
+                },
+                "flavor": {
+                    "id": 3,
+                    "name": "m1.large",
                 },
                 "hostId": "9e107d9d372bb6826bd81d3542a419d6",
                 "status": "ACTIVE",
@@ -358,7 +390,8 @@ class FakeHTTPClient(base_client.HTTPClient):
     def get_flavors(self, **kw):
         return (200, {'flavors': [
             {'id': 1, 'name': '256 MB Server'},
-            {'id': 2, 'name': '512 MB Server'}
+            {'id': 2, 'name': '512 MB Server'},
+            {'id': 3, 'name': 'm1.large'}
         ]})
 
     def get_flavors_detail(self, **kw):
@@ -366,7 +399,9 @@ class FakeHTTPClient(base_client.HTTPClient):
             {'id': 1, 'name': '256 MB Server', 'ram': 256, 'disk': 10,
              'OS-FLV-EXT-DATA:ephemeral': 10},
             {'id': 2, 'name': '512 MB Server', 'ram': 512, 'disk': 20,
-             'OS-FLV-EXT-DATA:ephemeral': 20}
+             'OS-FLV-EXT-DATA:ephemeral': 20},
+            {'id': 3, 'name': 'm1.large', 'ram': 512, 'disk': 20,
+             'OS-FLV-EXT-DATA:ephemeral': 30}
         ]})
 
     def get_flavors_1(self, **kw):
@@ -478,7 +513,8 @@ class FakeHTTPClient(base_client.HTTPClient):
     def get_images(self, **kw):
         return (200, {'images': [
             {'id': 1, 'name': 'CentOS 5.2'},
-            {'id': 2, 'name': 'My Server Backup'}
+            {'id': 2, 'name': 'My Server Backup'},
+            {'id': 3, 'name': 'F16-x86_64-gold'}
         ]})
 
     def get_images_detail(self, **kw):
@@ -498,6 +534,16 @@ class FakeHTTPClient(base_client.HTTPClient):
                 "id": 743,
                 "name": "My Server Backup",
                 "serverId": 1234,
+                "updated": "2010-10-10T12:00:00Z",
+                "created": "2010-08-10T12:00:00Z",
+                "status": "SAVING",
+                "progress": 80,
+                "links": {},
+            },
+            {
+                "id": 744,
+                "name": "F16-x86_64-gold",
+                "serverId": 9999,
                 "updated": "2010-10-10T12:00:00Z",
                 "created": "2010-08-10T12:00:00Z",
                 "status": "SAVING",

@@ -21,24 +21,20 @@ import os
 import shutil
 
 from heat.db.sqlalchemy.session import get_engine
-
-_DB = None
+import pdb
 
 
 def reset_db():
-    engine = get_engine()
-    engine.dispose()
-    conn = engine.connect()
-    conn.connection.executescript(_DB)
-
-
+    if os.path.exists('heat-test.db'):
+        os.remove('heat-test.db')
+    
 def setup():
     import mox  # Fail fast if you don't have mox. Workaround for bug 810424
 
     from heat import db
     from heat.db import migration
-
+    reset_db() 
     migration.db_sync()
     engine = get_engine()
     conn = engine.connect()
-#    _DB = "".join(line for line in conn.connection.dump())
+
