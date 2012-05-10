@@ -60,10 +60,6 @@ def raw_template_create(context, values):
 def parsed_template_get(context, template_id):
     result = model_query(context, models.ParsedTemplate).\
                         filter_by(id=template_id).first()
-
-    if not result:
-        raise Exception("parsed template with id %s not found" % template_id)
-
     return result
 
 

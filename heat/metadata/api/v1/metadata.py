@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import json
 
 from webob.exc import Response
@@ -73,10 +72,10 @@ class MetadataController:
         if error:
             if error == 'stack':
                 return json_error(404,
-                                  'The stack "%s" does not exist.' % stack_name)
+                            'The stack "%s" does not exist.' % stack_name)
             else:
                 return json_error(404,
-                                  'The resource "%s" does not exist.' % resource_id)
+                            'The resource "%s" does not exist.' % resource_id)
         return metadata
 
     def update_metadata(self, req, body, stack_name, resource_id):
@@ -89,10 +88,10 @@ class MetadataController:
         if error:
             if error == 'stack':
                 return json_error(404,
-                                  'The stack "%s" does not exist.' % stack_name)
+                        'The stack "%s" does not exist.' % stack_name)
             else:
                 return json_error(404,
-                                  'The resource "%s" does not exist.' % resource_id)
+                        'The resource "%s" does not exist.' % resource_id)
         return json_response(201, {
             'resource': resource_id,
             'metadata': body,

@@ -117,7 +117,8 @@ runas=root
 
 
 def tearDown_metadata_files():
-    shutil.rmtree('/tmp/_files_test_', ignore_errors=True)
+    shutil.rmtree('/tmp/_files_test_',\
+                ignore_errors=True)
 
 
 class PopenMock:

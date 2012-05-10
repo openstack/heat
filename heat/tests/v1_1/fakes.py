@@ -203,7 +203,7 @@ class FakeHTTPClient(base_client.HTTPClient):
                 }
             },
             {
-                "id": 9999, 
+                "id": 9999,
                 "name": "sample-server3",
                 "image": {
                     "id": 3,
@@ -306,7 +306,6 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def delete_servers_9999_metadata_key2(self, **kw):
         return (204, None)
-
 
     def post_servers_9999_metadata(self, **kw):
         return (204, {'metadata': {'test_key': 'test_value'}})
