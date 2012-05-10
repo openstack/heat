@@ -21,8 +21,6 @@ import os
 import shutil
 
 from heat.db.sqlalchemy.session import get_engine
-import pdb
-
 
 def reset_db():
     if os.path.exists('heat-test.db'):

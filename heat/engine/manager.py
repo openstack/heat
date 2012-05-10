@@ -124,6 +124,18 @@ class EngineManager(manager.Manager):
             return {'Error': 'Stack already exists with that name.'}
 
         metadata_server = config.FLAGS.heat_metadata_server_url
+        # We don't want to reset the stack template, so we are making
+        # an instance just for validation.
+        template_copy = deepcopy(template)
+        stack_validator = parser.Stack(stack_name, template_copy, 0, params,
+                             metadata_server=metadata_server)
+        response = stack_validator.validate()
+        stack_validator = None
+        template_copy = None
+        if 'Malformed Query Response' in \
+                response['ValidateTemplateResult']['Description']:
+            return response['ValidateTemplateResult']['Description']
+
         stack = parser.Stack(stack_name, template, 0, params,
                              metadata_server=metadata_server)
         rt = {}
