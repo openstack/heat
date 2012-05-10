@@ -248,6 +248,7 @@ class Stack(object):
                 logger.error('delete: %s' % str(ex))
 
         db_api.stack_delete(None, self.name)
+        self.status_set(self.DELETE_COMPLETE)
 
     def delete(self):
         pool = eventlet.GreenPool()

@@ -270,10 +270,48 @@ class FakeHTTPClient(base_client.HTTPClient):
     def delete_servers_1234_metadata_key2(self, **kw):
         return (204, None)
 
-    def post_servers_1234_metadata(self, **kw):
+    def delete_servers_5678(self, **kw):
+        return (202, None)
+
+    def delete_servers_5678_metadata_test_key(self, **kw):
+        return (204, None)
+
+    def delete_servers_5678_metadata_key1(self, **kw):
+        return (204, None)
+
+    def delete_servers_5678_metadata_key2(self, **kw):
+        return (204, None)
+
+    def get_servers_9999(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][0]}
+        return (200, r)
+
+    def get_servers_5678(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][1]}
+        return (200, r)
+
+    def put_servers_9999(self, body, **kw):
+        assert body.keys() == ['server']
+        fakes.assert_has_keys(body['server'], optional=['name', 'adminPass'])
+        return (204, None)
+
+    def delete_servers_9999(self, **kw):
+        return (202, None)
+
+    def delete_servers_9999_metadata_test_key(self, **kw):
+        return (204, None)
+
+    def delete_servers_9999_metadata_key1(self, **kw):
+        return (204, None)
+
+    def delete_servers_9999_metadata_key2(self, **kw):
+        return (204, None)
+
+
+    def post_servers_9999_metadata(self, **kw):
         return (204, {'metadata': {'test_key': 'test_value'}})
 
-    def get_servers_1234_diagnostics(self, **kw):
+    def get_servers_9999_diagnostics(self, **kw):
         return (200, 'Fake diagnostics')
 
     def get_servers_1234_actions(self, **kw):
