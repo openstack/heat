@@ -232,7 +232,7 @@ class validateTest(unittest.TestCase):
         assert(volumeattach.validate())
 
     def test_validate_ref_valid(self):
-        t = json.loads(test_template_ref % 'WikiDatabasez')
+        t = json.loads(test_template_ref % 'WikiDatabase')
         t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
         params['KeyStoneCreds'] = None
@@ -243,7 +243,8 @@ class validateTest(unittest.TestCase):
 
         manager = managers.EngineManager()
         res = dict(manager.validate_template(None, t, params)['ValidateTemplateResult'])
-        assert (res['Description'] != 'Successfully validated')
+        print 'res %s' % res
+        assert (res['Description'] == 'Successfully validated')
 
     def test_validate_ref_invalid(self):
         t = json.loads(test_template_ref % 'WikiDatabasez')
