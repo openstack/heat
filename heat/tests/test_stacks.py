@@ -127,7 +127,6 @@ class stacksTest(unittest.TestCase):
                    == 'F16-x86_64-gold')
             assert(result['ResourceProperties']['InstanceType'] == 'm1.large')
 
-
     def test_stack_list(self):
         stack = self.start_wordpress_stack('test_stack_list')
         rt = {}
@@ -163,7 +162,7 @@ class stacksTest(unittest.TestCase):
             assert(s['stack_id'] > 0)
             assert(s['template_description'].find('WordPress') != -1)
 
-    # allows testing of the test directly, shown below if __name__ == '__main__':
+    # allows testing of the test directly
     if __name__ == '__main__':
         sys.argv.append(__file__)
         nose.main()
