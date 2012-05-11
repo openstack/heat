@@ -127,7 +127,43 @@ class stacksTest(unittest.TestCase):
                    == 'F16-x86_64-gold')
             assert(result['ResourceProperties']['InstanceType'] == 'm1.large')
 
-    # allows testing of the test directly, shown below
+
+    def test_stack_list(self):
+        stack = self.start_wordpress_stack('test_stack_list')
+        rt = {}
+        rt['template'] = stack.t
+        rt['stack_name'] = stack.name
+        new_rt = db_api.raw_template_create(None, rt)
+        s = {}
+        s['name'] = stack.name
+        s['raw_template_id'] = new_rt.id
+        new_s = db_api.stack_create(None, s)
+        stack.id = new_s.id
+        pt = {}
+        pt['template'] = stack.t
+        pt['raw_template_id'] = new_rt.id
+        new_pt = db_api.parsed_template_create(None, pt)
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+        stack.create_blocking()
+
+        f = open('../../templates/WordPress_Single_Instance_gold.template')
+        t = json.loads(f.read())
+        params = {}
+        parameters = {}
+        params['KeyStoneCreds'] = None
+        t['Parameters']['KeyName']['Value'] = 'test'
+        stack = parser.Stack('test_stack_list', t, 0, params)
+
+        man = manager.EngineManager()
+        sl = man.list_stacks(None, params)
+
+        assert(len(sl) > 0)
+        for s in sl['stacks']:
+            assert(s['stack_id'] > 0)
+            assert(s['template_description'].find('WordPress') != -1)
+
+    # allows testing of the test directly, shown below if __name__ == '__main__':
     if __name__ == '__main__':
         sys.argv.append(__file__)
         nose.main()
