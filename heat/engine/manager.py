@@ -178,7 +178,8 @@ class EngineManager(manager.Manager):
         try:
             s = parser.Stack('validate', template, 0, params)
         except KeyError:
-            res = 'A Fn::FindInMap operation referenced a non-existent map [%s]' % sys.exc_value
+            res = 'A Fn::FindInMap operation referenced'\
+                  'a non-existent map [%s]' % sys.exc_value
 
             response = {'ValidateTemplateResult': {
                         'Description': 'Malformed Query Response [%s]' % (res),

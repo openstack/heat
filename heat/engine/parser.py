@@ -117,7 +117,8 @@ class Stack(object):
         try:
             order = self.get_create_order()
         except KeyError:
-            res = 'A Ref operation referenced a non-existent key [%s]' % sys.exc_value
+            res = 'A Ref operation referenced a non-existent key '\
+                  '[%s]' % sys.exc_value
 
             response = {'ValidateTemplateResult': {
                         'Description': 'Malformed Query Response [%s]' % (res),
