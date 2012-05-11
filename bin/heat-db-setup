@@ -58,7 +58,7 @@ install_mysql_server() {
 }
 
 start_mysql_server() {
-	$SERVICE_START
+	sudo $SERVICE_START
 }
 
 MYSQL_HEAT_PW_DEFAULT="heat"
@@ -149,13 +149,13 @@ fi
 if ! $SERVICE_STATUS > /dev/null
 then
 	if [ -z "${ASSUME_YES}" ] ; then
-		printf "$MYSQL_SERVICE is not running.  Would you like to start it now? (y/n): "
+		printf "$SERVICE_MYSQLD is not running.  Would you like to start it now? (y/n): "
 		read response
 		case "$response" in
 			y|Y)
 				;;
 			n|N)
-				echo "$MYSQL_SERVICE must be running.  Please start it before proceeding."
+				echo "$SERVICE_MYSQLD must be running.  Please start it before proceeding."
 				exit 0
 				;;
 			*)
