@@ -175,7 +175,16 @@ class EngineManager(manager.Manager):
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
-        s = parser.Stack('validate', template, 0, params)
+        try:
+            s = parser.Stack('validate', template, 0, params)
+        except KeyError:
+            res = 'A Fn::FindInMap operation referenced a non-existent map [%s]' % sys.exc_value
+
+            response = {'ValidateTemplateResult': {
+                        'Description': 'Malformed Query Response [%s]' % (res),
+                        'Parameters': []}}
+            return response
+
         res = s.validate()
 
         return res
