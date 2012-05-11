@@ -16,6 +16,7 @@
 import eventlet
 import json
 import logging
+import sys
 
 from heat.common import exception
 from heat.engine import resources
@@ -106,15 +107,23 @@ class Stack(object):
 
     def validate(self):
         '''
-        If you are wondering where the actual validation is, me too.
-        it is just not obvious how to respond to validation failures.
         http://docs.amazonwebservices.com/AWSCloudFormation/latest/ \
             APIReference/API_ValidateTemplate.html
         '''
-
-        order = self.get_create_order()
+        # TODO(sdake) Should return line number of invalid reference
 
         response = None
+
+        try:
+            order = self.get_create_order()
+        except KeyError:
+            res = 'A Ref operation referenced a non-existent key [%s]' % sys.exc_value
+
+            response = {'ValidateTemplateResult': {
+                        'Description': 'Malformed Query Response [%s]' % (res),
+                        'Parameters': []}}
+            return response
+
         for r in order:
             try:
                 res = self.resources[r].validate()
