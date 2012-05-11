@@ -221,7 +221,6 @@ class EngineManager(manager.Manager):
                 'ResourceProperties': event.resource_properties,
                 'ResourceStatus': event.name}
 
-
     def list_events(self, context, stack_name):
         """
         The list_events method lists all events associated with a given stack.

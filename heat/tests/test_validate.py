@@ -186,6 +186,8 @@ test_template_findinmap_invalid = '''
   }
 }
 '''
+
+
 @attr(tag=['unit', 'validate'])
 @attr(speed='fast')
 class validateTest(unittest.TestCase):
