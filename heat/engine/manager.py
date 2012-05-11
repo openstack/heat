@@ -33,6 +33,19 @@ from heat.db import api as db_api
 
 logger = logging.getLogger('heat.engine.manager')
 
+def parse_event(event):
+    s = event.stack
+    return {'EventId': event.id,
+            'StackId': event.stack_id,
+            'StackName': s.name,
+            'Timestamp': str(event.created_at),
+            'LogicalResourceId': event.logical_resource_id,
+            'PhysicalResourceId': event.physical_resource_id,
+            'ResourceType': event.resource_type,
+            'ResourceStatusReason': event.resource_status_reason,
+            'ResourceProperties': event.resource_properties,
+            'ResourceStatus': event.name}
+
 
 class EngineManager(manager.Manager):
     """
@@ -221,19 +234,6 @@ class EngineManager(manager.Manager):
             events = db_api.event_get_all_by_stack(None, st.id)
         else:
             events = db_api.event_get_all(None)
-
-        def parse_event(e):
-            s = e.stack
-            return {'EventId': e.id,
-                    'StackId': e.stack_id,
-                    'StackName': s.name,
-                    'Timestamp': str(e.created_at),
-                    'LogicalResourceId': e.logical_resource_id,
-                    'PhysicalResourceId': e.physical_resource_id,
-                    'ResourceType': e.resource_type,
-                    'ResourceStatusReason': e.resource_status_reason,
-                    'ResourceProperties': e.resource_properties,
-                    'ResourceStatus': e.name}
 
         return {'events': [parse_event(e) for e in events]}
 
