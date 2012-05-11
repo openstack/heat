@@ -11,7 +11,7 @@
 action=$1
 if [ -z "$action" ]
 then
-	echo "openstack [start|stop|install|erase]"
+	echo "openstack [start|stop|install|erase|status]"
 	echo ""
         echo "This tool is designed to control OpenStack on a Fedora 16/17 system"
 	echo ""
@@ -20,6 +20,16 @@ then
 	echo "install - Installs a fresh OpenStack system with Keystone from RPM repostories"
 	echo "erase - permanently destroys an existing installation of OpenStack"
 fi
+
+function os_status() {
+	services=(qpidd mysqld openstack-keystone tgtd openstack-glance-api openstack-glance-registry openstack-nova-api openstack-nova-objectstore openstack-nova-compute openstack-nova-network openstack-nova-volume openstack-nova-scheduler openstack-nova-cert)
+	for service in ${services[@]}
+	do
+		output=$(systemctl show "$service.service" --property=ActiveState)
+		running=(${output//=/ }) #ActiveState=active
+		echo "$service ${running[1]}" | awk '{ printf "%-40s %s\n", $1, $2}'
+	done
+}
 
 function os_start() {
 	action=start
@@ -161,6 +171,9 @@ case $action in
 		;;
 	install)
 		os_install
+		;;
+	status)
+		os_status
 		;;
 	*)
 		echo "The action \"$action\" is not supported."
