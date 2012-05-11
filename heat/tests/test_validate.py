@@ -15,7 +15,37 @@ from heat.engine import volume as volumes
 import heat.db as db_api
 from heat.engine import parser
 
-
+test_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Resources" : {
+    "WikiDatabase": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large",
+        "KeyName": "test_KeyName"
+      }
+    },
+    "DataVolume" : {
+      "Type" : "AWS::EC2::Volume",
+      "Properties" : {
+        "Size" : "6",
+        "AvailabilityZone" : "nova"
+      }
+    },
+    "MountPoint" : {
+      "Type" : "AWS::EC2::VolumeAttachment",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "WikiDatabase" },
+        "VolumeId"  : { "Ref" : "DataVolume" },
+        "Device" : "/dev/%s"
+      }
+    }
+  }
+}
+'''
 @attr(tag=['unit', 'validate'])
 @attr(speed='fast')
 class validateTest(unittest.TestCase):
@@ -28,14 +58,9 @@ class validateTest(unittest.TestCase):
         print "volumeTest teardown complete"
 
     def test_validate_volumeattach_valid(self):
-        f = open('../../templates/WordPress_Single_Instance_With_EBS.template')
-        t = json.loads(f.read())
-        f.close()
-
+        t = json.loads(test_template % 'vdq')
         params = {}
-        parameters = {}
         params['KeyStoneCreds'] = None
-        t['Parameters']['KeyName']['Value'] = 'test'
         stack = parser.Stack('test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
@@ -43,23 +68,16 @@ class validateTest(unittest.TestCase):
                                               stack).AndReturn(None)
 
         self.m.ReplayAll()
-        volumeattach = volumes.VolumeAttachment('test_resource_name',\
-                       t['Resources']['MountPoint'], stack)
-        volumeattach.stack.resolve_attributes(volumeattach.t)
-        volumeattach.stack.resolve_joins(volumeattach.t)
-        volumeattach.stack.resolve_base64(volumeattach.t)
+        volumeattach = stack.resources['MountPoint']
+        stack.resolve_attributes(volumeattach.t)
+        stack.resolve_joins(volumeattach.t)
+        stack.resolve_base64(volumeattach.t)
         assert(volumeattach.validate() == None)
 
     def test_validate_volumeattach_invalid(self):
-        f = open('../../templates/WordPress_Single_Instance_With_EBS.template')
-        t = json.loads(f.read())
-        f.close()
-
+        t = json.loads(test_template % 'sda')
         params = {}
-        parameters = {}
         params['KeyStoneCreds'] = None
-        t['Parameters']['KeyName']['Value'] = 'test'
-        t['Resources']['MountPoint']['Properties']['Device'] = '/dev/sdb'
         stack = parser.Stack('test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
@@ -67,12 +85,11 @@ class validateTest(unittest.TestCase):
                                               stack).AndReturn(None)
 
         self.m.ReplayAll()
-        volumeattach = volumes.VolumeAttachment('test_resource_name',\
-                       t['Resources']['MountPoint'], stack)
-        volumeattach.stack.resolve_attributes(volumeattach.t)
-        volumeattach.stack.resolve_joins(volumeattach.t)
-        volumeattach.stack.resolve_base64(volumeattach.t)
-        assert(volumeattach.validate)
+        volumeattach = stack.resources['MountPoint']
+        stack.resolve_attributes(volumeattach.t)
+        stack.resolve_joins(volumeattach.t)
+        stack.resolve_base64(volumeattach.t)
+        assert(volumeattach.validate())
 
     # allows testing of the test directly, shown below
     if __name__ == '__main__':
