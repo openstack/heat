@@ -232,53 +232,31 @@ class validateTest(unittest.TestCase):
         assert(volumeattach.validate())
 
     def test_validate_ref_valid(self):
-        t = json.loads(test_template_ref % 'WikiDatabase')
+        t = json.loads(test_template_ref % 'WikiDatabasez')
+        t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
         params['KeyStoneCreds'] = None
-        t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack('test_stack', t, 0, params)
+
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
-        instance = stack.resources['WikiDatabase']
-        instance.itype_oflavor['m1.large'] = 'm1.large'
-        instance.stack.resolve_attributes(instance.t)
-        instance.stack.resolve_joins(instance.t)
-        instance.stack.resolve_base64(instance.t)
-
-        self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
-        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
-                                              stack).AndReturn(None)
-
         self.m.ReplayAll()
-        stack.resolve_attributes(stack.t)
-        stack.resolve_joins(stack.t)
-        stack.resolve_base64(stack.t)
-        res = dict(stack.validate()['ValidateTemplateResult'])
-        assert (res['Description'] == 'Successfully validated')
+
+        manager = managers.EngineManager()
+        res = dict(manager.validate_template(None, t, params)['ValidateTemplateResult'])
+        assert (res['Description'] != 'Successfully validated')
 
     def test_validate_ref_invalid(self):
         t = json.loads(test_template_ref % 'WikiDatabasez')
+        t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
         params['KeyStoneCreds'] = None
-        t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack('test_stack', t, 0, params)
+
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
-        instance = stack.resources['WikiDatabase']
-        instance.itype_oflavor['m1.large'] = 'm1.large'
-        instance.stack.resolve_attributes(instance.t)
-        instance.stack.resolve_joins(instance.t)
-        instance.stack.resolve_base64(instance.t)
-
-        self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
-        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
-                                              stack).AndReturn(None)
-
         self.m.ReplayAll()
-        stack.resolve_attributes(stack.t)
-        stack.resolve_joins(stack.t)
-        stack.resolve_base64(stack.t)
-        res = dict(stack.validate()['ValidateTemplateResult'])
+
+        manager = managers.EngineManager()
+        res = dict(manager.validate_template(None, t, params)['ValidateTemplateResult'])
         assert (res['Description'] != 'Successfully validated')
 
     def test_validate_findinmap_valid(self):
