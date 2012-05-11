@@ -107,9 +107,10 @@ class stacksTest(unittest.TestCase):
         assert(stack.resources['WebServer'] != None)
         assert(stack.resources['WebServer'].instance_id > 0)
 
+        m = manager.EngineManager()
         events = db_api.event_get_all_by_stack(None, stack.id)
         for ev in events:
-            result = manager.parse_event(ev)
+            result = m.parse_event(ev)
             assert(result['EventId'] > 0)
             assert(result['StackName'] == "test_event_list_stack")
             # This is one of CREATE_COMPLETE or CREATE_IN_PROGRESS,

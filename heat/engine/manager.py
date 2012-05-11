@@ -33,19 +33,6 @@ from heat.db import api as db_api
 
 logger = logging.getLogger('heat.engine.manager')
 
-def parse_event(event):
-    s = event.stack
-    return {'EventId': event.id,
-            'StackId': event.stack_id,
-            'StackName': s.name,
-            'Timestamp': str(event.created_at),
-            'LogicalResourceId': event.logical_resource_id,
-            'PhysicalResourceId': event.physical_resource_id,
-            'ResourceType': event.resource_type,
-            'ResourceStatusReason': event.resource_status_reason,
-            'ResourceProperties': event.resource_properties,
-            'ResourceStatus': event.name}
-
 
 class EngineManager(manager.Manager):
     """
@@ -220,6 +207,21 @@ class EngineManager(manager.Manager):
         ps.delete()
         return None
 
+    # Helper for list_events.  It's here so we can use it in tests.
+    def parse_event(self, event):
+        s = event.stack
+        return {'EventId': event.id,
+                'StackId': event.stack_id,
+                'StackName': s.name,
+                'Timestamp': str(event.created_at),
+                'LogicalResourceId': event.logical_resource_id,
+                'PhysicalResourceId': event.physical_resource_id,
+                'ResourceType': event.resource_type,
+                'ResourceStatusReason': event.resource_status_reason,
+                'ResourceProperties': event.resource_properties,
+                'ResourceStatus': event.name}
+
+
     def list_events(self, context, stack_name):
         """
         The list_events method lists all events associated with a given stack.
@@ -235,7 +237,7 @@ class EngineManager(manager.Manager):
         else:
             events = db_api.event_get_all(None)
 
-        return {'events': [parse_event(e) for e in events]}
+        return {'events': [self.parse_event(e) for e in events]}
 
     def event_create(self, context, event):
         try:
