@@ -27,7 +27,8 @@ class stacksTest(unittest.TestCase):
         self.m.UnsetStubs()
         print "stackTest teardown complete"
 
-    def test_wordpress_single_instance_stack_create(self):
+    # We use this in a number of tests so it's factored out here.
+    def start_wordpress_stack(self, stack_name):
         f = open('../../templates/WordPress_Single_Instance_gold.template')
         t = json.loads(f.read())
         f.close()
@@ -35,7 +36,7 @@ class stacksTest(unittest.TestCase):
         parameters = {}
         params['KeyStoneCreds'] = None
         t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack('test_stack', t, 0, params)
+        stack = parser.Stack(stack_name, t, 0, params)
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
         instances.Instance.nova().AndReturn(self.fc)
@@ -52,7 +53,11 @@ class stacksTest(unittest.TestCase):
         self.fc.servers.create(image=744, flavor=3, key_name='test',\
                 name='WebServer', security_groups=None,\
                 userdata=server_userdata).\
-                AndReturn(self.fc.servers.list()[1])
+                AndReturn(self.fc.servers.list()[-1])
+        return stack
+
+    def test_wordpress_single_instance_stack_create(self):
+        stack = self.start_wordpress_stack('test_stack')
         self.m.ReplayAll()
         stack.create_blocking()
         assert(stack.resources['WebServer'] != None)
@@ -60,32 +65,7 @@ class stacksTest(unittest.TestCase):
         assert(stack.resources['WebServer'].ipaddress != '0.0.0.0')
 
     def test_wordpress_single_instance_stack_delete(self):
-        f = open('../../templates/WordPress_Single_Instance_gold.template')
-        t = json.loads(f.read())
-        f.close()
-        params = {}
-        parameters = {}
-        params['KeyStoneCreds'] = None
-        t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack('test_stack', t, 0, params)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instance = stack.resources['WebServer']
-        instance.itype_oflavor['m1.large'] = 'm1.large'
-        instance.stack.resolve_attributes(instance.t)
-        instance.stack.resolve_joins(instance.t)
-        instance.stack.resolve_base64(instance.t)
-        server_userdata = instance._build_userdata(\
-                                instance.t['Properties']['UserData'])
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(image=744, flavor=3, key_name='test',\
-                name='WebServer', security_groups=None,\
-                userdata=server_userdata).\
-                AndReturn(self.fc.servers.list()[2])
+        stack = self.start_wordpress_stack('test_stack')
         self.m.ReplayAll()
         rt = {}
         rt['template'] = stack.t
@@ -108,32 +88,7 @@ class stacksTest(unittest.TestCase):
         assert(stack.t['stack_status'] == 'DELETE_COMPLETE')
 
     def test_stack_event_list(self):
-        f = open('../../templates/WordPress_Single_Instance_gold.template')
-        t = json.loads(f.read())
-        f.close()
-        params = {}
-        parameters = {}
-        params['KeyStoneCreds'] = None
-        t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack('test_event_list_stack', t, 0, params)
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instance = stack.resources['WebServer']
-        instance.itype_oflavor['m1.large'] = 'm1.large'
-        instance.stack.resolve_attributes(instance.t)
-        instance.stack.resolve_joins(instance.t)
-        instance.stack.resolve_base64(instance.t)
-        server_userdata = instance._build_userdata(\
-                                instance.t['Properties']['UserData'])
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(image=744, flavor=3, key_name='test',\
-                name='WebServer', security_groups=None,\
-                userdata=server_userdata).\
-                AndReturn(self.fc.servers.list()[2])
+        stack = self.start_wordpress_stack('test_event_list_stack')
         self.m.ReplayAll()
         rt = {}
         rt['template'] = stack.t
@@ -157,16 +112,19 @@ class stacksTest(unittest.TestCase):
             result = manager.parse_event(ev)
             assert(result['EventId'] > 0)
             assert(result['StackName'] == "test_event_list_stack")
-            # This is one of CREATE_COMPLETE or CREATE_IN_PROGRESS, just did this to make it easy.
+            # This is one of CREATE_COMPLETE or CREATE_IN_PROGRESS,
+            # just did this to make it easy.
             assert(result['ResourceStatus'].find('CREATE') != -1)
             assert(result['ResourceType'] == 'AWS::EC2::Instance')
             assert(result['ResourceStatusReason'] == 'state changed')
             assert(result['LogicalResourceId'] == 'WebServer')
-            # Big long user data field.. it mentions 'wordpress' a few times so this should work.
-            assert(result['ResourceProperties']['UserData'].find('wordpress') != -1)
-            assert(result['ResourceProperties']['ImageId'] == 'F16-x86_64-gold')
+            # Big long user data field.. it mentions 'wordpress'
+            # a few times so this should work.
+            assert(result['ResourceProperties']['UserData'].find('wordpress')\
+                   != -1)
+            assert(result['ResourceProperties']['ImageId']\
+                   == 'F16-x86_64-gold')
             assert(result['ResourceProperties']['InstanceType'] == 'm1.large')
-
 
     # allows testing of the test directly, shown below
     if __name__ == '__main__':
