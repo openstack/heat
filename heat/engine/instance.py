@@ -102,11 +102,12 @@ class Instance(Resource):
                            filename='part-handler.py')
             mime_blob.attach(msg)
 
-            msg = MIMEText(json.dumps(self.t['Metadata']),
-                           _subtype='x-cfninitdata')
-            msg.add_header('Content-Disposition', 'attachment',
-                           filename='cfn-init-data')
-            mime_blob.attach(msg)
+            if 'Metadata' in self.t:
+                msg = MIMEText(json.dumps(self.t['Metadata']),
+                               _subtype='x-cfninitdata')
+                msg.add_header('Content-Disposition', 'attachment',
+                               filename='cfn-init-data')
+                mime_blob.attach(msg)
 
             if self.stack.metadata_server:
                 msg = MIMEText(self.stack.metadata_server,
