@@ -41,8 +41,11 @@ import rpmUtils.updates as rpmupdates
 import rpmUtils.miscutils as rpmutils
 import subprocess
 import sys
-from urllib2 import urlopen
+from urllib2 import urlopen, Request
 from urlparse import urlparse, urlunparse
+
+
+logger = logging.getLogger('cfntools')
 
 
 def to_boolean(b):
@@ -119,7 +122,7 @@ class Hook(object):
            ev_name in self.triggers:
             CommandRunner(self.action).run(user=self.runas)
         else:
-            logging.debug('event: {%s, %s, %s} did not match %s' % \
+            logger.debug('event: {%s, %s, %s} did not match %s' % \
                           (ev_name, ev_object, ev_resource, self.__str__()))
 
     def __str__(self):
@@ -160,7 +163,7 @@ class CommandRunner(object):
         Returns:
             self
         """
-        logging.debug("Running command: %s" % self._command)
+        logger.debug("Running command: %s" % self._command)
         cmd = ['su', user, '-c', self._command]
         subproc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -299,14 +302,14 @@ class RpmHelper(object):
         if rpms:
             cmd = "rpm -U --force --nosignature "
             cmd += " ".join(packages)
-            logging.info("Installing packages: %s" % cmd)
+            logger.info("Installing packages: %s" % cmd)
         else:
             cmd = "yum -y install "
             cmd += " ".join(packages)
-            logging.info("Installing packages: %s" % cmd)
+            logger.info("Installing packages: %s" % cmd)
         command = CommandRunner(cmd).run()
         if command.status:
-            logging.warn("Failed to install packages: %s" % cmd)
+            logger.warn("Failed to install packages: %s" % cmd)
 
     @classmethod
     def downgrade(cls, packages, rpms=True):
@@ -330,10 +333,10 @@ class RpmHelper(object):
         else:
             cmd = "yum -y downgrade "
             cmd += " ".join(packages)
-            logging.info("Downgrading packages: %s" % cmd)
+            logger.info("Downgrading packages: %s" % cmd)
             command = Command(cmd).run()
             if command.status:
-                logging.warn("Failed to downgrade packages: %s" % cmd)
+                logger.warn("Failed to downgrade packages: %s" % cmd)
 
 
 class PackagesHandler(object):
@@ -418,7 +421,7 @@ class PackagesHandler(object):
                 # FIXME:print non-error, but skipping pkg
                 pass
             elif not RpmHelper.yum_package_available(pkg):
-                logging.warn("Skipping package '%s'. Not available via yum" % \
+                logger.warn("Skipping package '%s'. Not available via yum" % \
                              pkg)
             elif not ver:
                 installs.append(pkg)
@@ -495,7 +498,7 @@ class PackagesHandler(object):
         for manager, package_entries in packages:
             handler = self._package_handler(manager)
             if not handler:
-                logging.warn("Skipping invalid package type: %s" % manager)
+                logger.warn("Skipping invalid package type: %s" % manager)
             else:
                 handler(self, package_entries)
 
@@ -513,9 +516,9 @@ class FilesHandler(object):
                 os.makedirs(os.path.dirname(dest))
             except OSError as e:
                 if e.errno == errno.EEXIST:
-                    logging.debug(str(e))
+                    logger.debug(str(e))
                 else:
-                    logging.exception(e)
+                    logger.exception(e)
 
             if 'content' in meta:
                 if isinstance(meta['content'], basestring):
@@ -529,7 +532,7 @@ class FilesHandler(object):
             elif 'source' in meta:
                 CommandRunner('wget -O %s %s' % (dest, meta['source'])).run()
             else:
-                logging.error('%s %s' % (dest, str(meta)))
+                logger.error('%s %s' % (dest, str(meta)))
                 continue
 
             uid = -1
@@ -600,9 +603,9 @@ class SourcesHandler(object):
                 os.makedirs(dest)
             except OSError as e:
                 if e.errno == errno.EEXIST:
-                    logging.debug(str(e))
+                    logger.debug(str(e))
                 else:
-                    logging.exception(e)
+                    logger.exception(e)
             self._decompress(tmp_name, dest)
 
 
@@ -654,10 +657,10 @@ class ServicesHandler(object):
         if "enabled" in properties:
             enable = to_boolean(properties["enabled"])
             if enable:
-                logging.info("Enabling service %s" % service)
+                logger.info("Enabling service %s" % service)
                 handler(self, service, "enable")
             else:
-                logging.info("Disabling service %s" % service)
+                logger.info("Disabling service %s" % service)
                 handler(self, service, "disable")
 
         if "ensureRunning" in properties:
@@ -665,10 +668,10 @@ class ServicesHandler(object):
             command = handler(self, service, "status")
             running = command.status == 0
             if ensure_running and not running:
-                logging.info("Starting service %s" % service)
+                logger.info("Starting service %s" % service)
                 handler(self, service, "start")
             elif not ensure_running and running:
-                logging.info("Stopping service %s" % service)
+                logger.info("Stopping service %s" % service)
                 handler(self, service, "stop")
 
     def _monitor_service(self, handler, service, properties):
@@ -677,10 +680,10 @@ class ServicesHandler(object):
             command = handler(self, service, "status")
             running = command.status == 0
             if ensure_running and not running:
-                logging.info("Restarting service %s" % service)
+                logger.warn("Restarting service %s" % service)
                 start_cmd = handler(self, service, "start")
                 if start_cmd.status != 0:
-                    logging.warning('Service %s did not start. STDERR: %s' %
+                    logger.warning('Service %s did not start. STDERR: %s' %
                                     (service, start_cmd.stderr))
                     return
                 for h in self.hooks:
@@ -716,7 +719,7 @@ class ServicesHandler(object):
         for manager, service_entries in self._services.iteritems():
             handler = self._service_handler(manager)
             if not handler:
-                logging.warn("Skipping invalid service type: %s" % manager)
+                logger.warn("Skipping invalid service type: %s" % manager)
             else:
                 self._initialize_services(handler, service_entries)
 
@@ -729,9 +732,54 @@ class ServicesHandler(object):
         for manager, service_entries in self._services.iteritems():
             handler = self._service_handler(manager)
             if not handler:
-                logging.warn("Skipping invalid service type: %s" % manager)
+                logger.warn("Skipping invalid service type: %s" % manager)
             else:
                 self._monitor_services(handler, service_entries)
+
+
+def metadata_server_url():
+    """
+    Return the url to the metadata server.
+    """
+    try:
+        f = open("/var/lib/cloud/data/cfn-metadata-server")
+        server_url = f.read().strip()
+        f.close()
+        if not server_url[-1] == '/':
+            server_url += '/'
+        return server_url
+    except IOError:
+        return None
+
+
+class MetadataLoggingHandler(logging.Handler):
+    def __init__(self, metadata_server_url, stack, resource):
+        super(MetadataLoggingHandler, self).__init__(level=logging.WARNING)
+        self.stack = stack
+        self.resource = resource
+
+        if metadata_server_url:
+            self.events_url = metadata_server_url + 'events/'
+        else:
+            logger.info('Metadata server URL not found')
+            self.events_url = None
+
+    def handle(self, record):
+        if not self.events_url:
+            return
+        event = {
+            'message': record.message,
+            'stack': self.stack,
+            'resource': self.resource,
+            'resource_type': 'AWS::EC2::Instance',
+            'reason': 'cfntools notification',
+        }
+        req = Request(self.events_url, json.dumps(event))
+        req.headers['Content-Type'] = 'application/json'
+        try:
+            urlopen(req)
+        except:
+            pass
 
 
 class MetadataServerConnectionError(Exception):
@@ -756,31 +804,23 @@ class Metadata(object):
         self._is_local_metadata = True
         self._metadata = None
 
-    def metadata_server_url(self):
-        """
-        Return the url to the metadata server.
-        """
-        try:
-            f = open("/var/lib/cloud/data/cfn-metadata-server")
-            server_url = f.read()
-            f.close()
-        except IOError:
-            return None
-
-        url_parts = list(urlparse(server_url))
-        url_parts[2] = '/stacks/%s/resources/%s' % (self.stack, self.resource)
-        return urlunparse(url_parts)
+    def metadata_resource_url(self):
+        server_url = metadata_server_url()
+        if not server_url:
+            return
+        return server_url + 'stacks/%s/resources/%s' % (self.stack,
+                                                        self.resource)
 
     def remote_metadata(self):
         """
         Connect to the metadata server and retreive the metadata from there.
         """
-        server_url = self.metadata_server_url()
-        if not server_url:
+        url = self.metadata_resource_url()
+        if not url:
             raise MetadataServerConnectionError()
 
         try:
-            return urlopen(server_url).read()
+            return urlopen(url).read()
         except:
             raise MetadataServerConnectionError()
 

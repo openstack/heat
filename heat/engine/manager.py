@@ -240,17 +240,29 @@ class EngineManager(manager.Manager):
         return {'events': [self.parse_event(e) for e in events]}
 
     def event_create(self, context, event):
+        stack_name = event['stack']
+        resource_name = event['resource']
+        stack = db_api.stack_get(None, stack_name)
+        resource = db_api.resource_get_by_name_and_stack(None, resource_name,
+                                                         stack.id)
+        if not resource:
+            return ['Unknown resource', None]
+        new_event = {
+            'name': event['message'],
+            'resource_status_reason': event['reason'],
+            'stack_id': stack.id,
+            'logical_resource_id': resource.name,
+            'physical_resource_id': None,
+            'resource_type': event['resource_type'],
+            'resource_properties': {},
+        }
         try:
-            result = db_api.event_create(None, event)
-            event['id'] = result.id
-            return [None, event]
+            result = db_api.event_create(None, new_event)
+            new_event['id'] = result.id
+            return [None, new_event]
         except Exception as ex:
             logger.warn('db error %s' % str(ex))
-            try:
-                # This returns the error message without the entire SQL request
-                msg = ex.inner_exception.orig[1]
-            except:
-                msg = 'Error creating event'
+            msg = 'Error creating event'
             return [msg, None]
 
     def metadata_register_address(self, context, url):
