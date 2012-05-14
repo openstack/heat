@@ -19,14 +19,47 @@ import routes
 from heat.api.v1 import stacks
 from heat.common import wsgi
 
-logger = logging.getLogger(__name__)
+from webob import Request
 
+logger = logging.getLogger(__name__)
 
 class API(wsgi.Router):
 
     """
     WSGI router for Heat v1 API requests.
     """
+
+    def action_match(self, action, environ):
+
+        req = Request(environ)
+
+        env_action = req.GET.get("Action")
+
+        if action == env_action:
+            return True
+        else:
+            return False
+
+    def action_ListStacks(self, environ, result):
+        return self.action_match('ListStacks', environ)
+
+    def action_CreateStack(self, environ, result):
+        return self.action_match('CreateStack', environ)
+
+    def action_DescribeStacks(self, environ, result):
+        return self.action_match('DescribeStacks', environ)
+
+    def action_DeleteStack(self, environ, result):
+        return self.action_match('DeleteStack', environ)
+
+    def action_UpdateStack(self, environ, result):
+        return self.action_match('UpdateStack', environ)
+
+    def action_DescribeStackEvents(self, environ, result):
+        return self.action_match('DescribeStackEvents', environ)
+
+    def action_ValidateTemplate(self, environ, result):
+        return self.action_match('ValidateTemplate', environ)
 
     def __init__(self, conf, **local_conf):
         self.conf = conf
@@ -35,24 +68,32 @@ class API(wsgi.Router):
         stacks_resource = stacks.create_resource(conf)
 
         mapper.resource("stack", "stacks", controller=stacks_resource,
-                        collection={'detail': 'GET'})
+            collection={'detail': 'GET'})
 
-        mapper.connect("/CreateStack", controller=stacks_resource,
-                       action="create", conditions=dict(method=["POST"]))
         mapper.connect("/", controller=stacks_resource,
-                       action="list", conditions=dict(method=["GET"]))
-        mapper.connect("/ListStacks", controller=stacks_resource,
-                       action="list", conditions=dict(method=["GET"]))
-        mapper.connect("/DescribeStacks", controller=stacks_resource,
-                       action="describe", conditions=dict(method=["GET"]))
-        mapper.connect("/DeleteStack", controller=stacks_resource,
-                       action="delete", conditions=dict(method=["DELETE"]))
-        mapper.connect("/UpdateStack", controller=stacks_resource,
-                       action="update", conditions=dict(method=["PUT"]))
-        mapper.connect("/DescribeStackEvents", controller=stacks_resource,
-                       action="events_list", conditions=dict(method=["GET"]))
-        mapper.connect("/ValidateTemplate", controller=stacks_resource,
+            action="list", conditions=dict(function=self.action_ListStacks))
+
+        mapper.connect("/", controller=stacks_resource,
+            action="create", conditions=dict(function=self.action_CreateStack))
+
+        mapper.connect("/", controller=stacks_resource,
+            action="describe", 
+            conditions=dict(function=self.action_DescribeStacks))
+
+        mapper.connect("/", controller=stacks_resource,
+            action="delete", conditions=dict(function=self.action_DeleteStack))
+
+        mapper.connect("/", controller=stacks_resource,
+            action="update", conditions=dict(function=self.action_UpdateStack))
+
+        mapper.connect("/", controller=stacks_resource,
+            action="events_list",
+            conditions=dict(function=self.action_DescribeStackEvents))
+
+        mapper.connect("/", controller=stacks_resource,
                        action="validate_template",
-                       conditions=dict(method=["GET"]))
+                       conditions=dict(function=self.action_ValidateTemplate))
+
+        mapper.connect("/", controller=stacks_resource, action="index")
 
         super(API, self).__init__(mapper)
