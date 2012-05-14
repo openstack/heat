@@ -56,7 +56,10 @@ test_template_ref = '''
   "Parameters" : {
 
     "KeyName" : {
-      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+''' + \
+      '"Description" : "Name of an existing EC2' + \
+      'KeyPair to enable SSH access to the instances",' + \
+'''
       "Type" : "String"
     }
   },
@@ -93,9 +96,11 @@ test_template_findinmap_valid = '''
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "test.",
   "Parameters" : {
-
     "KeyName" : {
-      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+''' + \
+      '"Description" : "Name of an existing EC2 KeyPair to' + \
+      'enable SSH access to the instances",' + \
+'''
       "Type" : "String"
     }
   },
@@ -135,8 +140,10 @@ test_template_findinmap_invalid = '''
   "Parameters" : {
 
     "KeyName" : {
-      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
-      "Type" : "String"
+''' + \
+      '"Description" : "Name of an existing EC2 KeyPair to enable SSH ' + \
+      'access to the instances",' + \
+'''      "Type" : "String"
     }
   },
 
@@ -161,8 +168,12 @@ test_template_findinmap_invalid = '''
     "WikiDatabase": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
-        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
-                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+''' + \
+        '"ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : ' + \
+        '"LinuxDistribution" },' + \
+        '{ "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : ' + \
+        '"InstanceType" }, "Arch" ] } ] },' + \
+'''
         "InstanceType": "m1.large",
         "KeyName": "test_KeyName"
       }
@@ -244,7 +255,8 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         manager = managers.EngineManager()
-        res = dict(manager.validate_template(None, t, params)['ValidateTemplateResult'])
+        res = dict(manager.\
+            validate_template(None, t, params)['ValidateTemplateResult'])
         print 'res %s' % res
         assert (res['Description'] == 'Successfully validated')
 
@@ -259,7 +271,8 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         manager = managers.EngineManager()
-        res = dict(manager.validate_template(None, t, params)['ValidateTemplateResult'])
+        res = dict(manager.\
+            validate_template(None, t, params)['ValidateTemplateResult'])
         assert (res['Description'] != 'Successfully validated')
 
     def test_validate_findinmap_valid(self):
@@ -273,7 +286,8 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         manager = managers.EngineManager()
-        res = dict(manager.validate_template(None, t, params)['ValidateTemplateResult'])
+        res = dict(manager.\
+            validate_template(None, t, params)['ValidateTemplateResult'])
         assert (res['Description'] == 'Successfully validated')
 
     def test_validate_findinmap_invalid(self):
@@ -287,7 +301,8 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         manager = managers.EngineManager()
-        res = dict(manager.validate_template(None, t, params)['ValidateTemplateResult'])
+        res = dict(manager.\
+            validate_template(None, t, params)['ValidateTemplateResult'])
         assert (res['Description'] != 'Successfully validated')
 
     # allows testing of the test directly, shown below

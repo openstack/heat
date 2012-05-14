@@ -142,7 +142,10 @@ class MetadataTest(unittest.TestCase):
         "AWS::CloudFormation::Init" : {
           "config" : {
             "sources": {
-              "/home/ec2-user/sample" : "https://s3.amazonaws.com/cloudformation-examples/CloudFormationRailsSample.zip"
+''' + \
+              '"/home/ec2-user/sample" : "https://s3.amazonaws.com/' + \
+              'cloudformation-examples/CloudFormationRailsSample.zip"' + \
+              '''
              },
             "files" : {
               "/tmp/_files_test_/epel.repo" : {
@@ -180,8 +183,9 @@ class MetadataTest(unittest.TestCase):
         self.m.StubOutWithMock(os, 'chmod')
 
         subprocess.Popen(['su', 'root', '-c',
-                          'wget -O /tmp/CloudFormationRailsSample.zip \
-https://s3.amazonaws.com/cloudformation-examples/CloudFormationRailsSample.zip'],
+                          'wget -O /tmp/CloudFormationRailsSample.zip ' + \
+                          'https://s3.amazonaws.com/cloudformation-' + \
+                          'examples/CloudFormationRailsSample.zip'],
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE).AndReturn(PopenMock())
 
