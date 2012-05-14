@@ -1,8 +1,9 @@
 #!/bin/bash
 
 TOOLS_DIR=`dirname $0`
-if [ "$1" = "-y" ]; then
+if [ "$1" = "-y" ] || [ "$1" = "--yes" ]; then
     SKIP_ASK=y
+    shift
 fi
 
 user_wants() {
@@ -31,12 +32,12 @@ if [ -n "$HEAT_PIDS" ]; then
 fi
 
 if user_wants 'Drop Heat database tables?'; then
-    $TOOLS_DIR/heat-db-drop
+    $TOOLS_DIR/heat-db-drop $*
     echo 1>&2
 fi
 
 if user_wants 'Erase OpenStack installation?'; then
-    $TOOLS_DIR/openstack erase
+    $TOOLS_DIR/openstack erase $*
     echo 1>&2
 fi
 

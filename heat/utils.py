@@ -178,7 +178,7 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
         if image['name'] == distro + '-' + arch + '-' + instance_type:
             image_registered = True
 
-    runoz = None
+    runoz = options.yes and 'y' or None
     if os.access(qcow2_filename, os.R_OK):
         while runoz not in ('y', 'n'):
             runoz = raw_input('An existing JEOS was found on disk.' \

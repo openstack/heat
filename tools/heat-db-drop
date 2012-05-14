@@ -1,8 +1,26 @@
 #!/bin/bash
-cat << EOF | mysql -u root -p
-DROP USER 'heat'@'localhost';
-DROP USER 'heat'@'%';
-DROP DATABASE heat;
+
+DATABASE=heat
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        heat|nova|keystone|glance)
+            DATABASE=$1
+            ;;
+        -r|--rootpw)
+            shift
+            MYSQL_ROOT_PW_ARG="--password=$1"
+            ;;
+        *)
+            ;;
+    esac
+    shift
+done
+
+cat << EOF | mysql -u root ${MYSQL_ROOT_PW_ARG}
+DROP USER '${DATABASE}'@'localhost';
+DROP USER '${DATABASE}'@'%';
+DROP DATABASE ${DATABASE};
 flush privileges;
 EOF
 

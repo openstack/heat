@@ -7,6 +7,7 @@
 
 # sleep 1 = systemd's definition of start is different from mine
 
+BASE_DIR=`dirname $0`
 
 action=$1
 if [ -z "$action" ]
@@ -72,18 +73,9 @@ function os_erase() {
 	sudo systemctl start mysqld.service
 	sleep 1
 
-cat << EOF | mysql -u root -p
-DROP USER 'nova'@'localhost';
-DROP USER 'nova'@'%';
-DROP USER 'keystone'@'localhost';
-DROP USER 'keystone'@'%';
-DROP USER 'glance'@'localhost';
-DROP USER 'glance'@'%';
-DROP DATABASE nova;
-DROP DATABASE keystone;
-DROP DATABASE glance;
-flush privileges;
-EOF
+	$BASE_DIR/heat-db-drop nova $*
+	$BASE_DIR/heat-db-drop keystone $*
+	$BASE_DIR/heat-db-drop glance $*
 
 	sudo vgchange -an nova-volumes
 	sudo losetup -d /dev/loop0
@@ -100,9 +92,9 @@ function os_install() {
 	sudo systemctl start mysqld.service
 	sleep 1
 	# Configure the databases
-	sudo openstack-nova-db-setup
-	sudo openstack-glance-db-setup
-	sudo openstack-keystone-db-setup
+	sudo openstack-nova-db-setup $*
+	sudo openstack-glance-db-setup $*
+	sudo openstack-keystone-db-setup $*
 
 	# Create a keystone RC file
 	mkdir -p $HOME/.openstack
@@ -143,17 +135,18 @@ EOF
 	os_start
 	sleep 1
 	echo "Installation Complete."
-	echo "Testing nova and glance.  If any errors are displayed, the install failed."
+	echo "Testing nova and glance.  If any errors are displayed, the install failed..."
 	nova flavor-list
 	glance index
+        echo
 	echo "note: This tool does not create a network.  Creating a network"
 	echo "depends on your environment.  An example network create operation:"
 	echo
-	echo "sudo nova-manage network create demonet 10.0.0.0/24 1 256 --bridge=demonetbr0"
+	echo "  sudo nova-manage network create demonet 10.0.0.0/24 1 256 --bridge=demonetbr0"
 	echo
-	echo "The network range here, should *not* be the one used on your existing physical network."
-	echo "It should be a range dedicated for the network that OpenStack will configure. So if"
-	echo "10.0.0.0/24 clashes with your local network, pick another range."
+	echo -e "The network range here should *not* be one used on your existing physical\n network."
+	echo "It should be a range dedicated for the network that OpenStack will configure."
+	echo "If 10.0.0.0/24 clashes with your local network, pick another range."
 
 }
 
@@ -167,10 +160,12 @@ case $action in
 		os_stop
 		;;
 	erase)
-		os_erase
+		shift
+		os_erase $*
 		;;
 	install)
-		os_install
+		shift
+		os_install $*
 		;;
 	status)
 		os_status

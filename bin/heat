@@ -311,6 +311,9 @@ def create_options(parser):
                       help="Print more verbose output")
     parser.add_option('-d', '--debug', default=False, action="store_true",
                       help="Print more verbose output")
+    parser.add_option('-y', '--yes', default=False, action="store_true",
+                      help="Don't prompt for user input; assume the answer to "
+                           "every question is 'yes'.")
     parser.add_option('-H', '--host', metavar="ADDRESS", default="0.0.0.0",
                       help="Address of heat API host. "
                            "Default: %default")

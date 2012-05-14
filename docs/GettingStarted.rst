@@ -34,7 +34,7 @@ Installing OpenStack on Fedora 16
 Note: on Fedora 16 you have to enable the `Preview Repository`_ to install the required OpenStack Essex release.
 A script called "``openstack``" in the tools directory of the repository will install and start OpenStack for you on Fedora 16/17::
 
-    ./tools/openstack install
+    ./tools/openstack install -y -r ${MYSQL_ROOT_PASSWORD}
 
 If you use this method, you will need to manually create a guest network.  How this is done depends on your environment.  An example network create operation:
 
@@ -90,9 +90,9 @@ Setup the MySQL database for Heat
 
 ::
 
-    ./bin/heat-db-setup rpm
+    heat-db-setup rpm -y -r ${MYSQL_ROOT_PASSWORD}
 
-Note: the first argument is either ``rpm`` for RPM-based distros (such as Fedora) or ``deb`` for Debian-based distros (such as Ubuntu).
+Note: the first argument is either ``rpm`` for RPM-based distros (such as Fedora) or ``deb`` for Debian-based distros (such as Ubuntu). To prompt for confirmation when e.g. installing MySQL Server, omit the ``-y`` option. Run ``heat-db-setup --help`` for detailed documentation.
 
 Register heat with keystone
 ---------------------------
@@ -128,7 +128,7 @@ Create a JEOS
 
 ::
 
-    sudo -E heat jeos_create F16 x86_64 cfntools
+    sudo -E heat -y jeos_create F16 x86_64 cfntools
 
 Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``jeos_create`` is run as root.
 
