@@ -45,7 +45,7 @@ class Volume(Resource):
             self.instance_id_set(vol.id)
             self.state_set(self.CREATE_COMPLETE)
         else:
-            self.state_set(self.CREATE_FAILED)
+            raise exception.Error(vol.status)
 
     def validate(self):
         '''
@@ -100,7 +100,7 @@ class VolumeAttachment(Resource):
             self.instance_id_set(va.id)
             self.state_set(self.CREATE_COMPLETE)
         else:
-            self.state_set(self.CREATE_FAILED)
+            raise exception.Error(vol.status)
 
     def validate(self):
         '''

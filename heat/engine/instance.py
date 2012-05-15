@@ -193,7 +193,7 @@ class Instance(Resource):
                 self.ipaddress = server.networks[n][0]
                 break
         else:
-            self.state_set(self.CREATE_FAILED)
+            raise exception.Error(server.status)
 
     def validate(self):
         '''

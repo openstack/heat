@@ -154,8 +154,7 @@ class WaitCondition(Resource):
             self.state_set(self.CREATE_COMPLETE,
                            '%s: %s' % (self.name, reason))
         else:
-            self.state_set(self.CREATE_FAILED,
-                           '%s: %s' % (self.name, reason))
+            raise exception.Error(reason)
 
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or \
