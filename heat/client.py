@@ -38,69 +38,34 @@ class V1Client(base_client.BaseClient):
         params['SignatureMethod'] = 'HmacSHA256'
         params['KeyStoneCreds'] = self.creds
 
-    def list_stacks(self, **kwargs):
+    def stack_request(self, action, method, **kwargs):
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         self._insert_common_parameters(params)
-        params['Action'] = "ListStacks"
+        params['Action'] = action
 
-        res = self.do_request("GET", "/", params=params)
-        data = json.loads(res.read())
-        return data
+        res = self.do_request(method, "/", params=params)
+        return json.loads(res.read())
+
+    def list_stacks(self, **kwargs):
+        return self.stack_request("ListStacks", "GET", **kwargs)
 
     def describe_stacks(self, **kwargs):
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
-        self._insert_common_parameters(params)
-        params['Action'] = "DescribeStacks"
-
-        res = self.do_request("GET", "/", params=params)
-        data = json.loads(res.read())
-        return data
+        return self.stack_request("DescribeStacks", "GET", **kwargs)
 
     def create_stack(self, **kwargs):
-
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
-        self._insert_common_parameters(params)
-        params['Action'] = "CreateStack"
-
-        res = self.do_request("POST", "/", params=params)
-        data = json.loads(res.read())
-        return data
+        return self.stack_request("CreateStack", "POST", **kwargs)
 
     def update_stack(self, **kwargs):
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
-        self._insert_common_parameters(params)
-        params['Action'] = "UpdateStack"
-
-        res = self.do_request("POST", "/", params=params)
-        data = json.loads(res.read())
-        return data
+        return self.stack_request("UpdateStack", "POST", **kwargs)
 
     def delete_stack(self, **kwargs):
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
-        self._insert_common_parameters(params)
-        params['Action'] = "DeleteStack"
-
-        res = self.do_request("GET", "/", params=params)
-        data = json.loads(res.read())
-        return data
+        return self.stack_request("DeleteStack", "GET", **kwargs)
 
     def list_stack_events(self, **kwargs):
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
-        self._insert_common_parameters(params)
-        params['Action'] = "DescribeStackEvents"
-
-        res = self.do_request("GET", "/", params=params)
-        data = json.loads(res.read())
-        return data
+        return self.stack_request("DescribeStackEvents", "GET", **kwargs)
 
     def validate_template(self, **kwargs):
-        params = self._extract_params(kwargs, SUPPORTED_PARAMS)
-        self._insert_common_parameters(params)
-        params['Action'] = "ValidateTemplate"
-
-        res = self.do_request("GET", "/", params=params)
-        data = json.loads(res.read())
-        return data
+        return self.stack_request("ValidateTemplate", "GET", **kwargs)
 
 HeatClient = V1Client
 
