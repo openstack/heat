@@ -58,12 +58,12 @@ def catch_error(action):
     return wrap
 
 
-@catch_error('jeos_create')
+@catch_error('jeos-create')
 def jeos_create(options, arguments, jeos_path, cfntools_path):
     '''
     Create a new JEOS (Just Enough Operating System) image.
 
-    Usage: heat jeos_create <distribution> <architecture> <image type>
+    Usage: heat jeos-create <distribution> <architecture> <image type>
 
     Distribution: Distribution such as 'F16', 'F17', 'U10', 'D6'.
     Architecture: Architecture such as 'i386' 'i686' or 'x86_64'.
@@ -77,12 +77,12 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
 
     # if not running as root, return EPERM to command line
     if os.geteuid() != 0:
-        logging.error("jeos_create must be run as root")
+        logging.error("jeos-create must be run as root")
         sys.exit(1)
     if len(arguments) < 3:
         print '\n  Please provide the distro, arch, and instance type.'
         print '  Usage:'
-        print '   heat jeos_create <distro> <arch> <instancetype>'
+        print '   heat jeos-create <distro> <arch> <instancetype>'
         print '     instance type can be:'
         print '     gold builds a base image where userdata is used to' \
               ' initialize the instance'
@@ -102,13 +102,13 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
 
     if not arch in arches:
         logging.error('arch %s not supported' % arch)
-        logging.error('try: heat jeos_create %s [ %s ]' % (distro, arches_str))
+        logging.error('try: heat jeos-create %s [ %s ]' % (distro, arches_str))
         sys.exit(1)
 
     if not instance_type in instance_types:
         logging.error('A JEOS instance type of %s not supported' %\
             instance_type)
-        logging.error('try: heat jeos_create %s %s [ %s ]' %\
+        logging.error('try: heat jeos-create %s %s [ %s ]' %\
             (distro, arch, instances_str))
         sys.exit(1)
 

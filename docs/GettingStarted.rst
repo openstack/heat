@@ -128,13 +128,13 @@ Create a JEOS
 
 ::
 
-    sudo -E heat -y jeos_create F16 x86_64 cfntools
+    sudo -E heat -y jeos-create F16 x86_64 cfntools
 
-Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``jeos_create`` is run as root.
+Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``jeos-create`` is run as root.
 
-Note: ``jeos_create`` must be run as root in order to create the cfntools disk image.
+Note: ``jeos-create`` must be run as root in order to create the cfntools disk image.
 
-Note: If you want to enable debugging output from Oz, add '``-d``' (debugging) to the ``jeos_create`` command.
+Note: If you want to enable debugging output from Oz, add '``-d``' (debugging) to the ``jeos-create`` command.
 
 Verify JEOS registration
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -182,7 +182,7 @@ List stack events
 
 ::
 
-    heat events_list wordpress
+    heat event-list wordpress
 
 Describe the ``wordpress`` stack
 --------------------------------

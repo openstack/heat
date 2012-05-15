@@ -233,12 +233,12 @@ def stack_describe(options, arguments):
     print json.dumps(result, indent=2)
 
 
-@utils.catch_error('events_list')
+@utils.catch_error('event-list')
 def stack_events_list(options, arguments):
     '''
     List events associated with the given stack.
 
-    Usage: heat events_list <stack name>
+    Usage: heat event-list <stack name>
     '''
     parameters = {}
     try:
@@ -263,12 +263,12 @@ def stack_list(options, arguments):
     print json.dumps(result, indent=2)
 
 
-@utils.catch_error('jeos_create')
+@utils.catch_error('jeos-create')
 def jeos_create(options, arguments):
     '''
     Create a new JEOS (Just Enough Operating System) image.
 
-    Usage: heat jeos_create <distribution> <architecture> <image type>
+    Usage: heat jeos-create <distribution> <architecture> <image type>
 
     Distribution: Distribution such as 'F16', 'F17', 'U10', 'D6'.
     Architecture: Architecture such as 'i386' 'i686' or 'x86_64'.
@@ -452,11 +452,13 @@ def lookup_command(parser, command_name):
                 'update': stack_update,
                 'delete': stack_delete,
                 'list': stack_list,
-                'events_list': stack_events_list,
+                'events_list': stack_events_list,  # DEPRECATED
+                'event-list': stack_events_list,
                 'validate': template_validate,
                 'gettemplate': get_template,
                 'describe': stack_describe,
-                'jeos_create': jeos_create}
+                'jeos_create': jeos_create,        # DEPRECATED
+                'jeos-create': jeos_create}
 
     commands = {}
     for command_set in (base_commands, stack_commands):
@@ -495,9 +497,9 @@ Commands:
 
     validate        Validate a template
 
-    jeos_create     Create a JEOS image
+    jeos-create     Create a JEOS image
 
-    events_list     List events for a stack
+    event-list      List events for a stack
 
 """
 
