@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from functools import partial
 import logging
 import routes
 
@@ -23,43 +24,24 @@ from webob import Request
 
 logger = logging.getLogger(__name__)
 
+
 class API(wsgi.Router):
 
     """
     WSGI router for Heat v1 API requests.
     """
 
-    def action_match(self, action, environ):
-
+    def action_match(self, action, environ, result):
         req = Request(environ)
-
         env_action = req.GET.get("Action")
+        return action == env_action
 
-        if action == env_action:
-            return True
-        else:
-            return False
-
-    def action_ListStacks(self, environ, result):
-        return self.action_match('ListStacks', environ)
-
-    def action_CreateStack(self, environ, result):
-        return self.action_match('CreateStack', environ)
-
-    def action_DescribeStacks(self, environ, result):
-        return self.action_match('DescribeStacks', environ)
-
-    def action_DeleteStack(self, environ, result):
-        return self.action_match('DeleteStack', environ)
-
-    def action_UpdateStack(self, environ, result):
-        return self.action_match('UpdateStack', environ)
-
-    def action_DescribeStackEvents(self, environ, result):
-        return self.action_match('DescribeStackEvents', environ)
-
-    def action_ValidateTemplate(self, environ, result):
-        return self.action_match('ValidateTemplate', environ)
+    def action(self, name):
+        """
+        Return a function that matches a request's `Action` query parameter to
+        the given value.
+        """
+        return partial(self.action_match, name)
 
     def __init__(self, conf, **local_conf):
         self.conf = conf
@@ -71,28 +53,31 @@ class API(wsgi.Router):
             collection={'detail': 'GET'})
 
         mapper.connect("/", controller=stacks_resource,
-            action="list", conditions=dict(function=self.action_ListStacks))
+            action="list", conditions=dict(function=self.action('ListStacks')))
 
         mapper.connect("/", controller=stacks_resource,
-            action="create", conditions=dict(function=self.action_CreateStack))
+            action="create",
+            conditions=dict(function=self.action('CreateStack')))
 
         mapper.connect("/", controller=stacks_resource,
-            action="describe", 
-            conditions=dict(function=self.action_DescribeStacks))
+            action="describe",
+            conditions=dict(function=self.action('DescribeStacks')))
 
         mapper.connect("/", controller=stacks_resource,
-            action="delete", conditions=dict(function=self.action_DeleteStack))
+            action="delete",
+            conditions=dict(function=self.action('DeleteStack')))
 
         mapper.connect("/", controller=stacks_resource,
-            action="update", conditions=dict(function=self.action_UpdateStack))
+            action="update",
+            conditions=dict(function=self.action('UpdateStack')))
 
         mapper.connect("/", controller=stacks_resource,
             action="events_list",
-            conditions=dict(function=self.action_DescribeStackEvents))
+            conditions=dict(function=self.action('DescribeStackEvents')))
 
         mapper.connect("/", controller=stacks_resource,
                        action="validate_template",
-                       conditions=dict(function=self.action_ValidateTemplate))
+                       conditions=dict(function=self.action('ValidateTemplate')))
 
         mapper.connect("/", controller=stacks_resource, action="index")
 
