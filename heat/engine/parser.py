@@ -17,13 +17,13 @@ import eventlet
 import json
 import logging
 import sys
-
 from heat.common import exception
 from heat.engine import resources
 from heat.engine import instance
 from heat.engine import volume
 from heat.engine import eip
 from heat.engine import security_group
+from heat.engine import user 
 from heat.engine import wait_condition
 
 from heat.db import api as db_api
@@ -97,6 +97,12 @@ class Stack(object):
                                                 self.t['Resources'][r], self)
             elif type == 'AWS::CloudFormation::WaitCondition':
                 self.resources[r] = wait_condition.WaitCondition(r,
+                                                self.t['Resources'][r], self)
+            elif type == 'AWS::IAM::User':
+                self.resources[r] = user.User(r,
+                                                self.t['Resources'][r], self)
+            elif type == 'AWS::IAM::AccessKey':
+                self.resources[r] = user.AccessKey(r,
                                                 self.t['Resources'][r], self)
             else:
                 self.resources[r] = resources.GenericResource(r,
