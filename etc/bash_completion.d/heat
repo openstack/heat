@@ -4,15 +4,19 @@ _heat()
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts=`for i in $(heat --help | grep -A100 "^Commands" | grep -B100 "^Options" | grep "^\s*[a-z]" | awk '{print $1}'); do echo $i; done`
 
-        if [[ ${cur} == * ]]; then
-            if [[ ${#COMP_WORDS[@]} -gt 2 ]]; then
-                return 0
-            else
-                COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-                return 0
-            fi
-        fi
+    if [[ ${cur} == -* ]]; then
+        opts=$(heat --help | grep -A100 "^Options" | sed -r "s/^[[:space:]]*-[[:alpha:]]([[:space:]][[:alpha:]_]*,|,)[[:space:]]//" | cut -d "=" -f1 | grep "^--" | awk '{print $1}')
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    if [[ ${#COMP_WORDS[@]} -gt 2 ]]; then
+        return 0
+    else
+        cmds=$(heat help  | awk '{print $1}' | egrep -v "^(Usage|Commands|$)")
+        COMPREPLY=( $(compgen -W "${cmds}" -- ${cur}) )
+        return 0
+    fi
 }
 complete -F _heat heat
