@@ -15,6 +15,9 @@
 
 import logging
 import routes
+import gettext
+
+gettext.install('heat', unicode=1)
 
 from heat.api.v1 import stacks
 from heat.common import wsgi
@@ -61,7 +64,7 @@ class API(wsgi.Router):
 
         for action in self._actions:
             mapper.connect("/", controller=stacks_resource, action=action,
-                           conditions=conditions(action))
+                conditions=conditions(action))
 
         mapper.connect("/", controller=stacks_resource, action="index")
 
