@@ -1,0 +1,4 @@
+[gerrit]
+host=review.stackforge.org
+port=29418
+project=stackforge/heat.git
