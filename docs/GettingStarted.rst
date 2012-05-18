@@ -198,29 +198,59 @@ Describe the ``wordpress`` stack
     EOF
     )
 
-Verify instance creation
-------------------------
-
-Because the software takes some time to install from the repository, it may be a few minutes before the Wordpress intance is in a running state.  One way to check is to login via ssh and ``tail -f /var/log/yum.log``.  Once mysql-server installs, the instance should be ready to go.
+After a few seconds, the ``StackStatus`` should change from ``IN_PROGRESS`` to ``CREATE_COMPLETE``.
 
 ..
-    # Wait for instance to start
-    retries=0
-    DONE_STATUS='"StackStatus": "CREATE_COMPLETE"'
-    while ((retries++ < 24)) && ! $HEAT_DESCRIBE | grep -q "$DONE_STATUS"; do
-        echo "Waiting for instance to become ACTIVE..." >&2
+    # Wait for Stack creation
+    CREATING='"StackStatus": "IN_PROGRESS"'
+    retries=24
+    while $HEAT_DESCRIBE | grep -q '"StackStatus": "IN_PROGRESS"' &&          \
+          ((retries-- > 0))
+    do
+        echo "Waiting for Stack creation to complete..." >&2
         sleep 5
     done
     
-    WebsiteURL=$($HEAT_DESCRIBE | sed -e '/"OutputKey": "WebsiteURL"/,/}/ {' \
-                                      -e '/"OutputValue":/ {'                \
-                                      -e 's/[^:]*": "//'       \
-                                      -e 's/",\?[[:space:]]*$//'       \
-                                      -e p -e '}' -e '}' -e d)
+    $HEAT_DESCRIBE | grep -q '"StackStatus": "CREATE_COMPLETE"'
     
-    sleep 120
 
-Point web browser at the location given by the ``WebsiteURL`` Output as shown by ``heat describe``)::
+Verify instance creation
+------------------------
+
+Because the software takes some time to install from the repository, it may be a few minutes before the Wordpress intance is in a running state.  One way to check is to login via ssh and ``tail -f /var/log/yum.log``.  Once ``mysql-server`` installs, the instance should be ready to go.
+
+..
+    WebsiteURL=$($HEAT_DESCRIBE | sed -e '/"OutputKey": "WebsiteURL"/,/}/ {'  \
+                                      -e '/"OutputValue":/ {'                 \
+                                      -e 's/[^:]*": "//'                      \
+                                      -e 's/",\?[[:space:]]*$//'              \
+                                      -e p -e '}' -e '}' -e d)
+    HOST=`echo $WebsiteURL | sed -r -e 's#http://([^/]+)/.*#\1#'`
+    
+    retries=9
+    while ! ping -q -c 1 $HOST && ((retries-- > 0)); do
+        echo "Waiting for host networking..." >&2
+        sleep 2
+    done
+    test $retries -ge 0
+    
+    sleep 10
+    
+    retries=49
+    while ! ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no  \
+                -q -t -l ec2-user $HOST                                   \
+                sudo grep -q mysql-server /var/log/yum.log &&             \
+          ((retries-- > 0))
+    do
+        echo "Waiting for package installation..." >&2
+        sleep 5
+    done
+    test $retries -ge 0
+    
+    echo "Pausing to wait for application startup..." >&2
+    sleep 60
+
+Point a web browser at the location given by the ``WebsiteURL`` Output as shown by ``heat describe``::
 
     wget ${WebsiteURL}
 
