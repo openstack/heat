@@ -63,11 +63,22 @@ function os_stop() {
 }
 
 function os_erase() {
+	for net in `sudo nova-manage network list |
+	            awk '/^[[:digit:]]/ { print $9 }'`
+	do
+		sudo nova-manage network delete --uuid $net
+	done
+
 	os_stop
 	sleep 1
+
+	# Kill dnsmasq processes
+	if find /var/lib/nova/networks -name '*.pid'; then
+		sudo kill `cat /var/lib/nova/networks/*.pid`
+	fi
+
 	sudo rm -f /var/lib/libvirt/qemu/save/instance-000*
 	sudo rm -f /var/lib/libvirt/qemu/instance-000*
-	for iii in /usr/lib/systemd/system/openstack-*.service; do sudo systemctl stop $(basename $iii); done
 	sudo yum erase -y python-glance python-nova* python-keystone* openstack-swift* openstack-dashboard
 
 	sudo systemctl start mysqld.service
