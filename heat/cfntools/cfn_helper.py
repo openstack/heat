@@ -139,8 +139,9 @@ class CommandRunner(object):
     Helper class to run a command and store the output.
     """
 
-    def __init__(self, command):
+    def __init__(self, command, nextcommand=None):
         self._command = command
+        self._next = nextcommand
         self._stdout = None
         self._stderr = None
         self._status = None
@@ -172,7 +173,8 @@ class CommandRunner(object):
         self._status = subproc.returncode
         self._stdout = output[0]
         self._stderr = output[1]
-
+        if self._next:
+          self._next.run()
         return self
 
     @property
@@ -590,7 +592,7 @@ class SourcesHandler(object):
             cmd_str = 'tar -C %s -xf %s' % (dest_dir, archive)
         else:
             pass
-        CommandRunner(cmd_str).run()
+        return CommandRunner(cmd_str)
 
     def apply_sources(self):
         if not self._sources:
@@ -598,7 +600,8 @@ class SourcesHandler(object):
         for dest, url in self._sources.iteritems():
             tmp_name = self._url_to_tmp_filename(url)
             cmd_str = 'wget -O %s %s' % (tmp_name, url)
-            CommandRunner(cmd_str).run()
+            decompress_command = self._decompress(tmp_name, dest)
+            CommandRunner(cmd_str, decompress_command).run()
             try:
                 os.makedirs(dest)
             except OSError as e:
@@ -606,7 +609,6 @@ class SourcesHandler(object):
                     logger.debug(str(e))
                 else:
                     logger.exception(e)
-            self._decompress(tmp_name, dest)
 
 
 class ServicesHandler(object):
