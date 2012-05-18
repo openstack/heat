@@ -31,6 +31,19 @@ from heat.db import api as db_api
 logger = logging.getLogger(__file__)
 
 
+(RESOURCE_CLASSES,) = ({
+    'AWS::EC2::Instance': instance.Instance,
+    'AWS::EC2::Volume': volume.Volume,
+    'AWS::EC2::VolumeAttachment': volume.VolumeAttachment,
+    'AWS::EC2::EIP': eip.ElasticIp,
+    'AWS::EC2::EIPAssociation': eip.ElasticIpAssociation,
+    'AWS::EC2::SecurityGroup': security_group.SecurityGroup,
+    'AWS::CloudFormation::WaitConditionHandle':
+        wait_condition.WaitConditionHandle,
+    'AWS::CloudFormation::WaitCondition': wait_condition.WaitCondition,
+},)
+
+
 class Stack(object):
     IN_PROGRESS = 'IN_PROGRESS'
     CREATE_FAILED = 'CREATE_FAILED'
@@ -72,38 +85,12 @@ class Stack(object):
             self.creds = parms['KeyStoneCreds']
 
         self.resources = {}
-        for r in self.t['Resources']:
-            type = self.t['Resources'][r]['Type']
-            if type == 'AWS::EC2::Instance':
-                self.resources[r] = instance.Instance(r,
-                                                self.t['Resources'][r], self)
-            elif type == 'AWS::EC2::Volume':
-                self.resources[r] = volume.Volume(r,
-                                                self.t['Resources'][r], self)
-            elif type == 'AWS::EC2::VolumeAttachment':
-                self.resources[r] = volume.VolumeAttachment(r,
-                                                self.t['Resources'][r], self)
-            elif type == 'AWS::EC2::EIP':
-                self.resources[r] = eip.ElasticIp(r,
-                                                self.t['Resources'][r], self)
-            elif type == 'AWS::EC2::EIPAssociation':
-                self.resources[r] = eip.ElasticIpAssociation(r,
-                                                self.t['Resources'][r], self)
-            elif type == 'AWS::EC2::SecurityGroup':
-                self.resources[r] = security_group.SecurityGroup(r,
-                                                self.t['Resources'][r], self)
-            elif type == 'AWS::CloudFormation::WaitConditionHandle':
-                self.resources[r] = wait_condition.WaitConditionHandle(r,
-                                                self.t['Resources'][r], self)
-            elif type == 'AWS::CloudFormation::WaitCondition':
-                self.resources[r] = wait_condition.WaitCondition(r,
-                                                self.t['Resources'][r], self)
-            else:
-                self.resources[r] = resources.GenericResource(r,
-                                                self.t['Resources'][r], self)
+        for rname, res in self.t['Resources'].items():
+            ResourceClass = RESOURCE_CLASSES.get(res['Type'],
+                                                 resources.GenericResource)
+            self.resources[rname] = ResourceClass(rname, res, self)
 
-            self.calulate_dependencies(self.t['Resources'][r],
-                                       self.resources[r])
+            self.calulate_dependencies(res, self.resources[rname])
 
     def validate(self):
         '''

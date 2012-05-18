@@ -136,12 +136,10 @@ class Instance(Resource):
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
         props = self.t['Properties']
-        if not 'KeyName' in props:
-            raise exception.UserParameterMissing(key='KeyName')
-        if not 'InstanceType' in props:
-            raise exception.UserParameterMissing(key='InstanceType')
-        if not 'ImageId' in props:
-            raise exception.UserParameterMissing(key='ImageId')
+        required_props = ('KeyName', 'InstanceType', 'ImageId')
+        for key in required_props:
+            if key not in props:
+                raise exception.UserParameterMissing(key=key)
 
         security_groups = props.get('SecurityGroups')
 
@@ -150,14 +148,8 @@ class Instance(Resource):
         flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
         key_name = self.t['Properties']['KeyName']
 
-        keypairs = self.nova().keypairs.list()
-        key_exists = False
-        for k in keypairs:
-            if k.name == key_name:
-                # cool it exists
-                key_exists = True
-                break
-        if not key_exists:
+        keypairs = [k.name for k in self.nova().keypairs.list()]
+        if key_name not in keypairs:
             raise exception.UserKeyPairMissing(key_name=key_name)
 
         image_name = self.t['Properties']['ImageId']
