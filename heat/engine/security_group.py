@@ -16,7 +16,6 @@
 import eventlet
 import logging
 import os
-
 from novaclient.exceptions import BadRequest
 from heat.common import exception
 from heat.engine.resources import Resource
@@ -53,7 +52,6 @@ class SecurityGroup(Resource):
                                                      self.description)
 
         self.instance_id_set(sec.id)
-
         if 'SecurityGroupIngress' in self.t['Properties']:
             rules_client = self.nova().security_group_rules
             for i in self.t['Properties']['SecurityGroupIngress']:

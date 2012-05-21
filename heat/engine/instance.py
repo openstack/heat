@@ -75,6 +75,8 @@ class Instance(Resource):
             res = self.t['Properties']['AvailabilityZone']
         elif key == 'PublicIp':
             res = self.ipaddress
+        elif key == 'PrivateDnsName':
+            res = self.ipaddress
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
