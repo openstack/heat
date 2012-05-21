@@ -581,15 +581,28 @@ class SourcesHandler(object):
 
     def _decompress(self, archive, dest_dir):
         cmd_str = ''
+        logger.debug("Decompressing")
         (r, ext) = os.path.splitext(archive)
-        if ext == '.tar.gz' or ext == '.tgz':
+        if  ext == '.tgz':
             cmd_str = 'tar -C %s -xzf %s' % (dest_dir, archive)
-        elif ext == '.tar.bz2' or ext == '.tbz2':
+        elif ext == '.tbz2':
             cmd_str = 'tar -C %s -xjf %s' % (dest_dir, archive)
         elif ext == '.zip':
             cmd_str = 'unzip -d %s %s' % (dest_dir, archive)
         elif ext == '.tar':
             cmd_str = 'tar -C %s -xf %s' % (dest_dir, archive)
+        elif ext == '.gz':
+            (r, ext) = os.path.splitext(r)
+            if ext:
+                cmd_str = 'tar -C %s -xzf %s' % (dest_dir, archive)
+            else:
+                cmd_str = 'gunzip -c %s > %s' % (archive, dest_dir)
+        elif ext == 'bz2':
+            (r, ext) = os.path.splitext(r)
+            if ext:
+                cmd_str = 'tar -C %s -xjf %s' % (dest_dir, archive)
+            else:
+                cmd_str = 'bunzip2 -c %s > %s' % (archive, dest_dir)
         else:
             pass
         return CommandRunner(cmd_str)
