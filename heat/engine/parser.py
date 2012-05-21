@@ -180,8 +180,7 @@ class Stack(object):
 
         pt = db_api.parsed_template_get(None, self.parsed_template_id)
         if pt:
-            pt.template = self.t
-            pt.save()
+            pt.update_and_save({'template': self.t.copy()})
         else:
             logger.warn('Cant find parsed template to update %d' % \
                         self.parsed_template_id)
@@ -220,8 +219,6 @@ class Stack(object):
             self.status_set(self.CREATE_FAILED)
         else:
             self.status_set(self.CREATE_COMPLETE)
-
-        self.update_parsed_template()
 
     def create(self):
 
