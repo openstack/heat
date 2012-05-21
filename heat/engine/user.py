@@ -42,6 +42,7 @@ class User(Resource):
         logger.info('%s.GetAtt(%s) == %s' % (self.name, key, res))
         return unicode(res)
 
+
 class AccessKey(Resource):
     def __init__(self, name, json_snippet, stack):
         super(AccessKey, self).__init__(name, json_snippet, stack)
@@ -64,4 +65,3 @@ class AccessKey(Resource):
 
         logger.info('%s.GetAtt(%s) == %s' % (self.name, key, res))
         return unicode(res)
-

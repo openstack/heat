@@ -174,7 +174,7 @@ class CommandRunner(object):
         self._stdout = output[0]
         self._stderr = output[1]
         if self._next:
-          self._next.run()
+            self._next.run()
         return self
 
     @property
