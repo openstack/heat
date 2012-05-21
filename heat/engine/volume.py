@@ -62,7 +62,7 @@ class Volume(Resource):
             vol = self.nova('volume').volumes.get(self.instance_id)
             if vol.status == 'in-use':
                 logger.warn('cant delete volume when in-use')
-                return
+                raise exception.Error("Volume in use")
 
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)

@@ -199,14 +199,14 @@ class Stack(object):
         self.status_set(self.IN_PROGRESS)
 
         for r in order:
-            failed_str = self.resources[r].CREATE_FAILED
+            res = self.resources[r]
             if not failed:
                 try:
-                    self.resources[r].create()
+                    res.create()
                 except Exception as ex:
                     logger.exception('create')
                     failed = True
-                    self.resources[r].state_set(failed_str, str(ex))
+                    res.state_set(res.CREATE_FAILED, str(ex))
 
                 try:
                     self.update_parsed_template()
@@ -214,11 +214,9 @@ class Stack(object):
                     logger.exception('update_parsed_template')
 
             else:
-                self.resources[r].state_set(failed_str)
-        if failed:
-            self.status_set(self.CREATE_FAILED)
-        else:
-            self.status_set(self.CREATE_COMPLETE)
+                res.state_set(res.CREATE_FAILED)
+
+        self.status_set(failed and self.CREATE_FAILED or self.CREATE_COMPLETE)
 
     def create(self):
 
@@ -230,19 +228,23 @@ class Stack(object):
         delete all the resources in the reverse order specified by
         get_create_order().
         '''
+        order = self.get_create_order()
+        failed = False
         self.status_set(self.DELETE_IN_PROGRESS)
 
-        order = self.get_create_order()
-        order.reverse()
-        for r in order:
+        for r in reversed(order):
+            res = self.resources[r]
             try:
-                self.resources[r].delete()
+                res.delete()
                 db_api.resource_get(None, self.resources[r].id).delete()
             except Exception as ex:
+                failed = True
+                res.state_set(res.DELETE_FAILED)
                 logger.error('delete: %s' % str(ex))
 
-        db_api.stack_delete(None, self.name)
-        self.status_set(self.DELETE_COMPLETE)
+        self.status_set(failed and self.DELETE_FAILED or self.DELETE_COMPLETE)
+        if not failed:
+            db_api.stack_delete(None, self.name)
 
     def delete(self):
         pool = eventlet.GreenPool()

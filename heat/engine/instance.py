@@ -222,7 +222,11 @@ class Instance(Resource):
             return
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
-        server = self.nova().servers.get(self.instance_id)
-        server.delete()
+        try:
+            server = self.nova().servers.get(self.instance_id)
+        except NotFound:
+            pass
+        else:
+            server.delete()
         self.instance_id = None
         self.state_set(self.DELETE_COMPLETE)
