@@ -78,7 +78,7 @@ class API(wsgi.Router):
         mapper.connect("/", controller=stacks_resource,
                        action="validate_template",
                        conditions=dict(function=self.action('ValidateTemplate')
-                       ))
+            ))
 
         mapper.connect("/", controller=stacks_resource, action="index")
 
