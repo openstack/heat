@@ -9,19 +9,23 @@ fi
 user_wants() {
     if [ "$SKIP_ASK" = "y" ]; then return 0; fi
 
-    read -n 1 -p "$1 " cont
-    echo 1>&2
-    case $cont in
-        y|Y)
-            return 0
-            ;;
-        *)
-            return 1
-            ;;
-    esac
+    while true; do
+        read -n 1 -p "$1 " cont
+        echo 1>&2
+        case $cont in
+            y|Y)
+                return 0
+                ;;
+            n|N)
+                return 1
+                ;;
+            *)
+                ;;
+        esac
+    done
 }
 
-HEAT_PIDS=`pgrep 'heat-.+'`
+HEAT_PIDS=`pgrep '^heat-(api|engine)$'`
 if [ -n "$HEAT_PIDS" ]; then
     echo 'The following Heat processes are running:' 1>&2
     ps $HEAT_PIDS 1>&2
@@ -41,7 +45,7 @@ if user_wants 'Erase OpenStack installation?'; then
     echo 1>&2
 fi
 
-HEAT_EGGS=`find ${PYTHONHOME:-/usr/lib/python2.7}/site-packages/ -maxdepth 1 -type d -name 'heat-*.egg'`
+HEAT_EGGS=`python -c 'import sys; print "\n".join(sys.path)' | grep '/heat-[^/]*\.egg$'`
 if [ -n "$HEAT_EGGS" ]; then
     echo 'The following Heat installations were found:' 1>&2
     echo "$HEAT_EGGS" 1>&2
