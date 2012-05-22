@@ -119,26 +119,26 @@ export OS_AUTH_STRATEGY=keystone
 EOF
 	# Install keystone catalog
 	source $HOME/.openstack/keystonerc
-	sudo openstack-config-set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
+	sudo openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
 	sudo systemctl start openstack-keystone.service
 	sleep 1
 
 	sudo ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass openstack-keystone-sample-data
 
 	# Configure nova to use keystone
-	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
-	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_user nova
-	sudo openstack-config-set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
-	sudo openstack-config-set /etc/nova/nova.conf DEFAULT auth_strategy keystone
+	sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
+	sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
+	sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
+	sudo openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
 	# Configure glance to use keystone
-	sudo openstack-config-set /etc/glance/glance-api.conf paste_deploy flavor keystone
-	sudo openstack-config-set /etc/glance/glance-registry.conf paste_deploy flavor keystone
-	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_tenant_name service
-	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_user glance
-	sudo openstack-config-set /etc/glance/glance-api-paste.ini filter:authtoken admin_password servicepass
-	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_tenant_name service
-	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
-	sudo openstack-config-set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
+	sudo openstack-config --set /etc/glance/glance-api.conf paste_deploy flavor keystone
+	sudo openstack-config --set /etc/glance/glance-registry.conf paste_deploy flavor keystone
+	sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_tenant_name service
+	sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_user glance
+	sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_password servicepass
+	sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_tenant_name service
+	sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
+	sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
 
 	os_stop
 	sleep 1
