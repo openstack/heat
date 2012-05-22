@@ -22,6 +22,8 @@ class stacksTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.fc = fakes.FakeClient()
+        self.path = os.path.dirname(os.path.realpath(__file__)).\
+            replace('heat/tests', 'templates')
 
     def tearDown(self):
         self.m.UnsetStubs()
