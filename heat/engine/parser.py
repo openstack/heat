@@ -41,6 +41,8 @@ logger = logging.getLogger(__file__)
     'AWS::CloudFormation::WaitConditionHandle':
         wait_condition.WaitConditionHandle,
     'AWS::CloudFormation::WaitCondition': wait_condition.WaitCondition,
+    'AWS::IAM::User': user.User,
+    'AWS::IAM::AccessKey': user.AccessKey,
 },)
 
 
