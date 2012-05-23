@@ -20,6 +20,7 @@ include heat/cfntools/cfn-init
 include heat/cfntools/cfn-hup
 include heat/cfntools/cfn-signal
 include heat/cfntools/cfn-get-metadata
+include heat/cfntools/cfn-push-stats
 include heat/cloudinit/config
 include heat/cloudinit/part-handler.py
 include heat/db/sqlalchemy/migrate_repo/migrate.cfg

@@ -20,5 +20,6 @@ apt-get -y upgrade;apt-get -y install cloud-init;/usr/sbin/useradd -m ec2-user;e
     <file name='/opt/aws/bin/cfn-signal'  type='base64'></file>
     <file name='/opt/aws/bin/cfn_helper.py'  type='base64'></file>
     <file name='/opt/aws/bin/cfn-get-metadata'  type='base64'></file>
+    <file name='/opt/aws/bin/cfn-push-stats'  type='base64'></file>
   </files>
 </template>

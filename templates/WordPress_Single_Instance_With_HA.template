@@ -100,19 +100,19 @@
     "WebServerRestartPolicy" : {
       "Type" : "HEAT::Recovery::EscalationPolicy",
       "Properties" : {
-        "Instance" : { "Ref" : "WikiDatabase" },
+        "Instance" : { "Ref" : "WikiDatabase" }
       }
     },
     "HttpFailureAlarm": {
      "Type": "AWS::CloudWatch::Alarm",
      "Properties": {
         "AlarmDescription": "Restart the WikiDatabase if httpd fails > 3 times in 10 minutes",
-        "MetricName": "ProcessRestartCount",
-        "Namespace": "HEAT",
+        "MetricName": "ServiceFailure",
+        "Namespace": "system/linux",
         "Statistic": "Maximum",
         "Period": "300",
-        "EvaluationPeriods": "2",
-        "Threshold": "3",
+        "EvaluationPeriods": "1",
+        "Threshold": "2",
         "AlarmActions": [ { "Ref": "WebServerRestartPolicy" } ],
         "ComparisonOperator": "GreaterThanThreshold"
       }
@@ -123,31 +123,6 @@
         "AWS::CloudFormation::Init" : {
           "config" : {
             "files" : {
-              "/opt/aws/bin/cfn-init" : {
-                "source" : "https://raw.github.com/heat-api/heat/master/heat/cfntools/cfn-init",
-                "mode"   : "000755",
-                "owner"  : "root",
-                "group"  : "root"
-              },
-              "/opt/aws/bin/cfn-hup" : {
-                "source" : "https://raw.github.com/heat-api/heat/master/heat/cfntools/cfn-hup",
-                "mode"   : "000755",
-                "owner"  : "root",
-                "group"  : "root"
-              },
-              "/opt/aws/bin/cfn-signal" : {
-                "source" : "https://raw.github.com/heat-api/heat/master/heat/cfntools/cfn-signal",
-                "mode"   : "000755",
-                "owner"  : "root",
-                "group"  : "root"
-              },
-              "/opt/aws/bin/cfn_helper.py" : {
-                "source" : "https://raw.github.com/heat-api/heat/master/heat/cfntools/cfn_helper.py",
-                "mode"   : "000644",
-                "owner"  : "root",
-                "group"  : "root"
-              },
-
               "/etc/cfn/cfn-credentials" : {
                 "content" : { "Fn::Join" : ["", [
                   "AWSAccessKeyId=GobbleGobble\n",
@@ -174,7 +149,9 @@
               "/etc/cfn/notify-on-httpd-restarted" : {
                 "content" : { "Fn::Join" : ["", [
                 "#!/bin/sh\n",
-                "logger -t cfn-event 'http got restarted'\n"
+                "/opt/aws/bin/cfn-push-stats --watch ",
+                { "Ref" : "HttpFailureAlarm" },
+                " --service-failure\n"
                 ]]},
                 "mode"    : "000700",
                 "owner"   : "root",

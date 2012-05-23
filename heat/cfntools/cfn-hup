@@ -100,12 +100,6 @@ if not mainconfig.unique_resources_get():
     exit(1)
 
 
-metadata_handler = MetadataLoggingHandler(metadata_server_url(),
-                                          mainconfig.stack,
-                                          mainconfig.unique_resources_get()[0])
-logger.addHandler(metadata_handler)
-
-
 for r in mainconfig.unique_resources_get():
     print r
     metadata = Metadata(mainconfig.stack,

@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.engine import checkeddict
 from heat.engine import cloud_watch
 from heat.engine import eip
+from heat.engine import escalation_policy
 from heat.engine import instance
 from heat.engine import resources
 from heat.engine import security_group
@@ -39,6 +40,8 @@ logger = logging.getLogger(__file__)
     'AWS::EC2::EIP': eip.ElasticIp,
     'AWS::EC2::EIPAssociation': eip.ElasticIpAssociation,
     'AWS::EC2::SecurityGroup': security_group.SecurityGroup,
+    'AWS::CloudWatch::Alarm': cloud_watch.CloudWatchAlarm,
+    'HEAT::Recovery::EscalationPolicy': escalation_policy.EscalationPolicy,
     'AWS::CloudFormation::WaitConditionHandle':
         wait_condition.WaitConditionHandle,
     'AWS::CloudFormation::WaitCondition': wait_condition.WaitCondition,
@@ -110,7 +113,6 @@ class Stack(object):
         # TODO(sdake) Should return line number of invalid reference
 
         response = None
-
         try:
             order = self.get_create_order()
         except KeyError:
@@ -289,8 +291,9 @@ class Stack(object):
                     pass
                 elif i == 'Ref':
                     #print '%s Refences %s' % (r.name, s[i])
-                    r.depends_on.append(s[i])
-                elif i == 'DependsOn' or i == 'Ref':
+                    if r.strict_dependency():
+                        r.depends_on.append(s[i])
+                elif i == 'DependsOn':
                     #print '%s DependsOn on %s' % (r.name, s[i])
                     r.depends_on.append(s[i])
                 else:

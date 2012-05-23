@@ -767,36 +767,6 @@ def metadata_server_url():
         return None
 
 
-class MetadataLoggingHandler(logging.Handler):
-    def __init__(self, metadata_server_url, stack, resource):
-        super(MetadataLoggingHandler, self).__init__(level=logging.WARNING)
-        self.stack = stack
-        self.resource = resource
-
-        if metadata_server_url:
-            self.events_url = metadata_server_url + 'events/'
-        else:
-            logger.info('Metadata server URL not found')
-            self.events_url = None
-
-    def handle(self, record):
-        if not self.events_url:
-            return
-        event = {
-            'message': record.message,
-            'stack': self.stack,
-            'resource': self.resource,
-            'resource_type': 'AWS::EC2::Instance',
-            'reason': 'cfntools notification',
-        }
-        req = Request(self.events_url, json.dumps(event))
-        req.headers['Content-Type'] = 'application/json'
-        try:
-            urlopen(req)
-        except:
-            pass
-
-
 class MetadataServerConnectionError(Exception):
     pass
 

@@ -19,6 +19,8 @@
 
 import functools
 import urlparse
+import sys
+
 from heat.openstack.common.exception import *
 
 

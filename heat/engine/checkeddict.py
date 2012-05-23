@@ -79,6 +79,10 @@ class CheckedDict(collections.MutableMapping):
                 if num > maxn or num < minn:
                     raise ValueError('%s is out of range' % key)
 
+            elif self.data[key]['Type'] == 'List':
+                if not isinstance(value, list):
+                    raise ValueError('%s Value must be a list' % (key))
+
             elif self.data[key]['Type'] == 'CommaDelimitedList':
                 sp = value.split(',')
                 if not isinstance(sp, list):

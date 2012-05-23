@@ -187,7 +187,7 @@ class Resource(object):
         http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/ \
         intrinsic-function-reference-getatt.html
         '''
-        raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
+        return unicode(self.name)
 
     def FnBase64(self, data):
         '''
@@ -195,6 +195,12 @@ class Resource(object):
             intrinsic-function-reference-base64.html
         '''
         return base64.b64encode(data)
+
+    def strict_dependency(self):
+        '''
+        If True, this resource must be created before it can be referenced.
+        '''
+        return True
 
 
 class GenericResource(Resource):

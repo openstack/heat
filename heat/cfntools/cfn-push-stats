@@ -17,11 +17,20 @@ Implements cfn-signal CloudFormation functionality
 """
 import argparse
 import logging
-import psutil
 import os
 import random
 import sys
 
+
+log_format = '%(levelname)s [%(asctime)s] %(message)s'
+logging.basicConfig(format=log_format, level=logging.DEBUG)
+logger = logging.getLogger('cfn-push-stats')
+
+try:
+    import psutil
+except ImportError:
+    logger.warn("psutil not available. If you want process and memory "
+            "statistics, you need to install it.")
 #
 #  --aws-credential-file=PATH  Specifies the location of the file with AWS
 #                              credentials.
@@ -84,13 +93,9 @@ parser.add_argument('--disk-units', required=False, default='megabytes',
                     help='Specifies units for disk metrics.')
 parser.add_argument('--disk-path', required=False, default='/',
                     help='Selects the disk by the path on which to report.')
-parser.add_argument('url',
-                    help='the url to post to')
+parser.add_argument('--watch', required=True,
+                    help='the name of the watch to post to.')
 args = parser.parse_args()
-
-log_format = '%(levelname)s [%(asctime)s] %(message)s'
-logging.basicConfig(format=log_format, level=logging.DEBUG)
-logger = logging.getLogger('cfn-push-stats')
 
 data = {'Namespace': 'system/linux'}
 
@@ -150,9 +155,15 @@ if args.disk_space_avail:
 
 logger.info(str(data))
 
+server_url = metadata_server_url()
+if not server_url:
+    logger.error('can not get the metadata_server_url')
+    exit(1)
+url = '%sstats/%s/data/' % (server_url, args.watch)
+
 cmd_str = "curl -X POST -H \'Content-Type:\' --data-binary \'%s\' %s" % \
-           (json.dumps(data), args.url)
+           (json.dumps(data), url)
 
 cmd = CommandRunner(cmd_str)
 cmd.run()
-print cmd.stdout
+logger.info(cmd.stdout)

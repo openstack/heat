@@ -30,6 +30,7 @@ class CloudWatchAlarm(Resource):
                          'AllowedValues': ['GreaterThanOrEqualToThreshold',
                          'GreaterThanThreshold', 'LessThanThreshold',
                          'LessThanOrEqualToThreshold']},
+        'AlarmDescription': {'Type': 'String'},
         'EvaluationPeriods': {'Type': 'String'},
         'MetricName': {'Type': 'String'},
         'Namespace': {'Type': 'String'},
@@ -37,6 +38,7 @@ class CloudWatchAlarm(Resource):
         'Statistic': {'Type': 'String',
                       'AllowedValues': ['SampleCount', 'Average', 'Sum',
                                         'Minimum', 'Maximum']},
+        'AlarmActions': {'Type': 'List'},
         'Threshold': {'Type': 'String'},
         'Units': {'Type': 'String',
                   'AllowedValues': ['Seconds', 'Microseconds', 'Milliseconds',
@@ -90,3 +92,6 @@ class CloudWatchAlarm(Resource):
 
     def FnGetRefId(self):
         return unicode(self.name)
+
+    def strict_dependency(self):
+        return False
