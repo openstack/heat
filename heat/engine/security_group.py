@@ -17,6 +17,7 @@ import eventlet
 import logging
 import os
 from novaclient.exceptions import BadRequest
+from novaclient.exceptions import NotFound
 from heat.common import exception
 from heat.engine.resources import Resource
 
@@ -27,7 +28,6 @@ class SecurityGroup(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)
-        self.instance_id = ''
 
         if 'GroupDescription' in self.t['Properties']:
             self.description = self.t['Properties']['GroupDescription']
@@ -86,12 +86,18 @@ class SecurityGroup(Resource):
         Resource.delete(self)
 
         if self.instance_id != None:
-            sec = self.nova().security_groups.get(self.instance_id)
+            try:
+                sec = self.nova().security_groups.get(self.instance_id)
+            except NotFound:
+                pass
+            else:
+                for rule in sec.rules:
+                    try:
+                        self.nova().security_group_rules.delete(rule['id'])
+                    except NotFound:
+                        pass
 
-            for rule in sec.rules:
-                self.nova().security_group_rules.delete(rule['id'])
-
-            self.nova().security_groups.delete(sec)
+                self.nova().security_groups.delete(sec)
             self.instance_id = None
 
         self.state_set(self.DELETE_COMPLETE)
