@@ -1,0 +1,24 @@
+<template>
+  <name>U10-x86_64-cfntools-jeos</name>
+  <os>
+    <name>Ubuntu</name>
+    <version>10.04</version>
+    <arch>x86_64</arch>
+    <install type='iso'>
+      <iso>file:/var/lib/libvirt/images/ubuntu-10.04.3-server-amd64.iso</iso>
+    </install>
+  </os>
+  <description>Ubuntu 10.04</description>
+  <commands>
+    <command name='commands'>
+apt-get -y upgrade;apt-get -y install cloud-init;/usr/sbin/useradd ec2-user;echo -e 'ec2-user\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers;chmod +x /opt/aws/bin/cfn-*
+    </command>
+  </commands>
+  <files>
+    <file name='/opt/aws/bin/cfn-init'  type='base64'></file>
+    <file name='/opt/aws/bin/cfn-hup'  type='base64'></file>
+    <file name='/opt/aws/bin/cfn-signal'  type='base64'></file>
+    <file name='/opt/aws/bin/cfn_helper.py'  type='base64'></file>
+    <file name='/opt/aws/bin/cfn-get-metadata'  type='base64'></file>
+  </files>
+</template>

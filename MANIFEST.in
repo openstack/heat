@@ -15,6 +15,7 @@ include heat/jeos/F16-x86_64-gold-jeos.tdl
 include heat/jeos/F17-x86_64-gold-jeos.tdl
 include heat/jeos/F16-x86_64-cfntools-jeos.tdl
 include heat/jeos/F17-x86_64-cfntools-jeos.tdl
+include heat/jeos/U10-amd64-cfntools-jeos.tdl
 include heat/cfntools/cfn-init
 include heat/cfntools/cfn-hup
 include heat/cfntools/cfn-signal

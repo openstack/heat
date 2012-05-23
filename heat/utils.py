@@ -112,11 +112,16 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
             (distro, arch, instances_str))
         sys.exit(1)
 
+    src_arch = 'i386'
     fedora_match = re.match('F(1[6-7])', distro)
     if fedora_match:
+        if arch == 'x86_64':
+            src_arch = 'x86_64'
         version = fedora_match.group(1)
         iso = '%s/Fedora-%s-%s-DVD.iso' % (images_dir, version, arch)
     elif distro == 'U10':
+        if arch == 'amd64':
+            src_arch = 'x86_64'
         iso = '%s/ubuntu-10.04.3-server-%s.iso' % (images_dir, arch)
     else:
         logging.error('distro %s not supported' % distro)
@@ -149,7 +154,7 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
         tdl_path = '/tmp/tdl'
 
     dsk_filename = '%s/%s-%s-%s-jeos.dsk' % (images_dir, distro,
-                                             arch, instance_type)
+                                             src_arch, instance_type)
     qcow2_filename = '%s/%s-%s-%s-jeos.qcow2' % (images_dir, distro,
                                                  arch, instance_type)
     image_name = '%s-%s-%s' % (distro, arch, instance_type)
