@@ -119,6 +119,9 @@ class Resource(object):
 
             except Exception as ex:
                 logger.warn('db error %s' % str(ex))
+        elif new_state is not self.CREATE_IN_PROGRESS:
+            rs = db_api.resource_get(None, self.id)
+            rs.update_and_save({'state': new_state})
 
         if new_state != self.state:
             ev = {}
