@@ -31,7 +31,7 @@ class stacksTest(unittest.TestCase):
 
     # We use this in a number of tests so it's factored out here.
     def start_wordpress_stack(self, stack_name):
-        f = open('templates/WordPress_Single_Instance_gold.template')
+        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
         t = json.loads(f.read())
         f.close()
         params = {}
@@ -148,7 +148,7 @@ class stacksTest(unittest.TestCase):
         self.m.ReplayAll()
         stack.create_blocking()
 
-        f = open('templates/WordPress_Single_Instance_gold.template')
+        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
         t = json.loads(f.read())
         params = {}
         parameters = {}

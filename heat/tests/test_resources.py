@@ -30,7 +30,7 @@ class instancesTest(unittest.TestCase):
         print "instancesTest teardown complete"
 
     def test_instance_create(self):
-        f = open('templates/WordPress_Single_Instance_gold.template')
+        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
         t = json.loads(f.read())
         f.close()
 
@@ -80,7 +80,7 @@ class instancesTest(unittest.TestCase):
         assert(instance.id > 0)
 
     def test_instance_create_delete(self):
-        f = open('templates/WordPress_Single_Instance_gold.template')
+        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
         t = json.loads(f.read())
         f.close()
 
