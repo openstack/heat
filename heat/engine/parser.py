@@ -18,14 +18,14 @@ import json
 import logging
 import sys
 from heat.common import exception
-from heat.engine import resources
-from heat.engine import instance
-from heat.engine import volume
+from heat.engine import checkeddict
 from heat.engine import eip
+from heat.engine import instance
+from heat.engine import resources
 from heat.engine import security_group
 from heat.engine import user
+from heat.engine import volume
 from heat.engine import wait_condition
-
 from heat.db import api as db_api
 
 logger = logging.getLogger(__file__)
@@ -58,7 +58,6 @@ class Stack(object):
                  metadata_server=None):
         self.id = stack_id
         self.t = template
-        self.parms = self.t.get('Parameters', {})
         self.maps = self.t.get('Mappings', {})
         self.outputs = self.t.get('Outputs', {})
         self.res = {}
@@ -67,20 +66,28 @@ class Stack(object):
         self.parsed_template_id = 0
         self.metadata_server = metadata_server
 
-        self.parms['AWS::StackName'] = {"Description": "AWS StackName",
-            "Type": "String",
-            "Value": stack_name}
-
-        self.parms['AWS::Region'] = {"Description": "AWS Regions",
-            "Type": "String",
+        # Default Parameters
+        self.parms = checkeddict.CheckedDict()
+        self.parms.addschema('AWS::StackName', {"Description": "AWS StackName",
+                                                "Type": "String"})
+        self.parms['AWS::StackName'] = stack_name
+        self.parms.addschema('AWS::Region', {"Description": "AWS Regions",
             "Default": "ap-southeast-1",
+            "Type": "String",
             "AllowedValues": ["us-east-1", "us-west-1", "us-west-2",
                               "sa-east-1", "eu-west-1", "ap-southeast-1",
                               "ap-northeast-1"],
-            "ConstraintDescription": "must be a valid EC2 instance type."}
+            "ConstraintDescription": "must be a valid EC2 instance type."})
 
+        # template Parameters
+        ps = self.t.get('Parameters', {})
+        for p in ps:
+            self.parms.addschema(p, ps[p])
+
+        # user Parameters
         if parms != None:
             self._apply_user_parameters(parms)
+
         if isinstance(parms['KeyStoneCreds'], (basestring, unicode)):
             self.creds = eval(parms['KeyStoneCreds'])
         else:
@@ -136,8 +143,8 @@ class Stack(object):
             res = jp['member']
             res['NoEcho'] = 'false'
             res['ParameterKey'] = p
-            res['Description'] = self.parms[p].get('Description', '')
-            res['DefaultValue'] = self.parms[p].get('Default', '')
+            res['Description'] = self.parms.get_attr(p, 'Description')
+            res['DefaultValue'] = self.parms.get_attr(p, 'Default')
             response['ValidateTemplateResult']['Parameters'].append(res)
         return response
 
@@ -290,13 +297,6 @@ class Stack(object):
             for index, item in enumerate(s):
                 self.calulate_dependencies(item, r)
 
-    def _apply_user_parameter(self, key, value):
-        logger.debug('appling user parameter %s=%s ' % (key, value))
-
-        if not key in self.parms:
-            self.parms[key] = {}
-        self.parms[key]['Value'] = value
-
     def _apply_user_parameters(self, parms):
         for p in parms:
             if 'Parameters.member.' in p and 'ParameterKey' in p:
@@ -304,19 +304,17 @@ class Stack(object):
                 try:
                     key_name = 'Parameters.member.%s.ParameterKey' % s[2]
                     value_name = 'Parameters.member.%s.ParameterValue' % s[2]
-                    self._apply_user_parameter(parms[key_name],
-                                               parms[value_name])
+                    logger.debug('appling user parameter %s=%s' % (key, value))
+                    self.parms[parms[key_name]] = parms[value_name]
                 except Exception:
                     logger.error('Could not apply parameter %s' % p)
 
     def parameter_get(self, key):
-        if self.parms[key] == None:
+        if not key in self.parms:
             raise exception.UserParameterMissing(key=key)
-        elif 'Value' in self.parms[key]:
-            return self.parms[key]['Value']
-        elif 'Default' in self.parms[key]:
-            return self.parms[key]['Default']
-        else:
+        try:
+            return self.parms[key]
+        except ValueError:
             raise exception.UserParameterMissing(key=key)
 
     def resolve_static_refs(self, s):

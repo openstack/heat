@@ -198,7 +198,7 @@ class Instance(Resource):
             keypairs = self.nova().keypairs.list()
             valid_key = False
             for k in keypairs:
-                if k.name == self.stack.parms['KeyName'].get('Value'):
+                if k.name == self.stack.parms['KeyName']:
                     valid_key = True
             if not valid_key:
                 return {'Error': \
