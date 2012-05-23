@@ -1,7 +1,6 @@
 #cloud-config
 cloud_config_modules:
  - locale
- - scripts_user
  - set_hostname
  - ssh
  - timezone
