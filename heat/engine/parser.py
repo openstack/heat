@@ -27,7 +27,6 @@ from heat.engine import user
 from heat.engine import volume
 from heat.engine import wait_condition
 from heat.db import api as db_api
-
 logger = logging.getLogger(__file__)
 
 
@@ -304,7 +303,8 @@ class Stack(object):
                 try:
                     key_name = 'Parameters.member.%s.ParameterKey' % s[2]
                     value_name = 'Parameters.member.%s.ParameterValue' % s[2]
-                    logger.debug('appling user parameter %s=%s' % (key, value))
+                    logger.debug('appling user parameter %s=%s' % \
+                        (key_name, value_name))
                     self.parms[parms[key_name]] = parms[value_name]
                 except Exception:
                     logger.error('Could not apply parameter %s' % p)
