@@ -29,9 +29,9 @@ class SecurityGroup(Resource):
                                               'Required': True},
                          'VpcId': {'Type': 'String',
                                    'Implemented': False},
-                         'SecurityGroupIngress': {'Type': 'CommaDelimitedList',
+                         'SecurityGroupIngress': {'Type': 'TuplesList',
                                                   'Implemented': False},
-                         'SecurityGroupEgress': {'Type': 'CommaDelimitedList'}}
+                         'SecurityGroupEgress': {'Type': 'TuplesList'}}
 
     def __init__(self, name, json_snippet, stack):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)

@@ -135,9 +135,11 @@ class Properties(CheckedDict):
     def validate(self):
         for key in self.data:
             # are there missing required Properties
-            if 'Required' in self.data[key] and not 'Value' in self.data[key]:
-                return {'Error': \
-                    '%s Property must be provided' % key}
+            if 'Required' in self.data[key]:
+                if self.data[key]['Required'] \
+                    and not 'Value' in self.data[key]:
+                    return {'Error': \
+                        '%s Property must be provided' % key}
 
             # are there unimplemented Properties
             if not self.data[key]['Implemented'] and 'Value' in self.data[key]:
