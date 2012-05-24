@@ -24,13 +24,13 @@ logger = logging.getLogger(__file__)
 
 
 class ElasticIp(Resource):
+    properties_schema = {'Domain': {'Type': 'String',
+                                    'Implemented': False},
+                         'InstanceId': {'Type': 'String'}}
+
     def __init__(self, name, json_snippet, stack):
         super(ElasticIp, self).__init__(name, json_snippet, stack)
         self.ipaddress = ''
-
-        if 'Domain' in self.t['Properties']:
-            logger.warn('*** can\'t support Domain %s yet' % \
-                        (self.t['Properties']['Domain']))
 
     def create(self):
         """Allocate a floating IP for the current tenant."""
@@ -49,7 +49,7 @@ class ElasticIp(Resource):
         '''
         Validate the ip address here
         '''
-        return None
+        return Resource.validate(self)
 
     def reload(self):
         '''
@@ -90,14 +90,26 @@ class ElasticIp(Resource):
 
 
 class ElasticIpAssociation(Resource):
+    properties_schema = {'InstanceId': {'Type': 'String',
+                                        'Required': True},
+                         'EIP': {'Type': 'String'},
+                         'AllocationId': {'Type': 'String',
+                                          'Implemented': False}}
+
     def __init__(self, name, json_snippet, stack):
         super(ElasticIpAssociation, self).__init__(name, json_snippet, stack)
 
     def FnGetRefId(self):
-        if not 'EIP' in self.t['Properties']:
+        if not 'EIP' in self.properties:
             return unicode('0.0.0.0')
         else:
-            return unicode(self.t['Properties']['EIP'])
+            return unicode(self.properties['EIP'])
+
+    def validate(self):
+        '''
+        Validate the ip address here
+        '''
+        return Resource.validate(self)
 
     def create(self):
         """Add a floating IP address to a server."""
@@ -106,13 +118,14 @@ class ElasticIpAssociation(Resource):
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(ElasticIpAssociation, self).create()
-        logger.debug('ElasticIpAssociation %s.add_floating_ip(%s)' % \
-                     (self.t['Properties']['InstanceId'],
-                      self.t['Properties']['EIP']))
 
-        server = self.nova().servers.get(self.t['Properties']['InstanceId'])
-        server.add_floating_ip(self.t['Properties']['EIP'])
-        self.instance_id_set(self.t['Properties']['EIP'])
+        logger.debug('ElasticIpAssociation %s.add_floating_ip(%s)' % \
+                     (self.properties['InstanceId'],
+                      self.properties['EIP']))
+
+        server = self.nova().servers.get(self.properties['InstanceId'])
+        server.add_floating_ip(self.properties['EIP'])
+        self.instance_id_set(self.properties['EIP'])
         self.state_set(self.CREATE_COMPLETE)
 
     def delete(self):
@@ -124,7 +137,7 @@ class ElasticIpAssociation(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
 
-        server = self.nova().servers.get(self.t['Properties']['InstanceId'])
-        server.remove_floating_ip(self.t['Properties']['EIP'])
+        server = self.nova().servers.get(self.properties['InstanceId'])
+        server.remove_floating_ip(self.properties['EIP'])
 
         self.state_set(self.DELETE_COMPLETE)

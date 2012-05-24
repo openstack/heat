@@ -583,7 +583,7 @@ class SourcesHandler(object):
         cmd_str = ''
         logger.debug("Decompressing")
         (r, ext) = os.path.splitext(archive)
-        if  ext == '.tgz':
+        if ext == '.tgz':
             cmd_str = 'tar -C %s -xzf %s' % (dest_dir, archive)
         elif ext == '.tbz2':
             cmd_str = 'tar -C %s -xjf %s' % (dest_dir, archive)

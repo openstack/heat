@@ -24,4 +24,3 @@ include heat/cloudinit/part-handler.py
 include heat/db/sqlalchemy/migrate_repo/migrate.cfg
 graft etc
 graft docs
-graft var

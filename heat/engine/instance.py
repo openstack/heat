@@ -47,14 +47,49 @@ else:
 
 
 class Instance(Resource):
+    # AWS does not require KeyName and InstanceType but we seem to
+    properties_schema = {'ImageId': {'Type': 'String',
+                                    'Required': True},
+                         'InstanceType': {'Type': 'String',
+                                    'Required': True},
+                         'KeyName': {'Type': 'String',
+                                     'Required': True},
+                         'AvailabilityZone': {'Type': 'String',
+                                              'Default': 'nova'},
+                         'DisableApiTermination': {'Type': 'String',
+                                                   'Implemented': False},
+                         'KernelId': {'Type': 'String',
+                                      'Implemented': False},
+                         'Monitoring': {'Type': 'Boolean',
+                                        'Implemented': False},
+                         'PlacementGroupName': {'Type': 'String',
+                                                'Implemented': False},
+                         'PrivateIpAddress': {'Type': 'String',
+                                              'Implemented': False},
+                         'RamDiskId': {'Type': 'String',
+                                       'Implemented': False},
+                         'SecurityGroups': {'Type': 'CommaDelimitedList',
+                                              'Implemented': False},
+                         'SecurityGroupIds': {'Type': 'CommaDelimitedList',
+                                              'Implemented': False},
+                         'SourceDestCheck': {'Type': 'Boolean',
+                                             'Implemented': False},
+                         'SubnetId': {'Type': 'String',
+                                       'Implemented': False},
+                         'Tags': {'Type': 'CommaDelimitedList',
+                                          'Implemented': False},
+                         'Tenancy': {'Type': 'String',
+                                     'AllowedValues': ['dedicated', 'default'],
+                                     'Implemented': False},
+                         'UserData': {'Type': 'String'},
+                         'Volumes': {'Type': 'CommaDelimitedList',
+                                     'Implemented': False}}
 
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = '0.0.0.0'
         self.mime_string = None
 
-        if not 'AvailabilityZone' in self.t['Properties']:
-            self.t['Properties']['AvailabilityZone'] = 'nova'
         self.itype_oflavor = {'t1.micro': 'm1.tiny',
             'm1.small': 'm1.small',
             'm1.medium': 'm1.medium',
@@ -72,7 +107,7 @@ class Instance(Resource):
 
         res = None
         if key == 'AvailabilityZone':
-            res = self.t['Properties']['AvailabilityZone']
+            res = self.properties['AvailabilityZone']
         elif key == 'PublicIp':
             res = self.ipaddress
         elif key == 'PrivateDnsName':
@@ -137,24 +172,17 @@ class Instance(Resource):
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
-        props = self.t['Properties']
-        required_props = ('KeyName', 'InstanceType', 'ImageId')
-        for key in required_props:
-            if key not in props:
-                raise exception.UserParameterMissing(key=key)
 
-        security_groups = props.get('SecurityGroups')
-
-        userdata = self.t['Properties']['UserData']
-
-        flavor = self.itype_oflavor[self.t['Properties']['InstanceType']]
-        key_name = self.t['Properties']['KeyName']
+        security_groups = self.properties.get('SecurityGroups')
+        userdata = self.properties['UserData']
+        flavor = self.itype_oflavor[self.properties['InstanceType']]
+        key_name = self.properties['KeyName']
 
         keypairs = [k.name for k in self.nova().keypairs.list()]
         if key_name not in keypairs:
             raise exception.UserKeyPairMissing(key_name=key_name)
 
-        image_name = self.t['Properties']['ImageId']
+        image_name = self.properties['ImageId']
         image_id = None
         image_list = self.nova().images.list()
         for o in image_list:
@@ -193,6 +221,9 @@ class Instance(Resource):
         '''
         Validate any of the provided params
         '''
+        res = Resource.validate(self)
+        if res:
+            return res
         #check validity of key
         if self.stack.parms['KeyName']:
             keypairs = self.nova().keypairs.list()

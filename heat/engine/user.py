@@ -24,6 +24,14 @@ logger = logging.getLogger(__file__)
 
 
 class User(Resource):
+    properties_schema = {'Path': {'Type': 'String',
+                                  'Implemented': False},
+                         'Groups': {'Type': 'CommaDelimitedList',
+                                    'Implemented': False},
+                         'LoginProfile': {'Type': 'String',
+                                          'Implemented': False},
+                         'Policies': {'Type': 'CommaDelimitedList'}}
+
     def __init__(self, name, json_snippet, stack):
         super(User, self).__init__(name, json_snippet, stack)
         self.instance_id = ''
@@ -44,6 +52,14 @@ class User(Resource):
 
 
 class AccessKey(Resource):
+    properties_schema = {'Serial': {'Type': 'Integer',
+                                  'Implemented': False},
+                         'UserName': {'Type': 'String',
+                                  'Required': True},
+                         'Status': {'Type': 'String',
+                                  'Implemented': False,
+                                  'AllowedValues': ['Active', 'Inactive']}}
+
     def __init__(self, name, json_snippet, stack):
         super(AccessKey, self).__init__(name, json_snippet, stack)
 

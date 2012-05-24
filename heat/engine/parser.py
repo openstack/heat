@@ -123,15 +123,16 @@ class Stack(object):
         for r in order:
             try:
                 res = self.resources[r].validate()
+            except Exception as ex:
+                logger.exception('validate')
+                res = str(ex)
+            finally:
                 if res:
                     err_str = 'Malformed Query Response [%s]' % (res)
                     response = {'ValidateTemplateResult': {
                                 'Description': err_str,
                                 'Parameters': []}}
                     return response
-            except Exception as ex:
-                logger.exception('validate')
-                failed = True
 
         if response == None:
             response = {'ValidateTemplateResult': {

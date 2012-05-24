@@ -25,14 +25,16 @@ logger = logging.getLogger(__file__)
 
 
 class SecurityGroup(Resource):
+    properties_schema = {'GroupDescription': {'Type': 'String',
+                                              'Required': True},
+                         'VpcId': {'Type': 'String',
+                                   'Implemented': False},
+                         'SecurityGroupIngress': {'Type': 'CommaDelimitedList',
+                                                  'Implemented': False},
+                         'SecurityGroupEgress': {'Type': 'CommaDelimitedList'}}
 
     def __init__(self, name, json_snippet, stack):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)
-
-        if 'GroupDescription' in self.t['Properties']:
-            self.description = self.t['Properties']['GroupDescription']
-        else:
-            self.description = ''
 
     def create(self):
         if self.state != None:
@@ -49,12 +51,12 @@ class SecurityGroup(Resource):
 
         if not sec:
             sec = self.nova().security_groups.create(self.name,
-                                                     self.description)
+                                          self.properties['GroupDescription'])
 
         self.instance_id_set(sec.id)
-        if 'SecurityGroupIngress' in self.t['Properties']:
+        if 'SecurityGroupIngress' in self.properties:
             rules_client = self.nova().security_group_rules
-            for i in self.t['Properties']['SecurityGroupIngress']:
+            for i in self.properties['SecurityGroupIngress']:
                 try:
                     rule = rules_client.create(sec.id,
                                                i['IpProtocol'],
@@ -75,7 +77,7 @@ class SecurityGroup(Resource):
         '''
         Validate the security group
         '''
-        return None
+        return Resource.validate(self)
 
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or \

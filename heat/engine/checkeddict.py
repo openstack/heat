@@ -39,10 +39,15 @@ class CheckedDict(collections.MutableMapping):
             except ValueError:
                 return float(s)
 
+        num_converter = {'Integer': int,
+                         'Number': str_to_num,
+                         'Float': float}
+
         if not key in self.data:
             raise KeyError('key %s not found' % key)
 
         if 'Type' in self.data[key]:
+            t = self.data[key]['Type']
             if self.data[key]['Type'] == 'String':
                 if not isinstance(value, (basestring, unicode)):
                     raise ValueError('%s Value must be a string' % \
@@ -62,15 +67,15 @@ class CheckedDict(collections.MutableMapping):
                         raise ValueError('Pattern does not match %s' % \
                                      (key))
 
-            elif self.data[key]['Type'] == 'Number':
-                # just try convert to an int/float, it will throw a ValueError
-                num = str_to_num(value)
+            elif self.data[key]['Type'] in ['Integer', 'Number', 'Float']:
+                # just try convert and see if it will throw a ValueError
+                num = num_converter[t](value)
                 minn = num
                 maxn = num
                 if 'MaxValue' in self.data[key]:
-                    maxn = str_to_num(self.data[key]['MaxValue'])
+                    maxn = num_converter[t](self.data[key]['MaxValue'])
                 if 'MinValue' in self.data[key]:
-                    minn = str_to_num(self.data[key]['MinValue'])
+                    minn = num_converter[t](self.data[key]['MinValue'])
                 if num > maxn or num < minn:
                     raise ValueError('%s is out of range' % key)
 
@@ -98,18 +103,44 @@ class CheckedDict(collections.MutableMapping):
             if not self.data[key]['Required']:
                 return None
             else:
-                raise ValueError('key %s has no value' % key)
+                raise ValueError('%s must be provided' % key)
         else:
-            raise ValueError('key %s has no value' % key)
+            raise ValueError('%s must be provided' % key)
 
     def __len__(self):
         return len(self.data)
 
     def __contains__(self, key):
-        return self.data.__contains__(key)
+        return key in self.data
 
     def __iter__(self):
-        return self.data.__iter__()
+        return iter(self.data)
 
     def __delitem__(self, k):
         del self.data[k]
+
+
+class Properties(CheckedDict):
+    def __init__(self, schema):
+        CheckedDict.__init__(self)
+        self.data = schema
+
+        # set some defaults
+        for s in self.data:
+            if not 'Implemented' in self.data[s]:
+                self.data[s]['Implemented'] = True
+            if not 'Required' in self.data[s]:
+                self.data[s]['Required'] = False
+
+    def validate(self):
+        for key in self.data:
+            # are there missing required Properties
+            if 'Required' in self.data[key] and not 'Value' in self.data[key]:
+                return {'Error': \
+                    '%s Property must be provided' % key}
+
+            # are there unimplemented Properties
+            if not self.data[key]['Implemented'] and 'Value' in self.data[key]:
+                return {'Error': \
+                    '%s Property not implemented yet' % key}
+        return None

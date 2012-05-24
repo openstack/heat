@@ -51,12 +51,6 @@ class WaitConditionHandle(Resource):
 
         self.state_set(self.CREATE_COMPLETE)
 
-    def validate(self):
-        '''
-        Validate the wait condition
-        '''
-        return None
-
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or \
            self.state == self.DELETE_COMPLETE:
@@ -74,6 +68,13 @@ class WaitConditionHandle(Resource):
 
 
 class WaitCondition(Resource):
+    properties_schema = {'Handle': {'Type': 'String',
+                                    'Required': True},
+                         'Timeout': {'Type': 'Number',
+                                    'Required': True,
+                                    'MinValue': '1'},
+                         'Count': {'Type': 'Number',
+                                   'MinValue': '1'}}
 
     def __init__(self, name, json_snippet, stack):
         super(WaitCondition, self).__init__(name, json_snippet, stack)
@@ -82,20 +83,6 @@ class WaitCondition(Resource):
 
         self.timeout = int(self.t['Properties']['Timeout'])
         self.count = int(self.t['Properties'].get('Count', '1'))
-
-    def validate(self):
-        '''
-        Validate the wait condition
-        '''
-        if not 'Handle' in self.t['Properties']:
-            return {'Error': \
-                    'Handle Property must be provided'}
-        if self.count < 1:
-            return {'Error': \
-                    'Count must be greater than 0'}
-        if self.timeout < 1:
-            return {'Error': \
-                    'Timeout must be greater than 0'}
 
     def _get_handle_resource_id(self):
         if self.resource_id == None:

@@ -26,8 +26,9 @@ from novaclient.exceptions import BadRequest
 from novaclient.exceptions import NotFound
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.common.config import HeatEngineConfigOpts
+from heat.db import api as db_api
+from heat.engine import checkeddict
 
 logger = logging.getLogger(__file__)
 
@@ -49,6 +50,12 @@ class Resource(object):
         self.references = []
         self.stack = stack
         self.name = name
+        self.properties = checkeddict.Properties(self.properties_schema)
+        if not 'Properties' in self.t:
+            # make a dummy entry to prevent having to check all over the
+            # place for it.
+            self.t['Properties'] = {}
+
         resource = db_api.resource_get_by_name_and_stack(None, name, stack.id)
         if resource:
             self.instance_id = resource.nova_instance
@@ -59,10 +66,6 @@ class Resource(object):
             self.state = None
             self.id = None
         self._nova = {}
-        if not 'Properties' in self.t:
-            # make a dummy entry to prevent having to check all over the
-            # place for it.
-            self.t['Properties'] = {}
 
         stack.resolve_static_refs(self.t)
         stack.resolve_find_in_map(self.t)
@@ -92,6 +95,9 @@ class Resource(object):
         self.stack.resolve_attributes(self.t)
         self.stack.resolve_joins(self.t)
         self.stack.resolve_base64(self.t)
+        for p in self.t['Properties']:
+            self.properties[p] = self.t['Properties'][p]
+        self.properties.validate()
 
     def validate(self):
         logger.info('validating %s name:%s' % (self.t['Type'], self.name))
@@ -99,6 +105,13 @@ class Resource(object):
         self.stack.resolve_attributes(self.t)
         self.stack.resolve_joins(self.t)
         self.stack.resolve_base64(self.t)
+
+        try:
+            for p in self.t['Properties']:
+                self.properties[p] = self.t['Properties'][p]
+        except ValueError as ex:
+                return {'Error': '%s' % str(ex)}
+        self.properties.validate()
 
     def instance_id_set(self, inst):
         self.instance_id = inst
@@ -185,6 +198,8 @@ class Resource(object):
 
 
 class GenericResource(Resource):
+    properties_schema = {}
+
     def __init__(self, name, json_snippet, stack):
         super(GenericResource, self).__init__(name, json_snippet, stack)
 
