@@ -23,6 +23,7 @@ API server.
 import gettext
 import optparse
 import os
+import os.path
 import sys
 import time
 import json
@@ -34,15 +35,19 @@ from urlparse import urlparse
 possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
                                    os.pardir,
                                    os.pardir))
+jeos_path = ''
+cfntools_path = ''
 if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
     sys.path.insert(0, possible_topdir)
     jeos_path = '%s/heat/%s/' % (possible_topdir, "jeos")
     cfntools_path = '%s/heat/%s/' % (possible_topdir, "cfntools")
+    jeos_path = os.path.join(possible_topdir, 'jeos')
+    cfntools_path = os.path.join(possible_topdir, 'cfntools')
 else:
     for p in sys.path:
-        if 'heat' in p:
-            jeos_path = '%s/heat/%s/' % (p, "jeos")
-            cfntools_path = '%s/heat/%s/' % (p, "cfntools")
+        jeos_path = os.path.join(p, 'heat', 'jeos')
+        cfntools_path = os.path.join(p, 'heat', 'cfntools')
+        if os.access(jeos_path, os.R_OK):
             break
 
 gettext.install('heat', unicode=1)

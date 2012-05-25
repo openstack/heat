@@ -15,6 +15,7 @@
 
 import functools
 import os
+import os.path
 import sys
 import base64
 from lxml import etree
@@ -132,7 +133,8 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
         logging.error('*** %s does not exist.' % (iso))
         sys.exit(1)
 
-    tdl_path = '%s%s-%s-%s-jeos.tdl' % (jeos_path, distro, arch, instance_type)
+    tdl_file = '%s-%s-%s-jeos.tdl' % (distro, arch, instance_type)
+    tdl_path = os.path.join(jeos_path, tdl_file)
     if options.debug:
         print "Using tdl: %s" % tdl_path
 
