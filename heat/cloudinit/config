@@ -1,4 +1,5 @@
-#cloud-config
+user: ec2-user
+
 cloud_config_modules:
  - locale
  - set_hostname
