@@ -33,6 +33,7 @@ class WaitConditionHandle(Resource):
     then the cfn-signal will use this url to post to and
     WaitCondition will poll it to see if has been written to.
     '''
+    properties_schema = {}
 
     def __init__(self, name, json_snippet, stack):
         super(WaitConditionHandle, self).__init__(name, json_snippet, stack)
