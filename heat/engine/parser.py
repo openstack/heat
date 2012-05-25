@@ -47,6 +47,7 @@ logger = logging.getLogger(__file__)
     'AWS::CloudFormation::WaitCondition': wait_condition.WaitCondition,
     'AWS::IAM::User': user.User,
     'AWS::IAM::AccessKey': user.AccessKey,
+    'HEAT::HA::Restarter': instance.Restarter,
 },)
 
 
@@ -277,6 +278,48 @@ class Stack(object):
             outs.append(out)
 
         return outs
+
+    def restart_resource_blocking(self, resource_name):
+        '''
+        stop resource_name and all that depend on it
+        start resource_name and all that depend on it
+        '''
+        order = []
+        self.resource_append_deps(self.resources[resource_name], order)
+
+        for r in reversed(order):
+            res = self.resources[r]
+            try:
+                res.delete()
+                #db_api.resource_get(None, self.resources[r].id).delete()
+            except Exception as ex:
+                failed = True
+                res.state_set(res.DELETE_FAILED)
+                logger.error('delete: %s' % str(ex))
+
+        for r in order:
+            res = self.resources[r]
+            if not failed:
+                try:
+                    res.create()
+                except Exception as ex:
+                    logger.exception('create')
+                    failed = True
+                    res.state_set(res.CREATE_FAILED, str(ex))
+
+                try:
+                    self.update_parsed_template()
+                except Exception as ex:
+                    logger.exception('update_parsed_template')
+
+            else:
+                res.state_set(res.CREATE_FAILED)
+        # TODO(asalkeld) if any of this fails we Should
+        # restart the whole stack
+
+    def restart_resource(self, resource_name):
+        pool = eventlet.GreenPool()
+        pool.spawn_n(self.restart_resource_blocking)
 
     def calulate_dependencies(self, s, r):
         if isinstance(s, dict):

@@ -46,6 +46,34 @@ else:
             break
 
 
+class Restarter(Resource):
+    properties_schema = {'InstanceId': {'Type': 'String',
+                                        'Required': True}}
+
+    def __init__(self, name, json_snippet, stack):
+        super(Restarter, self).__init__(name, json_snippet, stack)
+
+    def create(self):
+        if self.state != None:
+            return
+        self.state_set(self.CREATE_IN_PROGRESS)
+        Resource.create(self)
+        self.state_set(self.CREATE_COMPLETE)
+
+    def delete(self):
+        if self.state == self.DELETE_IN_PROGRESS or \
+           self.state == self.DELETE_COMPLETE:
+            return
+        self.state_set(self.DELETE_IN_PROGRESS)
+        Resource.delete(self)
+        self.state_set(self.DELETE_COMPLETE)
+
+    def alarm(self):
+        logger.notice('%s Alarm, restarting resource: %s' % \
+                      (self.name, self.properties['InstanceId']))
+        self.stack.restart_resource(self.properties['InstanceId'])
+
+
 class Instance(Resource):
     # AWS does not require KeyName and InstanceType but we seem to
     properties_schema = {'ImageId': {'Type': 'String',
