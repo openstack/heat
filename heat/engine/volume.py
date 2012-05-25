@@ -28,7 +28,8 @@ class Volume(Resource):
     properties_schema = {'AvailabilityZone': {'Type': 'String',
                                               'Required': True},
                          'Size': {'Type': 'Number'},
-                         'SnapshotId': {'Type': 'String'}}
+                         'SnapshotId': {'Type': 'String'},
+                         'Tags': {'Type': 'TuplesList'}}
 
     def __init__(self, name, json_snippet, stack):
         super(Volume, self).__init__(name, json_snippet, stack)
