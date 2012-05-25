@@ -182,3 +182,29 @@ class Resource(BASE, HeatBase):
     stack = relationship(Stack, backref=backref('resources'))
 
     depends_on = Column(Integer)
+
+
+class WatchRule(BASE, HeatBase):
+    """Represents a watch_rule created by the heat engine."""
+
+    __tablename__ = 'watch_rule'
+
+    id = Column(Integer, primary_key=True)
+    name = Column('name', String, nullable=False)
+    rule = Column('rule', Json)
+    state = Column('state', String)
+    stack_name = Column('stack_name', String)
+    last_evaluated = Column(DateTime, default=timeutils.utcnow)
+
+
+class WatchData(BASE, HeatBase):
+    """Represents a watch_data created by the heat engine."""
+
+    __tablename__ = 'watch_data'
+
+    id = Column(Integer, primary_key=True)
+    data = Column('data', Json)
+
+    watch_rule_id = Column(Integer, ForeignKey('watch_rule.id'),\
+                           nullable=False)
+    watch_rule = relationship(WatchRule, backref=backref('watch_data'))

@@ -16,6 +16,7 @@
 
 import contextlib
 from copy import deepcopy
+import datetime
 import functools
 import os
 import socket
@@ -30,6 +31,7 @@ from heat.common import config
 from heat.engine import parser
 from heat.engine import resources
 from heat.db import api as db_api
+from heat.openstack.common import timeutils
 
 logger = logging.getLogger('heat.engine.manager')
 
@@ -324,3 +326,125 @@ class EngineManager(manager.Manager):
         pt.template = t
         pt.save()
         return [None, metadata]
+
+    def do_data_cmp(self, rule, data, threshold):
+        op = rule['ComparisonOperator']
+        if op == 'GreaterThanThreshold':
+            return data > threshold
+        elif op == 'GreaterThanOrEqualToThreshold':
+            return data >= threshold
+        elif op == 'LessThanThreshold':
+            return data < threshold
+        elif op == 'LessThanOrEqualToThreshold':
+            return data <= threshold
+        else:
+            return False
+
+    def do_data_calc(self, rule, rolling, metric):
+
+        stat = rule['Statistic']
+        if stat == 'Maximum':
+            if metric > rolling:
+                return metric
+            else:
+                return rolling
+        elif stat == 'Minimum':
+            if metric < rolling:
+                return metric
+            else:
+                return rolling
+        else:
+            return metric + rolling
+
+    @manager.periodic_task
+    def _periodic_watcher_task(self, context):
+
+        now = timeutils.utcnow()
+        wrs = db_api.watch_rule_get_all(context)
+        for wr in wrs:
+            logger.debug('_periodic_watcher_task %s' % wr.name)
+            # has enough time progressed to run the rule
+            dt_period = datetime.timedelta(seconds=int(wr.rule['Period']))
+            if now < (wr.last_evaluated + dt_period):
+                continue
+
+            # get dataset ordered by creation_at
+            # - most recient first
+            periods = int(wr.rule['EvaluationPeriods'])
+
+            # TODO fix this
+            # initial assumption: all samples are in this period
+            period = int(wr.rule['Period'])
+            #wds = db_api.watch_data_get_all(context, wr.id)
+            wds = wr.watch_data
+
+            stat = wr.rule['Statistic']
+            data = 0
+            samples = 0
+            for d in wds:
+                if d.created_at < wr.last_evaluated:
+                    logger.debug('ignoring old data %s: %s < %s' % \
+                                 (wr.rule['MetricName'],
+                                  str(d.created_at),
+                                  str(wr.last_evaluated)))
+                    continue
+                samples = samples + 1
+                metric = 1
+                data = samples
+                if stat != 'SampleCount':
+                    metric = int(d.data[wr.rule['MetricName']]['Value'])
+                    data = self.do_data_calc(wr.rule, data, metric)
+                logger.debug('%s: %d/%d' % (wr.rule['MetricName'],
+                                            metric, data))
+
+            if stat == 'Average' and samples > 0:
+                data = data / samples
+
+            alarming = self.do_data_cmp(wr.rule, data,
+                                        int(wr.rule['Threshold']))
+            logger.debug('%s: %d/%d => %d (current state:%s)' % \
+                         (wr.rule['MetricName'],
+                          int(wr.rule['Threshold']),
+                          data, alarming, wr.state))
+            if alarming and wr.state != 'ALARM':
+                wr.state = 'ALARM'
+                wr.save()
+                logger.info('ALARM> stack:%s, watch_name:%s',
+                            wr.stack_name, wr.name)
+                #s = db_api.stack_get(None, wr.stack_name)
+                #if s:
+                #    ps = parser.Stack(s.name,
+                #                      s.raw_template.parsed_template.template,
+                #                      s.id,
+                #                      params)
+                #    for a in wr.rule['AlarmActions']:
+                #        ps.resources[a].alarm()
+
+            elif not alarming and wr.state == 'ALARM':
+                wr.state = 'NORMAL'
+                wr.save()
+                logger.info('NORMAL> stack:%s, watch_name:%s',
+                            wr.stack_name, wr.name)
+
+            wr.last_evaluated = now
+
+    def create_watch_data(self, context, watch_name, stats_data):
+        '''
+        This could be used by CloudWatch and WaitConditions
+        and treat HA service events like any other CloudWatch.
+        '''
+
+        wr = db_api.watch_rule_get(context, watch_name)
+        if wr is None:
+            return ['NoSuch Watch Rule', None]
+
+        if not wr.rule['MetricName'] in stats_data:
+            return ['MetricName %s missing' % wr.rule['MetricName'], None]
+
+        watch_data = {
+            'data': stats_data,
+            'watch_rule_id': wr.id
+        }
+        wd = db_api.watch_data_create(context, watch_data)
+
+        return [None, wd.data]

@@ -97,6 +97,26 @@
   },
 
   "Resources" : {
+    "WebServerRestartPolicy" : {
+      "Type" : "HEAT::Recovery::EscalationPolicy",
+      "Properties" : {
+        "Instance" : { "Ref" : "WikiDatabase" },
+      }
+    },
+    "HttpFailureAlarm": {
+     "Type": "AWS::CloudWatch::Alarm",
+     "Properties": {
+        "AlarmDescription": "Restart the WikiDatabase if httpd fails > 3 times in 10 minutes",
+        "MetricName": "ProcessRestartCount",
+        "Namespace": "HEAT",
+        "Statistic": "Maximum",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "3",
+        "AlarmActions": [ { "Ref": "WebServerRestartPolicy" } ],
+        "ComparisonOperator": "GreaterThanThreshold"
+      }
+    },
     "WikiDatabase": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {

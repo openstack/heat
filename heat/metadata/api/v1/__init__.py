@@ -52,6 +52,14 @@ class API(wsgi.Router):
         mapper.connect('/events/',
                        controller=metadata_controller, action='create_event',
                        conditions=dict(method=['POST']))
+        mapper.connect('/stats/:watch_name/data/',
+                       controller=metadata_controller,
+                       action='create_watch_data',
+                       conditions=dict(method=['POST']))
+#        mapper.connect('/stats/:watch_name/data/',
+#                       controller=metadata_controller,
+#                       action='list_watch_data',
+#                       conditions=dict(method=['GET']))
 
         # TODO(shadower): make sure all responses are JSON-encoded
         # currently, calling an unknown route uses the default handler which
