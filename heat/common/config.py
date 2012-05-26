@@ -126,7 +126,12 @@ rpc_opts = [
     cfg.StrOpt('control_exchange',
                default='heat-engine',
                help='the main RabbitMQ exchange to connect to'),
-
+    cfg.BoolOpt('rabbit_durable_queues',
+                default=False,
+                help='use durable queues in RabbitMQ'),
+    cfg.BoolOpt('fake_rabbit',
+                default=False,
+                help='If passed, use a fake RabbitMQ provider'),
     ]
 
 
