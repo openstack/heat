@@ -30,7 +30,7 @@ class User(Resource):
                                     'Implemented': False},
                          'LoginProfile': {'Type': 'String',
                                           'Implemented': False},
-                         'Policies': {'Type': 'CommaDelimitedList'}}
+                         'Policies': {'Type': 'TuplesList'}}
 
     def __init__(self, name, json_snippet, stack):
         super(User, self).__init__(name, json_snippet, stack)
