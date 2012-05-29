@@ -68,7 +68,7 @@ class Instance(Resource):
                                               'Implemented': False},
                          'RamDiskId': {'Type': 'String',
                                        'Implemented': False},
-                         'SecurityGroups': {'Type': 'CommaDelimitedList',
+                         'SecurityGroups': {'Type': 'TuplesList',
                                               'Implemented': False},
                          'SecurityGroupIds': {'Type': 'CommaDelimitedList',
                                               'Implemented': False},
