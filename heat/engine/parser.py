@@ -58,9 +58,10 @@ class Stack(object):
     DELETE_FAILED = 'DELETE_FAILED'
     DELETE_COMPLETE = 'DELETE_COMPLETE'
 
-    def __init__(self, stack_name, template, stack_id=0, parms=None,
+    def __init__(self, context, stack_name, template, stack_id=0, parms=None,
                  metadata_server=None):
         self.id = stack_id
+        self.context = context
         self.t = template
         self.maps = self.t.get('Mappings', {})
         self.outputs = self.t.get('Outputs', {})
@@ -91,11 +92,6 @@ class Stack(object):
         # user Parameters
         if parms != None:
             self._apply_user_parameters(parms)
-
-        if isinstance(parms['KeyStoneCreds'], (basestring, unicode)):
-            self.creds = eval(parms['KeyStoneCreds'])
-        else:
-            self.creds = parms['KeyStoneCreds']
 
         self.resources = {}
         for rname, res in self.t['Resources'].items():

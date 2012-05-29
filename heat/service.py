@@ -31,8 +31,8 @@ from heat.openstack.common import importutils
 
 from heat.common import utils as heat_utils
 from heat.common import exception
+from heat.common import context
 
-from heat import context
 from heat import rpc
 from heat import version
 

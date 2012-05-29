@@ -18,7 +18,7 @@ import json
 from webob.exc import Response
 
 from heat.common import wsgi
-from heat import context
+from heat.common import context
 from heat import rpc
 
 

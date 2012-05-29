@@ -29,8 +29,9 @@ from webob.exc import (HTTPNotFound,
                        HTTPBadRequest)
 from heat.common import wsgi
 from heat.common import config
+from heat.common import context
+from heat import utils
 from heat import rpc
-from heat import context
 import heat.rpc.common as rpc_common
 
 
@@ -51,10 +52,12 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        con = context.get_admin_context()
+        con = req.context
+        parms = dict(req.params)
+
         stack_list = rpc.call(con, 'engine',
                             {'method': 'list_stacks',
-                            'args': {'params': dict(req.params)}})
+                            'args': {'params': parms}})
 
         res = {'ListStacksResponse': {
                 'ListStacksResult': {'StackSummaries': []}}}
@@ -70,13 +73,14 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        con = context.get_admin_context()
+        con = req.context
+        parms = dict(req.params)
 
         try:
             stack_list = rpc.call(con, 'engine',
                               {'method': 'show_stack',
                                'args': {'stack_name': req.params['StackName'],
-                                'params': dict(req.params)}})
+                                'params': parms}})
 
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
@@ -116,7 +120,8 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        con = context.get_admin_context()
+        con = req.context
+        parms = dict(req.params)
 
         try:
             templ = self._get_template(req)
@@ -139,13 +144,14 @@ class StackController(object):
                             {'method': 'create_stack',
                              'args': {'stack_name': req.params['StackName'],
                                       'template': stack,
-                                      'params': dict(req.params)}})
+                                      'params': parms}})
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
     def validate_template(self, req):
 
-        con = context.get_admin_context()
+        con = req.context
+        parms = dict(req.params)
 
         try:
             templ = self._get_template(req)
@@ -167,7 +173,7 @@ class StackController(object):
             return rpc.call(con, 'engine',
                             {'method': 'validate_template',
                              'args': {'template': stack,
-                                      'params': dict(req.params)}})
+                                      'params': parms}})
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
@@ -175,13 +181,14 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        con = context.get_admin_context()
+        con = req.context
+        parms = dict(req.params)
 
         try:
             res = rpc.call(con, 'engine',
                        {'method': 'delete_stack',
                         'args': {'stack_name': req.params['StackName'],
-                        'params': dict(req.params)}})
+                        'params': parms}})
 
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
@@ -195,12 +202,15 @@ class StackController(object):
         """
         Returns the following information for all stacks:
         """
-        con = context.get_admin_context()
+        con = req.context
+        parms = dict(req.params)
+
         stack_name = req.params.get('StackName', None)
         try:
             event_res = rpc.call(con, 'engine',
                              {'method': 'list_events',
-                              'args': {'stack_name': stack_name}})
+                              'args': {'stack_name': stack_name,
+                              'params': parms}})
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 

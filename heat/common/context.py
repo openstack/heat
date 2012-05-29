@@ -13,10 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.openstack.common import local
 from heat.common import exception
 from heat.common import wsgi
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
+from heat.common import utils as heat_utils
+
+
+def generate_request_id():
+    return 'req-' + str(heat_utils.gen_uuid())
 
 
 class RequestContext(object):
@@ -25,17 +31,48 @@ class RequestContext(object):
     accesses the system, as well as additional request information.
     """
 
-    def __init__(self, auth_tok=None, user=None, tenant=None, roles=None,
+    def __init__(self, auth_token=None, username=None, password=None,
+                 tenant=None, tenant_id=None, auth_url=None, roles=None,
                  is_admin=False, read_only=False, show_deleted=False,
-                 owner_is_tenant=True):
-        self.auth_tok = auth_tok
-        self.user = user
+                 owner_is_tenant=True, overwrite=True, **kwargs):
+        """
+        :param overwrite: Set to False to ensure that the greenthread local
+            copy of the index is not overwritten.
+
+         :param kwargs: Extra arguments that might be present, but we ignore
+            because they possibly came in from older rpc messages.
+        """
+
+        self.auth_token = auth_token
+        self.username = username
+        self.password = password
         self.tenant = tenant
+        self.tenant_id = tenant_id
+        self.auth_url = auth_url
         self.roles = roles or []
         self.is_admin = is_admin
         self.read_only = read_only
         self._show_deleted = show_deleted
         self.owner_is_tenant = owner_is_tenant
+        if overwrite or not hasattr(local.store, 'context'):
+            self.update_store()
+
+    def update_store(self):
+        local.store.context = self
+
+    def to_dict(self):
+        return {'auth_token': self.auth_token,
+                'username': self.username,
+                'password': self.password,
+                'tenant': self.tenant,
+                'tenant_id': self.tenant_id,
+                'auth_url': self.auth_url,
+                'roles': self.roles,
+                'is_admin': self.is_admin}
+
+    @classmethod
+    def from_dict(cls, values):
+        return cls(**values)
 
     @property
     def owner(self):
@@ -48,6 +85,10 @@ class RequestContext(object):
         if self._show_deleted or self.is_admin:
             return True
         return False
+
+
+def get_admin_context(read_deleted="no"):
+    return RequestContext(is_admin=True)
 
 
 class ContextMiddleware(wsgi.Middleware):
@@ -93,30 +134,33 @@ class ContextMiddleware(wsgi.Middleware):
            tokenauth middleware would have rejected the request, so we must be
            using NoAuth. In that case, assume that is_admin=True.
         """
-        auth_tok = req.headers.get('X-Auth-Token')
-        #
-        # hack alert, this is for POC only FIXME properly!
-        #
-        if False:
-            if req.headers.get('X-Identity-Status') == 'Confirmed':
-                # 1. Auth-token is passed, check other headers
-                user = req.headers.get('X-User-Id')
-                tenant = req.headers.get('X-Tenant-Id')
-                roles = [r.strip()
-                         for r in req.headers.get('X-Roles', '').split(',')]
-                is_admin = self.conf.admin_role in roles
-            else:
-                # 2. Indentity-Status not confirmed
-                # FIXME(sirp): not sure what the correct behavior in this case
-                # is; just raising NotAuthenticated for now
-                raise exception.NotAuthenticated()
-        else:
-            # 3. Auth-token is ommited, assume NoAuth
-            user = None
-            tenant = None
-            roles = []
-            is_admin = True
+        headers = req.headers
 
-        req.context = self.make_context(
-            auth_tok=auth_tok, user=user, tenant=tenant, roles=roles,
-            is_admin=is_admin)
+        try:
+            """
+            This sets the username/password to the admin user because you
+            need this information in order to perform token authentication.
+            The real 'username' is the 'tenant'.
+
+            We should also check here to see if X-Auth-Token is not set and
+            in that case we should assign the user/pass directly as the real
+            username/password and token as None.  'tenant' should still be
+            the username.
+            """
+
+            token = headers.get('X-Auth-Token')
+            username = headers.get('X-Admin-User')
+            password = headers.get('X-Admin-Pass')
+            tenant = headers.get('X-Tenant')
+            tenant_id = headers.get('X-Tenant-Id')
+            auth_url = headers.get('X-Auth-Url')
+            roles = headers.get('X-Roles')
+        except:
+            raise exception.NotAuthenticated()
+
+        req.context = self.make_context(auth_token=token,
+                                        tenant=tenant, tenant_id=tenant_id,
+                                        username=username,
+                                        password=password,
+                                        auth_url=auth_url, roles=roles,
+                                        is_admin=True)

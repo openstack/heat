@@ -34,7 +34,7 @@ import uuid
 from eventlet import greenpool
 from eventlet import pools
 
-from heat import context
+from heat.common import context
 from heat.common import exception
 from heat.common import config
 from heat.openstack.common import local

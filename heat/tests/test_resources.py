@@ -38,7 +38,7 @@ class instancesTest(unittest.TestCase):
         parameters = {}
         params['KeyStoneCreds'] = None
         t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack('test_stack', t, 0, params)
+        stack = parser.Stack(None, 'test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
@@ -88,7 +88,7 @@ class instancesTest(unittest.TestCase):
         parameters = {}
         params['KeyStoneCreds'] = None
         t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack('test_stack', t, 0, params)
+        stack = parser.Stack(None, 'test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\

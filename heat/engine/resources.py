@@ -74,17 +74,18 @@ class Resource(object):
         if service_type in self._nova:
             return self._nova[service_type]
 
-        username = self.stack.creds['username']
-        password = self.stack.creds['password']
-        tenant = self.stack.creds['tenant']
-        auth_url = self.stack.creds['auth_url']
         if service_type == 'compute':
             service_name = 'nova'
         else:
             service_name = None
 
-        self._nova[service_type] = client.Client(username, password, tenant,
-                                                 auth_url,
+        con = self.stack.context
+        self._nova[service_type] = client.Client(con.username,
+                                                 con.password,
+                                                 con.tenant,
+                                                 con.auth_url,
+                                                 proxy_token=con.auth_token,
+                                                 proxy_tenant_id=con.tenant_id,
                                                  service_type=service_type,
                                                  service_name=service_name)
         return self._nova[service_type]

@@ -212,9 +212,10 @@ class validateTest(unittest.TestCase):
 
     def test_validate_volumeattach_valid(self):
         t = json.loads(test_template_volumeattach % 'vdq')
+        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
+        managers.EngineManager._authenticate(None).AndReturn(True)
         params = {}
-        params['KeyStoneCreds'] = None
-        stack = parser.Stack('test_stack', t, 0, params)
+        stack = parser.Stack(None, 'test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
@@ -229,9 +230,10 @@ class validateTest(unittest.TestCase):
 
     def test_validate_volumeattach_invalid(self):
         t = json.loads(test_template_volumeattach % 'sda')
+        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
+        managers.EngineManager._authenticate(None).AndReturn(True)
         params = {}
-        params['KeyStoneCreds'] = None
-        stack = parser.Stack('test_stack', t, 0, params)
+        stack = parser.Stack(None, 'test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
@@ -248,7 +250,8 @@ class validateTest(unittest.TestCase):
         t = json.loads(test_template_ref % 'WikiDatabase')
         t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
-        params['KeyStoneCreds'] = None
+        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
+        managers.EngineManager._authenticate(None).AndReturn(True)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -264,7 +267,8 @@ class validateTest(unittest.TestCase):
         t = json.loads(test_template_ref % 'WikiDatabasez')
         t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
-        params['KeyStoneCreds'] = None
+        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
+        managers.EngineManager._authenticate(None).AndReturn(True)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -279,7 +283,8 @@ class validateTest(unittest.TestCase):
         t = json.loads(test_template_findinmap_valid)
         t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
-        params['KeyStoneCreds'] = None
+        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
+        managers.EngineManager._authenticate(None).AndReturn(True)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -294,7 +299,8 @@ class validateTest(unittest.TestCase):
         t = json.loads(test_template_findinmap_invalid)
         t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
-        params['KeyStoneCreds'] = None
+        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
+        managers.EngineManager._authenticate(None).AndReturn(True)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)

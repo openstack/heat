@@ -26,7 +26,7 @@ import traceback
 
 import eventlet
 
-from heat import context
+from heat.common import context
 from heat.common import config
 from heat.rpc import common as rpc_common
 

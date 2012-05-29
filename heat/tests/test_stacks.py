@@ -36,9 +36,8 @@ class stacksTest(unittest.TestCase):
         f.close()
         params = {}
         parameters = {}
-        params['KeyStoneCreds'] = None
         t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack(stack_name, t, 0, params)
+        stack = parser.Stack(None, stack_name, t, 0, params)
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
         instances.Instance.nova().AndReturn(self.fc)
@@ -130,6 +129,8 @@ class stacksTest(unittest.TestCase):
             assert(result['ResourceProperties']['InstanceType'] == 'm1.large')
 
     def test_stack_list(self):
+        self.m.StubOutWithMock(manager.EngineManager, '_authenticate')
+        manager.EngineManager._authenticate(None).AndReturn(True)
         stack = self.start_wordpress_stack('test_stack_list')
         rt = {}
         rt['template'] = stack.t
@@ -152,9 +153,8 @@ class stacksTest(unittest.TestCase):
         t = json.loads(f.read())
         params = {}
         parameters = {}
-        params['KeyStoneCreds'] = None
         t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack('test_stack_list', t, 0, params)
+        stack = parser.Stack(None, 'test_stack_list', t, 0, params)
 
         man = manager.EngineManager()
         sl = man.list_stacks(None, params)

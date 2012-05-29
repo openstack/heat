@@ -33,6 +33,10 @@ from heat.engine import resources
 from heat.db import api as db_api
 from heat.openstack.common import timeutils
 
+from novaclient.v1_1 import client
+from novaclient.exceptions import BadRequest
+from novaclient.exceptions import NotFound
+
 logger = logging.getLogger('heat.engine.manager')
 
 
@@ -51,6 +55,21 @@ class EngineManager(manager.Manager):
         """Load configuration options and connect to the hypervisor."""
         pass
 
+    def _authenticate(self, con):
+        """ Authenticate against the 'heat' service.  This should be
+            the first call made in an endpoint call.  I like to see this
+            done explicitly so that it is clear there is an authentication
+            request at the entry to the call.
+        """
+
+        nova = client.Client(con.username, con.password,
+                             con.tenant, con.auth_url,
+                             proxy_token=con.auth_token,
+                             proxy_tenant_id=con.tenant_id,
+                             service_type='heat',
+                             service_name='heat')
+        nova.authenticate()
+
     def list_stacks(self, context, params):
         """
         The list_stacks method is the end point that actually implements
@@ -58,13 +77,16 @@ class EngineManager(manager.Manager):
         arg1 -> RPC context.
         arg2 -> Dict of http request parameters passed in from API side.
         """
-        logger.info('context is %s' % context)
+
+        self._authenticate(context)
+
         res = {'stacks': []}
         stacks = db_api.stack_get_all(None)
         if stacks == None:
             return res
         for s in stacks:
-            ps = parser.Stack(s.name, s.raw_template.parsed_template.template,
+            ps = parser.Stack(context, s.name,
+                              s.raw_template.parsed_template.template,
                               s.id, params)
             mem = {}
             mem['stack_id'] = s.id
@@ -84,10 +106,13 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the stack you want to see.
         arg3 -> Dict of http request parameters passed in from API side.
         """
+        self._authenticate(context)
+
         res = {'stacks': []}
         s = db_api.stack_get(None, stack_name)
         if s:
-            ps = parser.Stack(s.name, s.raw_template.parsed_template.template,
+            ps = parser.Stack(context, s.name,
+                              s.raw_template.parsed_template.template,
                               s.id, params)
             mem = {}
             mem['stack_id'] = s.id
@@ -122,6 +147,9 @@ class EngineManager(manager.Manager):
         arg4 -> Params passed from API.
         """
         logger.info('template is %s' % template)
+
+        self._authenticate(context)
+
         if db_api.stack_get(None, stack_name):
             return {'Error': 'Stack already exists with that name.'}
 
@@ -129,8 +157,9 @@ class EngineManager(manager.Manager):
         # We don't want to reset the stack template, so we are making
         # an instance just for validation.
         template_copy = deepcopy(template)
-        stack_validator = parser.Stack(stack_name, template_copy, 0, params,
-                             metadata_server=metadata_server)
+        stack_validator = parser.Stack(context, stack_name,
+                                       template_copy, 0, params,
+                                       metadata_server=metadata_server)
         response = stack_validator.validate()
         stack_validator = None
         template_copy = None
@@ -138,7 +167,7 @@ class EngineManager(manager.Manager):
                 response['ValidateTemplateResult']['Description']:
             return response['ValidateTemplateResult']['Description']
 
-        stack = parser.Stack(stack_name, template, 0, params,
+        stack = parser.Stack(context, stack_name, template, 0, params,
                              metadata_server=metadata_server)
         rt = {}
         rt['template'] = template
@@ -172,13 +201,15 @@ class EngineManager(manager.Manager):
         arg4 -> Params passed from API.
         """
 
+        self._authenticate(context)
+
         logger.info('validate_template')
         if template is None:
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
         try:
-            s = parser.Stack('validate', template, 0, params)
+            s = parser.Stack(context, 'validate', template, 0, params)
         except KeyError:
             res = 'A Fn::FindInMap operation referenced'\
                   'a non-existent map [%s]' % sys.exc_value
@@ -199,13 +230,17 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the stack you want to delete.
         arg3 -> Params passed from API.
         """
+
+        self._authenticate(context)
+
         st = db_api.stack_get(None, stack_name)
         if not st:
             return {'Error': 'No stack by that name'}
 
         logger.info('deleting stack %s' % stack_name)
 
-        ps = parser.Stack(st.name, st.raw_template.parsed_template.template,
+        ps = parser.Stack(context, st.name,
+                          st.raw_template.parsed_template.template,
                           st.id, params)
         ps.delete()
         return None
@@ -224,12 +259,16 @@ class EngineManager(manager.Manager):
                 'ResourceProperties': event.resource_properties,
                 'ResourceStatus': event.name}
 
-    def list_events(self, context, stack_name):
+    def list_events(self, context, stack_name, params):
         """
         The list_events method lists all events associated with a given stack.
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to get events for.
+        arg3 -> Params passed from API.
         """
+
+        self._authenticate(context)
+
         if stack_name is not None:
             st = db_api.stack_get(None, stack_name)
             if not st:
@@ -242,6 +281,9 @@ class EngineManager(manager.Manager):
         return {'events': [self.parse_event(e) for e in events]}
 
     def event_create(self, context, event):
+
+        self._authenticate(context)
+
         stack_name = event['stack']
         resource_name = event['resource']
         stack = db_api.stack_get(None, stack_name)
@@ -274,6 +316,8 @@ class EngineManager(manager.Manager):
         """
         Return the names of the stacks registered with Heat.
         """
+        self._authenticate(context)
+
         stacks = db_api.stack_get_all(None)
         return [s.name for s in stacks]
 
@@ -281,6 +325,8 @@ class EngineManager(manager.Manager):
         """
         Return the resource IDs of the given stack.
         """
+        self._authenticate(context)
+
         stack = db_api.stack_get(None, stack_name)
         if stack:
             return [r.name for r in stack.resources]
@@ -291,6 +337,8 @@ class EngineManager(manager.Manager):
         """
         Get the metadata for the given resource.
         """
+        self._authenticate(context)
+
         s = db_api.stack_get(None, stack_name)
         if not s:
             return ['stack', None]
@@ -306,6 +354,8 @@ class EngineManager(manager.Manager):
         """
         Update the metadata for the given resource.
         """
+        self._authenticate(context)
+
         s = db_api.stack_get(None, stack_name)
         if not s:
             return ['stack', None]
