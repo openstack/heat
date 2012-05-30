@@ -529,9 +529,9 @@ class BaseClient(object):
             elif status_code in self.REDIRECT_RESPONSE_CODES:
                 raise exception.RedirectException(res.getheader('Location'))
             elif status_code == httplib.UNAUTHORIZED:
-                raise exception.NotAuthorized(res.read())
+                raise exception.NotAuthorized()
             elif status_code == httplib.FORBIDDEN:
-                raise exception.NotAuthorized(res.read())
+                raise exception.NotAuthorized()
             elif status_code == httplib.NOT_FOUND:
                 raise exception.NotFound(res.read())
             elif status_code == httplib.CONFLICT:
