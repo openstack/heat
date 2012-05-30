@@ -14,6 +14,7 @@
 #    under the License.
 
 import base64
+from datetime import datetime
 import eventlet
 import logging
 import os
@@ -130,12 +131,17 @@ class Resource(object):
                 rs['stack_name'] = self.stack.name
                 new_rs = db_api.resource_create(None, rs)
                 self.id = new_rs.id
+                if new_rs.stack:
+                    new_rs.stack.update_and_save({'updated_at':
+                        datetime.utcnow()})
 
             except Exception as ex:
                 logger.warn('db error %s' % str(ex))
         elif new_state is not self.CREATE_IN_PROGRESS:
             rs = db_api.resource_get(None, self.id)
             rs.update_and_save({'state': new_state})
+            if rs.stack:
+                rs.stack.update_and_save({'updated_at': datetime.utcnow()})
 
         if new_state != self.state:
             ev = {}
