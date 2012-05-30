@@ -37,8 +37,12 @@ import logging
 import os
 import os.path
 import pwd
-import rpmUtils.updates as rpmupdates
-import rpmUtils.miscutils as rpmutils
+try:
+    import rpmUtils.updates as rpmupdates
+    import rpmUtils.miscutils as rpmutils
+    rpmutils_present = True
+except:
+    rpmutils_present = False
 import subprocess
 import sys
 from urllib2 import urlopen, Request
@@ -192,7 +196,8 @@ class CommandRunner(object):
 
 class RpmHelper(object):
 
-    _rpm_util = rpmupdates.Updates([], [])
+    if rpmutils_present:
+        _rpm_util = rpmupdates.Updates([], [])
 
     @classmethod
     def prepcache(cls):
@@ -461,11 +466,9 @@ class PackagesHandler(object):
         very basic support for apt
         """
         # TODO(asalkeld) support versions
-        pkg_str = ''
-        for pkg_name, versions in packages.iteritems():
-            pkg_str.append(' %s ' % pkg_name)
+        pkg_list = ' '.join([p for p in packages])
 
-        cmd_str = 'apt-get -y %s' % (pkg_str)
+        cmd_str = 'apt-get -y install %s' % pkg_list
         CommandRunner(cmd_str).run()
 
     # map of function pionters to handle different package managers
