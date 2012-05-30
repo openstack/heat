@@ -235,7 +235,7 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
             sys.exit(1)
 
         logging.info('Converting raw disk image to a qcow2 image.')
-        os.system("qemu-img convert -O qcow2 %s %s" % (dsk_filename,
+        os.system("qemu-img convert -c -O qcow2 %s %s" % (dsk_filename,
                                                        qcow2_filename))
 
     logging.info('Registering JEOS image (%s) ' \
