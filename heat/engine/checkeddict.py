@@ -19,8 +19,9 @@ import re
 
 class CheckedDict(collections.MutableMapping):
 
-    def __init__(self):
+    def __init__(self, name):
         self.data = {}
+        self.name = name
 
     def addschema(self, key, schema):
         self.data[key] = schema
@@ -44,28 +45,31 @@ class CheckedDict(collections.MutableMapping):
                          'Float': float}
 
         if not key in self.data:
-            raise KeyError('key %s not found' % key)
+            raise KeyError('%s: key %s not found' % (self.name, key))
 
         if 'Type' in self.data[key]:
             t = self.data[key]['Type']
             if self.data[key]['Type'] == 'String':
                 if not isinstance(value, (basestring, unicode)):
-                    raise ValueError('%s Value must be a string' % \
-                                     (key))
+                    raise ValueError('%s: %s Value must be a string' % \
+                                     (self.name, key))
                 if 'MaxLength' in self.data[key]:
                     if len(value) > int(self.data[key]['MaxLength']):
-                        raise ValueError('%s is too long; MaxLength %s' % \
-                                     (key, self.data[key]['MaxLength']))
+                        raise ValueError('%s: %s is too long; MaxLength %s' % \
+                                     (self.name, key,
+                                      self.data[key]['MaxLength']))
                 if 'MinLength' in self.data[key]:
                     if len(value) < int(self.data[key]['MinLength']):
-                        raise ValueError('%s is too short; MinLength  %s' % \
-                                     (key, self.data[key]['MinLength']))
+                        raise ValueError('%s: %s is too short; MinLength %s' %\
+                                     (self.name, key,
+                                      self.data[key]['MinLength']))
                 if 'AllowedPattern' in self.data[key]:
                     rc = re.match('^%s$' % self.data[key]['AllowedPattern'],
                                   value)
                     if rc == None:
-                        raise ValueError('Pattern does not match %s' % \
-                                     (key))
+                        raise ValueError('%s: Pattern %s does not match %s' % \
+                                  (self.name, self.data[key]['AllowedPattern'],
+                                   key))
 
             elif self.data[key]['Type'] in ['Integer', 'Number', 'Float']:
                 # just try convert and see if it will throw a ValueError
@@ -77,27 +81,31 @@ class CheckedDict(collections.MutableMapping):
                 if 'MinValue' in self.data[key]:
                     minn = num_converter[t](self.data[key]['MinValue'])
                 if num > maxn or num < minn:
-                    raise ValueError('%s is out of range' % key)
+                    raise ValueError('%s: %s is out of range' % (self.name,
+                                                                 key))
 
             elif self.data[key]['Type'] == 'List':
                 if not isinstance(value, list):
-                    raise ValueError('%s Value must be a list' % (key))
+                    raise ValueError('%s: %s Value must be a list' % \
+                                     (self.name, key))
 
             elif self.data[key]['Type'] == 'CommaDelimitedList':
                 sp = value.split(',')
                 if not isinstance(sp, list):
-                    raise ValueError('%s Value must be a list' % (key))
+                    raise ValueError('%s: %s Value must be a list' % \
+                                     (self.name, key))
 
         if 'AllowedValues' in self.data[key]:
             if not value in self.data[key]['AllowedValues']:
-                raise ValueError('Value must be one of %s' % \
-                                 str(self.data[key]['AllowedValues']))
+                raise ValueError('%s: %s Value must be one of %s' % \
+                                 (self.name, key,
+                                  str(self.data[key]['AllowedValues'])))
 
         self.data[key]['Value'] = value
 
     def __getitem__(self, key):
         if not key in self.data:
-            raise KeyError('key %s not found' % key)
+            raise KeyError('%s: key %s not found' % (self.name, key))
 
         if 'Value' in self.data[key]:
             return self.data[key]['Value']
@@ -107,9 +115,9 @@ class CheckedDict(collections.MutableMapping):
             if not self.data[key]['Required']:
                 return None
             else:
-                raise ValueError('%s must be provided' % key)
+                raise ValueError('%s: %s must be provided' % (self.name, key))
         else:
-            raise ValueError('%s must be provided' % key)
+            raise ValueError('%s: %s must be provided' % (self.name, key))
 
     def __len__(self):
         return len(self.data)
@@ -125,8 +133,8 @@ class CheckedDict(collections.MutableMapping):
 
 
 class Properties(CheckedDict):
-    def __init__(self, schema):
-        CheckedDict.__init__(self)
+    def __init__(self, name, schema):
+        CheckedDict.__init__(self, name)
         self.data = schema
 
         # set some defaults

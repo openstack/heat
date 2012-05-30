@@ -50,7 +50,7 @@ class Resource(object):
         self.references = []
         self.stack = stack
         self.name = name
-        self.properties = checkeddict.Properties(self.properties_schema)
+        self.properties = checkeddict.Properties(name, self.properties_schema)
         if not 'Properties' in self.t:
             # make a dummy entry to prevent having to check all over the
             # place for it.

@@ -72,7 +72,7 @@ class Stack(object):
         self.metadata_server = metadata_server
 
         # Default Parameters
-        self.parms = checkeddict.CheckedDict()
+        self.parms = checkeddict.CheckedDict('Parameters')
         self.parms.addschema('AWS::StackName', {"Description": "AWS StackName",
                                                 "Type": "String"})
         self.parms['AWS::StackName'] = stack_name

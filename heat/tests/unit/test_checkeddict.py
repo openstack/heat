@@ -51,7 +51,7 @@ class CheckedDictTest(unittest.TestCase):
 }
 '''
         ps = json.loads(parms)
-        cd = checkeddict.CheckedDict()
+        cd = checkeddict.CheckedDict('test_paramerters')
         for p in ps['Parameters']:
             cd.addschema(p, ps['Parameters'][p])
 
