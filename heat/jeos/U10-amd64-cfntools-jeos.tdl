@@ -11,7 +11,7 @@
   <description>Ubuntu 10.04</description>
   <commands>
     <command name='commands'>
-apt-get -y upgrade;apt-get -y install cloud-init;/usr/sbin/useradd -m ec2-user;echo -e 'ec2-user\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers;chmod +x /opt/aws/bin/cfn-*
+apt-get -y update;apt-get -y upgrade;apt-get -y install python-argparse;apt-get -y install chkconfig;apt-get -y install cloud-init;/usr/sbin/useradd -m ec2-user;echo -e 'ec2-user\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers;chmod +x /opt/aws/bin/cfn-*
     </command>
   </commands>
   <files>
