@@ -239,6 +239,11 @@
           "mysql -u root --password='", { "Ref" : "DBRootPassword" },
           "' < /tmp/setup.mysql || error_exit 'Failed to create database.'\n",
 
+          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" },
+          "/ --e s/username_here/", { "Ref" : "DBUsername" },
+          "/ --e s/password_here/", { "Ref" : "DBPassword" },
+          "/ /usr/share/wordpress/wp-config.php\n",
+
           "# install cfn-hup crontab\n",
           "crontab /tmp/cfn-hup-crontab.txt\n",
 
