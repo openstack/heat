@@ -55,7 +55,7 @@ def to_boolean(b):
 
 class HupConfig(object):
     def __init__(self, fp_list):
-        self.config = ConfigParser.SafeConfigParser(allow_no_value=True)
+        self.config = ConfigParser.SafeConfigParser()
         for fp in fp_list:
             self.config.readfp(fp)
 
