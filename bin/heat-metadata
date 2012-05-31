@@ -37,7 +37,7 @@ import logging
 from heat import rpc
 from heat.common import config
 from heat.common import wsgi
-from heat import context
+from heat.common import context
 from paste import httpserver
 
 LOG = logging.getLogger('heat.metadata')

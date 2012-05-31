@@ -316,8 +316,6 @@ class EngineManager(manager.Manager):
         """
         Return the names of the stacks registered with Heat.
         """
-        self._authenticate(context)
-
         stacks = db_api.stack_get_all(None)
         return [s.name for s in stacks]
 
@@ -325,8 +323,6 @@ class EngineManager(manager.Manager):
         """
         Return the resource IDs of the given stack.
         """
-        self._authenticate(context)
-
         stack = db_api.stack_get(None, stack_name)
         if stack:
             return [r.name for r in stack.resources]
@@ -337,7 +333,6 @@ class EngineManager(manager.Manager):
         """
         Get the metadata for the given resource.
         """
-        self._authenticate(context)
 
         s = db_api.stack_get(None, stack_name)
         if not s:
@@ -354,8 +349,6 @@ class EngineManager(manager.Manager):
         """
         Update the metadata for the given resource.
         """
-        self._authenticate(context)
-
         s = db_api.stack_get(None, stack_name)
         if not s:
             return ['stack', None]
@@ -433,10 +426,6 @@ class EngineManager(manager.Manager):
             samples = 0
             for d in wds:
                 if d.created_at < wr.last_evaluated:
-                    logger.debug('ignoring old data %s: %s < %s' % \
-                                 (wr.rule['MetricName'],
-                                  str(d.created_at),
-                                  str(wr.last_evaluated)))
                     continue
                 samples = samples + 1
                 metric = 1
@@ -444,8 +433,6 @@ class EngineManager(manager.Manager):
                 if stat != 'SampleCount':
                     metric = int(d.data[wr.rule['MetricName']]['Value'])
                     data = self.do_data_calc(wr.rule, data, metric)
-                logger.debug('%s: %d/%d' % (wr.rule['MetricName'],
-                                            metric, data))
 
             if stat == 'Average' and samples > 0:
                 data = data / samples
@@ -459,7 +446,7 @@ class EngineManager(manager.Manager):
             if alarming and wr.state != 'ALARM':
                 wr.state = 'ALARM'
                 wr.save()
-                logger.info('ALARM> stack:%s, watch_name:%s',
+                logger.warn('ALARM> stack:%s, watch_name:%s',
                             wr.stack_name, wr.name)
                 #s = db_api.stack_get(None, wr.stack_name)
                 #if s:
