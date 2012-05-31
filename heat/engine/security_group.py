@@ -13,9 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
 import logging
-import os
 from novaclient.exceptions import BadRequest
 from novaclient.exceptions import NotFound
 from heat.common import exception

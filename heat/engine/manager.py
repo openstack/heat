@@ -17,12 +17,6 @@
 import contextlib
 from copy import deepcopy
 import datetime
-import functools
-import os
-import socket
-import tempfile
-import time
-import traceback
 import logging
 import webob
 from heat import manager

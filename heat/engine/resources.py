@@ -15,12 +15,7 @@
 
 import base64
 from datetime import datetime
-import eventlet
 import logging
-import os
-import string
-import json
-import sys
 
 from novaclient.v1_1 import client
 from novaclient.exceptions import BadRequest

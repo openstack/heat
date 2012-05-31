@@ -13,16 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import base64
 import eventlet
 import logging
 import os
-import string
 import json
 import sys
-from email import encoders
-from email.message import Message
-from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from novaclient.exceptions import NotFound

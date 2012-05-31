@@ -15,7 +15,6 @@
 
 import eventlet
 import logging
-import os
 import re
 
 from heat.common import exception

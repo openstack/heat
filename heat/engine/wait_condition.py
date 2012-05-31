@@ -16,7 +16,6 @@
 import eventlet
 import logging
 import json
-import os
 
 from heat.common import exception
 from heat.db import api as db_api
