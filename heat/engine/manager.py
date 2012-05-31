@@ -20,7 +20,6 @@ import datetime
 import functools
 import os
 import socket
-import sys
 import tempfile
 import time
 import traceback
@@ -210,9 +209,9 @@ class EngineManager(manager.Manager):
 
         try:
             s = parser.Stack(context, 'validate', template, 0, params)
-        except KeyError:
-            res = 'A Fn::FindInMap operation referenced'\
-                  'a non-existent map [%s]' % sys.exc_value
+        except KeyError as ex:
+            res = ('A Fn::FindInMap operation referenced '
+                   'a non-existent map [%s]' % str(ex))
 
             response = {'ValidateTemplateResult': {
                         'Description': 'Malformed Query Response [%s]' % (res),
