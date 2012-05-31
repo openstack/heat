@@ -40,6 +40,18 @@ class Resource(object):
     UPDATE_FAILED = 'UPDATE_FAILED'
     UPDATE_COMPLETE = 'UPDATE_COMPLETE'
 
+    def __new__(cls, name, json, stack):
+        '''Create a new Resource of the appropriate class for its type.'''
+
+        if cls != Resource:
+            # Call is already for a subclass, so pass it through
+            return super(Resource, cls).__new__(cls, name, json, stack)
+
+        # Select the correct subclass to instantiate
+        import resource_types
+        ResourceClass = resource_types.getClass(json['Type'])
+        return ResourceClass(name, json, stack)
+
     def __init__(self, name, json_snippet, stack):
         self.t = json_snippet
         self.depends_on = []
