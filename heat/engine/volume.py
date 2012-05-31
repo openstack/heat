@@ -29,7 +29,7 @@ class Volume(Resource):
                                               'Required': True},
                          'Size': {'Type': 'Number'},
                          'SnapshotId': {'Type': 'String'},
-                         'Tags': {'Type': 'TuplesList'}}
+                         'Tags': {'Type': 'List'}}
 
     def __init__(self, name, json_snippet, stack):
         super(Volume, self).__init__(name, json_snippet, stack)

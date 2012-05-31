@@ -15,6 +15,9 @@
 
 import collections
 import re
+import logging
+
+logger = logging.getLogger(__file__)
 
 
 class CheckedDict(collections.MutableMapping):
@@ -49,29 +52,30 @@ class CheckedDict(collections.MutableMapping):
 
         if 'Type' in self.data[key]:
             t = self.data[key]['Type']
-            if self.data[key]['Type'] == 'String':
-                if not isinstance(value, (basestring, unicode)):
-                    raise ValueError('%s: %s Value must be a string' % \
+            if t == 'String':
+                if not isinstance(value, basestring):
+                    raise ValueError('%s: %s Value must be a string' %
                                      (self.name, key))
                 if 'MaxLength' in self.data[key]:
                     if len(value) > int(self.data[key]['MaxLength']):
-                        raise ValueError('%s: %s is too long; MaxLength %s' % \
-                                     (self.name, key,
-                                      self.data[key]['MaxLength']))
+                        raise ValueError('%s: %s is too long; MaxLength %s' %
+                                         (self.name, key,
+                                          self.data[key]['MaxLength']))
                 if 'MinLength' in self.data[key]:
                     if len(value) < int(self.data[key]['MinLength']):
-                        raise ValueError('%s: %s is too short; MinLength %s' %\
-                                     (self.name, key,
-                                      self.data[key]['MinLength']))
+                        raise ValueError('%s: %s is too short; MinLength %s' %
+                                         (self.name, key,
+                                          self.data[key]['MinLength']))
                 if 'AllowedPattern' in self.data[key]:
                     rc = re.match('^%s$' % self.data[key]['AllowedPattern'],
                                   value)
                     if rc == None:
-                        raise ValueError('%s: Pattern %s does not match %s' % \
-                                  (self.name, self.data[key]['AllowedPattern'],
-                                   key))
+                        raise ValueError('%s: Pattern %s does not match %s' %
+                                         (self.name,
+                                          self.data[key]['AllowedPattern'],
+                                          key))
 
-            elif self.data[key]['Type'] in ['Integer', 'Number', 'Float']:
+            elif t in ['Integer', 'Number', 'Float']:
                 # just try convert and see if it will throw a ValueError
                 num = num_converter[t](value)
                 minn = num
@@ -84,20 +88,20 @@ class CheckedDict(collections.MutableMapping):
                     raise ValueError('%s: %s is out of range' % (self.name,
                                                                  key))
 
-            elif self.data[key]['Type'] == 'List':
-                if not isinstance(value, list):
-                    raise ValueError('%s: %s Value must be a list' % \
+            elif t == 'List':
+                if not isinstance(value, (list, tuple)):
+                    raise ValueError('%s: %s Value must be a list' %
                                      (self.name, key))
 
-            elif self.data[key]['Type'] == 'CommaDelimitedList':
+            elif t == 'CommaDelimitedList':
                 sp = value.split(',')
-                if not isinstance(sp, list):
-                    raise ValueError('%s: %s Value must be a list' % \
-                                     (self.name, key))
+
+            else:
+                logger.warn('Unknown value type "%s"' % t)
 
         if 'AllowedValues' in self.data[key]:
             if not value in self.data[key]['AllowedValues']:
-                raise ValueError('%s: %s Value must be one of %s' % \
+                raise ValueError('%s: %s Value must be one of %s' %
                                  (self.name, key,
                                   str(self.data[key]['AllowedValues'])))
 
