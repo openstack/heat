@@ -16,16 +16,14 @@ Getting Started With Heat
     # Exit on error
     set -e
 
-Install heat from source
-------------------------
+Get Heat
+--------
 
-Clone the heat repository_ from GitHub at git://github.com/heat-api/heat.git and install::
-
-    sudo python setup.py install
+Clone the heat repository_ from GitHub at ``git://github.com/heat-api/heat.git``. Note that OpenStack must be installed before heat.
 
 .. _repository: https://github.com/heat-api/heat
 
-Install Openstack
+Install OpenStack
 -----------------
 
 Installing OpenStack on Fedora 16
@@ -61,6 +59,17 @@ Installing OpenStack on other Distributions
 
 .. _Debian packaging team for OpenStack: http://wiki.openstack.org/Packaging/Debian
 .. _installing OpenStack on Ubuntu: http://docs.openstack.org/bexar/openstack-compute/admin/content/ch03s02.html
+
+Install heat from source
+------------------------
+
+In the heat directory, run the install script::
+
+    sudo python setup.py install
+    sudo install -d /etc/heat
+    sudo install etc/*.conf etc/*.ini /etc/heat
+    sudo install etc/bash_completion.d/heat /etc/bash_completion.d/heat
+    sudo install -d /var/log/heat
 
 Download Fedora 16 DVD and copy it to libvirt images location
 -------------------------------------------------------------
