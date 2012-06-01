@@ -187,7 +187,7 @@ Launch the Heat services
 
 ::
 
-    sudo -E bash -c 'heat-api & heat-engine &'
+    sudo -E bash -c 'heat-api & heat-engine & heat-metadata &'
 
 ..
     sleep 5
