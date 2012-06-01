@@ -39,8 +39,8 @@ def catch_error(action):
                 ret = func(*arguments, **kwargs)
                 return SUCCESS if ret is None else ret
             except exception.NotAuthorized:
-                logging.error("Not authorized to make this request. Check " +\
-                      "your credentials (OS_USERNAME, OS_PASSWORD, " +\
+                logging.error("Not authorized to make this request. Check " +
+                      "your credentials (OS_USERNAME, OS_PASSWORD, " +
                       "OS_TENANT_NAME, OS_AUTH_URL and OS_AUTH_STRATEGY).")
                 return FAILURE
             except exception.ClientConfigurationError:
@@ -107,9 +107,9 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
         sys.exit(1)
 
     if not instance_type in instance_types:
-        logging.error('A JEOS instance type of %s not supported' %\
+        logging.error('A JEOS instance type of %s not supported' %
             instance_type)
-        logging.error('try: heat jeos-create %s %s [ %s ]' %\
+        logging.error('try: heat jeos-create %s %s [ %s ]' %
             (distro, arch, instances_str))
         sys.exit(1)
 
@@ -188,8 +188,8 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
     runoz = options.yes and 'y' or None
     if os.access(qcow2_filename, os.R_OK):
         while runoz not in ('y', 'n'):
-            runoz = raw_input('An existing JEOS was found on disk.' \
-                              ' Do you want to build a fresh JEOS?' \
+            runoz = raw_input('An existing JEOS was found on disk.'
+                              ' Do you want to build a fresh JEOS?'
                               ' (y/n) ').lower()
         if runoz == 'y':
             os.remove(qcow2_filename)
@@ -199,7 +199,7 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
         elif runoz == 'n':
             answer = None
             while answer not in ('y', 'n'):
-                answer = raw_input('Do you want to register your existing' \
+                answer = raw_input('Do you want to register your existing'
                                    ' JEOS file with glance? (y/n) ').lower()
                 if answer == 'n':
                     logging.info('No action taken')
@@ -207,8 +207,8 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
                 elif answer == 'y' and image_registered:
                     answer = None
                     while answer not in ('y', 'n'):
-                        answer = raw_input('Do you want to delete the ' \
-                                           'existing JEOS in glance?' \
+                        answer = raw_input('Do you want to delete the '
+                                           'existing JEOS in glance?'
                                            ' (y/n) ').lower()
                     if answer == 'n':
                         logging.info('No action taken')
@@ -216,8 +216,8 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
                     elif answer == 'y':
                         client.delete_image(image['id'])
 
-    if runoz == None or runoz == 'y':
-        logging.info('Creating JEOS image (%s) - '\
+    if runoz is None or runoz == 'y':
+        logging.info('Creating JEOS image (%s) - '
                      'this takes approximately 10 minutes.' % image_name)
         extra_opts = ' '
         if options.debug:
@@ -230,7 +230,7 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
         if res == 256:
             sys.exit(1)
         if not os.access(dsk_filename, os.R_OK):
-            logging.error('oz-install did not create the image,' \
+            logging.error('oz-install did not create the image,'
                           ' check your oz installation.')
             sys.exit(1)
 
@@ -238,7 +238,7 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
         os.system("qemu-img convert -c -O qcow2 %s %s" % (dsk_filename,
                                                        qcow2_filename))
 
-    logging.info('Registering JEOS image (%s) ' \
+    logging.info('Registering JEOS image (%s) '
                  'with OpenStack Glance.' % image_name)
 
     image_meta = {'name': image_name,
@@ -258,7 +258,7 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
         for k, v in sorted(image_meta.items()):
             logging.debug(" %(k)30s => %(v)s" % locals())
     except exception.ClientConnectionError, e:
-        logging.error((" Failed to connect to the Glance API server." +\
+        logging.error((" Failed to connect to the Glance API server." +
                " Is the server running?" % locals()))
         pieces = unicode(e).split('\n')
         for piece in pieces:
@@ -269,7 +269,7 @@ def jeos_create(options, arguments, jeos_path, cfntools_path):
         pieces = unicode(e).split('\n')
         for piece in pieces:
             logging.error(piece)
-        logging.warning(" Note: Your image metadata may still be in the " +\
+        logging.warning(" Note: Your image metadata may still be in the " +
                "registry, but the image's status will likely be 'killed'.")
 
 

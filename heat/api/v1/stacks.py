@@ -63,7 +63,7 @@ class StackController(object):
                 'ListStacksResult': {'StackSummaries': []}}}
         results = res['ListStacksResponse']['ListStacksResult']
         summaries = results['StackSummaries']
-        if stack_list != None:
+        if stack_list is not None:
             for s in stack_list['stacks']:
                 summaries.append(s)
 
@@ -193,7 +193,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
-        if res == None:
+        if res is None:
             return {'DeleteStackResult': ''}
         else:
             return {'DeleteStackResult': res['Error']}

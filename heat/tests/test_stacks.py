@@ -48,11 +48,11 @@ class stacksTest(unittest.TestCase):
         instance.stack.resolve_attributes(instance.t)
         instance.stack.resolve_joins(instance.t)
         instance.stack.resolve_base64(instance.t)
-        server_userdata = instance._build_userdata(\
+        server_userdata = instance._build_userdata(
                                 instance.t['Properties']['UserData'])
         self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(image=744, flavor=3, key_name='test',\
-                name='WebServer', security_groups=None,\
+        self.fc.servers.create(image=744, flavor=3, key_name='test',
+                name='WebServer', security_groups=None,
                 userdata=server_userdata).\
                 AndReturn(self.fc.servers.list()[-1])
         return stack
@@ -61,7 +61,7 @@ class stacksTest(unittest.TestCase):
         stack = self.start_wordpress_stack('test_stack')
         self.m.ReplayAll()
         stack.create_blocking()
-        assert(stack.resources['WebServer'] != None)
+        assert(stack.resources['WebServer'] is not None)
         assert(stack.resources['WebServer'].instance_id > 0)
         assert(stack.resources['WebServer'].ipaddress != '0.0.0.0')
 
@@ -82,7 +82,7 @@ class stacksTest(unittest.TestCase):
         pt['raw_template_id'] = new_rt.id
         new_pt = db_api.parsed_template_create(None, pt)
         stack.create_blocking()
-        assert(stack.resources['WebServer'] != None)
+        assert(stack.resources['WebServer'] is not None)
         assert(stack.resources['WebServer'].instance_id > 0)
         stack.delete_blocking()
         assert(stack.resources['WebServer'].state == 'DELETE_COMPLETE')
@@ -105,7 +105,7 @@ class stacksTest(unittest.TestCase):
         pt['raw_template_id'] = new_rt.id
         new_pt = db_api.parsed_template_create(None, pt)
         stack.create_blocking()
-        assert(stack.resources['WebServer'] != None)
+        assert(stack.resources['WebServer'] is not None)
         assert(stack.resources['WebServer'].instance_id > 0)
 
         m = manager.EngineManager()
@@ -122,9 +122,9 @@ class stacksTest(unittest.TestCase):
             assert(result['LogicalResourceId'] == 'WebServer')
             # Big long user data field.. it mentions 'wordpress'
             # a few times so this should work.
-            assert(result['ResourceProperties']['UserData'].find('wordpress')\
+            assert(result['ResourceProperties']['UserData'].find('wordpress')
                    != -1)
-            assert(result['ResourceProperties']['ImageId']\
+            assert(result['ResourceProperties']['ImageId']
                    == 'F16-x86_64-gold')
             assert(result['ResourceProperties']['InstanceType'] == 'm1.large')
 

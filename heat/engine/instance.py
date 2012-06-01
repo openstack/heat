@@ -49,7 +49,7 @@ class Restarter(Resource):
         super(Restarter, self).__init__(name, json_snippet, stack)
 
     def create(self):
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
@@ -64,7 +64,7 @@ class Restarter(Resource):
         self.state_set(self.DELETE_COMPLETE)
 
     def alarm(self):
-        logger.notice('%s Alarm, restarting resource: %s' % \
+        logger.notice('%s Alarm, restarting resource: %s' %
                       (self.name, self.properties['InstanceId']))
         self.stack.restart_resource(self.properties['InstanceId'])
 
@@ -191,7 +191,7 @@ class Instance(Resource):
             """
             pass
 
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
@@ -255,7 +255,7 @@ class Instance(Resource):
                 if k.name == self.stack.parms['KeyName']:
                     valid_key = True
             if not valid_key:
-                return {'Error': \
+                return {'Error':
                         'Provided KeyName is not registered with nova'}
         return None
 

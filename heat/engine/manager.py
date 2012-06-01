@@ -75,7 +75,7 @@ class EngineManager(manager.Manager):
 
         res = {'stacks': []}
         stacks = db_api.stack_get_all(None)
-        if stacks == None:
+        if stacks is None:
             return res
         for s in stacks:
             ps = parser.Stack(context, s.name,
@@ -181,7 +181,7 @@ class EngineManager(manager.Manager):
         stack.parsed_template_id = new_pt.id
         stack.create()
 
-        return {'stack': {'id': new_s.id, 'name': new_s.name,\
+        return {'stack': {'id': new_s.id, 'name': new_s.name,
                 'created_at': str(new_s.created_at)}}
 
     def validate_template(self, context, template, params):
@@ -432,7 +432,7 @@ class EngineManager(manager.Manager):
 
             alarming = self.do_data_cmp(wr.rule, data,
                                         int(wr.rule['Threshold']))
-            logger.debug('%s: %d/%d => %d (current state:%s)' % \
+            logger.debug('%s: %d/%d => %d (current state:%s)' %
                          (wr.rule['MetricName'],
                           int(wr.rule['Threshold']),
                           data, alarming, wr.state))

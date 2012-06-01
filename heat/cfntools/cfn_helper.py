@@ -126,7 +126,7 @@ class Hook(object):
            ev_name in self.triggers:
             CommandRunner(self.action).run(user=self.runas)
         else:
-            logger.debug('event: {%s, %s, %s} did not match %s' % \
+            logger.debug('event: {%s, %s, %s} did not match %s' %
                           (ev_name, ev_object, ev_resource, self.__str__()))
 
     def __str__(self):
@@ -428,7 +428,7 @@ class PackagesHandler(object):
                 # FIXME:print non-error, but skipping pkg
                 pass
             elif not RpmHelper.yum_package_available(pkg):
-                logger.warn("Skipping package '%s'. Not available via yum" % \
+                logger.warn("Skipping package '%s'. Not available via yum" %
                              pkg)
             elif not ver:
                 installs.append(pkg)

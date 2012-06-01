@@ -117,7 +117,7 @@ runas=root
 
 
 def tearDown_metadata_files():
-    shutil.rmtree('/tmp/_files_test_',\
+    shutil.rmtree('/tmp/_files_test_',
                 ignore_errors=True)
 
 
@@ -183,8 +183,8 @@ class MetadataTest(unittest.TestCase):
         self.m.StubOutWithMock(os, 'chmod')
 
         subprocess.Popen(['su', 'root', '-c',
-                          'wget -O /tmp/CloudFormationRailsSample.zip ' + \
-                          'https://s3.amazonaws.com/cloudformation-' + \
+                          'wget -O /tmp/CloudFormationRailsSample.zip ' +
+                          'https://s3.amazonaws.com/cloudformation-' +
                           'examples/CloudFormationRailsSample.zip'],
                           stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE).AndReturn(PopenMock())

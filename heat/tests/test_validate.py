@@ -218,7 +218,7 @@ class validateTest(unittest.TestCase):
         stack = parser.Stack(None, 'test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
-        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
+        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
                                               stack).AndReturn(None)
 
         self.m.ReplayAll()
@@ -226,7 +226,7 @@ class validateTest(unittest.TestCase):
         stack.resolve_attributes(volumeattach.t)
         stack.resolve_joins(volumeattach.t)
         stack.resolve_base64(volumeattach.t)
-        assert(volumeattach.validate() == None)
+        assert(volumeattach.validate() is None)
 
     def test_validate_volumeattach_invalid(self):
         t = json.loads(test_template_volumeattach % 'sda')
@@ -236,7 +236,7 @@ class validateTest(unittest.TestCase):
         stack = parser.Stack(None, 'test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
-        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
+        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
                                               stack).AndReturn(None)
 
         self.m.ReplayAll()
@@ -258,7 +258,7 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         manager = managers.EngineManager()
-        res = dict(manager.\
+        res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
         print 'res %s' % res
         assert (res['Description'] == 'Successfully validated')
@@ -275,7 +275,7 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         manager = managers.EngineManager()
-        res = dict(manager.\
+        res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
         assert (res['Description'] != 'Successfully validated')
 
@@ -291,7 +291,7 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         manager = managers.EngineManager()
-        res = dict(manager.\
+        res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
         assert (res['Description'] == 'Successfully validated')
 
@@ -307,7 +307,7 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         manager = managers.EngineManager()
-        res = dict(manager.\
+        res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
         assert (res['Description'] != 'Successfully validated')
 

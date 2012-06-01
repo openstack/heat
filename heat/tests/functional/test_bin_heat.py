@@ -107,7 +107,7 @@ class TestBinHeat():
         print "Waiting for OpenStack to initialize and assign network address"
         ip = None
         tries = 0
-        while ip == None:
+        while ip is None:
             tries += 1
             assert tries < 500
             time.sleep(10)

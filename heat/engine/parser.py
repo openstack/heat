@@ -64,7 +64,7 @@ class Stack(object):
             self.parms.addschema(p, ps[p])
 
         # user Parameters
-        if parms != None:
+        if parms is not None:
             self._apply_user_parameters(parms)
 
         self.resources = {}
@@ -107,7 +107,7 @@ class Stack(object):
                                 'Parameters': []}}
                     return response
 
-        if response == None:
+        if response is None:
             response = {'ValidateTemplateResult': {
                         'Description': 'Successfully validated',
                         'Parameters': []}}
@@ -164,7 +164,7 @@ class Stack(object):
         if pt:
             pt.update_and_save({'template': self.t.copy()})
         else:
-            logger.warn('Cant find parsed template to update %d' % \
+            logger.warn('Cant find parsed template to update %d' %
                         self.parsed_template_id)
 
     def status_set(self, new_status, reason='change in resource state'):
@@ -320,7 +320,7 @@ class Stack(object):
                 try:
                     key_name = 'Parameters.member.%s.ParameterKey' % s[2]
                     value_name = 'Parameters.member.%s.ParameterValue' % s[2]
-                    logger.debug('appling user parameter %s=%s' % \
+                    logger.debug('appling user parameter %s=%s' %
                         (key_name, value_name))
                     self.parms[parms[key_name]] = parms[value_name]
                 except Exception:

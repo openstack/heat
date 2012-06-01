@@ -32,7 +32,7 @@ class ElasticIp(Resource):
 
     def create(self):
         """Allocate a floating IP for the current tenant."""
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(ElasticIp, self).create()
@@ -53,7 +53,7 @@ class ElasticIp(Resource):
         '''
         get the ipaddress here
         '''
-        if self.instance_id != None:
+        if self.instance_id is not None:
             try:
                 ips = self.nova().floating_ips.get(self.instance_id)
                 self.ipaddress = ips.ip
@@ -71,7 +71,7 @@ class ElasticIp(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
 
-        if self.instance_id != None:
+        if self.instance_id is not None:
             self.nova().floating_ips.delete(self.instance_id)
 
         self.state_set(self.DELETE_COMPLETE)
@@ -112,12 +112,12 @@ class ElasticIpAssociation(Resource):
     def create(self):
         """Add a floating IP address to a server."""
 
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(ElasticIpAssociation, self).create()
 
-        logger.debug('ElasticIpAssociation %s.add_floating_ip(%s)' % \
+        logger.debug('ElasticIpAssociation %s.add_floating_ip(%s)' %
                      (self.properties['InstanceId'],
                       self.properties['EIP']))
 

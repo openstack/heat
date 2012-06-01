@@ -422,14 +422,14 @@ def parse_options(parser, cli_args):
     command = lookup_command(parser, command_name)
 
     if options.debug:
-        logging.basicConfig(format='%(levelname)s:%(message)s',\
+        logging.basicConfig(format='%(levelname)s:%(message)s',
             level=logging.DEBUG)
         logging.debug("Debug level logging enabled")
     elif options.verbose:
-        logging.basicConfig(format='%(levelname)s:%(message)s',\
+        logging.basicConfig(format='%(levelname)s:%(message)s',
             level=logging.INFO)
     else:
-        logging.basicConfig(format='%(levelname)s:%(message)s',\
+        logging.basicConfig(format='%(levelname)s:%(message)s',
             level=logging.WARNING)
 
     return (options, command, args)

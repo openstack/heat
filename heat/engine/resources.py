@@ -191,7 +191,7 @@ class Resource(object):
         http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/ \
             intrinsic-function-reference-ref.html
         '''
-        if self.instance_id != None:
+        if self.instance_id is not None:
             return unicode(self.instance_id)
         else:
             return unicode(self.name)
@@ -224,7 +224,7 @@ class GenericResource(Resource):
         super(GenericResource, self).__init__(name, json_snippet, stack)
 
     def create(self):
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(GenericResource, self).create()

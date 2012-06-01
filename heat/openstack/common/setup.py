@@ -33,7 +33,7 @@ def parse_mailmap(mailmap='.mailmap'):
         for l in fp:
             l = l.strip()
             if not l.startswith('#') and ' ' in l:
-                canonical_email, alias = [x for x in l.split(' ') \
+                canonical_email, alias = [x for x in l.split(' ')
                                          if x.startswith('<')]
                 mapping[alias] = canonical_email
     return mapping

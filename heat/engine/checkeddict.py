@@ -69,7 +69,7 @@ class CheckedDict(collections.MutableMapping):
                 if 'AllowedPattern' in self.data[key]:
                     rc = re.match('^%s$' % self.data[key]['AllowedPattern'],
                                   value)
-                    if rc == None:
+                    if rc is None:
                         raise ValueError('%s: Pattern %s does not match %s' %
                                          (self.name,
                                           self.data[key]['AllowedPattern'],
@@ -154,11 +154,11 @@ class Properties(CheckedDict):
             if 'Required' in self.data[key]:
                 if self.data[key]['Required'] \
                     and not 'Value' in self.data[key]:
-                    return {'Error': \
+                    return {'Error':
                         '%s Property must be provided' % key}
 
             # are there unimplemented Properties
             if not self.data[key]['Implemented'] and 'Value' in self.data[key]:
-                return {'Error': \
+                return {'Error':
                     '%s Property not implemented yet' % key}
         return None

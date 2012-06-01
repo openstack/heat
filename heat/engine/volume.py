@@ -34,7 +34,7 @@ class Volume(Resource):
         super(Volume, self).__init__(name, json_snippet, stack)
 
     def create(self):
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(Volume, self).create()
@@ -63,7 +63,7 @@ class Volume(Resource):
            self.state == self.DELETE_COMPLETE:
             return
 
-        if self.instance_id != None:
+        if self.instance_id is not None:
             vol = self.nova('volume').volumes.get(self.instance_id)
             if vol.status == 'in-use':
                 logger.warn('cant delete volume when in-use')
@@ -72,7 +72,7 @@ class Volume(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
 
-        if self.instance_id != None:
+        if self.instance_id is not None:
             self.nova('volume').volumes.delete(self.instance_id)
         self.state_set(self.DELETE_COMPLETE)
 
@@ -91,7 +91,7 @@ class VolumeAttachment(Resource):
 
     def create(self):
 
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(VolumeAttachment, self).create()
@@ -130,7 +130,7 @@ class VolumeAttachment(Resource):
 
         server_id = self.properties['InstanceId']
         volume_id = self.properties['VolumeId']
-        logger.info('VolumeAttachment un-attaching %s %s' % \
+        logger.info('VolumeAttachment un-attaching %s %s' %
                     (server_id, volume_id))
 
         volapi = self.nova().volumes

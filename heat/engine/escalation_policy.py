@@ -41,7 +41,7 @@ class EscalationPolicy(Resource):
         return Resource.validate(self)
 
     def create(self):
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)

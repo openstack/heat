@@ -41,7 +41,7 @@ class instancesTest(unittest.TestCase):
         stack = parser.Stack(None, 'test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
-        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
+        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
                                               stack).AndReturn(None)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
@@ -55,7 +55,7 @@ class instancesTest(unittest.TestCase):
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
             '256 MB Server'
-        instance = instances.Instance('test_resource_name',\
+        instance = instances.Instance('test_resource_name',
                                       t['Resources']['WebServer'], stack)
 
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
@@ -64,11 +64,11 @@ class instancesTest(unittest.TestCase):
         instance.stack.resolve_base64(instance.t)
 
         # need to resolve the template functions
-        server_userdata = instance._build_userdata(\
+        server_userdata = instance._build_userdata(
                                 instance.t['Properties']['UserData'])
         self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(image=1, flavor=1, key_name='test',\
-                name='test_resource_name', security_groups=None,\
+        self.fc.servers.create(image=1, flavor=1, key_name='test',
+                name='test_resource_name', security_groups=None,
                 userdata=server_userdata).\
                 AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
@@ -91,7 +91,7 @@ class instancesTest(unittest.TestCase):
         stack = parser.Stack(None, 'test_stack', t, 0, params)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
-        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',\
+        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
                                               stack).AndReturn(None)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
@@ -105,7 +105,7 @@ class instancesTest(unittest.TestCase):
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
             '256 MB Server'
-        instance = instances.Instance('test_resource_name',\
+        instance = instances.Instance('test_resource_name',
                                       t['Resources']['WebServer'], stack)
 
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
@@ -114,11 +114,11 @@ class instancesTest(unittest.TestCase):
         instance.stack.resolve_base64(instance.t)
 
         # need to resolve the template functions
-        server_userdata = instance._build_userdata(\
+        server_userdata = instance._build_userdata(
                                 instance.t['Properties']['UserData'])
         self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(image=1, flavor=1, key_name='test',\
-                name='test_resource_name', security_groups=None,\
+        self.fc.servers.create(image=1, flavor=1, key_name='test',
+                name='test_resource_name', security_groups=None,
                 userdata=server_userdata).\
                 AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
@@ -131,7 +131,7 @@ class instancesTest(unittest.TestCase):
         assert(instance.id > 0)
 
         instance.delete()
-        assert(instance.instance_id == None)
+        assert(instance.instance_id is None)
         assert(instance.state == instance.DELETE_COMPLETE)
 
     # allows testing of the test directly, shown below

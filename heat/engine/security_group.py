@@ -35,7 +35,7 @@ class SecurityGroup(Resource):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)
 
     def create(self):
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
@@ -85,7 +85,7 @@ class SecurityGroup(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
 
-        if self.instance_id != None:
+        if self.instance_id is not None:
             try:
                 sec = self.nova().security_groups.get(self.instance_id)
             except NotFound:

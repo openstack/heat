@@ -144,7 +144,7 @@ def stack_create(context, values):
 def stack_delete(context, stack_name):
     s = stack_get(context, stack_name)
     if not s:
-        raise Exception('Attempt to delete a stack with id: %s %s' % \
+        raise Exception('Attempt to delete a stack with id: %s %s' %
                         (stack_name, 'that does not exist'))
 
     session = Session.object_session(s)
@@ -220,7 +220,7 @@ def watch_rule_delete(context, watch_name):
                         filter_by(name=watch_name).first()
 
     if not wr:
-        raise Exception('Attempt to delete a watch_rule with name: %s %s' % \
+        raise Exception('Attempt to delete a watch_rule with name: %s %s' %
                         (watch_name, 'that does not exist'))
 
     session = Session.object_session(wr)
@@ -251,7 +251,7 @@ def watch_data_delete(context, watch_name):
                      filter_by(name=watch_name).all()
 
     if not ds:
-        raise Exception('Attempt to delete watch_data with name: %s %s' % \
+        raise Exception('Attempt to delete watch_data with name: %s %s' %
                         (watch_name, 'that does not exist'))
 
     session = Session.object_session(ds)

@@ -39,7 +39,7 @@ class WaitConditionHandle(Resource):
         self.instance_id = ''
 
     def create(self):
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
@@ -85,13 +85,13 @@ class WaitCondition(Resource):
         self.count = int(self.t['Properties'].get('Count', '1'))
 
     def _get_handle_resource_id(self):
-        if self.resource_id == None:
+        if self.resource_id is None:
             self.handle_url = self.t['Properties'].get('Handle', None)
             self.resource_id = self.handle_url.split('/')[-1]
             return self.resource_id
 
     def create(self):
-        if self.state != None:
+        if self.state is not None:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
