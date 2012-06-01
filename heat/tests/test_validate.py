@@ -223,9 +223,6 @@ class validateTest(unittest.TestCase):
 
         self.m.ReplayAll()
         volumeattach = stack.resources['MountPoint']
-        stack.resolve_attributes(volumeattach.t)
-        stack.resolve_joins(volumeattach.t)
-        stack.resolve_base64(volumeattach.t)
         assert(volumeattach.validate() is None)
 
     def test_validate_volumeattach_invalid(self):
@@ -241,9 +238,6 @@ class validateTest(unittest.TestCase):
 
         self.m.ReplayAll()
         volumeattach = stack.resources['MountPoint']
-        stack.resolve_attributes(volumeattach.t)
-        stack.resolve_joins(volumeattach.t)
-        stack.resolve_base64(volumeattach.t)
         assert(volumeattach.validate())
 
     def test_validate_ref_valid(self):

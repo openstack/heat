@@ -15,6 +15,7 @@
 
 import eventlet
 import json
+import itertools
 import logging
 from heat.common import exception
 from heat.engine import checkeddict
@@ -72,7 +73,7 @@ class Stack(object):
             res = Resource(rname, rdesc, self)
             self.resources[rname] = res
 
-            self.calulate_dependencies(rdesc, res)
+            self.calulate_dependencies(res.t, res)
 
     def validate(self):
         '''
@@ -233,23 +234,15 @@ class Stack(object):
         pool.spawn_n(self.delete_blocking)
 
     def get_outputs(self):
+        outputs = self.resolve_runtime_data(self.outputs)
 
-        for r in self.resources:
-            self.resources[r].reload()
+        def output_dict(k):
+            return {'Description': outputs[k].get('Description',
+                                                  'No description given'),
+                    'OutputKey': k,
+                    'OutputValue': outputs[k].get('Value', '')}
 
-        self.resolve_attributes(self.outputs)
-        self.resolve_joins(self.outputs)
-
-        outs = []
-        for o in self.outputs:
-            out = {}
-            out['Description'] = self.outputs[o].get('Description',
-                                                     'No description given')
-            out['OutputKey'] = o
-            out['OutputValue'] = self.outputs[o].get('Value', '')
-            outs.append(out)
-
-        return outs
+        return [output_dict(key) for key in outputs]
 
     def restart_resource_blocking(self, resource_name):
         '''
@@ -334,110 +327,112 @@ class Stack(object):
         except ValueError:
             raise exception.UserParameterMissing(key=key)
 
-    def resolve_static_refs(self, s):
+    def _resolve_static_refs(self, s):
         '''
-            looking for { "Ref": "str" }
+            looking for { "Ref" : "str" }
         '''
-        if isinstance(s, dict):
-            for i in s:
-                if i == 'Ref' and \
-                      isinstance(s[i], (basestring, unicode)) and \
-                      s[i] in self.parms:
-                    return self.parameter_get(s[i])
-                else:
-                    s[i] = self.resolve_static_refs(s[i])
-        elif isinstance(s, list):
-            for index, item in enumerate(s):
-                #print 'resolve_static_refs %d %s' % (index, item)
-                s[index] = self.resolve_static_refs(item)
-        return s
+        def match(key, value):
+            return (key == 'Ref' and
+                    isinstance(value, basestring) and
+                    value in self.parms)
 
-    def resolve_find_in_map(self, s):
-        '''
-            looking for { "Fn::FindInMap": ["str", "str"] }
-        '''
-        if isinstance(s, dict):
-            for i in s:
-                if i == 'Fn::FindInMap':
-                    obj = self.maps
-                    if isinstance(s[i], list):
-                        #print 'map list: %s' % s[i]
-                        for index, item in enumerate(s[i]):
-                            if isinstance(item, dict):
-                                item = self.resolve_find_in_map(item)
-                                #print 'map item dict: %s' % (item)
-                            else:
-                                pass
-                                #print 'map item str: %s' % (item)
-                            obj = obj[item]
-                    else:
-                        obj = obj[s[i]]
-                    return obj
-                else:
-                    s[i] = self.resolve_find_in_map(s[i])
-        elif isinstance(s, list):
-            for index, item in enumerate(s):
-                s[index] = self.resolve_find_in_map(item)
-        return s
+        def handle(ref):
+            return self.parameter_get(ref)
 
-    def resolve_attributes(self, s):
+        return _resolve(match, handle, s)
+
+    def _resolve_find_in_map(self, s):
+        def handle(args):
+            try:
+                name, key, value = args
+                return self.maps[name][key][value]
+            except (ValueError, TypeError) as ex:
+                raise KeyError(str(ex))
+
+        return _resolve(lambda k, v: k == 'Fn::FindInMap', handle, s)
+
+    def _resolve_attributes(self, s):
         '''
             looking for something like:
-            {"Fn::GetAtt" : ["DBInstance", "Endpoint.Address"]}
+            { "Fn::GetAtt" : [ "DBInstance", "Endpoint.Address" ] }
         '''
-        if isinstance(s, dict):
-            for i in s:
-                if i == 'Ref' and s[i] in self.resources:
-                    return self.resources[s[i]].FnGetRefId()
-                elif i == 'Fn::GetAtt':
-                    resource_name = s[i][0]
-                    key_name = s[i][1]
-                    res = self.resources.get(resource_name)
-                    rc = None
-                    if res:
-                        return res.FnGetAtt(key_name)
-                    else:
-                        raise exception.InvalidTemplateAttribute(
-                                        resource=resource_name, key=key_name)
-                    return rc
-                else:
-                    s[i] = self.resolve_attributes(s[i])
-        elif isinstance(s, list):
-            for index, item in enumerate(s):
-                s[index] = self.resolve_attributes(item)
-        return s
+        def match_ref(key, value):
+            return key == 'Ref' and value in self.resources
 
-    def resolve_joins(self, s):
-        '''
-            looking for { "Fn::join": []}
-        '''
-        if isinstance(s, dict):
-            for i in s:
-                if i == 'Fn::Join':
-                    j = None
-                    try:
-                        j = s[i][0].join(s[i][1])
-                    except Exception:
-                        logger.error('Could not join %s' % str(s[i]))
-                    return j
-                else:
-                    s[i] = self.resolve_joins(s[i])
-        elif isinstance(s, list):
-            for index, item in enumerate(s):
-                s[index] = self.resolve_joins(item)
-        return s
+        def handle_ref(arg):
+            return self.resources[arg].FnGetRefId()
 
-    def resolve_base64(self, s):
+        def handle_getatt(args):
+            resource, att = args
+            try:
+                return self.resources[resource].FnGetAtt(att)
+            except KeyError:
+                raise exception.InvalidTemplateAttribute(resource=resource,
+                                                         key=att)
+
+        return _resolve(lambda k, v: k == 'Fn::GetAtt', handle_getatt,
+                        _resolve(match_ref, handle_ref, s))
+
+    @staticmethod
+    def _resolve_joins(s):
         '''
-            looking for { "Fn::join": [] }
+            looking for { "Fn::Join" : [] }
         '''
-        if isinstance(s, dict):
-            for i in s:
-                if i == 'Fn::Base64':
-                    return s[i]
-                else:
-                    s[i] = self.resolve_base64(s[i])
-        elif isinstance(s, list):
-            for index, item in enumerate(s):
-                s[index] = self.resolve_base64(item)
-        return s
+        def handle(args):
+            delim, strings = args
+            return delim.join(strings)
+
+        return _resolve(lambda k, v: k == 'Fn::Join', handle, s)
+
+    @staticmethod
+    def _resolve_base64(s):
+        '''
+            looking for { "Fn::Base64" : "" }
+        '''
+        return _resolve(lambda k, v: k == 'Fn::Base64', lambda d: d, s)
+
+    def resolve_static_data(self, snippet):
+        return transform(snippet, [self._resolve_static_refs,
+                                   self._resolve_find_in_map])
+
+    def resolve_runtime_data(self, snippet):
+        return transform(snippet, [self._resolve_attributes,
+                                   self._resolve_joins,
+                                   self._resolve_base64])
+
+
+def transform(data, transformations):
+    '''
+    Apply each of the transformation functions in the supplied list to the data
+    in turn.
+    '''
+    for t in transformations:
+        data = t(data)
+    return data
+
+
+def _resolve(match, handle, snippet):
+    '''
+    Resolve constructs in a snippet of a template. The supplied match function
+    should return True if a particular key-value pair should be substituted,
+    and the handle function should return the correct substitution when passed
+    the argument list as parameters.
+
+    Returns a copy of the original snippet with the substitutions performed.
+    '''
+    recurse = lambda k: _resolve(match, handle, snippet[k])
+
+    if isinstance(snippet, dict):
+        should_handle = lambda k: match(k, snippet[k])
+        matches = itertools.imap(recurse,
+                                 itertools.ifilter(should_handle, snippet))
+        try:
+            args = next(matches)
+        except StopIteration:
+            # No matches
+            return dict((k, recurse(k)) for k in snippet)
+        else:
+            return handle(args)
+    elif isinstance(snippet, list):
+        return [recurse(i) for i in range(len(snippet))]
+    return snippet

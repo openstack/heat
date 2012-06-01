@@ -45,11 +45,9 @@ class stacksTest(unittest.TestCase):
         instances.Instance.nova().AndReturn(self.fc)
         instance = stack.resources['WebServer']
         instance.itype_oflavor['m1.large'] = 'm1.large'
-        instance.stack.resolve_attributes(instance.t)
-        instance.stack.resolve_joins(instance.t)
-        instance.stack.resolve_base64(instance.t)
+        instance.calculate_properties()
         server_userdata = instance._build_userdata(
-                                instance.t['Properties']['UserData'])
+                                instance.properties['UserData'])
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(image=744, flavor=3, key_name='test',
                 name='WebServer', security_groups=None,

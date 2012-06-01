@@ -28,7 +28,18 @@ class ElasticIp(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(ElasticIp, self).__init__(name, json_snippet, stack)
-        self.ipaddress = ''
+        self.ipaddress = None
+
+    def _ipaddress(self):
+        if self.ipaddress is None:
+            if self.instance_id is not None:
+                try:
+                    ips = self.nova().floating_ips.get(self.instance_id)
+                except NotFound as ex:
+                    logger.warn("Floating IPs not found: %s" % str(ex))
+                else:
+                    self.ipaddress = ips.ip
+        return self.ipaddress or ''
 
     def create(self):
         """Allocate a floating IP for the current tenant."""
@@ -49,19 +60,6 @@ class ElasticIp(Resource):
         '''
         return Resource.validate(self)
 
-    def reload(self):
-        '''
-        get the ipaddress here
-        '''
-        if self.instance_id is not None:
-            try:
-                ips = self.nova().floating_ips.get(self.instance_id)
-                self.ipaddress = ips.ip
-            except Exception as ex:
-                logger.warn("Error getting floating IPs: %s" % str(ex))
-
-        Resource.reload(self)
-
     def delete(self):
         """De-allocate a floating IP."""
         if self.state == self.DELETE_IN_PROGRESS or \
@@ -77,7 +75,7 @@ class ElasticIp(Resource):
         self.state_set(self.DELETE_COMPLETE)
 
     def FnGetRefId(self):
-        return unicode(self.ipaddress)
+        return unicode(self._ipaddress())
 
     def FnGetAtt(self, key):
         if key == 'AllocationId':

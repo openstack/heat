@@ -59,9 +59,7 @@ class instancesTest(unittest.TestCase):
                                       t['Resources']['WebServer'], stack)
 
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
-        instance.stack.resolve_attributes(instance.t)
-        instance.stack.resolve_joins(instance.t)
-        instance.stack.resolve_base64(instance.t)
+        instance.t = instance.stack.resolve_runtime_data(instance.t)
 
         # need to resolve the template functions
         server_userdata = instance._build_userdata(
@@ -109,9 +107,7 @@ class instancesTest(unittest.TestCase):
                                       t['Resources']['WebServer'], stack)
 
         instance.itype_oflavor['256 MB Server'] = '256 MB Server'
-        instance.stack.resolve_attributes(instance.t)
-        instance.stack.resolve_joins(instance.t)
-        instance.stack.resolve_base64(instance.t)
+        instance.t = instance.stack.resolve_runtime_data(instance.t)
 
         # need to resolve the template functions
         server_userdata = instance._build_userdata(

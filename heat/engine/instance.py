@@ -110,7 +110,7 @@ class Instance(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
-        self.ipaddress = '0.0.0.0'
+        self.ipaddress = None
         self.mime_string = None
 
         self.itype_oflavor = {'t1.micro': 'm1.tiny',
@@ -126,15 +126,30 @@ class Instance(Resource):
             'cc2.8xlarge': 'm1.large',
             'cg1.4xlarge': 'm1.large'}
 
-    def FnGetAtt(self, key):
+    def _ipaddress(self):
+        '''
+        Return the server's IP address, fetching it from Nova if necessary
+        '''
+        if self.ipaddress is None:
+            try:
+                server = self.nova().servers.get(self.instance_id)
+            except NotFound as ex:
+                logger.warn('Instance IP address not found (%s)' % str(ex))
+            else:
+                for n in server.networks:
+                    self.ipaddress = server.networks[n][0]
+                    break
 
+        return self.ipaddress or '0.0.0.0'
+
+    def FnGetAtt(self, key):
         res = None
         if key == 'AvailabilityZone':
             res = self.properties['AvailabilityZone']
         elif key == 'PublicIp':
-            res = self.ipaddress
+            res = self._ipaddress()
         elif key == 'PrivateDnsName':
-            res = self.ipaddress
+            res = self._ipaddress()
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
@@ -258,19 +273,6 @@ class Instance(Resource):
                 return {'Error':
                         'Provided KeyName is not registered with nova'}
         return None
-
-    def reload(self):
-        '''
-        re-read the server's ipaddress so FnGetAtt works.
-        '''
-        try:
-            server = self.nova().servers.get(self.instance_id)
-            for n in server.networks:
-                self.ipaddress = server.networks[n][0]
-        except NotFound:
-            self.ipaddress = '0.0.0.0'
-
-        Resource.reload(self)
 
     def delete(self):
         if self.state == self.DELETE_IN_PROGRESS or \

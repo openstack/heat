@@ -53,13 +53,13 @@ class Resource(object):
         return ResourceClass(name, json, stack)
 
     def __init__(self, name, json_snippet, stack):
-        self.t = json_snippet
         self.depends_on = []
         self.references = []
         self.stack = stack
         self.name = name
+        self.t = stack.resolve_static_data(json_snippet)
         self.properties = checkeddict.Properties(name, self.properties_schema)
-        if not 'Properties' in self.t:
+        if 'Properties' not in self.t:
             # make a dummy entry to prevent having to check all over the
             # place for it.
             self.t['Properties'] = {}
@@ -74,9 +74,6 @@ class Resource(object):
             self.state = None
             self.id = None
         self._nova = {}
-
-        stack.resolve_static_refs(self.t)
-        stack.resolve_find_in_map(self.t)
 
     def nova(self, service_type='compute'):
         if service_type in self._nova:
@@ -98,26 +95,22 @@ class Resource(object):
                                                  service_name=service_name)
         return self._nova[service_type]
 
+    def calculate_properties(self):
+        template = self.stack.resolve_runtime_data(self.t)
+
+        for p, v in template['Properties'].items():
+            self.properties[p] = v
+
     def create(self):
         logger.info('creating %s name:%s' % (self.t['Type'], self.name))
-
-        self.stack.resolve_attributes(self.t)
-        self.stack.resolve_joins(self.t)
-        self.stack.resolve_base64(self.t)
-        for p in self.t['Properties']:
-            self.properties[p] = self.t['Properties'][p]
+        self.calculate_properties()
         self.properties.validate()
 
     def validate(self):
         logger.info('validating %s name:%s' % (self.t['Type'], self.name))
 
-        self.stack.resolve_attributes(self.t)
-        self.stack.resolve_joins(self.t)
-        self.stack.resolve_base64(self.t)
-
         try:
-            for p in self.t['Properties']:
-                self.properties[p] = self.t['Properties'][p]
+            self.calculate_properties()
         except ValueError as ex:
                 return {'Error': '%s' % str(ex)}
         self.properties.validate()
@@ -160,7 +153,8 @@ class Resource(object):
             ev['name'] = new_state
             ev['resource_status_reason'] = reason
             ev['resource_type'] = self.t['Type']
-            ev['resource_properties'] = self.t['Properties']
+            self.calculate_properties()
+            ev['resource_properties'] = dict(self.properties)
             try:
                 db_api.event_create(None, ev)
             except Exception as ex:
@@ -168,23 +162,9 @@ class Resource(object):
             self.state = new_state
 
     def delete(self):
-        self.reload()
         logger.info('deleting %s name:%s inst:%s db_id:%s' %
                     (self.t['Type'], self.name,
                      self.instance_id, str(self.id)))
-
-    def reload(self):
-        '''
-        The point of this function is to get the Resource instance back
-        into the state that it was just after it was created. So we
-        need to retrieve things like ipaddresses and other variables
-        used by FnGetAtt and FnGetRefId. classes inheriting from Resource
-        might need to override this, but still call it.
-        This is currently used by stack.get_outputs()
-        '''
-        logger.info('reloading %s name:%s instance_id:%s' %
-                    (self.t['Type'], self.name, self.instance_id))
-        self.stack.resolve_attributes(self.t)
 
     def FnGetRefId(self):
         '''
