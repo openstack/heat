@@ -39,6 +39,8 @@ class CloudWatchAlarm(Resource):
                       'AllowedValues': ['SampleCount', 'Average', 'Sum',
                                         'Minimum', 'Maximum']},
         'AlarmActions': {'Type': 'List'},
+        'OKActions': {'Type': 'List'},
+        'InsufficientDataActions': {'Type': 'List'},
         'Threshold': {'Type': 'String'},
         'Units': {'Type': 'String',
                   'AllowedValues': ['Seconds', 'Microseconds', 'Milliseconds',
