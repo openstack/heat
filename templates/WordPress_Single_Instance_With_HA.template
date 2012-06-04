@@ -97,6 +97,15 @@
   },
 
   "Resources" : {
+    "CfnUser" : {
+      "Type" : "AWS::IAM::User"
+    },
+    "WebServerKeys" : {
+      "Type" : "AWS::IAM::AccessKey",
+      "Properties" : {
+        "UserName" : {"Ref": "CfnUser"}
+      }
+    },
     "WebServerRestartPolicy" : {
       "Type" : "HEAT::HA::Restarter",
       "Properties" : {
@@ -109,7 +118,7 @@
         "AlarmDescription": "Restart the WikiDatabase if httpd fails > 3 times in 10 minutes",
         "MetricName": "ServiceFailure",
         "Namespace": "system/linux",
-        "Statistic": "Maximum",
+        "Statistic": "SampleCount",
         "Period": "300",
         "EvaluationPeriods": "1",
         "Threshold": "2",
@@ -125,8 +134,9 @@
             "files" : {
               "/etc/cfn/cfn-credentials" : {
                 "content" : { "Fn::Join" : ["", [
-                  "AWSAccessKeyId=GobbleGobble\n",
-                  "AWSSecretKey=Fn_GetAtt_WebServerKeys_SecretAccessKey\n"
+                  "AWSAccessKeyId=", { "Ref" : "WebServerKeys" }, "\n",
+                  "AWSSecretKey=", {"Fn::GetAtt": ["WebServerKeys",
+                                    "SecretAccessKey"]}, "\n"
                 ]]},
                 "mode"    : "000400",
                 "owner"   : "root",
@@ -229,8 +239,12 @@
           "  exit 1\n",
           "}\n",
 
-          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r WikiDatabase ",
-          "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" },
+          " -r WikiDatabase ",
+          " --access-key ", { "Ref" : "WebServerKeys" },
+          " --secret-key ", {"Fn::GetAtt": ["WebServerKeys", "SecretAccessKey"]},
+          " --region ", { "Ref" : "AWS::Region" },
+          " || error_exit 'Failed to run cfn-init'\n",
 
           "# Setup MySQL root password and create a user\n",
           "mysqladmin -u root password '", { "Ref" : "DBRootPassword" },
