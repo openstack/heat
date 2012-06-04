@@ -51,8 +51,9 @@ if __name__ == '__main__':
 
         app = config.load_paste_app(conf)
 
-        port = config.DEFAULT_PORT
-        LOG.info(('Starting Heat API on port %s') % port)
-        httpserver.serve(app, port=port)
+        port = conf.bind_port
+        host = conf.bind_host
+        LOG.info(('Starting Heat API on %s:%s') % (host, port))
+        httpserver.serve(app, host=host, port=port)
     except RuntimeError, e:
         sys.exit("ERROR: %s" % e)

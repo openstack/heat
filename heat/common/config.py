@@ -137,12 +137,17 @@ rpc_opts = [
 
 class HeatConfigOpts(cfg.CommonConfigOpts):
     def __init__(self, default_config_files=None, **kwargs):
+        config_files = cfg.find_config_files(project='heat',
+                                             prog='heat-api')
         super(HeatConfigOpts, self).__init__(
             project='heat',
             version='%%prog %s' % version.version_string(),
             default_config_files=default_config_files,
             **kwargs)
-        self.register_cli_opts(rpc_opts)
+        opts = [cfg.IntOpt('bind_port', default=8000),
+                cfg.StrOpt('bind_host', default='127.0.0.1')]
+        opts.extend(rpc_opts)
+        self.register_cli_opts(opts)
 
 
 class HeatMetadataConfigOpts(cfg.CommonConfigOpts):
