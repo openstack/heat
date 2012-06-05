@@ -426,19 +426,14 @@ def _resolve(match, handle, snippet):
 
     Returns a copy of the original snippet with the substitutions performed.
     '''
-    recurse = lambda k: _resolve(match, handle, snippet[k])
+    recurse = lambda s: _resolve(match, handle, s)
 
     if isinstance(snippet, dict):
-        should_handle = lambda k: match(k, snippet[k])
-        matches = itertools.imap(recurse,
-                                 itertools.ifilter(should_handle, snippet))
-        try:
-            args = next(matches)
-        except StopIteration:
-            # No matches
-            return dict((k, recurse(k)) for k in snippet)
-        else:
-            return handle(args)
+        if len(snippet) == 1:
+            k, v = snippet.items()[0]
+            if match(k, v):
+                return handle(recurse(v))
+        return dict((k, recurse(v)) for k, v in snippet.items())
     elif isinstance(snippet, list):
-        return [recurse(i) for i in range(len(snippet))]
+        return [recurse(v) for v in snippet]
     return snippet
