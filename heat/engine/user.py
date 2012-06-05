@@ -32,7 +32,6 @@ class User(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(User, self).__init__(name, json_snippet, stack)
-        self.instance_id = ''
 
     def create(self):
         self.state_set(self.CREATE_COMPLETE)

@@ -36,7 +36,6 @@ class WaitConditionHandle(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(WaitConditionHandle, self).__init__(name, json_snippet, stack)
-        self.instance_id = ''
 
     def create(self):
         if self.state is not None:
@@ -60,12 +59,6 @@ class WaitConditionHandle(Resource):
         Resource.delete(self)
         self.state_set(self.DELETE_COMPLETE)
 
-    def FnGetRefId(self):
-        '''
-        Return the Wait Condition Signal URL
-        '''
-        return unicode(self.instance_id)
-
 
 class WaitCondition(Resource):
     properties_schema = {'Handle': {'Type': 'String',
@@ -78,7 +71,6 @@ class WaitCondition(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(WaitCondition, self).__init__(name, json_snippet, stack)
-        self.instance_id = ''
         self.resource_id = None
 
         self.timeout = int(self.t['Properties']['Timeout'])
@@ -153,9 +145,6 @@ class WaitCondition(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
         self.state_set(self.DELETE_COMPLETE)
-
-    def FnGetRefId(self):
-        return unicode(self.name)
 
     def FnGetAtt(self, key):
         res = None
