@@ -227,7 +227,7 @@ class EngineManager(manager.Manager):
 
         self._authenticate(context)
 
-        st = db_api.stack_get(None, stack_name)
+        st = db_api.stack_get(context, stack_name)
         if not st:
             return {'Error': 'No stack by that name'}
 
@@ -264,13 +264,13 @@ class EngineManager(manager.Manager):
         self._authenticate(context)
 
         if stack_name is not None:
-            st = db_api.stack_get(None, stack_name)
+            st = db_api.stack_get(context, stack_name)
             if not st:
                 return {'Error': 'No stack by that name'}
 
-            events = db_api.event_get_all_by_stack(None, st.id)
+            events = db_api.event_get_all_by_stack(context, st.id)
         else:
-            events = db_api.event_get_all(None)
+            events = db_api.event_get_all(context)
 
         return {'events': [self.parse_event(e) for e in events]}
 
@@ -280,8 +280,9 @@ class EngineManager(manager.Manager):
 
         stack_name = event['stack']
         resource_name = event['resource']
-        stack = db_api.stack_get(None, stack_name)
-        resource = db_api.resource_get_by_name_and_stack(None, resource_name,
+        stack = db_api.stack_get(context, stack_name)
+        resource = db_api.resource_get_by_name_and_stack(context,
+                                                         resource_name,
                                                          stack.id)
         if not resource:
             return ['Unknown resource', None]
@@ -295,7 +296,7 @@ class EngineManager(manager.Manager):
             'resource_properties': {},
         }
         try:
-            result = db_api.event_create(None, new_event)
+            result = db_api.event_create(context, new_event)
             new_event['id'] = result.id
             return [None, new_event]
         except Exception as ex:
@@ -310,14 +311,14 @@ class EngineManager(manager.Manager):
         """
         Return the names of the stacks registered with Heat.
         """
-        stacks = db_api.stack_get_all(None)
+        stacks = db_api.stack_get_all(context)
         return [s.name for s in stacks]
 
     def metadata_list_resources(self, context, stack_name):
         """
         Return the resource IDs of the given stack.
         """
-        stack = db_api.stack_get(None, stack_name)
+        stack = db_api.stack_get(context, stack_name)
         if stack:
             return [r.name for r in stack.resources]
         else:
@@ -328,7 +329,7 @@ class EngineManager(manager.Manager):
         Get the metadata for the given resource.
         """
 
-        s = db_api.stack_get(None, stack_name)
+        s = db_api.stack_get(context, stack_name)
         if not s:
             return ['stack', None]
 
@@ -343,12 +344,12 @@ class EngineManager(manager.Manager):
         """
         Update the metadata for the given resource.
         """
-        s = db_api.stack_get(None, stack_name)
+        s = db_api.stack_get(context, stack_name)
         if not s:
             return ['stack', None]
         pt_id = s.raw_template.parsed_template.id
 
-        pt = db_api.parsed_template_get(None, pt_id)
+        pt = db_api.parsed_template_get(context, pt_id)
         if not resource_id in pt.template.get('Resources', {}):
             return ['resource', None]
 

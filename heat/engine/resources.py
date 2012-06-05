@@ -64,7 +64,8 @@ class Resource(object):
             # place for it.
             self.t['Properties'] = {}
 
-        resource = db_api.resource_get_by_name_and_stack(None, name, stack.id)
+        resource = db_api.resource_get_by_name_and_stack(self.stack.context,
+                                                         name, stack.id)
         if resource:
             self.instance_id = resource.nova_instance
             self.state = resource.state
@@ -129,7 +130,7 @@ class Resource(object):
                 rs['nova_instance'] = self.instance_id
                 rs['name'] = self.name
                 rs['stack_name'] = self.stack.name
-                new_rs = db_api.resource_create(None, rs)
+                new_rs = db_api.resource_create(self.stack.context, rs)
                 self.id = new_rs.id
                 if new_rs.stack:
                     new_rs.stack.update_and_save({'updated_at':
@@ -159,7 +160,7 @@ class Resource(object):
             self.calculate_properties()
             ev['resource_properties'] = dict(self.properties)
             try:
-                db_api.event_create(None, ev)
+                db_api.event_create(self.stack.context, ev)
             except Exception as ex:
                 logger.warn('db error %s' % str(ex))
             self.state = new_state

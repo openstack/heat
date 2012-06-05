@@ -108,7 +108,7 @@ class WaitCondition(Resource):
                 pt = None
                 if self.stack.parsed_template_id:
                     try:
-                        pt = db_api.parsed_template_get(None,
+                        pt = db_api.parsed_template_get(self.stack.context,
                                              self.stack.parsed_template_id)
                     except Exception as ex:
                         if 'not found' in ex:

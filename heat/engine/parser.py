@@ -155,13 +155,13 @@ class Stack(object):
         created, so commands like describe will work.
         '''
         if self.parsed_template_id == 0:
-            stack = db_api.stack_get(None, self.name)
+            stack = db_api.stack_get(self.context, self.name)
             if stack:
                 self.parsed_template_id = stack.raw_template.parsed_template.id
             else:
                 return
 
-        pt = db_api.parsed_template_get(None, self.parsed_template_id)
+        pt = db_api.parsed_template_get(self.context, self.parsed_template_id)
         if pt:
             pt.update_and_save({'template': self.t.copy()})
         else:
@@ -219,7 +219,8 @@ class Stack(object):
             res = self.resources[r]
             try:
                 res.delete()
-                db_api.resource_get(None, self.resources[r].id).delete()
+                re = db_api.resource_get(self.context, self.resources[r].id)
+                re.delete()
             except Exception as ex:
                 failed = True
                 res.state_set(res.DELETE_FAILED)
@@ -227,7 +228,7 @@ class Stack(object):
 
         self.status_set(failed and self.DELETE_FAILED or self.DELETE_COMPLETE)
         if not failed:
-            db_api.stack_delete(None, self.name)
+            db_api.stack_delete(self.context, self.name)
 
     def delete(self):
         pool = eventlet.GreenPool()
@@ -256,7 +257,7 @@ class Stack(object):
             res = self.resources[r]
             try:
                 res.delete()
-                #db_api.resource_get(None, self.resources[r].id).delete()
+                #db_api.resource_get(context, self.resources[r].id).delete()
             except Exception as ex:
                 failed = True
                 res.state_set(res.DELETE_FAILED)

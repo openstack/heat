@@ -75,7 +75,7 @@ class CloudWatchAlarm(Resource):
             'stack_name': self.stack.name
         }
 
-        wr = db_api.watch_rule_create(None, wr_values)
+        wr = db_api.watch_rule_create(self.stack.context, wr_values)
         self.instance_id = wr.id
 
         self.state_set(self.CREATE_COMPLETE)
@@ -87,7 +87,7 @@ class CloudWatchAlarm(Resource):
 
         self.state_set(self.DELETE_IN_PROGRESS)
 
-        db_api.watch_rule_delete(None, self.name)
+        db_api.watch_rule_delete(self.stack.context, self.name)
 
         Resource.delete(self)
         self.state_set(self.DELETE_COMPLETE)
