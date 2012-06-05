@@ -34,11 +34,7 @@ class SecurityGroup(Resource):
     def __init__(self, name, json_snippet, stack):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)
 
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        Resource.create(self)
+    def handle_create(self):
         sec = None
 
         groups = self.nova().security_groups.list()
@@ -69,21 +65,7 @@ class SecurityGroup(Resource):
                         # unexpected error
                         raise
 
-        self.state_set(self.CREATE_COMPLETE)
-
-    def validate(self):
-        '''
-        Validate the security group
-        '''
-        return Resource.validate(self)
-
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-
+    def handle_delete(self):
         if self.instance_id is not None:
             try:
                 sec = self.nova().security_groups.get(self.instance_id)
@@ -98,8 +80,6 @@ class SecurityGroup(Resource):
 
                 self.nova().security_groups.delete(sec)
             self.instance_id = None
-
-        self.state_set(self.DELETE_COMPLETE)
 
     def FnGetRefId(self):
         return unicode(self.name)

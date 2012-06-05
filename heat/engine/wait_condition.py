@@ -37,26 +37,11 @@ class WaitConditionHandle(Resource):
     def __init__(self, name, json_snippet, stack):
         super(WaitConditionHandle, self).__init__(name, json_snippet, stack)
 
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        Resource.create(self)
-
+    def handle_create(self):
         self.instance_id = '%s/stacks/%s/resources/%s' % \
                            (self.stack.metadata_server,
                             self.stack.name,
                             self.name)
-
-        self.state_set(self.CREATE_COMPLETE)
-
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-        self.state_set(self.DELETE_COMPLETE)
 
 
 class WaitCondition(Resource):
@@ -82,12 +67,7 @@ class WaitCondition(Resource):
             self.resource_id = handle_url.split('/')[-1]
         return self.resource_id
 
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        Resource.create(self)
-
+    def handle_create(self):
         self._get_handle_resource_id()
 
         # keep polling our Metadata to see if the cfn-signal has written
@@ -128,22 +108,8 @@ class WaitCondition(Resource):
         finally:
             tmo.cancel()
 
-        if status == 'SUCCESS':
-            self.state_set(self.CREATE_COMPLETE,
-                           '%s: %s' % (self.name, reason))
-        elif status == 'DELETED':
-            # don't try write to the db as it's gone.
-            pass
-        else:
+        if status != 'SUCCESS':
             raise exception.Error(reason)
-
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-        self.state_set(self.DELETE_COMPLETE)
 
     def FnGetAtt(self, key):
         res = None

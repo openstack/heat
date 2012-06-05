@@ -33,12 +33,7 @@ class Volume(Resource):
     def __init__(self, name, json_snippet, stack):
         super(Volume, self).__init__(name, json_snippet, stack)
 
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        super(Volume, self).create()
-
+    def handle_create(self):
         vol = self.nova('volume').volumes.create(self.properties['Size'],
                                                  display_name=self.name,
                                                  display_description=self.name)
@@ -48,32 +43,17 @@ class Volume(Resource):
             vol.get()
         if vol.status == 'available':
             self.instance_id_set(vol.id)
-            self.state_set(self.CREATE_COMPLETE)
         else:
             raise exception.Error(vol.status)
 
-    def validate(self):
-        '''
-        Validate the volume
-        '''
-        return Resource.validate(self)
-
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-
+    def handle_delete(self):
         if self.instance_id is not None:
             vol = self.nova('volume').volumes.get(self.instance_id)
             if vol.status == 'in-use':
                 logger.warn('cant delete volume when in-use')
                 raise exception.Error("Volume in use")
 
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-
-        if self.instance_id is not None:
             self.nova('volume').volumes.delete(self.instance_id)
-        self.state_set(self.DELETE_COMPLETE)
 
 
 class VolumeAttachment(Resource):
@@ -88,12 +68,7 @@ class VolumeAttachment(Resource):
     def __init__(self, name, json_snippet, stack):
         super(VolumeAttachment, self).__init__(name, json_snippet, stack)
 
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        super(VolumeAttachment, self).create()
-
+    def handle_create(self):
         server_id = self.properties['InstanceId']
         volume_id = self.properties['VolumeId']
         logger.warn('Attaching InstanceId %s VolumeId %s Device %s' %
@@ -109,22 +84,10 @@ class VolumeAttachment(Resource):
             vol.get()
         if vol.status == 'in-use':
             self.instance_id_set(va.id)
-            self.state_set(self.CREATE_COMPLETE)
         else:
             raise exception.Error(vol.status)
 
-    def validate(self):
-        '''
-        Validate the mountpoint device
-        '''
-        return Resource.validate(self)
-
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-
+    def handle_delete(self):
         server_id = self.properties['InstanceId']
         volume_id = self.properties['VolumeId']
         logger.info('VolumeAttachment un-attaching %s %s' %
@@ -146,5 +109,3 @@ class VolumeAttachment(Resource):
             except Exception:
                 pass
             vol.get()
-
-        self.state_set(self.DELETE_COMPLETE)

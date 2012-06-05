@@ -21,6 +21,7 @@ import webob
 import json
 import urlparse
 import httplib
+import eventlet
 
 from heat import manager
 from heat.db import api as db_api
@@ -36,6 +37,7 @@ from novaclient.exceptions import NotFound
 from novaclient.exceptions import AuthorizationFailure
 
 logger = logging.getLogger('heat.engine.manager')
+greenpool = eventlet.GreenPool()
 
 
 class EngineManager(manager.Manager):
@@ -228,7 +230,7 @@ class EngineManager(manager.Manager):
         new_pt = db_api.parsed_template_create(None, pt)
 
         stack.parsed_template_id = new_pt.id
-        stack.create()
+        greenpool.spawn_n(stack.create)
 
         return {'stack': {'id': new_s.id, 'name': new_s.name,
                 'CreationTime': str(new_s.created_at)}}
@@ -297,7 +299,7 @@ class EngineManager(manager.Manager):
         ps = parser.Stack(context, st.name,
                           st.raw_template.parsed_template.template,
                           st.id, params)
-        ps.delete()
+        greenpool.spawn_n(ps.delete)
         return None
 
     # Helper for list_events.  It's here so we can use it in tests.
@@ -464,7 +466,7 @@ class EngineManager(manager.Manager):
                                       s.raw_template.parsed_template.template,
                                       s.id)
                     for a in wr.rule[action_map[new_state]]:
-                        ps[a].alarm()
+                        greenpool.spawn_n(ps[a].alarm)
 
         wr.last_evaluated = now
 

@@ -42,7 +42,6 @@ class Stack(object):
         self.t = template
         self.maps = self.t.get('Mappings', {})
         self.outputs = self.t.get('Outputs', {})
-        self.timeout = self.t.get('Timeout', None)
         self.res = {}
         self.doc = None
         self.name = stack_name
@@ -170,98 +169,80 @@ class Stack(object):
             logger.warn('Cant find parsed template to update %d' %
                         self.parsed_template_id)
 
-    def status_set(self, new_status, reason='change in resource state'):
-
+    def state_set(self, new_status, reason='change in resource state'):
         self.t['stack_status'] = new_status
         self.t['stack_status_reason'] = reason
         self.update_parsed_template()
 
-    def create_blocking(self):
+    def _timeout(self):
+        '''Return the stack creation timeout in seconds'''
+        if 'Timeout' in self.t:
+            try:
+                # Timeout is in minutes
+                return int(self.t['Timeout']) * 60
+            except ValueError:
+                logger.exception('create timeout conversion')
+
+        # Default to 1 hour
+        return 60 * 60
+
+    def create(self):
         '''
         Create the stack and all of the resources.
         '''
-        self.status_set(self.IN_PROGRESS, 'Stack creation started')
+        self.state_set(self.IN_PROGRESS, 'Stack creation started')
 
         stack_status = self.CREATE_COMPLETE
         reason = 'Stack successfully created'
 
-        # Timeout is in minutes (default to 1 hour)
-        secs_tmo = 60 * 60
-        if self.timeout:
+        with eventlet.Timeout(self._timeout()) as tmo:
             try:
-                secs_tmo = int(self.timeout) * 60
-            except ValueError as ve:
-                logger.exception('create timeout conversion')
-        tmo = eventlet.Timeout(secs_tmo)
-        try:
-            for res in self:
-                if stack_status != self.CREATE_FAILED:
-                    try:
-                        res.create()
-                    except Exception as ex:
-                        logger.exception('create')
-                        stack_status = self.CREATE_FAILED
-                        reason = 'resource %s failed with: %s' % (res.name,
-                                                                  str(ex))
-                        res.state_set(res.CREATE_FAILED, str(ex))
+                for res in self:
+                    if stack_status != self.CREATE_FAILED:
+                        result = res.create()
+                        if result:
+                            stack_status = self.CREATE_FAILED
+                            reason = 'Resource %s failed with: %s' % (str(res),
+                                                                      result)
 
-                    try:
-                        self.update_parsed_template()
-                    except Exception as ex:
-                        logger.exception('update_parsed_template')
+                        try:
+                            self.update_parsed_template()
+                        except Exception as ex:
+                            logger.exception('update_parsed_template')
 
+                    else:
+                        res.state_set(res.CREATE_FAILED,
+                                      'Stack creation aborted')
+
+            except eventlet.Timeout, t:
+                if t is tmo:
+                    stack_status = self.CREATE_FAILED
+                    reason = 'Timed out waiting for %s' % (res.name)
                 else:
-                    res.state_set(res.CREATE_FAILED)
+                    # not my timeout
+                    raise
 
-        except eventlet.Timeout, t:
-            if t is not tmo:
-                # not my timeout
-                raise
-            else:
-                stack_status = self.CREATE_FAILED
-                reason = 'Timed out waiting for %s' % (res.name)
-        finally:
-            tmo.cancel()
+        self.state_set(stack_status, reason)
 
-        self.status_set(stack_status, reason)
-
-    def create(self):
-
-        pool = eventlet.GreenPool()
-        pool.spawn_n(self.create_blocking)
-
-    def delete_blocking(self):
+    def delete(self):
         '''
         Delete all of the resources, and then the stack itself.
         '''
-        failed = False
-        self.status_set(self.DELETE_IN_PROGRESS)
+        self.state_set(self.DELETE_IN_PROGRESS)
+
+        failures = []
 
         for res in reversed(self):
-            try:
-                res.delete()
-            except Exception as ex:
-                failed = True
-                res.state_set(res.DELETE_FAILED)
-                logger.error('delete: %s' % str(ex))
-            else:
-                try:
-                    db_api.resource_get(self.context, res.id).delete()
-                except Exception as ex:
-                    # don't fail the delete if the db entry has
-                    # not been created yet.
-                    if 'not found' not in str(ex):
-                        failed = True
-                        res.state_set(res.DELETE_FAILED)
-                        logger.error('delete: %s' % str(ex))
+            result = res.delete()
+            if result:
+                failures.append(str(res))
 
-        self.status_set(failed and self.DELETE_FAILED or self.DELETE_COMPLETE)
-        if not failed:
+        if failures:
+            self.state_set(self.DELETE_FAILED,
+                           'Failed to delete ' + ', '.join(failures))
+        else:
+            self.state_set(self.DELETE_COMPLETE, 'Deleted successfully')
             db_api.stack_delete(self.context, self.name)
-
-    def delete(self):
-        pool = eventlet.GreenPool()
-        pool.spawn_n(self.delete_blocking)
 
     def get_outputs(self):
         outputs = self.resolve_runtime_data(self.outputs)
@@ -274,7 +255,7 @@ class Stack(object):
 
         return [output_dict(key) for key in outputs]
 
-    def restart_resource_blocking(self, resource_name):
+    def restart_resource(self, resource_name):
         '''
         stop resource_name and all that depend on it
         start resource_name and all that depend on it
@@ -295,7 +276,6 @@ class Stack(object):
                 re.delete()
             except Exception as ex:
                 failed = True
-                res.state_set(res.DELETE_FAILED)
                 logger.error('delete: %s' % str(ex))
 
         for res in deps:
@@ -305,21 +285,15 @@ class Stack(object):
                 except Exception as ex:
                     logger.exception('create')
                     failed = True
-                    res.state_set(res.CREATE_FAILED, str(ex))
 
                 try:
                     self.update_parsed_template()
                 except Exception as ex:
                     logger.exception('update_parsed_template')
-
             else:
                 res.state_set(res.CREATE_FAILED)
         # TODO(asalkeld) if any of this fails we Should
         # restart the whole stack
-
-    def restart_resource(self, resource_name):
-        pool = eventlet.GreenPool()
-        pool.spawn_n(self.restart_resource_blocking, resource_name)
 
     def _apply_user_parameters(self, parms):
         for p in parms:

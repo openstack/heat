@@ -45,30 +45,19 @@ class Restarter(Resource):
     properties_schema = {'InstanceId': {'Type': 'String',
                                         'Required': True}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(Restarter, self).__init__(name, json_snippet, stack)
-
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        Resource.create(self)
-        self.state_set(self.CREATE_COMPLETE)
-
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-        self.state_set(self.DELETE_COMPLETE)
+    def _find_resource(self, instance_id):
+        '''
+        Return the resource with the specified instance ID, or None if it
+        cannot be found.
+        '''
+        for resource in self.stack:
+            if resource.instance_id == instance_id:
+                return resource
+        return None
 
     def alarm(self):
         self.calculate_properties()
-        victim = None
-        for rname, r in self.stack.resources.items():
-            if r.instance_id == self.properties['InstanceId']:
-                victim = r
-                break
+        victim = self._find_resource(self.properties['InstanceId'])
 
         if victim is None:
             logger.info('%s Alarm, can not find instance %s' %
@@ -137,6 +126,15 @@ class Instance(Resource):
             'cc2.8xlarge': 'm1.large',
             'cg1.4xlarge': 'm1.large'}
 
+    def _set_ipaddress(self, networks):
+        '''
+        Read the server's IP address from a list of networks provided by Nova
+        '''
+        # Just record the first ipaddress
+        for n in networks:
+            self.ipaddress = networks[n][0]
+            break
+
     def _ipaddress(self):
         '''
         Return the server's IP address, fetching it from Nova if necessary
@@ -147,9 +145,7 @@ class Instance(Resource):
             except NotFound as ex:
                 logger.warn('Instance IP address not found (%s)' % str(ex))
             else:
-                for n in server.networks:
-                    self.ipaddress = server.networks[n][0]
-                    break
+                self._set_ipaddress(server.networks)
 
         return self.ipaddress or '0.0.0.0'
 
@@ -211,18 +207,7 @@ class Instance(Resource):
 
         return self.mime_string
 
-    def create(self):
-        def _null_callback(p, n, out):
-            """
-            Method to silence the default M2Crypto.RSA.gen_key output.
-            """
-            pass
-
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        Resource.create(self)
-
+    def handle_create(self):
         security_groups = self.properties.get('SecurityGroups')
         userdata = self.properties['UserData']
         flavor = self.itype_oflavor[self.properties['InstanceType']]
@@ -259,11 +244,7 @@ class Instance(Resource):
             eventlet.sleep(1)
         if server.status == 'ACTIVE':
             self.instance_id_set(server.id)
-            self.state_set(self.CREATE_COMPLETE)
-            # just record the first ipaddress
-            for n in server.networks:
-                self.ipaddress = server.networks[n][0]
-                break
+            self._set_ipaddress(server.networks)
         else:
             raise exception.Error('%s instance[%s] status[%s]' %
                                   ('nova reported unexpected',
@@ -288,11 +269,7 @@ class Instance(Resource):
                         'Provided KeyName is not registered with nova'}
         return None
 
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
+    def handle_delete(self):
         try:
             server = self.nova().servers.get(self.instance_id)
         except NotFound:
@@ -300,4 +277,3 @@ class Instance(Resource):
         else:
             server.delete()
         self.instance_id = None
-        self.state_set(self.DELETE_COMPLETE)

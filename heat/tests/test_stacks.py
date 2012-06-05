@@ -59,7 +59,7 @@ class stacksTest(unittest.TestCase):
     def test_wordpress_single_instance_stack_create(self):
         stack = self.start_wordpress_stack('test_stack')
         self.m.ReplayAll()
-        stack.create_blocking()
+        stack.create()
         assert(stack.resources['WebServer'] is not None)
         assert(stack.resources['WebServer'].instance_id > 0)
         assert(stack.resources['WebServer'].ipaddress != '0.0.0.0')
@@ -85,10 +85,10 @@ class stacksTest(unittest.TestCase):
         pt['template'] = stack.t
         pt['raw_template_id'] = new_rt.id
         new_pt = db_api.parsed_template_create(None, pt)
-        stack.create_blocking()
+        stack.create()
         assert(stack.resources['WebServer'] is not None)
         assert(stack.resources['WebServer'].instance_id > 0)
-        stack.delete_blocking()
+        stack.delete()
         assert(stack.resources['WebServer'].state == 'DELETE_COMPLETE')
         assert(stack.t['stack_status'] == 'DELETE_COMPLETE')
 
@@ -113,7 +113,7 @@ class stacksTest(unittest.TestCase):
         pt['template'] = stack.t
         pt['raw_template_id'] = new_rt.id
         new_pt = db_api.parsed_template_create(None, pt)
-        stack.create_blocking()
+        stack.create()
         assert(stack.resources['WebServer'] is not None)
         assert(stack.resources['WebServer'].instance_id > 0)
 
@@ -123,9 +123,8 @@ class stacksTest(unittest.TestCase):
             result = m.parse_event(ev)
             assert(result['EventId'] > 0)
             assert(result['StackName'] == "test_event_list_stack")
-            # This is one of CREATE_COMPLETE or CREATE_IN_PROGRESS,
-            # just did this to make it easy.
-            assert(result['ResourceStatus'].find('CREATE') != -1)
+            assert(result['ResourceStatus'] in ('IN_PROGRESS',
+                                                'CREATE_COMPLETE'))
             assert(result['ResourceType'] == 'AWS::EC2::Instance')
             assert(result['ResourceStatusReason'] == 'state changed')
             assert(result['LogicalResourceId'] == 'WebServer')
@@ -166,7 +165,7 @@ class stacksTest(unittest.TestCase):
         new_pt = db_api.parsed_template_create(ctx, pt)
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
-        stack.create_blocking()
+        stack.create()
 
         f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
         t = json.loads(f.read())

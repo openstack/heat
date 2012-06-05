@@ -32,7 +32,7 @@ logger = logging.getLogger('heat.engine.resources')
 
 
 class Resource(object):
-    CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
+    CREATE_IN_PROGRESS = 'IN_PROGRESS'
     CREATE_FAILED = 'CREATE_FAILED'
     CREATE_COMPLETE = 'CREATE_COMPLETE'
     DELETE_IN_PROGRESS = 'DELETE_IN_PROGRESS'
@@ -140,12 +140,31 @@ class Resource(object):
             self.properties[p] = v
 
     def create(self):
-        logger.info('creating %s name:%s' % (self.t['Type'], self.name))
-        self.calculate_properties()
-        self.properties.validate()
+        '''
+        Create the resource. Subclasses should provide a handle_create() method
+        to customise creation.
+        '''
+        if self.state in (self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE):
+            return 'Resource creation already requested'
+
+        logger.info('creating %s' % str(self))
+
+        self.state_set(self.CREATE_IN_PROGRESS)
+
+        try:
+            self.calculate_properties()
+            self.properties.validate()
+            if callable(getattr(self, 'handle_create', None)):
+                self.handle_create()
+        except Exception as ex:
+            logger.exception('create %s', str(self))
+            self.state_set(self.CREATE_FAILED, str(ex))
+            return str(ex)
+        else:
+            self.state_set(self.CREATE_COMPLETE)
 
     def validate(self):
-        logger.info('validating %s name:%s' % (self.t['Type'], self.name))
+        logger.info('Validating %s' % str(self))
 
         try:
             self.calculate_properties()
@@ -153,59 +172,98 @@ class Resource(object):
                 return str(ex)
         return self.properties.validate()
 
+    def delete(self):
+        '''
+        Delete the resource. Subclasses should provide a handle_delete() method
+        to customise deletion.
+        '''
+        if self.state == self.DELETE_COMPLETE:
+            return
+        if self.state == self.DELETE_IN_PROGRESS:
+            return 'Resource deletion already in progress'
+
+        logger.info('deleting %s (inst:%s db_id:%s)' %
+                    (str(self), self.instance_id, str(self.id)))
+        self.state_set(self.DELETE_IN_PROGRESS)
+
+        try:
+            if callable(getattr(self, 'handle_delete', None)):
+                self.handle_delete()
+        except Exception as ex:
+            logger.exception('Delete %s', str(self))
+            self.state_set(self.DELETE_FAILED, str(ex))
+            return str(ex)
+        else:
+            try:
+                db_api.resource_get(self.stack.context, self.id).delete()
+            except Exception as ex:
+                # Don't fail on delete if the db entry has
+                # not been created yet.
+                if 'not found' not in str(ex):
+                    self.state_set(self.DELETE_FAILED)
+                    logger.exception('Delete %s from DB' % str(self))
+                    return str(ex)
+
+            self.state_set(self.DELETE_COMPLETE)
+
     def instance_id_set(self, inst):
         self.instance_id = inst
 
+    def _create_db(self):
+        '''Create the resource in the database'''
+        try:
+            rs = {'state': self.state,
+                  'stack_id': self.stack.id,
+                  'parsed_template_id': self.stack.parsed_template_id,
+                  'nova_instance': self.instance_id,
+                  'name': self.name,
+                  'stack_name': self.stack.name}
+
+            new_rs = db_api.resource_create(self.stack.context, rs)
+            self.id = new_rs.id
+
+            if new_rs.stack:
+                new_rs.stack.update_and_save({'updated_at': datetime.utcnow()})
+
+        except Exception as ex:
+            logger.error('DB error %s' % str(ex))
+
+    def _add_event(self, new_state, reason):
+        '''Add a state change event to the database'''
+        self.calculate_properties()
+        ev = {'logical_resource_id': self.name,
+              'physical_resource_id': self.instance_id,
+              'stack_id': self.stack.id,
+              'stack_name': self.stack.name,
+              'resource_status': new_state,
+              'name': new_state,
+              'resource_status_reason': reason,
+              'resource_type': self.t['Type'],
+              'resource_properties': dict(self.properties)}
+        try:
+            db_api.event_create(self.stack.context, ev)
+        except Exception as ex:
+            logger.error('DB error %s' % str(ex))
+
     def state_set(self, new_state, reason="state changed"):
+        self.state, old_state = new_state, self.state
+
         if self.id is not None:
             try:
                 rs = db_api.resource_get(self.stack.context, self.id)
-                rs.update_and_save({'state': new_state,
+                rs.update_and_save({'state': self.state,
                                     'nova_instance': self.instance_id})
+
                 if rs.stack:
                     rs.stack.update_and_save({'updated_at': datetime.utcnow()})
             except Exception as ex:
-                logger.warn('db error %s' % str(ex))
-        elif new_state in [self.CREATE_COMPLETE, self.CREATE_FAILED]:
-            try:
-                rs = {}
-                rs['state'] = new_state
-                rs['stack_id'] = self.stack.id
-                rs['parsed_template_id'] = self.stack.parsed_template_id
-                rs['nova_instance'] = self.instance_id
-                rs['name'] = self.name
-                rs['stack_name'] = self.stack.name
-                new_rs = db_api.resource_create(self.stack.context, rs)
-                self.id = new_rs.id
-                if new_rs.stack:
-                    new_rs.stack.update_and_save({'updated_at':
-                        datetime.utcnow()})
+                logger.error('DB error %s' % str(ex))
 
-            except Exception as ex:
-                logger.warn('db error %s' % str(ex))
+        elif new_state in (self.CREATE_COMPLETE, self.CREATE_FAILED):
+            self._create_db()
 
-        if new_state != self.state:
-            ev = {}
-            ev['logical_resource_id'] = self.name
-            ev['physical_resource_id'] = self.instance_id
-            ev['stack_id'] = self.stack.id
-            ev['stack_name'] = self.stack.name
-            ev['resource_status'] = new_state
-            ev['name'] = new_state
-            ev['resource_status_reason'] = reason
-            ev['resource_type'] = self.t['Type']
-            self.calculate_properties()
-            ev['resource_properties'] = dict(self.properties)
-            try:
-                db_api.event_create(self.stack.context, ev)
-            except Exception as ex:
-                logger.warn('db error %s' % str(ex))
-            self.state = new_state
-
-    def delete(self):
-        logger.info('deleting %s name:%s inst:%s db_id:%s' %
-                    (self.t['Type'], self.name,
-                     self.instance_id, str(self.id)))
+        if new_state != old_state:
+            self._add_event(new_state, reason)
 
     def FnGetRefId(self):
         '''
@@ -235,13 +293,6 @@ class Resource(object):
 class GenericResource(Resource):
     properties_schema = {}
 
-    def __init__(self, name, json_snippet, stack):
-        super(GenericResource, self).__init__(name, json_snippet, stack)
-
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        super(GenericResource, self).create()
-        logger.info('creating GenericResource %s' % self.name)
-        self.state_set(self.CREATE_COMPLETE)
+    def handle_create(self):
+        logger.warning('Creating generic resource (Type "%s")' %
+                self.t['Type'])

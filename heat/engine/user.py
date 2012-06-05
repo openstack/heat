@@ -44,12 +44,7 @@ class User(Resource):
     def __init__(self, name, json_snippet, stack):
         super(User, self).__init__(name, json_snippet, stack)
 
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        super(User, self).create()
-
+    def handle_create(self):
         passwd = ''
         if 'LoginProfile' in self.properties:
             if self.properties['LoginProfile'] and \
@@ -62,14 +57,8 @@ class User(Resource):
                                             tenant_id=tenant_id,
                                             enabled=True)
         self.instance_id_set(user.id)
-        self.state_set(self.CREATE_COMPLETE)
 
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-        self.state_set(self.DELETE_IN_PROGRESS)
-        super(User, self).delete()
-
+    def handle_delete(self):
         try:
             user = self.keystone().users.get(DummyId(self.instance_id))
         except Exception as ex:
@@ -77,8 +66,6 @@ class User(Resource):
                                                        self.instance_id))
         else:
             user.delete()
-
-        self.state_set(self.DELETE_COMPLETE)
 
     def FnGetRefId(self):
         return unicode(self.name)
@@ -116,12 +103,7 @@ class AccessKey(Resource):
                 return u
         return None
 
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        super(AccessKey, self).create()
-
+    def handle_create(self):
         user = self._user_from_name(self.properties['UserName'])
         if user is None:
             raise exception.NotFound('could not find user %s' %
@@ -132,19 +114,10 @@ class AccessKey(Resource):
         self.instance_id_set(cred.access)
         self._secret = cred.secret
 
-        self.state_set(self.CREATE_COMPLETE)
-
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-        self.state_set(self.DELETE_IN_PROGRESS)
-        super(AccessKey, self).delete()
-
+    def handle_delete(self):
         user = self._user_from_name(self.properties['UserName'])
         if user and self.instance_id:
             self.keystone().ec2.delete(user.id, self.instance_id)
-
-        self.state_set(self.DELETE_COMPLETE)
 
     def _secret_accesskey(self):
         '''

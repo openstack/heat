@@ -54,22 +54,13 @@ class CloudWatchAlarm(Resource):
 
     strict_dependency = False
 
-    def __init__(self, name, json_snippet, stack):
-        super(CloudWatchAlarm, self).__init__(name, json_snippet, stack)
-        self.instance_id = ''
-
     def validate(self):
         '''
         Validate the Properties
         '''
         return Resource.validate(self)
 
-    def create(self):
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        Resource.create(self)
-
+    def handle_create(self):
         wr_values = {
             'name': self.name,
             'rule': self.parsed_template()['Properties'],
@@ -80,21 +71,11 @@ class CloudWatchAlarm(Resource):
         wr = db_api.watch_rule_create(self.stack.context, wr_values)
         self.instance_id = wr.id
 
-        self.state_set(self.CREATE_COMPLETE)
-
-    def delete(self):
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-
+    def handle_delete(self):
         try:
             db_api.watch_rule_delete(self.stack.context, self.name)
         except Exception as ex:
             pass
-
-        self.state_set(self.DELETE_COMPLETE)
 
     def FnGetRefId(self):
         return unicode(self.name)

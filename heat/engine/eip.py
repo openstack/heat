@@ -41,18 +41,12 @@ class ElasticIp(Resource):
                     self.ipaddress = ips.ip
         return self.ipaddress or ''
 
-    def create(self):
+    def handle_create(self):
         """Allocate a floating IP for the current tenant."""
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        super(ElasticIp, self).create()
-
         ips = self.nova().floating_ips.create()
         logger.info('ElasticIp create %s' % str(ips))
         self.ipaddress = ips.ip
         self.instance_id_set(ips.id)
-        self.state_set(self.CREATE_COMPLETE)
 
     def validate(self):
         '''
@@ -60,18 +54,10 @@ class ElasticIp(Resource):
         '''
         return Resource.validate(self)
 
-    def delete(self):
+    def handle_delete(self):
         """De-allocate a floating IP."""
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-
         if self.instance_id is not None:
             self.nova().floating_ips.delete(self.instance_id)
-
-        self.state_set(self.DELETE_COMPLETE)
 
     def FnGetRefId(self):
         return unicode(self._ipaddress())
@@ -106,14 +92,8 @@ class ElasticIpAssociation(Resource):
         '''
         return Resource.validate(self)
 
-    def create(self):
+    def handle_create(self):
         """Add a floating IP address to a server."""
-
-        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
-            return
-        self.state_set(self.CREATE_IN_PROGRESS)
-        super(ElasticIpAssociation, self).create()
-
         logger.debug('ElasticIpAssociation %s.add_floating_ip(%s)' %
                      (self.properties['InstanceId'],
                       self.properties['EIP']))
@@ -121,17 +101,8 @@ class ElasticIpAssociation(Resource):
         server = self.nova().servers.get(self.properties['InstanceId'])
         server.add_floating_ip(self.properties['EIP'])
         self.instance_id_set(self.properties['EIP'])
-        self.state_set(self.CREATE_COMPLETE)
 
-    def delete(self):
+    def handle_delete(self):
         """Remove a floating IP address from a server."""
-        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
-            return
-
-        self.state_set(self.DELETE_IN_PROGRESS)
-        Resource.delete(self)
-
         server = self.nova().servers.get(self.properties['InstanceId'])
         server.remove_floating_ip(self.properties['EIP'])
-
-        self.state_set(self.DELETE_COMPLETE)
