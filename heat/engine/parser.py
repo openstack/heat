@@ -252,12 +252,14 @@ class Stack(object):
         '''
         order = []
         self.resource_append_deps(self.resources[resource_name], order)
+        failed = False
 
         for r in reversed(order):
             res = self.resources[r]
             try:
                 res.delete()
-                #db_api.resource_get(context, self.resources[r].id).delete()
+                re = db_api.resource_get(self.context, self.resources[r].id)
+                re.delete()
             except Exception as ex:
                 failed = True
                 res.state_set(res.DELETE_FAILED)
@@ -285,7 +287,7 @@ class Stack(object):
 
     def restart_resource(self, resource_name):
         pool = eventlet.GreenPool()
-        pool.spawn_n(self.restart_resource_blocking)
+        pool.spawn_n(self.restart_resource_blocking, resource_name)
 
     def calulate_dependencies(self, s, r):
         if isinstance(s, dict):
