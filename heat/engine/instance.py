@@ -25,7 +25,7 @@ from novaclient.exceptions import NotFound
 from heat.engine.resources import Resource
 from heat.common import exception
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('heat.engine.instance')
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
 possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
@@ -64,9 +64,21 @@ class Restarter(Resource):
         self.state_set(self.DELETE_COMPLETE)
 
     def alarm(self):
-        logger.notice('%s Alarm, restarting resource: %s' %
-                      (self.name, self.properties['InstanceId']))
-        self.stack.restart_resource(self.properties['InstanceId'])
+        self.calculate_properties()
+        victim = None
+        for rname, r in self.stack.resources.items():
+            if r.instance_id == self.properties['InstanceId']:
+                victim = r
+                break
+
+        if victim is None:
+            logger.info('%s Alarm, can not find instance %s' %
+                    (self.name, self.properties['InstanceId']))
+            return
+
+        logger.info('%s Alarm, restarting resource: %s' %
+                    (self.name, victim.name))
+        self.stack.restart_resource(victim.name)
 
 
 class Instance(Resource):
