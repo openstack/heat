@@ -70,7 +70,7 @@ class CloudWatchAlarm(Resource):
 
         wr_values = {
             'name': self.name,
-            'rule': self.t['Properties'],
+            'rule': self.parsed_template()['Properties'],
             'state': 'NORMAL',
             'stack_name': self.stack.name
         }

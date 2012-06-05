@@ -76,6 +76,9 @@ class Resource(object):
             self.id = None
         self._nova = {}
 
+    def parsed_template(self):
+        return self.stack.resolve_runtime_data(self.t)
+
     def nova(self, service_type='compute'):
         if service_type in self._nova:
             return self._nova[service_type]
@@ -97,9 +100,7 @@ class Resource(object):
         return self._nova[service_type]
 
     def calculate_properties(self):
-        template = self.stack.resolve_runtime_data(self.t)
-
-        for p, v in template['Properties'].items():
+        for p, v in self.parsed_template()['Properties'].items():
             self.properties[p] = v
 
     def create(self):

@@ -163,7 +163,10 @@ class Stack(object):
 
         pt = db_api.parsed_template_get(self.context, self.parsed_template_id)
         if pt:
-            pt.update_and_save({'template': self.t.copy()})
+            template = self.t.copy()
+            template['Resources'] = dict((k, r.parsed_template())
+                                         for (k, r) in self.resources.items())
+            pt.update_and_save({'template': template})
         else:
             logger.warn('Cant find parsed template to update %d' %
                         self.parsed_template_id)

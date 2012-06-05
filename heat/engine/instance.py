@@ -190,7 +190,8 @@ class Instance(Resource):
             mime_blob.attach(msg)
 
             if 'Metadata' in self.t:
-                msg = MIMEText(json.dumps(self.t['Metadata']),
+                metadata = self.parsed_template()['Metadata']
+                msg = MIMEText(json.dumps(metadata),
                                _subtype='x-cfninitdata')
                 msg.add_header('Content-Disposition', 'attachment',
                                filename='cfn-init-data')
