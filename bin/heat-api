@@ -44,7 +44,7 @@ LOG = logging.getLogger('heat.api')
 if __name__ == '__main__':
     try:
         conf = config.HeatConfigOpts()
-        conf()
+        conf(project='heat', prog='heat-api')
         config.FLAGS = conf
         rpc.configure(conf)
         config.setup_logging(conf)

@@ -136,14 +136,8 @@ rpc_opts = [
 
 
 class HeatConfigOpts(cfg.CommonConfigOpts):
-    def __init__(self, default_config_files=None, **kwargs):
-        config_files = cfg.find_config_files(project='heat',
-                                             prog='heat-api')
-        super(HeatConfigOpts, self).__init__(
-            project='heat',
-            version='%%prog %s' % version.version_string(),
-            default_config_files=default_config_files,
-            **kwargs)
+    def __init__(self):
+        super(HeatConfigOpts, self).__init__()
         opts = [cfg.IntOpt('bind_port', default=8000),
                 cfg.StrOpt('bind_host', default='127.0.0.1')]
         opts.extend(rpc_opts)
@@ -151,14 +145,8 @@ class HeatConfigOpts(cfg.CommonConfigOpts):
 
 
 class HeatMetadataConfigOpts(cfg.CommonConfigOpts):
-    def __init__(self, default_config_files=None, **kwargs):
-        config_files = cfg.find_config_files(project='heat',
-                                             prog='heat-metadata')
-        super(HeatMetadataConfigOpts, self).__init__(
-            project='heat',
-            version='%%prog %s' % version.version_string(),
-            default_config_files=default_config_files,
-            **kwargs)
+    def __init__(self):
+        super(HeatMetadataConfigOpts, self).__init__()
         opts = [cfg.IntOpt('bind_port', default=8000),
                 cfg.StrOpt('bind_host', default='127.0.0.1')]
         opts.extend(rpc_opts)
@@ -224,13 +212,8 @@ class HeatEngineConfigOpts(cfg.CommonConfigOpts):
                help='Driver to use for controlling instances'),
     ]
 
-    def __init__(self, default_config_files=None, **kwargs):
-        super(HeatEngineConfigOpts, self).__init__(
-            project='heat',
-            version='%%prog %s' % version.version_string(),
-            **kwargs)
-        config_files = cfg.find_config_files(project='heat',
-                                             prog='heat-engine')
+    def __init__(self):
+        super(HeatEngineConfigOpts, self).__init__()
         self.register_cli_opts(self.engine_opts)
         self.register_cli_opts(self.db_opts)
         self.register_cli_opts(self.service_opts)
