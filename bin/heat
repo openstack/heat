@@ -270,25 +270,6 @@ def stack_list(options, arguments):
     print json.dumps(result, indent=2)
 
 
-@utils.catch_error('jeos-create')
-def jeos_create(options, arguments):
-    '''
-    Create a new JEOS (Just Enough Operating System) image.
-
-    Usage: heat jeos-create <distribution> <architecture> <image type>
-
-    Distribution: Distribution such as 'F16', 'F17', 'U10', 'D6'.
-    Architecture: Architecture such as 'i386' 'i686' or 'x86_64'.
-    Image Type: Image type such as 'gold' or 'cfntools'.
-                'gold' is a basic gold JEOS.
-                'cfntools' contains the cfntools helper scripts.
-
-    The command must be run as root in order for libvirt to have permissions
-    to create virtual machines and read the raw DVDs.
-    '''
-    utils.jeos_create(options, arguments, jeos_path, cfntools_path)
-
-
 def get_client(options):
     """
     Returns a new client object to a heat server
@@ -466,9 +447,7 @@ def lookup_command(parser, command_name):
                 'event-list': stack_events_list,
                 'validate': template_validate,
                 'gettemplate': get_template,
-                'describe': stack_describe,
-                'jeos_create': jeos_create,        # DEPRECATED
-                'jeos-create': jeos_create}
+                'describe': stack_describe}
 
     commands = {}
     for command_set in (base_commands, stack_commands):
@@ -506,8 +485,6 @@ Commands:
     gettemplate     Get the template
 
     validate        Validate a template
-
-    jeos-create     Create a JEOS image
 
     event-list      List events for a stack
 

@@ -121,29 +121,27 @@ This is for Heat to associate with the virtual machines.
 
     nova keypair-add --pub_key ~/.ssh/id_rsa.pub ${USER}_key
 
-Install Oz
-----------
 
-Verify that Oz_ is installed ::
-
-    sudo yum -y install oz
-
-Oz is used below to create the JEOS.
-
-.. _Oz: http://aeolusproject.org/oz.html
-
-Create a JEOS
--------------
+Download and install heat_jeos via git
+--------------------------------------
+Download heat_jeos via git
 
 ::
+    git clone git://github.com/heat-api/heat-jeos.git
+    cd heat-jeos
+    setup.py install
 
-    sudo -E heat -y jeos-create F16 x86_64 cfntools
+Create a JEOS with heat_jeos tools
+----------------------------------
+::
 
-Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``jeos-create`` is run as root.
+    sudo -E heat-jeos -y create F16 x86_64 cfntools
 
-Note: ``jeos-create`` must be run as root in order to create the cfntools disk image.
+Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``heat-jeos`` is run as root.
 
-Note: If you want to enable debugging output from Oz, add '``-d``' (debugging) to the ``jeos-create`` command.
+Note: ``heat-jeos`` must be run as root in order to create the cfntools disk image.
+
+Note: If you want to enable debugging output from Oz, add '``-d``' (debugging) to the ``heat-jeos`` command.
 
 Verify JEOS registration
 ~~~~~~~~~~~~~~~~~~~~~~~~
