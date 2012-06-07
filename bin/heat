@@ -137,6 +137,8 @@ def stack_create(options, arguments):
             parameters['Parameters.member.%d.ParameterValue' % count] = v
             count = count + 1
 
+    parameters['Timeout'] = options.timeout
+
     if options.template_file:
         parameters['TemplateBody'] = open(options.template_file).read()
     elif options.template_url:
@@ -367,8 +369,11 @@ def create_options(parser):
 
     parser.add_option('-u', '--template-url', metavar="template_url",
                       default=None, help="URL of template. Default: None")
-    parser.add_option('-t', '--template-file', metavar="template_file",
+    parser.add_option('-f', '--template-file', metavar="template_file",
                       default=None, help="Path to the template. Default: None")
+    parser.add_option('-t', '--timeout', metavar="timeout",
+                      default='60',
+                      help='Stack creation timeout in minutes. Default: 60')
 
     parser.add_option('-P', '--parameters', metavar="parameters", default=None,
                       help="Parameter values used to create the stack.")

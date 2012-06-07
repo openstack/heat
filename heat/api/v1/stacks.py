@@ -138,6 +138,8 @@ class StackController(object):
             msg = _("The Template must be a JSON document.")
             return webob.exc.HTTPBadRequest(explanation=msg)
         stack['StackName'] = req.params['StackName']
+        if 'Timeout' in req.params:
+            stack['Timeout'] = req.params['Timeout']
 
         try:
             return rpc.call(con, 'engine',

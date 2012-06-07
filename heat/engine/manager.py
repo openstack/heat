@@ -115,11 +115,12 @@ class EngineManager(manager.Manager):
             mem['updated_at'] = str(s.updated_at)
             mem['NotificationARNs'] = 'TODO'
             mem['Parameters'] = ps.t['Parameters']
-            mem['StackStatusReason'] = 'TODO'
-            mem['TimeoutInMinutes'] = 'TODO'
+            mem['TimeoutInMinutes'] = ps.t.get('Timeout', '60')
             mem['TemplateDescription'] = ps.t.get('Description',
                                                   'No description')
             mem['StackStatus'] = ps.t.get('stack_status', 'unknown')
+            mem['StackStatusReason'] = ps.t.get('stack_status_reason',
+                                                'State changed')
 
             # only show the outputs on a completely created stack
             if ps.t['stack_status'] == ps.CREATE_COMPLETE:

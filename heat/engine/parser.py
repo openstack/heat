@@ -40,6 +40,7 @@ class Stack(object):
         self.t = template
         self.maps = self.t.get('Mappings', {})
         self.outputs = self.t.get('Outputs', {})
+        self.timeout = self.t.get('Timeout', None)
         self.res = {}
         self.doc = None
         self.name = stack_name
@@ -174,6 +175,7 @@ class Stack(object):
     def status_set(self, new_status, reason='change in resource state'):
 
         self.t['stack_status'] = new_status
+        self.t['stack_status_reason'] = reason
         self.update_parsed_template()
 
     def create_blocking(self):
@@ -181,28 +183,51 @@ class Stack(object):
         create all the resources in the order specified by get_create_order
         '''
         order = self.get_create_order()
-        failed = False
-        self.status_set(self.IN_PROGRESS)
+        self.status_set(self.IN_PROGRESS, 'Stack creation started')
 
-        for r in order:
-            res = self.resources[r]
-            if not failed:
-                try:
-                    res.create()
-                except Exception as ex:
-                    logger.exception('create')
-                    failed = True
-                    res.state_set(res.CREATE_FAILED, str(ex))
+        stack_status = self.CREATE_COMPLETE
+        reason = 'Stack successfully created'
 
-                try:
-                    self.update_parsed_template()
-                except Exception as ex:
-                    logger.exception('update_parsed_template')
+        # Timeout is in minutes (default to 1 hour)
+        secs_tmo = 60 * 60
+        if self.timeout:
+            try:
+                secs_tmo = int(self.timeout) * 60
+            except ValueError as ve:
+                logger.exception('create timeout conversion')
+        tmo = eventlet.Timeout(secs_tmo)
+        try:
+            for r in order:
+                res = self.resources[r]
+                if stack_status != self.CREATE_FAILED:
+                    try:
+                        res.create()
+                    except Exception as ex:
+                        logger.exception('create')
+                        stack_status = self.CREATE_FAILED
+                        reason = 'resource %s failed with: %s' % (res.name,
+                                                                  str(ex))
+                        res.state_set(res.CREATE_FAILED, str(ex))
 
+                    try:
+                        self.update_parsed_template()
+                    except Exception as ex:
+                        logger.exception('update_parsed_template')
+
+                else:
+                    res.state_set(res.CREATE_FAILED)
+
+        except eventlet.Timeout, t:
+            if t is not tmo:
+                # not my timeout
+                raise
             else:
-                res.state_set(res.CREATE_FAILED)
+                stack_status = self.CREATE_FAILED
+                reason = 'Timed out waiting for %s' % (res.name)
+        finally:
+            tmo.cancel()
 
-        self.status_set(failed and self.CREATE_FAILED or self.CREATE_COMPLETE)
+        self.status_set(stack_status, reason)
 
     def create(self):
 
@@ -222,12 +247,20 @@ class Stack(object):
             res = self.resources[r]
             try:
                 res.delete()
-                re = db_api.resource_get(self.context, self.resources[r].id)
-                re.delete()
             except Exception as ex:
                 failed = True
                 res.state_set(res.DELETE_FAILED)
                 logger.error('delete: %s' % str(ex))
+            try:
+                re = db_api.resource_get(self.context, self.resources[r].id)
+                re.delete()
+            except Exception as ex:
+                # don't fail the delete if the db entry has
+                # not been created yet.
+                if 'not found' not in str(ex):
+                    failed = True
+                    res.state_set(res.DELETE_FAILED)
+                    logger.error('delete: %s' % str(ex))
 
         self.status_set(failed and self.DELETE_FAILED or self.DELETE_COMPLETE)
         if not failed:
