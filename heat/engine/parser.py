@@ -22,7 +22,7 @@ from heat.engine import checkeddict
 from heat.engine.resources import Resource
 from heat.db import api as db_api
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('heat.engine.parser')
 
 
 class Stack(object):

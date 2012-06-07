@@ -22,7 +22,7 @@ from sqlalchemy.exc import DisconnectionError
 from heat.db import api as db_api
 from heat.openstack.common import cfg
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('heat.db.sqlalchemy.session')
 _ENGINE = None
 _MAKER = None
 

@@ -19,7 +19,7 @@ from novaclient.exceptions import NotFound
 from heat.common import exception
 from heat.engine.resources import Resource
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('heat.engine.security_group')
 
 
 class SecurityGroup(Resource):

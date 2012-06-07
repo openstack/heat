@@ -26,7 +26,7 @@ from heat.common.config import HeatEngineConfigOpts
 from heat.db import api as db_api
 from heat.engine import checkeddict
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger('heat.engine.resources')
 
 
 class Resource(object):
