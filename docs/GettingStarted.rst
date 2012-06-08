@@ -127,9 +127,10 @@ Download and install heat_jeos via git
 Download heat_jeos via git
 
 ::
+
     git clone git://github.com/heat-api/heat-jeos.git
     cd heat-jeos
-    setup.py install
+    sudo python setup.py install
 
 Create a JEOS with heat_jeos tools
 ----------------------------------
