@@ -169,6 +169,10 @@ class StackController(object):
 
         return {'GetTemplateResult': {'TemplateBody': templ}}
 
+    def estimate_template_cost(self, req):
+        return {'EstimateTemplateCostResult': {
+                'Url': 'http://en.wikipedia.org/wiki/Gratis'}}
+
     def validate_template(self, req):
 
         con = req.context

@@ -70,6 +70,9 @@ class V1Client(base_client.BaseClient):
     def get_template(self, **kwargs):
         return self.stack_request("GetTemplate", "GET", **kwargs)
 
+    def estimate_template_cost(self, **kwargs):
+        return self.stack_request("EstimateTemplateCost", "GET", **kwargs)
+
 HeatClient = V1Client
 
 

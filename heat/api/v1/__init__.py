@@ -124,6 +124,7 @@ class API(wsgi.Router):
         'events_list': 'DescribeStackEvents',
         'validate_template': 'ValidateTemplate',
         'get_template': 'GetTemplate',
+        'estimate_template_cost': 'EstimateTemplateCost',
     }
 
     def __init__(self, conf, **local_conf):

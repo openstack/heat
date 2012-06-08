@@ -94,6 +94,37 @@ def template_validate(options, arguments):
     print json.dumps(result, indent=2)
 
 
+@utils.catch_error('estimatetemplatecost')
+def estimate_template_cost(options, arguments):
+    parameters = {}
+    try:
+        parameters['StackName'] = arguments.pop(0)
+    except IndexError:
+        logging.error("Please specify the stack name you wish to estimate")
+        logging.error("as the first argument")
+        return utils.FAILURE
+
+    if options.parameters:
+        count = 1
+        for p in options.parameters.split(';'):
+            (n, v) = p.split('=')
+            parameters['Parameters.member.%d.ParameterKey' % count] = n
+            parameters['Parameters.member.%d.ParameterValue' % count] = v
+            count = count + 1
+
+    if options.template_file:
+        parameters['TemplateBody'] = open(options.template_file).read()
+    elif options.template_url:
+        parameters['TemplateUrl'] = options.template_url
+    else:
+        logging.error('Please specify a template file or url')
+        return utils.FAILURE
+
+    c = get_client(options)
+    result = c.estimate_template_cost(**parameters)
+    print json.dumps(result, indent=2)
+
+
 @utils.catch_error('gettemplate')
 def get_template(options, arguments):
     '''
@@ -455,6 +486,7 @@ def lookup_command(parser, command_name):
                 'event-list': stack_events_list,
                 'validate': template_validate,
                 'gettemplate': get_template,
+                'estimate-template-cost': estimate_template_cost,
                 'describe': stack_describe}
 
     commands = {}
@@ -491,6 +523,8 @@ Commands:
     list            List the user's stacks
 
     gettemplate     Get the template
+
+    estimate-template-cost     Returns the estimated monthly cost of a template
 
     validate        Validate a template
 
