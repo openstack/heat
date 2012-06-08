@@ -123,6 +123,7 @@ class API(wsgi.Router):
         'update': 'UpdateStack',
         'events_list': 'DescribeStackEvents',
         'validate_template': 'ValidateTemplate',
+        'get_template': 'GetTemplate',
     }
 
     def __init__(self, conf, **local_conf):

@@ -14,7 +14,6 @@
 #    under the License.
 
 
-import contextlib
 from copy import deepcopy
 import datetime
 import logging
@@ -217,6 +216,19 @@ class EngineManager(manager.Manager):
         res = s.validate()
 
         return res
+
+    def get_template(self, context, stack_name, params):
+        """
+        Get the template.
+        arg1 -> RPC context.
+        arg2 -> Name of the stack you want to see.
+        arg3 -> Dict of http request parameters passed in from API side.
+        """
+        self._authenticate(context)
+        s = db_api.stack_get(None, stack_name)
+        if s:
+            return s.raw_template.template
+        return None
 
     def delete_stack(self, context, stack_name, params):
         """

@@ -150,6 +150,25 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
+    def get_template(self, req):
+
+        con = req.context
+        parms = dict(req.params)
+
+        logger.info('get_template')
+        try:
+            templ = rpc.call(con, 'engine',
+                             {'method': 'get_template',
+                              'args': {'stack_name': req.params['StackName'],
+                                       'params': parms}})
+        except rpc_common.RemoteError as ex:
+            return webob.exc.HTTPBadRequest(str(ex))
+
+        if templ is None:
+            return webob.exc.HTTPNotFound('stack not found')
+
+        return {'GetTemplateResult': {'TemplateBody': templ}}
+
     def validate_template(self, req):
 
         con = req.context

@@ -98,10 +98,18 @@ def template_validate(options, arguments):
 def get_template(options, arguments):
     '''
     Gets an existing stack template.
-
-    NOT YET IMPLEMENTED.
     '''
-    pass
+    parameters = {}
+    try:
+        parameters['StackName'] = arguments.pop(0)
+    except IndexError:
+        logging.error("Please specify the stack you wish to get")
+        logging.error("as the first argument")
+        return utils.FAILURE
+
+    c = get_client(options)
+    result = c.get_template(**parameters)
+    print json.dumps(result, indent=2)
 
 
 @utils.catch_error('create')

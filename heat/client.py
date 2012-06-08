@@ -67,6 +67,9 @@ class V1Client(base_client.BaseClient):
     def validate_template(self, **kwargs):
         return self.stack_request("ValidateTemplate", "GET", **kwargs)
 
+    def get_template(self, **kwargs):
+        return self.stack_request("GetTemplate", "GET", **kwargs)
+
 HeatClient = V1Client
 
 
