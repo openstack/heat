@@ -286,6 +286,12 @@ class Stack(object):
         stop resource_name and all that depend on it
         start resource_name and all that depend on it
         '''
+
+        if self.parsed_template_id == 0:
+            stack = db_api.stack_get(self.context, self.name)
+            if stack:
+                self.parsed_template_id = stack.raw_template.parsed_template.id
+
         order = []
         self.resource_append_deps(self.resources[resource_name], order)
         failed = False
