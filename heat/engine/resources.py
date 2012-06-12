@@ -121,8 +121,16 @@ class Resource(object):
         self.instance_id = inst
 
     def state_set(self, new_state, reason="state changed"):
-        if new_state is self.CREATE_COMPLETE or \
-           new_state is self.CREATE_FAILED:
+        if self.id is not None:
+            try:
+                rs = db_api.resource_get(self.stack.context, self.id)
+                rs.update_and_save({'state': new_state,
+                                    'nova_instance': self.instance_id})
+                if rs.stack:
+                    rs.stack.update_and_save({'updated_at': datetime.utcnow()})
+            except Exception as ex:
+                logger.warn('db error %s' % str(ex))
+        elif new_state in [self.CREATE_COMPLETE, self.CREATE_FAILED]:
             try:
                 rs = {}
                 rs['state'] = new_state
@@ -137,14 +145,6 @@ class Resource(object):
                     new_rs.stack.update_and_save({'updated_at':
                         datetime.utcnow()})
 
-            except Exception as ex:
-                logger.warn('db error %s' % str(ex))
-        elif self.id is not None:
-            try:
-                rs = db_api.resource_get(self.stack.context, self.id)
-                rs.update_and_save({'state': new_state})
-                if rs.stack:
-                    rs.stack.update_and_save({'updated_at': datetime.utcnow()})
             except Exception as ex:
                 logger.warn('db error %s' % str(ex))
 
