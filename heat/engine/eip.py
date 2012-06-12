@@ -43,7 +43,7 @@ class ElasticIp(Resource):
 
     def create(self):
         """Allocate a floating IP for the current tenant."""
-        if self.state is not None:
+        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(ElasticIp, self).create()
@@ -62,8 +62,7 @@ class ElasticIp(Resource):
 
     def delete(self):
         """De-allocate a floating IP."""
-        if self.state == self.DELETE_IN_PROGRESS or \
-           self.state == self.DELETE_COMPLETE:
+        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
             return
 
         self.state_set(self.DELETE_IN_PROGRESS)
@@ -110,7 +109,7 @@ class ElasticIpAssociation(Resource):
     def create(self):
         """Add a floating IP address to a server."""
 
-        if self.state is not None:
+        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(ElasticIpAssociation, self).create()
@@ -126,8 +125,7 @@ class ElasticIpAssociation(Resource):
 
     def delete(self):
         """Remove a floating IP address from a server."""
-        if self.state == self.DELETE_IN_PROGRESS or \
-           self.state == self.DELETE_COMPLETE:
+        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
             return
 
         self.state_set(self.DELETE_IN_PROGRESS)

@@ -209,7 +209,7 @@ class GenericResource(Resource):
         super(GenericResource, self).__init__(name, json_snippet, stack)
 
     def create(self):
-        if self.state is not None:
+        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         super(GenericResource, self).create()

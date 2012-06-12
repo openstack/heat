@@ -35,7 +35,7 @@ class SecurityGroup(Resource):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)
 
     def create(self):
-        if self.state is not None:
+        if self.state in [self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE]:
             return
         self.state_set(self.CREATE_IN_PROGRESS)
         Resource.create(self)
@@ -78,8 +78,7 @@ class SecurityGroup(Resource):
         return Resource.validate(self)
 
     def delete(self):
-        if self.state == self.DELETE_IN_PROGRESS or \
-           self.state == self.DELETE_COMPLETE:
+        if self.state in [self.DELETE_IN_PROGRESS, self.DELETE_COMPLETE]:
             return
 
         self.state_set(self.DELETE_IN_PROGRESS)
