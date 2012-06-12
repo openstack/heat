@@ -74,7 +74,7 @@ class CloudWatchAlarm(Resource):
     def handle_delete(self):
         try:
             db_api.watch_rule_delete(self.stack.context, self.name)
-        except Exception as ex:
+        except exception.NotFound:
             pass
 
     def FnGetRefId(self):

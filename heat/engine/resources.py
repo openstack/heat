@@ -20,9 +20,6 @@ import logging
 from novaclient.v1_1 import client as nc
 from keystoneclient.v2_0 import client as kc
 
-from novaclient.exceptions import BadRequest
-from novaclient.exceptions import NotFound
-
 from heat.common import exception
 from heat.common.config import HeatEngineConfigOpts
 from heat.db import api as db_api
@@ -196,13 +193,14 @@ class Resource(object):
         else:
             try:
                 db_api.resource_get(self.stack.context, self.id).delete()
-            except Exception as ex:
+            except exception.NotFound:
                 # Don't fail on delete if the db entry has
                 # not been created yet.
-                if 'not found' not in str(ex):
-                    self.state_set(self.DELETE_FAILED)
-                    logger.exception('Delete %s from DB' % str(self))
-                    return str(ex)
+                pass
+            except Exception as ex:
+                self.state_set(self.DELETE_FAILED)
+                logger.exception('Delete %s from DB' % str(self))
+                return str(ex)
 
             self.state_set(self.DELETE_COMPLETE)
 
