@@ -22,7 +22,6 @@ from heat.engine import resources
 
 from heat.engine import cloud_watch
 from heat.engine import eip
-from heat.engine import escalation_policy
 from heat.engine import instance
 from heat.engine import security_group
 from heat.engine import user
@@ -44,7 +43,6 @@ _resource_classes = {
     'AWS::IAM::User': user.User,
     'AWS::IAM::AccessKey': user.AccessKey,
     'HEAT::HA::Restarter': instance.Restarter,
-    'HEAT::Recovery::EscalationPolicy': escalation_policy.EscalationPolicy,
 }
 
 
