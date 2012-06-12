@@ -87,7 +87,10 @@ class CloudWatchAlarm(Resource):
         self.state_set(self.DELETE_IN_PROGRESS)
         Resource.delete(self)
 
-        db_api.watch_rule_delete(self.stack.context, self.name)
+        try:
+            db_api.watch_rule_delete(self.stack.context, self.name)
+        except Exception as ex:
+            pass
 
         self.state_set(self.DELETE_COMPLETE)
 
