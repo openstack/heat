@@ -19,6 +19,7 @@ from heat.common import wsgi
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
 from heat.common import utils as heat_utils
+import json
 
 
 def generate_request_id():
@@ -32,8 +33,10 @@ class RequestContext(object):
     """
 
     def __init__(self, auth_token=None, username=None, password=None,
-                 tenant=None, tenant_id=None, auth_url=None, roles=None,
-                 is_admin=False, read_only=False, show_deleted=False,
+                 aws_creds=None, aws_auth_uri=None,
+                 service_user=None, service_password=None, tenant=None,
+                 tenant_id=None, auth_url=None, roles=None, is_admin=False,
+                 read_only=False, show_deleted=False,
                  owner_is_tenant=True, overwrite=True, **kwargs):
         """
         :param overwrite: Set to False to ensure that the greenthread local
@@ -46,6 +49,10 @@ class RequestContext(object):
         self.auth_token = auth_token
         self.username = username
         self.password = password
+        self.aws_creds = aws_creds
+        self.aws_auth_uri = aws_auth_uri
+        self.service_user = service_user
+        self.service_password = service_password
         self.tenant = tenant
         self.tenant_id = tenant_id
         self.auth_url = auth_url
@@ -64,6 +71,10 @@ class RequestContext(object):
         return {'auth_token': self.auth_token,
                 'username': self.username,
                 'password': self.password,
+                'aws_creds': self.aws_creds,
+                'aws_auth_uri': self.aws_auth_uri,
+                'service_user': self.service_user,
+                'service_password': self.service_password,
                 'tenant': self.tenant,
                 'tenant_id': self.tenant_id,
                 'auth_url': self.auth_url,
@@ -148,9 +159,27 @@ class ContextMiddleware(wsgi.Middleware):
             the username.
             """
 
+            username = None
+            password = None
+            aws_creds = None
+            aws_auth_uri = None
+
+            if headers.get('X-Auth-EC2-Creds') is not None:
+                aws_creds = headers.get('X-Auth-EC2-Creds')
+                aws_auth_uri = headers.get('X-Auth-EC2-Url')
+            else:
+                # XXX: The eval here is a bit scary, it's possible someone
+                # could put something malicious in here I would think.
+                # I Haven't tested to see if WSGI stuff would escape
+                # everything to make this safe.  However, I haven't found
+                # a better way to do this either.
+                creds = eval(req.params['KeyStoneCreds'])
+                username = creds['username']
+                password = creds['password']
+
             token = headers.get('X-Auth-Token')
-            username = headers.get('X-Admin-User')
-            password = headers.get('X-Admin-Pass')
+            service_user = headers.get('X-Admin-User')
+            service_password = headers.get('X-Admin-Pass')
             tenant = headers.get('X-Tenant')
             tenant_id = headers.get('X-Tenant-Id')
             auth_url = headers.get('X-Auth-Url')
@@ -160,7 +189,11 @@ class ContextMiddleware(wsgi.Middleware):
 
         req.context = self.make_context(auth_token=token,
                                         tenant=tenant, tenant_id=tenant_id,
+                                        aws_creds=aws_creds,
+                                        aws_auth_uri=aws_auth_uri,
                                         username=username,
                                         password=password,
+                                        service_user=service_user,
+                                        service_password=service_password,
                                         auth_url=auth_url, roles=roles,
                                         is_admin=True)

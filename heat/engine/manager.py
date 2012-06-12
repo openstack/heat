@@ -18,6 +18,10 @@ from copy import deepcopy
 import datetime
 import logging
 import webob
+import json
+import urlparse
+import httplib
+
 from heat import manager
 from heat.db import api as db_api
 from heat.common import config
@@ -29,6 +33,7 @@ from heat.openstack.common import timeutils
 from novaclient.v1_1 import client
 from novaclient.exceptions import BadRequest
 from novaclient.exceptions import NotFound
+from novaclient.exceptions import AuthorizationFailure
 
 logger = logging.getLogger('heat.engine.manager')
 
@@ -53,15 +58,54 @@ class EngineManager(manager.Manager):
             the first call made in an endpoint call.  I like to see this
             done explicitly so that it is clear there is an authentication
             request at the entry to the call.
+
+            In the case of EC2 style authentication this will also set the
+            username in the context so we can use it to key in the database.
         """
 
-        nova = client.Client(con.username, con.password,
-                             con.tenant, con.auth_url,
-                             proxy_token=con.auth_token,
-                             proxy_tenant_id=con.tenant_id,
-                             service_type='heat',
-                             service_name='heat')
-        nova.authenticate()
+        if con.password is not None:
+            nova = client.Client(con.username, con.password,
+                                 con.tenant, con.auth_url,
+                                 service_type='heat',
+                                 service_name='heat')
+            nova.authenticate()
+        else:
+            # We'll have to do AWS style auth which is more complex.
+            # First step is to get a token from the AWS creds.
+            headers = {'Content-Type': 'application/json'}
+
+            o = urlparse.urlparse(con.aws_auth_uri)
+            if o.scheme == 'http':
+                conn = httplib.HTTPConnection(o.netloc)
+            else:
+                conn = httplib.HTTPSConnection(o.netloc)
+            conn.request('POST', o.path, body=con.aws_creds, headers=headers)
+            response = conn.getresponse().read()
+            conn.close()
+
+            result = json.loads(response)
+            try:
+                token_id = result['access']['token']['id']
+                # We grab the username here because with token auth and EC2
+                # we never get it normally.  We could pass it in but then We
+                # are relying on user input to give us the correct username.
+                # This one is the result of the authentication and is verified.
+                username = result['access']['user']['username']
+                con.username = username
+
+                logger.info("AWS authentication successful.")
+            except (AttributeError, KeyError):
+                # FIXME: Should be 404 I think.
+                logger.info("AWS authentication failure.")
+                raise exception.AuthorizationFailure()
+
+            nova = client.Client(con.service_user, con.service_password,
+                                 con.tenant, con.auth_url,
+                                 proxy_token=token_id,
+                                 proxy_tenant_id=con.tenant_id,
+                                 service_type='heat',
+                                 service_name='heat')
+            nova.authenticate()
 
     def list_stacks(self, context, params):
         """

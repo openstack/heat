@@ -104,8 +104,10 @@ class EC2Token(wsgi.Middleware):
             raise webob.exc.HTTPBadRequest()
 
         # Authenticated!
+        req.headers['X-Auth-EC2-Creds'] = creds_json
         req.headers['X-Auth-Token'] = token_id
         req.headers['X-Auth-URL'] = self.conf['auth_uri']
+        req.headers['X-Auth-EC2_URL'] = self.conf['keystone_ec2_uri']
         return self.application
 
 
