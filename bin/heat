@@ -91,7 +91,7 @@ def template_validate(options, arguments):
 
     client = get_client(options)
     result = client.validate_template(**parameters)
-    print json.dumps(result, indent=2)
+    print result
 
 
 @utils.catch_error('estimatetemplatecost')
@@ -188,7 +188,7 @@ def stack_create(options, arguments):
 
     c = get_client(options)
     result = c.create_stack(**parameters)
-    print json.dumps(result, indent=2)
+    print result
 
 
 @utils.catch_error('update')
@@ -234,7 +234,7 @@ def stack_update(options, arguments):
 
     c = get_client(options)
     result = c.update_stack(**parameters)
-    print json.dumps(result, indent=2)
+    print result
 
 
 @utils.catch_error('delete')
@@ -256,7 +256,7 @@ def stack_delete(options, arguments):
 
     c = get_client(options)
     result = c.delete_stack(**parameters)
-    print json.dumps(result, indent=2)
+    print result
 
 
 @utils.catch_error('describe')
@@ -276,7 +276,7 @@ def stack_describe(options, arguments):
 
     c = get_client(options)
     result = c.describe_stacks(**parameters)
-    print json.dumps(result, indent=2)
+    print result
 
 
 @utils.catch_error('event-list')
@@ -294,7 +294,7 @@ def stack_events_list(options, arguments):
 
     c = get_client(options)
     result = c.list_stack_events(**parameters)
-    print json.dumps(result, indent=2)
+    print result
 
 
 @utils.catch_error('list')
@@ -306,7 +306,7 @@ def stack_list(options, arguments):
     '''
     c = get_client(options)
     result = c.list_stacks()
-    print json.dumps(result, indent=2)
+    print result
 
 
 def get_client(options):

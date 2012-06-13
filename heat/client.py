@@ -17,7 +17,7 @@
 Client classes for callers of a heat system
 """
 
-import json
+from lxml import etree
 import logging
 import os
 from heat.common import client as base_client
@@ -44,7 +44,8 @@ class V1Client(base_client.BaseClient):
         params['Action'] = action
 
         res = self.do_request(method, "/", params=params)
-        return json.loads(res.read())
+        doc = etree.fromstring(res.read())
+        return etree.tostring(doc, pretty_print=True)
 
     def list_stacks(self, **kwargs):
         return self.stack_request("ListStacks", "GET", **kwargs)

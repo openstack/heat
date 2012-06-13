@@ -28,6 +28,9 @@ import os
 import signal
 import sys
 import time
+import re
+from lxml import etree
+
 
 import eventlet
 import eventlet.greenio
@@ -431,6 +434,34 @@ class JSONResponseSerializer(object):
     def default(self, response, result):
         response.content_type = 'application/json'
         response.body = self.to_json(result)
+
+
+class XMLResponseSerializer(object):
+
+    def object_to_element(self, obj, element):
+        if isinstance(obj, list):
+            for item in obj:
+                subelement = etree.SubElement(element, "member")
+                self.object_to_element(item, subelement)
+        elif isinstance(obj, dict):
+            for key, value in obj.items():
+                subelement = etree.SubElement(element, key)
+                self.object_to_element(value, subelement)
+        else:
+            element.text = str(obj)
+
+    def to_xml(self, data):
+        # Assumption : root node is dict with single key
+        root = data.keys()[0]
+        eltree = etree.Element(root)
+        doc = etree.ElementTree(eltree)
+        self.object_to_element(data.get(root), eltree)
+        logging.debug("XML response : %s" % etree.tostring(eltree))
+        return etree.tostring(eltree)
+
+    def default(self, response, result):
+        response.content_type = 'application/xml'
+        response.body = self.to_xml(result)
 
 
 class Resource(object):
