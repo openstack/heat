@@ -1,0 +1,77 @@
+'\" t
+.\"     Title: heat 
+.\"    Author: [see the "AUTHOR" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 03/31/2012
+.\"    Manual: System administration commands
+.\"    Source: Heat 0.0.1
+.\"  Language: English
+.\"
+.TH "HEAT" "1" "06/13/2012" "HEAT 0\&.0\&.1" "System administration commands"
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+heat-db-setup \- Setup and configure the Heat database
+.SH "SYNOPSIS"
+.sp
+heat-db-setup <platform_type>
+.SH "DESCRIPTION"
+.sp
+The \fBheat-db-setup\fR script creates the heat database on the system,
+using MYSQL as a backend database.  The script works on either RPM or DEB
+based distributions.  If the MYSQL server is not present, the user will
+be prompted to install it.  If the MYSQL server is not running, the user
+will be prompted to start it.  Once MYSQL is started, the appropriate
+SQL commands will be run to instantiate the database on the system.
+
+.SH "OPTIONS"
+.PP
+\fB\platform_type\fR
+.RS 4
+This required option can be either rpm or deb, which will use the appropriate
+platform specific tools and packaging to instantiate the database.
+
+.PP
+\fB\--help\fR
+.RS 4
+Print usage information.
+
+.PP
+\fB\--password <pw>\fR
+.RS 4
+Specify the password for the 'heat' MySQL user that  will use to connect to
+the 'heat' MySQL database.  By default, the password 'heat' will be used.
+
+.PP
+\fB\--yes\fR
+.RS 4
+In cases where the script would normally ask for confirmation before doing
+something, such as installing mysql-server, just assume yes.  This is useful
+if you want to run the script non-interactively.
+
+.SH "BUGS"
+.sp
+Since Heat is in active development, occasionally the database may suffer
+corruption during master updates.  In this case, the heat-db-drop tool can
+be used to drop the database tables and start from scratch.  This application
+is only shipped in the source tarball, since it will be unnecessary when Heat
+is production quality and too heavyweight for a production deployment.
+
+.SH "AUTHOR"
+.sp
+See the AUTHORS file for a complete list of contributors\&.
+.SH "COPYRIGHT"
+.sp
+Copyright \(co 2012, Red Hat Inc
+.sp
+Heat is released under the terms of the ASL 2 License\&.
+.sp
+Extensive documentation as well as IRC and mailing list info is available on the heat home page: https://heat\&-api\&.org/
