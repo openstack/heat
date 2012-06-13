@@ -16,6 +16,7 @@ httplib2
 kombu
 iso8601>=0.1.4
 python-novaclient
+https://github.com/openstack/python-keystoneclient/zipball/master#egg=python-keystoneclient
 glance
 
 # Note you will need gcc buildtools installed and must

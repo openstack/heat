@@ -17,7 +17,9 @@ import base64
 from datetime import datetime
 import logging
 
-from novaclient.v1_1 import client
+from novaclient.v1_1 import client as nc
+from keystoneclient.v2_0 import client as kc
+
 from novaclient.exceptions import BadRequest
 from novaclient.exceptions import NotFound
 
@@ -75,9 +77,21 @@ class Resource(object):
             self.state = None
             self.id = None
         self._nova = {}
+        self._keystone = None
 
     def parsed_template(self):
         return self.stack.resolve_runtime_data(self.t)
+
+    def keystone(self):
+        if self._keystone:
+            return self._keystone
+
+        con = self.stack.context
+        self._keystone = kc.Client(username=con.username,
+                                   password=con.password,
+                                   tenant_name=con.tenant,
+                                   auth_url=con.auth_url)
+        return self._keystone
 
     def nova(self, service_type='compute'):
         if service_type in self._nova:
@@ -89,14 +103,14 @@ class Resource(object):
             service_name = None
 
         con = self.stack.context
-        self._nova[service_type] = client.Client(con.username,
-                                                 con.password,
-                                                 con.tenant,
-                                                 con.auth_url,
-                                                 proxy_token=con.auth_token,
-                                                 proxy_tenant_id=con.tenant_id,
-                                                 service_type=service_type,
-                                                 service_name=service_name)
+        self._nova[service_type] = nc.Client(con.username,
+                                             con.password,
+                                             con.tenant,
+                                             con.auth_url,
+                                             proxy_token=con.auth_token,
+                                             proxy_tenant_id=con.tenant_id,
+                                             service_type=service_type,
+                                             service_name=service_name)
         return self._nova[service_type]
 
     def calculate_properties(self):
