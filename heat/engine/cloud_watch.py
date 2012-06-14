@@ -52,6 +52,8 @@ class CloudWatchAlarm(Resource):
                   'Megabits/Second', 'Gigabits/Second', 'Terabits/Second',
                   'Count/Second', None]}}
 
+    strict_dependency = False
+
     def __init__(self, name, json_snippet, stack):
         super(CloudWatchAlarm, self).__init__(name, json_snippet, stack)
         self.instance_id = ''
@@ -96,6 +98,3 @@ class CloudWatchAlarm(Resource):
 
     def FnGetRefId(self):
         return unicode(self.name)
-
-    def strict_dependency(self):
-        return False

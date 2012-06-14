@@ -381,7 +381,7 @@ class EngineManager(manager.Manager):
         """
         stack = db_api.stack_get(context, stack_name)
         if stack:
-            return [r.name for r in stack.resources]
+            return [res.name for res in stack]
         else:
             return None
 
@@ -464,7 +464,7 @@ class EngineManager(manager.Manager):
                                       s.raw_template.parsed_template.template,
                                       s.id)
                     for a in wr.rule[action_map[new_state]]:
-                        ps.resources[a].alarm()
+                        ps[a].alarm()
 
         wr.last_evaluated = now
 

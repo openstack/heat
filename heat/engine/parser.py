@@ -17,8 +17,10 @@ import eventlet
 import json
 import itertools
 import logging
+
 from heat.common import exception
 from heat.engine import checkeddict
+from heat.engine import dependencies
 from heat.engine.resources import Resource
 from heat.db import api as db_api
 
@@ -69,45 +71,68 @@ class Stack(object):
         if parms is not None:
             self._apply_user_parameters(parms)
 
-        self.resources = {}
-        for rname, rdesc in self.t['Resources'].items():
-            res = Resource(rname, rdesc, self)
-            self.resources[rname] = res
+        self.resources = dict((name,
+                               Resource(name, data, self))
+                              for (name, data) in self.t['Resources'].items())
 
-            self.calulate_dependencies(res.t, res)
+        self.dependencies = dependencies.Dependencies()
+        for resource in self.resources.values():
+            resource.add_dependencies(self.dependencies)
+
+    def __iter__(self):
+        '''
+        Return an iterator over this template's resources in the order that
+        they should be started.
+        '''
+        return iter(self.dependencies)
+
+    def __reversed__(self):
+        '''
+        Return an iterator over this template's resources in the order that
+        they should be stopped.
+        '''
+        return reversed(self.dependencies)
+
+    def __len__(self):
+        '''Return the number of resources'''
+        return len(self.resources)
+
+    def __getitem__(self, key):
+        '''Get the resource with the specified name.'''
+        return self.resources[key]
+
+    def __contains__(self, key):
+        '''Determine whether the stack contains the specified resource'''
+        return key in self.resources
+
+    def keys(self):
+        return self.resources.keys()
+
+    def __str__(self):
+        return 'Stack "%s"' % self.name
 
     def validate(self):
         '''
-        http://docs.amazonwebservices.com/AWSCloudFormation/latest/ \
-            APIReference/API_ValidateTemplate.html
+        http://docs.amazonwebservices.com/AWSCloudFormation/latest/\
+        APIReference/API_ValidateTemplate.html
         '''
         # TODO(sdake) Should return line number of invalid reference
 
         response = None
-        try:
-            order = self.get_create_order()
-        except KeyError as ex:
-            res = 'A Ref operation referenced a non-existent key '\
-                  '[%s]' % str(ex)
 
-            response = {'ValidateTemplateResult': {
-                        'Description': 'Malformed Query Response [%s]' % (res),
-                        'Parameters': []}}
-            return response
-
-        for r in order:
+        for res in self:
             try:
-                res = self.resources[r].validate()
+                result = res.validate()
             except Exception as ex:
                 logger.exception('validate')
-                res = str(ex)
-            finally:
-                if res:
-                    err_str = 'Malformed Query Response %s' % (res)
-                    response = {'ValidateTemplateResult': {
+                result = str(ex)
+
+            if result:
+                err_str = 'Malformed Query Response %s' % result
+                response = {'ValidateTemplateResult': {
                                 'Description': err_str,
                                 'Parameters': []}}
-                    return response
+                return response
 
         if response is None:
             response = {'ValidateTemplateResult': {
@@ -122,33 +147,6 @@ class Stack(object):
             res['DefaultValue'] = self.parms.get_attr(p, 'Default')
             response['ValidateTemplateResult']['Parameters'].append(res)
         return response
-
-    def resource_append_deps(self, resource, order_list):
-        '''
-        For the given resource first append it's dependancies then
-        it's self to order_list.
-        '''
-        for r in resource.depends_on:
-            self.resource_append_deps(self.resources[r], order_list)
-        if not resource.name in order_list:
-            order_list.append(resource.name)
-
-    def get_create_order(self):
-        '''
-        return a list of Resource names in the correct order
-        for startup.
-        '''
-        order = []
-        for r in self.t['Resources']:
-            if self.t['Resources'][r]['Type'] == 'AWS::EC2::Volume' or \
-               self.t['Resources'][r]['Type'] == 'AWS::EC2::EIP':
-                if len(self.resources[r].depends_on) == 0:
-                    order.append(r)
-
-        for r in self.t['Resources']:
-            self.resource_append_deps(self.resources[r], order)
-
-        return order
 
     def update_parsed_template(self):
         '''
@@ -180,9 +178,8 @@ class Stack(object):
 
     def create_blocking(self):
         '''
-        create all the resources in the order specified by get_create_order
+        Create the stack and all of the resources.
         '''
-        order = self.get_create_order()
         self.status_set(self.IN_PROGRESS, 'Stack creation started')
 
         stack_status = self.CREATE_COMPLETE
@@ -197,8 +194,7 @@ class Stack(object):
                 logger.exception('create timeout conversion')
         tmo = eventlet.Timeout(secs_tmo)
         try:
-            for r in order:
-                res = self.resources[r]
+            for res in self:
                 if stack_status != self.CREATE_FAILED:
                     try:
                         res.create()
@@ -236,31 +232,28 @@ class Stack(object):
 
     def delete_blocking(self):
         '''
-        delete all the resources in the reverse order specified by
-        get_create_order().
+        Delete all of the resources, and then the stack itself.
         '''
-        order = self.get_create_order()
         failed = False
         self.status_set(self.DELETE_IN_PROGRESS)
 
-        for r in reversed(order):
-            res = self.resources[r]
+        for res in reversed(self):
             try:
                 res.delete()
             except Exception as ex:
                 failed = True
                 res.state_set(res.DELETE_FAILED)
                 logger.error('delete: %s' % str(ex))
-            try:
-                re = db_api.resource_get(self.context, self.resources[r].id)
-                re.delete()
-            except Exception as ex:
-                # don't fail the delete if the db entry has
-                # not been created yet.
-                if 'not found' not in str(ex):
-                    failed = True
-                    res.state_set(res.DELETE_FAILED)
-                    logger.error('delete: %s' % str(ex))
+            else:
+                try:
+                    db_api.resource_get(self.context, res.id).delete()
+                except Exception as ex:
+                    # don't fail the delete if the db entry has
+                    # not been created yet.
+                    if 'not found' not in str(ex):
+                        failed = True
+                        res.state_set(res.DELETE_FAILED)
+                        logger.error('delete: %s' % str(ex))
 
         self.status_set(failed and self.DELETE_FAILED or self.DELETE_COMPLETE)
         if not failed:
@@ -292,23 +285,20 @@ class Stack(object):
             if stack:
                 self.parsed_template_id = stack.raw_template.parsed_template.id
 
-        order = []
-        self.resource_append_deps(self.resources[resource_name], order)
+        deps = self.dependencies[self[resource_name]]
         failed = False
 
-        for r in reversed(order):
-            res = self.resources[r]
+        for res in reversed(deps):
             try:
                 res.delete()
-                re = db_api.resource_get(self.context, self.resources[r].id)
+                re = db_api.resource_get(self.context, res.id)
                 re.delete()
             except Exception as ex:
                 failed = True
                 res.state_set(res.DELETE_FAILED)
                 logger.error('delete: %s' % str(ex))
 
-        for r in order:
-            res = self.resources[r]
+        for res in deps:
             if not failed:
                 try:
                     res.create()
@@ -331,26 +321,6 @@ class Stack(object):
         pool = eventlet.GreenPool()
         pool.spawn_n(self.restart_resource_blocking, resource_name)
 
-    def calulate_dependencies(self, s, r):
-        if isinstance(s, dict):
-            for i in s:
-                if i == 'Fn::GetAtt':
-                    #print '%s seems to depend on %s' % (r.name, s[i][0])
-                    #r.depends_on.append(s[i][0])
-                    pass
-                elif i == 'Ref':
-                    #print '%s Refences %s' % (r.name, s[i])
-                    if r.strict_dependency():
-                        r.depends_on.append(s[i])
-                elif i == 'DependsOn':
-                    #print '%s DependsOn on %s' % (r.name, s[i])
-                    r.depends_on.append(s[i])
-                else:
-                    self.calulate_dependencies(s[i], r)
-        elif isinstance(s, list):
-            for index, item in enumerate(s):
-                self.calulate_dependencies(item, r)
-
     def _apply_user_parameters(self, parms):
         for p in parms:
             if 'Parameters.member.' in p and 'ParameterKey' in p:
@@ -358,8 +328,8 @@ class Stack(object):
                 try:
                     key_name = 'Parameters.member.%s.ParameterKey' % s[2]
                     value_name = 'Parameters.member.%s.ParameterValue' % s[2]
-                    logger.debug('appling user parameter %s=%s' %
-                        (key_name, value_name))
+                    logger.debug('applying user parameter %s=%s' %
+                                 (key_name, value_name))
                     self.parms[parms[key_name]] = parms[value_name]
                 except Exception:
                     logger.error('Could not apply parameter %s' % p)
@@ -402,15 +372,15 @@ class Stack(object):
             { "Fn::GetAtt" : [ "DBInstance", "Endpoint.Address" ] }
         '''
         def match_ref(key, value):
-            return key == 'Ref' and value in self.resources
+            return key == 'Ref' and value in self
 
         def handle_ref(arg):
-            return self.resources[arg].FnGetRefId()
+            return self[arg].FnGetRefId()
 
         def handle_getatt(args):
             resource, att = args
             try:
-                return self.resources[resource].FnGetAtt(att)
+                return self[resource].FnGetAtt(att)
             except KeyError:
                 raise exception.InvalidTemplateAttribute(resource=resource,
                                                          key=att)

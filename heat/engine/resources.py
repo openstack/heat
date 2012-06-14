@@ -42,6 +42,9 @@ class Resource(object):
     UPDATE_FAILED = 'UPDATE_FAILED'
     UPDATE_COMPLETE = 'UPDATE_COMPLETE'
 
+    # If True, this resource must be created before it can be referenced.
+    strict_dependency = True
+
     def __new__(cls, name, json, stack):
         '''Create a new Resource of the appropriate class for its type.'''
 
@@ -55,7 +58,6 @@ class Resource(object):
         return ResourceClass(name, json, stack)
 
     def __init__(self, name, json_snippet, stack):
-        self.depends_on = []
         self.references = []
         self.stack = stack
         self.name = name
@@ -81,6 +83,26 @@ class Resource(object):
 
     def parsed_template(self):
         return self.stack.resolve_runtime_data(self.t)
+
+    def __str__(self):
+        return '%s "%s"' % (self.__class__.__name__, self.name)
+
+    def _add_dependencies(self, deps, fragment):
+        if isinstance(fragment, dict):
+            for key, value in fragment.items():
+                if key in ('DependsOn', 'Ref'):
+                    target = self.stack.resources[value]
+                    if key == 'DependsOn' or target.strict_dependency:
+                        deps += (self, target)
+                elif key != 'Fn::GetAtt':
+                    self._add_dependencies(deps, value)
+        elif isinstance(fragment, list):
+            for item in fragment:
+                self._add_dependencies(deps, item)
+
+    def add_dependencies(self, deps):
+        self._add_dependencies(deps, self.t)
+        deps += (self, None)
 
     def keystone(self):
         if self._keystone:
@@ -187,8 +209,8 @@ class Resource(object):
 
     def FnGetRefId(self):
         '''
-        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/ \
-            intrinsic-function-reference-ref.html
+        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/\
+        intrinsic-function-reference-ref.html
         '''
         if self.instance_id is not None:
             return unicode(self.instance_id)
@@ -197,23 +219,17 @@ class Resource(object):
 
     def FnGetAtt(self, key):
         '''
-        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/ \
+        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/\
         intrinsic-function-reference-getatt.html
         '''
         return unicode(self.name)
 
     def FnBase64(self, data):
         '''
-        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/ \
+        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/\
             intrinsic-function-reference-base64.html
         '''
         return base64.b64encode(data)
-
-    def strict_dependency(self):
-        '''
-        If True, this resource must be created before it can be referenced.
-        '''
-        return True
 
 
 class GenericResource(Resource):
