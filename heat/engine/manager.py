@@ -203,7 +203,7 @@ class EngineManager(manager.Manager):
         template_copy = None
         if 'Malformed Query Response' in \
                 response['ValidateTemplateResult']['Description']:
-            return response['ValidateTemplateResult']['Description']
+            return response
 
         stack = parser.Stack(context, stack_name, template, 0, params,
                              metadata_server=metadata_server)

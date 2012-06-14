@@ -128,8 +128,8 @@ class Resource(object):
         try:
             self.calculate_properties()
         except ValueError as ex:
-                return {'Error': '%s' % str(ex)}
-        self.properties.validate()
+                return str(ex)
+        return self.properties.validate()
 
     def instance_id_set(self, inst):
         self.instance_id = inst

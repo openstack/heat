@@ -154,11 +154,9 @@ class Properties(CheckedDict):
             if 'Required' in self.data[key]:
                 if self.data[key]['Required'] \
                     and not 'Value' in self.data[key]:
-                    return {'Error':
-                        '%s Property must be provided' % key}
+                    return '%s Property must be provided' % key
 
             # are there unimplemented Properties
             if not self.data[key]['Implemented'] and 'Value' in self.data[key]:
-                return {'Error':
-                    '%s Property not implemented yet' % key}
+                return '%s Property not implemented yet' % key
         return None

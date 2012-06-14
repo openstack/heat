@@ -103,7 +103,7 @@ class Stack(object):
                 res = str(ex)
             finally:
                 if res:
-                    err_str = 'Malformed Query Response [%s]' % (res)
+                    err_str = 'Malformed Query Response %s' % (res)
                     response = {'ValidateTemplateResult': {
                                 'Description': err_str,
                                 'Parameters': []}}
