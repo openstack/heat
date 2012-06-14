@@ -297,6 +297,61 @@ def stack_events_list(options, arguments):
     print result
 
 
+@utils.catch_error('resource')
+def stack_resource_show(options, arguments):
+    '''
+    Display details of the specified resource.
+    '''
+    c = get_client(options)
+    try:
+        stack_name, resource_name = arguments
+    except ValueError:
+        print 'Enter stack name and logical resource id'
+        return
+
+    parameters = {
+        'StackName': stack_name,
+        'LogicalResourceId': resource_name,
+    }
+    result = c.describe_stack_resource(**parameters)
+    print result
+
+
+@utils.catch_error('resource-list')
+def stack_resources_list(options, arguments):
+    '''
+    Display summary of all resources in the specified stack.
+    '''
+    c = get_client(options)
+    try:
+        stack_name = arguments.pop(0)
+    except IndexError:
+        print 'Enter stack name'
+        return
+
+    parameters = {
+        'StackName': stack_name,
+    }
+    result = c.list_stack_resources(**parameters)
+    print result
+
+
+@utils.catch_error('resource-list-details')
+def stack_resources_list_details(options, arguments):
+    '''
+    Display details of all resources in the specified stack.
+    '''
+    c = get_client(options)
+    logical_resource_id = arguments.pop(0) if arguments else None
+    parameters = {
+        'StackName': options.stack_name,
+        'PhysicalResourceId': options.physical_resource_id,
+        'LogicalResourceId': logical_resource_id,
+    }
+    result = c.describe_stack_resources(**parameters)
+    print result
+
+
 @utils.catch_error('list')
 def stack_list(options, arguments):
     '''
@@ -397,6 +452,10 @@ def create_options(parser):
 
     parser.add_option('-P', '--parameters', metavar="parameters", default=None,
                       help="Parameter values used to create the stack.")
+    parser.add_option('-n', '--stack-name', default=None,
+                      help="Name of the queried stack")
+    parser.add_option('-c', '--physical-resource-id', default=None,
+                      help="Physical ID of the queried resource")
 
 
 def credentials_from_env():
@@ -484,6 +543,9 @@ def lookup_command(parser, command_name):
                 'list': stack_list,
                 'events_list': stack_events_list,  # DEPRECATED
                 'event-list': stack_events_list,
+                'resource': stack_resource_show,
+                'resource-list': stack_resources_list,
+                'resource-list-details': stack_resources_list_details,
                 'validate': template_validate,
                 'gettemplate': get_template,
                 'estimate-template-cost': estimate_template_cost,
@@ -529,6 +591,12 @@ Commands:
     validate        Validate a template
 
     event-list      List events for a stack
+
+    resource        Describe the resource
+
+    resource-list   Show list of resources belonging to a stack
+
+    resource-list-details    Detailed view of resources belonging to a stack
 
 """
 

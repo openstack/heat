@@ -95,6 +95,11 @@ def resource_get_by_name_and_stack(context, resource_name, stack_id):
                                                resource_name, stack_id)
 
 
+def resource_get_by_physical_resource_id(context, physical_resource_id):
+    return IMPL.resource_get_by_physical_resource_id(context,
+                                                     physical_resource_id)
+
+
 def stack_get(context, stack_id):
     return IMPL.stack_get(context, stack_id)
 

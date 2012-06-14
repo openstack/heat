@@ -98,6 +98,13 @@ def resource_get_by_name_and_stack(context, resource_name, stack_id):
     return result
 
 
+def resource_get_by_physical_resource_id(context, physical_resource_id):
+    result = (model_query(context, models.Resource)
+              .filter_by(nova_instance=physical_resource_id)
+              .first())
+    return result
+
+
 def resource_get_all(context):
     results = model_query(context, models.Resource).all()
 

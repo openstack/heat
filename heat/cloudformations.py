@@ -16,4 +16,6 @@
 SUPPORTED_PARAMS = ('StackName', 'TemplateBody', 'TemplateUrl',
                     'NotificationARNs', 'Parameters', 'Version',
                     'SignatureVersion', 'Timestamp', 'AWSAccessKeyId',
-                    'Signature', 'KeyStoneCreds', 'Timeout')
+                    'Signature', 'KeyStoneCreds', 'Timeout',
+                    'LogicalResourceId', 'PhysicalResourceId', 'NextToken',
+)

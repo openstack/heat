@@ -391,6 +391,67 @@ class EngineManager(manager.Manager):
             msg = 'Error creating event'
             return [msg, None]
 
+    def describe_stack_resource(self, context, stack_name, resource_name):
+        self._authenticate(context)
+
+        stack = db_api.stack_get(context, stack_name)
+        if not stack:
+            raise AttributeError('Unknown stack name')
+        resource = db_api.resource_get_by_name_and_stack(context,
+                                                         resource_name,
+                                                         stack.id)
+        if not resource:
+            raise AttributeError('Unknown resource name')
+        return format_resource_attributes(stack, resource)
+
+    def describe_stack_resources(self, context, stack_name,
+                                 physical_resource_id, logical_resource_id):
+        self._authenticate(context)
+
+        if stack_name:
+            stack = db_api.stack_get(context, stack_name)
+        else:
+            resource = db_api.resource_get_by_physical_resource_id(context,
+                    physical_resource_id)
+            if not resource:
+                msg = "The specified PhysicalResourceId doesn't exist"
+                raise AttributeError(msg)
+            stack = resource.stack
+
+        if not stack:
+            raise AttributeError("The specified stack doesn't exist")
+
+        resources = []
+        for r in stack.resources:
+            if logical_resource_id and r.name != logical_resource_id:
+                continue
+            formatted = format_resource_attributes(stack, r)
+            # this API call uses Timestamp instead of LastUpdatedTimestamp
+            formatted['Timestamp'] = formatted['LastUpdatedTimestamp']
+            del formatted['LastUpdatedTimestamp']
+            resources.append(formatted)
+
+        return resources
+
+    def list_stack_resources(self, context, stack_name):
+        self._authenticate(context)
+
+        stack = db_api.stack_get(context, stack_name)
+        if not stack:
+            raise AttributeError('Unknown stack name')
+
+        resources = []
+        response_keys = ('ResourceStatus', 'LogicalResourceId',
+                         'LastUpdatedTimestamp', 'PhysicalResourceId',
+                         'ResourceType')
+        for r in stack.resources:
+            formatted = format_resource_attributes(stack, r)
+            for key in formatted.keys():
+                if not key in response_keys:
+                    del formatted[key]
+            resources.append(formatted)
+        return resources
+
     def metadata_register_address(self, context, url):
         config.FLAGS.heat_metadata_server_url = url
 
@@ -520,3 +581,23 @@ class EngineManager(manager.Manager):
             self.run_rule(None, wr)
 
         return [None, wd.data]
+
+
+def format_resource_attributes(stack, resource):
+    """
+    Return a representation of the given resource that mathes the API output
+    expectations.
+    """
+    template = resource.parsed_template.template
+    template_resources = template.get('Resources', {})
+    resource_type = template_resources.get(resource.name, {}).get('Type', '')
+    last_updated_time = resource.updated_at or resource.created_at
+    return {
+        'StackId': stack.id,
+        'StackName': stack.name,
+        'LogicalResourceId': resource.name,
+        'PhysicalResourceId': resource.nova_instance or '',
+        'ResourceType': resource_type,
+        'LastUpdatedTimestamp': last_updated_time.isoformat(),
+        'ResourceStatus': resource.state,
+    }

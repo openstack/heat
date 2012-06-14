@@ -243,6 +243,98 @@ class StackController(object):
 
         return {'DescribeStackEventsResult': {'StackEvents': events}}
 
+    def describe_stack_resource(self, req):
+        """
+        Return the details of the given resource belonging to the given stack.
+        """
+        con = req.context
+        args = {
+            'stack_name': req.params.get('StackName'),
+            'resource_name': req.params.get('LogicalResourceId'),
+        }
+
+        try:
+            resource_details = rpc.call(con, 'engine',
+                              {'method': 'describe_stack_resource',
+                               'args': args})
+
+        except rpc_common.RemoteError as ex:
+            return webob.exc.HTTPBadRequest(str(ex))
+
+        return {
+            'DescribeStackResourceResponse': {
+                'DescribeStackResourceResult': {
+                    'StackResourceDetail': resource_details,
+                },
+            },
+        }
+
+    def describe_stack_resources(self, req):
+        """
+        Return details of resources specified by the parameters.
+
+        `StackName`: returns all resources belonging to the stack
+        `PhysicalResourceId`: returns all resources belonging to the stack this
+                              resource is associated with.
+
+        Only one of the parameters may be specified.
+
+        Optional parameter:
+
+        `LogicalResourceId`: filter the resources list by the logical resource
+        id.
+        """
+        con = req.context
+        stack_name = req.params.get('StackName')
+        physical_resource_id = req.params.get('PhysicalResourceId')
+        if stack_name and physical_resource_id:
+            msg = 'Use `StackName` or `PhysicalResourceId` but not both'
+            return webob.exc.HTTPBadRequest(msg)
+
+        args = {
+            'stack_name': stack_name,
+            'physical_resource_id': physical_resource_id,
+            'logical_resource_id': req.params.get('LogicalResourceId'),
+        }
+
+        try:
+            resources = rpc.call(con, 'engine',
+                              {'method': 'describe_stack_resources',
+                               'args': args})
+
+        except rpc_common.RemoteError as ex:
+            return webob.exc.HTTPBadRequest(str(ex))
+
+        response = {
+            'DescribeStackResourcesResult': {
+                'StackResources': resources,
+            }
+        }
+        return response
+
+    def list_stack_resources(self, req):
+        """
+        Return summary of the resources belonging to the specified stack.
+
+        """
+        con = req.context
+
+        try:
+            resources = rpc.call(con, 'engine', {
+                'method': 'list_stack_resources',
+                'args': {'stack_name': req.params.get('StackName')}
+            })
+        except rpc_common.RemoteError as ex:
+            return webob.exc.HTTPBadRequest(str(ex))
+
+        return {
+            'ListStackResourcesResponse': {
+                'ListStackResourcesResult': {
+                    'StackResourceSummaries': resources,
+                },
+            },
+        }
+
 
 def create_resource(options):
     """

@@ -65,6 +65,15 @@ class V1Client(base_client.BaseClient):
     def list_stack_events(self, **kwargs):
         return self.stack_request("DescribeStackEvents", "GET", **kwargs)
 
+    def describe_stack_resource(self, **kwargs):
+        return self.stack_request("DescribeStackResource", "GET", **kwargs)
+
+    def describe_stack_resources(self, **kwargs):
+        return self.stack_request("DescribeStackResources", "GET", **kwargs)
+
+    def list_stack_resources(self, **kwargs):
+        return self.stack_request("ListStackResources", "GET", **kwargs)
+
     def validate_template(self, **kwargs):
         return self.stack_request("ValidateTemplate", "GET", **kwargs)
 
