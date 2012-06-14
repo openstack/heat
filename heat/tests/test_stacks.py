@@ -69,7 +69,7 @@ class stacksTest(unittest.TestCase):
         self.m.ReplayAll()
         rt = {}
         rt['template'] = stack.t
-        rt['stack_name'] = stack.name
+        rt['StackName'] = stack.name
         new_rt = db_api.raw_template_create(None, rt)
         ct = {'username': 'fred',
                    'password': 'mentions_fruit'}
@@ -97,7 +97,7 @@ class stacksTest(unittest.TestCase):
         self.m.ReplayAll()
         rt = {}
         rt['template'] = stack.t
-        rt['stack_name'] = stack.name
+        rt['StackName'] = stack.name
         new_rt = db_api.raw_template_create(None, rt)
         ct = {'username': 'fred',
                    'password': 'mentions_fruit'}
@@ -141,7 +141,7 @@ class stacksTest(unittest.TestCase):
         stack = self.start_wordpress_stack('test_stack_list')
         rt = {}
         rt['template'] = stack.t
-        rt['stack_name'] = stack.name
+        rt['StackName'] = stack.name
         new_rt = db_api.raw_template_create(None, rt)
         ct = {'username': 'fred',
               'password': 'mentions_fruit'}
@@ -180,8 +180,8 @@ class stacksTest(unittest.TestCase):
 
         assert(len(sl) > 0)
         for s in sl['stacks']:
-            assert(s['stack_id'] > 0)
-            assert(s['template_description'].find('WordPress') != -1)
+            assert(s['StackId'] > 0)
+            assert(s['TemplateDescription'].find('WordPress') != -1)
 
     # allows testing of the test directly
     if __name__ == '__main__':

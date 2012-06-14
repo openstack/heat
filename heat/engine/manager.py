@@ -126,10 +126,10 @@ class EngineManager(manager.Manager):
                               s.raw_template.parsed_template.template,
                               s.id, params)
             mem = {}
-            mem['stack_id'] = s.id
-            mem['stack_name'] = s.name
-            mem['created_at'] = str(s.created_at)
-            mem['template_description'] = ps.t.get('Description',
+            mem['StackId'] = s.id
+            mem['StackName'] = s.name
+            mem['CreationTime'] = str(s.created_at)
+            mem['TemplateDescription'] = ps.t.get('Description',
                                                    'No description')
             mem['StackStatus'] = ps.t.get('stack_status', 'unknown')
             res['stacks'].append(mem)
@@ -152,10 +152,10 @@ class EngineManager(manager.Manager):
                               s.raw_template.parsed_template.template,
                               s.id, params)
             mem = {}
-            mem['stack_id'] = s.id
-            mem['stack_name'] = s.name
-            mem['creation_at'] = str(s.created_at)
-            mem['updated_at'] = str(s.updated_at)
+            mem['StackId'] = s.id
+            mem['StackName'] = s.name
+            mem['CreationTime'] = str(s.created_at)
+            mem['LastUpdatedTimestamp'] = str(s.updated_at)
             mem['NotificationARNs'] = 'TODO'
             mem['Parameters'] = ps.t['Parameters']
             mem['TimeoutInMinutes'] = ps.t.get('Timeout', '60')
@@ -209,7 +209,7 @@ class EngineManager(manager.Manager):
                              metadata_server=metadata_server)
         rt = {}
         rt['template'] = template
-        rt['stack_name'] = stack_name
+        rt['StackName'] = stack_name
         new_rt = db_api.raw_template_create(None, rt)
 
         new_creds = db_api.user_creds_create(context.to_dict())
@@ -231,7 +231,7 @@ class EngineManager(manager.Manager):
         stack.create()
 
         return {'stack': {'id': new_s.id, 'name': new_s.name,
-                'created_at': str(new_s.created_at)}}
+                'CreationTime': str(new_s.created_at)}}
 
     def validate_template(self, context, template, params):
         """
@@ -350,11 +350,11 @@ class EngineManager(manager.Manager):
         new_event = {
             'name': event['message'],
             'resource_status_reason': event['reason'],
-            'stack_id': stack.id,
-            'logical_resource_id': resource.name,
-            'physical_resource_id': None,
-            'resource_type': event['resource_type'],
-            'resource_properties': {},
+            'StackId': stack.id,
+            'LogicalResourceId': resource.name,
+            'PhysicalResourceId': None,
+            'ResourceType': event['resource_type'],
+            'ResourceProperties': {},
         }
         try:
             result = db_api.event_create(context, new_event)
