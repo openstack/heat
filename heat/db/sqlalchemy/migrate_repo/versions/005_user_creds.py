@@ -39,30 +39,41 @@ def upgrade(migrate_engine):
         Column('aws_creds', Text())
     )
 
-    try:
-        user_creds.create()
-    except Exception:
-        meta.drop_all(tables=tables)
-        raise
+    user_creds.create()
 
     stack = Table('stack', meta, autoload=True)
+
+    try:
+        Column('user_creds_id', Integer, ForeignKey("user_creds.id"),
+               nullable=False).create(stack)
+    except sqlalchemy.exc.IntegrityError:
+        stack.c.user_creds_id.drop()
+        user_creds.drop()
+        raise
 
     Column('username', String(length=256, convert_unicode=False,
                               assert_unicode=None,
                               unicode_error=None,
                               _warn_on_bytestring=False)).create(stack)
-    Column('user_creds_id', Integer, ForeignKey("user_creds.id"),
-           nullable=False).create(stack)
 
 
 def downgrade(migrate_engine):
     meta = MetaData()
     meta.bind = migrate_engine
 
-    watch_rule = Table('user_creds', meta, autoload=True)
-    watch_rule.drop()
-
     stack = Table('stack', meta, autoload=True)
+    user_creds = Table('user_creds', meta, autoload=True)
 
     stack.c.username.drop()
+
+    def fk_name(table, ref_column):
+        for fk in table.foreign_keys:
+            if fk.column == ref_column:
+                return fk.name
+
+    fkc = ForeignKeyConstraint([stack.c.user_creds_id], [user_creds.c.id],
+                               name=fk_name(stack, user_creds.c.id))
+    fkc.drop()
+
     stack.c.user_creds_id.drop()
+    user_creds.drop()
