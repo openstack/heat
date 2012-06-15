@@ -265,7 +265,9 @@ class Instance(Resource):
                 self.ipaddress = server.networks[n][0]
                 break
         else:
-            raise exception.Error(server.status)
+            raise exception.Error('%s instance[%s] status[%s]' %
+                                  ('nova reported unexpected',
+                                   self.name, server.status))
 
     def validate(self):
         '''
