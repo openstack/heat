@@ -173,9 +173,10 @@ class ContextMiddleware(wsgi.Middleware):
                 # I Haven't tested to see if WSGI stuff would escape
                 # everything to make this safe.  However, I haven't found
                 # a better way to do this either.
-                creds = eval(req.params['KeyStoneCreds'])
-                username = creds['username']
-                password = creds['password']
+                if 'KeyStoneCreds' in req.params:
+                    creds = eval(req.params['KeyStoneCreds'])
+                    username = creds['username']
+                    password = creds['password']
 
             token = headers.get('X-Auth-Token')
             service_user = headers.get('X-Admin-User')
