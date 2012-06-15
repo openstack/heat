@@ -118,7 +118,7 @@ class EngineManager(manager.Manager):
         self._authenticate(context)
 
         res = {'stacks': []}
-        stacks = db_api.stack_get_all(None)
+        stacks = db_api.stack_get_by_user(context)
         if stacks is None:
             return res
         for s in stacks:
@@ -146,7 +146,7 @@ class EngineManager(manager.Manager):
         self._authenticate(context)
 
         res = {'stacks': []}
-        s = db_api.stack_get(None, stack_name)
+        s = db_api.stack_get(context, stack_name)
         if s:
             ps = parser.Stack(context, s.name,
                               s.raw_template.parsed_template.template,
@@ -212,10 +212,14 @@ class EngineManager(manager.Manager):
         rt['stack_name'] = stack_name
         new_rt = db_api.raw_template_create(None, rt)
 
+        new_creds = db_api.user_creds_create(context.to_dict())
+
         s = {}
         s['name'] = stack_name
         s['raw_template_id'] = new_rt.id
-        new_s = db_api.stack_create(None, s)
+        s['user_creds_id'] = new_creds.id
+        s['username'] = context.username
+        new_s = db_api.stack_create(context, s)
         stack.id = new_s.id
 
         pt = {}

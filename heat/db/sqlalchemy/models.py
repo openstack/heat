@@ -141,6 +141,29 @@ class Stack(BASE, HeatBase):
                             nullable=False)
     raw_template = relationship(RawTemplate,
         backref=backref('stack'))
+    username = Column(String)
+    user_creds_id = Column(Integer, ForeignKey('user_creds.id'),
+                           nullable=False)
+
+
+class UserCreds(BASE, HeatBase):
+    """
+    Represents user credentials and mirrors the 'context'
+    handed in by wsgi.
+    """
+
+    __tablename__ = 'user_creds'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    password = Column(String)
+    service_user = Column(String)
+    service_password = Column(String)
+    tenant = Column(String)
+    auth_url = Column(String)
+    aws_auth_url = Column(String)
+    tenant_id = Column(String)
+    aws_creds = Column(String)
 
 
 class Event(BASE, HeatBase):

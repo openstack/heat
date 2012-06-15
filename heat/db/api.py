@@ -103,12 +103,24 @@ def stack_get_all(context):
     return IMPL.stack_get_all(context)
 
 
+def stack_get_by_user(context):
+    return IMPL.stack_get_by_user(context)
+
+
 def stack_create(context, values):
     return IMPL.stack_create(context, values)
 
 
 def stack_delete(context, stack_name):
     return IMPL.stack_delete(context, stack_name)
+
+
+def user_creds_create(context):
+    return IMPL.user_creds_create(context)
+
+
+def user_creds_get(context_id):
+    return IMPL.user_creds_get(context_id)
 
 
 def event_get(context, event_id):

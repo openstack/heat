@@ -126,11 +126,20 @@ def resource_get_all_by_stack(context, stack_id):
 def stack_get(context, stack_id):
     result = model_query(context, models.Stack).\
                         filter_by(name=stack_id).first()
+    if result is not None and context is not None and\
+        result.username != context.username:
+        return None
     return result
 
 
 def stack_get_all(context):
     results = model_query(context, models.Stack).all()
+    return results
+
+
+def stack_get_by_user(context):
+    results = model_query(context, models.Stack).\
+                          filter_by(username=context.username).all()
     return results
 
 
@@ -168,6 +177,20 @@ def stack_delete(context, stack_name):
 
     session.delete(s)
     session.flush()
+
+
+def user_creds_create(values):
+    user_creds_ref = models.UserCreds()
+    user_creds_ref.update(values)
+    user_creds_ref.save()
+    return user_creds_ref
+
+
+def user_creds_get(user_creds_id):
+    result = model_query(None, models.UserCreds).\
+                        filter_by(id=user_creds_id).first()
+
+    return result
 
 
 def event_get(context, event_id):

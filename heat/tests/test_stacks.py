@@ -9,6 +9,7 @@ import sqlalchemy
 from nose.plugins.attrib import attr
 from nose import with_setup
 
+from heat. common import context
 from heat.tests.v1_1 import fakes
 from heat.engine import instance as instances
 import heat.db as db_api
@@ -70,9 +71,14 @@ class stacksTest(unittest.TestCase):
         rt['template'] = stack.t
         rt['stack_name'] = stack.name
         new_rt = db_api.raw_template_create(None, rt)
+        ct = {'username': 'fred',
+                   'password': 'mentions_fruit'}
+        new_creds = db_api.user_creds_create(ct)
         s = {}
         s['name'] = stack.name
         s['raw_template_id'] = new_rt.id
+        s['user_creds_id'] = new_creds.id
+        s['username'] = ct['username']
         new_s = db_api.stack_create(None, s)
         stack.id = new_s.id
         pt = {}
@@ -93,9 +99,14 @@ class stacksTest(unittest.TestCase):
         rt['template'] = stack.t
         rt['stack_name'] = stack.name
         new_rt = db_api.raw_template_create(None, rt)
+        ct = {'username': 'fred',
+                   'password': 'mentions_fruit'}
+        new_creds = db_api.user_creds_create(ct)
         s = {}
         s['name'] = stack.name
         s['raw_template_id'] = new_rt.id
+        s['user_creds_id'] = new_creds.id
+        s['username'] = ct['username']
         new_s = db_api.stack_create(None, s)
         stack.id = new_s.id
         pt = {}
@@ -127,22 +138,32 @@ class stacksTest(unittest.TestCase):
             assert(result['ResourceProperties']['InstanceType'] == 'm1.large')
 
     def test_stack_list(self):
-        self.m.StubOutWithMock(manager.EngineManager, '_authenticate')
-        manager.EngineManager._authenticate(None).AndReturn(True)
         stack = self.start_wordpress_stack('test_stack_list')
         rt = {}
         rt['template'] = stack.t
         rt['stack_name'] = stack.name
         new_rt = db_api.raw_template_create(None, rt)
+        ct = {'username': 'fred',
+              'password': 'mentions_fruit'}
+        new_creds = db_api.user_creds_create(ct)
+
+        ctx = context.get_admin_context()
+        self.m.StubOutWithMock(ctx, 'username')
+        ctx.username = 'fred'
+        self.m.StubOutWithMock(manager.EngineManager, '_authenticate')
+        manager.EngineManager._authenticate(ctx).AndReturn(True)
+
         s = {}
         s['name'] = stack.name
         s['raw_template_id'] = new_rt.id
-        new_s = db_api.stack_create(None, s)
+        s['user_creds_id'] = new_creds.id
+        s['username'] = ct['username']
+        new_s = db_api.stack_create(ctx, s)
         stack.id = new_s.id
         pt = {}
         pt['template'] = stack.t
         pt['raw_template_id'] = new_rt.id
-        new_pt = db_api.parsed_template_create(None, pt)
+        new_pt = db_api.parsed_template_create(ctx, pt)
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
         stack.create_blocking()
@@ -152,10 +173,10 @@ class stacksTest(unittest.TestCase):
         params = {}
         parameters = {}
         t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack(None, 'test_stack_list', t, 0, params)
+        stack = parser.Stack(ctx, 'test_stack_list', t, 0, params)
 
         man = manager.EngineManager()
-        sl = man.list_stacks(None, params)
+        sl = man.list_stacks(ctx, params)
 
         assert(len(sl) > 0)
         for s in sl['stacks']:
