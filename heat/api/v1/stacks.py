@@ -22,6 +22,7 @@ import logging
 import os
 import socket
 import sys
+import re
 import urlparse
 import webob
 from webob.exc import (HTTPNotFound,
@@ -48,6 +49,13 @@ class StackController(object):
     def __init__(self, options):
         self.options = options
 
+    # convert date so it is aligned with aws date spec
+    # engine returns UTC date "2012-06-15 18:24:32"
+    # AWS format is "2012-06-15T18:24:32Z"
+    def _to_api_date(self, db_date):
+        return re.sub("([0-9]+-[0-9]+-[0-9]+) ([0-9]+:[0-9]+:[0-9]+)$",
+                        "\\1T\\2Z", str(db_date))
+
     def list(self, req):
         """
         Returns the following information for all stacks:
@@ -65,6 +73,7 @@ class StackController(object):
         summaries = results['StackSummaries']
         if stack_list is not None:
             for s in stack_list['stacks']:
+                s['CreationTime'] = self._to_api_date(s['CreationTime'])
                 summaries.append(s)
 
         return res
@@ -88,8 +97,10 @@ class StackController(object):
         res = {'DescribeStacksResult': {'Stacks': []}}
         stacks = res['DescribeStacksResult']['Stacks']
         for s in stack_list['stacks']:
-            mem = {'member': s}
-            stacks.append(mem)
+            s['CreationTime'] = self._to_api_date(s['CreationTime'])
+            s['LastUpdatedTimestamp'] = self._to_api_date(
+                s['LastUpdatedTimestamp'])
+            stacks.append(s)
 
         return res
 
