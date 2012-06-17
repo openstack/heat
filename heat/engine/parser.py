@@ -68,7 +68,7 @@ class Stack(object):
 
         # user Parameters
         if parms is not None:
-            self._apply_user_parameters(parms)
+            self.parms.update(parms)
 
         self.resources = dict((name,
                                Resource(name, data, self))
@@ -294,19 +294,6 @@ class Stack(object):
                 res.state_set(res.CREATE_FAILED)
         # TODO(asalkeld) if any of this fails we Should
         # restart the whole stack
-
-    def _apply_user_parameters(self, parms):
-        for p in parms:
-            if 'Parameters.member.' in p and 'ParameterKey' in p:
-                s = p.split('.')
-                try:
-                    key_name = 'Parameters.member.%s.ParameterKey' % s[2]
-                    value_name = 'Parameters.member.%s.ParameterValue' % s[2]
-                    logger.debug('applying user parameter %s=%s' %
-                                 (key_name, value_name))
-                    self.parms[parms[key_name]] = parms[value_name]
-                except Exception:
-                    logger.error('Could not apply parameter %s' % p)
 
     def parameter_get(self, key):
         if not key in self.parms:

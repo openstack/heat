@@ -20,6 +20,7 @@ import logging
 import webob
 import json
 import urlparse
+import re
 import httplib
 import eventlet
 
@@ -38,6 +39,25 @@ from novaclient.exceptions import AuthorizationFailure
 
 logger = logging.getLogger('heat.engine.manager')
 greenpool = eventlet.GreenPool()
+
+_param_key = re.compile(r'Parameters\.member\.(.*?)\.ParameterKey$')
+
+
+def _extract_user_params(params):
+    def get_param_pairs():
+        for k in params:
+            keymatch = _param_key.match(k)
+            if keymatch:
+                key = params[k]
+                v = 'Parameters.member.%s.ParameterValue' % keymatch.group(1)
+                try:
+                    value = params[v]
+                except KeyError:
+                    logger.error('Could not apply parameter %s' % key)
+
+                yield (key, value)
+
+    return dict(get_param_pairs())
 
 
 class EngineManager(manager.Manager):
@@ -126,7 +146,7 @@ class EngineManager(manager.Manager):
         for s in stacks:
             ps = parser.Stack(context, s.name,
                               s.raw_template.parsed_template.template,
-                              s.id, params)
+                              s.id, _extract_user_params(params))
             mem = {}
             mem['StackId'] = s.id
             mem['StackName'] = s.name
@@ -152,7 +172,7 @@ class EngineManager(manager.Manager):
         if s:
             ps = parser.Stack(context, s.name,
                               s.raw_template.parsed_template.template,
-                              s.id, params)
+                              s.id, _extract_user_params(params))
             mem = {}
             mem['StackId'] = s.id
             mem['StackName'] = s.name
@@ -193,12 +213,14 @@ class EngineManager(manager.Manager):
         if db_api.stack_get_by_name(None, stack_name):
             return {'Error': 'Stack already exists with that name.'}
 
+        user_params = _extract_user_params(params)
         metadata_server = config.FLAGS.heat_metadata_server_url
         # We don't want to reset the stack template, so we are making
         # an instance just for validation.
         template_copy = deepcopy(template)
         stack_validator = parser.Stack(context, stack_name,
-                                       template_copy, 0, params,
+                                       template_copy, 0,
+                                       user_params,
                                        metadata_server=metadata_server)
         response = stack_validator.validate()
         stack_validator = None
@@ -207,7 +229,7 @@ class EngineManager(manager.Manager):
                 response['ValidateTemplateResult']['Description']:
             return response
 
-        stack = parser.Stack(context, stack_name, template, 0, params,
+        stack = parser.Stack(context, stack_name, template, 0, user_params,
                              metadata_server=metadata_server)
         rt = {}
         rt['template'] = template
@@ -253,7 +275,8 @@ class EngineManager(manager.Manager):
             return webob.exc.HTTPBadRequest(explanation=msg)
 
         try:
-            s = parser.Stack(context, 'validate', template, 0, params)
+            s = parser.Stack(context, 'validate', template, 0,
+                             _extract_user_params(params))
         except KeyError as ex:
             res = ('A Fn::FindInMap operation referenced '
                    'a non-existent map [%s]' % str(ex))
@@ -298,7 +321,7 @@ class EngineManager(manager.Manager):
 
         ps = parser.Stack(context, st.name,
                           st.raw_template.parsed_template.template,
-                          st.id, params)
+                          st.id, _extract_user_params(params))
         greenpool.spawn_n(ps.delete)
         return None
 
