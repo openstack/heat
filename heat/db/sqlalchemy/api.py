@@ -124,8 +124,9 @@ def resource_get_all_by_stack(context, stack_id):
     return results
 
 
-def stack_get_by_name(context, stack_name):
+def stack_get_by_name(context, stack_name, owner_id=None):
     result = model_query(context, models.Stack).\
+                        filter_by(owner_id=owner_id).\
                         filter_by(name=stack_name).first()
     if (result is not None and context is not None and
         result.username != context.username):
@@ -143,13 +144,15 @@ def stack_get(context, stack_id):
 
 
 def stack_get_all(context):
-    results = model_query(context, models.Stack).all()
+    results = model_query(context, models.Stack).\
+                         filter_by(owner_id=None).all()
     return results
 
 
 def stack_get_by_user(context):
     results = model_query(context, models.Stack).\
-                        filter_by(username=context.username).all()
+                         filter_by(owner_id=None).\
+                         filter_by(username=context.username).all()
     return results
 
 

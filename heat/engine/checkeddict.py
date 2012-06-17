@@ -88,6 +88,11 @@ class CheckedDict(collections.MutableMapping):
                     raise ValueError('%s: %s is out of range' % (self.name,
                                                                  key))
 
+            elif t == 'Map':
+                if not isinstance(value, dict):
+                    raise ValueError('%s: %s Value must be a map' %
+                                     (self.name, key))
+
             elif t == 'List':
                 if not isinstance(value, (list, tuple)):
                     raise ValueError('%s: %s Value must be a list' %

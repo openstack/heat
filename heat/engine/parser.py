@@ -41,7 +41,7 @@ class Stack(object):
         self.context = context
         self.t = template
         self.maps = self.t.get('Mappings', {})
-        self.outputs = self.t.get('Outputs', {})
+        self.outputs = self.resolve_static_data(self.t.get('Outputs', {}))
         self.res = {}
         self.doc = None
         self.name = stack_name
@@ -244,16 +244,18 @@ class Stack(object):
             self.state_set(self.DELETE_COMPLETE, 'Deleted successfully')
             db_api.stack_delete(self.context, self.id)
 
+    def output(self, key):
+        value = self.outputs[key].get('Value', '')
+        return self.resolve_runtime_data(value)
+
     def get_outputs(self):
-        outputs = self.resolve_runtime_data(self.outputs)
-
         def output_dict(k):
-            return {'Description': outputs[k].get('Description',
-                                                  'No description given'),
+            return {'Description': self.outputs[k].get('Description',
+                                                       'No description given'),
                     'OutputKey': k,
-                    'OutputValue': outputs[k].get('Value', '')}
+                    'OutputValue': self.output(k)}
 
-        return [output_dict(key) for key in outputs]
+        return [output_dict(key) for key in self.outputs]
 
     def restart_resource(self, resource_name):
         '''
