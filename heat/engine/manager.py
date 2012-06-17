@@ -148,7 +148,7 @@ class EngineManager(manager.Manager):
         self._authenticate(context)
 
         res = {'stacks': []}
-        s = db_api.stack_get(context, stack_name)
+        s = db_api.stack_get_by_name(context, stack_name)
         if s:
             ps = parser.Stack(context, s.name,
                               s.raw_template.parsed_template.template,
@@ -190,7 +190,7 @@ class EngineManager(manager.Manager):
 
         self._authenticate(context)
 
-        if db_api.stack_get(None, stack_name):
+        if db_api.stack_get_by_name(None, stack_name):
             return {'Error': 'Stack already exists with that name.'}
 
         metadata_server = config.FLAGS.heat_metadata_server_url
@@ -275,7 +275,7 @@ class EngineManager(manager.Manager):
         arg3 -> Dict of http request parameters passed in from API side.
         """
         self._authenticate(context)
-        s = db_api.stack_get(None, stack_name)
+        s = db_api.stack_get_by_name(None, stack_name)
         if s:
             return s.raw_template.template
         return None
@@ -290,7 +290,7 @@ class EngineManager(manager.Manager):
 
         self._authenticate(context)
 
-        st = db_api.stack_get(context, stack_name)
+        st = db_api.stack_get_by_name(context, stack_name)
         if not st:
             return {'Error': 'No stack by that name'}
 
@@ -327,7 +327,7 @@ class EngineManager(manager.Manager):
         self._authenticate(context)
 
         if stack_name is not None:
-            st = db_api.stack_get(context, stack_name)
+            st = db_api.stack_get_by_name(context, stack_name)
             if not st:
                 return {'Error': 'No stack by that name'}
 
@@ -343,7 +343,7 @@ class EngineManager(manager.Manager):
 
         stack_name = event['stack']
         resource_name = event['resource']
-        stack = db_api.stack_get(context, stack_name)
+        stack = db_api.stack_get_by_name(context, stack_name)
         resource = db_api.resource_get_by_name_and_stack(context,
                                                          resource_name,
                                                          stack.id)
@@ -381,7 +381,7 @@ class EngineManager(manager.Manager):
         """
         Return the resource IDs of the given stack.
         """
-        stack = db_api.stack_get(context, stack_name)
+        stack = db_api.stack_get_by_name(context, stack_name)
         if stack:
             return [res.name for res in stack]
         else:
@@ -392,7 +392,7 @@ class EngineManager(manager.Manager):
         Get the metadata for the given resource.
         """
 
-        s = db_api.stack_get(context, stack_name)
+        s = db_api.stack_get_by_name(context, stack_name)
         if not s:
             return ['stack', None]
 
@@ -407,7 +407,7 @@ class EngineManager(manager.Manager):
         """
         Update the metadata for the given resource.
         """
-        s = db_api.stack_get(context, stack_name)
+        s = db_api.stack_get_by_name(context, stack_name)
         if not s:
             return ['stack', None]
         pt_id = s.raw_template.parsed_template.id
@@ -460,7 +460,7 @@ class EngineManager(manager.Manager):
                 logger.info('no action for new state %s',
                             new_state)
             else:
-                s = db_api.stack_get(None, wr.stack_name)
+                s = db_api.stack_get_by_name(None, wr.stack_name)
                 if s:
                     ps = parser.Stack(context, s.name,
                                       s.raw_template.parsed_template.template,

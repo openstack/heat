@@ -153,7 +153,7 @@ class Stack(object):
         created, so commands like describe will work.
         '''
         if self.parsed_template_id == 0:
-            stack = db_api.stack_get(self.context, self.name)
+            stack = db_api.stack_get(self.context, self.id)
             if stack:
                 self.parsed_template_id = stack.raw_template.parsed_template.id
             else:
@@ -242,7 +242,7 @@ class Stack(object):
                            'Failed to delete ' + ', '.join(failures))
         else:
             self.state_set(self.DELETE_COMPLETE, 'Deleted successfully')
-            db_api.stack_delete(self.context, self.name)
+            db_api.stack_delete(self.context, self.id)
 
     def get_outputs(self):
         outputs = self.resolve_runtime_data(self.outputs)
@@ -262,7 +262,7 @@ class Stack(object):
         '''
 
         if self.parsed_template_id == 0:
-            stack = db_api.stack_get(self.context, self.name)
+            stack = db_api.stack_get(self.context, self.id)
             if stack:
                 self.parsed_template_id = stack.raw_template.parsed_template.id
 

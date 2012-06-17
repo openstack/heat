@@ -124,11 +124,20 @@ def resource_get_all_by_stack(context, stack_id):
     return results
 
 
+def stack_get_by_name(context, stack_name):
+    result = model_query(context, models.Stack).\
+                        filter_by(name=stack_name).first()
+    if (result is not None and context is not None and
+        result.username != context.username):
+        return None
+    return result
+
+
 def stack_get(context, stack_id):
     result = model_query(context, models.Stack).\
-                        filter_by(name=stack_id).first()
-    if result is not None and context is not None and\
-        result.username != context.username:
+                        filter_by(id=stack_id).first()
+    if (result is not None and context is not None and
+        result.username != context.username):
         return None
     return result
 
@@ -140,7 +149,7 @@ def stack_get_all(context):
 
 def stack_get_by_user(context):
     results = model_query(context, models.Stack).\
-                          filter_by(username=context.username).all()
+                        filter_by(username=context.username).all()
     return results
 
 
@@ -151,8 +160,8 @@ def stack_create(context, values):
     return stack_ref
 
 
-def stack_delete(context, stack_name):
-    s = stack_get(context, stack_name)
+def stack_delete(context, stack_id):
+    s = stack_get(context, stack_id)
     if not s:
         raise NotFound('Attempt to delete a stack with id: %s %s' %
                         (stack_name, 'that does not exist'))
