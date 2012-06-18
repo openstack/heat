@@ -226,6 +226,17 @@ def event_get_all(context):
     return results
 
 
+def event_get_all_by_user(context):
+    stacks = model_query(context, models.Stack).\
+                          filter_by(username=context.username).all()
+    results = []
+    for stack in stacks:
+        results.extend(model_query(context, models.Event).\
+                                   filter_by(stack_id=stack.id).all())
+
+    return results
+
+
 def event_get_all_by_stack(context, stack_id):
     results = model_query(context, models.Event).\
                         filter_by(stack_id=stack_id).all()

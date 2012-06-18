@@ -299,7 +299,7 @@ class EngineManager(manager.Manager):
         arg3 -> Dict of http request parameters passed in from API side.
         """
         self._authenticate(context)
-        s = db_api.stack_get_by_name(None, stack_name)
+        s = db_api.stack_get_by_name(context, stack_name)
         if s:
             return s.raw_template.template
         return None
@@ -357,7 +357,7 @@ class EngineManager(manager.Manager):
 
             events = db_api.event_get_all_by_stack(context, st.id)
         else:
-            events = db_api.event_get_all(context)
+            events = db_api.event_get_all_by_user(context)
 
         return {'events': [self.parse_event(e) for e in events]}
 

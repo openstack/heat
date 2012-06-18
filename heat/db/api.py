@@ -140,6 +140,10 @@ def event_get_all(context):
     return IMPL.event_get_all(context)
 
 
+def event_get_all_by_user(context):
+    return IMPL.event_get_all_by_user(context)
+
+
 def event_get_all_by_stack(context, stack_id):
     return IMPL.event_get_all_by_stack(context, stack_id)
 
