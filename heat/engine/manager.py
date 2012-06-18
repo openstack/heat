@@ -394,7 +394,7 @@ class EngineManager(manager.Manager):
     def describe_stack_resource(self, context, stack_name, resource_name):
         self._authenticate(context)
 
-        stack = db_api.stack_get(context, stack_name)
+        stack = db_api.stack_get_by_name(context, stack_name)
         if not stack:
             raise AttributeError('Unknown stack name')
         resource = db_api.resource_get_by_name_and_stack(context,
@@ -409,7 +409,7 @@ class EngineManager(manager.Manager):
         self._authenticate(context)
 
         if stack_name:
-            stack = db_api.stack_get(context, stack_name)
+            stack = db_api.stack_get_by_name(context, stack_name)
         else:
             resource = db_api.resource_get_by_physical_resource_id(context,
                     physical_resource_id)
@@ -436,7 +436,7 @@ class EngineManager(manager.Manager):
     def list_stack_resources(self, context, stack_name):
         self._authenticate(context)
 
-        stack = db_api.stack_get(context, stack_name)
+        stack = db_api.stack_get_by_name(context, stack_name)
         if not stack:
             raise AttributeError('Unknown stack name')
 
