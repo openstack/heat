@@ -415,7 +415,7 @@ class EngineManager(manager.Manager):
         Get the metadata for the given resource.
         """
 
-        s = db_api.stack_get_by_name(context, stack_name)
+        s = db_api.stack_get_by_name(None, stack_name)
         if not s:
             return ['stack', None]
 
@@ -430,12 +430,12 @@ class EngineManager(manager.Manager):
         """
         Update the metadata for the given resource.
         """
-        s = db_api.stack_get_by_name(context, stack_name)
+        s = db_api.stack_get_by_name(None, stack_name)
         if not s:
             return ['stack', None]
         pt_id = s.raw_template.parsed_template.id
 
-        pt = db_api.parsed_template_get(context, pt_id)
+        pt = db_api.parsed_template_get(None, pt_id)
         if not resource_id in pt.template.get('Resources', {}):
             return ['resource', None]
 
@@ -485,7 +485,8 @@ class EngineManager(manager.Manager):
             else:
                 s = db_api.stack_get_by_name(None, wr.stack_name)
                 if s:
-                    ps = parser.Stack(context, s.name,
+                    ctxt = context.RequestContext.from_dict(dict(s.user_creds))
+                    ps = parser.Stack(ctxt, s.name,
                                       s.raw_template.parsed_template.template,
                                       s.id)
                     for a in wr.rule[action_map[new_state]]:
@@ -498,7 +499,7 @@ class EngineManager(manager.Manager):
         This could be used by CloudWatch and WaitConditions
         and treat HA service events like any other CloudWatch.
         '''
-        wr = db_api.watch_rule_get(context, watch_name)
+        wr = db_api.watch_rule_get(None, watch_name)
         if wr is None:
             logger.warn('NoSuch watch:%s' % (watch_name))
             return ['NoSuch Watch Rule', None]
@@ -512,9 +513,9 @@ class EngineManager(manager.Manager):
             'data': stats_data,
             'watch_rule_id': wr.id
         }
-        wd = db_api.watch_data_create(context, watch_data)
+        wd = db_api.watch_data_create(None, watch_data)
         logger.debug('new watch:%s data:%s' % (watch_name, str(wd.data)))
         if wr.rule['Statistic'] == 'SampleCount':
-            self.run_rule(context, wr)
+            self.run_rule(None, wr)
 
         return [None, wd.data]
