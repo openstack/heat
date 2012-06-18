@@ -277,7 +277,7 @@
       "DependsOn" : "WikiDatabase",
       "Properties" : {
         "Handle" : {"Ref" : "WaitHandle"},
-        "Timeout" : "300"
+        "Timeout" : "600"
       }
     }
   },
