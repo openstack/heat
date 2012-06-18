@@ -32,7 +32,7 @@ from eventlet.green import subprocess
 from heat.openstack.common import exception
 from heat.openstack.common import timeutils
 
-PERFECT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
+PERFECT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 def chunkreadable(iter, chunk_size=65536):

@@ -27,6 +27,7 @@ import eventlet
 from heat import manager
 from heat.db import api as db_api
 from heat.common import config
+from heat.common import utils as heat_utils
 from heat.engine import parser
 from heat.engine import resources
 from heat.engine import watchrule
@@ -150,7 +151,7 @@ class EngineManager(manager.Manager):
             mem = {}
             mem['StackId'] = s.id
             mem['StackName'] = s.name
-            mem['CreationTime'] = str(s.created_at)
+            mem['CreationTime'] = heat_utils.strtime(s.created_at)
             mem['TemplateDescription'] = ps.t.get('Description',
                                                    'No description')
             mem['StackStatus'] = ps.t.get('stack_status', 'unknown')
@@ -176,8 +177,8 @@ class EngineManager(manager.Manager):
             mem = {}
             mem['StackId'] = s.id
             mem['StackName'] = s.name
-            mem['CreationTime'] = str(s.created_at)
-            mem['LastUpdatedTimestamp'] = str(s.updated_at)
+            mem['CreationTime'] = heat_utils.strtime(s.created_at)
+            mem['LastUpdatedTimestamp'] = heat_utils.strtime(s.updated_at)
             mem['NotificationARNs'] = 'TODO'
             mem['Parameters'] = ps.t['Parameters']
             mem['TimeoutInMinutes'] = ps.t.get('Timeout', '60')
@@ -255,7 +256,7 @@ class EngineManager(manager.Manager):
         greenpool.spawn_n(stack.create)
 
         return {'stack': {'id': new_s.id, 'name': new_s.name,
-                'CreationTime': str(new_s.created_at)}}
+                'CreationTime': heat_utils.strtime(new_s.created_at)}}
 
     def validate_template(self, context, template, params):
         """
