@@ -55,7 +55,7 @@ class API(wsgi.Router):
         mapper.connect('/stats/:watch_name/data/',
                        controller=metadata_controller,
                        action='create_watch_data',
-                       conditions=dict(method=['POST']))
+                       conditions=dict(method=['PUT']))
 #        mapper.connect('/stats/:watch_name/data/',
 #                       controller=metadata_controller,
 #                       action='list_watch_data',
