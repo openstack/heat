@@ -49,6 +49,15 @@ class StackController(object):
     def __init__(self, options):
         self.options = options
 
+    # On valid non-error response, we add a host:port:stack prefix
+    # This formats the StackId in the response more like the AWS spec
+    def _stackid_addprefix(self, resp):
+        if 'StackId' in resp:
+            hostportprefix = ":".join([socket.gethostname(),
+                str(self.options.bind_port), "stack"])
+            resp['StackId'] = "/".join([hostportprefix, resp['StackId']])
+        return resp
+
     def list(self, req):
         """
         Returns the following information for all stacks:
@@ -66,7 +75,7 @@ class StackController(object):
         summaries = results['StackSummaries']
         if stack_list is not None:
             for s in stack_list['stacks']:
-                summaries.append(s)
+                summaries.append(self._stackid_addprefix(s))
 
         return res
 
@@ -89,7 +98,7 @@ class StackController(object):
         res = {'DescribeStacksResult': {'Stacks': []}}
         stacks = res['DescribeStacksResult']['Stacks']
         for s in stack_list['stacks']:
-            stacks.append(s)
+            stacks.append(self._stackid_addprefix(s))
 
         return res
 
@@ -142,13 +151,15 @@ class StackController(object):
             stack['Timeout'] = req.params['Timeout']
 
         try:
-            return rpc.call(con, 'engine',
+            res = rpc.call(con, 'engine',
                             {'method': 'create_stack',
                              'args': {'stack_name': req.params['StackName'],
                                       'template': stack,
                                       'params': parms}})
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
+
+        return {'CreateStackResult': self._stackid_addprefix(res)}
 
     def get_template(self, req):
 

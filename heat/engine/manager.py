@@ -149,7 +149,7 @@ class EngineManager(manager.Manager):
                               s.raw_template.parsed_template.template,
                               s.id, _extract_user_params(params))
             mem = {}
-            mem['StackId'] = s.id
+            mem['StackId'] = "/".join([s.name, str(s.id)])
             mem['StackName'] = s.name
             mem['CreationTime'] = heat_utils.strtime(s.created_at)
             mem['TemplateDescription'] = ps.t.get('Description',
@@ -175,7 +175,7 @@ class EngineManager(manager.Manager):
                               s.raw_template.parsed_template.template,
                               s.id, _extract_user_params(params))
             mem = {}
-            mem['StackId'] = s.id
+            mem['StackId'] = "/".join([s.name, str(s.id)])
             mem['StackName'] = s.name
             mem['CreationTime'] = heat_utils.strtime(s.created_at)
             mem['LastUpdatedTimestamp'] = heat_utils.strtime(s.updated_at)
@@ -255,8 +255,7 @@ class EngineManager(manager.Manager):
         stack.parsed_template_id = new_pt.id
         greenpool.spawn_n(stack.create)
 
-        return {'stack': {'id': new_s.id, 'name': new_s.name,
-                'CreationTime': heat_utils.strtime(new_s.created_at)}}
+        return {'StackId': "/".join([new_s.name, str(new_s.id)])}
 
     def validate_template(self, context, template, params):
         """
