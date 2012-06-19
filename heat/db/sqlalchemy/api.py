@@ -102,6 +102,9 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
     result = (model_query(context, models.Resource)
               .filter_by(nova_instance=physical_resource_id)
               .first())
+    if (result is not None and context is not None and
+        result.stack.username != context.username):
+        return None
     return result
 
 
@@ -231,7 +234,7 @@ def event_get_all_by_user(context):
                           filter_by(username=context.username).all()
     results = []
     for stack in stacks:
-        results.extend(model_query(context, models.Event).\
+        results.extend(model_query(context, models.Event).
                                    filter_by(stack_id=stack.id).all())
 
     return results
