@@ -28,6 +28,7 @@ from heat import manager
 from heat.db import api as db_api
 from heat.common import config
 from heat.common import utils as heat_utils
+from heat.common import context as ctxtlib
 from heat.engine import parser
 from heat.engine import resources
 from heat.engine import watchrule
@@ -465,9 +466,9 @@ class EngineManager(manager.Manager):
         """
         Return the resource IDs of the given stack.
         """
-        stack = db_api.stack_get_by_name(context, stack_name)
+        stack = db_api.stack_get_by_name(None, stack_name)
         if stack:
-            return [res.name for res in stack]
+            return [res.name for res in stack.resources]
         else:
             return None
 
@@ -546,7 +547,8 @@ class EngineManager(manager.Manager):
             else:
                 s = db_api.stack_get_by_name(None, wr.stack_name)
                 if s:
-                    ctxt = context.RequestContext.from_dict(dict(s.user_creds))
+                    user_creds = db_api.user_creds_get(s.user_creds_id)
+                    ctxt = ctxtlib.RequestContext.from_dict(dict(user_creds))
                     ps = parser.Stack(ctxt, s.name,
                                       s.raw_template.parsed_template.template,
                                       s.id)
