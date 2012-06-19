@@ -174,7 +174,7 @@ def stack_delete(context, stack_id):
     s = stack_get(context, stack_id)
     if not s:
         raise NotFound('Attempt to delete a stack with id: %s %s' %
-                        (stack_name, 'that does not exist'))
+                        (stack_id, 'that does not exist'))
 
     session = Session.object_session(s)
 
