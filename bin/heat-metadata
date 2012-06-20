@@ -62,7 +62,6 @@ if __name__ == '__main__':
         conf(project='heat', prog='heat-metadata')
         config.FLAGS = conf
         rpc.configure(conf)
-        config.setup_logging(conf)
 
         app = config.load_paste_app(conf)
 
