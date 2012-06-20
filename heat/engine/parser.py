@@ -241,7 +241,7 @@ class Stack(object):
         failures = []
 
         for res in reversed(self):
-            result = res.delete()
+            result = res.destroy()
             if result:
                 failures.append(str(res))
 

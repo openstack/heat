@@ -190,19 +190,26 @@ class Resource(object):
             logger.exception('Delete %s', str(self))
             self.state_set(self.DELETE_FAILED, str(ex))
             return str(ex)
-        else:
-            try:
-                db_api.resource_get(self.stack.context, self.id).delete()
-            except exception.NotFound:
-                # Don't fail on delete if the db entry has
-                # not been created yet.
-                pass
-            except Exception as ex:
-                self.state_set(self.DELETE_FAILED)
-                logger.exception('Delete %s from DB' % str(self))
-                return str(ex)
 
-            self.state_set(self.DELETE_COMPLETE)
+        self.state_set(self.DELETE_COMPLETE)
+
+    def destroy(self):
+        '''
+        Delete the resource and remove it from the database.
+        '''
+        result = self.delete()
+        if result:
+            return result
+
+        try:
+            db_api.resource_get(self.stack.context, self.id).delete()
+        except exception.NotFound:
+            # Don't fail on delete if the db entry has
+            # not been created yet.
+            pass
+        except Exception as ex:
+            logger.exception('Delete %s from DB' % str(self))
+            return str(ex)
 
     def instance_id_set(self, inst):
         self.instance_id = inst
