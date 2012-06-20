@@ -75,11 +75,11 @@ class WaitCondition(Resource):
         tmo = eventlet.Timeout(self.timeout)
         status = 'WAITING'
         reason = ''
+        res = None
         try:
             while status == 'WAITING':
-                pt = None
                 try:
-                    pt = self.stack.parsed_template_get()
+                    res = db_api.resource_get(self.stack.context, self.id)
                 except Exception as ex:
                     if 'not found' in ex:
                         # it has been deleted
@@ -87,11 +87,11 @@ class WaitCondition(Resource):
                     else:
                         pass
 
-                if pt:
-                    res = pt.template['Resources'][self.resource_id]
-                    metadata = res.get('Metadata', {})
-                    status = metadata.get('Status', 'WAITING')
-                    reason = metadata.get('Reason', 'Reason not provided')
+                if res and res.rsrc_metadata:
+                    metadata = res.rsrc_metadata
+                    if metadata:
+                        status = metadata.get('Status', 'WAITING')
+                        reason = metadata.get('Reason', 'Reason not provided')
                     logger.debug('got %s' % json.dumps(metadata))
                 if status == 'WAITING':
                     logger.debug('Waiting some more for the Metadata[Status]')
@@ -111,10 +111,14 @@ class WaitCondition(Resource):
 
     def FnGetAtt(self, key):
         res = None
-        self._get_handle_resource_id()
         if key == 'Data':
-            resource = self.stack.t['Resources'][self.resource_id]
-            res = resource['Metadata']['Data']
+            try:
+                r = db_api.resource_get(self.stack.context, self.id)
+                if r.rsrc_metadata and 'Data' in r.rsrc_metadata:
+                    res = r.rsrc_metadata['Data']
+            except Exception as ex:
+                pass
+
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)

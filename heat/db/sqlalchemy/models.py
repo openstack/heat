@@ -142,6 +142,8 @@ class Stack(BASE, HeatBase):
     raw_template = relationship(RawTemplate,
         backref=backref('stack'))
     username = Column(String)
+    status = Column('status', String)
+    status_reason = Column('status_reason', String)
     user_creds_id = Column(Integer, ForeignKey('user_creds.id'),
                            nullable=False)
     owner_id = Column(Integer, nullable=True)
@@ -196,6 +198,8 @@ class Resource(BASE, HeatBase):
     name = Column('name', String, nullable=False)
     nova_instance = Column('nova_instance', String)
     state_description = Column('state_description', String)
+    # odd name as "metadata" is reserved
+    rsrc_metadata = Column('rsrc_metadata', Json)
     parsed_template_id = Column(Integer, ForeignKey('parsed_template.id'),
                                  nullable=True)
     parsed_template = relationship(ParsedTemplate,

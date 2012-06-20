@@ -178,9 +178,17 @@ class Stack(object):
                         self.parsed_template_id)
 
     def state_set(self, new_status, reason='change in resource state'):
-        self.t['stack_status'] = new_status
-        self.t['stack_status_reason'] = reason
-        self.update_parsed_template()
+        if self.id != 0:
+            stack = db_api.stack_get(self.context, self.id)
+        else:
+            stack = db_api.stack_get_by_name(self.context, self.name)
+
+        if stack is None:
+            return
+
+        self.id = stack.id
+        stack.update_and_save({'status': new_status,
+                               'status_reason': reason})
 
     def _timeout(self):
         '''Return the stack creation timeout in seconds'''

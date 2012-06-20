@@ -155,7 +155,7 @@ class EngineManager(manager.Manager):
             mem['CreationTime'] = heat_utils.strtime(s.created_at)
             mem['TemplateDescription'] = ps.t.get('Description',
                                                    'No description')
-            mem['StackStatus'] = ps.t.get('stack_status', 'unknown')
+            mem['StackStatus'] = s.status
             res['stacks'].append(mem)
 
         return res
@@ -185,12 +185,11 @@ class EngineManager(manager.Manager):
             mem['TimeoutInMinutes'] = ps.t.get('Timeout', '60')
             mem['TemplateDescription'] = ps.t.get('Description',
                                                   'No description')
-            mem['StackStatus'] = ps.t.get('stack_status', 'unknown')
-            mem['StackStatusReason'] = ps.t.get('stack_status_reason',
-                                                'State changed')
+            mem['StackStatus'] = s.status
+            mem['StackStatusReason'] = s.status_reason
 
             # only show the outputs on a completely created stack
-            if ps.t['stack_status'] == ps.CREATE_COMPLETE:
+            if s.state == ps.CREATE_COMPLETE:
                 mem['Outputs'] = ps.get_outputs()
 
             res['stacks'].append(mem)
@@ -481,12 +480,11 @@ class EngineManager(manager.Manager):
         if not s:
             return ['stack', None]
 
-        template = s.raw_template.parsed_template.template
-        if not resource_id in template.get('Resources', {}):
+        r = db_api.resource_get_by_name_and_stack(None, resource_id, s.id)
+        if r is None:
             return ['resource', None]
 
-        metadata = template['Resources'][resource_id].get('Metadata', {})
-        return [None, metadata]
+        return [None, r.rsrc_metadata]
 
     def metadata_update(self, context, stack_name, resource_id, metadata):
         """
@@ -495,21 +493,14 @@ class EngineManager(manager.Manager):
         s = db_api.stack_get_by_name(None, stack_name)
         if not s:
             return ['stack', None]
-        pt_id = s.raw_template.parsed_template.id
 
-        pt = db_api.parsed_template_get(None, pt_id)
-        if not resource_id in pt.template.get('Resources', {}):
+        r = db_api.resource_get_by_name_and_stack(None, resource_id, s.id)
+        if r is None:
+            logger.warn("Resource not found %s:%s." % (stack_name,
+                                                       resource_id))
             return ['resource', None]
 
-        # TODO(shadower) deep copy of the template is required here. Without
-        # it, we directly modify parsed_template.template by assigning the new
-        # metadata. When we then call parsed_template.update_and_save, the
-        # session will detect no changes and thus not update the database.
-        # Just updating the values and calling save didn't seem to work either.
-        # There's probably an idiomatic way I'm missing right now.
-        t = deepcopy(pt.template)
-        t['Resources'][resource_id]['Metadata'] = metadata
-        pt.update_and_save({'template': t})
+        r.update_and_save({'rsrc_metadata': metadata})
         return [None, metadata]
 
     @manager.periodic_task

@@ -64,6 +64,10 @@ class Resource(object):
             # make a dummy entry to prevent having to check all over the
             # place for it.
             self.t['Properties'] = {}
+        if 'Metadata' not in self.t:
+            # make a dummy entry to prevent having to check all over the
+            # place for it.
+            self.t['Metadata'] = {}
 
         resource = db_api.resource_get_by_name_and_stack(self.stack.context,
                                                          name, stack.id)
@@ -146,11 +150,10 @@ class Resource(object):
 
         logger.info('creating %s' % str(self))
 
-        self.state_set(self.CREATE_IN_PROGRESS)
-
         try:
             self.calculate_properties()
             self.properties.validate()
+            self.state_set(self.CREATE_IN_PROGRESS)
             if callable(getattr(self, 'handle_create', None)):
                 self.handle_create()
         except Exception as ex:
@@ -207,7 +210,7 @@ class Resource(object):
     def instance_id_set(self, inst):
         self.instance_id = inst
 
-    def _create_db(self):
+    def _create_db(self, metadata=None):
         '''Create the resource in the database'''
         try:
             rs = {'state': self.state,
@@ -215,6 +218,7 @@ class Resource(object):
                   'parsed_template_id': self.stack.parsed_template_id,
                   'nova_instance': self.instance_id,
                   'name': self.name,
+                  'rsrc_metadata': metadata,
                   'stack_name': self.stack.name}
 
             new_rs = db_api.resource_create(self.stack.context, rs)
@@ -259,7 +263,7 @@ class Resource(object):
                 logger.error('DB error %s' % str(ex))
 
         elif new_state in (self.CREATE_COMPLETE, self.CREATE_FAILED):
-            self._create_db()
+            self._create_db(metadata=self.parsed_template()['Metadata'])
 
         if new_state != old_state:
             self._add_event(new_state, reason)

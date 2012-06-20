@@ -90,7 +90,7 @@ class stacksTest(unittest.TestCase):
         assert(stack.resources['WebServer'].instance_id > 0)
         stack.delete()
         assert(stack.resources['WebServer'].state == 'DELETE_COMPLETE')
-        assert(stack.t['stack_status'] == 'DELETE_COMPLETE')
+        assert(new_s.status == 'DELETE_COMPLETE')
 
     def test_stack_event_list(self):
         stack = self.start_wordpress_stack('test_event_list_stack')
