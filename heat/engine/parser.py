@@ -147,19 +147,27 @@ class Stack(object):
             response['ValidateTemplateResult']['Parameters'].append(res)
         return response
 
+    def parsed_template_get(self):
+        stack = None
+        if self.parsed_template_id == 0:
+            if self.id == 0:
+                stack = db_api.stack_get(self.context, self.id)
+            else:
+                stack = db_api.stack_get_by_name(self.context, self.name)
+
+            if stack is None:
+                return None
+
+            self.parsed_template_id = stack.raw_template.parsed_template.id
+        return db_api.parsed_template_get(self.context,
+                                          self.parsed_template_id)
+
     def update_parsed_template(self):
         '''
         Update the parsed template after each resource has been
         created, so commands like describe will work.
         '''
-        if self.parsed_template_id == 0:
-            stack = db_api.stack_get(self.context, self.id)
-            if stack:
-                self.parsed_template_id = stack.raw_template.parsed_template.id
-            else:
-                return
-
-        pt = db_api.parsed_template_get(self.context, self.parsed_template_id)
+        pt = self.parsed_template_get()
         if pt:
             template = self.t.copy()
             template['Resources'] = dict((k, r.parsed_template())

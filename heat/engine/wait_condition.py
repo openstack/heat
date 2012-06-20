@@ -78,16 +78,14 @@ class WaitCondition(Resource):
         try:
             while status == 'WAITING':
                 pt = None
-                if self.stack.parsed_template_id:
-                    try:
-                        pt = db_api.parsed_template_get(self.stack.context,
-                                             self.stack.parsed_template_id)
-                    except Exception as ex:
-                        if 'not found' in ex:
-                            # it has been deleted
-                            status = 'DELETED'
-                        else:
-                            pass
+                try:
+                    pt = self.stack.parsed_template_get()
+                except Exception as ex:
+                    if 'not found' in ex:
+                        # it has been deleted
+                        status = 'DELETED'
+                    else:
+                        pass
 
                 if pt:
                     res = pt.template['Resources'][self.resource_id]

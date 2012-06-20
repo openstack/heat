@@ -509,8 +509,7 @@ class EngineManager(manager.Manager):
         # There's probably an idiomatic way I'm missing right now.
         t = deepcopy(pt.template)
         t['Resources'][resource_id]['Metadata'] = metadata
-        pt.template = t
-        pt.save()
+        pt.update_and_save({'template': t})
         return [None, metadata]
 
     @manager.periodic_task
