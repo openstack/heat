@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import eventlet
 import logging
 from heat.common import exception
 from heat.engine.resources import Resource
@@ -64,8 +65,33 @@ class User(Resource):
         except Exception as ex:
             logger.info('user %s/%s does not exist' % (self.name,
                                                        self.instance_id))
-        else:
-            user.delete()
+            return
+
+        # tempory hack to work around an openstack bug.
+        # seems you can't delete a user first time - you have to try
+        # a couple of times - go figure!
+        tmo = eventlet.Timeout(10)
+        status = 'WAITING'
+        reason = 'Timed out trying to delete user'
+        try:
+            while status == 'WAITING':
+                try:
+                    user.delete()
+                    status = 'DELETED'
+                except Exception as ce:
+                    reason = str(ce)
+                    eventlet.sleep(1)
+        except eventlet.Timeout as t:
+            if t is not tmo:
+                # not my timeout
+                raise
+            else:
+                status = 'TIMEDOUT'
+        finally:
+            tmo.cancel()
+
+        if status != 'DELETED':
+            raise exception.Error(reason)
 
     def FnGetRefId(self):
         return unicode(self.name)
