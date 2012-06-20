@@ -600,4 +600,5 @@ def format_resource_attributes(stack, resource):
         'ResourceType': resource_type,
         'LastUpdatedTimestamp': last_updated_time.isoformat(),
         'ResourceStatus': resource.state,
+        'ResourceStatusReason': resource.state_description,
     }

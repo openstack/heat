@@ -250,6 +250,7 @@ class Resource(object):
             try:
                 rs = db_api.resource_get(self.stack.context, self.id)
                 rs.update_and_save({'state': self.state,
+                                    'state_description': reason,
                                     'nova_instance': self.instance_id})
 
                 if rs.stack:
