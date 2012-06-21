@@ -13,7 +13,7 @@
       "Properties" : {
         "KeyName" : { "Ref" : "KeyName" },
         "ImageId" : "F16-x86_64-cfntools",
-	"InstanceType": "m1.large",
+        "InstanceType": "m1.large",
         "UserData" : { "Fn::Base64" : "80" }
       }
     }
@@ -22,9 +22,8 @@
     "InstanceIp" : {
       "Value" : { "Fn::Join" : ["", ["ssh ec2-user@",
                                      {"Fn::GetAtt": ["MyInstance",
-				                     "PublicIp"]}]]},
+                                     "PublicIp"]}]]},
       "Description" : "My ssh command"
     }
   }
 }
-

@@ -1,8 +1,8 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  
+
   "Description": "Sample template to bring up Puppet Master instance that can be used to bootstrap and manage Puppet Clients. The Puppet Master is populated from an embedded template that defines the set of applications to load. **WARNING** This template creates one or more Amazon EC2 instances. You will be billed for the AWS resources used if you create a stack from this template.",
-  
+
   "Parameters" : {
     "InstanceType" : {
       "Description" : "WebServer EC2 instance type",
@@ -14,7 +14,7 @@
     "KeyName" : {
       "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the PuppetMaster",
       "Type" : "String"
-    },    
+    },
     "ContentManifest" : {
       "Default" : "/wordpress/: { include wordpress }",
       "Description" : "Manifest of roles to add to nodes.pp",
@@ -53,8 +53,8 @@
       "RHEL-6.2" : { "32" : "rhel62-i386-cfntools", "64" : "rhel62-x86_64-cfntools" },
       "RHEL-6.3" : { "32" : "rhel63-i386-cfntools", "64" : "rhel63-x86_64-cfntools" }
     }
-  }, 
-  "Resources" : {  
+  },
+  "Resources" : {
     "CFNInitUser" : {
       "Type" : "AWS::IAM::User",
       "Properties" : {
@@ -117,7 +117,7 @@
                 "mode"    : "100644",
                 "owner"   : "root",
                 "group"   : "wheel"
-              },              
+              },
               "/etc/puppet/puppet.conf" : {
                 "content" : { "Fn::Join" : ["", [
                   "[main]\n",
@@ -148,28 +148,28 @@
                 "content" : {"Fn::Join" : ["", [
                   "node basenode {\n",
                   "  include cfn\n",
-                  "}\n",            
+                  "}\n",
                   "node /^.*internal$/ inherits basenode {\n",
                   "  case $cfn_roles {\n",
-                  "    ", { "Ref" : "ContentManifest" }, "\n", 
+                  "    ", { "Ref" : "ContentManifest" }, "\n",
                   "  }\n",
                   "}\n"]]},
                 "mode"    : "100644",
                 "owner"   : "root",
-                "group"   : "wheel" 
+                "group"   : "wheel"
               },
               "/etc/puppet/manifests/site.pp" : {
                 "content" : "import \"nodes\"\n",
                 "mode"    : "100644",
                 "owner"   : "root",
-                "group"   : "wheel" 
+                "group"   : "wheel"
               }
             },
             "services" : {
-              "sysvinit" : {  
+              "sysvinit" : {
                 "puppetmaster" : {
                   "enabled" : "true",
-                  "ensureRunning" : "true"                
+                  "ensureRunning" : "true"
                 }
               }
             }
@@ -208,7 +208,7 @@
         "SecurityGroupIngress" : [
           { "IpProtocol" : "tcp", "FromPort" : "8140", "ToPort" : "8140", "CidrIp": "0.0.0.0/0"},
           { "IpProtocol" : "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "0.0.0.0/0" }
-        ]        
+        ]
       }
     },
 
@@ -225,7 +225,7 @@
       }
     }
   },
-  
+
   "Outputs" : {
     "PuppetMasterDNSName" : {
       "Value" : { "Fn::GetAtt" : [ "PuppetMasterInstance", "PrivateDnsName" ] },
@@ -237,4 +237,3 @@
     }
   }
 }
-

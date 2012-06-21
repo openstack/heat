@@ -1,7 +1,7 @@
 TemplateFormatVersion" : "2010-09-09",
-  
+
   "Description": "Sample template to bring up WordPress using the Puppet client to install server roles. A WaitCondition is used to hold up the stack creation until the application is deployed. **WARNING** This template creates one or more Amazon EC2 instances and CloudWatch alarms. You will be billed for the AWS resources used if you create a stack from this template.",
-  
+
   "Parameters" : {
     "KeyName": {
       "Type": "String",
@@ -50,7 +50,7 @@ TemplateFormatVersion" : "2010-09-09",
       "ConstraintDescription" : "must contain only alphanumeric characters."
     }
   },
-  
+
   "Mappings" : {
     "AWSInstanceType2Arch" : {
       "t1.micro"    : { "Arch" : "64" },
@@ -78,8 +78,8 @@ TemplateFormatVersion" : "2010-09-09",
       "sa-east-1"      : { "32" : "ami-3e3be423", "64" : "ami-3c3be421", "64HVM" : "NOT_YET_SUPPORTED" }
     }
   },
-    
-  "Resources" : {  
+
+  "Resources" : {
 
     "CFNInitUser" : {
       "Type" : "AWS::IAM::User",
@@ -104,7 +104,7 @@ TemplateFormatVersion" : "2010-09-09",
       }
     },
 
-    "WebServer": {  
+    "WebServer": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
@@ -146,10 +146,10 @@ TemplateFormatVersion" : "2010-09-09",
               }
             },
             "services" : {
-              "sysvinit" : {  
+              "sysvinit" : {
                 "puppet" : {
                   "enabled" : "true",
-                  "ensureRunning" : "true"                
+                  "ensureRunning" : "true"
                 }
               }
             }
@@ -230,7 +230,7 @@ TemplateFormatVersion" : "2010-09-09",
       }
     }
   },
-  
+
   "Outputs": {
     "WebsiteURL": {
       "Value": { "Fn::Join": [ "", [ "http://", { "Fn::GetAtt": [ "WebServer", "PublicDnsName" ] }, "/wordpress" ] ] },
