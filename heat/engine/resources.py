@@ -120,11 +120,6 @@ class Resource(object):
         if service_type in self._nova:
             return self._nova[service_type]
 
-        if service_type == 'compute':
-            service_name = 'nova'
-        else:
-            service_name = None
-
         con = self.stack.context
         self._nova[service_type] = nc.Client(con.username,
                                              con.password,
@@ -132,8 +127,7 @@ class Resource(object):
                                              con.auth_url,
                                              proxy_token=con.auth_token,
                                              proxy_tenant_id=con.tenant_id,
-                                             service_type=service_type,
-                                             service_name=service_name)
+                                             service_type=service_type)
         return self._nova[service_type]
 
     def calculate_properties(self):
