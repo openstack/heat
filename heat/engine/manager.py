@@ -189,7 +189,7 @@ class EngineManager(manager.Manager):
             mem['StackStatusReason'] = s.status_reason
 
             # only show the outputs on a completely created stack
-            if s.state == ps.CREATE_COMPLETE:
+            if s.status == ps.CREATE_COMPLETE:
                 mem['Outputs'] = ps.get_outputs()
 
             res['stacks'].append(mem)
