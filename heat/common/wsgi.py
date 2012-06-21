@@ -481,16 +481,13 @@ class Resource(object):
     may raise a webob.exc exception or return a dict, which will be
     serialized by requested content type.
     """
-    def __init__(self, controller, deserializer, serializer):
+    def __init__(self, controller, deserializer):
         """
         :param controller: object that implement methods created by routes lib
         :param deserializer: object that supports webob request deserialization
                              through controller-like actions
-        :param serializer: object that supports webob response serialization
-                           through controller-like actions
         """
         self.controller = controller
-        self.serializer = serializer
         self.deserializer = deserializer
 
     @webob.dec.wsgify(RequestClass=Request)
@@ -498,6 +495,15 @@ class Resource(object):
         """WSGI method that controls (de)serialization and method dispatch."""
         action_args = self.get_action_args(request.environ)
         action = action_args.pop('action', None)
+
+        # From reading the boto code, and observation of real AWS api responses
+        # it seems that the AWS api ignores the content-type in the html header
+        # Instead it looks at a "ContentType" GET query parameter
+        # This doesn't seem to be documented in the AWS cfn API spec, but it
+        # would appear that the default response serialization is XML, as
+        # described in the API docs, but passing a query parameter of
+        # ContentType=JSON results in a JSON serialized response...
+        content_type = request.GET.get("ContentType")
 
         deserialized_request = self.dispatch(self.deserializer,
                                              action, request)
@@ -507,7 +513,12 @@ class Resource(object):
                                       request, **action_args)
         try:
             response = webob.Response(request=request)
-            self.dispatch(self.serializer, action, response, action_result)
+            if content_type == "JSON":
+                self.dispatch(JSONResponseSerializer(),
+                    action, response, action_result)
+            else:
+                self.dispatch(XMLResponseSerializer(), action,
+                    response, action_result)
             return response
 
         # return unserializable result (typically a webob exc)
