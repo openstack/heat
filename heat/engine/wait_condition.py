@@ -69,6 +69,8 @@ class WaitCondition(Resource):
 
     def handle_create(self):
         self._get_handle_resource_id()
+        res_name = self.resource_id
+        cntx = self.stack.context
 
         # keep polling our Metadata to see if the cfn-signal has written
         # it yet. The execution here is limited by timeout.
@@ -79,7 +81,9 @@ class WaitCondition(Resource):
         try:
             while status == 'WAITING':
                 try:
-                    res = db_api.resource_get(self.stack.context, self.id)
+                    res = db_api.resource_get_by_name_and_stack(cntx,
+                                                                res_name,
+                                                                self.stack.id)
                 except Exception as ex:
                     if 'not found' in ex:
                         # it has been deleted
