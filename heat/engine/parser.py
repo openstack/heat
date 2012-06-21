@@ -41,7 +41,6 @@ class Stack(object):
         self.context = context
         self.t = template
         self.maps = self.t.get('Mappings', {})
-        self.outputs = self.resolve_static_data(self.t.get('Outputs', {}))
         self.res = {}
         self.doc = None
         self.name = stack_name
@@ -69,6 +68,8 @@ class Stack(object):
         # user Parameters
         if parms is not None:
             self.parms.update(parms)
+
+        self.outputs = self.resolve_static_data(self.t.get('Outputs', {}))
 
         self.resources = dict((name,
                                Resource(name, data, self))
