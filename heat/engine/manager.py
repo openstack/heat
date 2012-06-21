@@ -492,6 +492,7 @@ class EngineManager(manager.Manager):
         """
         s = db_api.stack_get_by_name(None, stack_name)
         if not s:
+            logger.warn("Stack not found %s." % (stack_name))
             return ['stack', None]
 
         r = db_api.resource_get_by_name_and_stack(None, resource_id, s.id)

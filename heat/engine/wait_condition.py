@@ -78,6 +78,7 @@ class WaitCondition(Resource):
         status = 'WAITING'
         reason = ''
         res = None
+        sleep_time = 1
         try:
             while status == 'WAITING':
                 try:
@@ -85,21 +86,28 @@ class WaitCondition(Resource):
                                                                 res_name,
                                                                 self.stack.id)
                 except Exception as ex:
+                    logger.exception('resource %s not found' % res_name)
                     if 'not found' in ex:
                         # it has been deleted
                         status = 'DELETED'
                     else:
                         pass
 
-                if res and res.rsrc_metadata:
-                    metadata = res.rsrc_metadata
-                    if metadata:
-                        status = metadata.get('Status', 'WAITING')
-                        reason = metadata.get('Reason', 'Reason not provided')
-                    logger.debug('got %s' % json.dumps(metadata))
+                if res:
+                    if res.rsrc_metadata:
+                        meta = res.rsrc_metadata
+                        status = meta.get('Status',
+                                          'WAITING')
+                        reason = meta.get('Reason',
+                                          'Reason not provided')
+                    logger.debug('got %s' % json.dumps(res.rsrc_metadata))
                 if status == 'WAITING':
                     logger.debug('Waiting some more for the Metadata[Status]')
-                    eventlet.sleep(30)
+                    eventlet.sleep(sleep_time)
+                    sleep_time = min(sleep_time * 2, self.timeout / 4)
+                    if res:
+                        res.expire()
+
         except eventlet.Timeout, t:
             if t is not tmo:
                 # not my timeout
