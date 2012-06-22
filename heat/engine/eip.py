@@ -17,6 +17,7 @@ import logging
 
 from heat.common import exception
 from heat.engine.resources import Resource
+from novaclient.exceptions import NotFound
 
 logger = logging.getLogger('heat.engine.eip')
 
@@ -104,5 +105,9 @@ class ElasticIpAssociation(Resource):
 
     def handle_delete(self):
         """Remove a floating IP address from a server."""
-        server = self.nova().servers.get(self.properties['InstanceId'])
-        server.remove_floating_ip(self.properties['EIP'])
+        try:
+            server = self.nova().servers.get(self.properties['InstanceId'])
+            if server:
+                server.remove_floating_ip(self.properties['EIP'])
+        except NotFound as ex:
+            pass

@@ -27,9 +27,9 @@ class SecurityGroup(Resource):
                                               'Required': True},
                          'VpcId': {'Type': 'String',
                                    'Implemented': False},
-                         'SecurityGroupIngress': {'Type': 'List',
-                                                  'Implemented': False},
-                         'SecurityGroupEgress': {'Type': 'List'}}
+                         'SecurityGroupIngress': {'Type': 'List'},
+                         'SecurityGroupEgress': {'Type': 'List',
+                                                  'Implemented': False}}
 
     def __init__(self, name, json_snippet, stack):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)
