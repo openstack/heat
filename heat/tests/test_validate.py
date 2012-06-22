@@ -16,6 +16,7 @@ from heat.engine import volume as volumes
 from heat.engine import manager as managers
 import heat.db as db_api
 from heat.engine import parser
+from heat.engine import auth
 
 test_template_volumeattach = '''
 {
@@ -212,8 +213,8 @@ class validateTest(unittest.TestCase):
 
     def test_validate_volumeattach_valid(self):
         t = json.loads(test_template_volumeattach % 'vdq')
-        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
-        managers.EngineManager._authenticate(None).AndReturn(True)
+        self.m.StubOutWithMock(auth, 'authenticate')
+        auth.authenticate(None).AndReturn(True)
         params = {}
         stack = parser.Stack(None, 'test_stack', t, 0, params)
 
@@ -227,8 +228,8 @@ class validateTest(unittest.TestCase):
 
     def test_validate_volumeattach_invalid(self):
         t = json.loads(test_template_volumeattach % 'sda')
-        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
-        managers.EngineManager._authenticate(None).AndReturn(True)
+        self.m.StubOutWithMock(auth, 'authenticate')
+        auth.authenticate(None).AndReturn(True)
         params = {}
         stack = parser.Stack(None, 'test_stack', t, 0, params)
 
@@ -244,8 +245,8 @@ class validateTest(unittest.TestCase):
         t = json.loads(test_template_ref % 'WikiDatabase')
         t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
-        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
-        managers.EngineManager._authenticate(None).AndReturn(True)
+        self.m.StubOutWithMock(auth, 'authenticate')
+        auth.authenticate(None).AndReturn(True)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -261,8 +262,8 @@ class validateTest(unittest.TestCase):
         t = json.loads(test_template_ref % 'WikiDatabasez')
         t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
-        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
-        managers.EngineManager._authenticate(None).AndReturn(True)
+        self.m.StubOutWithMock(auth, 'authenticate')
+        auth.authenticate(None).AndReturn(True)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -277,8 +278,8 @@ class validateTest(unittest.TestCase):
         t = json.loads(test_template_findinmap_valid)
         t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
-        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
-        managers.EngineManager._authenticate(None).AndReturn(True)
+        self.m.StubOutWithMock(auth, 'authenticate')
+        auth.authenticate(None).AndReturn(True)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -293,8 +294,8 @@ class validateTest(unittest.TestCase):
         t = json.loads(test_template_findinmap_invalid)
         t['Parameters']['KeyName']['Value'] = 'test'
         params = {}
-        self.m.StubOutWithMock(managers.EngineManager, '_authenticate')
-        managers.EngineManager._authenticate(None).AndReturn(True)
+        self.m.StubOutWithMock(auth, 'authenticate')
+        auth.authenticate(None).AndReturn(True)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)

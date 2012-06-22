@@ -24,6 +24,7 @@ from heat.common import exception
 from heat.common.config import HeatEngineConfigOpts
 from heat.db import api as db_api
 from heat.engine import checkeddict
+from heat.engine import auth
 
 logger = logging.getLogger('heat.engine.resources')
 
@@ -121,13 +122,9 @@ class Resource(object):
             return self._nova[service_type]
 
         con = self.stack.context
-        self._nova[service_type] = nc.Client(con.username,
-                                             con.password,
-                                             con.tenant,
-                                             con.auth_url,
-                                             proxy_token=con.auth_token,
-                                             proxy_tenant_id=con.tenant_id,
-                                             service_type=service_type)
+        self._nova[service_type] = auth.authenticate(con,
+                                                     service_type=service_type,
+                                                     service_name=None)
         return self._nova[service_type]
 
     def calculate_properties(self):

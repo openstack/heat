@@ -15,6 +15,7 @@ from heat.engine import instance as instances
 import heat.db as db_api
 from heat.engine import parser
 from heat.engine import manager
+from heat.engine import auth
 
 
 @attr(tag=['unit', 'resource'])
@@ -149,8 +150,8 @@ class stacksTest(unittest.TestCase):
         ctx = context.get_admin_context()
         self.m.StubOutWithMock(ctx, 'username')
         ctx.username = 'fred'
-        self.m.StubOutWithMock(manager.EngineManager, '_authenticate')
-        manager.EngineManager._authenticate(ctx).AndReturn(True)
+        self.m.StubOutWithMock(auth, 'authenticate')
+        auth.authenticate(ctx).AndReturn(True)
 
         s = {}
         s['name'] = stack.name

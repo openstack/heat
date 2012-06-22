@@ -32,6 +32,7 @@ from heat.common import context as ctxtlib
 from heat.engine import parser
 from heat.engine import resources
 from heat.engine import watchrule
+from heat.engine import auth
 from heat.openstack.common import timeutils
 
 from novaclient.v1_1 import client
@@ -77,60 +78,6 @@ class EngineManager(manager.Manager):
         """Load configuration options and connect to the hypervisor."""
         pass
 
-    def _authenticate(self, con):
-        """ Authenticate against the 'heat' service.  This should be
-            the first call made in an endpoint call.  I like to see this
-            done explicitly so that it is clear there is an authentication
-            request at the entry to the call.
-
-            In the case of EC2 style authentication this will also set the
-            username in the context so we can use it to key in the database.
-        """
-
-        if con.password is not None:
-            nova = client.Client(con.username, con.password,
-                                 con.tenant, con.auth_url,
-                                 service_type='heat',
-                                 service_name='heat')
-            nova.authenticate()
-        else:
-            # We'll have to do AWS style auth which is more complex.
-            # First step is to get a token from the AWS creds.
-            headers = {'Content-Type': 'application/json'}
-
-            o = urlparse.urlparse(con.aws_auth_uri)
-            if o.scheme == 'http':
-                conn = httplib.HTTPConnection(o.netloc)
-            else:
-                conn = httplib.HTTPSConnection(o.netloc)
-            conn.request('POST', o.path, body=con.aws_creds, headers=headers)
-            response = conn.getresponse().read()
-            conn.close()
-
-            result = json.loads(response)
-            try:
-                token_id = result['access']['token']['id']
-                # We grab the username here because with token auth and EC2
-                # we never get it normally.  We could pass it in but then We
-                # are relying on user input to give us the correct username.
-                # This one is the result of the authentication and is verified.
-                username = result['access']['user']['username']
-                con.username = username
-
-                logger.info("AWS authentication successful.")
-            except (AttributeError, KeyError):
-                # FIXME: Should be 404 I think.
-                logger.info("AWS authentication failure.")
-                raise exception.AuthorizationFailure()
-
-            nova = client.Client(con.service_user, con.service_password,
-                                 con.tenant, con.auth_url,
-                                 proxy_token=token_id,
-                                 proxy_tenant_id=con.tenant_id,
-                                 service_type='heat',
-                                 service_name='heat')
-            nova.authenticate()
-
     def list_stacks(self, context, params):
         """
         The list_stacks method is the end point that actually implements
@@ -139,7 +86,7 @@ class EngineManager(manager.Manager):
         arg2 -> Dict of http request parameters passed in from API side.
         """
 
-        self._authenticate(context)
+        auth.authenticate(context)
 
         res = {'stacks': []}
         stacks = db_api.stack_get_by_user(context)
@@ -167,7 +114,7 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the stack you want to see.
         arg3 -> Dict of http request parameters passed in from API side.
         """
-        self._authenticate(context)
+        auth.authenticate(context)
 
         res = {'stacks': []}
         s = db_api.stack_get_by_name(context, stack_name)
@@ -209,7 +156,7 @@ class EngineManager(manager.Manager):
         """
         logger.info('template is %s' % template)
 
-        self._authenticate(context)
+        auth.authenticate(context)
 
         if db_api.stack_get_by_name(None, stack_name):
             return {'Error': 'Stack already exists with that name.'}
@@ -267,7 +214,7 @@ class EngineManager(manager.Manager):
         arg4 -> Params passed from API.
         """
 
-        self._authenticate(context)
+        auth.authenticate(context)
 
         logger.info('validate_template')
         if template is None:
@@ -297,7 +244,7 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the stack you want to see.
         arg3 -> Dict of http request parameters passed in from API side.
         """
-        self._authenticate(context)
+        auth.authenticate(context)
         s = db_api.stack_get_by_name(context, stack_name)
         if s:
             return s.raw_template.template
@@ -311,7 +258,7 @@ class EngineManager(manager.Manager):
         arg3 -> Params passed from API.
         """
 
-        self._authenticate(context)
+        auth.authenticate(context)
 
         st = db_api.stack_get_by_name(context, stack_name)
         if not st:
@@ -347,7 +294,7 @@ class EngineManager(manager.Manager):
         arg3 -> Params passed from API.
         """
 
-        self._authenticate(context)
+        auth.authenticate(context)
 
         if stack_name is not None:
             st = db_api.stack_get_by_name(context, stack_name)
@@ -362,7 +309,7 @@ class EngineManager(manager.Manager):
 
     def event_create(self, context, event):
 
-        self._authenticate(context)
+        auth.authenticate(context)
 
         stack_name = event['stack']
         resource_name = event['resource']
@@ -391,7 +338,7 @@ class EngineManager(manager.Manager):
             return [msg, None]
 
     def describe_stack_resource(self, context, stack_name, resource_name):
-        self._authenticate(context)
+        auth.authenticate(context)
 
         stack = db_api.stack_get_by_name(context, stack_name)
         if not stack:
@@ -405,7 +352,7 @@ class EngineManager(manager.Manager):
 
     def describe_stack_resources(self, context, stack_name,
                                  physical_resource_id, logical_resource_id):
-        self._authenticate(context)
+        auth.authenticate(context)
 
         if stack_name:
             stack = db_api.stack_get_by_name(context, stack_name)
@@ -433,7 +380,7 @@ class EngineManager(manager.Manager):
         return resources
 
     def list_stack_resources(self, context, stack_name):
-        self._authenticate(context)
+        auth.authenticate(context)
 
         stack = db_api.stack_get_by_name(context, stack_name)
         if not stack:
