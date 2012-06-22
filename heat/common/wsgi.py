@@ -481,14 +481,17 @@ class Resource(object):
     may raise a webob.exc exception or return a dict, which will be
     serialized by requested content type.
     """
-    def __init__(self, controller, deserializer):
+    def __init__(self, controller, deserializer, serializer=None):
         """
         :param controller: object that implement methods created by routes lib
         :param deserializer: object that supports webob request deserialization
                              through controller-like actions
+        :param serializer: object that supports webob response serialization
+                           through controller-like actions
         """
         self.controller = controller
         self.deserializer = deserializer
+        self.serializer = serializer
 
     @webob.dec.wsgify(RequestClass=Request)
     def __call__(self, request):
@@ -511,14 +514,19 @@ class Resource(object):
 
         action_result = self.dispatch(self.controller, action,
                                       request, **action_args)
+
+        # Here we support either passing in a serializer or detecting it
+        # based on the content type.
         try:
+            serializer = self.serializer
+            if serializer is None:
+                if content_type == "JSON":
+                    serializer = JSONResponseSerializer()
+                else:
+                    serializer = XMLResponseSerializer()
+
             response = webob.Response(request=request)
-            if content_type == "JSON":
-                self.dispatch(JSONResponseSerializer(),
-                    action, response, action_result)
-            else:
-                self.dispatch(XMLResponseSerializer(), action,
-                    response, action_result)
+            self.dispatch(serializer, action, response, action_result)
             return response
 
         # return unserializable result (typically a webob exc)
