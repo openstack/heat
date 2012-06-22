@@ -34,13 +34,10 @@ class DummyId:
 
 
 class User(Resource):
-    properties_schema = {'Path': {'Type': 'String',
-                                  'Implemented': False},
-                         'Groups': {'Type': 'CommaDelimitedList',
-                                    'Implemented': False},
+    properties_schema = {'Path': {'Type': 'String'},
+                         'Groups': {'Type': 'CommaDelimitedList'},
                          'LoginProfile': {'Type': 'List'},
-                         'Policies': {'Type': 'List',
-                                      'Implemented': False}}
+                         'Policies': {'Type': 'List'}}
 
     def __init__(self, name, json_snippet, stack):
         super(User, self).__init__(name, json_snippet, stack)
