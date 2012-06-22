@@ -1,22 +1,30 @@
-#!/bin/sh
+#!/bin/bash
 
-mkdir -p /var/log/heat
-mkdir -p /etc/heat
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root"
+    exit 1
+fi
 
-pushd etc
+CONF_DIR=/etc/heat
+LOG_DIR=/var/log/heat
+
+mkdir -p $LOG_DIR
+mkdir -p $CONF_DIR
+
+pushd etc > /dev/null
 for f in *
 do
-    if [ -d $f ] ; then
-        #ignore
-        s=0
-    elif [ -f $f ] ; then
-        echo not coping over /etc/heat/$f
-        diff -u /etc/heat/$f $f
+    if [ -d $f ]; then
+        # ignore directories
+        continue
+    elif [ -f $CONF_DIR/$f ]; then
+        echo "not copying over $CONF_DIR/$f"
+        diff -u $CONF_DIR/$f $f
     else
-        cp $f /etc/heat/
+        cp $f $CONF_DIR
     fi
 done
-popd
+popd > /dev/null
 
 ./setup.py install --root=/ >/dev/null
 rm -rf build heat.egg-info
