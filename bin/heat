@@ -122,7 +122,7 @@ def estimate_template_cost(options, arguments):
 
     c = get_client(options)
     result = c.estimate_template_cost(**parameters)
-    print json.dumps(result, indent=2)
+    print result
 
 
 @utils.catch_error('gettemplate')
@@ -140,7 +140,7 @@ def get_template(options, arguments):
 
     c = get_client(options)
     result = c.get_template(**parameters)
-    print json.dumps(result, indent=2)
+    print result
 
 
 @utils.catch_error('create')
