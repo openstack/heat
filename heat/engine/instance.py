@@ -22,23 +22,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from novaclient.exceptions import NotFound
 
+import heat
 from heat.engine.resources import Resource
 from heat.common import exception
 
 logger = logging.getLogger('heat.engine.instance')
-# If ../heat/__init__.py exists, add ../ to Python search path, so that
-# it will override what happens to be installed in /usr/(local/)lib/python...
-possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
-                                   os.pardir,
-                                   os.pardir))
-if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
-    sys.path.insert(0, possible_topdir)
-    cloudinit_path = '%s/heat/%s/' % (possible_topdir, "cloudinit")
-else:
-    for p in sys.path:
-        if 'heat' in p:
-            cloudinit_path = '%s/heat/%s/' % (p, "cloudinit")
-            break
 
 
 class Restarter(Resource):
@@ -168,40 +156,37 @@ class Instance(Resource):
     def _build_userdata(self, userdata):
         if not self.mime_string:
             # Build mime multipart data blob for cloudinit userdata
-            mime_blob = MIMEMultipart()
-            fp = open('%s/%s' % (cloudinit_path, 'config'), 'r')
-            msg = MIMEText(fp.read(), _subtype='cloud-config')
-            fp.close()
-            msg.add_header('Content-Disposition', 'attachment',
-                           filename='cloud-config')
-            mime_blob.attach(msg)
 
-            fp = open('%s/%s' % (cloudinit_path, 'part-handler.py'), 'r')
-            msg = MIMEText(fp.read(), _subtype='part-handler')
-            fp.close()
-            msg.add_header('Content-Disposition', 'attachment',
-                           filename='part-handler.py')
-            mime_blob.attach(msg)
+            def make_subpart(content, filename, subtype=None):
+                if subtype is None:
+                    subtype = os.path.splitext(filename)[0]
+                msg = MIMEText(content, _subtype=subtype)
+                msg.add_header('Content-Disposition', 'attachment',
+                               filename=filename)
+                return msg
+
+            def read_cloudinit_file(fn):
+                with open(os.path.join(heat.__path__[0], 'cloudinit', fn),
+                          'r') as fp:
+                    return fp.read()
+
+            attachments = [(read_cloudinit_file('config'), 'cloud-config'),
+                           (read_cloudinit_file('part-handler.py'),
+                            'part-handler.py'),
+                           (userdata, 'startup', 'x-shellscript')]
 
             if 'Metadata' in self.t:
                 metadata = self.parsed_template()['Metadata']
-                msg = MIMEText(json.dumps(metadata),
-                               _subtype='x-cfninitdata')
-                msg.add_header('Content-Disposition', 'attachment',
-                               filename='cfn-init-data')
-                mime_blob.attach(msg)
+                attachments.append((json.dumps(metadata),
+                                    'cfn-init-data', 'x-cfninitdata'))
 
             if self.stack.metadata_server:
-                msg = MIMEText(self.stack.metadata_server,
-                               _subtype='x-cfninitdata')
-                msg.add_header('Content-Disposition', 'attachment',
-                               filename='cfn-metadata-server')
-                mime_blob.attach(msg)
+                attachments.append((self.stack.metadata_server,
+                                    'cfn-metadata-server', 'x-cfninitdata'))
 
-            msg = MIMEText(userdata, _subtype='x-shellscript')
-            msg.add_header('Content-Disposition', 'attachment',
-                           filename='startup')
-            mime_blob.attach(msg)
+            subparts = [make_subpart(*args) for args in attachments]
+            mime_blob = MIMEMultipart(_subparts=subparts)
+
             self.mime_string = mime_blob.as_string()
 
         return self.mime_string
