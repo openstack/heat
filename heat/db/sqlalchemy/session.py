@@ -27,30 +27,6 @@ _ENGINE = None
 _MAKER = None
 
 
-class Error(Exception):
-    pass
-
-
-class DBError(Error):
-    """Wraps an implementation specific exception."""
-    def __init__(self, inner_exception=None):
-        self.inner_exception = inner_exception
-        super(DBError, self).__init__(str(inner_exception))
-
-
-def _wrap_db_error(f):
-    def _wrap(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except UnicodeEncodeError:
-            raise InvalidUnicodeParameter()
-        except Exception, e:
-            logger.exception(_('DB exception wrapped.'))
-            raise DBError(e)
-    _wrap.func_name = f.func_name
-    return _wrap
-
-
 def get_session(autocommit=True, expire_on_commit=False):
     """Return a SQLAlchemy session."""
     global _ENGINE, _MAKER
@@ -58,10 +34,7 @@ def get_session(autocommit=True, expire_on_commit=False):
     if _MAKER is None or _ENGINE is None:
         _ENGINE = get_engine()
         _MAKER = get_maker(_ENGINE, autocommit, expire_on_commit)
-    session = _MAKER()
-    session.query = _wrap_db_error(session.query)
-    session.flush = _wrap_db_error(session.flush)
-    return session
+    return _MAKER()
 
 
 class SynchronousSwitchListener(sqlalchemy.interfaces.PoolListener):
