@@ -446,7 +446,13 @@ class XMLResponseSerializer(object):
         elif isinstance(obj, dict):
             for key, value in obj.items():
                 subelement = etree.SubElement(element, key)
-                self.object_to_element(value, subelement)
+                if key == "TemplateBody":
+                    # Escape serialization for TemplateBody key, as
+                    # AWS api defines JSON-template-inside-XML format
+                    # ref to GetTemplate AWS CFN API docs
+                    subelement.text = str(value)
+                else:
+                    self.object_to_element(value, subelement)
         else:
             element.text = str(obj)
 
