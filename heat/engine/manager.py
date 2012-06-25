@@ -279,7 +279,7 @@ class EngineManager(manager.Manager):
         return {'EventId': event.id,
                 'StackId': event.stack_id,
                 'StackName': s.name,
-                'Timestamp': str(event.created_at),
+                'Timestamp': heat_utils.strtime(event.created_at),
                 'LogicalResourceId': event.logical_resource_id,
                 'PhysicalResourceId': event.physical_resource_id,
                 'ResourceType': event.resource_type,
@@ -534,7 +534,7 @@ def format_resource_attributes(stack, resource):
         'LogicalResourceId': resource.name,
         'PhysicalResourceId': resource.nova_instance or '',
         'ResourceType': resource_type,
-        'LastUpdatedTimestamp': last_updated_time.isoformat(),
+        'LastUpdatedTimestamp': heat_utils.strtime(last_updated_time),
         'ResourceStatus': resource.state,
         'ResourceStatusReason': resource.state_description,
     }
