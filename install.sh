@@ -26,6 +26,6 @@ do
 done
 popd > /dev/null
 
-./setup.py install --root=/ >/dev/null
+./setup.py install >/dev/null
 rm -rf build heat.egg-info
 
