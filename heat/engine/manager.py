@@ -130,7 +130,7 @@ class EngineManager(manager.Manager):
             mem['NotificationARNs'] = 'TODO'
             mem['Parameters'] = ps.t['Parameters']
             mem['TimeoutInMinutes'] = ps.t.get('Timeout', '60')
-            mem['TemplateDescription'] = ps.t.get('Description',
+            mem['Description'] = ps.t.get('Description',
                                                   'No description')
             mem['StackStatus'] = s.status
             mem['StackStatusReason'] = s.status_reason

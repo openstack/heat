@@ -98,6 +98,12 @@ class StackController(object):
         res = {'DescribeStacksResult': {'Stacks': []}}
         stacks = res['DescribeStacksResult']['Stacks']
         for s in stack_list['stacks']:
+            # Reformat Parameters dict-of-dict into AWS API format
+            # This is a list-of-dict with nasty "ParameterKey" : key
+            # "ParameterValue" : value format.
+            s['Parameters'] = [{'ParameterKey':k,
+                'ParameterValue':v.get('Default')}
+                for (k, v) in s['Parameters'].items()]
             stacks.append(self._stackid_addprefix(s))
 
         return res
