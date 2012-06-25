@@ -270,9 +270,7 @@ def stack_describe(options, arguments):
     try:
         parameters['StackName'] = arguments.pop(0)
     except IndexError:
-        logging.error("Please specify the stack name you wish to describe")
-        logging.error("as the first argument")
-        return utils.FAILURE
+        logging.info("No stack name passed, getting results for ALL stacks")
 
     c = get_client(options)
     result = c.describe_stacks(**parameters)

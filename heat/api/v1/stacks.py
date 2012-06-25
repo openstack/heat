@@ -86,10 +86,17 @@ class StackController(object):
         con = req.context
         parms = dict(req.params)
 
+        # If no StackName parameter is passed, we pass None into the engine
+        # this returns results for all stacks (visible to this user), which
+        # is the behavior described in the AWS DescribeStacks API docs
+        stack_name = None
+        if 'StackName' in req.params:
+            stack_name = req.params['StackName']
+
         try:
             stack_list = rpc.call(con, 'engine',
                               {'method': 'show_stack',
-                               'args': {'stack_name': req.params['StackName'],
+                               'args': {'stack_name': stack_name,
                                 'params': parms}})
 
         except rpc_common.RemoteError as ex:

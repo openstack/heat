@@ -123,34 +123,47 @@ class EngineManager(manager.Manager):
         """
         The show_stack method returns the attributes of one stack.
         arg1 -> RPC context.
-        arg2 -> Name of the stack you want to see.
+        arg2 -> Name of the stack you want to see, or None to see all
         arg3 -> Dict of http request parameters passed in from API side.
         """
         auth.authenticate(context)
 
         res = {'stacks': []}
-        s = db_api.stack_get_by_name(context, stack_name)
-        if s:
-            ps = parser.Stack(context, s.name,
-                              s.raw_template.parsed_template.template,
-                              s.id, _extract_user_params(params))
-            mem = {}
-            mem['StackId'] = "/".join([s.name, str(s.id)])
-            mem['StackName'] = s.name
-            mem['CreationTime'] = heat_utils.strtime(s.created_at)
-            mem['LastUpdatedTimestamp'] = heat_utils.strtime(s.updated_at)
-            mem['NotificationARNs'] = 'TODO'
-            mem['Parameters'] = ps.t['Parameters']
-            mem['Description'] = ps.t.get('Description',
-                                          'No description')
-            mem['StackStatus'] = s.status
-            mem['StackStatusReason'] = s.status_reason
+        stacks = []
+        if not stack_name:
+            stacks = [s.name for s in db_api.stack_get_by_user(context)]
+            logging.debug("No stack name passed, got %s" % stacks)
+        else:
+            stacks = [stack_name]
 
-            # only show the outputs on a completely created stack
-            if s.status == ps.CREATE_COMPLETE:
-                mem['Outputs'] = ps.get_outputs()
+        if not stacks:
+            logging.debug("No stacks found to process")
+            return res
 
-            res['stacks'].append(mem)
+        for stack in stacks:
+            logging.debug("Processing show_stack for %s" % stack)
+            s = db_api.stack_get_by_name(context, stack)
+            if s:
+                ps = parser.Stack(context, s.name,
+                                  s.raw_template.parsed_template.template,
+                                  s.id, _extract_user_params(params))
+                mem = {}
+                mem['StackId'] = "/".join([s.name, str(s.id)])
+                mem['StackName'] = s.name
+                mem['CreationTime'] = heat_utils.strtime(s.created_at)
+                mem['LastUpdatedTimestamp'] = heat_utils.strtime(s.updated_at)
+                mem['NotificationARNs'] = 'TODO'
+                mem['Parameters'] = ps.t['Parameters']
+                mem['Description'] = ps.t.get('Description',
+                                              'No description')
+                mem['StackStatus'] = s.status
+                mem['StackStatusReason'] = s.status_reason
+
+                # only show the outputs on a completely created stack
+                if s.status == ps.CREATE_COMPLETE:
+                    mem['Outputs'] = ps.get_outputs()
+
+                res['stacks'].append(mem)
 
         return res
 
