@@ -60,6 +60,24 @@ Installing OpenStack on other Distributions
 .. _Debian packaging team for OpenStack: http://wiki.openstack.org/Packaging/Debian
 .. _installing OpenStack on Ubuntu: http://docs.openstack.org/bexar/openstack-compute/admin/content/ch03s02.html
 
+
+Install OZ
+----------
+
+It is recommended to install the latest upstream oz, as this supports Fedora 17 (and Ubuntu U10/U12) guests::
+
+    git clone https://github.com/clalancette/oz.git
+    cd oz
+    rm -f ~/rpmbuild/RPMS/noarch/oz-*
+    make rpm
+    sudo rpm -Uvh ~/rpmbuild/RPMS/noarch/oz-*
+
+Note: In the steps above, it's only necessary to be root for the rpm -Uvh, it's recommended not to be root while building the rpm
+
+If you do not require F17/U10/U12 support, oz can be installed directly via yum::
+
+    yum install oz
+
 Install heat from source
 ------------------------
 
