@@ -40,7 +40,7 @@ class WaitConditionHandle(Resource):
     def handle_create(self):
         self.instance_id = '%s/stacks/%s/resources/%s' % \
                            (self.stack.metadata_server,
-                            self.stack.name,
+                            self.stack.id,
                             self.name)
 
 

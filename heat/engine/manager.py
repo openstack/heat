@@ -433,19 +433,15 @@ class EngineManager(manager.Manager):
 
         return [None, r.rsrc_metadata]
 
-    def metadata_update(self, context, stack_name, resource_id, metadata):
+    def metadata_update(self, context, stack_id, resource_name, metadata):
         """
         Update the metadata for the given resource.
         """
-        s = db_api.stack_get_by_name(None, stack_name)
-        if not s:
-            logger.warn("Stack not found %s." % (stack_name))
-            return ['stack', None]
-
-        r = db_api.resource_get_by_name_and_stack(None, resource_id, s.id)
+        r = db_api.resource_get_by_name_and_stack(None, resource_name,
+                                                  stack_id)
         if r is None:
-            logger.warn("Resource not found %s:%s." % (stack_name,
-                                                       resource_id))
+            logger.warn("Resource not found %s:%s." % (stack_id,
+                                                       resource_name))
             return ['resource', None]
 
         r.update_and_save({'rsrc_metadata': metadata})

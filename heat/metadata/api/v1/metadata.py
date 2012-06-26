@@ -78,22 +78,22 @@ class MetadataController:
                             'The resource "%s" does not exist.' % resource_id)
         return metadata
 
-    def update_metadata(self, req, body, stack_name, resource_id):
+    def update_metadata(self, req, body, stack_id, resource_name):
         con = context.get_admin_context()
         [error, metadata] = rpc.call(con, 'engine',
                                      {'method': 'metadata_update',
-                                      'args': {'stack_name': stack_name,
-                                               'resource_id': resource_id,
+                                      'args': {'stack_id': stack_id,
+                                               'resource_name': resource_name,
                                                'metadata': body}})
         if error:
             if error == 'stack':
                 return json_error(404,
-                        'The stack "%s" does not exist.' % stack_name)
+                        'The stack "%s" does not exist.' % stack_id)
             else:
                 return json_error(404,
-                        'The resource "%s" does not exist.' % resource_id)
+                        'The resource "%s" does not exist.' % resource_name)
         return json_response(201, {
-            'resource': resource_id,
+            'resource': resource_name,
             'metadata': body,
         })
 
