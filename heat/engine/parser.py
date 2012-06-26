@@ -191,28 +191,20 @@ class Stack(object):
         stack.update_and_save({'status': new_status,
                                'status_reason': reason})
 
-    def _timeout(self):
-        '''Return the stack creation timeout in seconds'''
-        if 'Timeout' in self.t:
-            try:
-                # Timeout is in minutes
-                return int(self.t['Timeout']) * 60
-            except ValueError:
-                logger.exception('create timeout conversion')
-
-        # Default to 1 hour
-        return 60 * 60
-
-    def create(self):
+    def create(self, timeout_in_minutes=60):
         '''
         Create the stack and all of the resources.
+
+        Creation will fail if it exceeds the specified timeout. The default is
+        60 minutes.
         '''
         self.state_set(self.IN_PROGRESS, 'Stack creation started')
 
         stack_status = self.CREATE_COMPLETE
         reason = 'Stack successfully created'
+        res = None
 
-        with eventlet.Timeout(self._timeout()) as tmo:
+        with eventlet.Timeout(timeout_in_minutes * 60) as tmo:
             try:
                 for res in self:
                     if stack_status != self.CREATE_FAILED:
@@ -231,10 +223,10 @@ class Stack(object):
                         res.state_set(res.CREATE_FAILED,
                                       'Stack creation aborted')
 
-            except eventlet.Timeout, t:
+            except eventlet.Timeout as t:
                 if t is tmo:
                     stack_status = self.CREATE_FAILED
-                    reason = 'Timed out waiting for %s' % (res.name)
+                    reason = 'Timed out waiting for %s' % str(res)
                 else:
                     # not my timeout
                     raise

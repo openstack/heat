@@ -176,7 +176,7 @@ def stack_create(options, arguments):
             parameters['Parameters.member.%d.ParameterValue' % count] = v
             count = count + 1
 
-    parameters['Timeout'] = options.timeout
+    parameters['TimeoutInMinutes'] = options.timeout
 
     if options.template_file:
         parameters['TemplateBody'] = open(options.template_file).read()
