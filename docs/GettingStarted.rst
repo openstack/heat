@@ -26,8 +26,8 @@ Clone the heat repository_ from GitHub at ``git://github.com/heat-api/heat.git``
 Install OpenStack
 -----------------
 
-Installing OpenStack on Fedora 16
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Installing OpenStack on Fedora 16 and 17
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note: on Fedora 16 you have to enable the `Preview Repository`_ to install the required OpenStack Essex release.
 A script called "``openstack``" in the tools directory of the repository will install and start OpenStack for you on Fedora 16/17::

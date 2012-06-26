@@ -98,7 +98,8 @@ function os_erase() {
 
 
 function os_install() {
-	sudo yum install -y openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server
+	sudo yum groupinstall -y Virtualization
+	sudo yum install -y openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server mysql-server
 	sudo dd if=/dev/zero of=/var/lib/nova/nova-volumes.img bs=1M seek=20k count=0
 	sudo systemctl start mysqld.service
 	sleep 1
