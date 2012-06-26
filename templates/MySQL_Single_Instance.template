@@ -86,7 +86,7 @@
   },
 
   "Resources" : {
-    "DatabaseServer": {
+    "MySqlDatabaseServer": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
@@ -112,7 +112,19 @@
         "KeyName"        : { "Ref" : "KeyName" },
         "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -v\n",
-          "/opt/aws/bin/cfn-init\n",
+
+          "# Helper function\n",
+          "function error_exit\n",
+          "{\n",
+          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "MySqlWaitHandle" }, "'\n",
+          "  exit 1\n",
+          "}\n",
+
+          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" },
+          " -r MySqlDatabaseServer ",
+          " --region ", { "Ref" : "AWS::Region" },
+          " || error_exit 'Failed to run cfn-init'\n",
+
           "# Setup MySQL root password and create a user\n",
           "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
           "cat << EOF | mysql -u root --password='", { "Ref" : "DBRootPassword" }, "'\n",
@@ -121,15 +133,32 @@
           "IDENTIFIED BY \"", { "Ref" : "DBPassword" }, "\";\n",
           "FLUSH PRIVILEGES;\n",
           "EXIT\n",
-          "EOF\n"
+          "EOF\n",
+          "# All is well so signal success\n",
+          "/opt/aws/bin/cfn-signal -e 0 -r \"MySQL Database setup complete\" '",
+          { "Ref" : "MySqlWaitHandle" }, "'\n"
         ]]}}
       }
+    },
+
+    "MySqlWaitHandle" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
+
+    "MySqlWaitCondition" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "DependsOn" : "MySqlDatabaseServer",
+      "Properties" : {
+        "Handle" : {"Ref" : "MySqlWaitHandle"},
+        "Timeout" : "600"
+      }
     }
+
   },
 
   "Outputs" : {
     "PublicIp": {
-      "Value": { "Fn::GetAtt" : [ "DatabaseServer", "PublicIp" ] },
+      "Value": { "Fn::GetAtt" : [ "MySqlDatabaseServer", "PublicIp" ] },
       "Description": "Database server IP"
     }
   }

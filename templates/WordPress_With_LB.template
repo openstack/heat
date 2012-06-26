@@ -1,0 +1,148 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "WordPress is web software you can use to create a beautiful website or blog. This template installs two instances: one running a WordPress deployment and the other, created within a separate stack embedded in this one with template composition, using a local MySQL database to store the data.",
+
+  "Parameters": {
+
+    "KeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type": "String"
+    },
+
+    "InstanceType": {
+      "Description": "WebServer EC2 instance type",
+      "Type": "String",
+      "Default": "m1.large",
+      "AllowedValues": [ "t1.micro", "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "c1.medium", "c1.xlarge", "cc1.4xlarge" ],
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    },
+
+    "DBName": {
+      "Default": "wordpress",
+      "Description": "The WordPress database name",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBUsername": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description": "The WordPress database admin account username",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description": "The WordPress database admin account password",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "ConstraintDescription": "must contain only alphanumeric characters."
+    },
+
+    "DBRootPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description": "Root password for MySQL",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern": "[a-zA-Z0-9]*",
+      "ConstraintDescription": "must contain only alphanumeric characters."
+    },
+    "LinuxDistribution": {
+      "Default": "F16",
+      "Description": "Distribution of choice",
+      "Type": "String",
+      "AllowedValues": [ "F16", "F17", "U10", "RHEL-6.1", "RHEL-6.2", "RHEL-6.3" ]
+    }
+  },
+
+  "Mappings": {
+    "AWSInstanceType2Arch": {
+      "t1.micro"    : { "Arch": "32" },
+      "m1.small"    : { "Arch": "32" },
+      "m1.large"    : { "Arch": "64" },
+      "m1.xlarge"   : { "Arch": "64" },
+      "m2.xlarge"   : { "Arch": "64" },
+      "m2.2xlarge"  : { "Arch": "64" },
+      "m2.4xlarge"  : { "Arch": "64" },
+      "c1.medium"   : { "Arch": "32" },
+      "c1.xlarge"   : { "Arch": "64" },
+      "cc1.4xlarge" : { "Arch": "64" }
+    },
+    "DistroArch2AMI": {
+      "F16"     : { "32": "F16-i386-cfntools", "64": "F16-x86_64-cfntools" },
+      "F17"     : { "32": "F17-i386-cfntools", "64": "F17-x86_64-cfntools" },
+      "U10"     : { "32": "U10-i386-cfntools", "64": "U10-x86_64-cfntools" },
+      "RHEL-6.1": { "32": "rhel61-i386-cfntools", "64": "rhel61-x86_64-cfntools" },
+      "RHEL-6.2": { "32": "rhel62-i386-cfntools", "64": "rhel62-x86_64-cfntools" },
+      "RHEL-6.3": { "32": "rhel63-i386-cfntools", "64": "rhel63-x86_64-cfntools" }
+    }
+  },
+
+  "Resources": {
+    "DatabaseServer": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": "https://raw.github.com/heat-api/heat/master/templates/MySQL_Single_Instance.template",
+        "Parameters": {
+          "KeyName"          : { "Ref": "KeyName" },
+          "InstanceType"     : { "Ref": "InstanceType" },
+          "DBName"           : { "Ref": "DBName" },
+          "DBUsername"       : { "Ref": "DBUsername" },
+          "DBPassword"       : { "Ref": "DBPassword" },
+          "DBRootPassword"   : { "Ref": "DBRootPassword" },
+          "LinuxDistribution": { "Ref": "LinuxDistribution" }
+        }
+      }
+    },
+
+    "WikiServerOne": {
+      "Type": "AWS::CloudFormation::Stack",
+      "DependsOn": "DatabaseServer",
+      "Properties": {
+        "TemplateURL": "https://raw.github.com/heat-api/heat/master/templates/WordPress_And_Http.template",
+        "Parameters": {
+          "KeyName"          : { "Ref": "KeyName" },
+          "InstanceType"     : { "Ref": "InstanceType" },
+          "DBName"           : { "Ref": "DBName" },
+          "DBUsername"       : { "Ref": "DBUsername" },
+          "DBPassword"       : { "Ref": "DBPassword" },
+          "DBIpaddress"      : { "Fn::GetAtt": [ "DatabaseServer", "Outputs.PublicIp" ]},
+          "LinuxDistribution": { "Ref": "LinuxDistribution" }
+        }
+      }
+    },
+
+    "LoadBalancer": {
+      "Type": "AWS::CloudFormation::Stack",
+      "DependsOn": "WikiServerOne",
+      "Properties": {
+        "TemplateURL": "https://raw.github.com/heat-api/heat/master/templates/HAProxy_Single_Instance.template",
+        "Parameters": {
+          "KeyName"          : { "Ref": "KeyName" },
+          "InstanceType"     : { "Ref": "InstanceType" },
+          "Server1"          : { "Fn::Join": ["", [{ "Fn::GetAtt": [ "WikiServerOne", "Outputs.PublicIp" ]}, ":80"]] }
+        }
+      }
+    }
+  },
+
+  "Outputs": {
+    "WebsiteURL": {
+      "Value": { "Fn::Join": ["", ["http://", { "Fn::GetAtt": [ "LoadBalancer", "Outputs.PublicIp" ]}, "/wordpress"]] },
+      "Description": "URL for Wordpress wiki"
+    }
+  }
+}

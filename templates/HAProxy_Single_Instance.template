@@ -1,0 +1,94 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Description": "A Database instance running a local MySQL server",
+
+  "Parameters": {
+
+    "KeyName": {
+      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type": "String"
+    },
+
+    "Server1": {
+      "Description": "Server1 to load balance <ip:port>",
+      "Type": "String"
+    },
+
+    "InstanceType": {
+      "Description": "Database server EC2 instance type",
+      "Default": "m1.small",
+      "Type": "String",
+      "AllowedValues": [ "t1.micro", "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "c1.medium", "c1.xlarge", "cc1.4xlarge" ],
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    }
+  },
+
+  "Resources": {
+    "LoadBalancerInstance": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "packages": {
+              "yum": {
+                "haproxy"        : []
+              }
+            },
+            "services": {
+              "systemd": {
+                "haproxy"   : { "enabled": "true", "ensureRunning": "true" }
+              }
+            },
+            "files": {
+              "/etc/haproxy/haproxy.cfg": {
+                "content": { "Fn::Join": ["", [
+                "    global\n",
+                "        daemon\n",
+                "        maxconn 256\n",
+                "\n",
+                "    defaults\n",
+                "        mode http\n",
+                "        timeout connect 5000ms\n",
+                "        timeout client 50000ms\n",
+                "        timeout server 50000ms\n",
+                "\n",
+                "    frontend http-in\n",
+                "        bind *:80\n",
+                "        default_backend servers\n",
+                "\n",
+                "    backend servers\n",
+                "        balance roundrobin\n",
+                "        option http-server-close\n",
+                "        option forwardfor\n",
+                "        server server1 ", { "Ref" : "Server1" }, "\n"
+                ]]},
+                "mode": "000644",
+                "owner": "root",
+                "group": "root"
+            }
+          }
+        }
+        }
+      },
+      "Properties": {
+        "ImageId": "F16-x86_64-cfntools",
+        "InstanceType": { "Ref": "InstanceType" },
+        "KeyName": { "Ref": "KeyName" },
+        "UserData": { "Fn::Base64": { "Fn::Join": ["", [
+          "#!/bin/bash -v\n",
+          "/opt/aws/bin/cfn-init -s ",
+          { "Ref": "AWS::StackName" },
+          "    --region ", { "Ref": "AWS::Region" }, "\n"
+        ]]}}
+      }
+    }
+  },
+
+  "Outputs": {
+    "PublicIp": {
+      "Value": { "Fn::GetAtt": [ "LoadBalancerInstance", "PublicIp" ] },
+      "Description": "instance IP"
+    }
+  }
+}
