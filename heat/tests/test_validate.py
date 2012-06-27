@@ -71,7 +71,7 @@ test_template_ref = '''
       "Properties": {
         "ImageId": "image_name",
         "InstanceType": "m1.large",
-        "KeyName": "test_KeyName"
+        "KeyName": { "Ref" : "KeyName" }
       }
     },
     "DataVolume" : {
@@ -112,7 +112,7 @@ test_template_findinmap_valid = '''
       "Properties": {
         "ImageId": "image_name",
         "InstanceType": "m1.large",
-        "KeyName": "test_KeyName"
+        "KeyName": { "Ref" : "KeyName" }
       }
     },
     "DataVolume" : {
@@ -176,7 +176,7 @@ test_template_findinmap_invalid = '''
         '"InstanceType" }, "Arch" ] } ] },' + \
 '''
         "InstanceType": "m1.large",
-        "KeyName": "test_KeyName"
+        "KeyName": { "Ref" : "KeyName"}
       }
     },
     "DataVolume" : {
