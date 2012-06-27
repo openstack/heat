@@ -191,6 +191,7 @@ class EngineManager(manager.Manager):
         s['raw_template_id'] = new_rt.id
         s['user_creds_id'] = new_creds.id
         s['username'] = context.username
+        s['parameters'] = user_params
         new_s = db_api.stack_create(context, s)
         stack.id = new_s.id
 
@@ -267,8 +268,8 @@ class EngineManager(manager.Manager):
         logger.info('deleting stack %s' % stack_name)
 
         ps = parser.Stack(context, st.name,
-                          st.raw_template.parsed_template.template,
-                          st.id, _extract_user_params(params))
+                          st.raw_template.template,
+                          st.id, st.parameters)
         greenpool.spawn_n(ps.delete)
         return None
 
@@ -484,8 +485,8 @@ class EngineManager(manager.Manager):
                     user_creds = db_api.user_creds_get(s.user_creds_id)
                     ctxt = ctxtlib.RequestContext.from_dict(dict(user_creds))
                     ps = parser.Stack(ctxt, s.name,
-                                      s.raw_template.parsed_template.template,
-                                      s.id)
+                                      s.raw_template.template,
+                                      s.id, s.parameters)
                     for a in wr.rule[action_map[new_state]]:
                         greenpool.spawn_n(ps[a].alarm)
 

@@ -160,6 +160,7 @@ class Stack(BASE, HeatBase):
     username = Column(String)
     status = Column('status', String)
     status_reason = Column('status_reason', String)
+    parameters = Column('parameters', Json)
     user_creds_id = Column(Integer, ForeignKey('user_creds.id'),
                            nullable=False)
     owner_id = Column(Integer, nullable=True)
