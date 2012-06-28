@@ -70,13 +70,14 @@ It is recommended to install the latest upstream oz, as this supports Fedora 17 
     cd oz
     rm -f ~/rpmbuild/RPMS/noarch/oz-*
     make rpm
-    sudo rpm -Uvh ~/rpmbuild/RPMS/noarch/oz-*
+    sudo yum localinstall -y ~/rpmbuild/RPMS/noarch/oz-*
+    cd -
 
-Note: In the steps above, it's only necessary to be root for the rpm -Uvh, it's recommended not to be root while building the rpm
+Note: In the steps above, it's only necessary to be root for the yum localinstall, it's recommended not to be root while building the rpm.
 
 If you do not require F17/U10/U12 support, oz can be installed directly via yum::
 
-    yum install oz
+  yum install oz
 
 Install heat from source
 ------------------------
