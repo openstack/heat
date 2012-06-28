@@ -26,9 +26,6 @@ setup.write_vcsversion('heat/vcsversion.py')
 # import this after write_vcsversion because version imports vcsversion
 from heat import version
 
-requires = setup.parse_requirements()
-depend_links = setup.parse_dependency_links()
-
 setuptools.setup(
     name='heat',
     version=version.canonical_version_string(),
@@ -38,10 +35,8 @@ setuptools.setup(
     author='Heat API Developers',
     author_email='discuss@heat-api.org',
     url='http://heat.openstack.org/',
-    packages=setuptools.find_packages(exclude=['bin']),
     cmdclass=setup.get_cmdclass(),
-    install_requires=requires,
-    dependency_links=depend_links,
+    packages=setuptools.find_packages(exclude=['bin']),
     include_package_data=True,
     classifiers=[
         'Development Status :: 4 - Beta',
