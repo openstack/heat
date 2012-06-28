@@ -63,6 +63,18 @@ def _extract_user_params(params):
     return dict(get_param_pairs())
 
 
+def _extract_args(params):
+    kwargs = {}
+    try:
+        timeout_mins = int(params.get('TimeoutInMinutes', 0))
+    except ValueError:
+        logger.exception('create timeout conversion')
+    else:
+        if timeout > 0:
+            kwargs['timeout_in_minutes'] = timeout_mins
+    return kwargs
+
+
 class EngineManager(manager.Manager):
     """
     Manages the running instances from creation to destruction.
@@ -129,9 +141,8 @@ class EngineManager(manager.Manager):
             mem['LastUpdatedTimestamp'] = heat_utils.strtime(s.updated_at)
             mem['NotificationARNs'] = 'TODO'
             mem['Parameters'] = ps.t['Parameters']
-            mem['TimeoutInMinutes'] = ps.t.get('Timeout', '60')
             mem['Description'] = ps.t.get('Description',
-                                                  'No description')
+                                          'No description')
             mem['StackStatus'] = s.status
             mem['StackStatusReason'] = s.status_reason
 
@@ -201,7 +212,8 @@ class EngineManager(manager.Manager):
         new_pt = db_api.parsed_template_create(None, pt)
 
         stack.parsed_template_id = new_pt.id
-        greenpool.spawn_n(stack.create)
+
+        greenpool.spawn_n(stack.create, **_extract_args(params))
 
         return {'StackId': "/".join([new_s.name, str(new_s.id)])}
 

@@ -241,17 +241,20 @@ class Instance(Resource):
         res = Resource.validate(self)
         if res:
             return res
+
         #check validity of key
-        if self.stack.parms['KeyName']:
+        try:
+            key_name = self.properties['KeyName']
+        except ValueError:
+            return
+        else:
             keypairs = self.nova().keypairs.list()
             valid_key = False
             for k in keypairs:
-                if k.name == self.stack.parms['KeyName']:
-                    valid_key = True
-            if not valid_key:
-                return {'Error':
-                        'Provided KeyName is not registered with nova'}
-        return None
+                if k.name == key_name:
+                    return
+        return {'Error':
+                'Provided KeyName is not registered with nova'}
 
     def handle_delete(self):
         try:
