@@ -3,24 +3,27 @@
 # The greenlet package must be compiled with gcc and needs
 # the Python.h headers. Make sure you install the python-dev
 # package to get the right headers...
-greenlet>=0.3.1
 
-eventlet>=0.9.12
-PasteDeploy
-routes
-webob==1.0.8
-argparse
-swift
-sqlalchemy-migrate>=0.7
-httplib2
-kombu
-iso8601>=0.1.4
-python-novaclient
-https://github.com/openstack/python-keystoneclient/zipball/master#egg=python-keystoneclient
-glance
-
-# Note you will need gcc buildtools installed and must
+# lxml note: You will need gcc buildtools installed and must
 # have installed libxml headers for lxml to be successfully
 # installed using pip, therefore you will need to install the
 # libxml2-dev(el) and libxslt-dev(el) packages.
+
+PyCrypto
+eventlet
+greenlet
+httplib2
+iso8601
+kombu
 lxml
+sqlalchemy-migrate
+python-novaclient
+Paste
+Routes
+pysendfile
+SQLAlchemy
+WebOb
+https://github.com/openstack/python-keystoneclient/zipball/master#egg=python-keystoneclient
+glance
+python-memcached
+
