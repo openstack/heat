@@ -429,7 +429,9 @@ class JSONResponseSerializer(object):
                 return obj.isoformat()
             return obj
 
-        return json.dumps(data, default=sanitizer)
+        response = json.dumps(data, default=sanitizer)
+        logging.debug("JSON response : %s" % response)
+        return response
 
     def default(self, response, result):
         response.content_type = 'application/json'
@@ -462,8 +464,9 @@ class XMLResponseSerializer(object):
         eltree = etree.Element(root)
         doc = etree.ElementTree(eltree)
         self.object_to_element(data.get(root), eltree)
-        logging.debug("XML response : %s" % etree.tostring(eltree))
-        return etree.tostring(eltree)
+        response = etree.tostring(eltree)
+        logging.debug("XML response : %s" % response)
+        return response
 
     def default(self, response, result):
         response.content_type = 'application/xml'
@@ -512,7 +515,7 @@ class Resource(object):
         # would appear that the default response serialization is XML, as
         # described in the API docs, but passing a query parameter of
         # ContentType=JSON results in a JSON serialized response...
-        content_type = request.GET.get("ContentType")
+        content_type = request.params.get("ContentType")
 
         deserialized_request = self.dispatch(self.deserializer,
                                              action, request)

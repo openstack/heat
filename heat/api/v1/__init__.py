@@ -146,7 +146,7 @@ class API(wsgi.Router):
 
             def action_match(environ, result):
                 req = Request(environ)
-                env_action = req.GET.get("Action")
+                env_action = req.params.get("Action")
                 return env_action == api_action
 
             return {'function': action_match}

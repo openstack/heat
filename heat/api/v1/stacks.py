@@ -169,7 +169,11 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
-        return {'CreateStackResult': self._stackid_addprefix(res)}
+        # Note boto expects CreateStackResult wrapped in CreateStackResponse
+        # CreateStackResponse is not mentioned in the aws API docs, so we
+        # need to check against a real AWS response to ensure this is correct
+        return {'CreateStackResponse':
+            {'CreateStackResult': self._stackid_addprefix(res)}}
 
     def get_template(self, req):
 
