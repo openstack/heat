@@ -67,7 +67,7 @@ def _extract_args(params):
     kwargs = {}
     try:
         timeout_mins = int(params.get('TimeoutInMinutes', 0))
-    except ValueError:
+    except (ValueError, TypeError):
         logger.exception('create timeout conversion')
     else:
         if timeout_mins > 0:

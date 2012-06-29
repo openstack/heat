@@ -53,3 +53,27 @@ class managerTest(unittest.TestCase):
              'Parameters.member.Foo.Bar.ParameterValue': 'bar'}
         params = manager._extract_user_params(p)
         self.assertFalse(params)
+
+    def test_timeout_extract(self):
+        p = {'TimeoutInMinutes': '5'}
+        args = manager._extract_args(p)
+        self.assertEqual(args['timeout_in_minutes'], 5)
+
+    def test_timeout_extract_zero(self):
+        p = {'TimeoutInMinutes': '0'}
+        args = manager._extract_args(p)
+        self.assertTrue('timeout_in_minutes' not in args)
+
+    def test_timeout_extract_garbage(self):
+        p = {'TimeoutInMinutes': 'wibble'}
+        args = manager._extract_args(p)
+        self.assertTrue('timeout_in_minutes' not in args)
+
+    def test_timeout_extract_none(self):
+        p = {'TimeoutInMinutes': None}
+        args = manager._extract_args(p)
+        self.assertTrue('timeout_in_minutes' not in args)
+
+    def test_timeout_extract_not_present(self):
+        args = manager._extract_args({})
+        self.assertTrue('timeout_in_minutes' not in args)
