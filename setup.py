@@ -47,6 +47,7 @@ setuptools.setup(
     ],
     scripts=['bin/heat',
              'bin/heat-api',
+             'bin/heat-boto',
              'bin/heat-metadata',
              'bin/heat-engine',
              'bin/heat-db-setup'],
