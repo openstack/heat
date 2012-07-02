@@ -92,11 +92,21 @@ class CheckedDict(collections.MutableMapping):
                 if not isinstance(value, dict):
                     raise ValueError('%s: %s Value must be a map' %
                                      (self.name, key))
+                if 'Schema' in self.data[key]:
+                    cdict = Properties(key, self.data[key]['Schema'])
+                    cdict.data = self.data[key]['Schema']
+                    for k, v in value.items():
+                        cdict[k] = v
 
             elif t == 'List':
                 if not isinstance(value, (list, tuple)):
-                    raise ValueError('%s: %s Value must be a list' %
-                                     (self.name, key))
+                    raise ValueError('%s: %s Value must be a list, not %s' %
+                                     (self.name, key, value))
+                if 'Schema' in self.data[key]:
+                    for item in value:
+                        cdict = Properties(key, self.data[key]['Schema'])
+                        for k, v in item.items():
+                            cdict[k] = v
 
             elif t == 'CommaDelimitedList':
                 sp = value.split(',')

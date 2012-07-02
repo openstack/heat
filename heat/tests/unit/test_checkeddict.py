@@ -86,3 +86,47 @@ class CheckedDictTest(unittest.TestCase):
         self.assertRaises(ValueError, cd.__setitem__, 'SomeNumber', '9048.56')
         # lists
         cd['TODOList'] = "'one', 'two', 'three'"
+
+    def test_nested_paramerters(self):
+        listeners_schema = {
+            'InstancePort': {'Type': 'Integer',
+                             'Required': True},
+            'LoadBalancerPort': {'Type': 'Integer',
+                                 'Required': True}
+        }
+
+        healthcheck_schema = {
+            'HealthyThreshold': {'Type': 'Number',
+                                 'Required': True},
+            'Interval': {'Type': 'Number',
+                         'Required': True}
+        }
+
+        properties_schema = {
+            'HealthCheck': {'Type': 'Map',
+                            'Implemented': False,
+                            'Schema': healthcheck_schema},
+            'Listeners': {'Type': 'List',
+                          'Schema': listeners_schema}
+        }
+
+        cd = checkeddict.Properties('nested', properties_schema)
+
+        hc = {'HealthyThreshold': 'bla', 'Interval': '45'}
+        self.assertRaises(ValueError, cd.__setitem__, 'HealthCheck', hc)
+
+        hc = {'HealthyThreshold': '246', 'Interval': '45'}
+        cd['HealthCheck'] = hc
+        self.assertTrue(cd['HealthCheck']['HealthyThreshold'] == '246')
+        self.assertTrue(cd['HealthCheck']['Interval'] == '45')
+
+        li = [{'InstancePort': 'bla', 'LoadBalancerPort': '45'},
+              {'InstancePort': '66', 'LoadBalancerPort': '775'}]
+        self.assertRaises(ValueError, cd.__setitem__, 'Listeners', li)
+
+        li2 = [{'InstancePort': '674', 'LoadBalancerPort': '45'},
+               {'InstancePort': '66',  'LoadBalancerPort': '775'}]
+        cd['Listeners'] = li2
+
+        self.assertTrue(cd['Listeners'][0]['LoadBalancerPort'] == '45')
+        self.assertTrue(cd['Listeners'][1]['LoadBalancerPort'] == '775')
