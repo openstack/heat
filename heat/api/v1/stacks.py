@@ -58,6 +58,13 @@ class StackController(object):
             resp['StackId'] = "/".join([hostportprefix, resp['StackId']])
         return resp
 
+    def _format_response(self, action, response):
+        '''
+            Format response from engine into API format
+        '''
+        # TODO : logic to handle error response format will go here..
+        return {'%sResponse' % action: {'%sResult' % action: response}}
+
     def list(self, req):
         """
         Returns the following information for all stacks:
@@ -69,15 +76,12 @@ class StackController(object):
                             {'method': 'list_stacks',
                             'args': {'params': parms}})
 
-        res = {'ListStacksResponse': {
-                'ListStacksResult': {'StackSummaries': []}}}
-        results = res['ListStacksResponse']['ListStacksResult']
-        summaries = results['StackSummaries']
+        res = {'StackSummaries': []}
         if stack_list is not None:
             for s in stack_list['stacks']:
-                summaries.append(self._stackid_addprefix(s))
+                res['StackSummaries'].append(self._stackid_addprefix(s))
 
-        return res
+        return self._format_response('ListStacks', res)
 
     def describe(self, req):
         """
@@ -102,8 +106,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
-        res = {'DescribeStacksResult': {'Stacks': []}}
-        stacks = res['DescribeStacksResult']['Stacks']
+        res = {'Stacks': []}
         for s in stack_list['stacks']:
             # Reformat Parameters dict-of-dict into AWS API format
             # This is a list-of-dict with nasty "ParameterKey" : key
@@ -111,9 +114,9 @@ class StackController(object):
             s['Parameters'] = [{'ParameterKey':k,
                 'ParameterValue':v.get('Default')}
                 for (k, v) in s['Parameters'].items()]
-            stacks.append(self._stackid_addprefix(s))
+            res['Stacks'].append(self._stackid_addprefix(s))
 
-        return res
+        return self._format_response('DescribeStacks', res)
 
     def _get_template(self, req):
         if 'TemplateBody' in req.params:
@@ -169,11 +172,8 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
-        # Note boto expects CreateStackResult wrapped in CreateStackResponse
-        # CreateStackResponse is not mentioned in the aws API docs, so we
-        # need to check against a real AWS response to ensure this is correct
-        return {'CreateStackResponse':
-            {'CreateStackResult': self._stackid_addprefix(res)}}
+        return self._format_response('CreateStack',
+            self._stackid_addprefix(res))
 
     def get_template(self, req):
 
@@ -192,11 +192,11 @@ class StackController(object):
         if templ is None:
             return webob.exc.HTTPNotFound('stack not found')
 
-        return {'GetTemplateResult': {'TemplateBody': templ}}
+        return self._format_response('GetTemplate', {'TemplateBody': templ})
 
     def estimate_template_cost(self, req):
-        return {'EstimateTemplateCostResult': {
-                'Url': 'http://en.wikipedia.org/wiki/Gratis'}}
+        return self._format_response('EstimateTemplateCost',
+            {'Url': 'http://en.wikipedia.org/wiki/Gratis'})
 
     def validate_template(self, req):
 
@@ -244,9 +244,9 @@ class StackController(object):
             return webob.exc.HTTPBadRequest(str(ex))
 
         if res is None:
-            return {'DeleteStackResult': ''}
+            return self._format_response('DeleteStack', '')
         else:
-            return {'DeleteStackResult': res['Error']}
+            return self._format_response('DeleteStack', res['Error'])
 
     def events_list(self, req):
         """
@@ -266,7 +266,8 @@ class StackController(object):
 
         events = 'Error' not in event_res and event_res['events'] or []
 
-        return {'DescribeStackEventsResult': {'StackEvents': events}}
+        return self._format_response('DescribeStackEvents',
+            {'StackEvents': events})
 
     def describe_stack_resource(self, req):
         """
@@ -286,13 +287,8 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
-        return {
-            'DescribeStackResourceResponse': {
-                'DescribeStackResourceResult': {
-                    'StackResourceDetail': resource_details,
-                },
-            },
-        }
+        return self._format_response('DescribeStackResource',
+            {'StackResourceDetail': resource_details})
 
     def describe_stack_resources(self, req):
         """
@@ -330,12 +326,8 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
-        response = {
-            'DescribeStackResourcesResult': {
-                'StackResources': resources,
-            }
-        }
-        return response
+        return self._format_response('DescribeStackResources',
+            {'StackResources': resources})
 
     def list_stack_resources(self, req):
         """
@@ -352,13 +344,8 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return webob.exc.HTTPBadRequest(str(ex))
 
-        return {
-            'ListStackResourcesResponse': {
-                'ListStackResourcesResult': {
-                    'StackResourceSummaries': resources,
-                },
-            },
-        }
+        return self._format_response('ListStackResources',
+            {'StackResourceSummaries': resources})
 
 
 def create_resource(options):
