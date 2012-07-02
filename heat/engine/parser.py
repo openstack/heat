@@ -328,6 +328,19 @@ class Stack(object):
 
         return _resolve(match, handle, s)
 
+    def _resolve_availability_zones(self, s):
+        '''
+            looking for { "Fn::GetAZs" : "str" }
+        '''
+        def match(key, value):
+            return (key == 'Fn::GetAZs' and
+                    isinstance(value, basestring))
+
+        def handle(ref):
+            return ['nova']
+
+        return _resolve(match, handle, s)
+
     def _resolve_find_in_map(self, s):
         def handle(args):
             try:
@@ -380,6 +393,7 @@ class Stack(object):
 
     def resolve_static_data(self, snippet):
         return transform(snippet, [self._resolve_static_refs,
+                                   self._resolve_availability_zones,
                                    self._resolve_find_in_map])
 
     def resolve_runtime_data(self, snippet):
