@@ -187,8 +187,8 @@ class Instance(resources.Resource):
                 attachments.append((json.dumps(metadata),
                                     'cfn-init-data', 'x-cfninitdata'))
 
-            metadata_server = resources.metadata_server()
-            if metadata_server:
+            metadata_server = resources.Metadata.server()
+            if metadata_server is not None:
                 attachments.append((metadata_server,
                                     'cfn-metadata-server', 'x-cfninitdata'))
 

@@ -19,11 +19,12 @@ from nose.plugins.attrib import attr
 import mox
 
 import json
+from heat.common import context
 from heat.engine import parser
 from heat.engine import resources
 
 
-@attr(tag=['unit', 'parser', 'stack'])
+@attr(tag=['unit', 'resource'])
 @attr(speed='fast')
 class ResourceTest(unittest.TestCase):
     def setUp(self):
@@ -67,6 +68,41 @@ class ResourceTest(unittest.TestCase):
         self.assertEqual(res.parsed_template('foo'), {})
         self.assertEqual(res.parsed_template('foo', 'bar'), 'bar')
 
+    def test_metadata_default(self):
+        tmpl = {'Type': 'Foo'}
+        res = resources.GenericResource('test_resource', tmpl, self.stack)
+        self.assertEqual(res.metadata, {})
+
+
+@attr(tag=['unit', 'resource'])
+@attr(speed='fast')
+class MetadataTest(unittest.TestCase):
+    def setUp(self):
+        self.m = mox.Mox()
+        tmpl = {
+            'Type': 'Foo',
+            'Metadata': {'Test': 'Initial metadata'}
+        }
+        ctx = context.get_admin_context()
+        self.m.StubOutWithMock(ctx, 'username')
+        ctx.username = 'metadata_test_user'
+        self.stack = parser.Stack(ctx, 'test_stack', parser.Template({}))
+        self.stack.store()
+        self.res = resources.GenericResource('metadata_resource',
+                                             tmpl, self.stack)
+        self.res.create()
+
+    def tearDown(self):
+        self.stack.delete()
+        self.m.UnsetStubs()
+
+    def test_read_initial(self):
+        self.assertEqual(self.res.metadata, {'Test': 'Initial metadata'})
+
+    def test_write(self):
+        test_data = {'Test': 'Newly-written data'}
+        self.res.metadata = test_data
+        self.assertEqual(self.res.metadata, test_data)
 
 # allows testing of the test directly, shown below
 if __name__ == '__main__':

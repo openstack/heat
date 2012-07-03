@@ -29,11 +29,39 @@ from heat.engine import auth
 logger = logging.getLogger('heat.engine.resources')
 
 
-def metadata_server():
-    try:
-        return config.FLAGS.heat_metadata_server_url
-    except AttributeError:
-        return None
+class Metadata(object):
+    '''
+    A descriptor for accessing the metadata of a resource while ensuring the
+    most up-to-date data is always obtained from the database.
+    '''
+
+    def __get__(self, resource, resource_class):
+        '''Return the metadata for the owning resource.'''
+        if resource is None:
+            return None
+        if resource.id is None:
+            return resource.parsed_template('Metadata')
+        rs = db_api.resource_get(resource.stack.context, resource.id)
+        rs.refresh(attrs=['rsrc_metadata'])
+        return rs.rsrc_metadata
+
+    def __set__(self, resource, metadata):
+        '''Update the metadata for the owning resource.'''
+        if resource.id is None:
+            raise AttributeError("Resource has not yet been created")
+        rs = db_api.resource_get(resource.stack.context, resource.id)
+        rs.update_and_save({'rsrc_metadata': metadata})
+
+    @staticmethod
+    def server():
+        '''
+        Get the address of the currently registered metadata server. Return
+        None if no server is registered.
+        '''
+        try:
+            return config.FLAGS.heat_metadata_server_url
+        except AttributeError:
+            return None
 
 
 class Resource(object):
@@ -49,6 +77,8 @@ class Resource(object):
 
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
+
+    metadata = Metadata()
 
     def __new__(cls, name, json, stack):
         '''Create a new Resource of the appropriate class for its type.'''
