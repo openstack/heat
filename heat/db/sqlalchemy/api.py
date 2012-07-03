@@ -166,9 +166,11 @@ def stack_delete(context, stack_id):
         session.delete(r)
 
     rt = s.raw_template
+    uc = s.user_creds
 
     session.delete(s)
     session.delete(rt)
+    session.delete(uc)
 
     session.flush()
 

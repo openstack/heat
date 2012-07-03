@@ -172,6 +172,8 @@ class UserCreds(BASE, HeatBase):
     aws_auth_url = Column(String)
     tenant_id = Column(String)
     aws_creds = Column(String)
+    stack = relationship(Stack,
+        backref=backref('user_creds'))
 
 
 class Event(BASE, HeatBase):
