@@ -105,15 +105,12 @@ class EngineManager(manager.Manager):
         if stacks is None:
             return res
         for s in stacks:
-            ps = parser.Stack(context, s.name,
-                              s.raw_template.template,
-                              s.id, s.parameters)
+            stack = parser.Stack.load(context, s.id)
             mem = {}
             mem['StackId'] = "/".join([s.name, str(s.id)])
             mem['StackName'] = s.name
             mem['CreationTime'] = heat_utils.strtime(s.created_at)
-            mem['TemplateDescription'] = ps.t.get('Description',
-                                                   'No description')
+            mem['TemplateDescription'] = stack.t[parser.DESCRIPTION]
             mem['StackStatus'] = s.status
             res['stacks'].append(mem)
 
@@ -144,24 +141,21 @@ class EngineManager(manager.Manager):
             logging.debug("Processing show_stack for %s" % stack)
             s = db_api.stack_get_by_name(context, stack)
             if s:
-                ps = parser.Stack(context, s.name,
-                                  s.raw_template.template,
-                                  s.id, s.parameters)
+                stack = parser.Stack.load(context, s.id)
                 mem = {}
                 mem['StackId'] = "/".join([s.name, str(s.id)])
                 mem['StackName'] = s.name
                 mem['CreationTime'] = heat_utils.strtime(s.created_at)
                 mem['LastUpdatedTimestamp'] = heat_utils.strtime(s.updated_at)
                 mem['NotificationARNs'] = 'TODO'
-                mem['Parameters'] = ps.t['Parameters']
-                mem['Description'] = ps.t.get('Description',
-                                              'No description')
+                mem['Parameters'] = stack.t[parser.PARAMETERS]
+                mem['Description'] = stack.t[parser.DESCRIPTION]
                 mem['StackStatus'] = s.status
                 mem['StackStatusReason'] = s.status_reason
 
                 # only show the outputs on a completely created stack
-                if s.status == ps.CREATE_COMPLETE:
-                    mem['Outputs'] = ps.get_outputs()
+                if s.status == stack.CREATE_COMPLETE:
+                    mem['Outputs'] = stack.get_outputs()
 
                 res['stacks'].append(mem)
 
@@ -185,40 +179,19 @@ class EngineManager(manager.Manager):
         if db_api.stack_get_by_name(None, stack_name):
             return {'Error': 'Stack already exists with that name.'}
 
-        user_params = _extract_user_params(params)
-        # We don't want to reset the stack template, so we are making
-        # an instance just for validation.
-        template_copy = deepcopy(template)
-        stack_validator = parser.Stack(context, stack_name,
-                                       template_copy, 0,
-                                       user_params)
-        response = stack_validator.validate()
-        stack_validator = None
-        template_copy = None
-        if 'Malformed Query Response' in \
-                response['ValidateTemplateResult']['Description']:
+        tmpl = parser.Template(template)
+        user_params = parser.Parameters(stack_name, tmpl,
+                                        _extract_user_params(params))
+        stack = parser.Stack(context, stack_name, tmpl, user_params)
+
+        response = stack.validate()
+        if response['Description'] != 'Successfully validated':
             return response
 
-        stack = parser.Stack(context, stack_name, template, 0, user_params)
-        rt = {}
-        rt['template'] = template
-        rt['StackName'] = stack_name
-        new_rt = db_api.raw_template_create(None, rt)
-
-        new_creds = db_api.user_creds_create(context.to_dict())
-
-        s = {}
-        s['name'] = stack_name
-        s['raw_template_id'] = new_rt.id
-        s['user_creds_id'] = new_creds.id
-        s['username'] = context.username
-        s['parameters'] = user_params
-        new_s = db_api.stack_create(context, s)
-        stack.id = new_s.id
-
+        stack_id = stack.store()
         greenpool.spawn_n(stack.create, **_extract_args(params))
 
-        return {'StackId': "/".join([new_s.name, str(new_s.id)])}
+        return {'StackId': "/".join([stack.name, str(stack.id)])}
 
     def validate_template(self, context, template, params):
         """
@@ -237,21 +210,22 @@ class EngineManager(manager.Manager):
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
+        stack_name = 'validate'
         try:
-            s = parser.Stack(context, 'validate', template, 0,
-                             _extract_user_params(params))
+            tmpl = parser.Template(template)
+            user_params = parser.Parameters(stack_name, tmpl,
+                                            _extract_user_params(params))
+            s = parser.Stack(context, stack_name, tmpl, user_params)
         except KeyError as ex:
             res = ('A Fn::FindInMap operation referenced '
                    'a non-existent map [%s]' % str(ex))
 
-            response = {'ValidateTemplateResult': {
-                        'Description': 'Malformed Query Response [%s]' % (res),
-                        'Parameters': []}}
-            return response
+            result = {'Description': 'Malformed Query Response [%s]' % (res),
+                      'Parameters': []}
+        else:
+            result = s.validate()
 
-        res = s.validate()
-
-        return res
+        return {'ValidateTemplateResult': result}
 
     def get_template(self, context, stack_name, params):
         """
@@ -282,10 +256,8 @@ class EngineManager(manager.Manager):
 
         logger.info('deleting stack %s' % stack_name)
 
-        ps = parser.Stack(context, st.name,
-                          st.raw_template.template,
-                          st.id, st.parameters)
-        greenpool.spawn_n(ps.delete)
+        stack = parser.Stack.load(context, st.id)
+        greenpool.spawn_n(stack.delete)
         return None
 
     # Helper for list_events.  It's here so we can use it in tests.
@@ -356,38 +328,43 @@ class EngineManager(manager.Manager):
     def describe_stack_resource(self, context, stack_name, resource_name):
         auth.authenticate(context)
 
-        stack = db_api.stack_get_by_name(context, stack_name)
-        if not stack:
+        s = db_api.stack_get_by_name(context, stack_name)
+        if not s:
             raise AttributeError('Unknown stack name')
-        resource = db_api.resource_get_by_name_and_stack(context,
-                                                         resource_name,
-                                                         stack.id)
-        if not resource:
+
+        stack = parser.Stack.load(context, s.id)
+        if resource_name not in stack:
             raise AttributeError('Unknown resource name')
-        return format_resource_attributes(stack, resource)
+
+        resource = stack[resource_name]
+        if resource.id is None:
+            raise AttributeError('Resource not created')
+
+        return format_stack_resource(stack[resource_name])
 
     def describe_stack_resources(self, context, stack_name,
                                  physical_resource_id, logical_resource_id):
         auth.authenticate(context)
 
-        if stack_name:
-            stack = db_api.stack_get_by_name(context, stack_name)
+        if stack_name is not None:
+            s = db_api.stack_get_by_name(context, stack_name)
         else:
-            resource = db_api.resource_get_by_physical_resource_id(context,
+            rs = db_api.resource_get_by_physical_resource_id(context,
                     physical_resource_id)
-            if not resource:
+            if not rs:
                 msg = "The specified PhysicalResourceId doesn't exist"
                 raise AttributeError(msg)
-            stack = resource.stack
+            s = rs.stack
 
-        if not stack:
+        if not s:
             raise AttributeError("The specified stack doesn't exist")
 
+        stack = parser.Stack.load(context, s.id)
         resources = []
-        for r in stack.resources:
-            if logical_resource_id and r.name != logical_resource_id:
+        for resource in stack:
+            if logical_resource_id and resource.name != logical_resource_id:
                 continue
-            formatted = format_resource_attributes(stack, r)
+            formatted = format_stack_resource(resource)
             # this API call uses Timestamp instead of LastUpdatedTimestamp
             formatted['Timestamp'] = formatted['LastUpdatedTimestamp']
             del formatted['LastUpdatedTimestamp']
@@ -398,16 +375,18 @@ class EngineManager(manager.Manager):
     def list_stack_resources(self, context, stack_name):
         auth.authenticate(context)
 
-        stack = db_api.stack_get_by_name(context, stack_name)
-        if not stack:
+        s = db_api.stack_get_by_name(context, stack_name)
+        if not s:
             raise AttributeError('Unknown stack name')
+
+        stack = parser.Stack.load(context, s.id)
 
         resources = []
         response_keys = ('ResourceStatus', 'LogicalResourceId',
                          'LastUpdatedTimestamp', 'PhysicalResourceId',
                          'ResourceType')
-        for r in stack.resources:
-            formatted = format_resource_attributes(stack, r)
+        for resource in stack:
+            formatted = format_stack_resource(resource)
             for key in formatted.keys():
                 if not key in response_keys:
                     del formatted[key]
@@ -499,11 +478,9 @@ class EngineManager(manager.Manager):
                 if s:
                     user_creds = db_api.user_creds_get(s.user_creds_id)
                     ctxt = ctxtlib.RequestContext.from_dict(dict(user_creds))
-                    ps = parser.Stack(ctxt, s.name,
-                                      s.raw_template.template,
-                                      s.id, s.parameters)
+                    stack = parser.Stack.load(ctxt, s.id)
                     for a in wr.rule[action_map[new_state]]:
-                        greenpool.spawn_n(ps[a].alarm)
+                        greenpool.spawn_n(stack[a].alarm)
 
         wr.last_evaluated = now
 
@@ -534,22 +511,20 @@ class EngineManager(manager.Manager):
         return [None, wd.data]
 
 
-def format_resource_attributes(stack, resource):
+def format_stack_resource(resource):
     """
     Return a representation of the given resource that mathes the API output
     expectations.
     """
-    template = resource.parsed_template.template
-    template_resources = template.get('Resources', {})
-    resource_type = template_resources.get(resource.name, {}).get('Type', '')
-    last_updated_time = resource.updated_at or resource.created_at
+    rs = db_api.resource_get(resource.stack.context, resource.id)
+    last_updated_time = rs.updated_at or rs.created_at
     return {
-        'StackId': stack.id,
-        'StackName': stack.name,
+        'StackId': resource.stack.id,
+        'StackName': resource.stack.name,
         'LogicalResourceId': resource.name,
-        'PhysicalResourceId': resource.nova_instance or '',
-        'ResourceType': resource_type,
+        'PhysicalResourceId': resource.instance_id or '',
+        'ResourceType': resource.t['Type'],
         'LastUpdatedTimestamp': heat_utils.strtime(last_updated_time),
-        'ResourceStatus': resource.state,
-        'ResourceStatusReason': resource.state_description,
+        'ResourceStatus': rs.state,
+        'ResourceStatusReason': rs.state_description,
     }

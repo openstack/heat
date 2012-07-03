@@ -215,8 +215,7 @@ class validateTest(unittest.TestCase):
         t = json.loads(test_template_volumeattach % 'vdq')
         self.m.StubOutWithMock(auth, 'authenticate')
         auth.authenticate(None).AndReturn(True)
-        params = {}
-        stack = parser.Stack(None, 'test_stack', t, 0, params)
+        stack = parser.Stack(None, 'test_stack', parser.Template(t))
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
@@ -224,14 +223,13 @@ class validateTest(unittest.TestCase):
 
         self.m.ReplayAll()
         volumeattach = stack.resources['MountPoint']
-        assert(volumeattach.validate() is None)
+        self.assertTrue(volumeattach.validate() is None)
 
     def test_validate_volumeattach_invalid(self):
         t = json.loads(test_template_volumeattach % 'sda')
         self.m.StubOutWithMock(auth, 'authenticate')
         auth.authenticate(None).AndReturn(True)
-        params = {}
-        stack = parser.Stack(None, 'test_stack', t, 0, params)
+        stack = parser.Stack(None, 'test_stack', parser.Template(t))
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',

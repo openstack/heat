@@ -15,7 +15,8 @@
 
 import eventlet
 import json
-import itertools
+import functools
+import copy
 import logging
 
 from heat.common import exception
@@ -24,7 +25,205 @@ from heat.engine import dependencies
 from heat.engine.resources import Resource
 from heat.db import api as db_api
 
+
 logger = logging.getLogger('heat.engine.parser')
+
+SECTIONS = (VERSION, DESCRIPTION, MAPPINGS,
+            PARAMETERS, RESOURCES, OUTPUTS) = \
+           ('AWSTemplateFormatVersion', 'Description', 'Mappings',
+            'Parameters', 'Resources', 'Outputs')
+
+(PARAM_STACK_NAME, PARAM_REGION) = ('AWS::StackName', 'AWS::Region')
+
+
+class Parameters(checkeddict.CheckedDict):
+    '''
+    The parameters of a stack, with type checking, defaults &c. specified by
+    the stack's template.
+    '''
+
+    def __init__(self, stack_name, template, user_params={}):
+        '''
+        Create the parameter container for a stack from the stack name and
+        template, optionally setting the initial set of parameters.
+        '''
+        checkeddict.CheckedDict.__init__(self, PARAMETERS)
+        self._init_schemata(template[PARAMETERS])
+
+        self[PARAM_STACK_NAME] = stack_name
+        self.update(user_params)
+
+    def _init_schemata(self, schemata):
+        '''
+        Initialise the parameter schemata with the pseudo-parameters and the
+        list of schemata obtained from the template.
+        '''
+        self.addschema(PARAM_STACK_NAME, {"Description": "AWS StackName",
+                                          "Type": "String"})
+        self.addschema(PARAM_REGION, {
+            "Description": "AWS Regions",
+            "Default": "ap-southeast-1",
+            "Type": "String",
+            "AllowedValues": ["us-east-1", "us-west-1", "us-west-2",
+                              "sa-east-1", "eu-west-1", "ap-southeast-1",
+                              "ap-northeast-1"],
+            "ConstraintDescription": "must be a valid EC2 instance type.",
+        })
+
+        for param, schema in schemata.items():
+            self.addschema(param, copy.deepcopy(schema))
+
+    def user_parameters(self):
+        '''
+        Return a dictionary of all the parameters passed in by the user
+        '''
+        return dict((k, v['Value']) for k, v in self.data.iteritems()
+                                    if 'Value' in v)
+
+
+class Template(object):
+    '''A stack template.'''
+
+    def __init__(self, template, template_id=None):
+        '''
+        Initialise the template with a JSON object and a set of Parameters
+        '''
+        self.id = template_id
+        self.t = template
+        self.maps = self[MAPPINGS]
+
+    @classmethod
+    def load(cls, context, template_id):
+        '''Retrieve a Template with the given ID from the database'''
+        t = db_api.raw_template_get(context, template_id)
+        return cls(t.template, template_id)
+
+    def store(self, context=None):
+        '''Store the Template in the database and return its ID'''
+        if self.id is None:
+            rt = {'template': self.t}
+            new_rt = db_api.raw_template_create(context, rt)
+            self.id = new_rt.id
+        return self.id
+
+    def __getitem__(self, section):
+        '''Get the relevant section in the template'''
+        if section not in SECTIONS:
+            raise KeyError('"%s" is not a valid template section' % section)
+        if section == VERSION:
+            return self.t[section]
+
+        if section == DESCRIPTION:
+            default = 'No description'
+        else:
+            default = {}
+
+        return self.t.get(section, default)
+
+    def resolve_find_in_map(self, s):
+        '''
+        Resolve constructs of the form { "Fn::FindInMap" : [ "mapping",
+                                                             "key",
+                                                             "value" ] }
+        '''
+        def handle_find_in_map(args):
+            try:
+                name, key, value = args
+                return self.maps[name][key][value]
+            except (ValueError, TypeError) as ex:
+                raise KeyError(str(ex))
+
+        return _resolve(lambda k, v: k == 'Fn::FindInMap',
+                        handle_find_in_map, s)
+
+    @staticmethod
+    def resolve_availability_zones(s):
+        '''
+            looking for { "Fn::GetAZs" : "str" }
+        '''
+        def match_get_az(key, value):
+            return (key == 'Fn::GetAZs' and
+                    isinstance(value, basestring))
+
+        def handle_get_az(ref):
+            return ['nova']
+
+        return _resolve(match_get_az, handle_get_az, s)
+
+    @staticmethod
+    def resolve_param_refs(s, parameters):
+        '''
+        Resolve constructs of the form { "Ref" : "string" }
+        '''
+        def match_param_ref(key, value):
+            return (key == 'Ref' and
+                    isinstance(value, basestring) and
+                    value in parameters)
+
+        def handle_param_ref(ref):
+            try:
+                return parameters[ref]
+            except (KeyError, ValueError):
+                raise exception.UserParameterMissing(key=ref)
+
+        return _resolve(match_param_ref, handle_param_ref, s)
+
+    @staticmethod
+    def resolve_resource_refs(s, resources):
+        '''
+        Resolve constructs of the form { "Ref" : "resource" }
+        '''
+        def match_resource_ref(key, value):
+            return key == 'Ref' and value in resources
+
+        def handle_resource_ref(arg):
+            return resources[arg].FnGetRefId()
+
+        return _resolve(match_resource_ref, handle_resource_ref, s)
+
+    @staticmethod
+    def resolve_attributes(s, resources):
+        '''
+        Resolve constructs of the form { "Fn::GetAtt" : [ "WebServer",
+                                                          "PublicIp" ] }
+        '''
+        def handle_getatt(args):
+            resource, att = args
+            try:
+                return resources[resource].FnGetAtt(att)
+            except KeyError:
+                raise exception.InvalidTemplateAttribute(resource=resource,
+                                                         key=att)
+
+        return _resolve(lambda k, v: k == 'Fn::GetAtt', handle_getatt, s)
+
+    @staticmethod
+    def resolve_joins(s):
+        '''
+        Resolve constructs of the form { "Fn::Join" : [ "delim", [ "str1",
+                                                                   "str2" ] }
+        '''
+        def handle_join(args):
+            if not isinstance(args, (list, tuple)):
+                raise TypeError('Arguments to "Fn::Join" must be a list')
+            delim, strings = args
+            if not isinstance(strings, (list, tuple)):
+                raise TypeError('Arguments to "Fn::Join" not fully resolved')
+            return delim.join(strings)
+
+        return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s)
+
+    @staticmethod
+    def resolve_base64(s):
+        '''
+        Resolve constructs of the form { "Fn::Base64" : "string" }
+        '''
+        def handle_base64(string):
+            if not isinstance(string, basestring):
+                raise TypeError('Arguments to "Fn::Base64" not fully resolved')
+            return string
+
+        return _resolve(lambda k, v: k == 'Fn::Base64', handle_base64, s)
 
 
 class Stack(object):
@@ -35,46 +234,65 @@ class Stack(object):
     DELETE_FAILED = 'DELETE_FAILED'
     DELETE_COMPLETE = 'DELETE_COMPLETE'
 
-    def __init__(self, context, stack_name, template, stack_id=0, parms=None):
+    def __init__(self, context, stack_name, template, parameters=None,
+                 stack_id=None):
+        '''
+        Initialise from a context, name, Template object and (optionally)
+        Parameters object. The database ID may also be initialised, if the
+        stack is already in the database.
+        '''
         self.id = stack_id
         self.context = context
         self.t = template
-        self.maps = self.t.get('Mappings', {})
-        self.res = {}
-        self.doc = None
         self.name = stack_name
 
-        # Default Parameters
-        self.parms = checkeddict.CheckedDict('Parameters')
-        self.parms.addschema('AWS::StackName', {"Description": "AWS StackName",
-                                                "Type": "String"})
-        self.parms['AWS::StackName'] = stack_name
-        self.parms.addschema('AWS::Region', {"Description": "AWS Regions",
-            "Default": "ap-southeast-1",
-            "Type": "String",
-            "AllowedValues": ["us-east-1", "us-west-1", "us-west-2",
-                              "sa-east-1", "eu-west-1", "ap-southeast-1",
-                              "ap-northeast-1"],
-            "ConstraintDescription": "must be a valid EC2 instance type."})
+        if parameters is None:
+            parameters = Parameters(stack_name, template)
+        self.parameters = parameters
 
-        # template Parameters
-        ps = self.t.get('Parameters', {})
-        for p in ps:
-            self.parms.addschema(p, ps[p])
-
-        # user Parameters
-        if parms is not None:
-            self.parms.update(parms)
-
-        self.outputs = self.resolve_static_data(self.t.get('Outputs', {}))
+        self.outputs = self.resolve_static_data(self.t[OUTPUTS])
 
         self.resources = dict((name,
                                Resource(name, data, self))
-                              for (name, data) in self.t['Resources'].items())
+                              for (name, data) in self.t[RESOURCES].items())
 
-        self.dependencies = dependencies.Dependencies()
-        for resource in self.resources.values():
-            resource.add_dependencies(self.dependencies)
+        self.dependencies = self._get_dependencies(self.resources.itervalues())
+
+    @staticmethod
+    def _get_dependencies(resources):
+        '''Return the dependency graph for a list of resources'''
+        deps = dependencies.Dependencies()
+        for resource in resources:
+            resource.add_dependencies(deps)
+
+        return deps
+
+    @classmethod
+    def load(cls, context, stack_id):
+        '''Retrieve a Stack from the database'''
+        s = db_api.stack_get(context, stack_id)
+
+        template = Template.load(context, s.raw_template_id)
+        params = Parameters(s.name, template, s.parameters)
+        stack = cls(context, s.name, template, params, stack_id)
+
+        return stack
+
+    def store(self, owner=None):
+        '''Store the stack in the database and return its ID'''
+        if self.id is None:
+            new_creds = db_api.user_creds_create(self.context.to_dict())
+
+            s = {'name': self.name,
+                 'raw_template_id': self.t.store(),
+                 'parameters': self.parameters.user_parameters(),
+                 'owner_id': owner and owner.id,
+                 'user_creds_id': new_creds.id,
+                 'username': self.context.username}
+            new_s = db_api.stack_create(self.context, s)
+            self.id = new_s.id
+
+        return self.id
 
     def __iter__(self):
         '''
@@ -103,9 +321,11 @@ class Stack(object):
         return key in self.resources
 
     def keys(self):
+        '''Return a list of resource keys for the stack'''
         return self.resources.keys()
 
     def __str__(self):
+        '''Return a human-readable string representation of the stack'''
         return 'Stack "%s"' % self.name
 
     def validate(self):
@@ -114,8 +334,6 @@ class Stack(object):
         APIReference/API_ValidateTemplate.html
         '''
         # TODO(sdake) Should return line number of invalid reference
-
-        response = None
 
         for res in self:
             try:
@@ -126,35 +344,27 @@ class Stack(object):
 
             if result:
                 err_str = 'Malformed Query Response %s' % result
-                response = {'ValidateTemplateResult': {
-                                'Description': err_str,
-                                'Parameters': []}}
+                response = {'Description': err_str,
+                            'Parameters': []}
                 return response
 
-        if response is None:
-            response = {'ValidateTemplateResult': {
-                        'Description': 'Successfully validated',
-                        'Parameters': []}}
-        for p in self.parms:
-            jp = {'member': {}}
-            res = jp['member']
-            res['NoEcho'] = 'false'
-            res['ParameterKey'] = p
-            res['Description'] = self.parms.get_attr(p, 'Description')
-            res['DefaultValue'] = self.parms.get_attr(p, 'Default')
-            response['ValidateTemplateResult']['Parameters'].append(res)
+        def format_param(p):
+            return {'NoEcho': 'false',
+                    'ParameterKey': p,
+                    'Description': self.parameters.get_attr(p, 'Description'),
+                    'DefaultValue': self.parameters.get_attr(p, 'Default')}
+
+        response = {'Description': 'Successfully validated',
+                    'Parameters': [format_param(p) for p in self.parameters]}
+
         return response
 
-    def state_set(self, new_status, reason='change in resource state'):
-        if self.id != 0:
-            stack = db_api.stack_get(self.context, self.id)
-        else:
-            stack = db_api.stack_get_by_name(self.context, self.name)
-
-        if stack is None:
+    def state_set(self, new_status, reason):
+        '''Update the stack state in the database'''
+        if self.id is None:
             return
 
-        self.id = stack.id
+        stack = db_api.stack_get(self.context, self.id)
         stack.update_and_save({'status': new_status,
                                'status_reason': reason})
 
@@ -199,7 +409,7 @@ class Stack(object):
         '''
         Delete all of the resources, and then the stack itself.
         '''
-        self.state_set(self.DELETE_IN_PROGRESS)
+        self.state_set(self.DELETE_IN_PROGRESS, 'Stack deletion started')
 
         failures = []
 
@@ -253,104 +463,25 @@ class Stack(object):
                     logger.exception('create')
                     failed = True
             else:
-                res.state_set(res.CREATE_FAILED)
+                res.state_set(res.CREATE_FAILED, 'Resource restart aborted')
         # TODO(asalkeld) if any of this fails we Should
         # restart the whole stack
 
-    def parameter_get(self, key):
-        if not key in self.parms:
-            raise exception.UserParameterMissing(key=key)
-        try:
-            return self.parms[key]
-        except ValueError:
-            raise exception.UserParameterMissing(key=key)
-
-    def _resolve_static_refs(self, s):
-        '''
-            looking for { "Ref" : "str" }
-        '''
-        def match(key, value):
-            return (key == 'Ref' and
-                    isinstance(value, basestring) and
-                    value in self.parms)
-
-        def handle(ref):
-            return self.parameter_get(ref)
-
-        return _resolve(match, handle, s)
-
-    def _resolve_availability_zones(self, s):
-        '''
-            looking for { "Fn::GetAZs" : "str" }
-        '''
-        def match(key, value):
-            return (key == 'Fn::GetAZs' and
-                    isinstance(value, basestring))
-
-        def handle(ref):
-            return ['nova']
-
-        return _resolve(match, handle, s)
-
-    def _resolve_find_in_map(self, s):
-        def handle(args):
-            try:
-                name, key, value = args
-                return self.maps[name][key][value]
-            except (ValueError, TypeError) as ex:
-                raise KeyError(str(ex))
-
-        return _resolve(lambda k, v: k == 'Fn::FindInMap', handle, s)
-
-    def _resolve_attributes(self, s):
-        '''
-            looking for something like:
-            { "Fn::GetAtt" : [ "DBInstance", "Endpoint.Address" ] }
-        '''
-        def match_ref(key, value):
-            return key == 'Ref' and value in self
-
-        def handle_ref(arg):
-            return self[arg].FnGetRefId()
-
-        def handle_getatt(args):
-            resource, att = args
-            try:
-                return self[resource].FnGetAtt(att)
-            except KeyError:
-                raise exception.InvalidTemplateAttribute(resource=resource,
-                                                         key=att)
-
-        return _resolve(lambda k, v: k == 'Fn::GetAtt', handle_getatt,
-                        _resolve(match_ref, handle_ref, s))
-
-    @staticmethod
-    def _resolve_joins(s):
-        '''
-            looking for { "Fn::Join" : [] }
-        '''
-        def handle(args):
-            delim, strings = args
-            return delim.join(strings)
-
-        return _resolve(lambda k, v: k == 'Fn::Join', handle, s)
-
-    @staticmethod
-    def _resolve_base64(s):
-        '''
-            looking for { "Fn::Base64" : "" }
-        '''
-        return _resolve(lambda k, v: k == 'Fn::Base64', lambda d: d, s)
-
     def resolve_static_data(self, snippet):
-        return transform(snippet, [self._resolve_static_refs,
-                                   self._resolve_availability_zones,
-                                   self._resolve_find_in_map])
+        return transform(snippet,
+                         [functools.partial(self.t.resolve_param_refs,
+                                            parameters=self.parameters),
+                          self.t.resolve_availability_zones,
+                          self.t.resolve_find_in_map])
 
     def resolve_runtime_data(self, snippet):
-        return transform(snippet, [self._resolve_attributes,
-                                   self._resolve_joins,
-                                   self._resolve_base64])
+        return transform(snippet,
+                         [functools.partial(self.t.resolve_resource_refs,
+                                            resources=self.resources),
+                          functools.partial(self.t.resolve_attributes,
+                                            resources=self.resources),
+                          self.t.resolve_joins,
+                          self.t.resolve_base64])
 
 
 def transform(data, transformations):

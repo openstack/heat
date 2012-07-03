@@ -206,13 +206,13 @@ class TestBinHeat():
         t = json.loads(f.read())
         f.close()
 
-        params = {}
-        params['KeyStoneCreds'] = None
-        t['Parameters']['KeyName']['Value'] = keyname
-        t['Parameters']['DBUsername']['Value'] = dbusername
-        t['Parameters']['DBPassword']['Value'] = creds['password']
+        template = parser.Template(t)
+        params = parser.Parameters('test', t,
+                                   {'KeyName': keyname,
+                                    'DBUsername': dbusername,
+                                    'DBPassword': creds['password']})
 
-        stack = parser.Stack('test', t, 0, params)
+        stack = parser.Stack(None, 'test', template, params)
         parsed_t = stack.resolve_static_refs(t)
         remote_file = sftp.open('/var/lib/cloud/instance/scripts/startup')
         remote_file_list = remote_file.read().split('\n')

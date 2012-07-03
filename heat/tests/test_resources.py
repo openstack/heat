@@ -34,19 +34,16 @@ class instancesTest(unittest.TestCase):
         t = json.loads(f.read())
         f.close()
 
-        parameters = {}
         t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack(None, 'test_stack', t, 0)
+        stack = parser.Stack(None, 'test_stack', parser.Template(t),
+                             stack_id=-1)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
                                               stack).AndReturn(None)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
+        instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
 
         self.m.ReplayAll()
 
@@ -80,9 +77,9 @@ class instancesTest(unittest.TestCase):
         t = json.loads(f.read())
         f.close()
 
-        parameters = {}
         t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack(None, 'test_stack', t, 0)
+        stack = parser.Stack(None, 'test_stack', parser.Template(t),
+                             stack_id=-1)
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',

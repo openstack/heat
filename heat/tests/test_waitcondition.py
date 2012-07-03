@@ -7,12 +7,12 @@ import sys
 
 import nose
 import unittest
-import mox
 from nose.plugins.attrib import attr
 from nose import with_setup
 
 import heat.db as db_api
 from heat.engine import parser
+from heat.common import context
 
 logger = logging.getLogger('test_waitcondition')
 
@@ -41,32 +41,15 @@ test_template_waitcondition = '''
 @attr(speed='slow')
 class stacksTest(unittest.TestCase):
     def setUp(self):
-        self.m = mox.Mox()
         self.greenpool = eventlet.GreenPool()
 
-    def tearDown(self):
-        self.m.UnsetStubs()
-
     def create_stack(self, stack_name, temp, params):
-        stack = parser.Stack(None, stack_name, temp, 0, params)
+        template = parser.Template(temp)
+        parameters = parser.Parameters(stack_name, template, params)
+        stack = parser.Stack(context.get_admin_context(), stack_name,
+                             template, parameters)
 
-        rt = {}
-        rt['template'] = temp
-        rt['StackName'] = stack_name
-        new_rt = db_api.raw_template_create(None, rt)
-
-        ct = {'username': 'fred',
-              'password': 'mentions_fruit'}
-        new_creds = db_api.user_creds_create(ct)
-
-        s = {}
-        s['name'] = stack_name
-        s['raw_template_id'] = new_rt.id
-        s['user_creds_id'] = new_creds.id
-        s['username'] = ct['username']
-        new_s = db_api.stack_create(None, s)
-        stack.id = new_s.id
-
+        stack.store()
         return stack
 
     def test_post_success_to_handle(self):
@@ -74,7 +57,6 @@ class stacksTest(unittest.TestCase):
         t = json.loads(test_template_waitcondition)
         stack = self.create_stack('test_stack', t, params)
 
-        self.m.ReplayAll()
         self.greenpool.spawn_n(stack.create)
         eventlet.sleep(1)
         self.assertEqual(stack.resources['WaitForTheHandle'].state,

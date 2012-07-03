@@ -24,27 +24,37 @@ class stacksTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.fc = fakes.FakeClient()
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
+        path = os.path.dirname(os.path.realpath(__file__))
+        self.path = path.replace(os.path.join('heat', 'tests'), 'templates')
 
     def tearDown(self):
         self.m.UnsetStubs()
         print "stackTest teardown complete"
 
+    def create_context(self, user='stacks_test_user'):
+        ctx = context.get_admin_context()
+        self.m.StubOutWithMock(ctx, 'username')
+        ctx.username = user
+        self.m.StubOutWithMock(auth, 'authenticate')
+        return ctx
+
     # We use this in a number of tests so it's factored out here.
-    def start_wordpress_stack(self, stack_name):
-        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
-        t = json.loads(f.read())
-        f.close()
-        params = {}
-        parameters = {}
-        t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack(None, stack_name, t, 0, params)
+    def get_wordpress_stack(self, stack_name, ctx=None):
+        tmpl_path = os.path.join(self.path,
+                                 'WordPress_Single_Instance_gold.template')
+        with open(tmpl_path) as f:
+            t = json.load(f)
+
+        template = parser.Template(t)
+        parameters = parser.Parameters(stack_name, template,
+                                       {'KeyName': 'test'})
+
+        stack = parser.Stack(ctx or self.create_context(),
+                             stack_name, template, parameters)
+
         self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
-        instances.Instance.nova().AndReturn(self.fc)
+        instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
+
         instance = stack.resources['WebServer']
         instance.itype_oflavor['m1.large'] = 'm1.large'
         instance.calculate_properties()
@@ -55,10 +65,11 @@ class stacksTest(unittest.TestCase):
                 name='WebServer', security_groups=None,
                 userdata=server_userdata).\
                 AndReturn(self.fc.servers.list()[-1])
+
         return stack
 
     def test_wordpress_single_instance_stack_create(self):
-        stack = self.start_wordpress_stack('test_stack')
+        stack = self.get_wordpress_stack('test_stack')
         self.m.ReplayAll()
         stack.create()
 
@@ -67,48 +78,28 @@ class stacksTest(unittest.TestCase):
         self.assertNotEqual(stack.resources['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_delete(self):
-        stack = self.start_wordpress_stack('test_stack')
+        ctx = self.create_context()
+        stack = self.get_wordpress_stack('test_stack', ctx)
         self.m.ReplayAll()
-        rt = {}
-        rt['template'] = stack.t
-        rt['StackName'] = stack.name
-        new_rt = db_api.raw_template_create(None, rt)
-        ct = {'username': 'fred',
-                   'password': 'mentions_fruit'}
-        new_creds = db_api.user_creds_create(ct)
-        s = {}
-        s['name'] = stack.name
-        s['raw_template_id'] = new_rt.id
-        s['user_creds_id'] = new_creds.id
-        s['username'] = ct['username']
-        new_s = db_api.stack_create(None, s)
-        stack.id = new_s.id
+        stack_id = stack.store()
         stack.create()
+
+        db_s = db_api.stack_get(ctx, stack_id)
+        self.assertNotEqual(db_s, None)
+
         self.assertNotEqual(stack.resources['WebServer'], None)
         self.assertTrue(stack.resources['WebServer'].instance_id > 0)
 
         stack.delete()
 
         self.assertEqual(stack.resources['WebServer'].state, 'DELETE_COMPLETE')
-        self.assertEqual(new_s.status, 'DELETE_COMPLETE')
+        self.assertEqual(db_api.stack_get(ctx, stack_id), None)
+        self.assertEqual(db_s.status, 'DELETE_COMPLETE')
 
     def test_stack_event_list(self):
-        stack = self.start_wordpress_stack('test_event_list_stack')
+        stack = self.get_wordpress_stack('test_event_list_stack')
         self.m.ReplayAll()
-        rt = {}
-        rt['template'] = stack.t
-        rt['StackName'] = stack.name
-        new_rt = db_api.raw_template_create(None, rt)
-        ct = {'username': 'fred',
-                   'password': 'mentions_fruit'}
-        new_creds = db_api.user_creds_create(ct)
-        s = {}
-        s['name'] = stack.name
-        s['raw_template_id'] = new_rt.id
-        s['user_creds_id'] = new_creds.id
-        s['username'] = ct['username']
-        new_s = db_api.stack_create(None, s)
-        stack.id = new_s.id
+        stack.store()
         stack.create()
 
         self.assertNotEqual(stack.resources['WebServer'], None)
@@ -135,46 +126,82 @@ class stacksTest(unittest.TestCase):
                              'm1.large')
 
     def test_stack_list(self):
-        stack = self.start_wordpress_stack('test_stack_list')
-        rt = {}
-        rt['template'] = stack.t
-        rt['StackName'] = stack.name
-        new_rt = db_api.raw_template_create(None, rt)
-        ct = {'username': 'fred',
-              'password': 'mentions_fruit'}
-        new_creds = db_api.user_creds_create(ct)
-
-        ctx = context.get_admin_context()
-        self.m.StubOutWithMock(ctx, 'username')
-        ctx.username = 'fred'
-        self.m.StubOutWithMock(auth, 'authenticate')
+        ctx = self.create_context()
         auth.authenticate(ctx).AndReturn(True)
 
-        s = {}
-        s['name'] = stack.name
-        s['raw_template_id'] = new_rt.id
-        s['user_creds_id'] = new_creds.id
-        s['username'] = ct['username']
-        new_s = db_api.stack_create(ctx, s)
-        stack.id = new_s.id
-        instances.Instance.nova().AndReturn(self.fc)
+        stack = self.get_wordpress_stack('test_stack_list', ctx)
+
         self.m.ReplayAll()
+        stack.store()
         stack.create()
 
-        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
-        t = json.loads(f.read())
-        params = {}
-        parameters = {}
-        t['Parameters']['KeyName']['Value'] = 'test'
-        stack = parser.Stack(ctx, 'test_stack_list', t, 0, params)
-
         man = manager.EngineManager()
-        sl = man.list_stacks(ctx, params)
+        sl = man.list_stacks(ctx, {})
 
         self.assertTrue(len(sl['stacks']) > 0)
         for s in sl['stacks']:
-            self.assertTrue(s['StackId'] > 0)
+            self.assertNotEqual(s['StackId'], None)
             self.assertNotEqual(s['TemplateDescription'].find('WordPress'), -1)
+
+    def test_stack_describe_all(self):
+        ctx = self.create_context('stack_describe_all')
+        auth.authenticate(ctx).AndReturn(True)
+
+        stack = self.get_wordpress_stack('test_stack_desc_all', ctx)
+
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+
+        man = manager.EngineManager()
+        sl = man.show_stack(ctx, None, {})
+
+        self.assertEqual(len(sl['stacks']), 1)
+        for s in sl['stacks']:
+            self.assertNotEqual(s['StackId'], None)
+            self.assertNotEqual(s['Description'].find('WordPress'), -1)
+
+    def test_stack_describe_all_empty(self):
+        ctx = self.create_context('stack_describe_all_empty')
+        auth.authenticate(ctx).AndReturn(True)
+
+        self.m.ReplayAll()
+
+        man = manager.EngineManager()
+        sl = man.show_stack(ctx, None, {})
+
+        self.assertEqual(len(sl['stacks']), 0)
+
+    def test_stack_describe_nonexistent(self):
+        ctx = self.create_context()
+        auth.authenticate(ctx).AndReturn(True)
+
+        self.m.ReplayAll()
+
+        man = manager.EngineManager()
+        sl = man.show_stack(ctx, 'wibble', {})
+
+        self.assertEqual(len(sl['stacks']), 0)
+
+    def test_stack_describe(self):
+        ctx = self.create_context('stack_describe')
+        auth.authenticate(ctx).AndReturn(True)
+
+        stack = self.get_wordpress_stack('test_stack_desc', ctx)
+
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+
+        man = manager.EngineManager()
+        sl = man.show_stack(ctx, 'test_stack_desc', {})
+
+        self.assertTrue(len(sl['stacks']) > 0)
+        for s in sl['stacks']:
+            self.assertEqual(s['StackName'], 'test_stack_desc')
+            self.assertTrue('CreationTime' in s)
+            self.assertNotEqual(s['StackId'], None)
+            self.assertNotEqual(s['Description'].find('WordPress'), -1)
 
     # allows testing of the test directly
     if __name__ == '__main__':
