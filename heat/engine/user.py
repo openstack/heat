@@ -49,7 +49,7 @@ class User(Resource):
                 'Password' in self.properties['LoginProfile']:
                 passwd = self.properties['LoginProfile']['Password']
 
-        tenant_id = self.stack.context.tenant_id
+        tenant_id = self.context.tenant_id
         user = self.keystone().users.create(self.name, passwd,
                                             '%s@heat-api.org' % self.name,
                                             tenant_id=tenant_id,
@@ -119,7 +119,7 @@ class AccessKey(Resource):
         self._secret = None
 
     def _user_from_name(self, username):
-        tenant_id = self.stack.context.tenant_id
+        tenant_id = self.context.tenant_id
         users = self.keystone().users.list(tenant_id=tenant_id)
         for u in users:
             if u.name == self.properties['UserName']:
@@ -132,7 +132,7 @@ class AccessKey(Resource):
             raise exception.NotFound('could not find user %s' %
                                      self.properties['UserName'])
 
-        tenant_id = self.stack.context.tenant_id
+        tenant_id = self.context.tenant_id
         cred = self.keystone().ec2.create(user.id, tenant_id)
         self.instance_id_set(cred.access)
         self._secret = cred.secret

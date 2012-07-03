@@ -46,7 +46,7 @@ class Stack(Resource):
 
     def nested(self):
         if self._nested is None and self.instance_id is not None:
-            self._nested = parser.Stack.load(self.stack.context,
+            self._nested = parser.Stack.load(self.context,
                                              self.instance_id)
 
             if self._nested is None:
@@ -61,7 +61,7 @@ class Stack(Resource):
         template = parser.Template(child_template)
         params = parser.Parameters(self.name, template, self._params())
 
-        self._nested = parser.Stack(self.stack.context,
+        self._nested = parser.Stack(self.context,
                                     self.name,
                                     template,
                                     params)

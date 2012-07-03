@@ -68,12 +68,12 @@ class CloudWatchAlarm(Resource):
             'stack_name': self.stack.name
         }
 
-        wr = db_api.watch_rule_create(self.stack.context, wr_values)
+        wr = db_api.watch_rule_create(self.context, wr_values)
         self.instance_id = wr.id
 
     def handle_delete(self):
         try:
-            db_api.watch_rule_delete(self.stack.context, self.name)
+            db_api.watch_rule_delete(self.context, self.name)
         except exception.NotFound:
             pass
 

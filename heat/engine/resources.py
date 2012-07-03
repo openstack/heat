@@ -65,6 +65,7 @@ class Resource(object):
     def __init__(self, name, json_snippet, stack):
         self.references = []
         self.stack = stack
+        self.context = stack.context
         self.name = name
         self.t = stack.resolve_static_data(json_snippet)
         self.properties = checkeddict.Properties(name, self.properties_schema)
@@ -77,7 +78,7 @@ class Resource(object):
             # place for it.
             self.t['Metadata'] = {}
 
-        resource = db_api.resource_get_by_name_and_stack(self.stack.context,
+        resource = db_api.resource_get_by_name_and_stack(self.context,
                                                          name, stack.id)
         if resource:
             self.instance_id = resource.nova_instance
@@ -117,7 +118,7 @@ class Resource(object):
         if self._keystone:
             return self._keystone
 
-        con = self.stack.context
+        con = self.context
         self._keystone = kc.Client(username=con.username,
                                    password=con.password,
                                    tenant_name=con.tenant,
@@ -128,8 +129,7 @@ class Resource(object):
         if service_type in self._nova:
             return self._nova[service_type]
 
-        con = self.stack.context
-        self._nova[service_type] = auth.authenticate(con,
+        self._nova[service_type] = auth.authenticate(self.context,
                                                      service_type=service_type,
                                                      service_name=None)
         return self._nova[service_type]
@@ -203,7 +203,7 @@ class Resource(object):
             return result
 
         try:
-            db_api.resource_get(self.stack.context, self.id).delete()
+            db_api.resource_get(self.context, self.id).delete()
         except exception.NotFound:
             # Don't fail on delete if the db entry has
             # not been created yet.
@@ -225,7 +225,7 @@ class Resource(object):
                   'rsrc_metadata': metadata,
                   'stack_name': self.stack.name}
 
-            new_rs = db_api.resource_create(self.stack.context, rs)
+            new_rs = db_api.resource_create(self.context, rs)
             self.id = new_rs.id
 
             if new_rs.stack:
@@ -247,7 +247,7 @@ class Resource(object):
               'resource_type': self.t['Type'],
               'resource_properties': dict(self.properties)}
         try:
-            db_api.event_create(self.stack.context, ev)
+            db_api.event_create(self.context, ev)
         except Exception as ex:
             logger.error('DB error %s' % str(ex))
 
@@ -256,7 +256,7 @@ class Resource(object):
 
         if self.id is not None:
             try:
-                rs = db_api.resource_get(self.stack.context, self.id)
+                rs = db_api.resource_get(self.context, self.id)
                 rs.update_and_save({'state': self.state,
                                     'state_description': reason,
                                     'nova_instance': self.instance_id})

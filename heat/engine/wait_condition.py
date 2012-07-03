@@ -70,7 +70,6 @@ class WaitCondition(resources.Resource):
     def handle_create(self):
         self._get_handle_resource_id()
         res_name = self.resource_id
-        cntx = self.stack.context
 
         # keep polling our Metadata to see if the cfn-signal has written
         # it yet. The execution here is limited by timeout.
@@ -82,7 +81,7 @@ class WaitCondition(resources.Resource):
         try:
             while status == 'WAITING':
                 try:
-                    res = db_api.resource_get_by_name_and_stack(cntx,
+                    res = db_api.resource_get_by_name_and_stack(self.context,
                                                                 res_name,
                                                                 self.stack.id)
                 except Exception as ex:
@@ -125,7 +124,7 @@ class WaitCondition(resources.Resource):
         res = None
         if key == 'Data':
             try:
-                r = db_api.resource_get(self.stack.context, self.id)
+                r = db_api.resource_get(self.context, self.id)
                 if r.rsrc_metadata and 'Data' in r.rsrc_metadata:
                     res = r.rsrc_metadata['Data']
             except Exception as ex:
