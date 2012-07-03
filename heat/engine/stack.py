@@ -67,8 +67,7 @@ class Stack(Resource):
         self._nested = parser.Stack(self.stack.context,
                                     self.name,
                                     child_template,
-                                    parms=self._params(),
-                                    metadata_server=self.stack.metadata_server)
+                                    parms=self._params())
 
         rt = {'template': child_template, 'stack_name': self.name}
         new_rt = db_api.raw_template_create(None, rt)

@@ -21,12 +21,19 @@ from novaclient.v1_1 import client as nc
 from keystoneclient.v2_0 import client as kc
 
 from heat.common import exception
-from heat.common.config import HeatEngineConfigOpts
+from heat.common import config
 from heat.db import api as db_api
 from heat.engine import checkeddict
 from heat.engine import auth
 
 logger = logging.getLogger('heat.engine.resources')
+
+
+def metadata_server():
+    try:
+        return config.FLAGS.heat_metadata_server_url
+    except AttributeError:
+        return None
 
 
 class Resource(object):

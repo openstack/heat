@@ -35,8 +35,7 @@ class Stack(object):
     DELETE_FAILED = 'DELETE_FAILED'
     DELETE_COMPLETE = 'DELETE_COMPLETE'
 
-    def __init__(self, context, stack_name, template, stack_id=0, parms=None,
-                 metadata_server=None):
+    def __init__(self, context, stack_name, template, stack_id=0, parms=None):
         self.id = stack_id
         self.context = context
         self.t = template
@@ -44,7 +43,6 @@ class Stack(object):
         self.res = {}
         self.doc = None
         self.name = stack_name
-        self.metadata_server = metadata_server
 
         # Default Parameters
         self.parms = checkeddict.CheckedDict('Parameters')

@@ -19,12 +19,12 @@ import json
 
 from heat.common import exception
 from heat.db import api as db_api
-from heat.engine.resources import Resource
+from heat.engine import resources
 
 logger = logging.getLogger('heat.engine.wait_condition')
 
 
-class WaitConditionHandle(Resource):
+class WaitConditionHandle(resources.Resource):
     '''
     the main point of this class is to :
     have no dependancies (so the instance can reference it)
@@ -39,12 +39,12 @@ class WaitConditionHandle(Resource):
 
     def handle_create(self):
         self.instance_id = '%s/stacks/%s/resources/%s' % \
-                           (self.stack.metadata_server,
+                           (resources.metadata_server(),
                             self.stack.id,
                             self.name)
 
 
-class WaitCondition(Resource):
+class WaitCondition(resources.Resource):
     properties_schema = {'Handle': {'Type': 'String',
                                     'Required': True},
                          'Timeout': {'Type': 'Number',

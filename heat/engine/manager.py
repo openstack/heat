@@ -186,14 +186,12 @@ class EngineManager(manager.Manager):
             return {'Error': 'Stack already exists with that name.'}
 
         user_params = _extract_user_params(params)
-        metadata_server = config.FLAGS.heat_metadata_server_url
         # We don't want to reset the stack template, so we are making
         # an instance just for validation.
         template_copy = deepcopy(template)
         stack_validator = parser.Stack(context, stack_name,
                                        template_copy, 0,
-                                       user_params,
-                                       metadata_server=metadata_server)
+                                       user_params)
         response = stack_validator.validate()
         stack_validator = None
         template_copy = None
@@ -201,8 +199,7 @@ class EngineManager(manager.Manager):
                 response['ValidateTemplateResult']['Description']:
             return response
 
-        stack = parser.Stack(context, stack_name, template, 0, user_params,
-                             metadata_server=metadata_server)
+        stack = parser.Stack(context, stack_name, template, 0, user_params)
         rt = {}
         rt['template'] = template
         rt['StackName'] = stack_name
