@@ -109,39 +109,59 @@
     },
 
     "WikiServerOne": {
-      "Type": "AWS::CloudFormation::Stack",
-      "DependsOn": "DatabaseServer",
-      "Properties": {
-        "TemplateURL": "https://raw.github.com/heat-api/heat/master/templates/WordPress_And_Http.template",
-        "Parameters": {
-          "KeyName"          : { "Ref": "KeyName" },
-          "InstanceType"     : { "Ref": "InstanceType" },
-          "DBName"           : { "Ref": "DBName" },
-          "DBUsername"       : { "Ref": "DBUsername" },
-          "DBPassword"       : { "Ref": "DBPassword" },
-          "DBIpaddress"      : { "Fn::GetAtt": [ "DatabaseServer", "Outputs.PublicIp" ]},
-          "LinuxDistribution": { "Ref": "LinuxDistribution" }
+      "Type": "AWS::EC2::Instance",
+      "DependsOn" : "DatabaseServer",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "packages": {
+              "yum": {
+                "httpd"        : [],
+                "wordpress"    : []
+              }
+            },
+            "services": {
+              "systemd": {
+                "httpd"    : { "enabled": "true", "ensureRunning": "true" }
+              }
+            }
+          }
         }
+      },
+      "Properties": {
+        "ImageId": { "Fn::FindInMap": [ "DistroArch2AMI", { "Ref": "LinuxDistribution" },
+                          { "Fn::FindInMap": [ "AWSInstanceType2Arch", { "Ref": "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref": "InstanceType" },
+        "KeyName"        : { "Ref": "KeyName" },
+        "UserData"       : { "Fn::Base64": { "Fn::Join": ["", [
+          "#!/bin/bash -v\n",
+          "/opt/aws/bin/cfn-init\n",
+          "sed --in-place --e s/database_name_here/", { "Ref": "DBName" },
+          "/ --e s/username_here/", { "Ref": "DBUsername" },
+          "/ --e s/password_here/", { "Ref": "DBPassword" },
+          "/ --e s/localhost/", { "Fn::GetAtt": [ "DatabaseServer", "Outputs.PublicIp" ]},
+          "/ /usr/share/wordpress/wp-config.php\n"
+        ]]}}
       }
     },
 
-    "LoadBalancer": {
-      "Type": "AWS::CloudFormation::Stack",
-      "DependsOn": "WikiServerOne",
-      "Properties": {
-        "TemplateURL": "https://raw.github.com/heat-api/heat/master/templates/HAProxy_Single_Instance.template",
-        "Parameters": {
-          "KeyName"          : { "Ref": "KeyName" },
-          "InstanceType"     : { "Ref": "InstanceType" },
-          "Server1"          : { "Fn::Join": ["", [{ "Fn::GetAtt": [ "WikiServerOne", "Outputs.PublicIp" ]}, ":80"]] }
-        }
+    "LoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "AvailabilityZones" : { "Fn::GetAZs" : "" },
+        "Instances" : [{"Ref": "WikiServerOne"}],
+        "Listeners" : [ {
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "80",
+          "Protocol" : "HTTP"
+        }]
       }
     }
   },
 
   "Outputs": {
     "WebsiteURL": {
-      "Value": { "Fn::Join": ["", ["http://", { "Fn::GetAtt": [ "LoadBalancer", "Outputs.PublicIp" ]}, "/wordpress"]] },
+      "Value": { "Fn::Join": ["", ["http://", { "Fn::GetAtt": [ "LoadBalancer", "DNSName" ]}, "/wordpress"]] },
       "Description": "URL for Wordpress wiki"
     }
   }

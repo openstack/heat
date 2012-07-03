@@ -23,6 +23,7 @@ from heat.engine import resources
 from heat.engine import cloud_watch
 from heat.engine import eip
 from heat.engine import instance
+from heat.engine import loadbalancer
 from heat.engine import security_group
 from heat.engine import stack
 from heat.engine import user
@@ -42,6 +43,7 @@ _resource_classes = {
     'AWS::EC2::SecurityGroup': security_group.SecurityGroup,
     'AWS::EC2::Volume': volume.Volume,
     'AWS::EC2::VolumeAttachment': volume.VolumeAttachment,
+    'AWS::ElasticLoadBalancing::LoadBalancer': loadbalancer.LoadBalancer,
     'AWS::IAM::User': user.User,
     'AWS::IAM::AccessKey': user.AccessKey,
     'HEAT::HA::Restarter': instance.Restarter,
