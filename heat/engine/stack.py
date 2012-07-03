@@ -60,10 +60,10 @@ class Stack(Resource):
 
         return self._nested
 
-    def handle_create(self):
-        response = urllib2.urlopen(self.properties[PROP_TEMPLATE_URL])
-        child_template = json.loads(response.read())
-
+    def create_with_template(self, child_template):
+        '''
+        Handle the creation of the nested stack from a given JSON template.
+        '''
         self._nested = parser.Stack(self.stack.context,
                                     self.name,
                                     child_template,
@@ -90,6 +90,12 @@ class Stack(Resource):
 
         self._nested.create()
         self.instance_id_set(self._nested.id)
+
+    def handle_create(self):
+        response = urllib2.urlopen(self.properties[PROP_TEMPLATE_URL])
+        template = json.load(response)
+
+        self.create_with_template(template)
 
     def handle_delete(self):
         try:

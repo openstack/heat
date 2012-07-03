@@ -18,7 +18,7 @@ import json
 import logging
 
 from heat.common import exception
-from heat.engine.resources import Resource
+from heat.engine import stack
 from heat.db import api as db_api
 from heat.engine import parser
 from novaclient.exceptions import NotFound
@@ -94,7 +94,7 @@ lb_template = '''
 # at the moment this is because we will probably need to implement a
 # LoadBalancer based on keepalived as well (for for ssl support).
 #
-class LoadBalancer(Resource):
+class LoadBalancer(stack.Stack):
 
     listeners_schema = {
         'InstancePort': {'Type': 'Integer',
@@ -141,31 +141,11 @@ class LoadBalancer(Resource):
                     'Implemented': False}
     }
 
-    def __init__(self, name, json_snippet, stack):
-        Resource.__init__(self, name, json_snippet, stack)
-        self._nested = None
-
     def _params(self):
         # total hack - probably need an admin key here.
         params = {'KeyName': {'Ref': 'KeyName'}}
         p = self.stack.resolve_static_data(params)
         return p
-
-    def nested(self):
-        if self._nested is None:
-            if self.instance_id is None:
-                return None
-
-            st = db_api.stack_get(self.stack.context, self.instance_id)
-            if not st:
-                raise exception.NotFound('Nested stack not found in DB')
-
-            n = parser.Stack(self.stack.context, st.name,
-                             st.raw_template.parsed_template.template,
-                             self.instance_id, self._params())
-            self._nested = n
-
-        return self._nested
 
     def _instance_to_ipaddress(self, inst):
         '''
@@ -235,41 +215,7 @@ class LoadBalancer(Resource):
         cfg = self._haproxy_config(templ)
         files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
-        self._nested = parser.Stack(self.stack.context,
-                                    self.name,
-                                    templ,
-                                    parms=self._params(),
-                                    metadata_server=self.stack.metadata_server)
-
-        rt = {'template': templ, 'stack_name': self.name}
-        new_rt = db_api.raw_template_create(None, rt)
-
-        parent_stack = db_api.stack_get(self.stack.context, self.stack.id)
-
-        s = {'name': self.name,
-             'owner_id': self.stack.id,
-             'raw_template_id': new_rt.id,
-             'user_creds_id': parent_stack.user_creds_id,
-             'username': self.stack.context.username}
-        new_s = db_api.stack_create(None, s)
-        self._nested.id = new_s.id
-
-        pt = {'template': self._nested.t, 'raw_template_id': new_rt.id}
-        new_pt = db_api.parsed_template_create(None, pt)
-
-        self._nested.parsed_template_id = new_pt.id
-
-        self._nested.create()
-        self.instance_id_set(self._nested.id)
-
-    def handle_delete(self):
-        try:
-            stack = self.nested()
-        except exception.NotFound:
-            logger.info("Stack not found to delete")
-        else:
-            if stack is not None:
-                stack.delete()
+        self.create_with_template(templ)
 
     def FnGetAtt(self, key):
         '''
@@ -285,11 +231,7 @@ class LoadBalancer(Resource):
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
 
-        stack = self.nested()
-        if stack is None:
-            # This seems like a hack, to get past validation
-            return ''
         if key == 'DNSName':
-            return stack.output('PublicIp')
+            return stack.Stack.FnGetAtt(self, 'Outputs.PublicIp')
         else:
             return ''
