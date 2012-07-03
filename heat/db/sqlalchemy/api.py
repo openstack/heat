@@ -58,28 +58,6 @@ def raw_template_create(context, values):
     return raw_template_ref
 
 
-def parsed_template_get(context, template_id):
-    result = model_query(context, models.ParsedTemplate).\
-                        filter_by(id=template_id).first()
-    return result
-
-
-def parsed_template_get_all(context):
-    results = model_query(context, models.ParsedTemplate).all()
-
-    if not results:
-        raise NotFound('no parsed templates were found')
-
-    return results
-
-
-def parsed_template_create(context, values):
-    parsed_template_ref = models.ParsedTemplate()
-    parsed_template_ref.update(values)
-    parsed_template_ref.save()
-    return parsed_template_ref
-
-
 def resource_get(context, resource_id):
     result = model_query(context, models.Resource).\
                         filter_by(id=resource_id).first()
@@ -184,21 +162,14 @@ def stack_delete(context, stack_id):
     for e in s.events:
         session.delete(e)
 
-    rpt = {}
-    rrt = {}
     for r in s.resources:
-        rpt[r.parsed_template.id] = r.parsed_template
-        rrt[r.parsed_template.raw_template.id] = \
-            r.parsed_template.raw_template
         session.delete(r)
 
-    for pt in rpt.values():
-        session.delete(pt)
-
-    for rt in rrt.values():
-        session.delete(rt)
+    rt = s.raw_template
 
     session.delete(s)
+    session.delete(rt)
+
     session.flush()
 
 

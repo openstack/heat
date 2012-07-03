@@ -106,8 +106,8 @@ class EngineManager(manager.Manager):
             return res
         for s in stacks:
             ps = parser.Stack(context, s.name,
-                              s.raw_template.parsed_template.template,
-                              s.id, _extract_user_params(params))
+                              s.raw_template.template,
+                              s.id, s.parameters)
             mem = {}
             mem['StackId'] = "/".join([s.name, str(s.id)])
             mem['StackName'] = s.name
@@ -145,8 +145,8 @@ class EngineManager(manager.Manager):
             s = db_api.stack_get_by_name(context, stack)
             if s:
                 ps = parser.Stack(context, s.name,
-                                  s.raw_template.parsed_template.template,
-                                  s.id, _extract_user_params(params))
+                                  s.raw_template.template,
+                                  s.id, s.parameters)
                 mem = {}
                 mem['StackId'] = "/".join([s.name, str(s.id)])
                 mem['StackName'] = s.name
@@ -218,13 +218,6 @@ class EngineManager(manager.Manager):
         s['parameters'] = user_params
         new_s = db_api.stack_create(context, s)
         stack.id = new_s.id
-
-        pt = {}
-        pt['template'] = stack.t
-        pt['raw_template_id'] = new_rt.id
-        new_pt = db_api.parsed_template_create(None, pt)
-
-        stack.parsed_template_id = new_pt.id
 
         greenpool.spawn_n(stack.create, **_extract_args(params))
 

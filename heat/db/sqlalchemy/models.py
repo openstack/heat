@@ -132,18 +132,6 @@ class RawTemplate(BASE, HeatBase):
     __tablename__ = 'raw_template'
     id = Column(Integer, primary_key=True)
     template = Column(Json)
-    parsed_template = relationship("ParsedTemplate",
-                                    uselist=False, backref="raw_template")
-
-
-class ParsedTemplate(BASE, HeatBase):
-    """Represents a parsed template."""
-
-    __tablename__ = 'parsed_template'
-    id = Column(Integer, primary_key=True)
-    template = Column(Json)
-    raw_template_id = Column(Integer, ForeignKey('raw_template.id'),
-                            nullable=False)
 
 
 class Stack(BASE, HeatBase):
@@ -217,10 +205,6 @@ class Resource(BASE, HeatBase):
     state_description = Column('state_description', String)
     # odd name as "metadata" is reserved
     rsrc_metadata = Column('rsrc_metadata', Json)
-    parsed_template_id = Column(Integer, ForeignKey('parsed_template.id'),
-                                 nullable=True)
-    parsed_template = relationship(ParsedTemplate,
-        backref=backref('resources'))
 
     stack_id = Column(Integer, ForeignKey('stack.id'),
                                  nullable=False)

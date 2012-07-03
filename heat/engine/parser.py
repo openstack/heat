@@ -44,7 +44,6 @@ class Stack(object):
         self.res = {}
         self.doc = None
         self.name = stack_name
-        self.parsed_template_id = 0
         self.metadata_server = metadata_server
 
         # Default Parameters
@@ -148,36 +147,6 @@ class Stack(object):
             response['ValidateTemplateResult']['Parameters'].append(res)
         return response
 
-    def parsed_template_get(self):
-        stack = None
-        if self.parsed_template_id == 0:
-            if self.id == 0:
-                stack = db_api.stack_get(self.context, self.id)
-            else:
-                stack = db_api.stack_get_by_name(self.context, self.name)
-
-            if stack is None:
-                return None
-
-            self.parsed_template_id = stack.raw_template.parsed_template.id
-        return db_api.parsed_template_get(self.context,
-                                          self.parsed_template_id)
-
-    def update_parsed_template(self):
-        '''
-        Update the parsed template after each resource has been
-        created, so commands like describe will work.
-        '''
-        pt = self.parsed_template_get()
-        if pt:
-            template = self.t.copy()
-            template['Resources'] = dict((k, r.parsed_template())
-                                         for (k, r) in self.resources.items())
-            pt.update_and_save({'template': template})
-        else:
-            logger.warn('Cant find parsed template to update %d' %
-                        self.parsed_template_id)
-
     def state_set(self, new_status, reason='change in resource state'):
         if self.id != 0:
             stack = db_api.stack_get(self.context, self.id)
@@ -213,11 +182,6 @@ class Stack(object):
                             stack_status = self.CREATE_FAILED
                             reason = 'Resource %s failed with: %s' % (str(res),
                                                                       result)
-
-                        try:
-                            self.update_parsed_template()
-                        except Exception as ex:
-                            logger.exception('update_parsed_template')
 
                     else:
                         res.state_set(res.CREATE_FAILED,
@@ -271,12 +235,6 @@ class Stack(object):
         stop resource_name and all that depend on it
         start resource_name and all that depend on it
         '''
-
-        if self.parsed_template_id == 0:
-            stack = db_api.stack_get(self.context, self.id)
-            if stack:
-                self.parsed_template_id = stack.raw_template.parsed_template.id
-
         deps = self.dependencies[self[resource_name]]
         failed = False
 
@@ -296,11 +254,6 @@ class Stack(object):
                 except Exception as ex:
                     logger.exception('create')
                     failed = True
-
-                try:
-                    self.update_parsed_template()
-                except Exception as ex:
-                    logger.exception('update_parsed_template')
             else:
                 res.state_set(res.CREATE_FAILED)
         # TODO(asalkeld) if any of this fails we Should

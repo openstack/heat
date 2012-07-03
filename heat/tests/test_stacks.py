@@ -83,10 +83,6 @@ class stacksTest(unittest.TestCase):
         s['username'] = ct['username']
         new_s = db_api.stack_create(None, s)
         stack.id = new_s.id
-        pt = {}
-        pt['template'] = stack.t
-        pt['raw_template_id'] = new_rt.id
-        new_pt = db_api.parsed_template_create(None, pt)
         stack.create()
         self.assertNotEqual(stack.resources['WebServer'], None)
         self.assertTrue(stack.resources['WebServer'].instance_id > 0)
@@ -113,10 +109,6 @@ class stacksTest(unittest.TestCase):
         s['username'] = ct['username']
         new_s = db_api.stack_create(None, s)
         stack.id = new_s.id
-        pt = {}
-        pt['template'] = stack.t
-        pt['raw_template_id'] = new_rt.id
-        new_pt = db_api.parsed_template_create(None, pt)
         stack.create()
 
         self.assertNotEqual(stack.resources['WebServer'], None)
@@ -165,10 +157,6 @@ class stacksTest(unittest.TestCase):
         s['username'] = ct['username']
         new_s = db_api.stack_create(ctx, s)
         stack.id = new_s.id
-        pt = {}
-        pt['template'] = stack.t
-        pt['raw_template_id'] = new_rt.id
-        new_pt = db_api.parsed_template_create(ctx, pt)
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
         stack.create()

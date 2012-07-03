@@ -62,18 +62,6 @@ def raw_template_create(context, values):
     return IMPL.raw_template_create(context, values)
 
 
-def parsed_template_get(context, template_id):
-    return IMPL.parsed_template_get(context, template_id)
-
-
-def parsed_template_get_all(context):
-    return IMPL.parsed_template_get_all(context)
-
-
-def parsed_template_create(context, values):
-    return IMPL.parsed_template_create(context, values)
-
-
 def resource_get(context, resource_id):
     return IMPL.resource_get(context, resource_id)
 

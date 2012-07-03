@@ -213,7 +213,6 @@ class Resource(object):
         try:
             rs = {'state': self.state,
                   'stack_id': self.stack.id,
-                  'parsed_template_id': self.stack.parsed_template_id,
                   'nova_instance': self.instance_id,
                   'name': self.name,
                   'rsrc_metadata': metadata,

@@ -54,7 +54,7 @@ class Stack(Resource):
                 raise exception.NotFound('Nested stack not found in DB')
 
             n = parser.Stack(self.stack.context, st.name,
-                             st.raw_template.parsed_template.template,
+                             st.raw_template.template,
                              self.instance_id, self._params())
             self._nested = n
 
@@ -82,11 +82,6 @@ class Stack(Resource):
              'username': self.stack.context.username}
         new_s = db_api.stack_create(None, s)
         self._nested.id = new_s.id
-
-        pt = {'template': self._nested.t, 'raw_template_id': new_rt.id}
-        new_pt = db_api.parsed_template_create(None, pt)
-
-        self._nested.parsed_template_id = new_pt.id
 
         self._nested.create()
         self.instance_id_set(self._nested.id)
