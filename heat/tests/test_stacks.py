@@ -9,7 +9,7 @@ import sqlalchemy
 from nose.plugins.attrib import attr
 from nose import with_setup
 
-from heat. common import context
+from heat.common import context
 from heat.tests.v1_1 import fakes
 from heat.engine import instance as instances
 import heat.db as db_api
@@ -61,9 +61,10 @@ class stacksTest(unittest.TestCase):
         stack = self.start_wordpress_stack('test_stack')
         self.m.ReplayAll()
         stack.create()
-        assert(stack.resources['WebServer'] is not None)
-        assert(stack.resources['WebServer'].instance_id > 0)
-        assert(stack.resources['WebServer'].ipaddress != '0.0.0.0')
+
+        self.assertNotEqual(stack.resources['WebServer'], None)
+        self.assertTrue(stack.resources['WebServer'].instance_id > 0)
+        self.assertNotEqual(stack.resources['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_delete(self):
         stack = self.start_wordpress_stack('test_stack')
@@ -87,11 +88,13 @@ class stacksTest(unittest.TestCase):
         pt['raw_template_id'] = new_rt.id
         new_pt = db_api.parsed_template_create(None, pt)
         stack.create()
-        assert(stack.resources['WebServer'] is not None)
-        assert(stack.resources['WebServer'].instance_id > 0)
+        self.assertNotEqual(stack.resources['WebServer'], None)
+        self.assertTrue(stack.resources['WebServer'].instance_id > 0)
+
         stack.delete()
-        assert(stack.resources['WebServer'].state == 'DELETE_COMPLETE')
-        assert(new_s.status == 'DELETE_COMPLETE')
+
+        self.assertEqual(stack.resources['WebServer'].state, 'DELETE_COMPLETE')
+        self.assertEqual(new_s.status, 'DELETE_COMPLETE')
 
     def test_stack_event_list(self):
         stack = self.start_wordpress_stack('test_event_list_stack')
@@ -115,27 +118,29 @@ class stacksTest(unittest.TestCase):
         pt['raw_template_id'] = new_rt.id
         new_pt = db_api.parsed_template_create(None, pt)
         stack.create()
-        assert(stack.resources['WebServer'] is not None)
-        assert(stack.resources['WebServer'].instance_id > 0)
+
+        self.assertNotEqual(stack.resources['WebServer'], None)
+        self.assertTrue(stack.resources['WebServer'].instance_id > 0)
 
         m = manager.EngineManager()
         events = db_api.event_get_all_by_stack(None, stack.id)
         for ev in events:
             result = m.parse_event(ev)
-            assert(result['EventId'] > 0)
-            assert(result['StackName'] == "test_event_list_stack")
-            assert(result['ResourceStatus'] in ('IN_PROGRESS',
-                                                'CREATE_COMPLETE'))
-            assert(result['ResourceType'] == 'AWS::EC2::Instance')
-            assert(result['ResourceStatusReason'] == 'state changed')
-            assert(result['LogicalResourceId'] == 'WebServer')
+            self.assertTrue(result['EventId'] > 0)
+            self.assertEqual(result['StackName'], "test_event_list_stack")
+            self.assertTrue(result['ResourceStatus'] in ('IN_PROGRESS',
+                                                         'CREATE_COMPLETE'))
+            self.assertEqual(result['ResourceType'], 'AWS::EC2::Instance')
+            self.assertEqual(result['ResourceStatusReason'], 'state changed')
+            self.assertEqual(result['LogicalResourceId'], 'WebServer')
             # Big long user data field.. it mentions 'wordpress'
             # a few times so this should work.
-            assert(result['ResourceProperties']['UserData'].find('wordpress')
-                   != -1)
-            assert(result['ResourceProperties']['ImageId']
-                   == 'F16-x86_64-gold')
-            assert(result['ResourceProperties']['InstanceType'] == 'm1.large')
+            user_data = result['ResourceProperties']['UserData']
+            self.assertNotEqual(user_data.find('wordpress'), -1)
+            self.assertEqual(result['ResourceProperties']['ImageId'],
+                             'F16-x86_64-gold')
+            self.assertEqual(result['ResourceProperties']['InstanceType'],
+                             'm1.large')
 
     def test_stack_list(self):
         stack = self.start_wordpress_stack('test_stack_list')
@@ -178,10 +183,10 @@ class stacksTest(unittest.TestCase):
         man = manager.EngineManager()
         sl = man.list_stacks(ctx, params)
 
-        assert(len(sl) > 0)
+        self.assertTrue(len(sl['stacks']) > 0)
         for s in sl['stacks']:
-            assert(s['StackId'] > 0)
-            assert(s['TemplateDescription'].find('WordPress') != -1)
+            self.assertTrue(s['StackId'] > 0)
+            self.assertNotEqual(s['TemplateDescription'].find('WordPress'), -1)
 
     # allows testing of the test directly
     if __name__ == '__main__':

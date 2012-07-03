@@ -82,11 +82,12 @@ class stacksTest(unittest.TestCase):
         self.m.ReplayAll()
         self.greenpool.spawn_n(stack.create)
         eventlet.sleep(1)
-        assert(stack.resources['WaitForTheHandle'].state == 'IN_PROGRESS')
+        self.assertEqual(stack.resources['WaitForTheHandle'].state,
+                         'IN_PROGRESS')
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   stack.id)
-        assert(r.name == 'WaitHandle')
+        self.assertEqual(r.name, 'WaitHandle')
 
         metadata = {"Status": "SUCCESS",
                     "Reason": "woot toot",
@@ -98,7 +99,8 @@ class stacksTest(unittest.TestCase):
         eventlet.sleep(2)
 
         logger.debug('state %s' % stack.resources['WaitForTheHandle'].state)
-        assert(stack.resources['WaitForTheHandle'].state == 'CREATE_COMPLETE')
+        self.assertEqual(stack.resources['WaitForTheHandle'].state,
+                         'CREATE_COMPLETE')
 
         self.greenpool.waitall()
 

@@ -73,7 +73,7 @@ class instancesTest(unittest.TestCase):
         instance.create()
 
         # this makes sure the auto increment worked on instance creation
-        assert(instance.id > 0)
+        self.assertTrue(instance.id > 0)
 
     def test_instance_create_delete(self):
         f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
@@ -120,11 +120,11 @@ class instancesTest(unittest.TestCase):
         instance.create()
 
         # this makes sure the auto increment worked on instance creation
-        assert(instance.id > 0)
+        self.assertTrue(instance.id > 0)
 
         instance.delete()
-        assert(instance.instance_id is None)
-        assert(instance.state == instance.DELETE_COMPLETE)
+        self.assertTrue(instance.instance_id is None)
+        self.assertEqual(instance.state, instance.DELETE_COMPLETE)
 
     # allows testing of the test directly, shown below
     if __name__ == '__main__':

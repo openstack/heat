@@ -239,7 +239,7 @@ class validateTest(unittest.TestCase):
 
         self.m.ReplayAll()
         volumeattach = stack.resources['MountPoint']
-        assert(volumeattach.validate())
+        self.assertTrue(volumeattach.validate())
 
     def test_validate_ref_valid(self):
         t = json.loads(test_template_ref % 'WikiDatabase')
@@ -256,7 +256,7 @@ class validateTest(unittest.TestCase):
         res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
         print 'res %s' % res
-        assert (res['Description'] == 'Successfully validated')
+        self.assertEqual(res['Description'], 'Successfully validated')
 
     def test_validate_ref_invalid(self):
         t = json.loads(test_template_ref % 'WikiDatabasez')
@@ -272,7 +272,7 @@ class validateTest(unittest.TestCase):
         manager = managers.EngineManager()
         res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
-        assert (res['Description'] != 'Successfully validated')
+        self.assertNotEqual(res['Description'], 'Successfully validated')
 
     def test_validate_findinmap_valid(self):
         t = json.loads(test_template_findinmap_valid)
@@ -288,7 +288,7 @@ class validateTest(unittest.TestCase):
         manager = managers.EngineManager()
         res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
-        assert (res['Description'] == 'Successfully validated')
+        self.assertEqual(res['Description'], 'Successfully validated')
 
     def test_validate_findinmap_invalid(self):
         t = json.loads(test_template_findinmap_invalid)
@@ -304,7 +304,7 @@ class validateTest(unittest.TestCase):
         manager = managers.EngineManager()
         res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
-        assert (res['Description'] != 'Successfully validated')
+        self.assertNotEqual(res['Description'], 'Successfully validated')
 
     # allows testing of the test directly, shown below
     if __name__ == '__main__':

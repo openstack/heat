@@ -46,13 +46,13 @@ class WatchRuleTest(unittest.TestCase):
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'NORMAL')
+        self.assertEqual(new_state, 'NORMAL')
 
         data.append(WatchData(25, now - datetime.timedelta(seconds=250)))
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'ALARM')
+        self.assertEqual(new_state, 'ALARM')
 
     @attr(tag=['unit', 'watchrule'])
     @attr(speed='fast')
@@ -74,13 +74,13 @@ class WatchRuleTest(unittest.TestCase):
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'NORMAL')
+        self.assertEqual(new_state, 'NORMAL')
 
         data.append(WatchData(35, now - datetime.timedelta(seconds=150)))
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'ALARM')
+        self.assertEqual(new_state, 'ALARM')
 
     @attr(tag=['unit', 'watchrule'])
     @attr(speed='fast')
@@ -103,14 +103,14 @@ class WatchRuleTest(unittest.TestCase):
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'NORMAL')
+        self.assertEqual(new_state, 'NORMAL')
 
         # only 3 samples -> ALARM
         data.append(WatchData(1, now - datetime.timedelta(seconds=200)))
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'ALARM')
+        self.assertEqual(new_state, 'ALARM')
 
         # only 3 samples (one old) -> NORMAL
         data.pop(0)
@@ -118,7 +118,7 @@ class WatchRuleTest(unittest.TestCase):
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'NORMAL')
+        self.assertEqual(new_state, 'NORMAL')
 
     @attr(tag=['unit', 'watchrule'])
     @attr(speed='fast')
@@ -140,14 +140,14 @@ class WatchRuleTest(unittest.TestCase):
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'NORMAL')
+        self.assertEqual(new_state, 'NORMAL')
 
         # sum > 100 -> ALARM
         data.append(WatchData(85, now - datetime.timedelta(seconds=150)))
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'ALARM')
+        self.assertEqual(new_state, 'ALARM')
 
     @attr(tag=['unit', 'watchrule'])
     @attr(speed='fast')
@@ -168,10 +168,10 @@ class WatchRuleTest(unittest.TestCase):
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'NORMAL')
+        self.assertEqual(new_state, 'NORMAL')
 
         data.append(WatchData(195, now - datetime.timedelta(seconds=250)))
         watcher = watchrule.WatchRule(rule, data, last, now)
         new_state = watcher.get_alarm_state()
         logger.info(new_state)
-        assert(new_state == 'ALARM')
+        self.assertEqual(new_state, 'ALARM')
