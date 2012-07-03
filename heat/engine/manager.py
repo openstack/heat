@@ -107,7 +107,7 @@ class EngineManager(manager.Manager):
         for s in stacks:
             stack = parser.Stack.load(context, s.id)
             mem = {}
-            mem['StackId'] = "/".join([s.name, str(s.id)])
+            mem['StackId'] = stack.stack_id()
             mem['StackName'] = s.name
             mem['CreationTime'] = heat_utils.strtime(s.created_at)
             mem['TemplateDescription'] = stack.t[parser.DESCRIPTION]
@@ -143,7 +143,7 @@ class EngineManager(manager.Manager):
             if s:
                 stack = parser.Stack.load(context, s.id)
                 mem = {}
-                mem['StackId'] = "/".join([s.name, str(s.id)])
+                mem['StackId'] = stack.stack_id()
                 mem['StackName'] = s.name
                 mem['CreationTime'] = heat_utils.strtime(s.created_at)
                 mem['LastUpdatedTimestamp'] = heat_utils.strtime(s.updated_at)
@@ -191,7 +191,7 @@ class EngineManager(manager.Manager):
         stack_id = stack.store()
         greenpool.spawn_n(stack.create, **_extract_args(params))
 
-        return {'StackId': "/".join([stack.name, str(stack.id)])}
+        return {'StackId': stack.stack_id()}
 
     def validate_template(self, context, template, params):
         """
@@ -519,7 +519,7 @@ def format_stack_resource(resource):
     rs = db_api.resource_get(resource.stack.context, resource.id)
     last_updated_time = rs.updated_at or rs.created_at
     return {
-        'StackId': resource.stack.id,
+        'StackId': resource.stack.stack_id(),
         'StackName': resource.stack.name,
         'LogicalResourceId': resource.name,
         'PhysicalResourceId': resource.instance_id or '',
