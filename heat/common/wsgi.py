@@ -438,6 +438,11 @@ class JSONResponseSerializer(object):
         response.body = self.to_json(result)
 
 
+# Escape XML serialization for these keys, as the AWS API defines them as
+# JSON inside XML when the response format is XML.
+JSON_ONLY_KEYS = ('TemplateBody', 'Metadata')
+
+
 class XMLResponseSerializer(object):
 
     def object_to_element(self, obj, element):
@@ -448,11 +453,9 @@ class XMLResponseSerializer(object):
         elif isinstance(obj, dict):
             for key, value in obj.items():
                 subelement = etree.SubElement(element, key)
-                if key == "TemplateBody":
-                    # Escape serialization for TemplateBody key, as
-                    # AWS api defines JSON-template-inside-XML format
-                    # ref to GetTemplate AWS CFN API docs
-                    subelement.text = str(value)
+                if key in JSON_ONLY_KEYS:
+                    if value:
+                        subelement.text = str(value)
                 else:
                     self.object_to_element(value, subelement)
         else:

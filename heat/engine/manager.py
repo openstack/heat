@@ -368,6 +368,7 @@ class EngineManager(manager.Manager):
             # this API call uses Timestamp instead of LastUpdatedTimestamp
             formatted['Timestamp'] = formatted['LastUpdatedTimestamp']
             del formatted['LastUpdatedTimestamp']
+            del formatted['Metadata']
             resources.append(formatted)
 
         return resources
@@ -525,6 +526,7 @@ def format_stack_resource(resource):
         'PhysicalResourceId': resource.instance_id or '',
         'ResourceType': resource.t['Type'],
         'LastUpdatedTimestamp': heat_utils.strtime(last_updated_time),
+        'Metadata': rs.rsrc_metadata,
         'ResourceStatus': rs.state,
         'ResourceStatusReason': rs.state_description,
     }
