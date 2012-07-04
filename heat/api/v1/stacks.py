@@ -25,9 +25,7 @@ import sys
 import re
 import urlparse
 import webob
-from webob.exc import (HTTPNotFound,
-                       HTTPConflict,
-                       HTTPBadRequest)
+from heat.api.v1 import exception
 from heat.common import wsgi
 from heat.common import config
 from heat.common import context
@@ -63,6 +61,20 @@ class StackController(object):
             Format response from engine into API format
         '''
         return {'%sResponse' % action: {'%sResult' % action: response}}
+
+    def _remote_error(self, ex):
+        '''
+        Map rpc_common.RemoteError exceptions returned by the engine
+        to HeatAPIException subclasses which can be used to return
+        properly formatted AWS error responses
+        '''
+        if ex.exc_type == 'AttributeError':
+            # Attribute error, bad user data, ex.value should tell us why
+            return exception.HeatInvalidParameterValueError(detail=ex.value)
+        else:
+            # Map everything else to internal server error for now
+            # FIXME : further investigation into engine errors required
+            return exception.HeatInternalFailureError(detail=ex.value)
 
     def list(self, req):
         """
@@ -103,7 +115,7 @@ class StackController(object):
                                 'params': parms}})
 
         except rpc_common.RemoteError as ex:
-            return webob.exc.HTTPBadRequest(str(ex))
+            return self._remote_error(ex)
 
         res = {'Stacks': []}
         for s in stack_list['stacks']:
@@ -151,16 +163,17 @@ class StackController(object):
             templ = self._get_template(req)
         except socket.gaierror:
             msg = _('Invalid Template URL')
-            return webob.exc.HTTPBadRequest(explanation=msg)
+            return exception.HeatInvalidParameterValueError(detail=msg)
+
         if templ is None:
             msg = _("TemplateBody or TemplateUrl were not given.")
-            return webob.exc.HTTPBadRequest(explanation=msg)
+            return exception.HeatMissingParameterError(detail=msg)
 
         try:
             stack = json.loads(templ)
         except ValueError:
             msg = _("The Template must be a JSON document.")
-            return webob.exc.HTTPBadRequest(explanation=msg)
+            return exception.HeatInvalidParameterValueError(detail=msg)
 
         try:
             res = rpc.call(con, 'engine',
@@ -169,7 +182,7 @@ class StackController(object):
                                       'template': stack,
                                       'params': parms}})
         except rpc_common.RemoteError as ex:
-            return webob.exc.HTTPBadRequest(str(ex))
+            return self._remote_error(ex)
 
         return self._format_response('CreateStack',
             self._stackid_addprefix(res))
@@ -186,10 +199,11 @@ class StackController(object):
                               'args': {'stack_name': req.params['StackName'],
                                        'params': parms}})
         except rpc_common.RemoteError as ex:
-            return webob.exc.HTTPBadRequest(str(ex))
+            return self._remote_error(ex)
 
         if templ is None:
-            return webob.exc.HTTPNotFound('stack not found')
+            msg = _('stack not not found')
+            return exception.HeatInvalidParameterValueError(detail=msg)
 
         return self._format_response('GetTemplate', {'TemplateBody': templ})
 
@@ -206,16 +220,16 @@ class StackController(object):
             templ = self._get_template(req)
         except socket.gaierror:
             msg = _('Invalid Template URL')
-            return webob.exc.HTTPBadRequest(explanation=msg)
+            return exception.HeatInvalidParameterValueError(detail=msg)
         if templ is None:
             msg = _("TemplateBody or TemplateUrl were not given.")
-            return webob.exc.HTTPBadRequest(explanation=msg)
+            return exception.HeatMissingParameterError(detail=msg)
 
         try:
             stack = json.loads(templ)
         except ValueError:
             msg = _("The Template must be a JSON document.")
-            return webob.exc.HTTPBadRequest(explanation=msg)
+            return exception.HeatInvalidParameterValueError(detail=msg)
 
         logger.info('validate_template')
         try:
@@ -224,7 +238,7 @@ class StackController(object):
                              'args': {'template': stack,
                                       'params': parms}})
         except rpc_common.RemoteError as ex:
-            return webob.exc.HTTPBadRequest(str(ex))
+            return self._remote_error(ex)
 
     def delete(self, req):
         """
@@ -240,7 +254,7 @@ class StackController(object):
                         'params': parms}})
 
         except rpc_common.RemoteError as ex:
-            return webob.exc.HTTPBadRequest(str(ex))
+            return self._remote_error(ex)
 
         if res is None:
             return self._format_response('DeleteStack', '')
@@ -261,7 +275,7 @@ class StackController(object):
                               'args': {'stack_name': stack_name,
                               'params': parms}})
         except rpc_common.RemoteError as ex:
-            return webob.exc.HTTPBadRequest(str(ex))
+            return self._remote_error(ex)
 
         events = 'Error' not in event_res and event_res['events'] or []
 
@@ -284,7 +298,7 @@ class StackController(object):
                                'args': args})
 
         except rpc_common.RemoteError as ex:
-            return webob.exc.HTTPBadRequest(str(ex))
+            return self._remote_error(ex)
 
         return self._format_response('DescribeStackResource',
             {'StackResourceDetail': resource_details})
@@ -309,7 +323,7 @@ class StackController(object):
         physical_resource_id = req.params.get('PhysicalResourceId')
         if stack_name and physical_resource_id:
             msg = 'Use `StackName` or `PhysicalResourceId` but not both'
-            return webob.exc.HTTPBadRequest(msg)
+            return exception.HeatInvalidParameterCombinationError(detail=msg)
 
         args = {
             'stack_name': stack_name,
@@ -323,7 +337,7 @@ class StackController(object):
                                'args': args})
 
         except rpc_common.RemoteError as ex:
-            return webob.exc.HTTPBadRequest(str(ex))
+            return self._remote_error(ex)
 
         return self._format_response('DescribeStackResources',
             {'StackResources': resources})
@@ -341,7 +355,7 @@ class StackController(object):
                 'args': {'stack_name': req.params.get('StackName')}
             })
         except rpc_common.RemoteError as ex:
-            return webob.exc.HTTPBadRequest(str(ex))
+            return self._remote_error(ex)
 
         return self._format_response('ListStackResources',
             {'StackResourceSummaries': resources})
