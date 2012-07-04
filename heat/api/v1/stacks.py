@@ -62,7 +62,6 @@ class StackController(object):
         '''
             Format response from engine into API format
         '''
-        # TODO : logic to handle error response format will go here..
         return {'%sResponse' % action: {'%sResult' % action: response}}
 
     def list(self, req):

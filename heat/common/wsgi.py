@@ -541,8 +541,20 @@ class Resource(object):
             self.dispatch(serializer, action, response, action_result)
             return response
 
-        # return unserializable result (typically a webob exc)
+        # return unserializable result (typically an exception)
         except Exception:
+            # Here we should get API exceptions derived from HeatAPIException
+            # these implement get_unserialized_body(), which allow us to get
+            # a dict containing the unserialized error response.
+            # If we get something else here (e.g a webob.exc exception),
+            # this will fail, and we just return it without serializing,
+            # which will not conform to the expected AWS error response format
+            try:
+                err_body = action_result.get_unserialized_body()
+                serializer.default(action_result, err_body)
+            except:
+                logging.warning("Unable to serialize exception response")
+
             return action_result
 
     def dispatch(self, obj, action, *args, **kwargs):
