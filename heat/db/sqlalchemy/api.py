@@ -33,8 +33,7 @@ def model_query(context, *args, **kwargs):
 
 
 def raw_template_get(context, template_id):
-    result = model_query(context, models.RawTemplate).\
-                        filter_by(id=template_id).first()
+    result = model_query(context, models.RawTemplate).get(template_id)
 
     if not result:
         raise NotFound("raw template with id %s not found" % template_id)
@@ -59,8 +58,7 @@ def raw_template_create(context, values):
 
 
 def resource_get(context, resource_id):
-    result = model_query(context, models.Resource).\
-                        filter_by(id=resource_id).first()
+    result = model_query(context, models.Resource).get(resource_id)
 
     if not result:
         raise NotFound("resource with id %s not found" % resource_id)
@@ -123,11 +121,12 @@ def stack_get_by_name(context, stack_name, owner_id=None):
 
 
 def stack_get(context, stack_id):
-    result = model_query(context, models.Stack).\
-                        filter_by(id=stack_id).first()
+    result = model_query(context, models.Stack).get(stack_id)
+
     if (result is not None and context is not None and
         result.username != context.username):
         return None
+
     return result
 
 
@@ -183,15 +182,13 @@ def user_creds_create(values):
 
 
 def user_creds_get(user_creds_id):
-    result = model_query(None, models.UserCreds).\
-                        filter_by(id=user_creds_id).first()
+    result = model_query(None, models.UserCreds).get(user_creds_id)
 
     return result
 
 
 def event_get(context, event_id):
-    result = model_query(context, models.Event).\
-                        filter_by(id=event_id).first()
+    result = model_query(context, models.Event).get(event_id)
 
     return result
 
