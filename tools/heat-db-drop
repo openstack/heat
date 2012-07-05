@@ -17,6 +17,13 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+if [ ! "${MYSQL_ROOT_PW_ARG+defined}" ] ; then
+    printf "Please enter the password for the 'root' MySQL user: "
+    read -s MYSQL_ROOT_PW
+    MYSQL_ROOT_PW_ARG="--password=${MYSQL_ROOT_PW}"
+    echo
+fi
+
 cat << EOF | mysql -u root ${MYSQL_ROOT_PW_ARG}
 DROP USER '${DATABASE}'@'localhost';
 DROP USER '${DATABASE}'@'%';
