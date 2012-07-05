@@ -438,29 +438,14 @@ def get_client(options):
     Returns a new boto client object to a heat server
     """
 
-    logging.debug("boto config expected in /etc/boto.cfg, reading contents")
-
-    # Retrieve the credentials from the config file
-    # FIXME : send patch to boto so it retrives these credentials from its
-    # config file, we shouldn't need to manually parse it...
-    access_key_id = boto.config.get_value('Credentials', 'aws_access_key_id')
-    secret_access_key = boto.config.get_value('Credentials',
-        'aws_secret_access_key')
-    if (access_key_id and secret_access_key):
-        logging.debug("Got credentials id=%s secret=%s" % (access_key_id,
-            secret_access_key))
-    else:
-        logging.error(
-            "Failed to get required credentials, please pass in /etc/boto.cfg")
-
     # FIXME : reopen boto pull-request so that --host can override the
     # host specified in the hostname by passing it via the constructor
     # I implemented this previously, but they preferred the config-file
     # solution..
-    cloudformation = boto.connect_cloudformation(
-        aws_access_key_id=access_key_id,
-        aws_secret_access_key=secret_access_key,
-        debug=options.debug, is_secure=False, port=options.port, path="/v1")
+    # Note we pass None/None for the keys so boto reads /etc/boto.cfg
+    cloudformation = boto.connect_cloudformation(aws_access_key_id=None,
+        aws_secret_access_key=None, debug=options.debug, is_secure=False,
+        port=options.port, path="/v1")
     if cloudformation:
         logging.debug("Got CF connection object OK")
     else:
