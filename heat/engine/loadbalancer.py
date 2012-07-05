@@ -35,6 +35,19 @@ lb_template = '''
     }
   },
   "Resources": {
+    "latency_watcher": {
+     "Type": "AWS::CloudWatch::Alarm",
+     "Properties": {
+        "MetricName": "Latency",
+        "Namespace": "AWS/ELB",
+        "Statistic": "Average",
+        "Period": "60",
+        "EvaluationPeriods": "1",
+        "Threshold": "2",
+        "AlarmActions": [],
+        "ComparisonOperator": "GreaterThanThreshold"
+      }
+    },
     "LoadBalancerInstance": {
       "Type": "AWS::EC2::Instance",
       "Metadata": {
@@ -42,20 +55,36 @@ lb_template = '''
           "config": {
             "packages": {
               "yum": {
-                "haproxy"        : []
+                "cronie"         : [],
+                "haproxy"        : [],
+                "socat"          : [],
+                "python-psutil"  : []
               }
             },
             "services": {
               "systemd": {
+                "crond"     : { "enabled" : "true", "ensureRunning" : "true" },
                 "haproxy"   : { "enabled": "true", "ensureRunning": "true" }
               }
             },
             "files": {
               "/etc/haproxy/haproxy.cfg": {
-                "content": ""},
+                "content": "",
                 "mode": "000644",
                 "owner": "root",
                 "group": "root"
+              },
+              "/tmp/cfn-hup-crontab.txt" : {
+                "content" : { "Fn::Join" : ["", [
+                "MAIL=\\"\\"\\n",
+                "\\n",
+                "* * * * * /opt/aws/bin/cfn-push-stats ",
+                " --watch latency_watcher --haproxy\\n"
+                ]]},
+                "mode"    : "000600",
+                "owner"   : "root",
+                "group"   : "root"
+              }
             }
           }
         }
@@ -68,7 +97,9 @@ lb_template = '''
           "#!/bin/bash -v\\n",
           "/opt/aws/bin/cfn-init -s ",
           { "Ref": "AWS::StackName" },
-          "    --region ", { "Ref": "AWS::Region" }, "\\n"
+          "    --region ", { "Ref": "AWS::Region" }, "\\n",
+          "# install cfn-hup crontab\\n",
+          "crontab /tmp/cfn-hup-crontab.txt\\n"
         ]]}}
       }
     }
@@ -85,13 +116,8 @@ lb_template = '''
 
 
 #
-# TODO(asalkeld) once we have done a couple of these composite
-# Resources we should probably make a generic CompositeResource class.
-# There will be plenty of scope for it. I resisted doing this initially
-# to see how what the other composites require.
-#
-# Also the above inline template _could_ be placed in an external file
-# at the moment this is because we will probably need to implement a
+# TODO(asalkeld) the above inline template _could_ be placed in an external
+# file at the moment this is because we will probably need to implement a
 # LoadBalancer based on keepalived as well (for for ssl support).
 #
 class LoadBalancer(stack.Stack):
@@ -126,7 +152,6 @@ class LoadBalancer(stack.Stack):
         'AvailabilityZones': {'Type': 'List',
                               'Required': True},
         'HealthCheck': {'Type': 'Map',
-                        'Implemented': False,
                         'Schema': healthcheck_schema},
         'Instances': {'Type': 'List'},
         'Listeners': {'Type': 'List',
@@ -172,6 +197,7 @@ class LoadBalancer(stack.Stack):
     global
         daemon
         maxconn 256
+        stats socket /tmp/.haproxy-stats
 
     defaults
         mode http
@@ -189,6 +215,15 @@ class LoadBalancer(stack.Stack):
             bind *:%s
 ''' % (lb_port)
 
+        health_chk = self.properties['HealthCheck']
+        if health_chk:
+            check = 'check inter %ss fall %s rise %s' % (
+                    health_chk.get('Interval', '2'),
+                    health_chk.get('UnHealthyTheshold', '3'),
+                    health_chk.get('HealthyTheshold', '3'))
+        else:
+            check = ''
+
         backend = '''
         default_backend servers
 
@@ -196,13 +231,15 @@ class LoadBalancer(stack.Stack):
             balance roundrobin
             option http-server-close
             option forwardfor
+            option httpchk
 '''
         servers = []
         n = 1
         for i in self.properties['Instances']:
             ip = self._instance_to_ipaddress(i)
-            servers.append('%sserver server%d %s:%s' % (spaces, n,
-                                                        ip, inst_port))
+            servers.append('%sserver server%d %s:%s %s' % (spaces, n,
+                                                           ip, inst_port,
+                                                           check))
             n = n + 1
 
         return '%s%s%s%s\n' % (gl, frontend, backend, '\n'.join(servers))
