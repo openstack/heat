@@ -18,6 +18,7 @@
 """Heat API exception subclasses - maps API response errors to AWS Errors"""
 
 import webob.exc
+from heat.common import wsgi
 
 
 class HeatAPIException(webob.exc.HTTPError):
@@ -31,6 +32,17 @@ class HeatAPIException(webob.exc.HTTPError):
     title = "HeatAPIException"
     explanation = "Generic HeatAPIException, please use specific subclasses!"
     err_type = "Sender"
+
+    def __init__(self, detail=None):
+        '''
+        Overload HTTPError constructor, so we can create a default serialized
+        body.  This is required because not all error responses are processed
+        by the wsgi controller (ie auth errors, which are further up the
+        paste pipeline.  We serialize in XML by default (as AWS does)
+        '''
+        webob.exc.HTTPError.__init__(self, detail=detail)
+        serializer = wsgi.XMLResponseSerializer()
+        serializer.default(self, self.get_unserialized_body())
 
     def get_unserialized_body(self):
         '''
@@ -190,3 +202,25 @@ class HeatThrottlingError(HeatAPIException):
     code = 400
     title = "Throttling"
     explanation = "Request was denied due to request throttling"
+
+
+# Not documented in the AWS docs, authentication failure errors
+class HeatAccessDeniedError(HeatAPIException):
+    '''
+    This is the response given when authentication fails due to user
+    IAM group memberships meaning we deny access
+    '''
+    code = 403
+    title = "AccessDenied"
+    explanation = "User is not authorized to perform action"
+
+
+class HeatSignatureError(HeatAPIException):
+    '''
+    This is the response given when authentication fails due to
+    a bad signature
+    '''
+    code = 403
+    title = "SignatureDoesNotMatch"
+    explanation = ("The request signature we calculated does not match the " +
+                   "signature you provided")

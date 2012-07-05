@@ -29,6 +29,7 @@ from webob import Request
 import webob
 from heat import utils
 from heat.common import context
+from heat.api.v1 import exception
 
 logger = logging.getLogger(__name__)
 
@@ -43,17 +44,28 @@ class EC2Token(wsgi.Middleware):
     @webob.dec.wsgify(RequestClass=wsgi.Request)
     def __call__(self, req):
         # Read request signature and access id.
+        # If we find KeyStoneCreds in the params we ignore a key error
+        # here so that we can use both authentication methods.
+        # Returning here just means the user didn't supply AWS
+        # authentication and we'll let the app try native keystone next.
         logger.info("Checking AWS credentials..")
         try:
             signature = req.params['Signature']
+        except KeyError:
+            logger.info("No AWS Signature found.")
+            if 'KeyStoneCreds' in req.params:
+                return self.application
+            else:
+                raise exception.HeatIncompleteSignatureError()
+
+        try:
             access = req.params['AWSAccessKeyId']
         except KeyError:
-            # We ignore a key error here so that we can use both
-            # authentication methods.  Returning here just means
-            # the user didn't supply AWS authentication and we'll let
-            # the app try native keystone next.
-            logger.info("No AWS credentials found.")
-            return self.application
+            logger.info("No AWSAccessKeyId found.")
+            if 'KeyStoneCreds' in req.params:
+                return self.application
+            else:
+                raise exception.HeatMissingAuthenticationTokenError()
 
         logger.info("AWS credentials found, checking against keystone.")
         # Make a copy of args for authentication and signature verification.
@@ -99,9 +111,20 @@ class EC2Token(wsgi.Middleware):
             token_id = result['access']['token']['id']
             logger.info("AWS authentication successful.")
         except (AttributeError, KeyError):
-            # FIXME: Should be 404 I think.
             logger.info("AWS authentication failure.")
-            raise webob.exc.HTTPBadRequest()
+            # Try to extract the reason for failure so we can return the
+            # appropriate AWS error via raising an exception
+            try:
+                reason = result['error']['message']
+            except KeyError:
+                reason = None
+
+            if reason == "EC2 access key not found.":
+                raise exception.HeatInvalidClientTokenIdError()
+            elif reason == "EC2 signature not supplied.":
+                raise exception.HeatSignatureError()
+            else:
+                raise exception.HeatAccessDeniedError()
 
         # Authenticated!
         req.headers['X-Auth-EC2-Creds'] = creds_json
