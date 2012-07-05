@@ -41,15 +41,17 @@ class StackController(object):
 
     """
     WSGI controller for stacks resource in heat v1 API
-
+    Implements the API actions
     """
 
     def __init__(self, options):
         self.options = options
 
-    # On valid non-error response, we add a host:port:stack prefix
-    # This formats the StackId in the response more like the AWS spec
     def _stackid_addprefix(self, resp):
+        """
+        Add a host:port:stack prefix, this formats the StackId in the response
+        more like the AWS spec
+        """
         if 'StackId' in resp:
             hostportprefix = ":".join([socket.gethostname(),
                 str(self.options.bind_port), "stack"])
@@ -57,17 +59,17 @@ class StackController(object):
         return resp
 
     def _format_response(self, action, response):
-        '''
-            Format response from engine into API format
-        '''
+        """
+        Format response from engine into API format
+        """
         return {'%sResponse' % action: {'%sResult' % action: response}}
 
     def _remote_error(self, ex):
-        '''
+        """
         Map rpc_common.RemoteError exceptions returned by the engine
         to HeatAPIException subclasses which can be used to return
         properly formatted AWS error responses
-        '''
+        """
         if ex.exc_type == 'AttributeError':
             # Attribute error, bad user data, ex.value should tell us why
             return exception.HeatInvalidParameterValueError(detail=ex.value)
@@ -78,7 +80,8 @@ class StackController(object):
 
     def list(self, req):
         """
-        Returns the following information for all stacks:
+        Implements ListStacks API action
+        Lists summary information for all stacks
         """
         con = req.context
         parms = dict(req.params)
@@ -96,7 +99,8 @@ class StackController(object):
 
     def describe(self, req):
         """
-        Returns the following information for all stacks:
+        Implements DescribeStacks API action
+        Gets detailed information for a stack (or all stacks)
         """
         con = req.context
         parms = dict(req.params)
@@ -130,6 +134,9 @@ class StackController(object):
         return self._format_response('DescribeStacks', res)
 
     def _get_template(self, req):
+        """
+        Get template file contents, either from local file or URL
+        """
         if 'TemplateBody' in req.params:
             logger.info('TemplateBody ...')
             return req.params['TemplateBody']
@@ -154,7 +161,8 @@ class StackController(object):
 
     def create(self, req):
         """
-        Returns the following information for all stacks:
+        Implements CreateStack API action
+        Create stack as defined in template file
         """
         con = req.context
         parms = dict(req.params)
@@ -188,6 +196,10 @@ class StackController(object):
             self._stackid_addprefix(res))
 
     def get_template(self, req):
+        """
+        Implements the GetTemplate API action
+        Get the template body for an existing stack
+        """
 
         con = req.context
         parms = dict(req.params)
@@ -208,10 +220,18 @@ class StackController(object):
         return self._format_response('GetTemplate', {'TemplateBody': templ})
 
     def estimate_template_cost(self, req):
+        """
+        Implements the EstimateTemplateCost API action
+        Get the estimated monthly cost of a template
+        """
         return self._format_response('EstimateTemplateCost',
             {'Url': 'http://en.wikipedia.org/wiki/Gratis'})
 
     def validate_template(self, req):
+        """
+        Implements the ValidateTemplate API action
+        Validates the specified template
+        """
 
         con = req.context
         parms = dict(req.params)
@@ -242,7 +262,8 @@ class StackController(object):
 
     def delete(self, req):
         """
-        Returns the following information for all stacks:
+        Implements the DeleteStack API action
+        Deletes the specified stack
         """
         con = req.context
         parms = dict(req.params)
@@ -263,7 +284,8 @@ class StackController(object):
 
     def events_list(self, req):
         """
-        Returns the following information for all stacks:
+        Implements the DescribeStackEvents API action
+        Returns events related to a specified stack (or all stacks)
         """
         con = req.context
         parms = dict(req.params)
@@ -284,6 +306,7 @@ class StackController(object):
 
     def describe_stack_resource(self, req):
         """
+        Implements the DescribeStackResource API action
         Return the details of the given resource belonging to the given stack.
         """
         con = req.context
@@ -305,6 +328,7 @@ class StackController(object):
 
     def describe_stack_resources(self, req):
         """
+        Implements the DescribeStackResources API action
         Return details of resources specified by the parameters.
 
         `StackName`: returns all resources belonging to the stack
@@ -344,8 +368,8 @@ class StackController(object):
 
     def list_stack_resources(self, req):
         """
+        Implements the ListStackResources API action
         Return summary of the resources belonging to the specified stack.
-
         """
         con = req.context
 
