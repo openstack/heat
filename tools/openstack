@@ -12,105 +12,105 @@ BASE_DIR=`dirname $0`
 action=$1
 if [ -z "$action" ]
 then
-	echo "openstack [start|stop|install|erase|status]"
-	echo ""
-        echo "This tool is designed to control OpenStack on a Fedora 16/17 system"
-	echo ""
-        echo "start - Starts OpenStack"
-	echo "stop - Stops OpenStack"
-	echo "install - Installs a fresh OpenStack system with Keystone from RPM repostories"
-	echo "erase - permanently destroys an existing installation of OpenStack"
+    echo "openstack [start|stop|install|erase|status]"
+    echo ""
+    echo "This tool is designed to control OpenStack on a Fedora 16/17 system"
+    echo ""
+    echo "start - Starts OpenStack"
+    echo "stop - Stops OpenStack"
+    echo "install - Installs a fresh OpenStack system with Keystone from RPM repostories"
+    echo "erase - permanently destroys an existing installation of OpenStack"
 fi
 
 function os_status() {
-	services=(qpidd mysqld openstack-keystone tgtd openstack-glance-api openstack-glance-registry openstack-nova-api openstack-nova-objectstore openstack-nova-compute openstack-nova-network openstack-nova-volume openstack-nova-scheduler openstack-nova-cert)
-	for service in ${services[@]}
-	do
-		output=$(systemctl show "$service.service" --property=ActiveState)
-		running=(${output//=/ }) #ActiveState=active
-		echo "$service ${running[1]}" | awk '{ printf "%-40s %s\n", $1, $2}'
-	done
+    services=(qpidd mysqld openstack-keystone tgtd openstack-glance-api openstack-glance-registry openstack-nova-api openstack-nova-objectstore openstack-nova-compute openstack-nova-network openstack-nova-volume openstack-nova-scheduler openstack-nova-cert)
+    for service in ${services[@]}
+    do
+        output=$(systemctl show "$service.service" --property=ActiveState)
+        running=(${output//=/ }) #ActiveState=active
+        echo "$service ${running[1]}" | awk '{ printf "%-40s %s\n", $1, $2}'
+    done
 }
 
 function os_start() {
-	action=start
-	sudo systemctl $action qpidd.service mysqld.service
-	sleep 1
-	sudo systemctl $action openstack-keystone.service tgtd.service
-	sleep 1
-	for svc in api registry
-	do
-		sudo systemctl $action openstack-glance-$svc.service
-	done
-	sudo vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
-	for svc in api objectstore compute network volume scheduler cert
-	do
-	       sudo systemctl $action openstack-nova-$svc.service
-	done
+    action=start
+    sudo systemctl $action qpidd.service mysqld.service
+    sleep 1
+    sudo systemctl $action openstack-keystone.service tgtd.service
+    sleep 1
+    for svc in api registry
+    do
+        sudo systemctl $action openstack-glance-$svc.service
+    done
+    sudo vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
+    for svc in api objectstore compute network volume scheduler cert
+    do
+        sudo systemctl $action openstack-nova-$svc.service
+    done
 }
 
 function os_stop() {
-	action=stop
-	sudo systemctl $action openstack-keystone.service tgtd.service
-	for svc in api objectstore compute network volume scheduler cert
-	do
-	       sudo systemctl $action openstack-nova-$svc.service
-	done
-	for svc in api registry
-	do
-		sudo systemctl $action openstack-glance-$svc.service
-	done
+    action=stop
+    sudo systemctl $action openstack-keystone.service tgtd.service
+    for svc in api objectstore compute network volume scheduler cert
+    do
+        sudo systemctl $action openstack-nova-$svc.service
+    done
+    for svc in api registry
+    do
+        sudo systemctl $action openstack-glance-$svc.service
+    done
 }
 
 function os_erase() {
-	for net in `sudo nova-manage network list |
-	            awk '/^[[:digit:]]/ { print $9 }'`
-	do
-		sudo nova-manage network delete --uuid $net
-	done
+    for net in `sudo nova-manage network list |
+                awk '/^[[:digit:]]/ { print $9 }'`
+    do
+        sudo nova-manage network delete --uuid $net
+    done
 
-	os_stop
-	sleep 1
+    os_stop
+    sleep 1
 
-	# Kill dnsmasq processes
-	if find /var/lib/nova/networks -name '*.pid'; then
-		sudo kill `cat /var/lib/nova/networks/*.pid`
-	fi
+    # Kill dnsmasq processes
+    if find /var/lib/nova/networks -name '*.pid'; then
+        sudo kill `cat /var/lib/nova/networks/*.pid`
+    fi
 
-	sudo rm -f /var/lib/libvirt/qemu/save/instance-000*
-	sudo rm -f /var/lib/libvirt/qemu/instance-000*
-	sudo yum erase -y python-glance python-nova* python-keystone* openstack-swift* openstack-dashboard
+    sudo rm -f /var/lib/libvirt/qemu/save/instance-000*
+    sudo rm -f /var/lib/libvirt/qemu/instance-000*
+    sudo yum erase -y python-glance python-nova* python-keystone* openstack-swift* openstack-dashboard
 
-	sudo systemctl start mysqld.service
-	sleep 1
+    sudo systemctl start mysqld.service
+    sleep 1
 
-	$BASE_DIR/heat-db-drop nova $*
-	$BASE_DIR/heat-db-drop keystone $*
-	$BASE_DIR/heat-db-drop glance $*
+    $BASE_DIR/heat-db-drop nova $*
+    $BASE_DIR/heat-db-drop keystone $*
+    $BASE_DIR/heat-db-drop glance $*
 
-	sudo vgchange -an nova-volumes
-	sudo losetup -d /dev/loop0
-	sudo rm -f /var/lib/nova/nova-volumes.img
-	sudo rm -rf /etc/{glance,nova,swift,keystone,openstack-dashboard} /var/lib/{glance,nova,swift,keystone} /var/log/{glance,nova,swift,keystone} /var/run/{glance,nova,swift,keystone}
-	rm -f $HOME/.openstack/.keystonerc
+    sudo vgchange -an nova-volumes
+    sudo losetup -d /dev/loop0
+    sudo rm -f /var/lib/nova/nova-volumes.img
+    sudo rm -rf /etc/{glance,nova,swift,keystone,openstack-dashboard} /var/lib/{glance,nova,swift,keystone} /var/log/{glance,nova,swift,keystone} /var/run/{glance,nova,swift,keystone}
+    rm -f $HOME/.openstack/.keystonerc
 }
 
 
 
 function os_install() {
-	sudo yum groupinstall -y Virtualization
-	sudo yum install -y openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server mysql-server
-	sudo dd if=/dev/zero of=/var/lib/nova/nova-volumes.img bs=1M seek=20k count=0
-	sudo systemctl start mysqld.service
-	sleep 1
-	# Configure the databases
-	sudo openstack-db --service nova --init
-	sudo openstack-db --service glance --init
-	sudo openstack-db --service keystone --init
+    sudo yum groupinstall -y Virtualization
+    sudo yum install -y openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server mysql-server
+    sudo dd if=/dev/zero of=/var/lib/nova/nova-volumes.img bs=1M seek=20k count=0
+    sudo systemctl start mysqld.service
+    sleep 1
+    # Configure the databases
+    sudo openstack-db --service nova --init
+    sudo openstack-db --service glance --init
+    sudo openstack-db --service keystone --init
 
-	# Create a keystone RC file
-	mkdir -p $HOME/.openstack
-	cat > $HOME/.openstack/keystonerc <<EOF
+    # Create a keystone RC file
+    mkdir -p $HOME/.openstack
+    cat > $HOME/.openstack/keystonerc <<EOF
 export ADMIN_TOKEN=$(openssl rand -hex 10)
 export OS_USERNAME=admin
 export OS_PASSWORD=verybadpass
@@ -118,72 +118,72 @@ export OS_TENANT_NAME=admin
 export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
 export OS_AUTH_STRATEGY=keystone
 EOF
-	# Install keystone catalog
-	source $HOME/.openstack/keystonerc
-	sudo openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
-	sudo systemctl start openstack-keystone.service
-	sleep 1
+    # Install keystone catalog
+    source $HOME/.openstack/keystonerc
+    sudo openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
+    sudo systemctl start openstack-keystone.service
+    sleep 1
 
-	sudo ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass openstack-keystone-sample-data
+    sudo ADMIN_PASSWORD=$OS_PASSWORD SERVICE_PASSWORD=servicepass openstack-keystone-sample-data
 
-	# Configure nova to use keystone
-	sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
-	sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
-	sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
-	sudo openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
-	# Configure glance to use keystone
-	sudo openstack-config --set /etc/glance/glance-api.conf paste_deploy flavor keystone
-	sudo openstack-config --set /etc/glance/glance-registry.conf paste_deploy flavor keystone
-	sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_tenant_name service
-	sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_user glance
-	sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_password servicepass
-	sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_tenant_name service
-	sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
-	sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
+    # Configure nova to use keystone
+    sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
+    sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
+    sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
+    sudo openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
+    # Configure glance to use keystone
+    sudo openstack-config --set /etc/glance/glance-api.conf paste_deploy flavor keystone
+    sudo openstack-config --set /etc/glance/glance-registry.conf paste_deploy flavor keystone
+    sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_tenant_name service
+    sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_user glance
+    sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_password servicepass
+    sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_tenant_name service
+    sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
+    sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
 
-	os_stop
-	sleep 1
-	sudo rm -rf /var/log/{glance,nova,swift,keystone}/*
-	os_start
-	sleep 1
-	echo "Installation Complete."
-	echo "Testing nova and glance.  If any errors are displayed, the install failed..."
-	nova flavor-list
-	glance index
-        echo
-	echo "note: This tool does not create a network.  Creating a network"
-	echo "depends on your environment.  An example network create operation:"
-	echo
-	echo "  sudo nova-manage network create demonet 10.0.0.0/24 1 256 --bridge=demonetbr0"
-	echo
-	echo -e "The network range here should *not* be one used on your existing physical\n network."
-	echo "It should be a range dedicated for the network that OpenStack will configure."
-	echo "If 10.0.0.0/24 clashes with your local network, pick another range."
+    os_stop
+    sleep 1
+    sudo rm -rf /var/log/{glance,nova,swift,keystone}/*
+    os_start
+    sleep 1
+    echo "Installation Complete."
+    echo "Testing nova and glance.  If any errors are displayed, the install failed..."
+    nova flavor-list
+    glance index
+    echo
+    echo "note: This tool does not create a network.  Creating a network"
+    echo "depends on your environment.  An example network create operation:"
+    echo
+    echo "  sudo nova-manage network create demonet 10.0.0.0/24 1 256 --bridge=demonetbr0"
+    echo
+    echo -e "The network range here should *not* be one used on your existing physical\n network."
+    echo "It should be a range dedicated for the network that OpenStack will configure."
+    echo "If 10.0.0.0/24 clashes with your local network, pick another range."
 
 }
 
 case $action in
-	"")
-		;;
-	start)
-		os_start
-		;;
-	stop)
-		os_stop
-		;;
-	erase)
-		shift
-		os_erase $*
-		;;
-	install)
-		shift
-		os_install $*
-		;;
-	status)
-		os_status
-		;;
-	*)
-		echo "The action \"$action\" is not supported."
-	;;
+    "")
+        ;;
+    start)
+        os_start
+        ;;
+    stop)
+        os_stop
+        ;;
+    erase)
+        shift
+        os_erase $*
+        ;;
+    install)
+        shift
+        os_install $*
+        ;;
+    status)
+        os_status
+        ;;
+    *)
+        echo "The action \"$action\" is not supported."
+    ;;
 esac
 
