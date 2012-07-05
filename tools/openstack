@@ -43,7 +43,10 @@ function os_start() {
     do
         sudo systemctl $action openstack-glance-$svc.service
     done
-    sudo vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
+    if ! sudo vgs | grep -q nova-volumes
+    then
+        sudo vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
+    fi
     for svc in api objectstore compute network volume scheduler cert
     do
         sudo systemctl $action openstack-nova-$svc.service
