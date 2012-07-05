@@ -59,6 +59,11 @@ class Restarter(resources.Resource):
 
 class Instance(resources.Resource):
     # AWS does not require KeyName and InstanceType but we seem to
+    tags_schema = {'Key': {'Type': 'String',
+                           'Required': True},
+                   'Value': {'Type': 'String',
+                             'Required': True}}
+
     properties_schema = {'ImageId': {'Type': 'String',
                                     'Required': True},
                          'InstanceType': {'Type': 'String',
@@ -87,7 +92,7 @@ class Instance(resources.Resource):
                          'SubnetId': {'Type': 'String',
                                        'Implemented': False},
                          'Tags': {'Type': 'List',
-                                          'Implemented': False},
+                                  'Schema': tags_schema},
                          'Tenancy': {'Type': 'String',
                                      'AllowedValues': ['dedicated', 'default'],
                                      'Implemented': False},
@@ -218,12 +223,21 @@ class Instance(resources.Resource):
             if o.name == flavor:
                 flavor_id = o.id
 
+        scheduler_hints = {}
+        prop_tags = self.properties['Tags']
+        if prop_tags:
+            for tm in prop_tags:
+                scheduler_hints[tm['Key']] = tm['Value']
+        else:
+            scheduler_hints = None
+
         server_userdata = self._build_userdata(userdata)
         server = self.nova().servers.create(name=self.name, image=image_id,
                                             flavor=flavor_id,
                                             key_name=key_name,
                                             security_groups=security_groups,
-                                            userdata=server_userdata)
+                                            userdata=server_userdata,
+                                            scheduler_hints=scheduler_hints)
         while server.status == 'BUILD':
             server.get()
             eventlet.sleep(1)
