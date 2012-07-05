@@ -75,6 +75,8 @@
         "ImageId": "F16-x86_64-cfntools",
         "InstanceType": { "Ref": "InstanceType" },
         "KeyName": { "Ref": "KeyName" },
+        "Tags": [ {"Key": "Part", "Value": "long"},
+                  {"Key": "ready", "Value": "short"} ],
         "UserData": { "Fn::Base64": { "Fn::Join": ["", [
           "#!/bin/bash -v\n",
           "/opt/aws/bin/cfn-init -s ",
