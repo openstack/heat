@@ -13,11 +13,12 @@ action=$1
 if [ -z "$action" ]
 then
     echo "openstack [start|stop|install|erase|status]"
-    echo ""
+    echo
     echo "This tool is designed to control OpenStack on a Fedora 16/17 system"
-    echo ""
+    echo
     echo "start - Starts OpenStack"
     echo "stop - Stops OpenStack"
+    echo "restart - Restart OpenStack"
     echo "install - Installs a fresh OpenStack system with Keystone from RPM repostories"
     echo "erase - permanently destroys an existing installation of OpenStack"
 fi
@@ -60,6 +61,13 @@ function os_stop() {
     do
         sudo systemctl $action openstack-glance-$svc.service
     done
+}
+
+function os_restart() {
+    action=restart
+    os_stop
+    sleep 1
+    os_start
 }
 
 function os_erase() {
@@ -170,6 +178,9 @@ case $action in
         ;;
     stop)
         os_stop
+        ;;
+    restart)
+        os_restart
         ;;
     erase)
         shift
