@@ -235,7 +235,7 @@ class Stack(object):
     DELETE_COMPLETE = 'DELETE_COMPLETE'
 
     def __init__(self, context, stack_name, template, parameters=None,
-                 stack_id=None):
+                 stack_id=None, state=None, state_description=''):
         '''
         Initialise from a context, name, Template object and (optionally)
         Parameters object. The database ID may also be initialised, if the
@@ -245,6 +245,8 @@ class Stack(object):
         self.context = context
         self.t = template
         self.name = stack_name
+        self.state = state
+        self.state_description = state_description
 
         if parameters is None:
             parameters = Parameters(stack_name, template)
@@ -274,7 +276,8 @@ class Stack(object):
 
         template = Template.load(context, s.raw_template_id)
         params = Parameters(s.name, template, s.parameters)
-        stack = cls(context, s.name, template, params, stack_id)
+        stack = cls(context, s.name, template, params,
+                    stack_id, s.status, s.status_reason)
 
         return stack
 
@@ -283,12 +286,16 @@ class Stack(object):
         if self.id is None:
             new_creds = db_api.user_creds_create(self.context.to_dict())
 
-            s = {'name': self.name,
-                 'raw_template_id': self.t.store(),
-                 'parameters': self.parameters.user_parameters(),
-                 'owner_id': owner and owner.id,
-                 'user_creds_id': new_creds.id,
-                 'username': self.context.username}
+            s = {
+                'name': self.name,
+                'raw_template_id': self.t.store(),
+                'parameters': self.parameters.user_parameters(),
+                'owner_id': owner and owner.id,
+                'user_creds_id': new_creds.id,
+                'username': self.context.username,
+                'status': self.state,
+                'status_reason': self.state_description,
+            }
             new_s = db_api.stack_create(self.context, s)
             self.id = new_s.id
 
@@ -368,6 +375,9 @@ class Stack(object):
 
     def state_set(self, new_status, reason):
         '''Update the stack state in the database'''
+        self.state = new_status
+        self.state_description = reason
+
         if self.id is None:
             return
 
