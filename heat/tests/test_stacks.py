@@ -122,23 +122,41 @@ class stacksTest(unittest.TestCase):
 
         m = manager.EngineManager()
         events = db_api.event_get_all_by_stack(None, stack.id)
-        for ev in events:
-            result = m.parse_event(ev)
-            self.assertTrue(result['EventId'] > 0)
-            self.assertEqual(result['StackName'], "test_event_list_stack")
-            self.assertTrue(result['ResourceStatus'] in ('IN_PROGRESS',
-                                                         'CREATE_COMPLETE'))
-            self.assertEqual(result['ResourceType'], 'AWS::EC2::Instance')
-            self.assertEqual(result['ResourceStatusReason'], 'state changed')
-            self.assertEqual(result['LogicalResourceId'], 'WebServer')
+        for ev in [m.parse_event(e) for e in events]:
+            self.assertTrue('EventId' in ev)
+            self.assertTrue(ev['EventId'] > 0)
+
+            self.assertTrue('LogicalResourceId' in ev)
+            self.assertEqual(ev['LogicalResourceId'], 'WebServer')
+
+            self.assertTrue('PhysicalResourceId' in ev)
+
+            self.assertTrue('ResourceProperties' in ev)
             # Big long user data field.. it mentions 'wordpress'
             # a few times so this should work.
-            user_data = result['ResourceProperties']['UserData']
+            user_data = ev['ResourceProperties']['UserData']
             self.assertNotEqual(user_data.find('wordpress'), -1)
-            self.assertEqual(result['ResourceProperties']['ImageId'],
+            self.assertEqual(ev['ResourceProperties']['ImageId'],
                              'F16-x86_64-gold')
-            self.assertEqual(result['ResourceProperties']['InstanceType'],
+            self.assertEqual(ev['ResourceProperties']['InstanceType'],
                              'm1.large')
+
+            self.assertTrue('ResourceStatus' in ev)
+            self.assertTrue(ev['ResourceStatus'] in ('IN_PROGRESS',
+                                                     'CREATE_COMPLETE'))
+
+            self.assertTrue('ResourceStatusReason' in ev)
+            self.assertEqual(ev['ResourceStatusReason'], 'state changed')
+
+            self.assertTrue('ResourceType' in ev)
+            self.assertEqual(ev['ResourceType'], 'AWS::EC2::Instance')
+
+            self.assertTrue('StackId' in ev)
+
+            self.assertTrue('StackName' in ev)
+            self.assertEqual(ev['StackName'], "test_event_list_stack")
+
+            self.assertTrue('Timestamp' in ev)
 
     def test_stack_list(self):
         ctx = self.create_context()
