@@ -69,6 +69,8 @@ class Stack(Resource):
         nested_id = self._nested.store(self.stack)
         self.instance_id_set(nested_id)
         self._nested.create()
+        if self._nested.state != self._nested.CREATE_COMPLETE:
+            raise exception.Error(self._nested.state_description)
 
     def handle_create(self):
         response = urllib2.urlopen(self.properties[PROP_TEMPLATE_URL])
