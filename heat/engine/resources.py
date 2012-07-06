@@ -214,6 +214,12 @@ class Resource(object):
 
     def instance_id_set(self, inst):
         self.instance_id = inst
+        if self.id is not None:
+            try:
+                rs = db_api.resource_get(self.stack.context, self.id)
+                rs.update_and_save({'nova_instance': self.instance_id})
+            except Exception as ex:
+                logger.warn('db error %s' % str(ex))
 
     def _create_db(self, metadata=None):
         '''Create the resource in the database'''

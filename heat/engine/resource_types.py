@@ -20,6 +20,7 @@ Register of resource types and their mapping to Resource classes.
 
 from heat.engine import resources
 
+from heat.engine import autoscaling
 from heat.engine import cloud_watch
 from heat.engine import eip
 from heat.engine import instance
@@ -47,6 +48,8 @@ _resource_classes = {
     'AWS::IAM::User': user.User,
     'AWS::IAM::AccessKey': user.AccessKey,
     'HEAT::HA::Restarter': instance.Restarter,
+    'AWS::AutoScaling::LaunchConfiguration': autoscaling.LaunchConfiguration,
+    'AWS::AutoScaling::AutoScalingGroup': autoscaling.AutoScalingGroup,
 }
 
 

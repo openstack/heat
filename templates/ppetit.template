@@ -1,0 +1,57 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Template to create multiple instances.",
+
+  "Parameters" : {
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String"
+    },
+    "InstanceType" : {
+      "Description" : "Instance type",
+      "Type" : "String",
+      "Default" : "m1.small",
+      "AllowedValues" : [ "t1.micro", "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "c1.medium", "c1.xlarge", "cc1.4xlarge" ],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+    "ImageId" : {
+      "Description" : "Name of the image to use",
+      "Type" : "String",
+      "Default" : "F16-x86_64-cfntools"
+    },
+    "NumInstances": {
+      "Default": "1",
+      "MinValue": "1",
+      "MaxValue": "100",
+      "Description" : "Number of instances to create",
+      "Type": "Integer"
+    }
+  },
+
+  "Resources" : {
+    "JobServerGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "LaunchConfigurationName" : { "Ref" : "JobServerConfig" },
+        "MinSize" : {"Ref": "NumInstances"},
+        "MaxSize" : {"Ref": "NumInstances"},
+        "AvailabilityZones" : { "Fn::GetAZs" : "" }
+      }
+    },
+
+    "JobServerConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId"           : { "Ref" : "ImageId" },
+        "InstanceType"      : { "Ref" : "InstanceType" },
+        "KeyName"           : { "Ref" : "KeyName" },
+        "NovaSchedulerHints": [ {"Key": "part", "Value": "long"},
+                                {"Key": "ready", "Value": "short"} ],
+        "UserData"          : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n"
+        ]]}}
+      }
+    }
+  }
+}
