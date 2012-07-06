@@ -433,17 +433,11 @@ class Stack(object):
             db_api.stack_delete(self.context, self.id)
 
     def output(self, key):
+        '''
+        Get the value of the specified stack output.
+        '''
         value = self.outputs[key].get('Value', '')
         return self.resolve_runtime_data(value)
-
-    def get_outputs(self):
-        def output_dict(k):
-            return {'Description': self.outputs[k].get('Description',
-                                                       'No description given'),
-                    'OutputKey': k,
-                    'OutputValue': self.output(k)}
-
-        return [output_dict(key) for key in self.outputs]
 
     def restart_resource(self, resource_name):
         '''

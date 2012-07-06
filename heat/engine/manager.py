@@ -20,7 +20,6 @@ import logging
 import webob
 import json
 import urlparse
-import re
 import httplib
 import eventlet
 
@@ -29,6 +28,7 @@ from heat.db import api as db_api
 from heat.common import config
 from heat.common import utils as heat_utils
 from heat.common import context as ctxtlib
+from heat.engine import api
 from heat.engine import parser
 from heat.engine import resources
 from heat.engine import watchrule
@@ -42,37 +42,6 @@ from novaclient.exceptions import AuthorizationFailure
 
 logger = logging.getLogger('heat.engine.manager')
 greenpool = eventlet.GreenPool()
-
-_param_key = re.compile(r'Parameters\.member\.(.*?)\.ParameterKey$')
-
-
-def _extract_user_params(params):
-    def get_param_pairs():
-        for k in params:
-            keymatch = _param_key.match(k)
-            if keymatch:
-                key = params[k]
-                v = 'Parameters.member.%s.ParameterValue' % keymatch.group(1)
-                try:
-                    value = params[v]
-                except KeyError:
-                    logger.error('Could not apply parameter %s' % key)
-
-                yield (key, value)
-
-    return dict(get_param_pairs())
-
-
-def _extract_args(params):
-    kwargs = {}
-    try:
-        timeout_mins = int(params.get('TimeoutInMinutes', 0))
-    except (ValueError, TypeError):
-        logger.exception('create timeout conversion')
-    else:
-        if timeout_mins > 0:
-            kwargs['timeout_in_minutes'] = timeout_mins
-    return kwargs
 
 
 class EngineManager(manager.Manager):
@@ -100,21 +69,15 @@ class EngineManager(manager.Manager):
 
         auth.authenticate(context)
 
-        res = {'stacks': []}
         stacks = db_api.stack_get_by_user(context)
         if stacks is None:
-            return res
-        for s in stacks:
-            stack = parser.Stack.load(context, s.id)
-            mem = {}
-            mem['StackId'] = stack.stack_id()
-            mem['StackName'] = s.name
-            mem['CreationTime'] = heat_utils.strtime(s.created_at)
-            mem['TemplateDescription'] = stack.t[parser.DESCRIPTION]
-            mem['StackStatus'] = s.status
-            res['stacks'].append(mem)
+            stacks = []
 
-        return res
+        def format_stack_summary(s):
+            stack = parser.Stack.load(context, s.id)
+            return api.format_stack(stack, api.KEYS_STACK_SUMMARY)
+
+        return {'stacks': [format_stack_summary(s) for s in stacks]}
 
     def show_stack(self, context, stack_name, params):
         """
@@ -125,41 +88,17 @@ class EngineManager(manager.Manager):
         """
         auth.authenticate(context)
 
-        res = {'stacks': []}
-        stacks = []
-        if not stack_name:
-            stacks = [s.name for s in db_api.stack_get_by_user(context)]
-            logging.debug("No stack name passed, got %s" % stacks)
+        if stack_name is not None:
+            s = db_api.stack_get_by_name(context, stack_name)
+            stacks = [s] if s is not None else []
         else:
-            stacks = [stack_name]
+            stacks = db_api.stack_get_by_user(context) or []
 
-        if not stacks:
-            logging.debug("No stacks found to process")
-            return res
+        def format_stack_detail(s):
+            stack = parser.Stack.load(context, s.id)
+            return api.format_stack(stack, api.KEYS_STACK)
 
-        for stack in stacks:
-            logging.debug("Processing show_stack for %s" % stack)
-            s = db_api.stack_get_by_name(context, stack)
-            if s:
-                stack = parser.Stack.load(context, s.id)
-                mem = {}
-                mem['StackId'] = stack.stack_id()
-                mem['StackName'] = s.name
-                mem['CreationTime'] = heat_utils.strtime(s.created_at)
-                mem['LastUpdatedTimestamp'] = heat_utils.strtime(s.updated_at)
-                mem['NotificationARNs'] = 'TODO'
-                mem['Parameters'] = stack.t[parser.PARAMETERS]
-                mem['Description'] = stack.t[parser.DESCRIPTION]
-                mem['StackStatus'] = s.status
-                mem['StackStatusReason'] = s.status_reason
-
-                # only show the outputs on a completely created stack
-                if s.status == stack.CREATE_COMPLETE:
-                    mem['Outputs'] = stack.get_outputs()
-
-                res['stacks'].append(mem)
-
-        return res
+        return {'stacks': [format_stack_detail(s) for s in stacks]}
 
     def create_stack(self, context, stack_name, template, params):
         """
@@ -181,7 +120,7 @@ class EngineManager(manager.Manager):
 
         tmpl = parser.Template(template)
         user_params = parser.Parameters(stack_name, tmpl,
-                                        _extract_user_params(params))
+                                        api.extract_user_params(params))
         stack = parser.Stack(context, stack_name, tmpl, user_params)
 
         response = stack.validate()
@@ -189,7 +128,7 @@ class EngineManager(manager.Manager):
             return response
 
         stack_id = stack.store()
-        greenpool.spawn_n(stack.create, **_extract_args(params))
+        greenpool.spawn_n(stack.create, **api.extract_args(params))
 
         return {'StackId': stack.stack_id()}
 
@@ -214,7 +153,7 @@ class EngineManager(manager.Manager):
         try:
             tmpl = parser.Template(template)
             user_params = parser.Parameters(stack_name, tmpl,
-                                            _extract_user_params(params))
+                                            api.extract_user_params(params))
             s = parser.Stack(context, stack_name, tmpl, user_params)
         except KeyError as ex:
             res = ('A Fn::FindInMap operation referenced '
@@ -260,20 +199,6 @@ class EngineManager(manager.Manager):
         greenpool.spawn_n(stack.delete)
         return None
 
-    # Helper for list_events.  It's here so we can use it in tests.
-    def parse_event(self, event):
-        s = event.stack
-        return {'EventId': event.id,
-                'StackId': event.stack_id,
-                'StackName': s.name,
-                'Timestamp': heat_utils.strtime(event.created_at),
-                'LogicalResourceId': event.logical_resource_id,
-                'PhysicalResourceId': event.physical_resource_id,
-                'ResourceType': event.resource_type,
-                'ResourceStatusReason': event.resource_status_reason,
-                'ResourceProperties': event.resource_properties,
-                'ResourceStatus': event.name}
-
     def list_events(self, context, stack_name, params):
         """
         The list_events method lists all events associated with a given stack.
@@ -293,7 +218,7 @@ class EngineManager(manager.Manager):
         else:
             events = db_api.event_get_all_by_user(context)
 
-        return {'events': [self.parse_event(e) for e in events]}
+        return {'events': [api.format_event(e) for e in events]}
 
     def event_create(self, context, event):
 
@@ -340,7 +265,8 @@ class EngineManager(manager.Manager):
         if resource.id is None:
             raise AttributeError('Resource not created')
 
-        return format_stack_resource(stack[resource_name])
+        return api.format_stack_resource(stack[resource_name],
+                                         api.KEYS_RESOURCE_DETAIL)
 
     def describe_stack_resources(self, context, stack_name,
                                  physical_resource_id, logical_resource_id):
@@ -360,18 +286,15 @@ class EngineManager(manager.Manager):
             raise AttributeError("The specified stack doesn't exist")
 
         stack = parser.Stack.load(context, s.id)
-        resources = []
-        for resource in stack:
-            if logical_resource_id and resource.name != logical_resource_id:
-                continue
-            formatted = format_stack_resource(resource)
-            # this API call uses Timestamp instead of LastUpdatedTimestamp
-            formatted['Timestamp'] = formatted['LastUpdatedTimestamp']
-            del formatted['LastUpdatedTimestamp']
-            del formatted['Metadata']
-            resources.append(formatted)
 
-        return resources
+        if logical_resource_id is not None:
+            name_match = lambda r: r.name == logical_resource_id
+        else:
+            name_match = lambda r: True
+
+        return [api.format_stack_resource(resource, api.KEYS_RESOURCE)
+                for resource in stack if resource.id is not None and
+                                         name_match(resource)]
 
     def list_stack_resources(self, context, stack_name):
         auth.authenticate(context)
@@ -382,17 +305,8 @@ class EngineManager(manager.Manager):
 
         stack = parser.Stack.load(context, s.id)
 
-        resources = []
-        response_keys = ('ResourceStatus', 'LogicalResourceId',
-                         'LastUpdatedTimestamp', 'PhysicalResourceId',
-                         'ResourceType')
-        for resource in stack:
-            formatted = format_stack_resource(resource)
-            for key in formatted.keys():
-                if not key in response_keys:
-                    del formatted[key]
-            resources.append(formatted)
-        return resources
+        return [api.format_stack_resource(resource, api.KEYS_RESOURCE_SUMMARY)
+                for resource in stack if resource.id is not None]
 
     def metadata_register_address(self, context, url):
         config.FLAGS.heat_metadata_server_url = url
@@ -510,23 +424,3 @@ class EngineManager(manager.Manager):
             self.run_rule(None, wr)
 
         return [None, wd.data]
-
-
-def format_stack_resource(resource):
-    """
-    Return a representation of the given resource that mathes the API output
-    expectations.
-    """
-    rs = db_api.resource_get(resource.stack.context, resource.id)
-    last_updated_time = rs.updated_at or rs.created_at
-    return {
-        'StackId': resource.stack.stack_id(),
-        'StackName': resource.stack.name,
-        'LogicalResourceId': resource.name,
-        'PhysicalResourceId': resource.instance_id or '',
-        'ResourceType': resource.t['Type'],
-        'LastUpdatedTimestamp': heat_utils.strtime(last_updated_time),
-        'Metadata': rs.rsrc_metadata,
-        'ResourceStatus': rs.state,
-        'ResourceStatusReason': rs.state_description,
-    }

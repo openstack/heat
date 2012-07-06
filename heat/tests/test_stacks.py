@@ -33,7 +33,7 @@ from heat.engine import manager
 from heat.engine import auth
 
 
-@attr(tag=['unit', 'resource'])
+@attr(tag=['unit', 'engine-api', 'resource'])
 @attr(speed='slow')
 class stacksTest(unittest.TestCase):
     def setUp(self):
@@ -112,7 +112,10 @@ class stacksTest(unittest.TestCase):
         self.assertEqual(db_s.status, 'DELETE_COMPLETE')
 
     def test_stack_event_list(self):
-        stack = self.get_wordpress_stack('test_event_list_stack')
+        ctx = self.create_context('test_event_list_user')
+        auth.authenticate(ctx).AndReturn(True)
+
+        stack = self.get_wordpress_stack('test_event_list_stack', ctx)
         self.m.ReplayAll()
         stack.store()
         stack.create()
@@ -120,9 +123,14 @@ class stacksTest(unittest.TestCase):
         self.assertNotEqual(stack.resources['WebServer'], None)
         self.assertTrue(stack.resources['WebServer'].instance_id > 0)
 
-        m = manager.EngineManager()
-        events = db_api.event_get_all_by_stack(None, stack.id)
-        for ev in [m.parse_event(e) for e in events]:
+        man = manager.EngineManager()
+        el = man.list_events(ctx, stack.name, {})
+
+        self.assertTrue('events' in el)
+        events = el['events']
+
+        self.assertEqual(len(events), 2)
+        for ev in events:
             self.assertTrue('EventId' in ev)
             self.assertTrue(ev['EventId'] > 0)
 
@@ -174,12 +182,12 @@ class stacksTest(unittest.TestCase):
         self.assertTrue(len(sl['stacks']) > 0)
         for s in sl['stacks']:
             self.assertTrue('CreationTime' in s)
-            #self.assertTrue('LastUpdatedTime' in s)
+            self.assertTrue('LastUpdatedTime' in s)
             self.assertTrue('StackId' in s)
             self.assertNotEqual(s['StackId'], None)
             self.assertTrue('StackName' in s)
             self.assertTrue('StackStatus' in s)
-            #self.assertTrue('StackStatusReason' in s)
+            self.assertTrue('StackStatusReason' in s)
             self.assertTrue('TemplateDescription' in s)
             self.assertNotEqual(s['TemplateDescription'].find('WordPress'), -1)
 
@@ -240,7 +248,7 @@ class stacksTest(unittest.TestCase):
 
         s = sl['stacks'][0]
         self.assertTrue('CreationTime' in s)
-        #self.assertTrue('LastUpdatedTime' in s)
+        self.assertTrue('LastUpdatedTime' in s)
         self.assertTrue('StackId' in s)
         self.assertNotEqual(s['StackId'], None)
         self.assertTrue('StackName' in s)
@@ -265,7 +273,7 @@ class stacksTest(unittest.TestCase):
         r = man.describe_stack_resource(ctx, 'test_stack_res_desc',
                                         'WebServer')
 
-        #self.assertTrue('Description' in r)
+        self.assertTrue('Description' in r)
         self.assertTrue('LastUpdatedTimestamp' in r)
         self.assertTrue('StackId' in r)
         self.assertNotEqual(r['StackId'], None)
@@ -320,7 +328,7 @@ class stacksTest(unittest.TestCase):
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
-        #self.assertTrue('Description' in r)
+        self.assertTrue('Description' in r)
         self.assertTrue('Timestamp' in r)
         self.assertTrue('StackId' in r)
         self.assertNotEqual(r['StackId'], None)
@@ -400,7 +408,7 @@ class stacksTest(unittest.TestCase):
         self.assertTrue('LogicalResourceId' in r)
         self.assertEqual(r['LogicalResourceId'], 'WebServer')
         self.assertTrue('ResourceStatus' in r)
-        #self.assertTrue('ResourceStatusReason' in r)
+        self.assertTrue('ResourceStatusReason' in r)
         self.assertTrue('ResourceType' in r)
 
     def test_stack_resources_list_nonexist_stack(self):
