@@ -78,8 +78,8 @@ class stacksTest(unittest.TestCase):
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(image=744, flavor=3, key_name='test',
                 name='WebServer', security_groups=None,
-                userdata=server_userdata, scheduler_hints=None).\
-                AndReturn(self.fc.servers.list()[-1])
+                userdata=server_userdata, scheduler_hints=None,
+                meta=None).AndReturn(self.fc.servers.list()[-1])
 
         return stack
 

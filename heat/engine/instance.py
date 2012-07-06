@@ -93,6 +93,8 @@ class Instance(resources.Resource):
                                        'Implemented': False},
                          'Tags': {'Type': 'List',
                                   'Schema': tags_schema},
+                         'NovaSchedulerHints': {'Type': 'List',
+                                                'Schema': tags_schema},
                          'Tenancy': {'Type': 'String',
                                      'AllowedValues': ['dedicated', 'default'],
                                      'Implemented': False},
@@ -223,10 +225,16 @@ class Instance(resources.Resource):
             if o.name == flavor:
                 flavor_id = o.id
 
+        tags = {}
+        if self.properties['Tags']:
+            for tm in self.properties['Tags']:
+                tags[tm['Key']] = tm['Value']
+        else:
+            tags = None
+
         scheduler_hints = {}
-        prop_tags = self.properties['Tags']
-        if prop_tags:
-            for tm in prop_tags:
+        if self.properties['NovaSchedulerHints']:
+            for tm in self.properties['NovaSchedulerHints']:
                 scheduler_hints[tm['Key']] = tm['Value']
         else:
             scheduler_hints = None
@@ -237,6 +245,7 @@ class Instance(resources.Resource):
                                             key_name=key_name,
                                             security_groups=security_groups,
                                             userdata=server_userdata,
+                                            meta=tags,
                                             scheduler_hints=scheduler_hints)
         while server.status == 'BUILD':
             server.get()
