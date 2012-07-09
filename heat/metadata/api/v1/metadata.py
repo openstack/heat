@@ -63,12 +63,13 @@ class MetadataController:
             return json_error(404,
                               'The stack "%s" does not exist.' % stack_name)
 
-    def get_resource(self, req, stack_name, resource_id):
+    def get_resource(self, req, stack_name, resource_name):
         con = context.get_admin_context()
         [error, metadata] = rpc.call(con, 'engine',
                                      {'method': 'metadata_get_resource',
                                       'args': {'stack_name': stack_name,
-                                               'resource_id': resource_id}})
+                                               'resource_name': resource_name}
+                                     })
         if error:
             if error == 'stack':
                 return json_error(404,

@@ -331,7 +331,7 @@ class EngineManager(manager.Manager):
         else:
             return None
 
-    def metadata_get_resource(self, context, stack_name, resource_id):
+    def metadata_get_resource(self, context, stack_name, resource_name):
         """
         Get the metadata for the given resource.
         """
@@ -340,7 +340,7 @@ class EngineManager(manager.Manager):
         if not s:
             return ['stack', None]
 
-        r = db_api.resource_get_by_name_and_stack(None, resource_id, s.id)
+        r = db_api.resource_get_by_name_and_stack(None, resource_name, s.id)
         if r is None:
             return ['resource', None]
 

@@ -39,7 +39,7 @@ class API(wsgi.Router):
         mapper.connect('/stacks/:stack_name/resources/',
                        controller=metadata_controller, action='list_resources',
                        conditions=dict(method=['GET']))
-        mapper.connect('/stacks/:stack_name/resources/:resource_id',
+        mapper.connect('/stacks/:stack_name/resources/:resource_name',
                        controller=metadata_controller, action='get_resource',
                        conditions=dict(method=['GET']))
         mapper.connect('/stacks/:stack_name',
