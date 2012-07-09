@@ -455,7 +455,12 @@ class XMLResponseSerializer(object):
                 subelement = etree.SubElement(element, key)
                 if key in JSON_ONLY_KEYS:
                     if value:
-                        subelement.text = str(value)
+                        # Need to use json.dumps for the JSON inside XML
+                        # otherwise quotes get mangled and json.loads breaks
+                        try:
+                            subelement.text = json.dumps(value)
+                        except:
+                            subelement.text = str(value)
                 else:
                     self.object_to_element(value, subelement)
         else:
