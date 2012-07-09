@@ -227,9 +227,10 @@ class stacksTest(unittest.TestCase):
         self.m.ReplayAll()
 
         man = manager.EngineManager()
-        sl = man.show_stack(ctx, 'wibble', {})
 
-        self.assertEqual(len(sl['stacks']), 0)
+        self.assertRaises(AttributeError,
+                          man.show_stack,
+                          ctx, 'wibble', {})
 
     def test_stack_describe(self):
         ctx = self.create_context('stack_describe')

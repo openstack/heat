@@ -90,7 +90,10 @@ class EngineManager(manager.Manager):
 
         if stack_name is not None:
             s = db_api.stack_get_by_name(context, stack_name)
-            stacks = [s] if s is not None else []
+            if s:
+                stacks = [s]
+            else:
+                raise AttributeError('Unknown stack name')
         else:
             stacks = db_api.stack_get_by_user(context) or []
 
@@ -191,7 +194,7 @@ class EngineManager(manager.Manager):
 
         st = db_api.stack_get_by_name(context, stack_name)
         if not st:
-            return {'Error': 'No stack by that name'}
+            raise AttributeError('Unknown stack name')
 
         logger.info('deleting stack %s' % stack_name)
 
@@ -212,7 +215,7 @@ class EngineManager(manager.Manager):
         if stack_name is not None:
             st = db_api.stack_get_by_name(context, stack_name)
             if not st:
-                return {'Error': 'No stack by that name'}
+                raise AttributeError('Unknown stack name')
 
             events = db_api.event_get_all_by_stack(context, st.id)
         else:
