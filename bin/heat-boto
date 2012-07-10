@@ -39,6 +39,8 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
+scriptname = os.path.basename(sys.argv[0])
+
 gettext.install('heat', unicode=1)
 
 import boto
@@ -406,18 +408,55 @@ def stack_resources_list(options, arguments):
 @utils.catch_error('resource-list-details')
 def stack_resources_list_details(options, arguments):
     '''
-    Display details of all resources in the specified stack.
+    Display details of resources in the specified stack.
+
+    - If stack name is specified, all associated resources are returned
+    - If physical resource ID is specified, all associated resources of the
+    stack the resource belongs to are returned
+    - You must specify stack name *or* physical resource ID
+    - You may optionally specify a Logical resource ID to filter the result
     '''
-    c = get_client(options)
-    logical_resource_id = arguments.pop(0) if arguments else None
-    if not options.stack_name and not options.physical_resource_id:
-        logging.error(
-            "Must specify either stack-name physical-resource-id")
+    usage = ('''Usage:
+%s resource-list-details stack_name [logical_resource_id]
+%s resource-list-details physical_resource_id [logical_resource_id]''' %
+        (scriptname, scriptname))
+
+    try:
+        name_or_pid = arguments.pop(0)
+    except IndexError:
+        logging.error("Must pass a stack_name or physical_resource_id")
+        print usage
         return
-    result = c.describe_stack_resources(options.stack_name,
-        logical_resource_id, options.physical_resource_id)
-    for r in result:
-        print_stack_resource(r)
+
+    logical_resource_id = arguments.pop(0) if arguments else None
+
+    c = get_client(options)
+
+    # Check if this is a StackName, if not assume it's a physical res ID
+    # Note this is slower (for the common case, which is probably StackName)
+    # than just doing a try/catch over the StackName case then retrying
+    # on failure with name_or_pid as the physical resource ID, however
+    # boto spews errors when raising an exception so we can't do that
+    list_stacks = c.list_stacks()
+    stack_names = [s.stack_name for s in list_stacks]
+    if name_or_pid in stack_names:
+        logging.debug("Looking up resources for StackName:%s" % name_or_pid)
+        result = c.describe_stack_resources(stack_name_or_id=name_or_pid,
+            logical_resource_id=logical_resource_id)
+    else:
+        logging.debug("Looking up resources for PhysicalResourceId:%s" %
+            name_or_pid)
+        result = c.describe_stack_resources(stack_name_or_id=None,
+            logical_resource_id=logical_resource_id,
+            physical_resource_id=name_or_pid)
+
+    if result:
+        for r in result:
+            print_stack_resource(r)
+    else:
+        logging.error("Invalid stack_name, physical_resource_id " +
+                      "or logical_resource_id")
+        print usage
 
 
 @utils.catch_error('list')
@@ -525,10 +564,6 @@ def create_options(parser):
 
     parser.add_option('-P', '--parameters', metavar="parameters", default=None,
                       help="Parameter values used to create the stack.")
-    parser.add_option('-n', '--stack-name', default=None,
-                      help="Name of the queried stack")
-    parser.add_option('-c', '--physical-resource-id', default=None,
-                      help="Physical ID of the queried resource")
 
 
 def credentials_from_env():

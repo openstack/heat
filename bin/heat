@@ -50,6 +50,8 @@ else:
         if os.access(jeos_path, os.R_OK):
             break
 
+scriptname = os.path.basename(sys.argv[0])
+
 gettext.install('heat', unicode=1)
 
 from heat import client as heat_client
@@ -334,20 +336,74 @@ def stack_resources_list(options, arguments):
     print result
 
 
+def _resources_list_details(options, lookup_key='StackName',
+                            lookup_value=None, log_resid=None):
+    '''
+    Helper function to reduce duplication in stack_resources_list_details
+    Looks up resource details based on StackName or PhysicalResourceId
+    '''
+    c = get_client(options)
+    parameters = {}
+
+    if lookup_key in ['StackName', 'PhysicalResourceId']:
+        parameters[lookup_key] = lookup_value
+    else:
+        logging.error("Unexpected key %s" % lookup_key)
+        return
+
+    if log_resid:
+        parameters['LogicalResourceId'] = log_resid
+
+    try:
+        result = c.describe_stack_resources(**parameters)
+    except:
+        logging.debug("Failed to lookup resource details with key %s:%s" %
+            (lookup_key, lookup_value))
+        return
+
+    return result
+
+
 @utils.catch_error('resource-list-details')
 def stack_resources_list_details(options, arguments):
     '''
-    Display details of all resources in the specified stack.
+    Display details of resources in the specified stack.
+
+    - If stack name is specified, all associated resources are returned
+    - If physical resource ID is specified, all associated resources of the
+    stack the resource belongs to are returned
+    - You must specify stack name *or* physical resource ID
+    - You may optionally specify a Logical resource ID to filter the result
     '''
-    c = get_client(options)
+    usage = ('''Usage:
+%s resource-list-details stack_name [logical_resource_id]
+%s resource-list-details physical_resource_id [logical_resource_id]''' %
+        (scriptname, scriptname))
+
+    try:
+        name_or_pid = arguments.pop(0)
+    except IndexError:
+        logging.error("No valid stack_name or physical_resource_id")
+        print usage
+        return
+
     logical_resource_id = arguments.pop(0) if arguments else None
-    parameters = {
-        'StackName': options.stack_name,
-        'PhysicalResourceId': options.physical_resource_id,
-        'LogicalResourceId': logical_resource_id,
-    }
-    result = c.describe_stack_resources(**parameters)
-    print result
+
+    # Try StackName first as it seems the most likely..
+    lookup_keys = ['StackName', 'PhysicalResourceId']
+    for key in lookup_keys:
+        logging.debug("Looking up resources for %s:%s" % (key, name_or_pid))
+        result = _resources_list_details(options, lookup_key=key,
+                                         lookup_value=name_or_pid,
+                                         log_resid=logical_resource_id)
+        if result:
+            break
+
+    if result:
+        print result
+    else:
+        logging.error("No valid stack_name or physical_resource_id")
+        print usage
 
 
 @utils.catch_error('list')
@@ -450,10 +506,6 @@ def create_options(parser):
 
     parser.add_option('-P', '--parameters', metavar="parameters", default=None,
                       help="Parameter values used to create the stack.")
-    parser.add_option('-n', '--stack-name', default=None,
-                      help="Name of the queried stack")
-    parser.add_option('-c', '--physical-resource-id', default=None,
-                      help="Physical ID of the queried resource")
 
 
 def credentials_from_env():
