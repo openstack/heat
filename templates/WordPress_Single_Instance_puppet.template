@@ -1,4 +1,5 @@
-TemplateFormatVersion" : "2010-09-09",
+{
+  "TemplateFormatVersion" : "2010-09-09",
 
   "Description": "Sample template to bring up WordPress using the Puppet client to install server roles. A WaitCondition is used to hold up the stack creation until the application is deployed. **WARNING** This template creates one or more Amazon EC2 instances and CloudWatch alarms. You will be billed for the AWS resources used if you create a stack from this template.",
 
