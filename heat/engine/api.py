@@ -20,48 +20,14 @@ from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.manager')
 
-PARAM_KEYS = (
-    PARAM_TIMEOUT,
-    PARAM_USER_KEY_re,
-    PARAM_USER_VALUE_fmt,
-) = (
-    'TimeoutInMinutes',
-    re.compile(r'Parameters\.member\.(.*?)\.ParameterKey$'),
-    'Parameters.member.%s.ParameterValue',
-)
-
-
-def extract_user_params(params):
-    '''
-    Extract a dictionary of user parameters (to e.g. a stack create command)
-    from the parameter dictionary passed through the API.
-
-    In the API parameters, each user parameter appears as two key-value pairs
-    with keys of the form:
-
-        Parameters.member.1.ParameterKey
-        Parameters.member.1.ParameterValue
-    '''
-    def get_param_pairs():
-        for k in params:
-            keymatch = PARAM_USER_KEY_re.match(k)
-            if keymatch:
-                key = params[k]
-                v = PARAM_USER_VALUE_fmt % keymatch.group(1)
-                try:
-                    value = params[v]
-                except KeyError:
-                    logger.error('Could not apply parameter %s' % key)
-
-                yield (key, value)
-
-    return dict(get_param_pairs())
+PARAM_KEYS = (PARAM_TIMEOUT, ) = ('timeout_mins', )
 
 
 def extract_args(params):
     '''
     Extract any arguments passed as parameters through the API and return them
-    as a dictionary.
+    as a dictionary. This allows us to filter the passed args and do type
+    conversion where appropriate
     '''
     kwargs = {}
     try:
@@ -70,19 +36,8 @@ def extract_args(params):
         logger.exception('create timeout conversion')
     else:
         if timeout_mins > 0:
-            kwargs['timeout_mins'] = timeout_mins
+            kwargs[PARAM_TIMEOUT] = timeout_mins
     return kwargs
-
-
-def _filter_keys(data, keys):
-    '''
-    Filter the provided data so that only the dictionary keys specified are
-    present. If keys is None, return all of the data.
-    '''
-    if keys is not None:
-        data = dict((k, v) for (k, v) in data.iteritems() if k in keys)
-
-    return data
 
 
 STACK_KEYS = (
@@ -91,42 +46,24 @@ STACK_KEYS = (
     STACK_NOTIFICATION_TOPICS,
     STACK_DESCRIPTION, STACK_TMPL_DESCRIPTION,
     STACK_PARAMETERS, STACK_OUTPUTS,
-    STACK_STATUS, STACK_STATUS_DATA,
-    STACK_TIMEOUT,
+    STACK_STATUS, STACK_STATUS_DATA, STACK_CAPABILITIES,
+    STACK_DISABLE_ROLLBACK, STACK_TIMEOUT,
 ) = (
-    'StackName', 'StackId',
-    'CreationTime', 'LastUpdatedTime', 'DeletionTime',
-    'NotificationARNs',
-    'Description', 'TemplateDescription',
-    'Parameters', 'Outputs',
-    'StackStatus', 'StackStatusReason',
-    PARAM_TIMEOUT,
+    'stack_name', 'stack_id',
+    'creation_time', 'updated_time', 'deletion_time',
+    'notification_topics',
+    'description', 'template_description',
+    'parameters', 'outputs',
+    'stack_status', 'stack_status_reason', 'capabilities',
+    'disable_rollback', 'timeout_mins'
 )
-
-KEYS_STACK = (
-    STACK_NAME, STACK_ID,
-    STACK_CREATION_TIME, STACK_UPDATED_TIME,
-    STACK_NOTIFICATION_TOPICS,
-    STACK_DESCRIPTION,
-    STACK_PARAMETERS, STACK_DESCRIPTION, STACK_OUTPUTS,
-    STACK_STATUS, STACK_STATUS_DATA,
-    STACK_TIMEOUT,
-)
-KEYS_STACK_SUMMARY = (
-    STACK_CREATION_TIME, STACK_DELETION_TIME,
-    STACK_UPDATED_TIME,
-    STACK_ID, STACK_NAME,
-    STACK_TMPL_DESCRIPTION,
-    STACK_STATUS, STACK_STATUS_DATA,
-)
-
 
 STACK_OUTPUT_KEYS = (
     OUTPUT_DESCRIPTION,
     OUTPUT_KEY, OUTPUT_VALUE,
 ) = (
-    'Description',
-    'OutputKey', 'OutputValue',
+    'description',
+    'output_key', 'output_value',
 )
 
 
@@ -144,7 +81,7 @@ def format_stack_outputs(stack, outputs):
     return [format_stack_output(key) for key in outputs]
 
 
-def format_stack(stack, keys=None):
+def format_stack(stack):
     '''
     Return a representation of the given stack that matches the API output
     expectations.
@@ -160,6 +97,8 @@ def format_stack(stack, keys=None):
         STACK_TMPL_DESCRIPTION: stack.t[parser.DESCRIPTION],
         STACK_STATUS: stack.state,
         STACK_STATUS_DATA: stack.state_description,
+        STACK_CAPABILITIES: [],   # TODO Not implemented yet
+        STACK_DISABLE_ROLLBACK: True,   # TODO Not implemented yet
         STACK_TIMEOUT: stack.timeout_mins,
     }
 
@@ -167,7 +106,7 @@ def format_stack(stack, keys=None):
     if stack.state == stack.CREATE_COMPLETE:
         info[STACK_OUTPUTS] = format_stack_outputs(stack, stack.outputs)
 
-    return _filter_keys(info, keys)
+    return info
 
 
 RES_KEYS = (
@@ -175,42 +114,21 @@ RES_KEYS = (
     RES_NAME, RES_PHYSICAL_ID, RES_METADATA,
     RES_STATUS, RES_STATUS_DATA, RES_TYPE,
     RES_STACK_ID, RES_STACK_NAME,
-    RES_TIMESTAMP,
 ) = (
-    'Description', 'LastUpdatedTimestamp',
-    'LogicalResourceId', 'PhysicalResourceId', 'Metadata',
-    'ResourceStatus', 'ResourceStatusReason', 'ResourceType',
+    'description', 'updated_time',
+    'logical_resource_id', 'physical_resource_id', 'metadata',
+    'resource_status', 'resource_status_reason', 'resource_type',
     STACK_ID, STACK_NAME,
-    'Timestamp',
-)
-
-KEYS_RESOURCE_DETAIL = (
-    RES_DESCRIPTION, RES_UPDATED_TIME,
-    RES_NAME, RES_PHYSICAL_ID, RES_METADATA,
-    RES_STATUS, RES_STATUS_DATA, RES_TYPE,
-    RES_STACK_ID, RES_STACK_NAME,
-)
-KEYS_RESOURCE = (
-    RES_DESCRIPTION,
-    RES_NAME, RES_PHYSICAL_ID,
-    RES_STATUS, RES_STATUS_DATA, RES_TYPE,
-    RES_STACK_ID, RES_STACK_NAME,
-    RES_TIMESTAMP,
-)
-KEYS_RESOURCE_SUMMARY = (
-    RES_UPDATED_TIME,
-    RES_NAME, RES_PHYSICAL_ID,
-    RES_STATUS, RES_STATUS_DATA, RES_TYPE,
 )
 
 
-def format_stack_resource(resource, keys=None):
+def format_stack_resource(resource):
     '''
     Return a representation of the given resource that matches the API output
     expectations.
     '''
     last_updated_time = resource.updated_time or resource.created_time
-    attrs = {
+    res = {
         RES_DESCRIPTION: resource.parsed_template().get('Description', ''),
         RES_UPDATED_TIME: heat_utils.strtime(last_updated_time),
         RES_NAME: resource.name,
@@ -221,10 +139,9 @@ def format_stack_resource(resource, keys=None):
         RES_TYPE: resource.t['Type'],
         RES_STACK_ID: resource.stack.id,
         RES_STACK_NAME: resource.stack.name,
-        RES_TIMESTAMP: heat_utils.strtime(last_updated_time),
     }
 
-    return _filter_keys(attrs, keys)
+    return res
 
 
 EVENT_KEYS = (
@@ -235,18 +152,18 @@ EVENT_KEYS = (
     EVENT_RES_STATUS, EVENT_RES_STATUS_DATA, EVENT_RES_TYPE,
     EVENT_RES_PROPERTIES,
 ) = (
-    'EventId',
+    'event_id',
     STACK_ID, STACK_NAME,
-    RES_TIMESTAMP,
+    "event_time",
     RES_NAME, RES_PHYSICAL_ID,
     RES_STATUS, RES_STATUS_DATA, RES_TYPE,
-    'ResourceProperties',
+    'resource_properties',
 )
 
 
-def format_event(event, keys=None):
+def format_event(event):
     s = event.stack
-    attrs = {
+    event = {
         EVENT_ID: event.id,
         EVENT_STACK_ID: s.id,
         EVENT_STACK_NAME: s.name,
@@ -259,4 +176,4 @@ def format_event(event, keys=None):
         EVENT_RES_PROPERTIES: event.resource_properties,
     }
 
-    return _filter_keys(attrs, keys)
+    return event

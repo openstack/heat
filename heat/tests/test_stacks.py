@@ -172,63 +172,48 @@ class stackManagerTest(unittest.TestCase):
 
         self.assertEqual(len(events), 2)
         for ev in events:
-            self.assertTrue('EventId' in ev)
-            self.assertTrue(ev['EventId'] > 0)
+            self.assertTrue('event_id' in ev)
+            self.assertTrue(ev['event_id'] > 0)
 
-            self.assertTrue('LogicalResourceId' in ev)
-            self.assertEqual(ev['LogicalResourceId'], 'WebServer')
+            self.assertTrue('logical_resource_id' in ev)
+            self.assertEqual(ev['logical_resource_id'], 'WebServer')
 
-            self.assertTrue('PhysicalResourceId' in ev)
+            self.assertTrue('physical_resource_id' in ev)
 
-            self.assertTrue('ResourceProperties' in ev)
+            self.assertTrue('resource_properties' in ev)
             # Big long user data field.. it mentions 'wordpress'
             # a few times so this should work.
-            user_data = ev['ResourceProperties']['UserData']
+            user_data = ev['resource_properties']['UserData']
             self.assertNotEqual(user_data.find('wordpress'), -1)
-            self.assertEqual(ev['ResourceProperties']['ImageId'],
+            self.assertEqual(ev['resource_properties']['ImageId'],
                              'F16-x86_64-gold')
-            self.assertEqual(ev['ResourceProperties']['InstanceType'],
+            self.assertEqual(ev['resource_properties']['InstanceType'],
                              'm1.large')
 
-            self.assertTrue('ResourceStatus' in ev)
-            self.assertTrue(ev['ResourceStatus'] in ('IN_PROGRESS',
+            self.assertTrue('resource_status' in ev)
+            self.assertTrue(ev['resource_status'] in ('IN_PROGRESS',
                                                      'CREATE_COMPLETE'))
 
-            self.assertTrue('ResourceStatusReason' in ev)
-            self.assertEqual(ev['ResourceStatusReason'], 'state changed')
+            self.assertTrue('resource_status_reason' in ev)
+            self.assertEqual(ev['resource_status_reason'], 'state changed')
 
-            self.assertTrue('ResourceType' in ev)
-            self.assertEqual(ev['ResourceType'], 'AWS::EC2::Instance')
+            self.assertTrue('resource_type' in ev)
+            self.assertEqual(ev['resource_type'], 'AWS::EC2::Instance')
 
-            self.assertTrue('StackId' in ev)
+            self.assertTrue('stack_id' in ev)
 
-            self.assertTrue('StackName' in ev)
-            self.assertEqual(ev['StackName'], self.stack_name)
+            self.assertTrue('stack_name' in ev)
+            self.assertEqual(ev['stack_name'], self.stack_name)
 
-            self.assertTrue('Timestamp' in ev)
-
-    def test_stack_list(self):
-        sl = self.man.list_stacks(self.ctx, {})
-
-        self.assertTrue(len(sl['stacks']) > 0)
-        for s in sl['stacks']:
-            self.assertTrue('CreationTime' in s)
-            self.assertTrue('LastUpdatedTime' in s)
-            self.assertTrue('StackId' in s)
-            self.assertNotEqual(s['StackId'], None)
-            self.assertTrue('StackName' in s)
-            self.assertTrue('StackStatus' in s)
-            self.assertTrue('StackStatusReason' in s)
-            self.assertTrue('TemplateDescription' in s)
-            self.assertNotEqual(s['TemplateDescription'].find('WordPress'), -1)
+            self.assertTrue('event_time' in ev)
 
     def test_stack_describe_all(self):
         sl = self.man.show_stack(self.ctx, None, {})
 
         self.assertEqual(len(sl['stacks']), 1)
         for s in sl['stacks']:
-            self.assertNotEqual(s['StackId'], None)
-            self.assertNotEqual(s['Description'].find('WordPress'), -1)
+            self.assertNotEqual(s['stack_id'], None)
+            self.assertNotEqual(s['description'].find('WordPress'), -1)
 
     def test_stack_describe_all_empty(self):
         self.tearDown()
@@ -250,35 +235,35 @@ class stackManagerTest(unittest.TestCase):
         self.assertEqual(len(sl['stacks']), 1)
 
         s = sl['stacks'][0]
-        self.assertTrue('CreationTime' in s)
-        self.assertTrue('LastUpdatedTime' in s)
-        self.assertTrue('StackId' in s)
-        self.assertNotEqual(s['StackId'], None)
-        self.assertTrue('StackName' in s)
-        self.assertEqual(s['StackName'], self.stack_name)
-        self.assertTrue('StackStatus' in s)
-        self.assertTrue('StackStatusReason' in s)
-        self.assertTrue('Description' in s)
-        self.assertNotEqual(s['Description'].find('WordPress'), -1)
-        self.assertTrue('Parameters' in s)
+        self.assertTrue('creation_time' in s)
+        self.assertTrue('updated_time' in s)
+        self.assertTrue('stack_id' in s)
+        self.assertNotEqual(s['stack_id'], None)
+        self.assertTrue('stack_name' in s)
+        self.assertEqual(s['stack_name'], self.stack_name)
+        self.assertTrue('stack_status' in s)
+        self.assertTrue('stack_status_reason' in s)
+        self.assertTrue('description' in s)
+        self.assertNotEqual(s['description'].find('WordPress'), -1)
+        self.assertTrue('parameters' in s)
 
     def test_stack_resource_describe(self):
         r = self.man.describe_stack_resource(self.ctx, self.stack_name,
                                              'WebServer')
 
-        self.assertTrue('Description' in r)
-        self.assertTrue('LastUpdatedTimestamp' in r)
-        self.assertTrue('StackId' in r)
-        self.assertNotEqual(r['StackId'], None)
-        self.assertTrue('StackName' in r)
-        self.assertEqual(r['StackName'], self.stack_name)
-        self.assertTrue('Metadata' in r)
-        self.assertTrue('ResourceStatus' in r)
-        self.assertTrue('ResourceStatusReason' in r)
-        self.assertTrue('ResourceType' in r)
-        self.assertTrue('PhysicalResourceId' in r)
-        self.assertTrue('LogicalResourceId' in r)
-        self.assertEqual(r['LogicalResourceId'], 'WebServer')
+        self.assertTrue('description' in r)
+        self.assertTrue('updated_time' in r)
+        self.assertTrue('stack_id' in r)
+        self.assertNotEqual(r['stack_id'], None)
+        self.assertTrue('stack_name' in r)
+        self.assertEqual(r['stack_name'], self.stack_name)
+        self.assertTrue('metadata' in r)
+        self.assertTrue('resource_status' in r)
+        self.assertTrue('resource_status_reason' in r)
+        self.assertTrue('resource_type' in r)
+        self.assertTrue('physical_resource_id' in r)
+        self.assertTrue('logical_resource_id' in r)
+        self.assertEqual(r['logical_resource_id'], 'WebServer')
 
     def test_stack_resource_describe_nonexist_stack(self):
         self.assertRaises(AttributeError,
@@ -297,18 +282,18 @@ class stackManagerTest(unittest.TestCase):
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
-        self.assertTrue('Description' in r)
-        self.assertTrue('Timestamp' in r)
-        self.assertTrue('StackId' in r)
-        self.assertNotEqual(r['StackId'], None)
-        self.assertTrue('StackName' in r)
-        self.assertEqual(r['StackName'], self.stack_name)
-        self.assertTrue('ResourceStatus' in r)
-        self.assertTrue('ResourceStatusReason' in r)
-        self.assertTrue('ResourceType' in r)
-        self.assertTrue('PhysicalResourceId' in r)
-        self.assertTrue('LogicalResourceId' in r)
-        self.assertEqual(r['LogicalResourceId'], 'WebServer')
+        self.assertTrue('description' in r)
+        self.assertTrue('updated_time' in r)
+        self.assertTrue('stack_id' in r)
+        self.assertNotEqual(r['stack_id'], None)
+        self.assertTrue('stack_name' in r)
+        self.assertEqual(r['stack_name'], self.stack_name)
+        self.assertTrue('resource_status' in r)
+        self.assertTrue('resource_status_reason' in r)
+        self.assertTrue('resource_type' in r)
+        self.assertTrue('physical_resource_id' in r)
+        self.assertTrue('logical_resource_id' in r)
+        self.assertEqual(r['logical_resource_id'], 'WebServer')
 
     def test_stack_resources_describe_no_filter(self):
         resources = self.man.describe_stack_resources(self.ctx,
@@ -317,8 +302,8 @@ class stackManagerTest(unittest.TestCase):
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
-        self.assertTrue('LogicalResourceId' in r)
-        self.assertEqual(r['LogicalResourceId'], 'WebServer')
+        self.assertTrue('logical_resource_id' in r)
+        self.assertEqual(r['logical_resource_id'], 'WebServer')
 
     def test_stack_resources_describe_bad_lookup(self):
         self.assertRaises(AttributeError,
@@ -340,13 +325,13 @@ class stackManagerTest(unittest.TestCase):
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
-        self.assertTrue('LastUpdatedTimestamp' in r)
-        self.assertTrue('PhysicalResourceId' in r)
-        self.assertTrue('LogicalResourceId' in r)
-        self.assertEqual(r['LogicalResourceId'], 'WebServer')
-        self.assertTrue('ResourceStatus' in r)
-        self.assertTrue('ResourceStatusReason' in r)
-        self.assertTrue('ResourceType' in r)
+        self.assertTrue('updated_time' in r)
+        self.assertTrue('physical_resource_id' in r)
+        self.assertTrue('logical_resource_id' in r)
+        self.assertEqual(r['logical_resource_id'], 'WebServer')
+        self.assertTrue('resource_status' in r)
+        self.assertTrue('resource_status_reason' in r)
+        self.assertTrue('resource_type' in r)
 
     def test_stack_resources_list_nonexist_stack(self):
         self.assertRaises(AttributeError,

@@ -60,26 +60,6 @@ class EngineManager(manager.Manager):
         """Load configuration options and connect to the hypervisor."""
         pass
 
-    def list_stacks(self, context, params):
-        """
-        The list_stacks method is the end point that actually implements
-        the 'list' command of the heat API.
-        arg1 -> RPC context.
-        arg2 -> Dict of http request parameters passed in from API side.
-        """
-
-        auth.authenticate(context)
-
-        stacks = db_api.stack_get_by_user(context)
-        if stacks is None:
-            stacks = []
-
-        def format_stack_summary(s):
-            stack = parser.Stack.load(context, s.id)
-            return api.format_stack(stack, api.KEYS_STACK_SUMMARY)
-
-        return {'stacks': [format_stack_summary(s) for s in stacks]}
-
     def show_stack(self, context, stack_name, params):
         """
         The show_stack method returns the attributes of one stack.
@@ -100,11 +80,11 @@ class EngineManager(manager.Manager):
 
         def format_stack_detail(s):
             stack = parser.Stack.load(context, s.id)
-            return api.format_stack(stack, api.KEYS_STACK)
+            return api.format_stack(stack)
 
         return {'stacks': [format_stack_detail(s) for s in stacks]}
 
-    def create_stack(self, context, stack_name, template, params):
+    def create_stack(self, context, stack_name, template, params, args):
         """
         The create_stack method creates a new stack using the template
         provided.
@@ -113,7 +93,8 @@ class EngineManager(manager.Manager):
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to create.
         arg3 -> Template of stack you want to create.
-        arg4 -> Params passed from API.
+        arg4 -> Stack Input Params
+        arg4 -> Request parameters/args passed from API
         """
         logger.info('template is %s' % template)
 
@@ -123,10 +104,11 @@ class EngineManager(manager.Manager):
             return {'Error': 'Stack already exists with that name.'}
 
         tmpl = parser.Template(template)
+
         # Extract the template parameters, and any common query parameters
-        template_params = parser.Parameters(stack_name, tmpl,
-                                            api.extract_user_params(params))
-        common_params = api.extract_args(params)
+        template_params = parser.Parameters(stack_name, tmpl, params)
+        common_params = api.extract_args(args)
+
         stack = parser.Stack(context, stack_name, tmpl, template_params,
                              **common_params)
 
@@ -159,8 +141,7 @@ class EngineManager(manager.Manager):
         stack_name = 'validate'
         try:
             tmpl = parser.Template(template)
-            user_params = parser.Parameters(stack_name, tmpl,
-                                            api.extract_user_params(params))
+            user_params = parser.Parameters(stack_name, tmpl, params)
             s = parser.Stack(context, stack_name, tmpl, user_params)
         except KeyError as ex:
             res = ('A Fn::FindInMap operation referenced '
@@ -272,8 +253,7 @@ class EngineManager(manager.Manager):
         if resource.id is None:
             raise AttributeError('Resource not created')
 
-        return api.format_stack_resource(stack[resource_name],
-                                         api.KEYS_RESOURCE_DETAIL)
+        return api.format_stack_resource(stack[resource_name])
 
     def describe_stack_resources(self, context, stack_name,
                                  physical_resource_id, logical_resource_id):
@@ -299,7 +279,7 @@ class EngineManager(manager.Manager):
         else:
             name_match = lambda r: True
 
-        return [api.format_stack_resource(resource, api.KEYS_RESOURCE)
+        return [api.format_stack_resource(resource)
                 for resource in stack if resource.id is not None and
                                          name_match(resource)]
 
@@ -312,7 +292,7 @@ class EngineManager(manager.Manager):
 
         stack = parser.Stack.load(context, s.id)
 
-        return [api.format_stack_resource(resource, api.KEYS_RESOURCE_SUMMARY)
+        return [api.format_stack_resource(resource)
                 for resource in stack if resource.id is not None]
 
     def metadata_register_address(self, context, url):

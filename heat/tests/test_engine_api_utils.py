@@ -23,69 +23,23 @@ import heat.engine.api as api
 @attr(tag=['unit', 'engine-api'])
 @attr(speed='fast')
 class EngineApiTest(unittest.TestCase):
-    def test_params_extract(self):
-        p = {'Parameters.member.Foo.ParameterKey': 'foo',
-             'Parameters.member.Foo.ParameterValue': 'bar',
-             'Parameters.member.Blarg.ParameterKey': 'blarg',
-             'Parameters.member.Blarg.ParameterValue': 'wibble'}
-        params = api.extract_user_params(p)
-        self.assertEqual(len(params), 2)
-        self.assertTrue('foo' in params)
-        self.assertEqual(params['foo'], 'bar')
-        self.assertTrue('blarg' in params)
-        self.assertEqual(params['blarg'], 'wibble')
-
-    def test_params_extract_dots(self):
-        p = {'Parameters.member.Foo.Bar.ParameterKey': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar',
-             'Parameters.member.Foo.Baz.ParameterKey': 'blarg',
-             'Parameters.member.Foo.Baz.ParameterValue': 'wibble'}
-        params = api.extract_user_params(p)
-        self.assertEqual(len(params), 2)
-        self.assertTrue('foo' in params)
-        self.assertEqual(params['foo'], 'bar')
-        self.assertTrue('blarg' in params)
-        self.assertEqual(params['blarg'], 'wibble')
-
-    def test_params_extract_garbage(self):
-        p = {'Parameters.member.Foo.Bar.ParameterKey': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar',
-             'Foo.Baz.ParameterKey': 'blarg',
-             'Foo.Baz.ParameterValue': 'wibble'}
-        params = api.extract_user_params(p)
-        self.assertEqual(len(params), 1)
-        self.assertTrue('foo' in params)
-        self.assertEqual(params['foo'], 'bar')
-
-    def test_params_extract_garbage_prefix(self):
-        p = {'prefixParameters.member.Foo.Bar.ParameterKey': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar'}
-        params = api.extract_user_params(p)
-        self.assertFalse(params)
-
-    def test_params_extract_garbage_suffix(self):
-        p = {'Parameters.member.Foo.Bar.ParameterKeysuffix': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar'}
-        params = api.extract_user_params(p)
-        self.assertFalse(params)
-
     def test_timeout_extract(self):
-        p = {'TimeoutInMinutes': '5'}
+        p = {'timeout_mins': '5'}
         args = api.extract_args(p)
         self.assertEqual(args['timeout_mins'], 5)
 
     def test_timeout_extract_zero(self):
-        p = {'TimeoutInMinutes': '0'}
+        p = {'timeout_mins': '0'}
         args = api.extract_args(p)
         self.assertTrue('timeout_mins' not in args)
 
     def test_timeout_extract_garbage(self):
-        p = {'TimeoutInMinutes': 'wibble'}
+        p = {'timeout_mins': 'wibble'}
         args = api.extract_args(p)
         self.assertTrue('timeout_mins' not in args)
 
     def test_timeout_extract_none(self):
-        p = {'TimeoutInMinutes': None}
+        p = {'timeout_mins': None}
         args = api.extract_args(p)
         self.assertTrue('timeout_mins' not in args)
 

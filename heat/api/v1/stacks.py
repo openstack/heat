@@ -31,6 +31,7 @@ from heat.common import context
 from heat import utils
 from heat import rpc
 import heat.rpc.common as rpc_common
+import heat.engine.api as engine_api
 
 from heat.openstack.common import log as logging
 
@@ -79,22 +80,103 @@ class StackController(object):
             # FIXME : further investigation into engine errors required
             return exception.HeatInternalFailureError(detail=ex.value)
 
+    @staticmethod
+    def _extract_user_params(params):
+        """
+        Extract a dictionary of user input parameters for the stack
+
+        In the AWS API parameters, each user parameter appears as two key-value
+        pairs with keys of the form below:
+
+        Parameters.member.1.ParameterKey
+        Parameters.member.1.ParameterValue
+
+        We reformat this into a normal dict here to match the heat
+        engine API expected format
+
+        Note this implemented outside of "create" as it will also be
+        used by update (and EstimateTemplateCost if appropriate..)
+        """
+        # Define the AWS key format to extract
+        PARAM_KEYS = (
+        PARAM_USER_KEY_re,
+        PARAM_USER_VALUE_fmt,
+        ) = (
+        re.compile(r'Parameters\.member\.(.*?)\.ParameterKey$'),
+        'Parameters.member.%s.ParameterValue',
+        )
+
+        def get_param_pairs():
+            for k in params:
+                keymatch = PARAM_USER_KEY_re.match(k)
+                if keymatch:
+                    key = params[k]
+                    v = PARAM_USER_VALUE_fmt % keymatch.group(1)
+                    try:
+                        value = params[v]
+                    except KeyError:
+                        logger.error('Could not apply parameter %s' % key)
+
+                    yield (key, value)
+
+        return dict(get_param_pairs())
+
+    @staticmethod
+    def _reformat_dict_keys(keymap={}, inputdict={}):
+        '''
+        Utility function for mapping one dict format to another
+        '''
+        result = {}
+        for key in keymap:
+            result[keymap[key]] = inputdict[key]
+        return result
+
     def list(self, req):
         """
         Implements ListStacks API action
         Lists summary information for all stacks
         """
+
+        def format_stack_summary(s):
+            """
+            Reformat engine output into the AWS "StackSummary" format
+            """
+            # Map the engine-api format to the AWS StackSummary datatype
+            keymap = {
+                engine_api.STACK_CREATION_TIME: 'CreationTime',
+                engine_api.STACK_UPDATED_TIME: 'LastUpdatedTime',
+                engine_api.STACK_ID: 'StackId',
+                engine_api.STACK_NAME: 'StackName',
+                engine_api.STACK_STATUS: 'StackStatus',
+                engine_api.STACK_STATUS_DATA: 'StackStatusReason',
+                engine_api.STACK_TMPL_DESCRIPTION: 'TemplateDescription',
+            }
+
+            result = self._reformat_dict_keys(keymap, s)
+
+            # AWS docs indicate DeletionTime is ommitted for current stacks
+            # This is still TODO in the engine, we don't keep data for
+            # stacks after they are deleted
+            if engine_api.STACK_DELETION_TIME in s:
+                result['DeletionTime'] = s[engine_api.STACK_DELETION_TIME]
+
+            return self._stackid_addprefix(result)
+
         con = req.context
         parms = dict(req.params)
 
-        stack_list = rpc.call(con, 'engine',
-                            {'method': 'list_stacks',
-                            'args': {'params': parms}})
+        try:
+            # Note show_stack returns details for all stacks when called with
+            # no stack_name, we only use a subset of the result here though
+            stack_list = rpc.call(con, 'engine',
+                              {'method': 'show_stack',
+                               'args': {'stack_name': None,
+                                'params': parms}})
+        except rpc_common.RemoteError as ex:
+            return self._remote_error(ex)
 
-        res = {'StackSummaries': []}
-        if stack_list is not None:
-            for s in stack_list['stacks']:
-                res['StackSummaries'].append(self._stackid_addprefix(s))
+        res = {'StackSummaries': [format_stack_summary(s)
+                                   for s in stack_list['stacks']]}
 
         return self._format_response('ListStacks', res)
 
@@ -103,6 +185,53 @@ class StackController(object):
         Implements DescribeStacks API action
         Gets detailed information for a stack (or all stacks)
         """
+        def format_stack_outputs(o):
+            keymap = {
+                engine_api.OUTPUT_DESCRIPTION: 'Description',
+                engine_api.OUTPUT_KEY: 'OutputKey',
+                engine_api.OUTPUT_VALUE: 'OutputValue',
+            }
+
+            return self._reformat_dict_keys(keymap, o)
+
+        def format_stack(s):
+            """
+            Reformat engine output into the AWS "StackSummary" format
+            """
+            keymap = {
+                engine_api.STACK_CAPABILITIES: 'Capabilities',
+                engine_api.STACK_CREATION_TIME: 'CreationTime',
+                engine_api.STACK_DESCRIPTION: 'Description',
+                engine_api.STACK_DISABLE_ROLLBACK: 'DisableRollback',
+                engine_api.STACK_UPDATED_TIME: 'LastUpdatedTime',
+                engine_api.STACK_NOTIFICATION_TOPICS: 'NotificationARNs',
+                engine_api.STACK_PARAMETERS: 'Parameters',
+                engine_api.STACK_ID: 'StackId',
+                engine_api.STACK_NAME: 'StackName',
+                engine_api.STACK_STATUS: 'StackStatus',
+                engine_api.STACK_STATUS_DATA: 'StackStatusReason',
+                engine_api.STACK_TIMEOUT: 'TimeoutInMinutes',
+            }
+
+            result = self._reformat_dict_keys(keymap, s)
+
+            # Reformat outputs, these are handled separately as they are
+            # only present in the engine output for a completely created
+            # stack
+            result['Outputs'] = []
+            if engine_api.STACK_OUTPUTS in s:
+                for o in s[engine_api.STACK_OUTPUTS]:
+                    result['Outputs'].append(format_stack_outputs(o))
+
+            # Reformat Parameters dict-of-dict into AWS API format
+            # This is a list-of-dict with nasty "ParameterKey" : key
+            # "ParameterValue" : value format.
+            result['Parameters'] = [{'ParameterKey':k,
+                'ParameterValue':v.get('Default')}
+                for (k, v) in result['Parameters'].items()]
+
+            return self._stackid_addprefix(result)
+
         con = req.context
         parms = dict(req.params)
 
@@ -122,15 +251,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
-        res = {'Stacks': []}
-        for s in stack_list['stacks']:
-            # Reformat Parameters dict-of-dict into AWS API format
-            # This is a list-of-dict with nasty "ParameterKey" : key
-            # "ParameterValue" : value format.
-            s['Parameters'] = [{'ParameterKey':k,
-                'ParameterValue':v.get('Default')}
-                for (k, v) in s['Parameters'].items()]
-            res['Stacks'].append(self._stackid_addprefix(s))
+        res = {'Stacks': [format_stack(s) for s in stack_list['stacks']]}
 
         return self._format_response('DescribeStacks', res)
 
@@ -165,8 +286,29 @@ class StackController(object):
         Implements CreateStack API action
         Create stack as defined in template file
         """
+        def extract_args(params):
+            """
+            Extract request parameters/arguments and reformat them to match
+            the engine API.  FIXME: we currently only support a subset of
+            the AWS defined parameters (both here and in the engine)
+            """
+            # TODO : Capabilities, DisableRollback, NotificationARNs
+            keymap = {'TimeoutInMinutes': engine_api.PARAM_TIMEOUT, }
+
+            result = {}
+            for k in keymap:
+                if k in req.params:
+                    result[keymap[k]] = params[k]
+
+            return result
+
         con = req.context
-        parms = dict(req.params)
+
+        # Extract the stack input parameters
+        stack_parms = self._extract_user_params(req.params)
+
+        # Extract any additional arguments ("Request Parameters")
+        create_args = extract_args(req.params)
 
         try:
             templ = self._get_template(req)
@@ -189,7 +331,8 @@ class StackController(object):
                             {'method': 'create_stack',
                              'args': {'stack_name': req.params['StackName'],
                                       'template': stack,
-                                      'params': parms}})
+                                      'params': stack_parms,
+                                      'args': create_args}})
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
@@ -288,6 +431,27 @@ class StackController(object):
         Implements the DescribeStackEvents API action
         Returns events related to a specified stack (or all stacks)
         """
+        def format_stack_event(e):
+            """
+            Reformat engine output into the AWS "StackEvent" format
+            """
+            keymap = {
+                engine_api.EVENT_ID: 'EventId',
+                engine_api.EVENT_RES_NAME: 'LogicalResourceId',
+                engine_api.EVENT_RES_PHYSICAL_ID: 'PhysicalResourceId',
+                engine_api.EVENT_RES_PROPERTIES: 'ResourceProperties',
+                engine_api.EVENT_RES_STATUS: 'ResourceStatus',
+                engine_api.EVENT_RES_STATUS_DATA: 'ResourceStatusData',
+                engine_api.EVENT_RES_TYPE: 'ResourceType',
+                engine_api.EVENT_STACK_ID: 'StackId',
+                engine_api.EVENT_STACK_NAME: 'StackName',
+                engine_api.EVENT_TIMESTAMP: 'Timestamp',
+            }
+
+            result = self._reformat_dict_keys(keymap, e)
+
+            return self._stackid_addprefix(result)
+
         con = req.context
         parms = dict(req.params)
 
@@ -302,9 +466,7 @@ class StackController(object):
 
         events = 'Error' not in event_res and event_res['events'] or []
 
-        result = []
-        for e in events:
-            result.append(self._stackid_addprefix(e))
+        result = [format_stack_event(e) for e in events]
 
         return self._format_response('DescribeStackEvents',
             {'StackEvents': result})
@@ -314,6 +476,28 @@ class StackController(object):
         Implements the DescribeStackResource API action
         Return the details of the given resource belonging to the given stack.
         """
+
+        def format_resource_detail(r):
+            """
+            Reformat engine output into the AWS "StackResourceDetail" format
+            """
+            keymap = {
+                engine_api.RES_DESCRIPTION: 'Description',
+                engine_api.RES_UPDATED_TIME: 'LastUpdatedTimestamp',
+                engine_api.RES_NAME: 'LogicalResourceId',
+                engine_api.RES_METADATA: 'Metadata',
+                engine_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
+                engine_api.RES_STATUS: 'ResourceStatus',
+                engine_api.RES_STATUS_DATA: 'ResourceStatusReason',
+                engine_api.RES_TYPE: 'ResourceType',
+                engine_api.RES_STACK_ID: 'StackId',
+                engine_api.RES_STACK_NAME: 'StackName',
+            }
+
+            result = self._reformat_dict_keys(keymap, r)
+
+            return self._stackid_addprefix(result)
+
         con = req.context
         args = {
             'stack_name': req.params.get('StackName'),
@@ -328,8 +512,10 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
+        result = format_resource_detail(resource_details)
+
         return self._format_response('DescribeStackResource',
-            {'StackResourceDetail': resource_details})
+            {'StackResourceDetail': result})
 
     def describe_stack_resources(self, req):
         """
@@ -347,6 +533,27 @@ class StackController(object):
         `LogicalResourceId`: filter the resources list by the logical resource
         id.
         """
+
+        def format_stack_resource(r):
+            """
+            Reformat engine output into the AWS "StackResource" format
+            """
+            keymap = {
+                engine_api.RES_DESCRIPTION: 'Description',
+                engine_api.RES_NAME: 'LogicalResourceId',
+                engine_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
+                engine_api.RES_STATUS: 'ResourceStatus',
+                engine_api.RES_STATUS_DATA: 'ResourceStatusReason',
+                engine_api.RES_TYPE: 'ResourceType',
+                engine_api.RES_STACK_ID: 'StackId',
+                engine_api.RES_STACK_NAME: 'StackName',
+                engine_api.RES_UPDATED_TIME: 'Timestamp',
+            }
+
+            result = self._reformat_dict_keys(keymap, r)
+
+            return self._stackid_addprefix(result)
+
         con = req.context
         stack_name = req.params.get('StackName')
         physical_resource_id = req.params.get('PhysicalResourceId')
@@ -368,9 +575,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
-        result = []
-        for r in resources:
-            result.append(self._stackid_addprefix(r))
+        result = [format_stack_resource(r) for r in resources]
 
         return self._format_response('DescribeStackResources',
             {'StackResources': result})
@@ -380,6 +585,21 @@ class StackController(object):
         Implements the ListStackResources API action
         Return summary of the resources belonging to the specified stack.
         """
+        def format_resource_summary(r):
+            """
+            Reformat engine output into the AWS "StackResourceSummary" format
+            """
+            keymap = {
+                engine_api.RES_UPDATED_TIME: 'LastUpdatedTimestamp',
+                engine_api.RES_NAME: 'LogicalResourceId',
+                engine_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
+                engine_api.RES_STATUS: 'ResourceStatus',
+                engine_api.RES_STATUS_DATA: 'ResourceStatusReason',
+                engine_api.RES_TYPE: 'ResourceType',
+            }
+
+            return self._reformat_dict_keys(keymap, r)
+
         con = req.context
 
         try:
@@ -390,8 +610,10 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
+        summaries = [format_resource_summary(r) for r in resources]
+
         return self._format_response('ListStackResources',
-            {'StackResourceSummaries': resources})
+            {'StackResourceSummaries': summaries})
 
 
 def create_resource(options):
