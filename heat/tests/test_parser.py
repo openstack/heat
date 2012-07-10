@@ -337,6 +337,9 @@ class StackTest(unittest.TestCase):
         stack.state_set('blarg', 'wibble')
         self.assertEqual(stack.state_description, 'wibble')
 
+    def test_load_nonexistant_id(self):
+        self.assertRaises(exception.NotFound, parser.Stack.load,
+                          None, -1)
 
 # allows testing of the test directly, shown below
 if __name__ == '__main__':

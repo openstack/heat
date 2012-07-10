@@ -273,6 +273,9 @@ class Stack(object):
     def load(cls, context, stack_id):
         '''Retrieve a Stack from the database'''
         s = db_api.stack_get(context, stack_id)
+        if s is None:
+            message = 'No stack exists with id "%s"' % str(stack_id)
+            raise exception.NotFound(message)
 
         template = Template.load(context, s.raw_template_id)
         params = Parameters(s.name, template, s.parameters)
