@@ -353,6 +353,26 @@ class stackManagerTest(unittest.TestCase):
                           self.man.list_stack_resources,
                           self.ctx, 'foo')
 
+    def test_metadata(self):
+        err, metadata = self.man.metadata_get_resource(None,
+                                                       self.stack_name,
+                                                       'WebServer')
+        self.assertEqual(err, None)
+        self.assertTrue('AWS::CloudFormation::Init' in metadata)
+
+        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
+        err, result = self.man.metadata_update(None,
+                                               self.stack.id, 'WebServer',
+                                               test_metadata)
+        self.assertEqual(err, None)
+        self.assertEqual(result, test_metadata)
+
+        err, metadata = self.man.metadata_get_resource(None,
+                                                       self.stack_name,
+                                                       'WebServer')
+        self.assertEqual(err, None)
+        self.assertFalse('AWS::CloudFormation::Init' in metadata)
+        self.assertEqual(metadata, test_metadata)
 
 # allows testing of the test directly
 if __name__ == '__main__':
