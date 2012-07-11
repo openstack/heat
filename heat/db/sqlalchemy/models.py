@@ -61,21 +61,21 @@ class HeatBase(object):
             else:
                 raise
 
-    def expire(self, session=None):
+    def expire(self, session=None, attrs=None):
         """Expire this object ()."""
         if not session:
             session = Session.object_session(self)
             if not session:
                 session = get_session()
-        session.expire(self)
+        session.expire(self, attrs)
 
-    def refresh(self, session=None):
+    def refresh(self, session=None, attrs=None):
         """Refresh this object."""
         if not session:
             session = Session.object_session(self)
             if not session:
                 session = get_session()
-        session.refresh(self)
+        session.refresh(self, attrs)
 
     def delete(self, session=None):
         """Delete this object."""
