@@ -63,7 +63,7 @@ class CloudWatchAlarm(Resource):
     def handle_create(self):
         wr_values = {
             'name': self.name,
-            'rule': self.parsed_template()['Properties'],
+            'rule': self.parsed_template('Properties'),
             'state': 'NORMAL',
             'stack_name': self.stack.name
         }

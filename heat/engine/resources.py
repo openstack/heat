@@ -69,14 +69,6 @@ class Resource(object):
         self.name = name
         self.t = stack.resolve_static_data(json_snippet)
         self.properties = checkeddict.Properties(name, self.properties_schema)
-        if 'Properties' not in self.t:
-            # make a dummy entry to prevent having to check all over the
-            # place for it.
-            self.t['Properties'] = {}
-        if 'Metadata' not in self.t:
-            # make a dummy entry to prevent having to check all over the
-            # place for it.
-            self.t['Metadata'] = {}
 
         resource = db_api.resource_get_by_name_and_stack(self.context,
                                                          name, stack.id)
@@ -146,7 +138,7 @@ class Resource(object):
         return self._nova[service_type]
 
     def calculate_properties(self):
-        for p, v in self.parsed_template()['Properties'].items():
+        for p, v in self.parsed_template('Properties').items():
             self.properties[p] = v
 
     def create(self):
@@ -285,7 +277,7 @@ class Resource(object):
                 logger.error('DB error %s' % str(ex))
 
         elif new_state in (self.CREATE_COMPLETE, self.CREATE_FAILED):
-            self._create_db(metadata=self.parsed_template()['Metadata'])
+            self._create_db(metadata=self.parsed_template('Metadata'))
 
         if new_state != old_state:
             self._add_event(new_state, reason)
