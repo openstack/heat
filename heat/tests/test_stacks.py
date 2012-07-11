@@ -33,59 +33,66 @@ from heat.engine import manager
 from heat.engine import auth
 
 
-@attr(tag=['unit', 'engine-api', 'resource'])
+tests_dir = os.path.dirname(os.path.realpath(__file__))
+templates_dir = os.path.normpath(os.path.join(tests_dir,
+                                              os.path.pardir, os.path.pardir,
+                                              'templates'))
+
+
+def create_context(mocks, user='stacks_test_user', ctx=None):
+    ctx = ctx or context.get_admin_context()
+    mocks.StubOutWithMock(ctx, 'username')
+    ctx.username = user
+    mocks.StubOutWithMock(auth, 'authenticate')
+    return ctx
+
+
+def get_wordpress_stack(stack_name, ctx):
+    tmpl_path = os.path.join(templates_dir,
+                             'WordPress_Single_Instance_gold.template')
+    with open(tmpl_path) as f:
+        t = json.load(f)
+
+    template = parser.Template(t)
+    parameters = parser.Parameters(stack_name, template,
+                                   {'KeyName': 'test'})
+
+    stack = parser.Stack(ctx, stack_name, template, parameters)
+
+    return stack
+
+
+def setup_mocks(mocks, stack):
+    fc = fakes.FakeClient()
+    mocks.StubOutWithMock(instances.Instance, 'nova')
+    instances.Instance.nova().MultipleTimes().AndReturn(fc)
+
+    instance = stack.resources['WebServer']
+    instance.itype_oflavor['m1.large'] = 'm1.large'
+    instance.calculate_properties()
+    server_userdata = instance._build_userdata(instance.properties['UserData'])
+    mocks.StubOutWithMock(fc.servers, 'create')
+    fc.servers.create(image=744, flavor=3, key_name='test',
+                      name='WebServer', security_groups=None,
+                      userdata=server_userdata, scheduler_hints=None,
+                      meta=None).AndReturn(fc.servers.list()[-1])
+
+
+@attr(tag=['unit', 'stack'])
 @attr(speed='slow')
-class stacksTest(unittest.TestCase):
+class stackCreateTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
-        self.fc = fakes.FakeClient()
-        path = os.path.dirname(os.path.realpath(__file__))
-        self.path = path.replace(os.path.join('heat', 'tests'), 'templates')
 
     def tearDown(self):
         self.m.UnsetStubs()
         print "stackTest teardown complete"
 
-    def create_context(self, user='stacks_test_user'):
-        ctx = context.get_admin_context()
-        self.m.StubOutWithMock(ctx, 'username')
-        ctx.username = user
-        self.m.StubOutWithMock(auth, 'authenticate')
-        return ctx
-
-    # We use this in a number of tests so it's factored out here.
-    def get_wordpress_stack(self, stack_name, ctx=None):
-        tmpl_path = os.path.join(self.path,
-                                 'WordPress_Single_Instance_gold.template')
-        with open(tmpl_path) as f:
-            t = json.load(f)
-
-        template = parser.Template(t)
-        parameters = parser.Parameters(stack_name, template,
-                                       {'KeyName': 'test'})
-
-        stack = parser.Stack(ctx or self.create_context(),
-                             stack_name, template, parameters)
-
-        self.m.StubOutWithMock(instances.Instance, 'nova')
-        instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
-
-        instance = stack.resources['WebServer']
-        instance.itype_oflavor['m1.large'] = 'm1.large'
-        instance.calculate_properties()
-        server_userdata = instance._build_userdata(
-                                instance.properties['UserData'])
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(image=744, flavor=3, key_name='test',
-                name='WebServer', security_groups=None,
-                userdata=server_userdata, scheduler_hints=None,
-                meta=None).AndReturn(self.fc.servers.list()[-1])
-
-        return stack
-
     def test_wordpress_single_instance_stack_create(self):
-        stack = self.get_wordpress_stack('test_stack')
+        stack = get_wordpress_stack('test_stack', create_context(self.m))
+        setup_mocks(self.m, stack)
         self.m.ReplayAll()
+        stack.store()
         stack.create()
 
         self.assertNotEqual(stack.resources['WebServer'], None)
@@ -93,8 +100,9 @@ class stacksTest(unittest.TestCase):
         self.assertNotEqual(stack.resources['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_delete(self):
-        ctx = self.create_context()
-        stack = self.get_wordpress_stack('test_stack', ctx)
+        ctx = create_context(self.m, 'test_delete_user')
+        stack = get_wordpress_stack('test_stack', ctx)
+        setup_mocks(self.m, stack)
         self.m.ReplayAll()
         stack_id = stack.store()
         stack.create()
@@ -111,20 +119,53 @@ class stacksTest(unittest.TestCase):
         self.assertEqual(db_api.stack_get(ctx, stack_id), None)
         self.assertEqual(db_s.status, 'DELETE_COMPLETE')
 
-    def test_stack_event_list(self):
-        ctx = self.create_context('test_event_list_user')
-        auth.authenticate(ctx).AndReturn(True)
 
-        stack = self.get_wordpress_stack('test_event_list_stack', ctx)
-        self.m.ReplayAll()
+@attr(tag=['unit', 'engine-api', 'engine-manager'])
+@attr(speed='fast')
+class stackManagerTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        m = mox.Mox()
+        cls.username = 'stack_manager_test_user'
+        ctx = create_context(m, cls.username)
+        cls.stack_name = 'manager_test_stack'
+
+        stack = get_wordpress_stack(cls.stack_name, ctx)
+        setup_mocks(m, stack)
+        m.ReplayAll()
+
         stack.store()
         stack.create()
+        cls.stack = stack
 
-        self.assertNotEqual(stack.resources['WebServer'], None)
-        self.assertTrue(stack.resources['WebServer'].instance_id > 0)
+        m.UnsetStubs()
 
-        man = manager.EngineManager()
-        el = man.list_events(ctx, stack.name, {})
+    @classmethod
+    def tearDownClass(cls):
+        cls = cls
+        m = mox.Mox()
+        create_context(m, cls.username, ctx=cls.stack.context)
+        setup_mocks(m, cls.stack)
+        m.ReplayAll()
+
+        cls.stack.delete()
+
+        m.UnsetStubs()
+
+    def setUp(self):
+        self.m = mox.Mox()
+        self.ctx = create_context(self.m, self.username)
+        auth.authenticate(self.ctx).AndReturn(True)
+        setup_mocks(self.m, self.stack)
+        self.m.ReplayAll()
+
+        self.man = manager.EngineManager()
+
+    def tearDown(self):
+        self.m.UnsetStubs()
+
+    def test_stack_event_list(self):
+        el = self.man.list_events(self.ctx, self.stack_name, {})
 
         self.assertTrue('events' in el)
         events = el['events']
@@ -162,22 +203,12 @@ class stacksTest(unittest.TestCase):
             self.assertTrue('StackId' in ev)
 
             self.assertTrue('StackName' in ev)
-            self.assertEqual(ev['StackName'], "test_event_list_stack")
+            self.assertEqual(ev['StackName'], self.stack_name)
 
             self.assertTrue('Timestamp' in ev)
 
     def test_stack_list(self):
-        ctx = self.create_context()
-        auth.authenticate(ctx).AndReturn(True)
-
-        stack = self.get_wordpress_stack('test_stack_list', ctx)
-
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-
-        man = manager.EngineManager()
-        sl = man.list_stacks(ctx, {})
+        sl = self.man.list_stacks(self.ctx, {})
 
         self.assertTrue(len(sl['stacks']) > 0)
         for s in sl['stacks']:
@@ -192,17 +223,7 @@ class stacksTest(unittest.TestCase):
             self.assertNotEqual(s['TemplateDescription'].find('WordPress'), -1)
 
     def test_stack_describe_all(self):
-        ctx = self.create_context('stack_describe_all')
-        auth.authenticate(ctx).AndReturn(True)
-
-        stack = self.get_wordpress_stack('test_stack_desc_all', ctx)
-
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-
-        man = manager.EngineManager()
-        sl = man.show_stack(ctx, None, {})
+        sl = self.man.show_stack(self.ctx, None, {})
 
         self.assertEqual(len(sl['stacks']), 1)
         for s in sl['stacks']:
@@ -210,40 +231,21 @@ class stacksTest(unittest.TestCase):
             self.assertNotEqual(s['Description'].find('WordPress'), -1)
 
     def test_stack_describe_all_empty(self):
-        ctx = self.create_context('stack_describe_all_empty')
-        auth.authenticate(ctx).AndReturn(True)
+        self.tearDown()
+        self.username = 'stack_describe_all_empty_user'
+        self.setUp()
 
-        self.m.ReplayAll()
-
-        man = manager.EngineManager()
-        sl = man.show_stack(ctx, None, {})
+        sl = self.man.show_stack(self.ctx, None, {})
 
         self.assertEqual(len(sl['stacks']), 0)
 
     def test_stack_describe_nonexistent(self):
-        ctx = self.create_context()
-        auth.authenticate(ctx).AndReturn(True)
-
-        self.m.ReplayAll()
-
-        man = manager.EngineManager()
-
         self.assertRaises(AttributeError,
-                          man.show_stack,
-                          ctx, 'wibble', {})
+                          self.man.show_stack,
+                          self.ctx, 'wibble', {})
 
     def test_stack_describe(self):
-        ctx = self.create_context('stack_describe')
-        auth.authenticate(ctx).AndReturn(True)
-
-        stack = self.get_wordpress_stack('test_stack_desc', ctx)
-
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-
-        man = manager.EngineManager()
-        sl = man.show_stack(ctx, 'test_stack_desc', {})
+        sl = self.man.show_stack(self.ctx, self.stack_name, {})
 
         self.assertEqual(len(sl['stacks']), 1)
 
@@ -253,7 +255,7 @@ class stacksTest(unittest.TestCase):
         self.assertTrue('StackId' in s)
         self.assertNotEqual(s['StackId'], None)
         self.assertTrue('StackName' in s)
-        self.assertEqual(s['StackName'], 'test_stack_desc')
+        self.assertEqual(s['StackName'], self.stack_name)
         self.assertTrue('StackStatus' in s)
         self.assertTrue('StackStatusReason' in s)
         self.assertTrue('Description' in s)
@@ -261,25 +263,15 @@ class stacksTest(unittest.TestCase):
         self.assertTrue('Parameters' in s)
 
     def test_stack_resource_describe(self):
-        ctx = self.create_context('stack_res_describe')
-        auth.authenticate(ctx).AndReturn(True)
-
-        stack = self.get_wordpress_stack('test_stack_res_desc', ctx)
-
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-
-        man = manager.EngineManager()
-        r = man.describe_stack_resource(ctx, 'test_stack_res_desc',
-                                        'WebServer')
+        r = self.man.describe_stack_resource(self.ctx, self.stack_name,
+                                             'WebServer')
 
         self.assertTrue('Description' in r)
         self.assertTrue('LastUpdatedTimestamp' in r)
         self.assertTrue('StackId' in r)
         self.assertNotEqual(r['StackId'], None)
         self.assertTrue('StackName' in r)
-        self.assertEqual(r['StackName'], 'test_stack_res_desc')
+        self.assertEqual(r['StackName'], self.stack_name)
         self.assertTrue('Metadata' in r)
         self.assertTrue('ResourceStatus' in r)
         self.assertTrue('ResourceStatusReason' in r)
@@ -289,43 +281,19 @@ class stacksTest(unittest.TestCase):
         self.assertEqual(r['LogicalResourceId'], 'WebServer')
 
     def test_stack_resource_describe_nonexist_stack(self):
-        ctx = self.create_context()
-        auth.authenticate(ctx).AndReturn(True)
-
-        man = manager.EngineManager()
         self.assertRaises(AttributeError,
-                          man.describe_stack_resource,
-                          ctx, 'foo', 'WebServer')
+                          self.man.describe_stack_resource,
+                          self.ctx, 'foo', 'WebServer')
 
     def test_stack_resource_describe_nonexist_resource(self):
-        ctx = self.create_context('stack_res_describe_bad_rsrc')
-        auth.authenticate(ctx).AndReturn(True)
-
-        stack = self.get_wordpress_stack('test_stack_res_desc', ctx)
-
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-
-        man = manager.EngineManager()
-
         self.assertRaises(AttributeError,
-                          man.describe_stack_resource,
-                          ctx, 'test_stack_res_desc', 'foo')
+                          self.man.describe_stack_resource,
+                          self.ctx, self.stack_name, 'foo')
 
     def test_stack_resources_describe(self):
-        ctx = self.create_context('stack_res_describe')
-        auth.authenticate(ctx).AndReturn(True)
-
-        stack = self.get_wordpress_stack('test_stack_ress_desc', ctx)
-
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-
-        man = manager.EngineManager()
-        resources = man.describe_stack_resources(ctx, 'test_stack_ress_desc',
-                                                 None, 'WebServer')
+        resources = self.man.describe_stack_resources(self.ctx,
+                                                      self.stack_name,
+                                                      None, 'WebServer')
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
@@ -334,7 +302,7 @@ class stacksTest(unittest.TestCase):
         self.assertTrue('StackId' in r)
         self.assertNotEqual(r['StackId'], None)
         self.assertTrue('StackName' in r)
-        self.assertEqual(r['StackName'], 'test_stack_ress_desc')
+        self.assertEqual(r['StackName'], self.stack_name)
         self.assertTrue('ResourceStatus' in r)
         self.assertTrue('ResourceStatusReason' in r)
         self.assertTrue('ResourceType' in r)
@@ -343,18 +311,8 @@ class stacksTest(unittest.TestCase):
         self.assertEqual(r['LogicalResourceId'], 'WebServer')
 
     def test_stack_resources_describe_no_filter(self):
-        ctx = self.create_context('stack_res_describe_nf')
-        auth.authenticate(ctx).AndReturn(True)
-
-        stack = self.get_wordpress_stack('test_stack_ress_desc_nf', ctx)
-
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-
-        man = manager.EngineManager()
-        resources = man.describe_stack_resources(ctx,
-                                                 'test_stack_ress_desc_nf',
+        resources = self.man.describe_stack_resources(self.ctx,
+                                                 self.stack_name,
                                                  None, None)
 
         self.assertEqual(len(resources), 1)
@@ -363,44 +321,22 @@ class stacksTest(unittest.TestCase):
         self.assertEqual(r['LogicalResourceId'], 'WebServer')
 
     def test_stack_resources_describe_bad_lookup(self):
-        ctx = self.create_context()
-        auth.authenticate(ctx).AndReturn(True)
-
-        man = manager.EngineManager()
         self.assertRaises(AttributeError,
-                          man.describe_stack_resources,
-                          ctx, None, None, 'WebServer')
+                          self.man.describe_stack_resources,
+                          self.ctx, None, None, 'WebServer')
 
     def test_stack_resources_describe_nonexist_stack(self):
-        ctx = self.create_context()
-        auth.authenticate(ctx).AndReturn(True)
-
-        man = manager.EngineManager()
         self.assertRaises(AttributeError,
-                          man.describe_stack_resources,
-                          ctx, 'foo', None, 'WebServer')
+                          self.man.describe_stack_resources,
+                          self.ctx, 'foo', None, 'WebServer')
 
     def test_stack_resources_describe_nonexist_physid(self):
-        ctx = self.create_context()
-        auth.authenticate(ctx).AndReturn(True)
-
-        man = manager.EngineManager()
         self.assertRaises(AttributeError,
-                          man.describe_stack_resources,
-                          ctx, None, 'foo', 'WebServer')
+                          self.man.describe_stack_resources,
+                          self.ctx, None, 'foo', 'WebServer')
 
     def test_stack_resources_list(self):
-        ctx = self.create_context('stack_res_describe')
-        auth.authenticate(ctx).AndReturn(True)
-
-        stack = self.get_wordpress_stack('test_stack_ress_list', ctx)
-
-        self.m.ReplayAll()
-        stack.store()
-        stack.create()
-
-        man = manager.EngineManager()
-        resources = man.list_stack_resources(ctx, 'test_stack_ress_list')
+        resources = self.man.list_stack_resources(self.ctx, self.stack_name)
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
@@ -413,13 +349,9 @@ class stacksTest(unittest.TestCase):
         self.assertTrue('ResourceType' in r)
 
     def test_stack_resources_list_nonexist_stack(self):
-        ctx = self.create_context()
-        auth.authenticate(ctx).AndReturn(True)
-
-        man = manager.EngineManager()
         self.assertRaises(AttributeError,
-                          man.list_stack_resources,
-                          ctx, 'foo')
+                          self.man.list_stack_resources,
+                          self.ctx, 'foo')
 
 
 # allows testing of the test directly
