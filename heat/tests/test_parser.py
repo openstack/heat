@@ -315,6 +315,29 @@ class ParametersTest(unittest.TestCase):
         self.assertEqual(params2['Defaulted'], 'foobar')
 
 
+@attr(tag=['unit', 'parser', 'stack'])
+@attr(speed='fast')
+class StackTest(unittest.TestCase):
+    def test_state_defaults(self):
+        stack = parser.Stack(None, 'test_stack', parser.Template({}))
+        self.assertEqual(stack.state, None)
+        self.assertEqual(stack.state_description, '')
+
+    def test_state(self):
+        stack = parser.Stack(None, 'test_stack', parser.Template({}),
+                             state='foo')
+        self.assertEqual(stack.state, 'foo')
+        stack.state_set('bar', '')
+        self.assertEqual(stack.state, 'bar')
+
+    def test_state_description(self):
+        stack = parser.Stack(None, 'test_stack', parser.Template({}),
+                             state_description='quux')
+        self.assertEqual(stack.state_description, 'quux')
+        stack.state_set('blarg', 'wibble')
+        self.assertEqual(stack.state_description, 'wibble')
+
+
 # allows testing of the test directly, shown below
 if __name__ == '__main__':
     sys.argv.append(__file__)

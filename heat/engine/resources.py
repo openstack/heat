@@ -83,10 +83,12 @@ class Resource(object):
         if resource:
             self.instance_id = resource.nova_instance
             self.state = resource.state
+            self.state_description = resource.state_description
             self.id = resource.id
         else:
             self.instance_id = None
             self.state = None
+            self.state_description = ''
             self.id = None
         self._nova = {}
         self._keystone = None
@@ -259,6 +261,7 @@ class Resource(object):
 
     def state_set(self, new_state, reason="state changed"):
         self.state, old_state = new_state, self.state
+        self.state_description = reason
 
         if self.id is not None:
             try:
