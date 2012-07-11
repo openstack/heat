@@ -340,25 +340,33 @@ class EngineManager(manager.Manager):
         if not s:
             return ['stack', None]
 
-        r = db_api.resource_get_by_name_and_stack(None, resource_name, s.id)
-        if r is None:
+        stack = parser.Stack.load(None, s.id)
+        if resource_name not in stack:
             return ['resource', None]
 
-        return [None, r.rsrc_metadata]
+        resource = stack[resource_name]
+
+        return [None, resource.metadata]
 
     def metadata_update(self, context, stack_id, resource_name, metadata):
         """
         Update the metadata for the given resource.
         """
-        r = db_api.resource_get_by_name_and_stack(None, resource_name,
-                                                  stack_id)
-        if r is None:
+        s = db_api.stack_get(None, stack_id)
+        if s is None:
+            logger.warn("Stack %s not found" % stack_id)
+            return ['stack', None]
+
+        stack = parser.Stack.load(None, s.id)
+        if resource_name not in stack:
             logger.warn("Resource not found %s:%s." % (stack_id,
                                                        resource_name))
             return ['resource', None]
 
-        r.update_and_save({'rsrc_metadata': metadata})
-        return [None, metadata]
+        resource = stack[resource_name]
+        resource.metadata = metadata
+
+        return [None, resource.metadata]
 
     @manager.periodic_task
     def _periodic_watcher_task(self, context):

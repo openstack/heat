@@ -183,8 +183,7 @@ class Instance(resources.Resource):
                            (userdata, 'startup', 'x-shellscript')]
 
             if 'Metadata' in self.t:
-                metadata = self.parsed_template('Metadata')
-                attachments.append((json.dumps(metadata),
+                attachments.append((json.dumps(self.metadata),
                                     'cfn-init-data', 'x-cfninitdata'))
 
             metadata_server = resources.Metadata.server()

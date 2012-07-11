@@ -18,7 +18,6 @@ import logging
 import json
 
 from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import resources
 
 logger = logging.getLogger('heat.engine.wait_condition')
@@ -42,6 +41,17 @@ class WaitConditionHandle(resources.Resource):
                            (resources.Metadata.server(),
                             self.stack.id,
                             self.name)
+
+
+WAIT_STATUSES = (
+    WAITING,
+    TIMEDOUT,
+    SUCCESS,
+) = (
+    'WAITING',
+    'TIMEDOUT',
+    'SUCCESS',
+)
 
 
 class WaitCondition(resources.Resource):
@@ -68,65 +78,45 @@ class WaitCondition(resources.Resource):
         return self.resource_id
 
     def handle_create(self):
-        self._get_handle_resource_id()
-        res_name = self.resource_id
-
-        # keep polling our Metadata to see if the cfn-signal has written
-        # it yet. The execution here is limited by timeout.
-        tmo = eventlet.Timeout(self.timeout)
-        status = 'WAITING'
-        reason = ''
-        res = None
-        sleep_time = 1
+        tmo = None
         try:
-            while status == 'WAITING':
-                try:
-                    res = db_api.resource_get_by_name_and_stack(self.context,
-                                                                res_name,
-                                                                self.stack.id)
-                except Exception as ex:
-                    logger.exception('resource %s not found' % res_name)
-                    if 'not found' in ex:
-                        # it has been deleted
-                        status = 'DELETED'
-                    else:
-                        pass
+            # keep polling our Metadata to see if the cfn-signal has written
+            # it yet. The execution here is limited by timeout.
+            with eventlet.Timeout(self.timeout) as tmo:
+                handle = self.stack[self._get_handle_resource_id()]
 
-                if res:
-                    if res.rsrc_metadata:
-                        meta = res.rsrc_metadata
-                        status = meta.get('Status',
-                                          'WAITING')
-                        reason = meta.get('Reason',
-                                          'Reason not provided')
-                    logger.debug('got %s' % json.dumps(res.rsrc_metadata))
-                if status == 'WAITING':
-                    logger.debug('Waiting some more for the Metadata[Status]')
-                    eventlet.sleep(sleep_time)
-                    sleep_time = min(sleep_time * 2, self.timeout / 4)
-                    if res:
-                        res.expire()
+                status = WAITING
+                reason = ''
+                sleep_time = 1
 
-        except eventlet.Timeout, t:
+                while status == WAITING:
+                    meta = handle.metadata
+                    status = meta.get('Status', WAITING)
+                    reason = meta.get('Reason', 'Reason not provided')
+                    logger.debug('got %s' % json.dumps(meta))
+                    if status == WAITING:
+                        logger.debug('Waiting for the Metadata[Status]')
+                        eventlet.sleep(sleep_time)
+                        sleep_time = min(sleep_time * 2, self.timeout / 4)
+
+        except eventlet.Timeout as t:
             if t is not tmo:
                 # not my timeout
                 raise
             else:
-                status = 'TIMEDOUT'
+                status = TIMEDOUT
                 reason = 'Timed out waiting for instance'
-        finally:
-            tmo.cancel()
 
-        if status != 'SUCCESS':
+        if status != SUCCESS:
             raise exception.Error(reason)
 
     def FnGetAtt(self, key):
         res = None
         if key == 'Data':
             try:
-                r = db_api.resource_get(self.context, self.id)
-                if r.rsrc_metadata and 'Data' in r.rsrc_metadata:
-                    res = r.rsrc_metadata['Data']
+                meta = self.metadata
+                if meta and 'Data' in meta:
+                    res = meta['Data']
             except Exception as ex:
                 pass
 

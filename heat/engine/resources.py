@@ -254,14 +254,14 @@ class Resource(object):
             except Exception as ex:
                 logger.warn('db error %s' % str(ex))
 
-    def _create_db(self, metadata=None):
+    def _store(self):
         '''Create the resource in the database'''
         try:
             rs = {'state': self.state,
                   'stack_id': self.stack.id,
                   'nova_instance': self.instance_id,
                   'name': self.name,
-                  'rsrc_metadata': metadata,
+                  'rsrc_metadata': self.metadata,
                   'stack_name': self.stack.name}
 
             new_rs = db_api.resource_create(self.context, rs)
@@ -307,7 +307,7 @@ class Resource(object):
                 logger.error('DB error %s' % str(ex))
 
         elif new_state in (self.CREATE_COMPLETE, self.CREATE_FAILED):
-            self._create_db(metadata=self.parsed_template('Metadata'))
+            self._store()
 
         if new_state != old_state:
             self._add_event(new_state, reason)
