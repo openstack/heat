@@ -45,15 +45,20 @@ LOG = logging.getLogger('heat.metadata')
 
 def send_address_to_engine(host, port):
     con = context.get_admin_context()
+    timeout = 2
     while True:
         try:
             resp = rpc.call(con, 'engine',
                             {'method': 'metadata_register_address',
-                             'args': {'url': 'http://%s:%s' % (host, port)}})
-            LOG.info('registered the hostname and port with the engine.')
-            return
+                             'args': {'url': 'http://%s:%s' % (host, port)}},
+                            timeout=timeout)
         except rpc.common.Timeout:
             LOG.info('Could not connect to the engine, retrying...')
+            if timeout < 30:
+                timeout *= 2
+        else:
+            LOG.info('registered the hostname and port with the engine.')
+            return
 
 
 if __name__ == '__main__':
