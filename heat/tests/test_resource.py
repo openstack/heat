@@ -47,6 +47,26 @@ class ResourceTest(unittest.TestCase):
         res.state_set('blarg', 'wibble')
         self.assertEqual(res.state_description, 'wibble')
 
+    def test_parsed_template(self):
+        tmpl = {
+            'Type': 'Foo',
+            'foo': {'Fn::Join': [' ', ['bar', 'baz', 'quux']]}
+        }
+        res = resources.GenericResource('test_resource', tmpl, self.stack)
+
+        parsed_tmpl = res.parsed_template()
+        self.assertEqual(parsed_tmpl['Type'], 'Foo')
+        self.assertEqual(parsed_tmpl['foo'], 'bar baz quux')
+
+        self.assertEqual(res.parsed_template('foo'), 'bar baz quux')
+        self.assertEqual(res.parsed_template('foo', 'bar'), 'bar baz quux')
+
+    def test_parsed_template_default(self):
+        tmpl = {'Type': 'Foo'}
+        res = resources.GenericResource('test_resource', tmpl, self.stack)
+        self.assertEqual(res.parsed_template('foo'), {})
+        self.assertEqual(res.parsed_template('foo', 'bar'), 'bar')
+
 
 # allows testing of the test directly, shown below
 if __name__ == '__main__':

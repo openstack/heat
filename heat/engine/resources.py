@@ -93,8 +93,17 @@ class Resource(object):
         self._nova = {}
         self._keystone = None
 
-    def parsed_template(self):
-        return self.stack.resolve_runtime_data(self.t)
+    def parsed_template(self, section=None, default={}):
+        '''
+        Return the parsed template data for the resource. May be limited to
+        only one section of the data, in which case a default value may also
+        be supplied.
+        '''
+        if section is None:
+            template = self.t
+        else:
+            template = self.t.get(section, default)
+        return self.stack.resolve_runtime_data(template)
 
     def __str__(self):
         return '%s "%s"' % (self.__class__.__name__, self.name)
