@@ -302,8 +302,12 @@ class StackController(object):
 
         events = 'Error' not in event_res and event_res['events'] or []
 
+        result = []
+        for e in events:
+            result.append(self._stackid_addprefix(e))
+
         return self._format_response('DescribeStackEvents',
-            {'StackEvents': events})
+            {'StackEvents': result})
 
     def describe_stack_resource(self, req):
         """
@@ -364,8 +368,12 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
+        result = []
+        for r in resources:
+            result.append(self._stackid_addprefix(r))
+
         return self._format_response('DescribeStackResources',
-            {'StackResources': resources})
+            {'StackResources': result})
 
     def list_stack_resources(self, req):
         """
