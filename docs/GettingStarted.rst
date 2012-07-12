@@ -155,13 +155,15 @@ Create a JEOS with heat_jeos tools
 ----------------------------------
 ::
 
-    sudo -E heat-jeos -y create F16 x86_64 cfntools
+    sudo -E heat-jeos -y create F16-x86_64-cfntools-jeos --register-with-glance
 
 Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``heat-jeos`` is run as root.
 
 Note: ``heat-jeos`` must be run as root in order to create the cfntools disk image.
 
 Note: If you want to enable debugging output from Oz, add '``-d``' (debugging) to the ``heat-jeos`` command.
+
+You can run ``heat-jeos list`` to pick a different JEOS image.
 
 Verify JEOS registration
 ~~~~~~~~~~~~~~~~~~~~~~~~
