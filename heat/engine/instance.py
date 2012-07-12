@@ -280,10 +280,19 @@ class Instance(resources.Resource):
                 'Provided KeyName is not registered with nova'}
 
     def handle_delete(self):
+        '''
+        Delete an instance, blocking until it is disposed by OpenStack
+        '''
         try:
             server = self.nova().servers.get(self.instance_id)
         except NotFound:
             pass
         else:
             server.delete()
+            while server.status == 'ACTIVE':
+                try:
+                    server.get()
+                except NotFound:
+                    break
+                eventlet.sleep(0.2)
         self.instance_id = None
