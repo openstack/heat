@@ -131,7 +131,6 @@ class EngineManager(manager.Manager):
         arg3 -> Template of stack you want to create.
         arg4 -> Params passed from API.
         """
-
         auth.authenticate(context)
 
         logger.info('validate_template')
@@ -139,20 +138,29 @@ class EngineManager(manager.Manager):
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
-        stack_name = 'validate'
-        try:
-            tmpl = parser.Template(template)
-            user_params = parser.Parameters(stack_name, tmpl, params)
-            s = parser.Stack(context, stack_name, tmpl, user_params)
-        except KeyError as ex:
-            res = ('A Fn::FindInMap operation referenced '
-                   'a non-existent map [%s]' % str(ex))
+        tmpl = parser.Template(template)
+        resources = template.get('Resources', [])
 
-            result = {'Description': 'Malformed Query Response [%s]' % (res),
-                      'Parameters': []}
-        else:
-            result = s.validate()
+        if not resources:
+            return {'Error': 'At least one Resources member must be defined.'}
 
+        for res in resources.values():
+            if not res.get('Type'):
+                return {'Error':
+                        'Every Resources object must contain a Type member.'}
+
+        parameters = []
+        for param_key, param in template.get('Parameters', {}).items():
+            parameters.append({
+                'NoEcho': param.get('NoEcho', 'false'),
+                'ParameterKey': param_key,
+                'Description': param.get('Description', '')
+            })
+
+        result = {
+            'Description': template.get('Description', ''),
+            'Parameters': parameters,
+        }
         return {'ValidateTemplateResult': result}
 
     def get_template(self, context, stack_name, params):

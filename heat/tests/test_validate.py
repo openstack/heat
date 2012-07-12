@@ -269,7 +269,7 @@ class validateTest(unittest.TestCase):
         res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
         print 'res %s' % res
-        self.assertEqual(res['Description'], 'Successfully validated')
+        self.assertEqual(res['Description'], 'test.')
 
     def test_validate_ref_invalid(self):
         t = json.loads(test_template_ref % 'WikiDatabasez')
@@ -301,7 +301,7 @@ class validateTest(unittest.TestCase):
         manager = managers.EngineManager()
         res = dict(manager.
             validate_template(None, t, params)['ValidateTemplateResult'])
-        self.assertEqual(res['Description'], 'Successfully validated')
+        self.assertEqual(res['Description'], 'test.')
 
     def test_validate_findinmap_invalid(self):
         t = json.loads(test_template_findinmap_invalid)
