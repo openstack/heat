@@ -153,7 +153,7 @@ def format_stack(stack, keys=None):
     s = db_api.stack_get(stack.context, stack.id)
     info = {
         STACK_NAME: stack.name,
-        STACK_ID: stack.stack_id(),
+        STACK_ID: stack.id,
         STACK_CREATION_TIME: heat_utils.strtime(s.created_at),
         STACK_UPDATED_TIME: heat_utils.strtime(s.updated_at),
         STACK_NOTIFICATION_TOPICS: [],  # TODO Not implemented yet
@@ -222,7 +222,7 @@ def format_stack_resource(resource, keys=None):
         RES_STATUS: rs.state,
         RES_STATUS_DATA: rs.state_description,
         RES_TYPE: resource.t['Type'],
-        RES_STACK_ID: resource.stack.stack_id(),
+        RES_STACK_ID: resource.stack.id,
         RES_STACK_NAME: resource.stack.name,
         RES_TIMESTAMP: heat_utils.strtime(last_updated_time),
     }
@@ -251,7 +251,7 @@ def format_event(event, keys=None):
     s = event.stack
     attrs = {
         EVENT_ID: event.id,
-        EVENT_STACK_ID: event.stack_id,
+        EVENT_STACK_ID: s.id,
         EVENT_STACK_NAME: s.name,
         EVENT_TIMESTAMP: heat_utils.strtime(event.created_at),
         EVENT_RES_NAME: event.logical_resource_id,

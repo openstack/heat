@@ -55,7 +55,8 @@ class StackController(object):
         if 'StackId' in resp:
             hostportprefix = ":".join([socket.gethostname(),
                 str(self.options.bind_port), "stack"])
-            resp['StackId'] = "/".join([hostportprefix, resp['StackId']])
+            resp['StackId'] = "/".join([hostportprefix, resp['StackName'],
+                                       str(resp['StackId'])])
         return resp
 
     def _format_response(self, action, response):

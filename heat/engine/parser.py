@@ -341,13 +341,6 @@ class Stack(object):
         '''Return a human-readable string representation of the stack'''
         return 'Stack "%s"' % self.name
 
-    def stack_id(self):
-        '''
-        Return a unique ID for this stack suitable for displaying to the
-        user
-        '''
-        return '/'.join([self.name, str(self.id)])
-
     def validate(self):
         '''
         http://docs.amazonwebservices.com/AWSCloudFormation/latest/\
