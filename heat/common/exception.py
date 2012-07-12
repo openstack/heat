@@ -29,6 +29,15 @@ class RedirectException(Exception):
         self.url = urlparse.urlparse(url)
 
 
+class KeystoneError(Exception):
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
+
+    def __str__(self):
+        return "Code: %s, message: %s" % (self.code, self.message)
+
+
 def wrap_exception(notifier=None, publisher_id=None, event_type=None,
                    level=None):
     """This decorator wraps a method to catch any exceptions that may

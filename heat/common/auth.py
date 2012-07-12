@@ -243,7 +243,12 @@ class KeystoneStrategy(BaseStrategy):
         elif resp.status == 404:
             raise exception.AuthUrlNotFound(url=token_url)
         else:
-            raise Exception(_('Unexpected response: %s') % resp.status)
+            try:
+                body = json.loads(resp_body)
+                msg = body['error']['message']
+            except:
+                msg = resp_body
+            raise exception.KeystoneError(resp.status, msg)
 
     @property
     def is_authenticated(self):
