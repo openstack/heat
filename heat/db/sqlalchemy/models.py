@@ -152,6 +152,7 @@ class Stack(BASE, HeatBase):
     user_creds_id = Column(Integer, ForeignKey('user_creds.id'),
                            nullable=False)
     owner_id = Column(Integer, nullable=True)
+    timeout = Column(Integer)
 
 
 class UserCreds(BASE, HeatBase):

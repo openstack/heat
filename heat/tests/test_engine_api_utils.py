@@ -72,23 +72,23 @@ class EngineApiTest(unittest.TestCase):
     def test_timeout_extract(self):
         p = {'TimeoutInMinutes': '5'}
         args = api.extract_args(p)
-        self.assertEqual(args['timeout_in_minutes'], 5)
+        self.assertEqual(args['timeout_mins'], 5)
 
     def test_timeout_extract_zero(self):
         p = {'TimeoutInMinutes': '0'}
         args = api.extract_args(p)
-        self.assertTrue('timeout_in_minutes' not in args)
+        self.assertTrue('timeout_mins' not in args)
 
     def test_timeout_extract_garbage(self):
         p = {'TimeoutInMinutes': 'wibble'}
         args = api.extract_args(p)
-        self.assertTrue('timeout_in_minutes' not in args)
+        self.assertTrue('timeout_mins' not in args)
 
     def test_timeout_extract_none(self):
         p = {'TimeoutInMinutes': None}
         args = api.extract_args(p)
-        self.assertTrue('timeout_in_minutes' not in args)
+        self.assertTrue('timeout_mins' not in args)
 
     def test_timeout_extract_not_present(self):
         args = api.extract_args({})
-        self.assertTrue('timeout_in_minutes' not in args)
+        self.assertTrue('timeout_mins' not in args)

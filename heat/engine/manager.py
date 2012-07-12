@@ -122,16 +122,19 @@ class EngineManager(manager.Manager):
             return {'Error': 'Stack already exists with that name.'}
 
         tmpl = parser.Template(template)
-        user_params = parser.Parameters(stack_name, tmpl,
-                                        api.extract_user_params(params))
-        stack = parser.Stack(context, stack_name, tmpl, user_params)
+        # Extract the template parameters, and any common query parameters
+        template_params = parser.Parameters(stack_name, tmpl,
+                                            api.extract_user_params(params))
+        common_params = api.extract_args(params)
+        stack = parser.Stack(context, stack_name, tmpl, template_params,
+                             **common_params)
 
         response = stack.validate()
         if response['Description'] != 'Successfully validated':
             return response
 
         stack_id = stack.store()
-        greenpool.spawn_n(stack.create, **api.extract_args(params))
+        greenpool.spawn_n(stack.create)
 
         return {'StackId': stack.stack_id()}
 

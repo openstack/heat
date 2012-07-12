@@ -235,7 +235,8 @@ class Stack(object):
     DELETE_COMPLETE = 'DELETE_COMPLETE'
 
     def __init__(self, context, stack_name, template, parameters=None,
-                 stack_id=None, state=None, state_description=''):
+                 stack_id=None, state=None, state_description='',
+                 timeout_mins=60):
         '''
         Initialise from a context, name, Template object and (optionally)
         Parameters object. The database ID may also be initialised, if the
@@ -247,6 +248,7 @@ class Stack(object):
         self.name = stack_name
         self.state = state
         self.state_description = state_description
+        self.timeout_mins = timeout_mins
 
         if parameters is None:
             parameters = Parameters(stack_name, template)
@@ -280,7 +282,7 @@ class Stack(object):
         template = Template.load(context, s.raw_template_id)
         params = Parameters(s.name, template, s.parameters)
         stack = cls(context, s.name, template, params,
-                    stack_id, s.status, s.status_reason)
+                    stack_id, s.status, s.status_reason, s.timeout)
 
         return stack
 
@@ -298,6 +300,7 @@ class Stack(object):
                 'username': self.context.username,
                 'status': self.state,
                 'status_reason': self.state_description,
+                'timeout': self.timeout_mins,
             }
             new_s = db_api.stack_create(self.context, s)
             self.id = new_s.id
@@ -388,12 +391,12 @@ class Stack(object):
         stack.update_and_save({'status': new_status,
                                'status_reason': reason})
 
-    def create(self, timeout_in_minutes=60):
+    def create(self):
         '''
         Create the stack and all of the resources.
 
         Creation will fail if it exceeds the specified timeout. The default is
-        60 minutes.
+        60 minutes, set in the constructor
         '''
         self.state_set(self.IN_PROGRESS, 'Stack creation started')
 
@@ -401,7 +404,7 @@ class Stack(object):
         reason = 'Stack successfully created'
         res = None
 
-        with eventlet.Timeout(timeout_in_minutes * 60) as tmo:
+        with eventlet.Timeout(self.timeout_mins * 60) as tmo:
             try:
                 for res in self:
                     if stack_status != self.CREATE_FAILED:

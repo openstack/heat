@@ -71,7 +71,7 @@ def extract_args(params):
         logger.exception('create timeout conversion')
     else:
         if timeout_mins > 0:
-            kwargs['timeout_in_minutes'] = timeout_mins
+            kwargs['timeout_mins'] = timeout_mins
     return kwargs
 
 
@@ -162,6 +162,7 @@ def format_stack(stack, keys=None):
         STACK_TMPL_DESCRIPTION: stack.t[parser.DESCRIPTION],
         STACK_STATUS: s.status,
         STACK_STATUS_DATA: s.status_reason,
+        STACK_TIMEOUT: stack.timeout_mins,
     }
 
     # only show the outputs on a completely created stack
