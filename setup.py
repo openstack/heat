@@ -21,8 +21,6 @@ import setuptools
 
 from heat.openstack.common import setup
 
-setup.write_vcsversion('heat/vcsversion.py')
-
 # import this after write_vcsversion because version imports vcsversion
 from heat import version
 

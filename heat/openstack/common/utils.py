@@ -28,6 +28,7 @@ from eventlet import greenthread
 from eventlet.green import subprocess
 
 from heat.openstack.common import exception
+from heat.openstack.common.gettextutils import _
 
 
 LOG = logging.getLogger(__name__)
@@ -118,13 +119,13 @@ def execute(*cmd, **kwargs):
                 LOG.debug(_('Result was %s') % _returncode)
                 if (isinstance(check_exit_code, int) and
                     not isinstance(check_exit_code, bool) and
-                    _returncode != check_exit_code):
+                        _returncode != check_exit_code):
                     (stdout, stderr) = result
                     raise exception.ProcessExecutionError(
-                            exit_code=_returncode,
-                            stdout=stdout,
-                            stderr=stderr,
-                            cmd=' '.join(cmd))
+                        exit_code=_returncode,
+                        stdout=stdout,
+                        stderr=stderr,
+                        cmd=' '.join(cmd))
             return result
         except exception.ProcessExecutionError:
             if not attempts:
