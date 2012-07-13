@@ -17,8 +17,9 @@ import nose
 import unittest
 from nose.plugins.attrib import attr
 import mox
-
 import json
+
+from heat.common import context
 from heat.common import exception
 from heat.engine import parser
 from heat.engine import checkeddict
@@ -318,6 +319,20 @@ class ParametersTest(unittest.TestCase):
 @attr(tag=['unit', 'parser', 'stack'])
 @attr(speed='fast')
 class StackTest(unittest.TestCase):
+    def setUp(self):
+        self.username = 'parser_stack_test_user'
+
+        self.m = mox.Mox()
+
+        self.ctx = context.get_admin_context()
+        self.m.StubOutWithMock(self.ctx, 'username')
+        self.ctx.username = self.username
+
+        self.m.ReplayAll()
+
+    def tearDown(self):
+        self.m.UnsetStubs()
+
     def test_state_defaults(self):
         stack = parser.Stack(None, 'test_stack', parser.Template({}))
         self.assertEqual(stack.state, None)
@@ -340,6 +355,23 @@ class StackTest(unittest.TestCase):
     def test_load_nonexistant_id(self):
         self.assertRaises(exception.NotFound, parser.Stack.load,
                           None, -1)
+
+    def test_created_time(self):
+        stack = parser.Stack(self.ctx, 'creation_time_test',
+                             parser.Template({}))
+        self.assertEqual(stack.created_time, None)
+        stack.store()
+        self.assertNotEqual(stack.created_time, None)
+
+    def test_updated_time(self):
+        stack = parser.Stack(self.ctx, 'update_time_test',
+                             parser.Template({}))
+        self.assertEqual(stack.updated_time, None)
+        stack.store()
+        stored_time = stack.updated_time
+        stack.state_set(stack.IN_PROGRESS, 'testing')
+        self.assertNotEqual(stack.updated_time, None)
+        self.assertNotEqual(stack.updated_time, stored_time)
 
 # allows testing of the test directly, shown below
 if __name__ == '__main__':

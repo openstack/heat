@@ -64,6 +64,32 @@ class Metadata(object):
             return None
 
 
+class Timestamp(object):
+    '''
+    A descriptor for fetching an up-to-date timestamp from the database.
+    '''
+
+    def __init__(self, db_fetch, attribute):
+        '''
+        Initialise with a function to fetch the database representation of an
+        object (given a context and ID) and the name of the attribute to
+        retrieve.
+        '''
+        self.db_fetch = db_fetch
+        self.attribute = attribute
+
+    def __get__(self, obj, obj_class):
+        '''
+        Get the latest data from the database for the given object and class.
+        '''
+        if obj is None or obj.id is None:
+            return None
+
+        o = self.db_fetch(obj.context, obj.id)
+        o.refresh(attrs=[self.attribute])
+        return getattr(o, self.attribute)
+
+
 class Resource(object):
     CREATE_IN_PROGRESS = 'IN_PROGRESS'
     CREATE_FAILED = 'CREATE_FAILED'
@@ -77,6 +103,9 @@ class Resource(object):
 
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
+
+    created_time = Timestamp(db_api.resource_get, 'created_at')
+    updated_time = Timestamp(db_api.resource_get, 'updated_at')
 
     metadata = Metadata()
 

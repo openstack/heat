@@ -28,11 +28,12 @@ from heat.engine import resources
 @attr(speed='fast')
 class ResourceTest(unittest.TestCase):
     def setUp(self):
-        self.stack = parser.Stack(None, 'test_stack', parser.Template({}))
+        self.stack = parser.Stack(None, 'test_stack', parser.Template({}),
+                                  stack_id=-1)
 
     def test_state_defaults(self):
         tmpl = {'Type': 'Foo'}
-        res = resources.GenericResource('test_resource', tmpl, self.stack)
+        res = resources.GenericResource('test_res_def', tmpl, self.stack)
         self.assertEqual(res.state, None)
         self.assertEqual(res.state_description, '')
 
@@ -47,6 +48,22 @@ class ResourceTest(unittest.TestCase):
         res = resources.GenericResource('test_resource', tmpl, self.stack)
         res.state_set('blarg', 'wibble')
         self.assertEqual(res.state_description, 'wibble')
+
+    def test_created_time(self):
+        tmpl = {'Type': 'Foo'}
+        res = resources.GenericResource('test_res_new', tmpl, self.stack)
+        self.assertEqual(res.created_time, None)
+        res._store()
+        self.assertNotEqual(res.created_time, None)
+
+    def test_updated_time(self):
+        tmpl = {'Type': 'Foo'}
+        res = resources.GenericResource('test_res_upd', tmpl, self.stack)
+        res._store()
+        stored_time = res.updated_time
+        res.state_set(res.CREATE_IN_PROGRESS, 'testing')
+        self.assertNotEqual(res.updated_time, None)
+        self.assertNotEqual(res.updated_time, stored_time)
 
     def test_parsed_template(self):
         tmpl = {

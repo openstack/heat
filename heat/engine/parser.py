@@ -22,7 +22,7 @@ import logging
 from heat.common import exception
 from heat.engine import checkeddict
 from heat.engine import dependencies
-from heat.engine.resources import Resource
+from heat.engine import resources
 from heat.db import api as db_api
 
 
@@ -234,6 +234,9 @@ class Stack(object):
     DELETE_FAILED = 'DELETE_FAILED'
     DELETE_COMPLETE = 'DELETE_COMPLETE'
 
+    created_time = resources.Timestamp(db_api.stack_get, 'created_at')
+    updated_time = resources.Timestamp(db_api.stack_get, 'updated_at')
+
     def __init__(self, context, stack_name, template, parameters=None,
                  stack_id=None, state=None, state_description='',
                  timeout_mins=60):
@@ -257,7 +260,7 @@ class Stack(object):
         self.outputs = self.resolve_static_data(self.t[OUTPUTS])
 
         self.resources = dict((name,
-                               Resource(name, data, self))
+                               resources.Resource(name, data, self))
                               for (name, data) in self.t[RESOURCES].items())
 
         self.dependencies = self._get_dependencies(self.resources.itervalues())
