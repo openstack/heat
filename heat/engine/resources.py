@@ -89,6 +89,13 @@ class Timestamp(object):
         o.refresh(attrs=[self.attribute])
         return getattr(o, self.attribute)
 
+    def __set__(self, obj, timestamp):
+        '''Update the timestamp for the given object.'''
+        if obj.id is None:
+            raise AttributeError("%s has not yet been created" % str(obj))
+        o = self.db_fetch(obj.context, obj.id)
+        o.update_and_save({self.attribute: timestamp})
+
 
 class Resource(object):
     CREATE_IN_PROGRESS = 'IN_PROGRESS'
@@ -296,8 +303,7 @@ class Resource(object):
             new_rs = db_api.resource_create(self.context, rs)
             self.id = new_rs.id
 
-            if new_rs.stack:
-                new_rs.stack.update_and_save({'updated_at': datetime.utcnow()})
+            self.stack.updated_time = datetime.utcnow()
 
         except Exception as ex:
             logger.error('DB error %s' % str(ex))
@@ -330,8 +336,7 @@ class Resource(object):
                                     'state_description': reason,
                                     'nova_instance': self.instance_id})
 
-                if rs.stack:
-                    rs.stack.update_and_save({'updated_at': datetime.utcnow()})
+                self.stack.updated_time = datetime.utcnow()
             except Exception as ex:
                 logger.error('DB error %s' % str(ex))
 
