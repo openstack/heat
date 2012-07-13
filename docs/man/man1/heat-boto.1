@@ -1,5 +1,5 @@
 '\" t
-.\"     Title: heat
+.\"     Title: heat-boto
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
 .\"      Date: 03/31/2012
@@ -19,34 +19,24 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-heat \- perform a heat action via the heat API
+heat-boto \- perform a heat action via the heat API
 .SH "SYNOPSIS"
 .sp
-heat COMMAND [OPTIONS]
+heat-boto COMMAND [OPTIONS]
 .SH "DESCRIPTION"
 .sp
-\fBheat\fR is a tool to orchestrate the setup of multiple cloud applications\&.
+\fBheat-boto\fR is a tool to orchestrate the setup of multiple cloud applications\&.
 
-.SH CONFIGURATION
+\fBheat-boto\fR is port a of the \fBheat\fR tool to use the boto client library\&.
 
-heat uses keystone authentication, and expects some variables to be set in
-your environment, without these heat will not be able to establish an
-authenticated connection with the heat API server.
+.SH CONFIGURATION FILES
 
-Example:
-.br
-export ADMIN_TOKEN=<keystone admin token>
-.br
-export OS_USERNAME=admin
-.br
-export OS_PASSWORD=verybadpass
-.br
-export OS_TENANT_NAME=admin
-.br
-export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
-.br
-export OS_AUTH_STRATEGY=keystone
-.br
+heat-boto uses the boto client library, which looks for configuration in /etc/boto.cfg
+
+heat installs a default version of this file, but you will need to update the
+aws_access_key_id and aws_secret_access_key values with your real keystone credentials\&.
+
+Use keystone ec2-credentials-list to retrieve your keystone ec2 access keys\&.
 
 .SH "COMMANDS"
 
@@ -118,21 +108,6 @@ Validate a template file syntax
 
 .SH "OPTIONS"
 .PP
-\fB\-S\fR, \fB\-\-auth_strategy\fR
-.RS 4
-Authentication strategy
-.RE
-.PP
-\fB\-A\fR, \fB\-\-auth_token\fR
-.RS 4
-Authentication token to use to identify the client to the heat server
-.RE
-.PP
-\fB\-N\fR, \fB\-\-auth_url\fR
-.RS 4
-Authentication URL for keystone authentication
-.RE
-.PP
 \fB\-d\fR, \fB\-\-debug\fR
 .RS 4
 Enable verbose debug level output
@@ -151,11 +126,6 @@ Use plain HTTP instead of HTTPS
 \fB\-P\fR, \fB\-\-parameters\fR
 .RS 4
 Stack input parameters
-.RE
-.PP
-\fB\-K\fR, \fB\-\-password\fR
-.RS 4
-Password used to acquire an authentication token
 .RE
 .PP
 \fB\-p\fR, \fB\-\-port\fR
@@ -178,24 +148,9 @@ Path to file containing the stack template
 URL to stack template
 .RE
 .PP
-\fB\-T\fR, \fB\-\-tenant\fR
-.RS 4
-Tenant name used for Keystone authentication
-.RE
-.PP
 \fB\-t\fR, \fB\-\-timeout\fR
 .RS 4
 Stack creation timeout (default is 60 minutes)
-.RE
-.PP
-\fB\-U\fR, \fB\-\-url\fR
-.RS 4
-URL of heat service
-.RE
-.PP
-\fB\-I\fR, \fB\-\-username\fR
-.RS 4
-User name used to acquire an authentication token
 .RE
 .PP
 \fB\-v\fR, \fB\-\-verbose\fR
@@ -213,23 +168,23 @@ Do not prompt for confirmation, assume yes
 .SH "USAGE EXAMPLES"
 .sp
 
-heat -d create wordpress --template-file=templates/WordPress_Single_Instance.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpass;KeyName=${USER}_key"
+heat-boto -d create wordpress --template-file=templates/WordPress_Single_Instance.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpass;KeyName=${USER}_key"
 
-heat list
+heat-boto list
 
-heat describe wordpress
+heat-boto describe wordpress
 
-heat resource-list wordpress
+heat-boto resource-list wordpress
 
-heat resource-list-details wordpress
+heat-boto resource-list-details wordpress
 
-heat resource-list-details wordpress WikiDatabase
+heat-boto resource-list-details wordpress WikiDatabase
 
-heat resource wordpress WikiDatabase
+heat-boto resource wordpress WikiDatabase
 
-heat event-list
+heat-boto event-list
 
-heat delete wordpress
+heat-boto delete wordpress
 
 .SH "AUTHOR"
 .sp
