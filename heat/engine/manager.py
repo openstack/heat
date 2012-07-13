@@ -136,7 +136,7 @@ class EngineManager(manager.Manager):
         stack_id = stack.store()
         greenpool.spawn_n(stack.create)
 
-        return {'StackId': stack.stack_id()}
+        return {'StackName': stack.name, 'StackId': stack.id}
 
     def validate_template(self, context, template, params):
         """
