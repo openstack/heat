@@ -15,7 +15,6 @@
 import re
 import logging
 from heat.common import utils as heat_utils
-from heat.db import api as db_api
 from heat.engine import parser
 
 
@@ -150,23 +149,22 @@ def format_stack(stack, keys=None):
     Return a representation of the given stack that matches the API output
     expectations.
     '''
-    s = db_api.stack_get(stack.context, stack.id)
     info = {
         STACK_NAME: stack.name,
         STACK_ID: stack.id,
-        STACK_CREATION_TIME: heat_utils.strtime(s.created_at),
-        STACK_UPDATED_TIME: heat_utils.strtime(s.updated_at),
+        STACK_CREATION_TIME: heat_utils.strtime(stack.created_time),
+        STACK_UPDATED_TIME: heat_utils.strtime(stack.updated_time),
         STACK_NOTIFICATION_TOPICS: [],  # TODO Not implemented yet
         STACK_PARAMETERS: stack.t[parser.PARAMETERS],
         STACK_DESCRIPTION: stack.t[parser.DESCRIPTION],
         STACK_TMPL_DESCRIPTION: stack.t[parser.DESCRIPTION],
-        STACK_STATUS: s.status,
-        STACK_STATUS_DATA: s.status_reason,
+        STACK_STATUS: stack.state,
+        STACK_STATUS_DATA: stack.state_description,
         STACK_TIMEOUT: stack.timeout_mins,
     }
 
     # only show the outputs on a completely created stack
-    if s.status == stack.CREATE_COMPLETE:
+    if stack.state == stack.CREATE_COMPLETE:
         info[STACK_OUTPUTS] = format_stack_outputs(stack, stack.outputs)
 
     return _filter_keys(info, keys)
@@ -211,16 +209,15 @@ def format_stack_resource(resource, keys=None):
     Return a representation of the given resource that matches the API output
     expectations.
     '''
-    rs = db_api.resource_get(resource.context, resource.id)
-    last_updated_time = rs.updated_at or rs.created_at
+    last_updated_time = resource.updated_time or resource.created_time
     attrs = {
         RES_DESCRIPTION: resource.parsed_template().get('Description', ''),
         RES_UPDATED_TIME: heat_utils.strtime(last_updated_time),
         RES_NAME: resource.name,
         RES_PHYSICAL_ID: resource.instance_id or '',
-        RES_METADATA: rs.rsrc_metadata,
-        RES_STATUS: rs.state,
-        RES_STATUS_DATA: rs.state_description,
+        RES_METADATA: resource.metadata,
+        RES_STATUS: resource.state,
+        RES_STATUS_DATA: resource.state_description,
         RES_TYPE: resource.t['Type'],
         RES_STACK_ID: resource.stack.id,
         RES_STACK_NAME: resource.stack.name,
