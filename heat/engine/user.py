@@ -14,10 +14,10 @@
 #    under the License.
 
 import eventlet
-import logging
 from heat.common import exception
 from heat.engine.resources import Resource
 
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.user')
 

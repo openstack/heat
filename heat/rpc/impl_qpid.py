@@ -19,7 +19,6 @@ import itertools
 import time
 import uuid
 import json
-import logging
 
 import eventlet
 import greenlet
@@ -30,6 +29,8 @@ from heat.common import config
 from heat.openstack.common import cfg
 from heat.rpc import amqp as rpc_amqp
 from heat.rpc import common as rpc_common
+
+from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

@@ -26,7 +26,8 @@ eventlet.monkey_patch()
 
 import os
 import sys
-import logging
+
+from heat.openstack.common import log as logging
 
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...

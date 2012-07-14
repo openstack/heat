@@ -14,7 +14,6 @@
 #    under the License.
 
 import eventlet
-import logging
 import os
 import json
 import sys
@@ -25,6 +24,8 @@ from novaclient.exceptions import NotFound
 import heat
 from heat.engine import resources
 from heat.common import exception
+
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.instance')
 

@@ -17,7 +17,6 @@ import eventlet
 import json
 import functools
 import copy
-import logging
 
 from heat.common import exception
 from heat.engine import checkeddict
@@ -25,6 +24,7 @@ from heat.engine import dependencies
 from heat.engine import resources
 from heat.db import api as db_api
 
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.parser')
 

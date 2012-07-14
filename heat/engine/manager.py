@@ -16,7 +16,6 @@
 
 from copy import deepcopy
 import datetime
-import logging
 import webob
 import json
 import urlparse
@@ -33,7 +32,9 @@ from heat.engine import parser
 from heat.engine import resources
 from heat.engine import watchrule
 from heat.engine import auth
+
 from heat.openstack.common import timeutils
+from heat.openstack.common import log as logging
 
 from novaclient.v1_1 import client
 from novaclient.exceptions import BadRequest

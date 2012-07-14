@@ -26,10 +26,11 @@ AMQP, but is deprecated and predates this code.
 """
 
 import inspect
-import logging
 import sys
 import traceback
 import uuid
+
+from heat.openstack.common import log as logging
 
 from eventlet import greenpool
 from eventlet import pools

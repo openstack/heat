@@ -15,7 +15,7 @@
 
 
 import datetime
-import logging
+from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 
 logger = logging.getLogger('heat.engine.watchrule')

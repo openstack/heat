@@ -18,12 +18,11 @@
 #    under the License.
 
 import copy
-import logging
 
 from heat.openstack.common import cfg
 from heat.openstack.common import exception
+from heat.openstack.common import log as logging
 from heat.common import config
-
 
 LOG = logging.getLogger(__name__)
 

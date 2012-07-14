@@ -14,13 +14,14 @@
 #    under the License.
 
 import eventlet
-import logging
 import json
 import os
 
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine.resources import Resource
+
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.cloud_watch')
 

@@ -23,11 +23,11 @@ import inspect
 import os
 
 import eventlet
-import logging
 import greenlet
 
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
+from heat.openstack.common import log as logging
 
 from heat.common import utils as heat_utils
 from heat.common import exception

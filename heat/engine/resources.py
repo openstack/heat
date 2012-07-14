@@ -15,7 +15,6 @@
 
 import base64
 from datetime import datetime
-import logging
 
 from novaclient.v1_1 import client as nc
 from keystoneclient.v2_0 import client as kc
@@ -25,6 +24,8 @@ from heat.common import config
 from heat.db import api as db_api
 from heat.engine import checkeddict
 from heat.engine import auth
+
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.resources')
 

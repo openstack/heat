@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 from heat.common import exception
 from heat.engine.resources import Resource
 from novaclient.exceptions import NotFound
+
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.eip')
 

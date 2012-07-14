@@ -53,10 +53,11 @@ This module provides Manager, a base class for managers.
 
 """
 
-import logging
-
 from heat import version
 from heat.common import config
+
+from heat.openstack.common import log as logging
+
 
 FLAGS = config.FLAGS
 LOG = logging.getLogger(__name__)

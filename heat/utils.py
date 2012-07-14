@@ -20,11 +20,13 @@ import sys
 import base64
 from lxml import etree
 import re
-import logging
 
 from glance import client as glance_client
 from heat.common import exception
 
+from heat.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 SUCCESS = 0
 FAILURE = 1
@@ -39,14 +41,14 @@ def catch_error(action):
                 ret = func(*arguments, **kwargs)
                 return SUCCESS if ret is None else ret
             except exception.NotAuthorized:
-                logging.error("Not authorized to make this request. Check " +
+                LOG.error("Not authorized to make this request. Check " +
                       "your credentials (OS_USERNAME, OS_PASSWORD, " +
                       "OS_TENANT_NAME, OS_AUTH_URL and OS_AUTH_STRATEGY).")
                 return FAILURE
             except exception.ClientConfigurationError:
                 raise
             except exception.KeystoneError, e:
-                logging.error("Keystone did not finish the authentication and "
+                LOG.error("Keystone did not finish the authentication and "
                               "returned the following message:\n\n%s"
                               % e.message)
                 return FAILURE
@@ -54,10 +56,10 @@ def catch_error(action):
                 options = arguments[0]
                 if options.debug:
                     raise
-                logging.error("Failed to %s. Got error:" % action)
+                LOG.error("Failed to %s. Got error:" % action)
                 pieces = unicode(e).split('\n')
                 for piece in pieces:
-                    logging.error(piece)
+                    LOG.error(piece)
                 return FAILURE
 
         return wrapper

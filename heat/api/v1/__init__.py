@@ -16,7 +16,6 @@
 import json
 import urlparse
 import httplib
-import logging
 import routes
 import gettext
 
@@ -30,6 +29,8 @@ import webob
 from heat import utils
 from heat.common import context
 from heat.api.v1 import exception
+
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 

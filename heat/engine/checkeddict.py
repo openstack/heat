@@ -15,7 +15,8 @@
 
 import collections
 import re
-import logging
+
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.checkeddict')
 

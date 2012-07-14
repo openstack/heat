@@ -19,8 +19,9 @@ and/or Accept headers and attempts to negotiate an API controller to
 return
 """
 
-import logging
 import re
+
+from heat.openstack.common import log as logging
 
 from heat.api import versions
 from heat.common import wsgi
