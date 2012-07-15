@@ -232,16 +232,15 @@ After a few seconds, the ``StackStatus`` should change from ``IN_PROGRESS`` to `
 
 ..
     # Wait for Stack creation
-    CREATING='"StackStatus": "IN_PROGRESS"'
+    CREATING="<StackStatus>IN_PROGRESS</StackStatus>"
     retries=24
-    while $HEAT_DESCRIBE | grep -q '"StackStatus": "IN_PROGRESS"' &&          \
-          ((retries-- > 0))
+    while $HEAT_DESCRIBE | grep -q $CREATING && ((retries-- > 0))
     do
         echo "Waiting for Stack creation to complete..." >&2
         sleep 5
     done
     
-    $HEAT_DESCRIBE | grep -q '"StackStatus": "CREATE_COMPLETE"'
+    $HEAT_DESCRIBE | grep -q "<StackStatus>CREATE_COMPLETE</StackStatus>"
     
 
 Verify instance creation
@@ -250,11 +249,14 @@ Verify instance creation
 Because the software takes some time to install from the repository, it may be a few minutes before the Wordpress intance is in a running state.  One way to check is to login via ssh and ``tail -f /var/log/yum.log``.  Once ``mysql-server`` installs, the instance should be ready to go.
 
 ..
-    WebsiteURL=$($HEAT_DESCRIBE | sed -e '/"OutputKey": "WebsiteURL"/,/}/ {'  \
-                                      -e '/"OutputValue":/ {'                 \
-                                      -e 's/[^:]*": "//'                      \
-                                      -e 's/",\?[[:space:]]*$//'              \
-                                      -e p -e '}' -e '}' -e d)
+    WebsiteURL=$($HEAT_DESCRIBE | sed                             \
+        -e '/<OutputKey>WebsiteURL<\/OutputKey>/,/<\/member>/ {'  \
+        -e '/<OutputValue>/ {'                                    \
+        -e 's/<OutputValue>\([^<]*\)<\/OutputValue>/\1/'          \
+        -e p                                                      \
+        -e '}' -e '}'                                             \
+        -e d                                                      \
+    )
     HOST=`echo $WebsiteURL | sed -r -e 's#http://([^/]+)/.*#\1#'`
     
     retries=9
