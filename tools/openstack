@@ -95,9 +95,9 @@ function os_erase() {
     sudo systemctl start mysqld.service
     sleep 1
 
-    $BASE_DIR/heat-db-drop nova $*
-    $BASE_DIR/heat-db-drop keystone $*
-    $BASE_DIR/heat-db-drop glance $*
+    sudo openstack-db --service nova --drop $*
+    sudo openstack-db --service glance --drop $*
+    sudo openstack-db --service keystone --drop $*
 
     sudo vgchange -an nova-volumes
     sudo losetup -d /dev/loop0
@@ -115,9 +115,9 @@ function os_install() {
     sudo systemctl start mysqld.service
     sleep 1
     # Configure the databases
-    sudo openstack-db --service nova --init
-    sudo openstack-db --service glance --init
-    sudo openstack-db --service keystone --init
+    sudo openstack-db --service nova --init $*
+    sudo openstack-db --service glance --init $*
+    sudo openstack-db --service keystone --init $*
 
     # Create a keystone RC file
     mkdir -p $HOME/.openstack
