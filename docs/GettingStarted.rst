@@ -67,11 +67,11 @@ Install OZ
 It is recommended to install the latest upstream oz, as this supports Fedora 17 (and Ubuntu U10/U12) guests::
 
     git clone https://github.com/clalancette/oz.git
-    cd oz
+    pushd oz
     rm -f ~/rpmbuild/RPMS/noarch/oz-*
     make rpm
     sudo yum localinstall -y ~/rpmbuild/RPMS/noarch/oz-*
-    cd -
+    popd
 
 Note: In the steps above, it's only necessary to be root for the yum localinstall, it's recommended not to be root while building the rpm.
 
@@ -148,8 +148,9 @@ Download heat_jeos via git
 ::
 
     git clone git://github.com/heat-api/heat-jeos.git
-    cd heat-jeos
+    pushd heat-jeos
     sudo python setup.py install
+    popd
 
 Create a JEOS with heat_jeos tools
 ----------------------------------
