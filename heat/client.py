@@ -18,11 +18,13 @@ Client classes for callers of a heat system
 """
 
 from lxml import etree
-import logging
 import os
 from heat.common import client as base_client
 from heat.common import exception
 from heat.cloudformations import *
+
+from heat.openstack.common import log as logging
+
 logger = logging.getLogger(__name__)
 
 

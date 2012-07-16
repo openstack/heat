@@ -18,7 +18,6 @@
 """
 import httplib
 import json
-import logging
 import os
 import socket
 import sys
@@ -33,6 +32,7 @@ from heat import utils
 from heat import rpc
 import heat.rpc.common as rpc_common
 
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.api.v1.stacks')
 

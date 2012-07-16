@@ -17,9 +17,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
+
+from heat.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

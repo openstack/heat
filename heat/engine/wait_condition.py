@@ -14,11 +14,12 @@
 #    under the License.
 
 import eventlet
-import logging
 import json
 
 from heat.common import exception
 from heat.engine import resources
+
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.wait_condition')
 

@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import json
 import httplib
 import urlparse
@@ -22,6 +21,7 @@ from novaclient.exceptions import BadRequest
 from novaclient.exceptions import NotFound
 from novaclient.exceptions import AuthorizationFailure
 from heat.common import context
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.auth')
 

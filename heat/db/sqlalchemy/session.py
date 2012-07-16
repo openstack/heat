@@ -14,10 +14,11 @@
 
 """Session Handling for SQLAlchemy backend."""
 
-import logging
 import sqlalchemy.interfaces
 import sqlalchemy.orm
 from sqlalchemy.exc import DisconnectionError
+
+from heat.openstack.common import log as logging
 
 from heat.db import api as db_api
 from heat.openstack.common import cfg

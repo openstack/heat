@@ -14,7 +14,7 @@
 #    under the License.
 
 import eventlet
-import logging
+from heat.openstack.common import log as logging
 import re
 
 from heat.common import exception

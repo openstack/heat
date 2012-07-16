@@ -15,13 +15,14 @@
 
 import urllib2
 import json
-import logging
 
 from heat.common import exception
 from heat.engine import stack
 from heat.db import api as db_api
 from heat.engine import parser
 from novaclient.exceptions import NotFound
+
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__file__)
 

@@ -15,12 +15,13 @@
 
 import urllib2
 import json
-import logging
 
 from heat.common import exception
 from heat.engine.resources import Resource
 from heat.db import api as db_api
 from heat.engine import parser
+
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__file__)
 

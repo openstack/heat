@@ -13,10 +13,10 @@
 #    under the License.
 
 import re
-import logging
 from heat.common import utils as heat_utils
 from heat.engine import parser
 
+from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.manager')
 

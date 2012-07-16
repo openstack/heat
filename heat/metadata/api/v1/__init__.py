@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import routes
 
 from heat.common import wsgi
 from heat.metadata.api.v1 import metadata
+
+from heat.openstack.common import log as logging
 
 
 class API(wsgi.Router):
