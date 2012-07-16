@@ -19,6 +19,7 @@ Client classes for callers of a heat system
 
 from lxml import etree
 import os
+import json
 from heat.common import client as base_client
 from heat.common import exception
 from heat.cloudformations import *
@@ -38,7 +39,7 @@ class V1Client(base_client.BaseClient):
         params['Version'] = '2010-05-15'
         params['SignatureVersion'] = '2'
         params['SignatureMethod'] = 'HmacSHA256'
-        params['KeyStoneCreds'] = self.creds
+        params['KeyStoneCreds'] = json.dumps(self.creds)
 
     def stack_request(self, action, method, **kwargs):
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)

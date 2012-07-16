@@ -168,13 +168,8 @@ class ContextMiddleware(wsgi.Middleware):
                 aws_creds = headers.get('X-Auth-EC2-Creds')
                 aws_auth_uri = headers.get('X-Auth-EC2-Url')
             else:
-                # XXX: The eval here is a bit scary, it's possible someone
-                # could put something malicious in here I would think.
-                # I Haven't tested to see if WSGI stuff would escape
-                # everything to make this safe.  However, I haven't found
-                # a better way to do this either.
                 if 'KeyStoneCreds' in req.params:
-                    creds = eval(req.params['KeyStoneCreds'])
+                    creds = json.loads(req.params['KeyStoneCreds'])
                     username = creds['username']
                     password = creds['password']
 
