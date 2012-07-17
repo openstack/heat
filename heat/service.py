@@ -28,12 +28,12 @@ import greenlet
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
+from heat import rpc
 
 from heat.common import utils as heat_utils
 from heat.common import exception
 from heat.common import context
 
-from heat import rpc
 from heat import version
 
 LOG = logging.getLogger(__name__)
@@ -154,25 +154,23 @@ class Service(object):
                periodic_interval=None, config=None):
         """Instantiates class and passes back application object.
 
-        :param host: defaults to FLAGS.host
+        :param host: defaults to cfg.CONF.host
         :param binary: defaults to basename of executable
         :param topic: defaults to bin_name - 'heat-' part
-        :param manager: defaults to FLAGS.<topic>_manager
-        :param periodic_interval: defaults to FLAGS.periodic_interval
+        :param manager: defaults to cfg.CONF.<topic>_manager
+        :param periodic_interval: defaults to cfg.CONF.periodic_interval
 
         """
-        global FLAGS
-        FLAGS = config
         if not host:
-            host = FLAGS.host
+            host = cfg.CONF.host
         if not binary:
             binary = os.path.basename(inspect.stack()[-1][1])
         if not topic:
             topic = binary.rpartition('heat-')[2]
         if not manager:
-            manager = FLAGS.get('%s_manager' % topic, None)
+            manager = cfg.CONF.get('%s_manager' % topic, None)
         if not periodic_interval:
-            periodic_interval = FLAGS.periodic_interval
+            periodic_interval = cfg.CONF.periodic_interval
         service_obj = cls(host, binary, topic, manager,
                           periodic_interval)
 
@@ -223,9 +221,9 @@ def serve(*servers):
 
 
 def wait():
-    LOG.debug(_('Full set of FLAGS:'))
-    for flag in FLAGS:
-        flag_get = FLAGS.get(flag, None)
+    LOG.debug(_('Full set of CONF:'))
+    for flag in cfg.CONF:
+        flag_get = cfg.CONF.get(flag, None)
         # hide flag contents from log if contains a password
         # should use secret flag when switch over to openstack-common
         if ("_password" in flag or "_key" in flag or

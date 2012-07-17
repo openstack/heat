@@ -40,6 +40,7 @@ from heat.common import context
 from paste import httpserver
 
 from heat.openstack.common import log as logging
+from heat.openstack.common import cfg
 
 LOG = logging.getLogger('heat.metadata')
 
@@ -64,15 +65,16 @@ def send_address_to_engine(host, port):
 
 if __name__ == '__main__':
     try:
-        conf = config.HeatMetadataConfigOpts()
-        conf(project='heat', prog='heat-metadata')
-        config.FLAGS = conf
-        rpc.configure(conf)
+        cfg.CONF(project='heat', prog='heat-metadata')
 
-        app = config.load_paste_app(conf)
+        config.setup_logging()
+        config.register_metadata_opts()
+        rpc.configure()
 
-        port = conf.bind_port
-        host = conf.bind_host
+        app = config.load_paste_app()
+
+        port = cfg.CONF.bind_port
+        host = cfg.CONF.bind_host
         send_address_to_engine(host, port)
         LOG.info(('Starting Heat Metadata on %s:%s') % (host, port))
         httpserver.serve(app, host=host, port=port)

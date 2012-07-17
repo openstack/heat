@@ -33,26 +33,28 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 gettext.install('heat', unicode=1)
 
-from heat import rpc
 from heat.common import config
 from heat.common import wsgi
 from paste import httpserver
 
+from heat.openstack.common import cfg
 from heat.openstack.common import log as logging
+
+from heat import rpc
 
 LOG = logging.getLogger('heat.api')
 
 if __name__ == '__main__':
     try:
-        conf = config.HeatConfigOpts()
-        conf(project='heat', prog='heat-api')
-        config.FLAGS = conf
-        rpc.configure(conf)
+        cfg.CONF(project='heat', prog='heat-api')
+        config.setup_logging()
+        config.register_api_opts()
+        rpc.configure()
 
-        app = config.load_paste_app(conf)
+        app = config.load_paste_app()
 
-        port = conf.bind_port
-        host = conf.bind_host
+        port = cfg.CONF.bind_port
+        host = cfg.CONF.bind_host
         LOG.info(('Starting Heat API on %s:%s') % (host, port))
         httpserver.serve(app, host=host, port=port)
     except RuntimeError, e:

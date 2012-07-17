@@ -17,7 +17,9 @@ import nose
 import unittest
 from nose.plugins.attrib import attr
 
-from heat.common.config import HeatConfigOpts
+from heat.common import config
+from heat.openstack.common import cfg
+import heat.common.config
 import heat.api.v1.stacks as stacks
 
 
@@ -78,8 +80,8 @@ class StackControllerTest(unittest.TestCase):
 
     def setUp(self):
         # Create WSGI controller instance
-        options = HeatConfigOpts()
-        self.controller = stacks.StackController(options)
+        config.register_api_opts()
+        self.controller = stacks.StackController(cfg.CONF)
         print "setup complete"
 
     def tearDown(self):

@@ -54,12 +54,11 @@ This module provides Manager, a base class for managers.
 """
 
 from heat import version
-from heat.common import config
 
 from heat.openstack.common import log as logging
+from heat.openstack.common import cfg
 
 
-FLAGS = config.FLAGS
 LOG = logging.getLogger(__name__)
 
 
@@ -129,7 +128,7 @@ class Manager(object):
 
     def __init__(self, host=None, db_driver=None):
         if not host:
-            host = FLAGS.host
+            host = cfg.CONF.host
         self.host = host
         super(Manager, self).__init__(db_driver)
 
@@ -169,6 +168,6 @@ class Manager(object):
 
     def service_config(self, context):
         config = {}
-        for key in FLAGS:
-            config[key] = FLAGS.get(key, None)
+        for key in cfg.CONF:
+            config[key] = cfg.CONF.get(key, None)
         return config

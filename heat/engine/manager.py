@@ -33,6 +33,7 @@ from heat.engine import resources
 from heat.engine import watchrule
 from heat.engine import auth
 
+from heat.openstack.common import cfg
 from heat.openstack.common import timeutils
 from heat.openstack.common import log as logging
 
@@ -296,7 +297,7 @@ class EngineManager(manager.Manager):
                 for resource in stack if resource.id is not None]
 
     def metadata_register_address(self, context, url):
-        config.FLAGS.heat_metadata_server_url = url
+        cfg.CONF.heat_metadata_server_url = url
 
     def metadata_list_stacks(self, context):
         """

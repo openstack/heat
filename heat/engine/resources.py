@@ -26,6 +26,7 @@ from heat.engine import checkeddict
 from heat.engine import auth
 
 from heat.openstack.common import log as logging
+from heat.openstack.common import cfg
 
 logger = logging.getLogger('heat.engine.resources')
 
@@ -60,7 +61,7 @@ class Metadata(object):
         None if no server is registered.
         '''
         try:
-            return config.FLAGS.heat_metadata_server_url
+            return cfg.CONF.heat_metadata_server_url
         except AttributeError:
             return None
 

@@ -189,12 +189,12 @@ def fanout_cast_to_server(context, server_params, topic, msg):
 _RPCIMPL = None
 
 
-def configure(conf):
+def configure():
     """Delay import of rpc_backend until FLAGS are loaded."""
-    LOG.debug(_("Configuring RPC %s") % conf.rpc_backend)
+    LOG.debug(_("Configuring RPC %s") % cfg.CONF.rpc_backend)
 
     global _RPCIMPL
-    _RPCIMPL = importutils.import_module(conf.rpc_backend)
+    _RPCIMPL = importutils.import_module(cfg.CONF.rpc_backend)
 
 
 def _get_impl():

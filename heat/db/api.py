@@ -28,7 +28,6 @@ supported backend.
 import heat.utils
 from heat.openstack.common import utils
 from heat.openstack.common import cfg
-#from heat.common import config
 import heat.utils
 
 SQL_CONNECTION = 'sqlite:///heat-test.db/'
@@ -43,11 +42,11 @@ IMPL = heat.utils.LazyPluggable('db_backend',
                            sqlalchemy='heat.db.sqlalchemy.api')
 
 
-def configure(conf):
+def configure():
     global SQL_CONNECTION
     global SQL_IDLE_TIMEOUT
-    SQL_CONNECTION = conf.sql_connection
-    SQL_IDLE_TIMEOUT = conf.sql_idle_timeout
+    SQL_CONNECTION = cfg.CONF.sql_connection
+    SQL_IDLE_TIMEOUT = cfg.CONF.sql_idle_timeout
 
 
 def raw_template_get(context, template_id):

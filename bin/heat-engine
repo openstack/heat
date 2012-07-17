@@ -27,7 +27,6 @@ eventlet.monkey_patch()
 import os
 import sys
 
-from heat.openstack.common import log as logging
 
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
@@ -39,29 +38,31 @@ if os.path.exists(os.path.join(POSSIBLE_TOPDIR, 'heat', '__init__.py')):
 
 gettext.install('heat', unicode=1)
 
-from heat import rpc
+from heat.openstack.common import log as logging
+from heat.openstack.common import cfg
 from heat import service
 from heat.common import config
 from heat.common import utils
 from heat.db import api as db_api
+
+from heat import rpc
 
 logger = logging.getLogger('heat.engine')
 
 if __name__ == '__main__':
 
     default_manager = 'heat.engine.manager.EngineManager'
-    conf = config.HeatEngineConfigOpts()
-    conf(project='heat', prog='heat-engine')
-    config.FLAGS = conf
+    cfg.CONF(project='heat', prog='heat-engine')
 
-    config.setup_logging(conf)
-    rpc.configure(conf)
-    db_api.configure(conf)
+    config.setup_logging()
+    config.register_engine_opts()
+    db_api.configure()
+    rpc.configure()
 
     #utils.monkey_patch()
     server = service.Service.create(binary='heat-engine',
                                     topic='engine',
                                     manager=default_manager,
-                                    config=conf)
+                                    config=cfg.CONF)
     service.serve(server)
     service.wait()
