@@ -107,6 +107,10 @@ def stack_create(context, values):
     return IMPL.stack_create(context, values)
 
 
+def stack_update(context, stack_id, values):
+    return IMPL.stack_update(context, stack_id, values)
+
+
 def stack_delete(context, stack_id):
     return IMPL.stack_delete(context, stack_id)
 

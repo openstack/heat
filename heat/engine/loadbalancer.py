@@ -312,6 +312,9 @@ class LoadBalancer(stack.Stack):
     def FnGetRefId(self):
         return unicode(self.name)
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
     def FnGetAtt(self, key):
         '''
         We don't really support any of these yet.

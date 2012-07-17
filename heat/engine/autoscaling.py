@@ -62,6 +62,9 @@ class AutoScalingGroup(Resource):
         self.adjust(int(self.properties['MinSize']),
                     adjustment_type='ExactCapacity')
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
     def handle_delete(self):
         if self.instance_id is not None:
             conf = self.properties['LaunchConfigurationName']

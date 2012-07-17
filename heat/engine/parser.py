@@ -227,12 +227,17 @@ class Template(object):
 
 
 class Stack(object):
-    IN_PROGRESS = 'IN_PROGRESS'
+    CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
     CREATE_FAILED = 'CREATE_FAILED'
     CREATE_COMPLETE = 'CREATE_COMPLETE'
+
     DELETE_IN_PROGRESS = 'DELETE_IN_PROGRESS'
     DELETE_FAILED = 'DELETE_FAILED'
     DELETE_COMPLETE = 'DELETE_COMPLETE'
+
+    UPDATE_IN_PROGRESS = 'UPDATE_IN_PROGRESS'
+    UPDATE_COMPLETE = 'UPDATE_COMPLETE'
+    UPDATE_FAILED = 'UPDATE_FAILED'
 
     created_time = resources.Timestamp(db_api.stack_get, 'created_at')
     updated_time = resources.Timestamp(db_api.stack_get, 'updated_at')
@@ -290,21 +295,26 @@ class Stack(object):
         return stack
 
     def store(self, owner=None):
-        '''Store the stack in the database and return its ID'''
-        if self.id is None:
-            new_creds = db_api.user_creds_create(self.context.to_dict())
+        '''
+        Store the stack in the database and return its ID
+        If self.id is set, we update the existing stack
+        '''
+        new_creds = db_api.user_creds_create(self.context.to_dict())
 
-            s = {
-                'name': self.name,
-                'raw_template_id': self.t.store(),
-                'parameters': self.parameters.user_parameters(),
-                'owner_id': owner and owner.id,
-                'user_creds_id': new_creds.id,
-                'username': self.context.username,
-                'status': self.state,
-                'status_reason': self.state_description,
-                'timeout': self.timeout_mins,
-            }
+        s = {
+            'name': self.name,
+            'raw_template_id': self.t.store(),
+            'parameters': self.parameters.user_parameters(),
+            'owner_id': owner and owner.id,
+            'user_creds_id': new_creds.id,
+            'username': self.context.username,
+            'status': self.state,
+            'status_reason': self.state_description,
+            'timeout': self.timeout_mins,
+        }
+        if self.id:
+            db_api.stack_update(self.context, self.id, s)
+        else:
             new_s = db_api.stack_create(self.context, s)
             self.id = new_s.id
 
@@ -331,6 +341,10 @@ class Stack(object):
     def __getitem__(self, key):
         '''Get the resource with the specified name.'''
         return self.resources[key]
+
+    def __setitem__(self, key, value):
+        '''Set the resource with the specified name to a specific value'''
+        self.resources[key] = value
 
     def __contains__(self, key):
         '''Determine whether the stack contains the specified resource'''
@@ -394,7 +408,7 @@ class Stack(object):
         Creation will fail if it exceeds the specified timeout. The default is
         60 minutes, set in the constructor
         '''
-        self.state_set(self.IN_PROGRESS, 'Stack creation started')
+        self.state_set(self.CREATE_IN_PROGRESS, 'Stack creation started')
 
         stack_status = self.CREATE_COMPLETE
         reason = 'Stack successfully created'
@@ -417,6 +431,116 @@ class Stack(object):
             except eventlet.Timeout as t:
                 if t is tmo:
                     stack_status = self.CREATE_FAILED
+                    reason = 'Timed out waiting for %s' % str(res)
+                else:
+                    # not my timeout
+                    raise
+
+        self.state_set(stack_status, reason)
+
+    def update(self, newstack):
+        '''
+        Compare the current stack with newstack,
+        and where necessary create/update/delete the resources until
+        this stack aligns with newstack.
+
+        Note update of existing stack resources depends on update
+        being implemented in the underlying resource types
+
+        Update will fail if it exceeds the specified timeout. The default is
+        60 minutes, set in the constructor
+        '''
+        self.state_set(self.UPDATE_IN_PROGRESS, 'Stack update started')
+
+        # Now make the resources match the new stack definition
+        failures = []
+        with eventlet.Timeout(self.timeout_mins * 60) as tmo:
+            try:
+                # First delete any resources which are not in newstack
+                for res in self:
+                    if not res.name in newstack.keys():
+                        logger.debug("resource %s not found in updated stack"
+                                      % res.name + " definition, deleting")
+                        result = res.destroy()
+                        if result:
+                            failures.append('Resource %s delete failed'
+                                            % res.name)
+                        else:
+                            del self.resources[res.name]
+
+                # Then create any which are defined in newstack but not self
+                for res in newstack:
+                    if not res.name in self.keys():
+                        logger.debug("resource %s not found in current stack"
+                                      % res.name + " definition, adding")
+                        res.stack = self
+                        self[res.name] = res
+                        result = self[res.name].create()
+                        if result:
+                            failures.append('Resource %s create failed'
+                                            % res.name)
+
+                # Now (the hard part :) update existing resources
+                # The Resource base class allows equality-test of resources,
+                # based on the parsed template snippet for the resource.
+                # If this  test fails, we call the underlying resource.update
+                #
+                # FIXME : Implement proper update logic for the resources
+                # AWS define three update strategies, applied depending
+                # on the resource and what is being updated within a
+                # resource :
+                # - Update with no interruption
+                # - Update with some interruption
+                # - Update requires replacement
+                #
+                # Currently all resource have a default handle_update method
+                # which returns "requires replacement" (res.UPDATE_REPLACE)
+                for res in newstack:
+                    if self[res.name] != res:
+                        # Can fail if underlying resource class does not
+                        # implement update logic or update requires replacement
+                        retval = self[res.name].update(res.parsed_template())
+                        if retval == self[res.name].UPDATE_REPLACE:
+                            logger.info("Resource %s for stack %s" %
+                                        (res.name, self.name) +
+                                        " update requires replacement")
+                            # Resource requires replacement for update
+                            result = self[res.name].destroy()
+                            if result:
+                                failures.append('Resource %s delete failed'
+                                                % res.name)
+                            else:
+                                res.stack = self
+                                self[res.name] = res
+                                result = self[res.name].create()
+                                if result:
+                                    failures.append('Resource %s create failed'
+                                                    % res.name)
+                        else:
+                            logger.warning("Cannot update resource %s," %
+                                            res.name + " reason %s" % retval)
+                            failures.append('Resource %s update failed'
+                                            % res.name)
+
+                # Set stack status values
+                if not failures:
+                    # flip the template & parameters to the newstack values
+                    self.t = newstack.t
+                    self.parameters = newstack.parameters
+                    self.outputs = self.resolve_static_data(self.t[OUTPUTS])
+                    self.dependencies = self._get_dependencies(
+                        self.resources.itervalues())
+                    self.store()
+
+                    stack_status = self.UPDATE_COMPLETE
+                    reason = 'Stack successfully updated'
+                else:
+                    stack_status = self.UPDATE_FAILED
+                    reason = ",".join(failures)
+
+            except eventlet.Timeout as t:
+                if t is tmo:
+                    stack_status = self.UPDATE_FAILED
                     reason = 'Timed out waiting for %s' % str(res)
                 else:
                     # not my timeout

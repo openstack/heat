@@ -56,6 +56,9 @@ class User(Resource):
                                             enabled=True)
         self.instance_id_set(user.id)
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
     def handle_delete(self):
         try:
             user = self.keystone().users.get(DummyId(self.instance_id))
@@ -136,6 +139,9 @@ class AccessKey(Resource):
         cred = self.keystone().ec2.create(user.id, tenant_id)
         self.instance_id_set(cred.access)
         self._secret = cred.secret
+
+    def handle_update(self):
+        return self.UPDATE_REPLACE
 
     def handle_delete(self):
         user = self._user_from_name(self.properties['UserName'])

@@ -73,6 +73,9 @@ class CloudWatchAlarm(Resource):
         wr = db_api.watch_rule_create(self.context, wr_values)
         self.instance_id = wr.id
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
     def handle_delete(self):
         try:
             db_api.watch_rule_delete(self.context, self.name)

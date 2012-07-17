@@ -281,10 +281,21 @@ class StackController(object):
 
         return None
 
+    CREATE_OR_UPDATE_ACTION = (
+        CREATE_STACK, UPDATE_STACK
+        ) = (
+        "CreateStack", "UpdateStack")
+
     def create(self, req):
+        return self.create_or_update(req, self.CREATE_STACK)
+
+    def update(self, req):
+        return self.create_or_update(req, self.UPDATE_STACK)
+
+    def create_or_update(self, req, action=None):
         """
-        Implements CreateStack API action
-        Create stack as defined in template file
+        Implements CreateStack and UpdateStack API actions
+        Create or update stack as defined in template file
         """
         def extract_args(params):
             """
@@ -301,6 +312,14 @@ class StackController(object):
                     result[keymap[k]] = params[k]
 
             return result
+
+        if action not in self.CREATE_OR_UPDATE_ACTION:
+            msg = _("Unexpected action %s" % action)
+            # This should not happen, so return HeatInternalFailureError
+            return exception.HeatInternalFailureError(detail=msg)
+
+        engine_action = {self.CREATE_STACK: "create_stack",
+                         self.UPDATE_STACK: "update_stack"}
 
         con = req.context
 
@@ -328,7 +347,7 @@ class StackController(object):
 
         try:
             res = rpc.call(con, 'engine',
-                            {'method': 'create_stack',
+                            {'method': engine_action[action],
                              'args': {'stack_name': req.params['StackName'],
                                       'template': stack,
                                       'params': stack_parms,
@@ -336,8 +355,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
-        return self._format_response('CreateStack',
-            self._stackid_addprefix(res))
+        return self._format_response(action, self._stackid_addprefix(res))
 
     def get_template(self, req):
         """

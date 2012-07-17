@@ -258,6 +258,9 @@ class Instance(resources.Resource):
                                   ('nova reported unexpected',
                                    self.name, server.status))
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
     def validate(self):
         '''
         Validate any of the provided params

@@ -66,6 +66,9 @@ class SecurityGroup(Resource):
                         # unexpected error
                         raise
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
     def handle_delete(self):
         if self.instance_id is not None:
             try:

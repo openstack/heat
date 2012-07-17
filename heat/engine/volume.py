@@ -46,6 +46,9 @@ class Volume(Resource):
         else:
             raise exception.Error(vol.status)
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
     def handle_delete(self):
         if self.instance_id is not None:
             vol = self.nova('volume').volumes.get(self.instance_id)
@@ -86,6 +89,9 @@ class VolumeAttachment(Resource):
             self.instance_id_set(va.id)
         else:
             raise exception.Error(vol.status)
+
+    def handle_update(self):
+        return self.UPDATE_REPLACE
 
     def handle_delete(self):
         server_id = self.properties['InstanceId']

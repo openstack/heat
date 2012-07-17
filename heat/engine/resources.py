@@ -100,6 +100,7 @@ class Timestamp(object):
 
 
 class Resource(object):
+    # Status strings
     CREATE_IN_PROGRESS = 'IN_PROGRESS'
     CREATE_FAILED = 'CREATE_FAILED'
     CREATE_COMPLETE = 'CREATE_COMPLETE'
@@ -109,6 +110,12 @@ class Resource(object):
     UPDATE_IN_PROGRESS = 'UPDATE_IN_PROGRESS'
     UPDATE_FAILED = 'UPDATE_FAILED'
     UPDATE_COMPLETE = 'UPDATE_COMPLETE'
+
+    # Status values, returned from subclasses to indicate update method
+    UPDATE_REPLACE = 'UPDATE_REPLACE'
+    UPDATE_INTERRUPTION = 'UPDATE_INTERRUPTION'
+    UPDATE_NO_INTERRUPTION = 'UPDATE_NO_INTERRUPTION'
+    UPDATE_NOT_IMPLEMENTED = 'UPDATE_NOT_IMPLEMENTED'
 
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
@@ -152,6 +159,21 @@ class Resource(object):
             self.id = None
         self._nova = {}
         self._keystone = None
+
+    def __eq__(self, other):
+        '''Allow == comparison of two resources'''
+        # For the purposes of comparison, we declare two resource objects
+        # equal if their parsed_templates are the same
+        if isinstance(other, Resource):
+            return self.parsed_template() == other.parsed_template()
+        return NotImplemented
+
+    def __ne__(self, other):
+        '''Allow != comparison of two resources'''
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return result
+        return not result
 
     def parsed_template(self, section=None, default={}):
         '''
@@ -231,6 +253,43 @@ class Resource(object):
             return str(ex)
         else:
             self.state_set(self.CREATE_COMPLETE)
+
+    def update(self, json_snippet=None):
+        '''
+        update the resource. Subclasses should provide a handle_update() method
+        to customise update, the base-class handle_update will fail by default.
+        '''
+        if self.state in (self.CREATE_IN_PROGRESS, self.UPDATE_IN_PROGRESS):
+            return 'Resource update already requested'
+
+        if not json_snippet:
+            return 'Must specify json snippet for resource update!'
+
+        logger.info('updating %s' % str(self))
+
+        result = self.UPDATE_NOT_IMPLEMENTED
+        try:
+            self.state_set(self.UPDATE_IN_PROGRESS)
+            self.t = self.stack.resolve_static_data(json_snippet)
+            self.properties = checkeddict.Properties(self.name,
+                                                     self.properties_schema)
+            self.calculate_properties()
+            self.properties.validate()
+            if callable(getattr(self, 'handle_update', None)):
+                result = self.handle_update()
+        except Exception as ex:
+            logger.exception('update %s : %s' % (str(self), str(ex)))
+            self.state_set(self.UPDATE_FAILED, str(ex))
+            return str(ex)
+        else:
+            # If resource was updated (with or without interruption),
+            # then we set the resource to UPDATE_COMPLETE
+            if not result == self.UPDATE_REPLACE:
+                self.state_set(self.UPDATE_COMPLETE)
+            return result
+
+    def validate(self):
+        logger.info('Validating %s' % str(self))
 
     def validate(self):
         logger.info('Validating %s' % str(self))
@@ -375,10 +434,18 @@ class Resource(object):
         '''
         return base64.b64encode(data)
 
+    def handle_update(self):
+        raise NotImplementedError("Update not implemented for Resource %s"
+                                  % type(self))
+
 
 class GenericResource(Resource):
     properties_schema = {}
 
     def handle_create(self):
         logger.warning('Creating generic resource (Type "%s")' %
+                self.t['Type'])
+
+    def handle_update(self):
+        logger.warning('Updating generic resource (Type "%s")' %
                 self.t['Type'])

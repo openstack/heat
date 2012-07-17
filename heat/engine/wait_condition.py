@@ -43,6 +43,8 @@ class WaitConditionHandle(resources.Resource):
                             self.stack.id,
                             self.name)
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
 
 WAIT_STATUSES = (
     WAITING,
@@ -110,6 +112,9 @@ class WaitCondition(resources.Resource):
 
         if status != SUCCESS:
             raise exception.Error(reason)
+
+    def handle_update(self):
+        return self.UPDATE_REPLACE
 
     def FnGetAtt(self, key):
         res = None

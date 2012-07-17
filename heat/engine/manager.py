@@ -122,6 +122,46 @@ class EngineManager(manager.Manager):
 
         return {'StackName': stack.name, 'StackId': stack.id}
 
+    def update_stack(self, context, stack_name, template, params, args):
+        """
+        The update_stack method updates an existing stack based on the
+        provided template and parameters.
+        Note that at this stage the template has already been fetched from the
+        heat-api process if using a template-url.
+        arg1 -> RPC context.
+        arg2 -> Name of the stack you want to create.
+        arg3 -> Template of stack you want to create.
+        arg4 -> Stack Input Params
+        arg4 -> Request parameters/args passed from API
+        """
+        logger.info('template is %s' % template)
+
+        auth.authenticate(context)
+
+        # Get the database representation of the existing stack
+        db_stack = db_api.stack_get_by_name(None, stack_name)
+        if not db_stack:
+            return {'Error': 'No stack exists with that name.'}
+
+        current_stack = parser.Stack.load(context, db_stack.id)
+
+        # Now parse the template and any parameters for the updated
+        # stack definition.
+        tmpl = parser.Template(template)
+        template_params = parser.Parameters(stack_name, tmpl, params)
+        common_params = api.extract_args(args)
+
+        updated_stack = parser.Stack(context, stack_name, tmpl,
+                                     template_params, **common_params)
+
+        response = updated_stack.validate()
+        if response['Description'] != 'Successfully validated':
+            return response
+
+        greenpool.spawn_n(current_stack.update, updated_stack)
+
+        return {'StackName': current_stack.name, 'StackId': current_stack.id}
+
     def validate_template(self, context, template, params):
         """
         The validate_template method uses the stack parser to check

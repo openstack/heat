@@ -154,6 +154,27 @@ def stack_create(context, values):
     return stack_ref
 
 
+def stack_update(context, stack_id, values):
+    stack = stack_get(context, stack_id)
+
+    if not stack:
+        raise NotFound('Attempt to update a stack with id: %s %s' %
+                        (stack_id, 'that does not exist'))
+
+    old_template_id = stack.raw_template_id
+
+    stack.update(values)
+    stack.save()
+
+    # When the raw_template ID changes, we delete the old template
+    # after storing the new template ID
+    if stack.raw_template_id != old_template_id:
+        session = Session.object_session(stack)
+        rt = raw_template_get(context, old_template_id)
+        session.delete(rt)
+        session.flush()
+
+
 def stack_delete(context, stack_id):
     s = stack_get(context, stack_id)
     if not s:

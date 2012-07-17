@@ -369,7 +369,7 @@ class StackTest(unittest.TestCase):
         self.assertEqual(stack.updated_time, None)
         stack.store()
         stored_time = stack.updated_time
-        stack.state_set(stack.IN_PROGRESS, 'testing')
+        stack.state_set(stack.CREATE_IN_PROGRESS, 'testing')
         self.assertNotEqual(stack.updated_time, None)
         self.assertNotEqual(stack.updated_time, stored_time)
 

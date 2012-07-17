@@ -49,6 +49,9 @@ class ElasticIp(Resource):
         self.ipaddress = ips.ip
         self.instance_id_set(ips.id)
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
     def validate(self):
         '''
         Validate the ip address here

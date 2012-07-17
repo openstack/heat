@@ -79,6 +79,9 @@ class Stack(Resource):
 
         self.create_with_template(template)
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
     def handle_delete(self):
         try:
             stack = self.nested()
