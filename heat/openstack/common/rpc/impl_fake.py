@@ -18,28 +18,28 @@ queues.  Casts will block, but this is very useful for tests.
 """
 
 import inspect
-import json
-import signal
-import sys
 import time
-import traceback
 
 import eventlet
 
-from heat.common import context
-from heat.common import config
-from heat.rpc import common as rpc_common
+from heat.openstack.common import jsonutils
+from heat.openstack.common.rpc import common as rpc_common
 
 CONSUMERS = {}
 
-FLAGS = config.FLAGS
 
-
-class RpcContext(context.RequestContext):
-    def __init__(self, *args, **kwargs):
-        super(RpcContext, self).__init__(*args, **kwargs)
+class RpcContext(rpc_common.CommonRpcContext):
+    def __init__(self, **kwargs):
+        super(RpcContext, self).__init__(**kwargs)
         self._response = []
         self._done = False
+
+    def deepcopy(self):
+        values = self.to_dict()
+        new_inst = self.__class__(**values)
+        new_inst._response = self._response
+        new_inst._done = self._done
+        return new_inst
 
     def reply(self, reply=None, failure=None, ending=False):
         if ending:
@@ -53,15 +53,13 @@ class Consumer(object):
         self.topic = topic
         self.proxy = proxy
 
-    def call(self, context, method, args, timeout):
-        node_func = getattr(self.proxy, method)
-        node_args = dict((str(k), v) for k, v in args.iteritems())
+    def call(self, context, version, method, args, timeout):
         done = eventlet.event.Event()
 
         def _inner():
             ctxt = RpcContext.from_dict(context.to_dict())
             try:
-                rval = node_func(context=ctxt, **node_args)
+                rval = self.proxy.dispatch(context, version, method, **args)
                 res = []
                 # Caller might have called ctxt.reply() manually
                 for (reply, failure) in ctxt._response:
@@ -77,12 +75,8 @@ class Consumer(object):
                     else:
                         res.append(rval)
                 done.send(res)
-            except Exception:
-                exc_info = sys.exc_info()
-                done.send_exception(
-                        rpc_common.RemoteError(exc_info[0].__name__,
-                            str(exc_info[1]),
-                            ''.join(traceback.format_exception(*exc_info))))
+            except Exception as e:
+                done.send_exception(e)
 
         thread = eventlet.greenthread.spawn(_inner)
 
@@ -120,17 +114,17 @@ class Connection(object):
         pass
 
 
-def create_connection(new=True):
+def create_connection(conf, new=True):
     """Create a connection"""
     return Connection()
 
 
 def check_serialize(msg):
     """Make sure a message intended for rpc can be serialized."""
-    json.dumps(msg)
+    jsonutils.dumps(msg)
 
 
-def multicall(context, topic, msg, timeout=None):
+def multicall(conf, context, topic, msg, timeout=None):
     """Make a call that returns multiple times."""
 
     check_serialize(msg)
@@ -139,18 +133,19 @@ def multicall(context, topic, msg, timeout=None):
     if not method:
         return
     args = msg.get('args', {})
+    version = msg.get('version', None)
 
     try:
         consumer = CONSUMERS[topic][0]
     except (KeyError, IndexError):
         return iter([None])
     else:
-        return consumer.call(context, method, args, timeout)
+        return consumer.call(context, version, method, args, timeout)
 
 
-def call(context, topic, msg, timeout=None):
+def call(conf, context, topic, msg, timeout=None):
     """Sends a message on a topic and wait for a response."""
-    rv = multicall(context, topic, msg, timeout)
+    rv = multicall(conf, context, topic, msg, timeout)
     # NOTE(vish): return the last result from the multicall
     rv = list(rv)
     if not rv:
@@ -158,14 +153,14 @@ def call(context, topic, msg, timeout=None):
     return rv[-1]
 
 
-def cast(context, topic, msg):
+def cast(conf, context, topic, msg):
     try:
-        call(context, topic, msg)
-    except rpc_common.RemoteError:
+        call(conf, context, topic, msg)
+    except Exception:
         pass
 
 
-def notify(context, topic, msg):
+def notify(conf, context, topic, msg):
     check_serialize(msg)
 
 
@@ -173,16 +168,17 @@ def cleanup():
     pass
 
 
-def fanout_cast(context, topic, msg):
+def fanout_cast(conf, context, topic, msg):
     """Cast to all consumers of a topic"""
     check_serialize(msg)
     method = msg.get('method')
     if not method:
         return
     args = msg.get('args', {})
+    version = msg.get('version', None)
 
     for consumer in CONSUMERS.get(topic, []):
         try:
-            consumer.call(context, method, args, None)
-        except rpc_common.RemoteError:
+            consumer.call(context, version, method, args, None)
+        except Exception:
             pass

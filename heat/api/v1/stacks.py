@@ -29,10 +29,10 @@ from heat.common import wsgi
 from heat.common import config
 from heat.common import context
 from heat import utils
-from heat import rpc
-import heat.rpc.common as rpc_common
 import heat.engine.api as engine_api
 
+from heat.openstack.common import rpc
+import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.api.v1.stacks')

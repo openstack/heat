@@ -29,6 +29,7 @@ import sys
 from heat import version
 from heat.common import wsgi
 from heat.openstack.common import cfg
+from heat.openstack.common import rpc
 
 DEFAULT_PORT = 8000
 
@@ -41,101 +42,6 @@ paste_deploy_opts = [
 
 bind_opts = [cfg.IntOpt('bind_port', default=8000),
              cfg.StrOpt('bind_host', default='127.0.0.1')]
-
-rpc_opts = [
-    cfg.StrOpt('rpc_backend',
-        default='heat.rpc.impl_qpid',
-        help="The messaging module to use, defaults to kombu."),
-    cfg.IntOpt('rpc_thread_pool_size',
-               default=1024,
-               help='Size of RPC thread pool'),
-    cfg.IntOpt('rpc_conn_pool_size',
-               default=30,
-               help='Size of RPC connection pool'),
-    cfg.IntOpt('rpc_response_timeout',
-               default=60,
-               help='Seconds to wait for a response from call or multicall'),
-    cfg.StrOpt('qpid_hostname',
-               default='localhost',
-               help='Qpid broker hostname'),
-    cfg.StrOpt('qpid_port',
-               default='5672',
-               help='Qpid broker port'),
-    cfg.StrOpt('qpid_username',
-               default='',
-               help='Username for qpid connection'),
-    cfg.StrOpt('qpid_password',
-               default='',
-               help='Password for qpid connection'),
-    cfg.StrOpt('qpid_sasl_mechanisms',
-               default='',
-               help='Space separated list of SASL mechanisms to use for auth'),
-    cfg.BoolOpt('qpid_reconnect',
-                default=True,
-                help='Automatically reconnect'),
-    cfg.IntOpt('qpid_reconnect_timeout',
-               default=0,
-               help='Reconnection timeout in seconds'),
-    cfg.IntOpt('qpid_reconnect_limit',
-               default=0,
-               help='Max reconnections before giving up'),
-    cfg.IntOpt('qpid_reconnect_interval_min',
-               default=0,
-               help='Minimum seconds between reconnection attempts'),
-    cfg.IntOpt('qpid_reconnect_interval_max',
-               default=0,
-               help='Maximum seconds between reconnection attempts'),
-    cfg.IntOpt('qpid_reconnect_interval',
-               default=0,
-               help='Equivalent to setting max and min to the same value'),
-    cfg.IntOpt('qpid_heartbeat',
-               default=5,
-               help='Seconds between connection keepalive heartbeats'),
-    cfg.StrOpt('qpid_protocol',
-               default='tcp',
-               help="Transport to use, either 'tcp' or 'ssl'"),
-    cfg.BoolOpt('qpid_tcp_nodelay',
-                default=True,
-                help='Disable Nagle algorithm'),
-    cfg.StrOpt('rabbit_host',
-               default='localhost',
-               help='the RabbitMQ host'),
-    cfg.IntOpt('rabbit_port',
-               default=5672,
-               help='the RabbitMQ port'),
-    cfg.BoolOpt('rabbit_use_ssl',
-                default=False,
-                help='connect over SSL for RabbitMQ'),
-    cfg.StrOpt('rabbit_userid',
-               default='guest',
-               help='the RabbitMQ userid'),
-    cfg.StrOpt('rabbit_password',
-               default='guest',
-               help='the RabbitMQ password'),
-    cfg.StrOpt('rabbit_virtual_host',
-               default='/',
-               help='the RabbitMQ virtual host'),
-    cfg.IntOpt('rabbit_retry_interval',
-               default=1,
-               help='how frequently to retry connecting with RabbitMQ'),
-    cfg.IntOpt('rabbit_retry_backoff',
-               default=2,
-               help='how long to backoff for between retries when connecting '
-                    'to RabbitMQ'),
-    cfg.IntOpt('rabbit_max_retries',
-               default=0,
-               help='maximum retries with trying to connect to RabbitMQ '
-                    '(the default of 0 implies an infinite retry count)'),
-    cfg.StrOpt('control_exchange',
-               default='heat-engine',
-               help='the main RabbitMQ exchange to connect to'),
-    cfg.BoolOpt('rabbit_durable_queues',
-                default=False,
-                help='use durable queues in RabbitMQ'),
-    cfg.BoolOpt('fake_rabbit',
-                default=False,
-                help='If passed, use a fake RabbitMQ provider'),
-]
 
 service_opts = [
 cfg.IntOpt('report_interval',
@@ -198,19 +104,16 @@ cfg.StrOpt('instance_driver',
 def register_metadata_opts():
     cfg.CONF.register_opts(service_opts)
     cfg.CONF.register_opts(bind_opts)
-    cfg.CONF.register_opts(rpc_opts)
 
 
 def register_api_opts():
     cfg.CONF.register_opts(bind_opts)
-    cfg.CONF.register_opts(rpc_opts)
 
 
 def register_engine_opts():
     cfg.CONF.register_opts(engine_opts)
     cfg.CONF.register_opts(db_opts)
     cfg.CONF.register_opts(service_opts)
-    cfg.CONF.register_opts(rpc_opts)
 
 
 def setup_logging():

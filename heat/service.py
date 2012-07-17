@@ -25,10 +25,10 @@ import os
 import eventlet
 import greenlet
 
+from heat.openstack.common import rpc
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
-from heat import rpc
 
 from heat.common import utils as heat_utils
 from heat.common import exception
@@ -129,13 +129,15 @@ class Service(object):
         LOG.debug(_("Creating Consumer connection for Service %s") %
                   self.topic)
 
+        rpc_dispatcher = self.manager.create_rpc_dispatcher()
+
         # Share this same connection for these Consumers
-        self.conn.create_consumer(self.topic, self, fanout=False)
+        self.conn.create_consumer(self.topic, rpc_dispatcher, fanout=False)
 
         node_topic = '%s.%s' % (self.topic, self.host)
-        self.conn.create_consumer(node_topic, self, fanout=False)
+        self.conn.create_consumer(node_topic, rpc_dispatcher, fanout=False)
 
-        self.conn.create_consumer(self.topic, self, fanout=True)
+        self.conn.create_consumer(self.topic, rpc_dispatcher, fanout=True)
 
         # Consume from all consumers in a thread
         self.conn.consume_in_thread()

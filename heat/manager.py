@@ -55,6 +55,7 @@ This module provides Manager, a base class for managers.
 
 from heat import version
 
+from heat.openstack.common.rpc import dispatcher as rpc_dispatcher
 from heat.openstack.common import log as logging
 from heat.openstack.common import cfg
 
@@ -131,6 +132,14 @@ class Manager(object):
             host = cfg.CONF.host
         self.host = host
         super(Manager, self).__init__(db_driver)
+
+    def create_rpc_dispatcher(self):
+        '''Get the rpc dispatcher for this manager.
+
+        If a manager would like to set an rpc API version, or support more than
+        one class as the target of rpc messages, override this method.
+        '''
+        return rpc_dispatcher.RpcDispatcher([self])
 
     def periodic_tasks(self, context, raise_on_error=False):
         """Tasks to be run at a periodic interval."""

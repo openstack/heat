@@ -19,7 +19,7 @@ from webob.exc import Response
 
 from heat.common import wsgi
 from heat.common import context
-from heat import rpc
+from heat.openstack.common import rpc
 
 
 def json_response(http_status, data):

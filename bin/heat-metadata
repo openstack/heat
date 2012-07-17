@@ -33,7 +33,7 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 gettext.install('heat', unicode=1)
 
-from heat import rpc
+from heat.openstack.common import rpc
 from heat.common import config
 from heat.common import wsgi
 from heat.common import context
@@ -69,7 +69,6 @@ if __name__ == '__main__':
 
         config.setup_logging()
         config.register_metadata_opts()
-        rpc.configure()
 
         app = config.load_paste_app()
 
