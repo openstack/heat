@@ -90,7 +90,7 @@ function os_erase() {
 
     sudo rm -f /var/lib/libvirt/qemu/save/instance-000*
     sudo rm -f /var/lib/libvirt/qemu/instance-000*
-    sudo yum erase -y python-glance python-nova* python-keystone* openstack-swift* openstack-dashboard openstack-utils
+    sudo yum erase -y python-glance python-nova* python-keystone* openstack-swift* openstack-dashboard
 
     sudo systemctl start mysqld.service
     sleep 1
@@ -98,6 +98,7 @@ function os_erase() {
     sudo openstack-db --service nova --drop $*
     sudo openstack-db --service glance --drop $*
     sudo openstack-db --service keystone --drop $*
+    sudo yum erase -y openstack-utils
 
     sudo vgchange -an nova-volumes
     sudo losetup -d /dev/loop0
