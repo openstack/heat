@@ -1,0 +1,167 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation Sample Template WordPress_With_RDS: WordPress is web software you can use to create a beautiful website or blog. This template installs two instances: one running a WordPress deployment and the other using RDS as a data storage.",
+
+  "Parameters" : {
+
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String"
+    },
+
+    "InstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "m1.large",
+      "AllowedValues" : [ "t1.micro", "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "c1.medium", "c1.xlarge", "cc1.4xlarge" ],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "DBClass" : {
+      "Default" : "db.m1.small",
+      "Description" : "Database instance class",
+      "Type" : "String",
+      "AllowedValues" : [ "db.m1.small", "db.m1.large", "db.m1.xlarge", "db.m2.xlarge", "db.m2.2xlarge", "db.m2.4xlarge" ],
+      "ConstraintDescription" : "must select a valid database instance type."
+    },
+
+    "DBName": {
+      "Default": "wordpress",
+      "Description" : "The WordPress database name",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBUsername": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "The WordPress database admin account username",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+
+    "DBPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "The WordPress database admin account password",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    },
+
+    "DBRootPassword": {
+      "Default": "admin",
+      "NoEcho": "true",
+      "Description" : "Root password for MySQL",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    },
+
+    "DBAllocatedStorage" : {
+      "Default": "5",
+      "Description" : "The size of the database (Gb)",
+      "Type": "Number",
+      "MinValue": "5",
+      "MaxValue": "1024",
+      "ConstraintDescription" : "must be between 5 and 1024Gb."
+    },
+
+    "LinuxDistribution": {
+      "Default": "F16",
+      "Description" : "Distribution of choice",
+      "Type": "String",
+      "AllowedValues" : [ "F16", "F17", "U10", "RHEL-6.1", "RHEL-6.2", "RHEL-6.3" ]
+    }
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "t1.micro"    : { "Arch" : "32" },
+      "m1.small"    : { "Arch" : "32" },
+      "m1.large"    : { "Arch" : "64" },
+      "m1.xlarge"   : { "Arch" : "64" },
+      "m2.xlarge"   : { "Arch" : "64" },
+      "m2.2xlarge"  : { "Arch" : "64" },
+      "m2.4xlarge"  : { "Arch" : "64" },
+      "c1.medium"   : { "Arch" : "32" },
+      "c1.xlarge"   : { "Arch" : "64" },
+      "cc1.4xlarge" : { "Arch" : "64" }
+    },
+    "DistroArch2AMI": {
+      "F16"      : { "32" : "F16-i386-cfntools", "64" : "F16-x86_64-cfntools" },
+      "F17"      : { "32" : "F17-i386-cfntools", "64" : "F17-x86_64-cfntools" },
+      "U10"      : { "32" : "U10-i386-cfntools", "64" : "U10-x86_64-cfntools" },
+      "RHEL-6.1" : { "32" : "rhel61-i386-cfntools", "64" : "rhel61-x86_64-cfntools" },
+      "RHEL-6.2" : { "32" : "rhel62-i386-cfntools", "64" : "rhel62-x86_64-cfntools" },
+      "RHEL-6.3" : { "32" : "rhel63-i386-cfntools", "64" : "rhel63-x86_64-cfntools" }
+    }
+  },
+
+  "Resources" : {
+    "DatabaseServer": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "DBName"            : { "Ref" : "DBName" },
+        "Engine"            : "MySQL",
+        "MasterUsername"    : { "Ref" : "DBUsername" },
+        "DBInstanceClass"   : { "Ref" : "DBClass" },
+        "DBSecurityGroups"  : [],
+        "AllocatedStorage"  : { "Ref" : "DBAllocatedStorage" },
+        "MasterUserPassword": { "Ref" : "DBPassword" }
+      }
+    },
+
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "DatabaseServer",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+              "yum" : {
+                "httpd"        : [],
+                "wordpress"    : []
+              }
+            },
+            "services" : {
+              "systemd" : {
+                "httpd"    : { "enabled" : "true", "ensureRunning" : "true" }
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "/opt/aws/bin/cfn-init\n",
+          "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ --e s/localhost/", { "Fn::GetAtt" : [ "DatabaseServer", "Endpoint.Address" ]}, "/ /usr/share/wordpress/wp-config.php\n"
+        ]]}}
+      }
+    }
+
+  },
+
+  "Outputs" : {
+    "WebsiteURL" : {
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "WebServer", "PublicIp" ]}, "/wordpress"]] },
+      "Description" : "URL for Wordpress wiki"
+    }
+  }
+}
