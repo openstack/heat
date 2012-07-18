@@ -47,6 +47,10 @@ from heat.openstack.common import cfg
 from heat.openstack.common import importutils
 from heat.openstack.common import utils
 
+
+# TODO(shadower) remove this once eventlet with fix from #55 gets released
+eventlet.wsgi.MAX_REQUEST_LINE = 50000
+
 bind_opts = [
     cfg.StrOpt('bind_host', default='0.0.0.0'),
     cfg.IntOpt('bind_port'),
@@ -74,7 +78,9 @@ class WritableLogger(object):
 
 def get_bind_addr(conf, default_port=None):
     """Return the host and port to bind to."""
-    conf.register_opts(bind_opts)
+    for opt in bind_opts:
+        if not opt.name in conf:
+            conf.register_opt(opt)
     return (conf.bind_host, conf.bind_port or default_port)
 
 

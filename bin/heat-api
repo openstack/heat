@@ -35,7 +35,6 @@ gettext.install('heat', unicode=1)
 
 from heat.common import config
 from heat.common import wsgi
-from paste import httpserver
 
 from heat.openstack.common import cfg
 from heat.openstack.common import log as logging
@@ -52,7 +51,9 @@ if __name__ == '__main__':
 
         port = cfg.CONF.bind_port
         host = cfg.CONF.bind_host
-        LOG.info(('Starting Heat API on %s:%s') % (host, port))
-        httpserver.serve(app, host=host, port=port)
+        LOG.info('Starting Heat API on %s:%s' % (host, port))
+        server = wsgi.Server()
+        server.start(app, cfg.CONF, default_port=port)
+        server.wait()
     except RuntimeError, e:
         sys.exit("ERROR: %s" % e)

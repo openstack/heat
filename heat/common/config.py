@@ -226,9 +226,6 @@ def load_paste_app(app_name=None):
         raise RuntimeError("Unable to locate config file")
 
     try:
-        # Setup logging early
-        setup_logging()
-
         app = wsgi.paste_deploy_app(conf_file, app_name, cfg.CONF)
 
         # Log the options used when starting if we're in debug mode...
