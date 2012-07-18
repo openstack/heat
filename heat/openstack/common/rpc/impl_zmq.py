@@ -63,9 +63,10 @@ zmq_opts = [
 
     cfg.StrOpt('rpc_zmq_ipc_dir', default='/var/run/openstack',
                help='Directory for holding IPC sockets'),
+
     cfg.StrOpt('rpc_zmq_host', default=socket.gethostname(),
                help='Name of this node. Must be a valid hostname, FQDN, or '
-                    'IP address')
+                    'IP address. Must match "host" option, if running Nova.')
 ]
 
 
@@ -130,7 +131,7 @@ class ZmqSocket(object):
                     'subscribe': subscribe, 'bind': bind}
 
         LOG.debug(_("Connecting to %(addr)s with %(type)s"), str_data)
-        LOG.debug(_("-> Subscribed to %(subscribe)s"),  str_data)
+        LOG.debug(_("-> Subscribed to %(subscribe)s"), str_data)
         LOG.debug(_("-> bind: %(bind)s"), str_data)
 
         try:
@@ -719,3 +720,6 @@ def register_opts(conf):
         mm_impl = importutils.import_module(mm_module)
         mm_constructor = getattr(mm_impl, mm_class)
         matchmaker = mm_constructor()
+
+
+register_opts(cfg.CONF)
