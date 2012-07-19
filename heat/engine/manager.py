@@ -331,10 +331,13 @@ class EngineManager(manager.Manager):
 
         s = db_api.stack_get_by_name(None, stack_name)
         if not s:
+            logger.warn("Stack %s not found" % stack_name)
             return ['stack', None]
 
         stack = parser.Stack.load(None, s.id)
         if resource_name not in stack:
+            logger.warn("Resource not found %s:%s." % (stack_name,
+                                                       resource_name))
             return ['resource', None]
 
         resource = stack[resource_name]
