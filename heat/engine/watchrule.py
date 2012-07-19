@@ -53,16 +53,16 @@ class WatchRule(object):
             if d.created_at < self.now - self.timeperiod:
                 continue
             if not have_data:
-                data = int(d.data[self.rule['MetricName']]['Value'])
+                data = float(d.data[self.rule['MetricName']]['Value'])
                 have_data = True
-            if int(d.data[self.rule['MetricName']]['Value']) > data:
-                data = int(d.data[self.rule['MetricName']]['Value'])
+            if float(d.data[self.rule['MetricName']]['Value']) > data:
+                data = float(d.data[self.rule['MetricName']]['Value'])
 
         if not have_data:
             return self.NODATA
 
         if self.do_data_cmp(data,
-                            int(self.rule['Threshold'])):
+                            float(self.rule['Threshold'])):
             return self.ALARM
         else:
             return self.NORMAL
@@ -74,16 +74,16 @@ class WatchRule(object):
             if d.created_at < self.now - self.timeperiod:
                 continue
             if not have_data:
-                data = int(d.data[self.rule['MetricName']]['Value'])
+                data = float(d.data[self.rule['MetricName']]['Value'])
                 have_data = True
-            elif int(d.data[self.rule['MetricName']]['Value']) < data:
-                data = int(d.data[self.rule['MetricName']]['Value'])
+            elif float(d.data[self.rule['MetricName']]['Value']) < data:
+                data = float(d.data[self.rule['MetricName']]['Value'])
 
         if not have_data:
             return self.NODATA
 
         if self.do_data_cmp(data,
-                            int(self.rule['Threshold'])):
+                            float(self.rule['Threshold'])):
             return self.ALARM
         else:
             return self.NORMAL
@@ -99,7 +99,7 @@ class WatchRule(object):
             data = data + 1
 
         if self.do_data_cmp(data,
-                            int(self.rule['Threshold'])):
+                            float(self.rule['Threshold'])):
             return self.ALARM
         else:
             return self.NORMAL
@@ -111,14 +111,14 @@ class WatchRule(object):
             if d.created_at < self.now - self.timeperiod:
                 continue
             samples = samples + 1
-            data = data + int(d.data[self.rule['MetricName']]['Value'])
+            data = data + float(d.data[self.rule['MetricName']]['Value'])
 
         if samples == 0:
             return self.NODATA
 
         data = data / samples
         if self.do_data_cmp(data,
-                            int(self.rule['Threshold'])):
+                            float(self.rule['Threshold'])):
             return self.ALARM
         else:
             return self.NORMAL
@@ -129,10 +129,10 @@ class WatchRule(object):
             if d.created_at < self.now - self.timeperiod:
                 logger.debug('ignoring %s' % str(d.data))
                 continue
-            data = data + int(d.data[self.rule['MetricName']]['Value'])
+            data = data + float(d.data[self.rule['MetricName']]['Value'])
 
         if self.do_data_cmp(data,
-                            int(self.rule['Threshold'])):
+                            float(self.rule['Threshold'])):
             return self.ALARM
         else:
             return self.NORMAL
