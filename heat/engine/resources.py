@@ -273,6 +273,9 @@ class Resource(object):
         if result:
             return result
 
+        if self.id is None:
+            return
+
         try:
             db_api.resource_get(self.context, self.id).delete()
         except exception.NotFound:

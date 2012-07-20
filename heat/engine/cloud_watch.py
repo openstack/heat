@@ -41,6 +41,7 @@ class CloudWatchAlarm(Resource):
                                         'Minimum', 'Maximum']},
         'AlarmActions': {'Type': 'List'},
         'OKActions': {'Type': 'List'},
+        'Dimensions': {'Type': 'List'},
         'InsufficientDataActions': {'Type': 'List'},
         'Threshold': {'Type': 'String'},
         'Units': {'Type': 'String',

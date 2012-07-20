@@ -104,10 +104,11 @@ class AutoScalingGroup(Resource):
         if new_capacity > capacity:
             # grow
             for x in range(capacity, new_capacity):
-                inst = instance.Instance('%s-%d' % (self.name, x),
+                name = '%s-%d' % (self.name, x)
+                inst = instance.Instance(name,
                                          self.stack.t['Resources'][conf],
                                          self.stack)
-                inst_list.append('%s-%d' % (self.name, x))
+                inst_list.append(name)
                 self.instance_id_set(','.join(inst_list))
                 inst.create()
         else:
@@ -120,6 +121,20 @@ class AutoScalingGroup(Resource):
                 inst.destroy()
                 inst_list.remove(victim)
                 self.instance_id_set(','.join(inst_list))
+
+        # notify the LoadBalancer to reload it's config to include
+        # the changes in instances we have just made.
+        if self.properties['LoadBalancerNames']:
+            # convert the list of instance names into a list of instance id's
+            id_list = []
+            for inst_name in inst_list:
+                inst = instance.Instance(inst_name,
+                                         self.stack.t['Resources'][conf],
+                                         self.stack)
+                id_list.append(inst.FnGetRefId())
+
+            for lb in self.properties['LoadBalancerNames']:
+                self.stack[lb].reload(id_list)
 
 
 class LaunchConfiguration(Resource):
@@ -147,3 +162,31 @@ class LaunchConfiguration(Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(LaunchConfiguration, self).__init__(name, json_snippet, stack)
+
+
+class ScalingPolicy(Resource):
+    properties_schema = {
+        'AutoScalingGroupName': {'Type': 'String',
+                                 'Required': True},
+        'ScalingAdjustment': {'Type': 'Integer',
+                              'Required': True},
+        'AdjustmentType': {'Type': 'String',
+                           'AllowedValues': ['ChangeInCapacity',
+                                             'ExactCapacity',
+                                             'PercentChangeInCapacity'],
+                           'Required': True},
+        'Cooldown': {'Type': 'Integer'},
+    }
+
+    def __init__(self, name, json_snippet, stack):
+        super(ScalingPolicy, self).__init__(name, json_snippet, stack)
+
+    def alarm(self):
+        self.calculate_properties()
+        group = self.stack.resources[self.properties['AutoScalingGroupName']]
+
+        logger.info('%s Alarm, adjusting Group %s by %s' %
+                    (self.name, group.name,
+                     self.properties['ScalingAdjustment']))
+        group.adjust(int(self.properties['ScalingAdjustment']),
+                     self.properties['AdjustmentType'])

@@ -76,7 +76,7 @@ class MetadataController:
                             'The stack "%s" does not exist.' % stack_name)
             else:
                 return json_error(404,
-                            'The resource "%s" does not exist.' % resource_id)
+                       'The resource "%s" does not exist.' % resource_name)
         return metadata
 
     def update_metadata(self, req, body, stack_id, resource_name):

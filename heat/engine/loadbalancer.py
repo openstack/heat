@@ -49,7 +49,7 @@ lb_template = '''
         "ComparisonOperator": "GreaterThanThreshold"
       }
     },
-    "LoadBalancerInstance": {
+    "LB_instance": {
       "Type": "AWS::EC2::Instance",
       "Metadata": {
         "AWS::CloudFormation::Init": {
@@ -69,6 +69,39 @@ lb_template = '''
               }
             },
             "files": {
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\\n",
+                  "stack=", { "Ref" : "AWS::StackName" }, "\\n",
+                  "credential-file=/etc/cfn/cfn-credentials\\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\\n",
+                  "interval=60\\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
+              "/etc/cfn/hooks.conf" : {
+                "content": { "Fn::Join" : ["", [
+                  "[cfn-init]\\n",
+                  "triggers=post.update\\n",
+                  "path=Resources.LB_instance.Metadata\\n",
+                  "action=/opt/aws/bin/cfn-init -s ",
+                  { "Ref": "AWS::StackName" },
+                  "    -r LB_instance ",
+                  "    --region ", { "Ref": "AWS::Region" }, "\\n",
+                  "runas=root\\n",
+                  "\\n",
+                  "[reload]\\n",
+                  "triggers=post.update\\n",
+                  "path=Resources.LB_instance.Metadata\\n",
+                  "action=systemctl reload haproxy.service\\n",
+                  "runas=root\\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
               "/etc/haproxy/haproxy.cfg": {
                 "content": "",
                 "mode": "000644",
@@ -79,6 +112,7 @@ lb_template = '''
                 "content" : { "Fn::Join" : ["", [
                 "MAIL=\\"\\"\\n",
                 "\\n",
+                "* * * * * /opt/aws/bin/cfn-hup -f\\n",
                 "* * * * * /opt/aws/bin/cfn-push-stats ",
                 " --watch latency_watcher --haproxy\\n"
                 ]]},
@@ -98,7 +132,9 @@ lb_template = '''
           "#!/bin/bash -v\\n",
           "/opt/aws/bin/cfn-init -s ",
           { "Ref": "AWS::StackName" },
+          "    -r LB_instance ",
           "    --region ", { "Ref": "AWS::Region" }, "\\n",
+          "touch /etc/cfn/cfn-credentials\\n",
           "# install cfn-hup crontab\\n",
           "crontab /tmp/cfn-hup-crontab.txt\\n"
         ]]}}
@@ -108,7 +144,7 @@ lb_template = '''
 
   "Outputs": {
     "PublicIp": {
-      "Value": { "Fn::GetAtt": [ "LoadBalancerInstance", "PublicIp" ] },
+      "Value": { "Fn::GetAtt": [ "LB_instance", "PublicIp" ] },
       "Description": "instance IP"
     }
   }
@@ -145,7 +181,7 @@ class LoadBalancer(stack.Stack):
                    'Required': True},
         'Timeout': {'Type': 'Integer',
                     'Required': True},
-        'UnHealthyTheshold': {'Type': 'Integer',
+        'UnhealthyThreshold': {'Type': 'Integer',
                               'Required': True},
     }
 
@@ -180,7 +216,7 @@ class LoadBalancer(stack.Stack):
         try:
             server = self.nova().servers.get(inst)
         except NotFound as ex:
-            logger.warn('Instance IP address not found (%s)' % str(ex))
+            logger.warn('Instance (%s) not found: %s' % (inst, str(ex)))
         else:
             for n in server.networks:
                 return server.networks[n][0]
@@ -190,7 +226,6 @@ class LoadBalancer(stack.Stack):
     def _haproxy_config(self, templ):
         # initial simplifications:
         # - only one Listener
-        # - static (only use Instances)
         # - only http (no tcp or ssl)
         #
         # option httpchk HEAD /check.txt HTTP/1.0
@@ -234,10 +269,12 @@ class LoadBalancer(stack.Stack):
             option forwardfor
             option httpchk
 '''
+
         servers = []
         n = 1
         for i in self.properties['Instances']:
             ip = self._instance_to_ipaddress(i)
+            logger.debug('haproxy server:%s' % ip)
             servers.append('%sserver server%d %s:%s %s' % (spaces, n,
                                                            ip, inst_port,
                                                            check))
@@ -248,12 +285,32 @@ class LoadBalancer(stack.Stack):
     def handle_create(self):
         templ = json.loads(lb_template)
 
-        md = templ['Resources']['LoadBalancerInstance']['Metadata']
-        files = md['AWS::CloudFormation::Init']['config']['files']
-        cfg = self._haproxy_config(templ)
-        files['/etc/haproxy/haproxy.cfg']['content'] = cfg
+        if self.properties['Instances']:
+            md = templ['Resources']['LB_instance']['Metadata']
+            files = md['AWS::CloudFormation::Init']['config']['files']
+            cfg = self._haproxy_config(templ)
+            files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
         self.create_with_template(templ)
+
+    def reload(self, inst_list):
+        '''
+        re-generate the Metadata
+        save it to the db.
+        rely on the cfn-hup to reconfigure HAProxy
+        '''
+        self.properties['Instances'] = inst_list
+        templ = json.loads(lb_template)
+        cfg = self._haproxy_config(templ)
+
+        md = self.nested()['LB_instance'].metadata
+        files = md['AWS::CloudFormation::Init']['config']['files']
+        files['/etc/haproxy/haproxy.cfg']['content'] = cfg
+
+        self.nested()['LB_instance'].metadata = md
+
+    def FnGetRefId(self):
+        return unicode(self.name)
 
     def FnGetAtt(self, key):
         '''

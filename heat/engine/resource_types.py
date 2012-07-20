@@ -50,6 +50,7 @@ _resource_classes = {
     'HEAT::HA::Restarter': instance.Restarter,
     'AWS::AutoScaling::LaunchConfiguration': autoscaling.LaunchConfiguration,
     'AWS::AutoScaling::AutoScalingGroup': autoscaling.AutoScalingGroup,
+    'AWS::AutoScaling::ScalingPolicy': autoscaling.ScalingPolicy,
 }
 
 
