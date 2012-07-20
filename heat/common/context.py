@@ -110,8 +110,7 @@ class ContextMiddleware(wsgi.Middleware):
         ]
 
     def __init__(self, app, conf, **local_conf):
-        self.conf = conf
-        self.conf.register_opts(self.opts)
+        cfg.CONF.register_opts(self.opts)
 
         # Determine the context class to use
         self.ctxcls = RequestContext
@@ -124,7 +123,7 @@ class ContextMiddleware(wsgi.Middleware):
         """
         Create a context with the given arguments.
         """
-        kwargs.setdefault('owner_is_tenant', self.conf.owner_is_tenant)
+        kwargs.setdefault('owner_is_tenant', cfg.CONF.owner_is_tenant)
 
         return self.ctxcls(*args, **kwargs)
 
@@ -193,3 +192,16 @@ class ContextMiddleware(wsgi.Middleware):
                                         service_password=service_password,
                                         auth_url=auth_url, roles=roles,
                                         is_admin=True)
+
+
+def ContextMiddleware_filter_factory(global_conf, **local_conf):
+    """
+    Factory method for paste.deploy
+    """
+    conf = global_conf.copy()
+    conf.update(local_conf)
+
+    def filter(app):
+        return ContextMiddleware(app, conf)
+
+    return filter
