@@ -22,6 +22,7 @@ from heat.engine import resources
 
 from heat.engine import autoscaling
 from heat.engine import cloud_watch
+from heat.engine import dbinstance
 from heat.engine import eip
 from heat.engine import instance
 from heat.engine import loadbalancer
@@ -51,6 +52,7 @@ _resource_classes = {
     'AWS::AutoScaling::LaunchConfiguration': autoscaling.LaunchConfiguration,
     'AWS::AutoScaling::AutoScalingGroup': autoscaling.AutoScalingGroup,
     'AWS::AutoScaling::ScalingPolicy': autoscaling.ScalingPolicy,
+    'AWS::RDS::DBInstance': dbinstance.DBInstance,
 }
 
 
