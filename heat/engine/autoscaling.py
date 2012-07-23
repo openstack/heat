@@ -139,6 +139,9 @@ class AutoScalingGroup(Resource):
             for lb in self.properties['LoadBalancerNames']:
                 self.stack[lb].reload(id_list)
 
+    def FnGetRefId(self):
+        return unicode(self.name)
+
 
 class LaunchConfiguration(Resource):
     tags_schema = {'Key': {'Type': 'String',
