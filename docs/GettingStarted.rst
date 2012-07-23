@@ -228,11 +228,11 @@ Describe the ``wordpress`` stack
     EOF
     )
 
-After a few seconds, the ``StackStatus`` should change from ``IN_PROGRESS`` to ``CREATE_COMPLETE``.
+After a few seconds, the ``StackStatus`` should change from ``CREATE_IN_PROGRESS`` to ``CREATE_COMPLETE``.
 
 ..
     # Wait for Stack creation
-    CREATING="<StackStatus>IN_PROGRESS</StackStatus>"
+    CREATING="<StackStatus>CREATE_IN_PROGRESS</StackStatus>"
     retries=24
     while $HEAT_DESCRIBE | grep -q $CREATING && ((retries-- > 0))
     do
