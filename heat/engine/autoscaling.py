@@ -101,7 +101,10 @@ class AutoScalingGroup(Resource):
             return
 
         if new_capacity == capacity:
+            logger.debug('no change in capacity %d' % capacity)
             return
+        logger.debug('adjusting capacity from %d to %d' % (capacity,
+                                                           new_capacity))
 
         conf = self.properties['LaunchConfigurationName']
         if new_capacity > capacity:
@@ -116,7 +119,7 @@ class AutoScalingGroup(Resource):
                 inst.create()
         else:
             # shrink (kill largest numbered first)
-            del_list = inst_list[:]
+            del_list = inst_list[new_capacity:]
             for victim in reversed(del_list):
                 inst = instance.Instance(victim,
                                          self.stack.t['Resources'][conf],
