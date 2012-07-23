@@ -178,9 +178,9 @@
                 "MAIL=\"\"\n",
                 "\n",
                 "* * * * * /opt/aws/bin/cfn-push-stats --watch ",
-                { "Ref" : "MEMAlarmHigh" }, " ----mem-util\n",
+                { "Ref" : "MEMAlarmHigh" }, " --mem-util\n",
                 "* * * * * /opt/aws/bin/cfn-push-stats --watch ",
-                { "Ref" : "MEMAlarmLow" }, " ----mem-util\n"
+                { "Ref" : "MEMAlarmLow" }, " --mem-util\n"
                 ]]},
                 "mode"    : "000600",
                 "owner"   : "root",
@@ -189,6 +189,7 @@
             },
             "packages" : {
               "yum" : {
+                "python-psutil": [],
                 "cronie"       : [],
                 "mysql"        : [],
                 "mysql-server" : [],
