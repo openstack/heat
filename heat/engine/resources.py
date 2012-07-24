@@ -291,9 +291,6 @@ class Resource(object):
     def validate(self):
         logger.info('Validating %s' % str(self))
 
-    def validate(self):
-        logger.info('Validating %s' % str(self))
-
         try:
             self.calculate_properties()
         except ValueError as ex:
