@@ -254,11 +254,13 @@ class LoadBalancer(stack.Stack):
         health_chk = self.properties['HealthCheck']
         if health_chk:
             check = 'check inter %ss fall %s rise %s' % (
-                    health_chk.get('Interval', '2'),
-                    health_chk.get('UnHealthyTheshold', '3'),
-                    health_chk.get('HealthyTheshold', '3'))
+                    health_chk['Interval'],
+                    health_chk['UnHealthyTheshold'],
+                    health_chk['HealthyTheshold'])
+            timeout_check = 'timeout check %ds' % (health_chk['Timeout'])
         else:
             check = ''
+            timeout_check = ''
 
         backend = '''
         default_backend servers
@@ -268,7 +270,8 @@ class LoadBalancer(stack.Stack):
             option http-server-close
             option forwardfor
             option httpchk
-'''
+            %s
+''' % timeout_check
 
         servers = []
         n = 1
@@ -292,6 +295,20 @@ class LoadBalancer(stack.Stack):
             files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
         self.create_with_template(templ)
+
+    def validate(self):
+        '''
+        Validate any of the provided params
+        '''
+        res = super(LoadBalancer, self).validate()
+        if res:
+            return res
+
+        health_chk = self.properties['HealthCheck']
+        if health_chk:
+            if float(health_chk['Interval']) >= float(health_chk['Timeout']):
+                return {'Error':
+                        'Interval must be larger than Timeout'}
 
     def reload(self, inst_list):
         '''
