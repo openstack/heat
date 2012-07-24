@@ -42,8 +42,7 @@ class AutoScalingGroup(Resource):
         'MinSize': {'Required': True,
                     'Type': 'String'},
         'Cooldown': {'Type': 'String'},
-        'DesiredCapacity': {'Type': 'String',
-                            'Implemented': False},
+        'DesiredCapacity': {'Type': 'Integer'},
         'HealthCheckGracePeriod': {'Type': 'Integer',
                                    'Implemented': False},
         'HealthCheckType': {'Type': 'String',
@@ -59,7 +58,13 @@ class AutoScalingGroup(Resource):
         # instance_id is a list of resources
 
     def handle_create(self):
-        self.adjust(int(self.properties['MinSize']),
+
+        if 'DesiredCapacity' in self.properties:
+            num_to_create = int(self.properties['DesiredCapacity'])
+        else:
+            num_to_create = int(self.properties['MinSize'])
+
+        self.adjust(num_to_create,
                     adjustment_type='ExactCapacity')
 
     def handle_update(self):
