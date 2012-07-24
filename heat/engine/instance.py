@@ -287,6 +287,8 @@ class Instance(resources.Resource):
         '''
         Delete an instance, blocking until it is disposed by OpenStack
         '''
+        if self.instance_id is None:
+            return
         try:
             server = self.nova().servers.get(self.instance_id)
         except NotFound:

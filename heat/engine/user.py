@@ -60,6 +60,8 @@ class User(Resource):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
+        if self.instance_id is None:
+            return
         try:
             user = self.keystone().users.get(DummyId(self.instance_id))
         except Exception as ex:

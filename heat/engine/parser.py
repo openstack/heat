@@ -559,6 +559,8 @@ class Stack(object):
         for res in reversed(self):
             result = res.destroy()
             if result:
+                logger.error('Failed to delete %s error: %s' % (str(res),
+                                                                result))
                 failures.append(str(res))
 
         if failures:
