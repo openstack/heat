@@ -77,7 +77,7 @@ class EngineManager(manager.Manager):
             else:
                 raise AttributeError('Unknown stack name')
         else:
-            stacks = db_api.stack_get_by_user(context) or []
+            stacks = db_api.stack_get_by_tenant(context) or []
 
         def format_stack_detail(s):
             stack = parser.Stack.load(context, s.id)
@@ -253,7 +253,7 @@ class EngineManager(manager.Manager):
 
             events = db_api.event_get_all_by_stack(context, st.id)
         else:
-            events = db_api.event_get_all_by_user(context)
+            events = db_api.event_get_all_by_tenant(context)
 
         return {'events': [api.format_event(e) for e in events]}
 

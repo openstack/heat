@@ -308,6 +308,7 @@ class Stack(object):
             'owner_id': owner and owner.id,
             'user_creds_id': new_creds.id,
             'username': self.context.username,
+            'tenant': self.context.tenant,
             'status': self.state,
             'status_reason': self.state_description,
             'timeout': self.timeout_mins,

@@ -99,8 +99,8 @@ def stack_get_all(context):
     return IMPL.stack_get_all(context)
 
 
-def stack_get_by_user(context):
-    return IMPL.stack_get_by_user(context)
+def stack_get_by_tenant(context):
+    return IMPL.stack_get_by_tenant(context)
 
 
 def stack_create(context, values):
@@ -131,8 +131,8 @@ def event_get_all(context):
     return IMPL.event_get_all(context)
 
 
-def event_get_all_by_user(context):
-    return IMPL.event_get_all_by_user(context)
+def event_get_all_by_tenant(context):
+    return IMPL.event_get_all_by_tenant(context)
 
 
 def event_get_all_by_stack(context, stack_id):

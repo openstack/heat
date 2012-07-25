@@ -39,10 +39,13 @@ templates_dir = os.path.normpath(os.path.join(tests_dir,
                                               'templates'))
 
 
-def create_context(mocks, user='stacks_test_user', ctx=None):
+def create_context(mocks, user='stacks_test_user',
+                   tenant='test_admin', ctx=None):
     ctx = ctx or context.get_admin_context()
     mocks.StubOutWithMock(ctx, 'username')
+    mocks.StubOutWithMock(ctx, 'tenant')
     ctx.username = user
+    ctx.tenant = tenant
     mocks.StubOutWithMock(auth, 'authenticate')
     return ctx
 
@@ -100,7 +103,7 @@ class stackCreateTest(unittest.TestCase):
         self.assertNotEqual(stack.resources['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_delete(self):
-        ctx = create_context(self.m, 'test_delete_user')
+        ctx = create_context(self.m, tenant='test_delete_tenant')
         stack = get_wordpress_stack('test_stack', ctx)
         setup_mocks(self.m, stack)
         self.m.ReplayAll()
@@ -127,7 +130,8 @@ class stackManagerTest(unittest.TestCase):
     def setUpClass(cls):
         m = mox.Mox()
         cls.username = 'stack_manager_test_user'
-        ctx = create_context(m, cls.username)
+        cls.tenant = 'stack_manager_test_tenant'
+        ctx = create_context(m, cls.username, cls.tenant)
         cls.stack_name = 'manager_test_stack'
 
         stack = get_wordpress_stack(cls.stack_name, ctx)
@@ -144,7 +148,7 @@ class stackManagerTest(unittest.TestCase):
     def tearDownClass(cls):
         cls = cls
         m = mox.Mox()
-        create_context(m, cls.username, ctx=cls.stack.context)
+        create_context(m, cls.username, cls.tenant, ctx=cls.stack.context)
         setup_mocks(m, cls.stack)
         m.ReplayAll()
 
@@ -154,7 +158,7 @@ class stackManagerTest(unittest.TestCase):
 
     def setUp(self):
         self.m = mox.Mox()
-        self.ctx = create_context(self.m, self.username)
+        self.ctx = create_context(self.m, self.username, self.tenant)
         auth.authenticate(self.ctx).AndReturn(True)
         setup_mocks(self.m, self.stack)
         self.m.ReplayAll()
@@ -217,7 +221,7 @@ class stackManagerTest(unittest.TestCase):
 
     def test_stack_describe_all_empty(self):
         self.tearDown()
-        self.username = 'stack_describe_all_empty_user'
+        self.tenant = 'stack_describe_all_empty_tenant'
         self.setUp()
 
         sl = self.man.show_stack(self.ctx, None, {})
