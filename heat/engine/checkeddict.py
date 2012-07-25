@@ -135,9 +135,10 @@ class CheckedDict(collections.MutableMapping):
             if not self.data[key]['Required']:
                 return None
             else:
-                raise ValueError('%s: %s must be provided' % (self.name, key))
+                raise ValueError('%s: Property %s not assigned' % (self.name,
+                                                                   key))
         else:
-            raise ValueError('%s: %s must be provided' % (self.name, key))
+            raise ValueError('%s: Property %s not assigned' % (self.name, key))
 
     def __len__(self):
         return len(self.data)

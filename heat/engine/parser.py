@@ -554,8 +554,10 @@ class Stack(object):
         '''
         self.state_set(self.DELETE_IN_PROGRESS, 'Stack deletion started')
 
-        failures = []
+        for res in self:
+            res.calculate_properties()
 
+        failures = []
         for res in reversed(self):
             result = res.destroy()
             if result:
