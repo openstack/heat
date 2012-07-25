@@ -408,7 +408,12 @@ class EngineManager(manager.Manager):
     def _periodic_watcher_task(self, context):
 
         now = timeutils.utcnow()
-        wrs = db_api.watch_rule_get_all(context)
+        try:
+            wrs = db_api.watch_rule_get_all(context)
+        except Exception as ex:
+            logger.warn('periodic_task db error (%s) %s' %
+                        ('watch rule removed?', str(ex)))
+            return
         for wr in wrs:
             # has enough time progressed to run the rule
             dt_period = datetime.timedelta(seconds=int(wr.rule['Period']))
@@ -427,22 +432,25 @@ class EngineManager(manager.Manager):
         new_state = watcher.get_alarm_state()
 
         if new_state != wr.state:
-            wr.state = new_state
-            wr.save()
             logger.warn('WATCH: stack:%s, watch_name:%s %s',
                         wr.stack_name, wr.name, new_state)
 
             if not action_map[new_state] in wr.rule:
                 logger.info('no action for new state %s',
                             new_state)
+                wr.state = new_state
+                wr.save()
             else:
                 s = db_api.stack_get_by_name(None, wr.stack_name)
-                if s:
+                if s and s.status in ('CREATE_COMPLETE',
+                                      'UPDATE_COMPLETE'):
                     user_creds = db_api.user_creds_get(s.user_creds_id)
                     ctxt = ctxtlib.RequestContext.from_dict(dict(user_creds))
                     stack = parser.Stack.load(ctxt, s.id)
                     for a in wr.rule[action_map[new_state]]:
                         greenpool.spawn_n(stack[a].alarm)
+                    wr.state = new_state
+                    wr.save()
 
         wr.last_evaluated = now
 

@@ -342,6 +342,8 @@ class Resource(object):
             logger.exception('Delete %s from DB' % str(self))
             return str(ex)
 
+        self.id = None
+
     def instance_id_set(self, inst):
         self.instance_id = inst
         if self.id is not None:

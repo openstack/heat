@@ -589,9 +589,7 @@ class Stack(object):
 
         for res in reversed(deps):
             try:
-                res.delete()
-                re = db_api.resource_get(self.context, res.id)
-                re.delete()
+                res.destroy()
             except Exception as ex:
                 failed = True
                 logger.error('delete: %s' % str(ex))

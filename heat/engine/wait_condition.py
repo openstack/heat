@@ -116,6 +116,14 @@ class WaitCondition(resources.Resource):
     def handle_update(self):
         return self.UPDATE_REPLACE
 
+    def handle_delete(self):
+        self._get_handle_resource_id()
+        if self.resource_id is None:
+            return
+
+        handle = self.stack[self.resource_id]
+        handle.metadata = {}
+
     def FnGetAtt(self, key):
         res = None
         if key == 'Data':
