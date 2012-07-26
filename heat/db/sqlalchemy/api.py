@@ -19,6 +19,7 @@ from sqlalchemy.orm.session import Session
 from heat.common.exception import NotFound
 from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy.session import get_session
+from heat.engine import auth
 
 
 def model_query(context, *args, **kwargs):
@@ -202,12 +203,18 @@ def stack_delete(context, stack_id):
 def user_creds_create(values):
     user_creds_ref = models.UserCreds()
     user_creds_ref.update(values)
+    user_creds_ref.password = auth.encrypt(values['password'])
+    user_creds_ref.service_password = auth.encrypt(values['service_password'])
+    user_creds_ref.aws_creds = auth.encrypt(values['aws_creds'])
     user_creds_ref.save()
     return user_creds_ref
 
 
 def user_creds_get(user_creds_id):
     result = model_query(None, models.UserCreds).get(user_creds_id)
+    result.password = auth.decrypt(result.password)
+    result.service_password = auth.decrypt(result.service_password)
+    result.aws_creds = auth.decrypt(result.aws_creds)
 
     return result
 

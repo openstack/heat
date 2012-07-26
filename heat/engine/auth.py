@@ -16,6 +16,7 @@
 import json
 import httplib
 import urlparse
+import base64
 from novaclient.v1_1 import client
 from novaclient.exceptions import BadRequest
 from novaclient.exceptions import NotFound
@@ -23,7 +24,41 @@ from novaclient.exceptions import AuthorizationFailure
 from heat.common import context
 from heat.openstack.common import log as logging
 
+from Crypto.Cipher import AES
+from Crypto import Random
+
+from heat.openstack.common import cfg
+from heat.openstack.common import importutils
+
+
+auth_opts = [
+    cfg.StrOpt('auth_encryption_key',
+               default='notgood',
+               help="Encryption key used for authentication info in database")
+]
+
+cfg.CONF.register_opts(auth_opts)
+
 logger = logging.getLogger('heat.engine.auth')
+
+
+def encrypt(auth_info):
+    if auth_info is None:
+        return None
+    iv = Random.new().read(AES.block_size)
+    cipher = AES.new(cfg.CONF.auth_encryption_key[:32], AES.MODE_CFB, iv)
+    res = base64.b64encode(iv + cipher.encrypt(auth_info))
+    return res
+
+
+def decrypt(auth_info):
+    if auth_info is None:
+        return None
+    auth = base64.b64decode(auth_info)
+    iv = auth[:AES.block_size]
+    cipher = AES.new(cfg.CONF.auth_encryption_key[:32], AES.MODE_CFB, iv)
+    res = cipher.decrypt(auth[AES.block_size:])
+    return res
 
 
 def authenticate(con, service_type='heat', service_name='heat'):

@@ -20,6 +20,8 @@ do
     elif [ -f $CONF_DIR/$f ]; then
         echo "not copying over $CONF_DIR/$f"
         diff -u $CONF_DIR/$f $f
+    elif [ $f = 'heat-engine.conf' ]; then
+	cat $f | sed s/%ENCRYPTION_KEY%/`/bin/uuidgen`/ > $CONF_DIR/$f
     else
         cp $f $CONF_DIR
     fi
