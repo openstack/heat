@@ -72,8 +72,8 @@ class StackController(object):
         to HeatAPIException subclasses which can be used to return
         properly formatted AWS error responses
         """
-        if ex.exc_type == 'AttributeError':
-            # Attribute error, bad user data, ex.value should tell us why
+        if ex.exc_type in ('AttributeError', 'ValueError'):
+            # Attribute/Value error, bad user data, ex.value should tell us why
             return exception.HeatInvalidParameterValueError(detail=ex.value)
         else:
             # Map everything else to internal server error for now
