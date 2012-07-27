@@ -98,6 +98,9 @@ cfg.StrOpt('host',
 cfg.StrOpt('instance_driver',
            default='heat.engine.nova',
            help='Driver to use for controlling instances'),
+cfg.StrOpt('engine_topic',
+           default='engine',
+           help='the topic engine nodes listen on')
 ]
 
 
