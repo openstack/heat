@@ -21,7 +21,7 @@ do
         echo "not copying over $CONF_DIR/$f"
         diff -u $CONF_DIR/$f $f
     elif [ $f = 'heat-engine.conf' ]; then
-	cat $f | sed s/%ENCRYPTION_KEY%/`/bin/uuidgen`/ > $CONF_DIR/$f
+	cat $f | sed s/%ENCRYPTION_KEY%/`hexdump -n 16 -v -e '/1 "%02x"' /dev/random`/ > $CONF_DIR/$f
     else
         cp $f $CONF_DIR
     fi
