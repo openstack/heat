@@ -15,6 +15,7 @@
 
 import collections
 import re
+from copy import deepcopy
 
 from heat.openstack.common import log as logging
 
@@ -28,7 +29,7 @@ class CheckedDict(collections.MutableMapping):
         self.name = name
 
     def addschema(self, key, schema):
-        self.data[key] = schema
+        self.data[key] = deepcopy(schema)
 
     def get_attr(self, key, attr):
         return self.data[key].get(attr, '')
@@ -156,7 +157,7 @@ class CheckedDict(collections.MutableMapping):
 class Properties(CheckedDict):
     def __init__(self, name, schema):
         CheckedDict.__init__(self, name)
-        self.data = schema
+        self.data = deepcopy(schema)
 
         # set some defaults
         for s in self.data:
