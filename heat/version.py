@@ -20,7 +20,7 @@ except ImportError:
                     'revision_id': 'LOCALREVISION',
                     'revno': 0}
 
-HEAT_VERSION = ['5']
+HEAT_VERSION = ['6']
 REVISION = HEAT_VERSION
 
 FINAL = False   # This becomes true at Release Candidate time
