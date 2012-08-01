@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "OpenShift Template.",
+  "Description" : "OpenShift Broker Template.",
 
   "Parameters" : {
 
@@ -103,16 +103,83 @@
 
           "useradd builder\n",
           "usermod -a -G mock builder\n",
-          "su builder -c 'cd /home/builder ; git clone git://github.com/openshift/crankcase.git /home/builder/crankcase'\n",
-          "su builder -c 'cd /home/builder/crankcase ; git checkout features/mcollective'\n",
-          "cd /home/builder/crankcase/build ; rake build_setup\n",
-          "cd /home/builder/crankcase/build ; rake build\n",
-          "cd /home/builder/crankcase/build ; rake install_broker || error_exit 'Failed to install broker'\n",
-
+          "su builder -c 'cd /home/builder ; git clone git://github.com/openshift/crankcase.git /home/builder/crankcase || error_exit failed_git_clone'\n",
+          "echo 'Hacking Rakefile to work with notty'\n",
+          "sed -i '/.*usermod.*/d' /home/builder/crankcase/build/Rakefile\n",
+          "cd /home/builder/crankcase/build ; rake build_setup || error_exit failed_build_setup\n",
+          "cd /home/builder/crankcase/build ; rake build || error_exit failed_build\n",
+          "cd /home/builder/crankcase/build ; rake devbroker || error_exit failed_devbroker\n",
           "ss-setup-broker\n",
+          "hostname\n",
+          "ss-register-dns --with-node-hostname node0 --with-node-ip ", { "Fn::GetAtt" : [ "OpenShiftNodeServer", "PublicIp" ]}, "\n"
+
+        ]]}}
+      }
+    },
+
+    "OpenShiftNodeServer": {
+      "Type": "AWS::EC2::Instance",
+      "DependsOn": "OpenShiftBrokerServer",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+              "yum" : {
+                "ntp"                      : [],
+                "git"                      : [],
+                "vim"                      : [],
+                "emacs"                    : [],
+                "wget"                     : [],
+                "tig"                      : [],
+                "mock"                     : [],
+                "createrepo"               : [],
+                "tito"                     : [],
+                "fedora-kickstarts"        : [],
+                "livecd-tools"             : [],
+                "ruby"                     : [],
+                "rubygems"                 : [],
+                "rubygem-rake"             : [],
+                "java-1.6.0-openjdk"       : [],
+                "jpackage-utils"           : [],
+                "java-1.6.0-openjdk-devel" : []
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "# Helper function\n",
+          "function error_exit\n",
+          "{\n",
+          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandle" }, "'\n",
+          "  exit 1\n",
+          "}\n",
+
+          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r OpenShiftNodeServer ",
+          "    --access-key Ref_HostKeys",
+          "    --secret-key Fn_GetAtt_HostKeys_SecretAccessKey",
+          "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+
+          "useradd builder\n",
+          "usermod -a -G mock builder\n",
+          "su builder -c 'cd /home/builder ; git clone git://github.com/openshift/crankcase.git /home/builder/crankcase'\n",
+          "echo 'Hacking Rakefile to work with notty'\n",
+          "sed -i '/.*usermod.*/d' /home/builder/crankcase/build/Rakefile\n",
+          "cd /home/builder/crankcase/build ; rake build_setup || error_exit failed_build_setup\n",
+          "cd /home/builder/crankcase/build ; rake build || error_exit failed_build\n",
+          "cd /home/builder/crankcase/build ; rake devnode || error_exit failed_devnode\n",
+          "ss-setup-node --with-broker-ip ", { "Fn::GetAtt" : [ "OpenShiftBrokerServer", "PublicIp" ]}, " --with-node-hostname node0\n",
+          "echo 'Testing connection to broker'\n",
+          "curl -k https://broker.example.com/broker/rest/api",
 
           "# All is well so signal success\n",
-          "/opt/aws/bin/cfn-signal -e 0 -r \"Rails application setup complete\" '", { "Ref" : "WaitHandle" }, "'\n"
+          "/opt/aws/bin/cfn-signal -e 0 -r \"OpenShift setup complete\" '", { "Ref" : "WaitHandle" }, "'\n"
         ]]}}
       }
     },
@@ -123,18 +190,19 @@
 
     "WaitCondition" : {
       "Type" : "AWS::CloudFormation::WaitCondition",
-      "DependsOn" : "OpenShiftBrokerServer",
+      "DependsOn" : "OpenShiftNodeServer",
       "Properties" : {
         "Handle" : {"Ref" : "WaitHandle"},
-        "Timeout" : "1500"
+        "Timeout" : "3000"
       }
     }
+
   },
 
   "Outputs" : {
     "WebsiteURL" : {
       "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "OpenShiftBrokerServer", "PublicIp" ]}, ":3000" ]] },
-      "Description" : "URL for newly created Rails application"
+      "Description" : "URL for newly created Openshift Broker Server"
     }
   }
 }
