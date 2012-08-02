@@ -68,7 +68,6 @@ class instancesTest(unittest.TestCase):
         instance = instances.Instance('test_resource_name',
                                       t['Resources']['WebServer'], stack)
 
-        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.t = instance.stack.resolve_runtime_data(instance.t)
 
         # need to resolve the template functions
@@ -81,7 +80,6 @@ class instancesTest(unittest.TestCase):
                 meta=None).AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
 
-        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.create()
 
         # this makes sure the auto increment worked on instance creation
@@ -114,7 +112,6 @@ class instancesTest(unittest.TestCase):
         instance = instances.Instance('test_resource_name',
                                       t['Resources']['WebServer'], stack)
 
-        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.t = instance.stack.resolve_runtime_data(instance.t)
 
         # need to resolve the template functions
@@ -128,7 +125,6 @@ class instancesTest(unittest.TestCase):
         self.m.ReplayAll()
 
         instance.instance_id = 1234
-        instance.itype_oflavor['256 MB Server'] = '256 MB Server'
         instance.create()
 
         # this makes sure the auto increment worked on instance creation

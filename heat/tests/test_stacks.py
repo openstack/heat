@@ -71,7 +71,6 @@ def setup_mocks(mocks, stack):
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
 
     instance = stack.resources['WebServer']
-    instance.itype_oflavor['m1.large'] = 'm1.large'
     instance.calculate_properties()
     server_userdata = instance._build_userdata(instance.properties['UserData'])
     mocks.StubOutWithMock(fc.servers, 'create')

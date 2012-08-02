@@ -108,19 +108,6 @@ class Instance(resources.Resource):
         self.ipaddress = None
         self.mime_string = None
 
-        self.itype_oflavor = {'t1.micro': 'm1.tiny',
-            'm1.small': 'm1.small',
-            'm1.medium': 'm1.medium',
-            'm1.large': 'm1.large',
-            'm1.xlarge': 'm1.tiny',  # TODO(sdake)
-            'm2.xlarge': 'm1.xlarge',
-            'm2.2xlarge': 'm1.large',
-            'm2.4xlarge': 'm1.large',
-            'c1.medium': 'm1.medium',
-            'c1.4xlarge': 'm1.large',
-            'cc2.8xlarge': 'm1.large',
-            'cg1.4xlarge': 'm1.large'}
-
     def _set_ipaddress(self, networks):
         '''
         Read the server's IP address from a list of networks provided by Nova
@@ -202,7 +189,7 @@ class Instance(resources.Resource):
     def handle_create(self):
         security_groups = self.properties.get('SecurityGroups')
         userdata = self.properties['UserData']
-        flavor = self.itype_oflavor[self.properties['InstanceType']]
+        flavor = self.properties['InstanceType']
         key_name = self.properties['KeyName']
 
         keypairs = [k.name for k in self.nova().keypairs.list()]

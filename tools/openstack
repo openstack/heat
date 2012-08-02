@@ -160,6 +160,8 @@ EOF
     sleep 1
     echo "Installation Complete."
     echo "Testing nova and glance.  If any errors are displayed, the install failed..."
+    # Create additional flavors required by heat templates
+    ${BASE_DIR}/nova_create_flavors.sh
     nova flavor-list
     glance index
     echo
