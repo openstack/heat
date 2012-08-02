@@ -19,6 +19,7 @@ from webob.exc import Response
 
 from heat.common import wsgi
 from heat.common import context
+from heat.engine import rpcapi as engine_rpcapi
 from heat.openstack.common import rpc
 
 
@@ -39,6 +40,7 @@ def json_error(http_status, message):
 class MetadataController:
     def __init__(self, options):
         self.options = options
+        self.engine_rpcapi = engine_rpcapi.EngineAPI()
 
     def entry_point(self, req):
         return {
@@ -48,15 +50,13 @@ class MetadataController:
 
     def list_stacks(self, req):
         con = context.get_admin_context()
-        resp = rpc.call(con, 'engine',
-                              {'method': 'metadata_list_stacks'})
+        resp = self.engine_rpcapi.metadata_list_stacks(con)
         return resp
 
     def list_resources(self, req, stack_name):
         con = context.get_admin_context()
-        resources = rpc.call(con, 'engine',
-                             {'method': 'metadata_list_resources',
-                              'args': {'stack_name': stack_name}})
+        resources = self.engine_rpcapi.metadata_list_resources(con,
+                         stack_name=stack_name)
         if resources:
             return resources
         else:
@@ -65,11 +65,9 @@ class MetadataController:
 
     def get_resource(self, req, stack_name, resource_name):
         con = context.get_admin_context()
-        [error, metadata] = rpc.call(con, 'engine',
-                                     {'method': 'metadata_get_resource',
-                                      'args': {'stack_name': stack_name,
-                                               'resource_name': resource_name}
-                                     })
+        [error, metadata] = self.engine_rpcapi.metadata_get_resource(con,
+                                 stack_name=stack_name,
+                                 resource_name=resource_name)
         if error:
             if error == 'stack':
                 return json_error(404,
@@ -81,11 +79,10 @@ class MetadataController:
 
     def update_metadata(self, req, body, stack_id, resource_name):
         con = context.get_admin_context()
-        [error, metadata] = rpc.call(con, 'engine',
-                                     {'method': 'metadata_update',
-                                      'args': {'stack_id': stack_id,
-                                               'resource_name': resource_name,
-                                               'metadata': body}})
+        [error, metadata] = self.engine_rpcapi.metadata_update(con,
+                                 stack_id=stack_id,
+                                 resource_name=resource_name,
+                                 metadata=body)
         if error:
             if error == 'stack':
                 return json_error(404,
@@ -100,28 +97,24 @@ class MetadataController:
 
     def create_event(self, req, body=None):
         con = context.get_admin_context()
-        [error, event] = rpc.call(con, 'engine',
-                                     {'method': 'event_create',
-                                      'args': {'event': body}})
+        [error, event] = self.engine_rpcapi.event_create(con, event=body)
         if error:
             return json_error(400, error)
         return json_response(201, event)
 
     def create_watch_data(self, req, body, watch_name):
         con = context.get_admin_context()
-        [error, watch_data] = rpc.call(con, 'engine',
-                                       {'method': 'create_watch_data',
-                                        'args': {'watch_name': watch_name,
-                                                 'stats_data': body}})
+        [error, watch_data] = self.engine_rpcapi.create_watch_data(con,
+                                   watch_name=watch_name,
+                                   stats_data=body)
         if error:
             return json_error(400, error)
         return json_response(201, watch_data)
 
     def list_watch_data(self, req, watch_name):
         con = context.get_admin_context()
-        data = rpc.call(con, 'engine',
-                        {'method': 'list_watch_data',
-                         'args': {'watch_name': watch_name}})
+        data = self.engine_rpcapi.list_watch_data(con,
+                    watch_name=watch_name)
         if data:
             return data
         else:

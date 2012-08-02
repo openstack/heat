@@ -91,13 +91,15 @@ cfg.IntOpt('sql_idle_timeout',
            help='timeout before idle sql connections are reaped'),
 ]
 engine_opts = [
-cfg.StrOpt('host',
-           default=socket.gethostname(),
-           help='Name of this node.  This can be an opaque identifier.  '
-                'It is not necessarily a hostname, FQDN, or IP address.'),
 cfg.StrOpt('instance_driver',
            default='heat.engine.nova',
-           help='Driver to use for controlling instances'),
+           help='Driver to use for controlling instances')
+]
+rpc_opts = [
+cfg.StrOpt('host',
+           default=socket.gethostname(),
+           help='Name of the engine node.  This can be an opaque identifier.'
+                'It is not necessarily a hostname, FQDN, or IP address.'),
 cfg.StrOpt('engine_topic',
            default='engine',
            help='the topic engine nodes listen on')
@@ -107,16 +109,19 @@ cfg.StrOpt('engine_topic',
 def register_metadata_opts():
     cfg.CONF.register_opts(service_opts)
     cfg.CONF.register_opts(bind_opts)
+    cfg.CONF.register_opts(rpc_opts)
 
 
 def register_api_opts():
     cfg.CONF.register_opts(bind_opts)
+    cfg.CONF.register_opts(rpc_opts)
 
 
 def register_engine_opts():
     cfg.CONF.register_opts(engine_opts)
     cfg.CONF.register_opts(db_opts)
     cfg.CONF.register_opts(service_opts)
+    cfg.CONF.register_opts(rpc_opts)
 
 
 def setup_logging():

@@ -29,6 +29,7 @@ from heat.common import wsgi
 from heat.common import config
 from heat.common import context
 from heat import utils
+from heat.engine import rpcapi as engine_rpcapi
 import heat.engine.api as engine_api
 
 from heat.openstack.common import rpc
@@ -47,6 +48,7 @@ class StackController(object):
 
     def __init__(self, options):
         self.options = options
+        self.engine_rpcapi = engine_rpcapi.EngineAPI()
 
     def _stackid_addprefix(self, resp):
         """
@@ -168,10 +170,9 @@ class StackController(object):
         try:
             # Note show_stack returns details for all stacks when called with
             # no stack_name, we only use a subset of the result here though
-            stack_list = rpc.call(con, 'engine',
-                              {'method': 'show_stack',
-                               'args': {'stack_name': None,
-                                'params': parms}})
+            stack_list = self.engine_rpcapi.show_stack(con,
+                                                       stack_name=None,
+                                                       params=parms)
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
@@ -243,10 +244,9 @@ class StackController(object):
             stack_name = req.params['StackName']
 
         try:
-            stack_list = rpc.call(con, 'engine',
-                              {'method': 'show_stack',
-                               'args': {'stack_name': stack_name,
-                                'params': parms}})
+            stack_list = self.engine_rpcapi.show_stack(con,
+                                                       stack_name=stack_name,
+                                                       params=parms)
 
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
@@ -318,8 +318,8 @@ class StackController(object):
             # This should not happen, so return HeatInternalFailureError
             return exception.HeatInternalFailureError(detail=msg)
 
-        engine_action = {self.CREATE_STACK: "create_stack",
-                         self.UPDATE_STACK: "update_stack"}
+        engine_action = {self.CREATE_STACK: self.engine_rpcapi.create_stack,
+                         self.UPDATE_STACK: self.engine_rpcapi.update_stack}
 
         con = req.context
 
@@ -346,12 +346,11 @@ class StackController(object):
             return exception.HeatInvalidParameterValueError(detail=msg)
 
         try:
-            res = rpc.call(con, 'engine',
-                            {'method': engine_action[action],
-                             'args': {'stack_name': req.params['StackName'],
-                                      'template': stack,
-                                      'params': stack_parms,
-                                      'args': create_args}})
+            res = engine_action[action](con,
+                                        stack_name=req.params['StackName'],
+                                        template=stack,
+                                        params=stack_parms,
+                                        args=create_args)
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
@@ -368,10 +367,9 @@ class StackController(object):
 
         logger.info('get_template')
         try:
-            templ = rpc.call(con, 'engine',
-                             {'method': 'get_template',
-                              'args': {'stack_name': req.params['StackName'],
-                                       'params': parms}})
+            templ = self.engine_rpcapi.get_template(con,
+                                       stack_name=req.params['StackName'],
+                                       params=parms)
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
@@ -415,10 +413,9 @@ class StackController(object):
 
         logger.info('validate_template')
         try:
-            return rpc.call(con, 'engine',
-                            {'method': 'validate_template',
-                             'args': {'template': stack,
-                                      'params': parms}})
+            return self.engine_rpcapi.validate_template(con,
+                                                        template=stack,
+                                                        params=parms)
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
@@ -431,10 +428,10 @@ class StackController(object):
         parms = dict(req.params)
 
         try:
-            res = rpc.call(con, 'engine',
-                       {'method': 'delete_stack',
-                        'args': {'stack_name': req.params['StackName'],
-                        'params': parms}})
+            res = self.engine_rpcapi.delete_stack(con,
+                                     stack_name=req.params['StackName'],
+                                     params=parms,
+                                     cast=False)
 
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
@@ -475,10 +472,9 @@ class StackController(object):
 
         stack_name = req.params.get('StackName', None)
         try:
-            event_res = rpc.call(con, 'engine',
-                             {'method': 'list_events',
-                              'args': {'stack_name': stack_name,
-                              'params': parms}})
+            event_res = self.engine_rpcapi.list_events(con,
+                                                       stack_name=stack_name,
+                                                       params=parms)
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
@@ -517,15 +513,11 @@ class StackController(object):
             return self._stackid_addprefix(result)
 
         con = req.context
-        args = {
-            'stack_name': req.params.get('StackName'),
-            'resource_name': req.params.get('LogicalResourceId'),
-        }
 
         try:
-            resource_details = rpc.call(con, 'engine',
-                              {'method': 'describe_stack_resource',
-                               'args': args})
+            resource_details = self.engine_rpcapi.describe_stack_resource(con,
+                        stack_name=req.params.get('StackName'),
+                        resource_name=req.params.get('LogicalResourceId'))
 
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
@@ -579,16 +571,11 @@ class StackController(object):
             msg = 'Use `StackName` or `PhysicalResourceId` but not both'
             return exception.HeatInvalidParameterCombinationError(detail=msg)
 
-        args = {
-            'stack_name': stack_name,
-            'physical_resource_id': physical_resource_id,
-            'logical_resource_id': req.params.get('LogicalResourceId'),
-        }
-
         try:
-            resources = rpc.call(con, 'engine',
-                              {'method': 'describe_stack_resources',
-                               'args': args})
+            resources = self.engine_rpcapi.describe_stack_resources(con,
+                stack_name=stack_name,
+                physical_resource_id=physical_resource_id,
+                logical_resource_id=req.params.get('LogicalResourceId'))
 
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
@@ -621,10 +608,8 @@ class StackController(object):
         con = req.context
 
         try:
-            resources = rpc.call(con, 'engine', {
-                'method': 'list_stack_resources',
-                'args': {'stack_name': req.params.get('StackName')}
-            })
+            resources = self.engine_rpcapi.list_stack_resources(con,
+                             stack_name=req.params.get('StackName'))
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 

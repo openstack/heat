@@ -25,8 +25,10 @@ import httplib
 import json
 import urlparse
 
+from heat.common import config
 from heat.common import context
 from heat.engine import auth
+from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
@@ -145,9 +147,10 @@ class StackControllerTest(unittest.TestCase):
                         u'stack_name': u'wordpress',
                         u'stack_status': u'CREATE_COMPLETE'}]}
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'show_stack',
+        rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
                                     'args': {'stack_name': None,
-                                    'params': dict(dummy_req.params)}}
+                                    'params': dict(dummy_req.params)},
+                                    'version': self.api_version}, None
                 ).AndReturn(engine_resp)
 
         # Stub socket.gethostname so it returns "ahostname"
@@ -175,9 +178,10 @@ class StackControllerTest(unittest.TestCase):
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'show_stack',
+        rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
                                     'args': {'stack_name': None,
-                                    'params': dict(dummy_req.params)}}
+                                    'params': dict(dummy_req.params)},
+                                    'version': self.api_version}, None
                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
         self.m.ReplayAll()
@@ -193,9 +197,10 @@ class StackControllerTest(unittest.TestCase):
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'show_stack',
+        rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
                                     'args': {'stack_name': None,
-                                    'params': dict(dummy_req.params)}}
+                                    'params': dict(dummy_req.params)},
+                                    'version': self.api_version}, None
                 ).AndRaise(rpc_common.RemoteError("Exception"))
 
         self.m.ReplayAll()
@@ -206,7 +211,7 @@ class StackControllerTest(unittest.TestCase):
 
     def test_describe(self):
         # Format a dummy GET request to pass into the WSGI handler
-        stack_name = "wordpress"
+        stack_name = u"wordpress"
         params = {'Action': 'DescribeStacks', 'StackName': stack_name}
         dummy_req = self._dummy_GET_request(params)
 
@@ -238,9 +243,10 @@ class StackControllerTest(unittest.TestCase):
             u'capabilities':[]}]}
 
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'show_stack', 'args':
-            {'stack_name': stack_name,
-            'params': dict(dummy_req.params)}}).AndReturn(engine_resp)
+        rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
+            'args': {'stack_name': stack_name,
+                     'params': dict(dummy_req.params)},
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         # Stub socket.gethostname so it returns "ahostname"
         self.m.StubOutWithMock(socket, 'gethostname')
@@ -292,9 +298,10 @@ class StackControllerTest(unittest.TestCase):
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'show_stack', 'args':
-            {'stack_name': stack_name,
-            'params': dict(dummy_req.params)}}
+        rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
+            'args': {'stack_name': stack_name,
+            'params': dict(dummy_req.params)},
+            'version': self.api_version}, None
             ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
         self.m.ReplayAll()
@@ -330,12 +337,13 @@ class StackControllerTest(unittest.TestCase):
         engine_resp = {u'StackName': u'wordpress', u'StackId': 1}
 
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'create_stack',
+        rpc.call(dummy_req.context, self.topic, {'method': 'create_stack',
             'args':
             {'stack_name': stack_name,
             'template': template,
             'params': engine_parms,
-            'args': engine_args}}).AndReturn(engine_resp)
+            'args': engine_args},
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         # Stub socket.gethostname so it returns "ahostname"
         self.m.StubOutWithMock(socket, 'gethostname')
@@ -389,12 +397,13 @@ class StackControllerTest(unittest.TestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
 
-        rpc.call(dummy_req.context, 'engine', {'method': 'create_stack',
+        rpc.call(dummy_req.context, self.topic, {'method': 'create_stack',
             'args':
             {'stack_name': stack_name,
             'template': template,
             'params': engine_parms,
-            'args': engine_args}}
+            'args': engine_args},
+            'version': self.api_version}, None
             ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
         self.m.ReplayAll()
@@ -420,12 +429,13 @@ class StackControllerTest(unittest.TestCase):
         engine_resp = {u'StackName': u'wordpress', u'StackId': 1}
 
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'update_stack',
+        rpc.call(dummy_req.context, self.topic, {'method': 'update_stack',
             'args':
             {'stack_name': stack_name,
             'template': template,
             'params': engine_parms,
-            'args': engine_args}}).AndReturn(engine_resp)
+            'args': engine_args},
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         # Stub socket.gethostname so it returns "ahostname"
         self.m.StubOutWithMock(socket, 'gethostname')
@@ -456,10 +466,11 @@ class StackControllerTest(unittest.TestCase):
         engine_resp = template
 
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'get_template',
+        rpc.call(dummy_req.context, self.topic, {'method': 'get_template',
             'args':
             {'stack_name': stack_name,
-            'params': dict(dummy_req.params)}}).AndReturn(engine_resp)
+            'params': dict(dummy_req.params)},
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -479,10 +490,11 @@ class StackControllerTest(unittest.TestCase):
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'get_template',
+        rpc.call(dummy_req.context, self.topic, {'method': 'get_template',
             'args':
             {'stack_name': stack_name,
-            'params': dict(dummy_req.params)}}
+            'params': dict(dummy_req.params)},
+            'version': self.api_version}, None
             ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
         self.m.ReplayAll()
@@ -502,10 +514,11 @@ class StackControllerTest(unittest.TestCase):
         engine_resp = None
 
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'get_template',
+        rpc.call(dummy_req.context, self.topic, {'method': 'get_template',
             'args':
             {'stack_name': stack_name,
-            'params': dict(dummy_req.params)}}).AndReturn(engine_resp)
+            'params': dict(dummy_req.params)},
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -543,10 +556,11 @@ class StackControllerTest(unittest.TestCase):
         engine_resp = None
 
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'delete_stack',
+        rpc.call(dummy_req.context, self.topic, {'method': 'delete_stack',
             'args':
             {'stack_name': stack_name,
-            'params': dict(dummy_req.params)}}).AndReturn(engine_resp)
+            'params': dict(dummy_req.params)},
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -564,10 +578,11 @@ class StackControllerTest(unittest.TestCase):
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'delete_stack',
+        rpc.call(dummy_req.context, self.topic, {'method': 'delete_stack',
             'args':
             {'stack_name': stack_name,
-            'params': dict(dummy_req.params)}}
+            'params': dict(dummy_req.params)},
+            'version': self.api_version}, None
             ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
         self.m.ReplayAll()
@@ -596,10 +611,11 @@ class StackControllerTest(unittest.TestCase):
                         u'resource_type': u'AWS::EC2::Instance'}]}
 
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'list_events',
+        rpc.call(dummy_req.context, self.topic, {'method': 'list_events',
             'args':
             {'stack_name': stack_name,
-            'params': dict(dummy_req.params)}}).AndReturn(engine_resp)
+            'params': dict(dummy_req.params)},
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         # Stub socket.gethostname so it returns "ahostname"
         self.m.StubOutWithMock(socket, 'gethostname')
@@ -633,10 +649,11 @@ class StackControllerTest(unittest.TestCase):
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, 'engine', {'method': 'list_events',
+        rpc.call(dummy_req.context, self.topic, {'method': 'list_events',
             'args':
             {'stack_name': stack_name,
-            'params': dict(dummy_req.params)}}
+            'params': dict(dummy_req.params)},
+            'version': self.api_version}, None
             ).AndRaise(rpc_common.RemoteError("Exception"))
 
         self.m.ReplayAll()
@@ -671,9 +688,10 @@ class StackControllerTest(unittest.TestCase):
             'stack_name': dummy_req.params.get('StackName'),
             'resource_name': dummy_req.params.get('LogicalResourceId'),
         }
-        rpc.call(dummy_req.context, 'engine',
+        rpc.call(dummy_req.context, self.topic,
             {'method': 'describe_stack_resource',
-            'args': args}).AndReturn(engine_resp)
+            'args': args,
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         # Stub socket.gethostname so it returns "ahostname"
         self.m.StubOutWithMock(socket, 'gethostname')
@@ -727,9 +745,10 @@ class StackControllerTest(unittest.TestCase):
             'physical_resource_id': None,
             'logical_resource_id': dummy_req.params.get('LogicalResourceId'),
         }
-        rpc.call(dummy_req.context, 'engine',
+        rpc.call(dummy_req.context, self.topic,
             {'method': 'describe_stack_resources',
-            'args': args}).AndReturn(engine_resp)
+            'args': args,
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         # Stub socket.gethostname so it returns "ahostname"
         self.m.StubOutWithMock(socket, 'gethostname')
@@ -792,9 +811,10 @@ class StackControllerTest(unittest.TestCase):
         args = {
             'stack_name': dummy_req.params.get('StackName'),
         }
-        rpc.call(dummy_req.context, 'engine',
+        rpc.call(dummy_req.context, self.topic,
             {'method': 'list_stack_resources',
-            'args': args}).AndReturn(engine_resp)
+            'args': args,
+            'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -815,6 +835,12 @@ class StackControllerTest(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
         self.m = mox.Mox()
+
+        config.register_engine_opts()
+        cfg.CONF.set_default('engine_topic', 'engine')
+        cfg.CONF.set_default('host', 'host')
+        self.topic = '%s.%s' % (cfg.CONF.engine_topic, cfg.CONF.host)
+        self.api_version = '1.0'
 
         # Create WSGI controller instance
         class DummyConfig():
