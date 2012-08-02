@@ -102,7 +102,7 @@ class EngineManager(manager.Manager):
         auth.authenticate(context)
 
         if db_api.stack_get_by_name(None, stack_name):
-            return {'Error': 'Stack already exists with that name.'}
+            raise AttributeError('Stack already exists with that name')
 
         tmpl = parser.Template(template)
 
@@ -141,7 +141,7 @@ class EngineManager(manager.Manager):
         # Get the database representation of the existing stack
         db_stack = db_api.stack_get_by_name(None, stack_name)
         if not db_stack:
-            return {'Error': 'No stack exists with that name.'}
+            raise AttributeError('No stack exists with that name')
 
         current_stack = parser.Stack.load(context, db_stack.id)
 
