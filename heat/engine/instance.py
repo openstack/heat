@@ -168,7 +168,9 @@ class Instance(resources.Resource):
             attachments = [(read_cloudinit_file('config'), 'cloud-config'),
                            (read_cloudinit_file('part-handler.py'),
                             'part-handler.py'),
-                           (userdata, 'startup', 'x-shellscript')]
+                           (userdata, 'cfn-userdata', 'x-cfninitdata'),
+                           (read_cloudinit_file('loguserdata.sh'),
+                            'loguserdata.sh', 'x-shellscript')]
 
             if 'Metadata' in self.t:
                 attachments.append((json.dumps(self.metadata),
