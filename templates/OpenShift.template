@@ -20,6 +20,12 @@
       "Default" : "m1.small",
       "AllowedValues" : [ "t1.micro","m1.small","m1.medium","m1.large","m1.xlarge","m2.xlarge","m2.2xlarge","m2.4xlarge","c1.medium","c1.xlarge","cc1.4xlarge","cc2.8xlarge","cg1.4xlarge"],
       "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+    "LinuxDistribution": {
+      "Default": "F16",
+      "Description" : "Distribution of choice",
+      "Type": "String",
+      "AllowedValues" : [ "F16", "F17", "U10", "RHEL-6.1", "RHEL-6.2", "RHEL-6.3" ]
     }
   },
 
@@ -39,15 +45,13 @@
       "cc2.8xlarge" : { "Arch" : "64HVM" },
       "cg1.4xlarge" : { "Arch" : "64HVM" }
     },
-
-    "AWSRegionArch2AMI" : {
-      "us-east-1"      : { "32" : "ami-31814f58", "64" : "ami-1b814f72", "64HVM" : "ami-0da96764" },
-      "us-west-2"      : { "32" : "ami-38fe7308", "64" : "ami-30fe7300", "64HVM" : "NOT_YET_SUPPORTED" },
-      "us-west-1"      : { "32" : "ami-11d68a54", "64" : "ami-1bd68a5e", "64HVM" : "NOT_YET_SUPPORTED" },
-      "eu-west-1"      : { "32" : "ami-973b06e3", "64" : "ami-953b06e1", "64HVM" : "NOT_YET_SUPPORTED" },
-      "ap-southeast-1" : { "32" : "ami-b4b0cae6", "64" : "F16-x86_64-cfntools", "64HVM" : "NOT_YET_SUPPORTED" },
-      "ap-northeast-1" : { "32" : "ami-0644f007", "64" : "ami-0a44f00b", "64HVM" : "NOT_YET_SUPPORTED" },
-      "sa-east-1"      : { "32" : "ami-3e3be423", "64" : "ami-3c3be421", "64HVM" : "NOT_YET_SUPPORTED" }
+    "DistroArch2AMI": {
+      "F16"      : { "32" : "F16-i386-cfntools", "64" : "F16-x86_64-cfntools" },
+      "F17"      : { "32" : "F17-i386-cfntools", "64" : "F17-x86_64-cfntools" },
+      "U10"      : { "32" : "U10-i386-cfntools", "64" : "U10-x86_64-cfntools" },
+      "RHEL-6.1" : { "32" : "rhel61-i386-cfntools", "64" : "rhel61-x86_64-cfntools" },
+      "RHEL-6.2" : { "32" : "rhel62-i386-cfntools", "64" : "rhel62-x86_64-cfntools" },
+      "RHEL-6.3" : { "32" : "rhel63-i386-cfntools", "64" : "rhel63-x86_64-cfntools" }
     }
   },
 
@@ -58,6 +62,65 @@
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "config" : {
+            "files": {
+              "/tmp/openshift-patch-rakefile.patch": {
+                "content": { "Fn::Join": ["", [
+"diff --git a/build/Rakefile b/build/Rakefile\n",
+"index 358ba25..ce82162 100644\n",
+"--- a/build/Rakefile\n",
+"+++ b/build/Rakefile\n",
+"@@ -22,18 +22,21 @@ name    = local_build\n",
+" baseurl = file://#{rpmdir}/noarch\n",
+" gpgcheck= 0\n",
+" enabled = 1\n",
+"+retries = 0\n",
+"\n",
+" [openshift_origin]\n",
+" name    = openshift_origin\n",
+" baseurl = http://mirror.openshift.com/pub/crankcase/fedora-$releasever/$basearch\n",
+" gpgcheck= 0\n",
+" enabled = 1\n",
+"+retries = 0\n",
+"\n",
+" [fedora_ruby]\n",
+" name    = openshift_origin\n",
+" baseurl = http://mirror.openshift.com/pub/fedora-ruby/$basearch\n",
+" gpgcheck= 0\n",
+" enabled = 1\n",
+"+retries = 0\n",
+"\n",
+" [openshift]\n",
+" name=Openshift\n",
+"@@ -44,6 +47,7 @@ gpgkey=https://openshift.redhat.com/app/repo/RPM-GPG-KEY-redhat-beta\n",
+" ggpkey=https://openshift.redhat.com/app/repo/RPM-GPG-KEY-redhat-release\n",
+" enabled=1\n",
+" gpgcheck=1\n",
+"+retries = 0\n",
+"   EOF\n",
+"   else\n",
+"   <<-EOF\n",
+"@@ -52,12 +56,14 @@ name    = local_build\n",
+" baseurl = file://#{rpmdir}/noarch\n",
+" gpgcheck= 0\n",
+" enabled = 1\n",
+"+retries = 0\n",
+"\n",
+" [openshift_origin]\n",
+" name    = openshift_origin\n",
+" baseurl = http://mirror.openshift.com/pub/crankcase/rhel-6/$basearch\n",
+" gpgcheck= 0\n",
+" enabled = 1\n",
+"+retries = 0\n",
+"   EOF\n",
+"   end\n",
+" end\n"
+                ]]},
+                "mode": "000644",
+                "owner": "root",
+                "group": "root"
+            }
+          },
+
             "packages" : {
               "yum" : {
                 "ntp"                      : [],
@@ -83,7 +146,7 @@
         }
       },
       "Properties": {
-        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType"   : { "Ref" : "InstanceType" },
         "KeyName"        : { "Ref" : "KeyName" },
@@ -104,6 +167,7 @@
           "useradd builder\n",
           "usermod -a -G mock builder\n",
           "su builder -c 'cd /home/builder ; git clone git://github.com/openshift/crankcase.git /home/builder/crankcase || error_exit failed_git_clone'\n",
+          "cd /home/builder/crankcase/build; cat /tmp/openshift-patch-rakefile.patch | patch -p2\n",
           "echo 'Hacking Rakefile to work with notty'\n",
           "sed -i '/.*usermod.*/d' /home/builder/crankcase/build/Rakefile\n",
           "cd /home/builder/crankcase/build ; rake build_setup || error_exit failed_build_setup\n",
@@ -148,7 +212,7 @@
         }
       },
       "Properties": {
-        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType"   : { "Ref" : "InstanceType" },
         "KeyName"        : { "Ref" : "KeyName" },
