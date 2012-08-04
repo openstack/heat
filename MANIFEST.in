@@ -8,6 +8,7 @@ include openstack-common.conf
 include babel.cfg
 graft templates
 include heat/cloudinit/config
+include heat/cloudinit/loguserdata.sh
 include heat/cloudinit/part-handler.py
 include heat/db/sqlalchemy/migrate_repo/migrate.cfg
 graft etc
