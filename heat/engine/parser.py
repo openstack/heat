@@ -457,8 +457,11 @@ class Stack(object):
         failures = []
         with eventlet.Timeout(self.timeout_mins * 60) as tmo:
             try:
-                # First delete any resources which are not in newstack
                 for res in self:
+                    res.calculate_properties()
+
+                # First delete any resources which are not in newstack
+                for res in reversed(self):
                     if not res.name in newstack.keys():
                         logger.debug("resource %s not found in updated stack"
                                       % res.name + " definition, deleting")
@@ -587,6 +590,9 @@ class Stack(object):
         '''
         deps = self.dependencies[self[resource_name]]
         failed = False
+
+        for res in self:
+            res.calculate_properties()
 
         for res in reversed(deps):
             try:
