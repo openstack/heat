@@ -62,65 +62,6 @@
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
           "config" : {
-            "files": {
-              "/tmp/openshift-patch-rakefile.patch": {
-                "content": { "Fn::Join": ["", [
-"diff --git a/build/Rakefile b/build/Rakefile\n",
-"index 358ba25..ce82162 100644\n",
-"--- a/build/Rakefile\n",
-"+++ b/build/Rakefile\n",
-"@@ -22,18 +22,21 @@ name    = local_build\n",
-" baseurl = file://#{rpmdir}/noarch\n",
-" gpgcheck= 0\n",
-" enabled = 1\n",
-"+retries = 0\n",
-"\n",
-" [openshift_origin]\n",
-" name    = openshift_origin\n",
-" baseurl = http://mirror.openshift.com/pub/crankcase/fedora-$releasever/$basearch\n",
-" gpgcheck= 0\n",
-" enabled = 1\n",
-"+retries = 0\n",
-"\n",
-" [fedora_ruby]\n",
-" name    = openshift_origin\n",
-" baseurl = http://mirror.openshift.com/pub/fedora-ruby/$basearch\n",
-" gpgcheck= 0\n",
-" enabled = 1\n",
-"+retries = 0\n",
-"\n",
-" [openshift]\n",
-" name=Openshift\n",
-"@@ -44,6 +47,7 @@ gpgkey=https://openshift.redhat.com/app/repo/RPM-GPG-KEY-redhat-beta\n",
-" ggpkey=https://openshift.redhat.com/app/repo/RPM-GPG-KEY-redhat-release\n",
-" enabled=1\n",
-" gpgcheck=1\n",
-"+retries = 0\n",
-"   EOF\n",
-"   else\n",
-"   <<-EOF\n",
-"@@ -52,12 +56,14 @@ name    = local_build\n",
-" baseurl = file://#{rpmdir}/noarch\n",
-" gpgcheck= 0\n",
-" enabled = 1\n",
-"+retries = 0\n",
-"\n",
-" [openshift_origin]\n",
-" name    = openshift_origin\n",
-" baseurl = http://mirror.openshift.com/pub/crankcase/rhel-6/$basearch\n",
-" gpgcheck= 0\n",
-" enabled = 1\n",
-"+retries = 0\n",
-"   EOF\n",
-"   end\n",
-" end\n"
-                ]]},
-                "mode": "000644",
-                "owner": "root",
-                "group": "root"
-            }
-          },
-
             "packages" : {
               "yum" : {
                 "ntp"                      : [],
