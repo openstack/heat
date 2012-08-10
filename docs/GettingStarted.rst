@@ -84,12 +84,7 @@ Install heat from source
 
 In the heat directory, run the install script::
 
-    sudo python setup.py install
-    sudo install -d /etc/heat
-    sudo install etc/*.conf etc/*.ini /etc/heat
-    sudo install etc/bash_completion.d/heat /etc/bash_completion.d/heat
-    sudo install -d /var/log/heat
-    sudo sed --in-place -e s/%ENCRYPTION_KEY%/`hexdump -n 16 -v -e '/1 "%02x"' /dev/random`/ /etc/heat/heat-engine.conf
+    sudo ./install.sh
 
 Download Fedora 16 DVD and copy it to libvirt images location
 -------------------------------------------------------------
