@@ -82,7 +82,7 @@
       "cc1.4xlarge" : { "Arch" : "64" }
     },
     "DistroArch2AMI": {
-      "U10"      : { "32" : "U10-i386-cfntools", "64" : "U10-amd64-cfntools" }
+      "U10"      : { "32" : "U10-i386-cfntools", "64" : "U10-x86_64-cfntools" }
     }
   },
 
