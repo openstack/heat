@@ -1,0 +1,165 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "OpenShift Broker/Node Template.",
+
+  "Parameters" : {
+
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern" : "[-_ a-zA-Z0-9]*",
+      "ConstraintDescription" : "can contain only alphanumeric characters, spaces, dashes and underscores."
+    },
+
+    "InstanceType" : {
+      "Description" : "Instance type",
+      "Type" : "String",
+      "Default" : "m1.small",
+      "AllowedValues" : [ "t1.micro","m1.small","m1.medium","m1.large","m1.xlarge","m2.xlarge","m2.2xlarge","m2.4xlarge","c1.medium","c1.xlarge","cc1.4xlarge","cc2.8xlarge","cg1.4xlarge"],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+    "LinuxDistribution": {
+      "Default": "F16",
+      "Description" : "Distribution of choice",
+      "Type": "String",
+      "AllowedValues" : [ "F16", "F17", "U10", "RHEL-6.1", "RHEL-6.2", "RHEL-6.3" ]
+    }
+  },
+
+  "Mappings" : {
+    "AWSInstanceType2Arch" : {
+      "t1.micro"    : { "Arch" : "64" },
+      "m1.small"    : { "Arch" : "64" },
+      "m1.medium"   : { "Arch" : "64" },
+      "m1.large"    : { "Arch" : "64" },
+      "m1.xlarge"   : { "Arch" : "64" },
+      "m2.xlarge"   : { "Arch" : "64" },
+      "m2.2xlarge"  : { "Arch" : "64" },
+      "m2.4xlarge"  : { "Arch" : "64" },
+      "c1.medium"   : { "Arch" : "64" },
+      "c1.xlarge"   : { "Arch" : "64" },
+      "cc1.4xlarge" : { "Arch" : "64HVM" },
+      "cc2.8xlarge" : { "Arch" : "64HVM" },
+      "cg1.4xlarge" : { "Arch" : "64HVM" }
+    },
+    "DistroArch2AMI": {
+      "F16"      : { "32" : "F16-i386-cfntools-openshift", "64" : "F16-x86_64-cfntools-openshift" },
+      "F17"      : { "32" : "F17-i386-cfntools-openshift", "64" : "F17-x86_64-cfntools-openshift" },
+      "U10"      : { "32" : "U10-i386-cfntools-openshift", "64" : "U10-x86_64-cfntools-openshift" },
+      "RHEL-6.1" : { "32" : "rhel61-i386-cfntools-openshift", "64" : "rhel61-x86_64-cfntools-openshift" },
+      "RHEL-6.2" : { "32" : "rhel62-i386-cfntools-openshift", "64" : "rhel62-x86_64-cfntools-openshift" },
+      "RHEL-6.3" : { "32" : "rhel63-i386-cfntools-openshift", "64" : "rhel63-x86_64-cfntools-openshift" }
+    }
+  },
+
+  "Resources" : {
+
+    "OpenShiftBrokerServer": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "# Helper function\n",
+          "function error_exit\n",
+          "{\n",
+          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandle" }, "'\n",
+          "  exit 1\n",
+          "}\n",
+
+          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r OpenShiftBrokerServer ",
+          "    --access-key Ref_HostKeys",
+          "    --secret-key Fn_GetAtt_HostKeys_SecretAccessKey",
+          "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+
+          "cd /home/builder/crankcase/build ; rake devbroker || error_exit failed_devbroker\n",
+          "ss-setup-broker\n",
+          "hostname\n",
+          "ss-register-dns --with-node-hostname node0 --with-node-ip ", { "Fn::GetAtt" : [ "OpenShiftNodeServer", "PublicIp" ]}, "\n",
+
+          "echo 'Creating example openshift application'\n",
+          "export USER='root'\n",
+          "export HOME='/root'\n",
+          "echo 'StrictHostKeyChecking no' >> /etc/ssh/ssh_config\n",
+          "yes | rhc domain create -l admin -p admin -n admin\n",
+          "rhc app create -l admin -p admin -t php-5.3 -a hello\n",
+
+          "# All is well so signal success\n",
+          "/opt/aws/bin/cfn-signal -e 0 -r \"OpenShift setup complete\" '", { "Ref" : "WaitHandle" }, "'\n"
+
+        ]]}}
+      }
+    },
+
+    "OpenShiftNodeServer": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "AWS::CloudFormation::Init" : {
+          "config" : {
+            "packages" : {
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "InstanceType"   : { "Ref" : "InstanceType" },
+        "KeyName"        : { "Ref" : "KeyName" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -v\n",
+          "# Helper function\n",
+          "function error_exit\n",
+          "{\n",
+          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandle" }, "'\n",
+          "  exit 1\n",
+          "}\n",
+
+          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r OpenShiftNodeServer ",
+          "    --access-key Ref_HostKeys",
+          "    --secret-key Fn_GetAtt_HostKeys_SecretAccessKey",
+          "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+
+          "cd /home/builder/crankcase/build ; rake devnode || error_exit failed_devnode\n",
+          "ss-setup-node --with-broker-ip ", { "Fn::GetAtt" : [ "OpenShiftBrokerServer", "PublicIp" ]}, " --with-node-hostname node0\n"
+
+        ]]}}
+      }
+    },
+
+    "WaitHandle" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
+
+    "WaitCondition" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "DependsOn" : "OpenShiftBrokerServer",
+      "Properties" : {
+        "Handle" : {"Ref" : "WaitHandle"},
+        "Timeout" : "2000"
+      }
+    }
+
+  },
+
+  "Outputs" : {
+    "WebsiteURL" : {
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "OpenShiftBrokerServer", "PublicIp" ]}, ":3000" ]] },
+      "Description" : "URL for newly created Openshift Broker Server"
+    }
+  }
+}
