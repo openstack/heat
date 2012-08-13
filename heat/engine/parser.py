@@ -614,20 +614,38 @@ class Stack(object):
         # restart the whole stack
 
     def resolve_static_data(self, snippet):
-        return transform(snippet,
-                         [functools.partial(self.t.resolve_param_refs,
-                                            parameters=self.parameters),
-                          self.t.resolve_availability_zones,
-                          self.t.resolve_find_in_map])
+        return resolve_static_data(self.t, self.parameters, snippet)
 
     def resolve_runtime_data(self, snippet):
-        return transform(snippet,
-                         [functools.partial(self.t.resolve_resource_refs,
-                                            resources=self.resources),
-                          functools.partial(self.t.resolve_attributes,
-                                            resources=self.resources),
-                          self.t.resolve_joins,
-                          self.t.resolve_base64])
+        return resolve_runtime_data(self.t, self.resources, snippet)
+
+
+def resolve_static_data(template, parameters, snippet):
+    '''
+    Resolve static parameters, map lookups, etc. in a template.
+
+    Example:
+
+    >>> template = Template(json.load(template_path))
+    >>> parameters = Parameters('stack', template, {'KeyName': 'my_key'})
+    >>> resolve_static_data(template, parameters, {'Ref': 'KeyName'})
+    'my_key'
+    '''
+    return transform(snippet,
+                     [functools.partial(template.resolve_param_refs,
+                                        parameters=parameters),
+                      template.resolve_availability_zones,
+                      template.resolve_find_in_map])
+
+
+def resolve_runtime_data(template, resources, snippet):
+    return transform(snippet,
+                     [functools.partial(template.resolve_resource_refs,
+                                        resources=resources),
+                      functools.partial(template.resolve_attributes,
+                                        resources=resources),
+                      template.resolve_joins,
+                      template.resolve_base64])
 
 
 def transform(data, transformations):
