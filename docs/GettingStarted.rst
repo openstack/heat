@@ -38,6 +38,7 @@ If you use this method, you will need to manually create a guest network.  How t
 
 ..
     SUBNET=10.0.0.0/24
+    BIND_IP=10.0.0.1
 
 ::
 
@@ -85,6 +86,15 @@ Install heat from source
 In the heat directory, run the install script::
 
     sudo ./install.sh
+
+Configure the Metadata server
+-----------------------------
+
+The Heat Metadata server must be configured to bind to the IP address of the host machine on the Nova network created above (`demonetbr0`). This allows the launched instances to access the metadata server.
+
+Edit the file `/etc/heat/heat-metadata.conf` to change the `bind_host` value from the default `0.0.0.0` to the correct IP address::
+
+    sudo sed -i -e "/^bind_host *=/ s/0\.0\.0\.0/${BIND_IP}/" /etc/heat/heat-metadata.conf
 
 Download Fedora 16 DVD and copy it to libvirt images location
 -------------------------------------------------------------
