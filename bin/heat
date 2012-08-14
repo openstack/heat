@@ -49,6 +49,16 @@ from heat.common import exception
 from heat import utils
 
 
+def format_parameters(options):
+    parameters = {}
+    if options.parameters:
+        for count, p in enumerate(options.parameters.split(';'), 1):
+            (n, v) = p.split('=')
+            parameters['Parameters.member.%d.ParameterKey' % count] = n
+            parameters['Parameters.member.%d.ParameterValue' % count] = v
+    return parameters
+
+
 @utils.catch_error('validate')
 def template_validate(options, arguments):
     '''
@@ -71,13 +81,7 @@ def template_validate(options, arguments):
         logging.error('Please specify a template file or url')
         return utils.FAILURE
 
-    if options.parameters:
-        count = 1
-        for p in options.parameters.split(';'):
-            (n, v) = p.split('=')
-            parameters['Parameters.member.%d.ParameterKey' % count] = n
-            parameters['Parameters.member.%d.ParameterValue' % count] = v
-            count = count + 1
+    parameters.update(format_parameters(options))
 
     client = get_client(options)
     result = client.validate_template(**parameters)
@@ -94,13 +98,7 @@ def estimate_template_cost(options, arguments):
         logging.error("as the first argument")
         return utils.FAILURE
 
-    if options.parameters:
-        count = 1
-        for p in options.parameters.split(';'):
-            (n, v) = p.split('=')
-            parameters['Parameters.member.%d.ParameterKey' % count] = n
-            parameters['Parameters.member.%d.ParameterValue' % count] = v
-            count = count + 1
+    parameters.update(format_parameters(options))
 
     if options.template_file:
         parameters['TemplateBody'] = open(options.template_file).read()
@@ -158,13 +156,7 @@ def stack_create(options, arguments):
         logging.error("as the first argument")
         return utils.FAILURE
 
-    if options.parameters:
-        count = 1
-        for p in options.parameters.split(';'):
-            (n, v) = p.split('=')
-            parameters['Parameters.member.%d.ParameterKey' % count] = n
-            parameters['Parameters.member.%d.ParameterValue' % count] = v
-            count = count + 1
+    parameters.update(format_parameters(options))
 
     parameters['TimeoutInMinutes'] = options.timeout
 
@@ -214,13 +206,7 @@ def stack_update(options, arguments):
     elif options.template_url:
         parameters['TemplateUrl'] = options.template_url
 
-    if options.parameters:
-        count = 1
-        for p in options.parameters.split(';'):
-            (n, v) = p.split('=')
-            parameters['Parameters.member.%d.ParameterKey' % count] = n
-            parameters['Parameters.member.%d.ParameterValue' % count] = v
-            count = count + 1
+    parameters.update(format_parameters(options))
 
     c = get_client(options)
     result = c.update_stack(**parameters)
