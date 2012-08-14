@@ -147,9 +147,9 @@ This is for Heat to associate with the virtual machines.
     nova keypair-add --pub_key ~/.ssh/id_rsa.pub ${USER}_key
 
 
-Download and install heat_jeos via git
+Download and install heat-jeos via git
 --------------------------------------
-Download heat_jeos via git
+Download heat-jeos via git
 
 ::
 
@@ -162,7 +162,7 @@ Create a JEOS with heat_jeos tools
 ----------------------------------
 ::
 
-    sudo -E heat-jeos -y create F16-x86_64-cfntools-jeos --register-with-glance
+    sudo -E heat-jeos -y create F16-x86_64-cfntools --register-with-glance
 
 Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``heat-jeos`` is run as root.
 
