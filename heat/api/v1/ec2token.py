@@ -38,8 +38,8 @@ logger = logging.getLogger(__name__)
 class EC2Token(wsgi.Middleware):
     """Authenticate an EC2 request with keystone and convert to token."""
 
-    def __init__(self, app, conf, **local_conf):
-        self.conf = local_conf
+    def __init__(self, app, conf):
+        self.conf = conf
         self.application = app
 
     @webob.dec.wsgify(RequestClass=wsgi.Request)
