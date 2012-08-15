@@ -277,7 +277,7 @@ def stack_resource_show(options, arguments):
         'LogicalResourceId': resource_name,
     }
     result = c.describe_stack_resource(**parameters)
-    print c.format_stack_resource(result)
+    print c.format_stack_resource_detail(result)
 
 
 @utils.catch_error('resource-list')

@@ -21,6 +21,7 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 from boto.cloudformation import CloudFormationConnection
+import json
 
 
 class BotoClient(CloudFormationConnection):
@@ -201,6 +202,24 @@ class BotoClient(CloudFormationConnection):
                         res.resource_status_reason)
             ret.append("ResourceType : %s" % res.resource_type)
             ret.append("--")
+        return '\n'.join(ret)
+
+    def format_stack_resource_detail(self, res):
+        '''
+        Print response from describe_stack_resource call
+
+        Note pending upstream patch will make this response a
+        boto.cloudformation.stack.StackResourceDetail object
+        which aligns better with all the existing calls
+        see https://github.com/boto/boto/pull/857
+
+        For now, we format the dict response as a workaround
+        '''
+        resource_detail = res['DescribeStackResourceResponse'][
+                   'DescribeStackResourceResult']['StackResourceDetail']
+        ret = []
+        for key in resource_detail:
+            ret.append("%s : %s" % (key, resource_detail[key]))
         return '\n'.join(ret)
 
     def format_stack_summary(self, summaries):

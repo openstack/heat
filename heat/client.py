@@ -118,6 +118,9 @@ class V1Client(base_client.BaseClient):
     def format_stack_summary(self, summary):
         return str(summary)
 
+    def format_stack_resource_detail(self, res):
+        return str(res)
+
     def format_template(self, template):
         return str(template)
 
