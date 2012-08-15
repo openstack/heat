@@ -72,7 +72,21 @@ class V1Client(base_client.BaseClient):
         return self.stack_request("DescribeStackResource", "GET", **kwargs)
 
     def describe_stack_resources(self, **kwargs):
-        return self.stack_request("DescribeStackResources", "GET", **kwargs)
+        for lookup_key in ['StackName', 'PhysicalResourceId']:
+            lookup_value = kwargs['NameOrPid']
+            parameters = {
+                lookup_key: lookup_value,
+                'LogicalResourceId': kwargs['LogicalResourceId']}
+            try:
+                result = self.stack_request("DescribeStackResources", "GET",
+                                        **parameters)
+            except:
+                logger.debug("Failed to lookup resource details with key %s:%s"
+                             % (lookup_key, lookup_value))
+            else:
+                logger.debug("Got lookup resource details with key %s:%s" %
+                             (lookup_key, lookup_value))
+                return result
 
     def list_stack_resources(self, **kwargs):
         return self.stack_request("ListStackResources", "GET", **kwargs)
@@ -85,6 +99,40 @@ class V1Client(base_client.BaseClient):
 
     def estimate_template_cost(self, **kwargs):
         return self.stack_request("EstimateTemplateCost", "GET", **kwargs)
+
+    # Dummy print functions for alignment with the boto-based client
+    # which has to extract class fields for printing, we could also
+    # align output format here by decoding the XML/JSON
+    def format_stack_event(self, event):
+        return str(event)
+
+    def format_stack(self, stack):
+        return str(stack)
+
+    def format_stack_resource(self, res):
+        return str(res)
+
+    def format_stack_resource_summary(self, res):
+        return str(res)
+
+    def format_stack_summary(self, summary):
+        return str(summary)
+
+    def format_template(self, template):
+        return str(template)
+
+    def format_parameters(self, options):
+        '''
+        Reformat parameters into dict of format expected by the API
+        '''
+        parameters = {}
+        if options.parameters:
+            for count, p in enumerate(options.parameters.split(';'), 1):
+                (n, v) = p.split('=')
+                parameters['Parameters.member.%d.ParameterKey' % count] = n
+                parameters['Parameters.member.%d.ParameterValue' % count] = v
+        return parameters
+
 
 HeatClient = V1Client
 

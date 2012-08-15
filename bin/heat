@@ -42,21 +42,14 @@ scriptname = os.path.basename(sys.argv[0])
 
 gettext.install('heat', unicode=1)
 
-from heat import client as heat_client
+if scriptname == 'heat-boto':
+    from heat import  boto_client as heat_client
+else:
+    from heat import client as heat_client
 from heat import version
 from heat.common import config
 from heat.common import exception
 from heat import utils
-
-
-def format_parameters(options):
-    parameters = {}
-    if options.parameters:
-        for count, p in enumerate(options.parameters.split(';'), 1):
-            (n, v) = p.split('=')
-            parameters['Parameters.member.%d.ParameterKey' % count] = n
-            parameters['Parameters.member.%d.ParameterValue' % count] = v
-    return parameters
 
 
 @utils.catch_error('validate')
@@ -81,11 +74,10 @@ def template_validate(options, arguments):
         logging.error('Please specify a template file or url')
         return utils.FAILURE
 
-    parameters.update(format_parameters(options))
-
-    client = get_client(options)
-    result = client.validate_template(**parameters)
-    print result
+    c = get_client(options)
+    parameters.update(c.format_parameters(options))
+    result = c.validate_template(**parameters)
+    print c.format_template(result)
 
 
 @utils.catch_error('estimatetemplatecost')
@@ -98,8 +90,6 @@ def estimate_template_cost(options, arguments):
         logging.error("as the first argument")
         return utils.FAILURE
 
-    parameters.update(format_parameters(options))
-
     if options.template_file:
         parameters['TemplateBody'] = open(options.template_file).read()
     elif options.template_url:
@@ -109,6 +99,7 @@ def estimate_template_cost(options, arguments):
         return utils.FAILURE
 
     c = get_client(options)
+    parameters.update(c.format_parameters(options))
     result = c.estimate_template_cost(**parameters)
     print result
 
@@ -156,8 +147,6 @@ def stack_create(options, arguments):
         logging.error("as the first argument")
         return utils.FAILURE
 
-    parameters.update(format_parameters(options))
-
     parameters['TimeoutInMinutes'] = options.timeout
 
     if options.template_file:
@@ -169,6 +158,7 @@ def stack_create(options, arguments):
         return utils.FAILURE
 
     c = get_client(options)
+    parameters.update(c.format_parameters(options))
     result = c.create_stack(**parameters)
     print result
 
@@ -206,9 +196,8 @@ def stack_update(options, arguments):
     elif options.template_url:
         parameters['TemplateUrl'] = options.template_url
 
-    parameters.update(format_parameters(options))
-
     c = get_client(options)
+    parameters.update(c.format_parameters(options))
     result = c.update_stack(**parameters)
     print result
 
@@ -250,7 +239,7 @@ def stack_describe(options, arguments):
 
     c = get_client(options)
     result = c.describe_stacks(**parameters)
-    print result
+    print c.format_stack(result)
 
 
 @utils.catch_error('event-list')
@@ -268,7 +257,7 @@ def stack_events_list(options, arguments):
 
     c = get_client(options)
     result = c.list_stack_events(**parameters)
-    print result
+    print c.format_stack_event(result)
 
 
 @utils.catch_error('resource')
@@ -288,7 +277,7 @@ def stack_resource_show(options, arguments):
         'LogicalResourceId': resource_name,
     }
     result = c.describe_stack_resource(**parameters)
-    print result
+    print c.format_stack_resource(result)
 
 
 @utils.catch_error('resource-list')
@@ -307,35 +296,7 @@ def stack_resources_list(options, arguments):
         'StackName': stack_name,
     }
     result = c.list_stack_resources(**parameters)
-    print result
-
-
-def _resources_list_details(options, lookup_key='StackName',
-                            lookup_value=None, log_resid=None):
-    '''
-    Helper function to reduce duplication in stack_resources_list_details
-    Looks up resource details based on StackName or PhysicalResourceId
-    '''
-    c = get_client(options)
-    parameters = {}
-
-    if lookup_key in ['StackName', 'PhysicalResourceId']:
-        parameters[lookup_key] = lookup_value
-    else:
-        logging.error("Unexpected key %s" % lookup_key)
-        return
-
-    if log_resid:
-        parameters['LogicalResourceId'] = log_resid
-
-    try:
-        result = c.describe_stack_resources(**parameters)
-    except:
-        logging.debug("Failed to lookup resource details with key %s:%s" %
-            (lookup_key, lookup_value))
-        return
-
-    return result
+    print c.format_stack_resource_summary(result)
 
 
 @utils.catch_error('resource-list-details')
@@ -357,26 +318,23 @@ def stack_resources_list_details(options, arguments):
     try:
         name_or_pid = arguments.pop(0)
     except IndexError:
-        logging.error("No valid stack_name or physical_resource_id")
+        logging.error("Must pass a stack_name or physical_resource_id")
         print usage
         return
 
     logical_resource_id = arguments.pop(0) if arguments else None
+    parameters = {
+        'NameOrPid': name_or_pid,
+        'LogicalResourceId': logical_resource_id, }
 
-    # Try StackName first as it seems the most likely..
-    lookup_keys = ['StackName', 'PhysicalResourceId']
-    for key in lookup_keys:
-        logging.debug("Looking up resources for %s:%s" % (key, name_or_pid))
-        result = _resources_list_details(options, lookup_key=key,
-                                         lookup_value=name_or_pid,
-                                         log_resid=logical_resource_id)
-        if result:
-            break
+    c = get_client(options)
+    result = c.describe_stack_resources(**parameters)
 
     if result:
-        print result
+        print c.format_stack_resource(result)
     else:
-        logging.error("No valid stack_name or physical_resource_id")
+        logging.error("Invalid stack_name, physical_resource_id " +
+                      "or logical_resource_id")
         print usage
 
 
@@ -389,7 +347,7 @@ def stack_list(options, arguments):
     '''
     c = get_client(options)
     result = c.list_stacks()
-    print result
+    print c.format_stack_summary(result)
 
 
 def get_client(options):
@@ -640,7 +598,7 @@ Commands:
             NotImplementedError,
             exception.ClientConfigurationError), ex:
         oparser.print_usage()
-        logging.error("ERROR: " % ex)
+        logging.error("ERROR: %s" % ex)
         sys.exit(1)
 
 
