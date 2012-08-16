@@ -23,7 +23,7 @@ Routes
 pysendfile
 SQLAlchemy
 WebOb
-https://github.com/openstack/python-keystoneclient/zipball/master#egg=python-keystoneclient
+python-keystoneclient
 glance
 python-memcached
 
