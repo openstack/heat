@@ -191,6 +191,7 @@ class Instance(resources.Resource):
     def handle_create(self):
         security_groups = self.properties.get('SecurityGroups')
         userdata = self.properties['UserData']
+        userdata += 'touch /var/lib/cloud/instance/provision-finished\n'
         flavor = self.properties['InstanceType']
         key_name = self.properties['KeyName']
 
