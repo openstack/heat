@@ -10,6 +10,11 @@ for i in ${IMAGES}
 do
     NAME=$(echo $i | sed "s/\.${DISK_FORMAT}//")
     echo "Downloading and registering $i with OpenStack glance as ${NAME}"
-    echo "Downloading from ${DOWNLOAD_URL}/$i"
-    glance add name=${NAME} is_public=true disk_format=${DISK_FORMAT} container_format=bare copy_from="${DOWNLOAD_URL}/$i"
+    if glance index | grep -q "\s${NAME}\s"
+    then
+        echo "WARNING : ${NAME} already exists, skipping"
+    else
+        echo "Downloading from ${DOWNLOAD_URL}/$i"
+        glance add name=${NAME} is_public=true disk_format=${DISK_FORMAT} container_format=bare copy_from="${DOWNLOAD_URL}/$i"
+    fi
 done
