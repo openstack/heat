@@ -479,3 +479,26 @@ class EngineManager(manager.Manager):
             self.run_rule(None, wr)
 
         return [None, wd.data]
+
+    def show_watch(self, context, watch_name):
+        '''
+        The show_watch method returns the attributes of one watch/alarm
+        arg1 -> RPC context.
+        arg2 -> Name of the watch you want to see, or None to see all
+        '''
+        if watch_name:
+            try:
+                wrs = db_api.watch_rule_get(context, watch_name)
+            except Exception as ex:
+                logger.warn('show_watch (%s) db error %s' %
+                            (watch_name, str(ex)))
+                return
+        else:
+            try:
+                wrs = db_api.watch_rule_get_all(context)
+            except Exception as ex:
+                logger.warn('show_watch (all) db error %s' % str(ex))
+                return
+
+        result = [api.format_watch(w) for w in wrs]
+        return result

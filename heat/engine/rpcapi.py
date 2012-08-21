@@ -219,3 +219,16 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt, self.make_msg('create_watch_data',
                          watch_name=watch_name, stats_data=stats_data),
                          topic=_engine_topic(self.topic, ctxt, None))
+
+    def show_watch(self, ctxt, watch_name):
+        """
+        The show_watch method returns the attributes of one watch
+        or all watches if no watch_name is passed
+
+        :param ctxt: RPC context.
+        :param watch_name: Name of the watch/alarm you want to see,
+                           or None to see all
+        """
+        return self.call(ctxt, self.make_msg('show_watch',
+                         watch_name=watch_name),
+                         topic=_engine_topic(self.topic, ctxt, None))

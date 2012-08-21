@@ -177,3 +177,78 @@ def format_event(event):
     }
 
     return result
+
+
+# This is the representation of a watch we expose to the API via RPC
+WATCH_KEYS = (
+    WATCH_ACTIONS_ENABLED, WATCH_ALARM_ACTIONS, WATCH_TOPIC,
+    WATCH_UPDATED_TIME, WATCH_DESCRIPTION, WATCH_NAME,
+    WATCH_COMPARISON, WATCH_DIMENSIONS, WATCH_PERIODS,
+    WATCH_INSUFFICIENT_ACTIONS, WATCH_METRIC_NAME, WATCH_NAMESPACE,
+    WATCH_OK_ACTIONS, WATCH_PERIOD, WATCH_STATE_REASON,
+    WATCH_STATE_REASON_DATA, WATCH_STATE_UPDATED_TIME, WATCH_STATE_VALUE,
+    WATCH_STATISTIC, WATCH_THRESHOLD, WATCH_UNIT, WATCH_STACK_NAME
+    ) = (
+    'actions_enabled', 'actions', 'topic',
+    'updated_time', 'description', 'name',
+    'comparison', 'dimensions', 'periods',
+    'insufficient_actions', 'metric_name', 'namespace',
+    'ok_actions', 'period', 'state_reason',
+    'state_reason_data', 'state_updated_time', 'state_value',
+    'statistic', 'threshold', 'unit', 'stack_name')
+
+
+# Alternate representation of a watch rule to align with DB format
+# FIXME : These align with AWS naming for compatibility with the
+# current cfn-push-stats & metadata server, fix when we've ported
+# cfn-push-stats to use the Cloudwatch server and/or moved metric
+# collection into ceilometer, these should just be WATCH_KEYS
+# or each field should be stored separately in the DB watch_data
+# table if we stick to storing watch data in the heat DB
+WATCH_RULE_KEYS = (
+    RULE_ACTIONS_ENABLED, RULE_ALARM_ACTIONS, RULE_TOPIC,
+    RULE_UPDATED_TIME, RULE_DESCRIPTION, RULE_NAME,
+    RULE_COMPARISON, RULE_DIMENSIONS, RULE_PERIODS,
+    RULE_INSUFFICIENT_ACTIONS, RULE_METRIC_NAME, RULE_NAMESPACE,
+    RULE_OK_ACTIONS, RULE_PERIOD, RULE_STATE_REASON,
+    RULE_STATE_REASON_DATA, RULE_STATE_UPDATED_TIME, RULE_STATE_VALUE,
+    RULE_STATISTIC, RULE_THRESHOLD, RULE_UNIT, RULE_STACK_NAME
+    ) = (
+    'ActionsEnabled', 'AlarmActions', 'AlarmArn',
+    'AlarmConfigurationUpdatedTimestamp', 'AlarmDescription', 'AlarmName',
+    'ComparisonOperator', 'Dimensions', 'EvaluationPeriods',
+    'InsufficientDataActions', 'MetricName', 'Namespace',
+    'OKActions', 'Period', 'StateReason',
+    'StateReasonData', 'StateUpdatedTimestamp', 'StateValue',
+    'Statistic', 'Threshold', 'Unit', 'StackName')
+
+
+def format_watch(watch):
+
+    result = {
+        WATCH_ACTIONS_ENABLED: watch.rule.get(RULE_ACTIONS_ENABLED),
+        WATCH_ALARM_ACTIONS: watch.rule.get(RULE_ALARM_ACTIONS),
+        WATCH_TOPIC: watch.rule.get(RULE_TOPIC),
+        WATCH_UPDATED_TIME: heat_utils.strtime(watch.updated_at),
+        WATCH_DESCRIPTION: watch.rule.get(RULE_DESCRIPTION),
+        WATCH_NAME: watch.name,
+        WATCH_COMPARISON: watch.rule.get(RULE_COMPARISON),
+        WATCH_DIMENSIONS: watch.rule.get(RULE_DIMENSIONS) or [],
+        WATCH_PERIODS: watch.rule.get(RULE_PERIODS),
+        WATCH_INSUFFICIENT_ACTIONS: watch.rule.get(RULE_INSUFFICIENT_ACTIONS),
+        WATCH_METRIC_NAME: watch.rule.get(RULE_METRIC_NAME),
+        WATCH_NAMESPACE: watch.rule.get(RULE_NAMESPACE),
+        WATCH_OK_ACTIONS: watch.rule.get(RULE_OK_ACTIONS),
+        WATCH_PERIOD: watch.rule.get(RULE_PERIOD),
+        WATCH_STATE_REASON: watch.rule.get(RULE_STATE_REASON),
+        WATCH_STATE_REASON_DATA: watch.rule.get(RULE_STATE_REASON_DATA),
+        WATCH_STATE_UPDATED_TIME: heat_utils.strtime(
+                                  watch.rule.get(RULE_STATE_UPDATED_TIME)),
+        WATCH_STATE_VALUE: watch.state,
+        WATCH_STATISTIC: watch.rule.get(RULE_STATISTIC),
+        WATCH_THRESHOLD: watch.rule.get(RULE_THRESHOLD),
+        WATCH_UNIT: watch.rule.get(RULE_UNIT),
+        WATCH_STACK_NAME: watch.stack_name
+    }
+
+    return result
