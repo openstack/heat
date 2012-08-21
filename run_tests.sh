@@ -5,17 +5,13 @@ function usage {
   echo "Run Heat's test suite(s)"
   echo ""
   echo "  -V, --virtual-env        Always use virtualenv.  Install automatically if not present"
-  echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment"
+  echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment (default)"
   echo "  -f, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
-  echo "  --unittests-only         Run unit tests only."
+  echo "  -u, --unittests-only     Run unit tests only."
   echo "  -p, --pep8               Just run pep8"
   echo "  -P, --no-pep8            Don't run static code checks"
   echo "  -c, --coverage           Generate coverage report"
   echo "  -h, --help               Print this usage message"
-  echo ""
-  echo "Note: with no options specified, the script will try to run the tests in a virtual environment,"
-  echo "      If no virtualenv is found, the script will ask if you would like to create one.  If you "
-  echo "      prefer to run tests NOT in a virtual environment, simply pass the -N option."
   exit
 }
 
@@ -24,7 +20,7 @@ function process_option {
     -V|--virtual-env) let always_venv=1; let never_venv=0;;
     -N|--no-virtual-env) let always_venv=0; let never_venv=1;;
     -f|--force) let force=1;;
-    --unittests-only) noseargs="$noseargs -a tag=unit";;
+    -u|--unittests-only) noseargs="$noseargs -a tag=unit";;
     -p|--pep8) let just_pep8=1;;
     -P|--no-pep8) no_pep8=1;;
     -c|--coverage) coverage=1;;
@@ -35,6 +31,7 @@ function process_option {
 
 venv=.venv
 with_venv=tools/with_venv.sh
+# change usage text if this option is changed:
 always_venv=0
 never_venv=1
 force=0
