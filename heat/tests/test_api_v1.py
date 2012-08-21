@@ -32,7 +32,7 @@ from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
-from heat.api.v1 import exception
+from heat.api.aws import exception
 import heat.api.v1.stacks as stacks
 
 

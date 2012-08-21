@@ -28,7 +28,7 @@ from webob import Request
 import webob
 from heat import utils
 from heat.common import context
-from heat.api.v1 import exception
+from heat.api.aws import exception
 
 from heat.openstack.common import log as logging
 

@@ -24,7 +24,7 @@ import sys
 import re
 import urlparse
 import webob
-from heat.api.v1 import exception
+from heat.api.aws import exception
 from heat.common import wsgi
 from heat.common import config
 from heat.common import context
