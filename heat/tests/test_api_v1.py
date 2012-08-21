@@ -60,11 +60,6 @@ class StackControllerTest(unittest.TestCase):
         return req
 
     # The tests
-    def test_format_response(self):
-        response = self.controller._format_response("Foo", "Bar")
-        expected = {'FooResponse': {'FooResult': 'Bar'}}
-        self.assert_(response == expected)
-
     def test_stackid_addprefix(self):
 
         # Stub socket.gethostname so it returns "ahostname"
@@ -78,59 +73,6 @@ class StackControllerTest(unittest.TestCase):
         expected = {'StackName': 'Foo',
                     'StackId': 'ahostname:8000:stack/Foo/123'}
         self.assert_(response == expected)
-
-    def test_params_extract(self):
-        p = {'Parameters.member.Foo.ParameterKey': 'foo',
-             'Parameters.member.Foo.ParameterValue': 'bar',
-             'Parameters.member.Blarg.ParameterKey': 'blarg',
-             'Parameters.member.Blarg.ParameterValue': 'wibble'}
-        params = self.controller._extract_user_params(p)
-        self.assertEqual(len(params), 2)
-        self.assertTrue('foo' in params)
-        self.assertEqual(params['foo'], 'bar')
-        self.assertTrue('blarg' in params)
-        self.assertEqual(params['blarg'], 'wibble')
-
-    def test_params_extract_dots(self):
-        p = {'Parameters.member.Foo.Bar.ParameterKey': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar',
-             'Parameters.member.Foo.Baz.ParameterKey': 'blarg',
-             'Parameters.member.Foo.Baz.ParameterValue': 'wibble'}
-        params = self.controller._extract_user_params(p)
-        self.assertEqual(len(params), 2)
-        self.assertTrue('foo' in params)
-        self.assertEqual(params['foo'], 'bar')
-        self.assertTrue('blarg' in params)
-        self.assertEqual(params['blarg'], 'wibble')
-
-    def test_params_extract_garbage(self):
-        p = {'Parameters.member.Foo.Bar.ParameterKey': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar',
-             'Foo.Baz.ParameterKey': 'blarg',
-             'Foo.Baz.ParameterValue': 'wibble'}
-        params = self.controller._extract_user_params(p)
-        self.assertEqual(len(params), 1)
-        self.assertTrue('foo' in params)
-        self.assertEqual(params['foo'], 'bar')
-
-    def test_params_extract_garbage_prefix(self):
-        p = {'prefixParameters.member.Foo.Bar.ParameterKey': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar'}
-        params = self.controller._extract_user_params(p)
-        self.assertFalse(params)
-
-    def test_params_extract_garbage_suffix(self):
-        p = {'Parameters.member.Foo.Bar.ParameterKeysuffix': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar'}
-        params = self.controller._extract_user_params(p)
-        self.assertFalse(params)
-
-    def test_reformat_dict_keys(self):
-        keymap = {"foo": "bar"}
-        data = {"foo": 123}
-        expected = {"bar": 123}
-        result = self.controller._reformat_dict_keys(keymap, data)
-        self.assertEqual(result, expected)
 
     def test_list(self):
         # Format a dummy GET request to pass into the WSGI handler

@@ -21,10 +21,10 @@ import json
 import os
 import socket
 import sys
-import re
 import urlparse
 import webob
 from heat.api.aws import exception
+from heat.api.aws import utils as api_utils
 from heat.common import wsgi
 from heat.common import config
 from heat.common import context
@@ -62,63 +62,6 @@ class StackController(object):
                                        str(resp['StackId'])])
         return resp
 
-    def _format_response(self, action, response):
-        """
-        Format response from engine into API format
-        """
-        return {'%sResponse' % action: {'%sResult' % action: response}}
-
-    @staticmethod
-    def _extract_user_params(params):
-        """
-        Extract a dictionary of user input parameters for the stack
-
-        In the AWS API parameters, each user parameter appears as two key-value
-        pairs with keys of the form below:
-
-        Parameters.member.1.ParameterKey
-        Parameters.member.1.ParameterValue
-
-        We reformat this into a normal dict here to match the heat
-        engine API expected format
-
-        Note this implemented outside of "create" as it will also be
-        used by update (and EstimateTemplateCost if appropriate..)
-        """
-        # Define the AWS key format to extract
-        PARAM_KEYS = (
-        PARAM_USER_KEY_re,
-        PARAM_USER_VALUE_fmt,
-        ) = (
-        re.compile(r'Parameters\.member\.(.*?)\.ParameterKey$'),
-        'Parameters.member.%s.ParameterValue',
-        )
-
-        def get_param_pairs():
-            for k in params:
-                keymatch = PARAM_USER_KEY_re.match(k)
-                if keymatch:
-                    key = params[k]
-                    v = PARAM_USER_VALUE_fmt % keymatch.group(1)
-                    try:
-                        value = params[v]
-                    except KeyError:
-                        logger.error('Could not apply parameter %s' % key)
-
-                    yield (key, value)
-
-        return dict(get_param_pairs())
-
-    @staticmethod
-    def _reformat_dict_keys(keymap={}, inputdict={}):
-        '''
-        Utility function for mapping one dict format to another
-        '''
-        result = {}
-        for key in keymap:
-            result[keymap[key]] = inputdict[key]
-        return result
-
     def list(self, req):
         """
         Implements ListStacks API action
@@ -140,7 +83,7 @@ class StackController(object):
                 engine_api.STACK_TMPL_DESCRIPTION: 'TemplateDescription',
             }
 
-            result = self._reformat_dict_keys(keymap, s)
+            result = api_utils.reformat_dict_keys(keymap, s)
 
             # AWS docs indicate DeletionTime is ommitted for current stacks
             # This is still TODO in the engine, we don't keep data for
@@ -165,7 +108,7 @@ class StackController(object):
         res = {'StackSummaries': [format_stack_summary(s)
                                    for s in stack_list['stacks']]}
 
-        return self._format_response('ListStacks', res)
+        return api_utils.format_response('ListStacks', res)
 
     def describe(self, req):
         """
@@ -179,7 +122,7 @@ class StackController(object):
                 engine_api.OUTPUT_VALUE: 'OutputValue',
             }
 
-            return self._reformat_dict_keys(keymap, o)
+            return api_utils.reformat_dict_keys(keymap, o)
 
         def format_stack(s):
             """
@@ -200,7 +143,7 @@ class StackController(object):
                 engine_api.STACK_TIMEOUT: 'TimeoutInMinutes',
             }
 
-            result = self._reformat_dict_keys(keymap, s)
+            result = api_utils.reformat_dict_keys(keymap, s)
 
             # Reformat outputs, these are handled separately as they are
             # only present in the engine output for a completely created
@@ -239,7 +182,7 @@ class StackController(object):
 
         res = {'Stacks': [format_stack(s) for s in stack_list['stacks']]}
 
-        return self._format_response('DescribeStacks', res)
+        return api_utils.format_response('DescribeStacks', res)
 
     def _get_template(self, req):
         """
@@ -310,7 +253,7 @@ class StackController(object):
         con = req.context
 
         # Extract the stack input parameters
-        stack_parms = self._extract_user_params(req.params)
+        stack_parms = api_utils.extract_user_params(req.params)
 
         # Extract any additional arguments ("Request Parameters")
         create_args = extract_args(req.params)
@@ -340,7 +283,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
-        return self._format_response(action, self._stackid_addprefix(res))
+        return api_utils.format_response(action, self._stackid_addprefix(res))
 
     def get_template(self, req):
         """
@@ -363,14 +306,15 @@ class StackController(object):
             msg = _('stack not not found')
             return exception.HeatInvalidParameterValueError(detail=msg)
 
-        return self._format_response('GetTemplate', {'TemplateBody': templ})
+        return api_utils.format_response('GetTemplate',
+                                         {'TemplateBody': templ})
 
     def estimate_template_cost(self, req):
         """
         Implements the EstimateTemplateCost API action
         Get the estimated monthly cost of a template
         """
-        return self._format_response('EstimateTemplateCost',
+        return api_utils.format_response('EstimateTemplateCost',
             {'Url': 'http://en.wikipedia.org/wiki/Gratis'})
 
     def validate_template(self, req):
@@ -423,9 +367,9 @@ class StackController(object):
             return exception.map_remote_error(ex)
 
         if res is None:
-            return self._format_response('DeleteStack', '')
+            return api_utils.format_response('DeleteStack', '')
         else:
-            return self._format_response('DeleteStack', res['Error'])
+            return api_utils.format_response('DeleteStack', res['Error'])
 
     def events_list(self, req):
         """
@@ -449,7 +393,7 @@ class StackController(object):
                 engine_api.EVENT_TIMESTAMP: 'Timestamp',
             }
 
-            result = self._reformat_dict_keys(keymap, e)
+            result = api_utils.reformat_dict_keys(keymap, e)
 
             return self._stackid_addprefix(result)
 
@@ -468,7 +412,7 @@ class StackController(object):
 
         result = [format_stack_event(e) for e in events]
 
-        return self._format_response('DescribeStackEvents',
+        return api_utils.format_response('DescribeStackEvents',
             {'StackEvents': result})
 
     def describe_stack_resource(self, req):
@@ -494,7 +438,7 @@ class StackController(object):
                 engine_api.RES_STACK_NAME: 'StackName',
             }
 
-            result = self._reformat_dict_keys(keymap, r)
+            result = api_utils.reformat_dict_keys(keymap, r)
 
             return self._stackid_addprefix(result)
 
@@ -510,7 +454,7 @@ class StackController(object):
 
         result = format_resource_detail(resource_details)
 
-        return self._format_response('DescribeStackResource',
+        return api_utils.format_response('DescribeStackResource',
             {'StackResourceDetail': result})
 
     def describe_stack_resources(self, req):
@@ -546,7 +490,7 @@ class StackController(object):
                 engine_api.RES_UPDATED_TIME: 'Timestamp',
             }
 
-            result = self._reformat_dict_keys(keymap, r)
+            result = api_utils.reformat_dict_keys(keymap, r)
 
             return self._stackid_addprefix(result)
 
@@ -568,7 +512,7 @@ class StackController(object):
 
         result = [format_stack_resource(r) for r in resources]
 
-        return self._format_response('DescribeStackResources',
+        return api_utils.format_response('DescribeStackResources',
             {'StackResources': result})
 
     def list_stack_resources(self, req):
@@ -589,7 +533,7 @@ class StackController(object):
                 engine_api.RES_TYPE: 'ResourceType',
             }
 
-            return self._reformat_dict_keys(keymap, r)
+            return api_utils.reformat_dict_keys(keymap, r)
 
         con = req.context
 
@@ -601,7 +545,7 @@ class StackController(object):
 
         summaries = [format_resource_summary(r) for r in resources]
 
-        return self._format_response('ListStackResources',
+        return api_utils.format_response('ListStackResources',
             {'StackResourceSummaries': summaries})
 
 
