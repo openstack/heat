@@ -68,20 +68,6 @@ class StackController(object):
         """
         return {'%sResponse' % action: {'%sResult' % action: response}}
 
-    def _remote_error(self, ex):
-        """
-        Map rpc_common.RemoteError exceptions returned by the engine
-        to HeatAPIException subclasses which can be used to return
-        properly formatted AWS error responses
-        """
-        if ex.exc_type in ('AttributeError', 'ValueError'):
-            # Attribute/Value error, bad user data, ex.value should tell us why
-            return exception.HeatInvalidParameterValueError(detail=ex.value)
-        else:
-            # Map everything else to internal server error for now
-            # FIXME : further investigation into engine errors required
-            return exception.HeatInternalFailureError(detail=ex.value)
-
     @staticmethod
     def _extract_user_params(params):
         """
@@ -174,7 +160,7 @@ class StackController(object):
                                                        stack_name=None,
                                                        params=parms)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
         res = {'StackSummaries': [format_stack_summary(s)
                                    for s in stack_list['stacks']]}
@@ -249,7 +235,7 @@ class StackController(object):
                                                        params=parms)
 
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
         res = {'Stacks': [format_stack(s) for s in stack_list['stacks']]}
 
@@ -352,7 +338,7 @@ class StackController(object):
                                         params=stack_parms,
                                         args=create_args)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
         return self._format_response(action, self._stackid_addprefix(res))
 
@@ -371,7 +357,7 @@ class StackController(object):
                                        stack_name=req.params['StackName'],
                                        params=parms)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
         if templ is None:
             msg = _('stack not not found')
@@ -417,7 +403,7 @@ class StackController(object):
                                                         template=stack,
                                                         params=parms)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
     def delete(self, req):
         """
@@ -434,7 +420,7 @@ class StackController(object):
                                      cast=False)
 
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
         if res is None:
             return self._format_response('DeleteStack', '')
@@ -476,7 +462,7 @@ class StackController(object):
                                                        stack_name=stack_name,
                                                        params=parms)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
         events = 'Error' not in event_res and event_res['events'] or []
 
@@ -520,7 +506,7 @@ class StackController(object):
                         resource_name=req.params.get('LogicalResourceId'))
 
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
         result = format_resource_detail(resource_details)
 
@@ -578,7 +564,7 @@ class StackController(object):
                 logical_resource_id=req.params.get('LogicalResourceId'))
 
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
         result = [format_stack_resource(r) for r in resources]
 
@@ -611,7 +597,7 @@ class StackController(object):
             resources = self.engine_rpcapi.list_stack_resources(con,
                              stack_name=req.params.get('StackName'))
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return exception.map_remote_error(ex)
 
         summaries = [format_resource_summary(r) for r in resources]
 

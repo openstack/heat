@@ -224,3 +224,18 @@ class HeatSignatureError(HeatAPIException):
     title = "SignatureDoesNotMatch"
     explanation = ("The request signature we calculated does not match the " +
                    "signature you provided")
+
+
+def map_remote_error(ex):
+        """
+        Map rpc_common.RemoteError exceptions returned by the engine
+        to HeatAPIException subclasses which can be used to return
+        properly formatted AWS error responses
+        """
+        if ex.exc_type in ('AttributeError', 'ValueError'):
+            # Attribute/Value error, bad user data, ex.value should tell us why
+            return HeatInvalidParameterValueError(detail=ex.value)
+        else:
+            # Map everything else to internal server error for now
+            # FIXME : further investigation into engine errors required
+            return HeatInternalFailureError(detail=ex.value)
