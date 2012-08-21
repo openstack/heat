@@ -163,7 +163,7 @@ EVENT_KEYS = (
 
 def format_event(event):
     s = event.stack
-    event = {
+    result = {
         EVENT_ID: event.id,
         EVENT_STACK_ID: s.id,
         EVENT_STACK_NAME: s.name,
@@ -176,4 +176,4 @@ def format_event(event):
         EVENT_RES_PROPERTIES: event.resource_properties,
     }
 
-    return event
+    return result
