@@ -226,6 +226,17 @@ class HeatSignatureError(HeatAPIException):
                    "signature you provided")
 
 
+# Heat-specific errors
+class HeatAPINotImplementedError(HeatAPIException):
+    '''
+    This is the response given when an API action is not yet implemented
+    '''
+    code = 500
+    title = "APINotImplemented"
+    explanation = ("The requested action is not yet implemented")
+    err_type = "Server"
+
+
 def map_remote_error(ex):
         """
         Map rpc_common.RemoteError exceptions returned by the engine
