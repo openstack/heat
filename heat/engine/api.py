@@ -252,3 +252,35 @@ def format_watch(watch):
     }
 
     return result
+
+
+WATCH_DATA_KEYS = (
+    WATCH_DATA_ALARM, WATCH_DATA_METRIC, WATCH_DATA_TIME,
+    WATCH_DATA_NAMESPACE, WATCH_DATA
+    ) = (
+    'watch_name', 'metric_name', 'timestamp',
+    'namespace', 'data')
+
+
+def format_watch_data(wd):
+
+    # Demangle DB format data into something more easily used in the API
+    # We are expecting a dict with exactly two items, Namespace and
+    # a metric key
+    namespace = wd.data['Namespace']
+    metric = [(k, v) for k, v in wd.data.items() if k != 'Namespace']
+    if len(metric) == 1:
+        metric_name, metric_data = metric[0]
+    else:
+        logger.error("Unexpected number of keys in watch_data.data!")
+        return
+
+    result = {
+        WATCH_DATA_ALARM: wd.watch_rule.name,
+        WATCH_DATA_METRIC: metric_name,
+        WATCH_DATA_TIME: heat_utils.strtime(wd.created_at),
+        WATCH_DATA_NAMESPACE: namespace,
+        WATCH_DATA: metric_data
+    }
+
+    return result

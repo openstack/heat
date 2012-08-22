@@ -502,3 +502,27 @@ class EngineManager(manager.Manager):
 
         result = [api.format_watch(w) for w in wrs]
         return result
+
+    def show_watch_metric(self, context, namespace=None, metric_name=None):
+        '''
+        The show_watch method returns the datapoints for a metric
+        arg1 -> RPC context.
+        arg2 -> Name of the namespace you want to see, or None to see all
+        arg3 -> Name of the metric you want to see, or None to see all
+        '''
+
+        # DB API and schema does not yet allow us to easily query by
+        # namespace/metric, but we will want this at some point
+        # for now, the API can query all metric data and filter locally
+        if namespace != None or metric_name != None:
+            logger.error("Filtering by namespace/metric not yet supported")
+            return
+
+        try:
+            wds = db_api.watch_data_get_all(context)
+        except Exception as ex:
+            logger.warn('show_metric (all) db error %s' % str(ex))
+            return
+
+        result = [api.format_watch_data(w) for w in wds]
+        return result

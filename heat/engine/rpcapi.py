@@ -232,3 +232,18 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt, self.make_msg('show_watch',
                          watch_name=watch_name),
                          topic=_engine_topic(self.topic, ctxt, None))
+
+    def show_watch_metric(self, ctxt, namespace=None, metric_name=None):
+        """
+        The show_watch_metric method returns the datapoints associated
+        with a specified metric, or all metrics if no metric_name is passed
+
+        :param ctxt: RPC context.
+        :param namespace: Name of the namespace you want to see,
+                           or None to see all
+        :param metric_name: Name of the metric you want to see,
+                           or None to see all
+        """
+        return self.call(ctxt, self.make_msg('show_watch_metric',
+                         namespace=namespace, metric_name=metric_name),
+                         topic=_engine_topic(self.topic, ctxt, None))
