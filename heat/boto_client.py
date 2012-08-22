@@ -25,6 +25,9 @@ import json
 
 
 class BotoClient(CloudFormationConnection):
+    '''
+    Wrapper class for boto CloudFormationConnection class
+    '''
 
     def list_stacks(self, **kwargs):
         return super(BotoClient, self).list_stacks()
@@ -274,7 +277,7 @@ def get_client(host, port=None, username=None,
                is_silent_upload=False, insecure=True):
 
     """
-    Returns a new boto client object to a heat server
+    Returns a new boto Cloudformation client connection to a heat server
     """
 
     # Note we pass None/None for the keys so boto reads /etc/boto.cfg
@@ -286,7 +289,7 @@ def get_client(host, port=None, username=None,
     if cloudformation:
         logger.debug("Got CF connection object OK")
     else:
-        logger.error("Error establishing connection!")
+        logger.error("Error establishing Cloudformation connection!")
         sys.exit(1)
 
     return cloudformation
