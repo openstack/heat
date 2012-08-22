@@ -45,6 +45,7 @@ setuptools.setup(
     ],
     scripts=['bin/heat',
              'bin/heat-api',
+             'bin/heat-api-cloudwatch',
              'bin/heat-boto',
              'bin/heat-metadata',
              'bin/heat-engine',
