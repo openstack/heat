@@ -298,10 +298,8 @@ def watch_data_create(context, values):
     return obj_ref
 
 
-def watch_data_get_all(context, watch_id):
-    # get dataset ordered by creation_at (most recient first)
-    results = model_query(context, models.WatchData).\
-                          filter_by(watch_rule_id=watch_id).all()
+def watch_data_get_all(context):
+    results = model_query(context, models.WatchData).all()
     return results
 
 

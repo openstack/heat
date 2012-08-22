@@ -163,8 +163,8 @@ def watch_data_create(context, values):
     return IMPL.watch_data_create(context, values)
 
 
-def watch_data_get_all(context, watch_id):
-    return IMPL.watch_data_get_all(context, watch_id)
+def watch_data_get_all(context):
+    return IMPL.watch_data_get_all(context)
 
 
 def watch_data_delete(context, watch_name):
