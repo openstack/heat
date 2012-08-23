@@ -41,7 +41,9 @@ class AWSCommon(unittest.TestCase):
              'Parameters.member.Foo.ParameterValue': 'bar',
              'Parameters.member.Blarg.ParameterKey': 'blarg',
              'Parameters.member.Blarg.ParameterValue': 'wibble'}
-        params = api_utils.extract_user_params(p)
+        params = api_utils.extract_param_pairs(p, prefix='Parameters',
+                                              keyname='ParameterKey',
+                                              valuename='ParameterValue')
         self.assertEqual(len(params), 2)
         self.assertTrue('foo' in params)
         self.assertEqual(params['foo'], 'bar')
@@ -53,7 +55,9 @@ class AWSCommon(unittest.TestCase):
              'Parameters.member.Foo.Bar.ParameterValue': 'bar',
              'Parameters.member.Foo.Baz.ParameterKey': 'blarg',
              'Parameters.member.Foo.Baz.ParameterValue': 'wibble'}
-        params = api_utils.extract_user_params(p)
+        params = api_utils.extract_param_pairs(p, prefix='Parameters',
+                                              keyname='ParameterKey',
+                                              valuename='ParameterValue')
         self.assertEqual(len(params), 2)
         self.assertTrue('foo' in params)
         self.assertEqual(params['foo'], 'bar')
@@ -65,7 +69,9 @@ class AWSCommon(unittest.TestCase):
              'Parameters.member.Foo.Bar.ParameterValue': 'bar',
              'Foo.Baz.ParameterKey': 'blarg',
              'Foo.Baz.ParameterValue': 'wibble'}
-        params = api_utils.extract_user_params(p)
+        params = api_utils.extract_param_pairs(p, prefix='Parameters',
+                                              keyname='ParameterKey',
+                                              valuename='ParameterValue')
         self.assertEqual(len(params), 1)
         self.assertTrue('foo' in params)
         self.assertEqual(params['foo'], 'bar')
@@ -73,13 +79,17 @@ class AWSCommon(unittest.TestCase):
     def test_params_extract_garbage_prefix(self):
         p = {'prefixParameters.member.Foo.Bar.ParameterKey': 'foo',
              'Parameters.member.Foo.Bar.ParameterValue': 'bar'}
-        params = api_utils.extract_user_params(p)
+        params = api_utils.extract_param_pairs(p, prefix='Parameters',
+                                              keyname='ParameterKey',
+                                              valuename='ParameterValue')
         self.assertFalse(params)
 
     def test_params_extract_garbage_suffix(self):
         p = {'Parameters.member.Foo.Bar.ParameterKeysuffix': 'foo',
              'Parameters.member.Foo.Bar.ParameterValue': 'bar'}
-        params = api_utils.extract_user_params(p)
+        params = api_utils.extract_param_pairs(p, prefix='Parameters',
+                                              keyname='ParameterKey',
+                                              valuename='ParameterValue')
         self.assertFalse(params)
 
     def test_reformat_dict_keys(self):

@@ -27,41 +27,41 @@ def format_response(action, response):
     return {'%sResponse' % action: {'%sResult' % action: response}}
 
 
-def extract_user_params(params):
+def extract_param_pairs(params, prefix='', keyname='', valuename=''):
     """
-    Extract a dictionary of user input parameters for the stack
+    Extract a dictionary of user input parameters, from AWS style
+    parameter-pair encoded list
 
-    In the AWS API parameters, each user parameter appears as two key-value
-    pairs with keys of the form below:
+    In the AWS API list items appear as two key-value
+    pairs (passed as query parameters)  with keys of the form below:
 
-    Parameters.member.1.ParameterKey
-    Parameters.member.1.ParameterValue
+    Prefix.member.1.keyname=somekey
+    Prefix.member.1.keyvalue=somevalue
+    Prefix.member.2.keyname=anotherkey
+    Prefix.member.2.keyvalue=somevalue
 
-    We reformat this into a normal dict here to match the heat
+    We reformat this into a dict here to match the heat
     engine API expected format
-
-    Note this implemented outside of "create" as it will also be
-    used by update (and EstimateTemplateCost if appropriate..)
     """
     # Define the AWS key format to extract
-    PARAM_KEYS = (
-    PARAM_USER_KEY_re,
-    PARAM_USER_VALUE_fmt,
+    LIST_KEYS = (
+    LIST_USER_KEY_re,
+    LIST_USER_VALUE_fmt,
     ) = (
-    re.compile(r'Parameters\.member\.(.*?)\.ParameterKey$'),
-    'Parameters.member.%s.ParameterValue',
+    re.compile(r"%s\.member\.(.*?)\.%s$" % (prefix, keyname)),
+    '.'.join([prefix, 'member', '%s', valuename])
     )
 
     def get_param_pairs():
         for k in params:
-            keymatch = PARAM_USER_KEY_re.match(k)
+            keymatch = LIST_USER_KEY_re.match(k)
             if keymatch:
                 key = params[k]
-                v = PARAM_USER_VALUE_fmt % keymatch.group(1)
+                v = LIST_USER_VALUE_fmt % keymatch.group(1)
                 try:
                     value = params[v]
                 except KeyError:
-                    logger.error('Could not apply parameter %s' % key)
+                    logger.error('Could not extract parameter %s' % key)
 
                 yield (key, value)
 

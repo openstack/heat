@@ -62,6 +62,22 @@ class StackController(object):
                                        str(resp['StackId'])])
         return resp
 
+    @staticmethod
+    def _extract_user_params(params):
+        """
+        Extract a dictionary of user input parameters for the stack
+
+        In the AWS API parameters, each user parameter appears as two key-value
+        pairs with keys of the form below:
+
+        Parameters.member.1.ParameterKey
+        Parameters.member.1.ParameterValue
+        """
+        return api_utils.extract_param_pairs(params,
+                                            prefix='Parameters',
+                                            keyname='ParameterKey',
+                                            valuename='ParameterValue')
+
     def list(self, req):
         """
         Implements ListStacks API action
@@ -253,7 +269,7 @@ class StackController(object):
         con = req.context
 
         # Extract the stack input parameters
-        stack_parms = api_utils.extract_user_params(req.params)
+        stack_parms = self._extract_user_params(req.params)
 
         # Extract any additional arguments ("Request Parameters")
         create_args = extract_args(req.params)
