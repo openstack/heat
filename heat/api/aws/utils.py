@@ -68,6 +68,52 @@ def extract_param_pairs(params, prefix='', keyname='', valuename=''):
     return dict(get_param_pairs())
 
 
+def extract_param_list(params, prefix=''):
+    """
+    Extract a list-of-dicts based on parameters containing AWS style list
+
+    MetricData.member.1.MetricName=buffers
+    MetricData.member.1.Unit=Bytes
+    MetricData.member.1.Value=231434333
+    MetricData.member.2.MetricName=buffers2
+    MetricData.member.2.Unit=Bytes
+    MetricData.member.2.Value=12345
+
+    This can be extracted by passing prefix=MetricData, resulting in a
+    list containing two dicts
+    """
+
+    key_re = re.compile(r"%s\.member\.([0-9]*?)\.(.*?)$" % (prefix))
+    result = []
+    for k in params:
+        keymatch = key_re.match(k)
+        if keymatch:
+            try:
+                index = int(keymatch.group(1))
+            except ValueError:
+                # Regex match should mean this never happens..
+                logger.error('Could not extract index %s' % keymatch.group(1))
+                continue
+
+            key = keymatch.group(2)
+            try:
+                value = params[k]
+            except KeyError:
+                logger.error('Could not extract parameter for %s' % key)
+                continue
+
+            # We can't rely on list indexes being in-order, so
+            # populate the list with empty dicts up to the current
+            # index value if index > current list length
+            # We then merge the result into the appropriate dict
+            if index > len(result):
+                while len(result) < index:
+                    result.append({})
+            result[index - 1].update({key: value})
+
+    return result
+
+
 def reformat_dict_keys(keymap={}, inputdict={}):
     '''
     Utility function for mapping one dict format to another

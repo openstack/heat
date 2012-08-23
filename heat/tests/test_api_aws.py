@@ -92,6 +92,97 @@ class AWSCommon(unittest.TestCase):
                                               valuename='ParameterValue')
         self.assertFalse(params)
 
+    def test_extract_param_list(self):
+        p = {'MetricData.member.1.MetricName': 'foo',
+              'MetricData.member.1.Unit': 'Bytes',
+              'MetricData.member.1.Value': 234333}
+        params = api_utils.extract_param_list(p, prefix='MetricData')
+        self.assertEqual(len(params), 1)
+        self.assertTrue('MetricName' in params[0])
+        self.assertTrue('Unit' in params[0])
+        self.assertTrue('Value' in params[0])
+        self.assertEqual(params[0]['MetricName'], 'foo')
+        self.assertEqual(params[0]['Unit'], 'Bytes')
+        self.assertEqual(params[0]['Value'], 234333)
+
+    def test_extract_param_list_garbage_prefix(self):
+        p = {'AMetricData.member.1.MetricName': 'foo',
+              'MetricData.member.1.Unit': 'Bytes',
+              'MetricData.member.1.Value': 234333}
+        params = api_utils.extract_param_list(p, prefix='MetricData')
+        self.assertEqual(len(params), 1)
+        self.assertTrue('MetricName' not in params[0])
+        self.assertTrue('Unit' in params[0])
+        self.assertTrue('Value' in params[0])
+        self.assertEqual(params[0]['Unit'], 'Bytes')
+        self.assertEqual(params[0]['Value'], 234333)
+
+    def test_extract_param_list_garbage_prefix2(self):
+        p = {'AMetricData.member.1.MetricName': 'foo',
+              'BMetricData.member.1.Unit': 'Bytes',
+              'CMetricData.member.1.Value': 234333}
+        params = api_utils.extract_param_list(p, prefix='MetricData')
+        self.assertEqual(len(params), 0)
+
+    def test_extract_param_list_garbage_suffix(self):
+        p = {'MetricData.member.1.AMetricName': 'foo',
+              'MetricData.member.1.Unit': 'Bytes',
+              'MetricData.member.1.Value': 234333}
+        params = api_utils.extract_param_list(p, prefix='MetricData')
+        self.assertEqual(len(params), 1)
+        self.assertTrue('MetricName' not in params[0])
+        self.assertTrue('Unit' in params[0])
+        self.assertTrue('Value' in params[0])
+        self.assertEqual(params[0]['Unit'], 'Bytes')
+        self.assertEqual(params[0]['Value'], 234333)
+
+    def test_extract_param_list_multiple(self):
+        p = {'MetricData.member.1.MetricName': 'foo',
+              'MetricData.member.1.Unit': 'Bytes',
+              'MetricData.member.1.Value': 234333,
+              'MetricData.member.2.MetricName': 'foo2',
+              'MetricData.member.2.Unit': 'Bytes',
+              'MetricData.member.2.Value': 12345}
+        params = api_utils.extract_param_list(p, prefix='MetricData')
+        self.assertEqual(len(params), 2)
+        self.assertTrue('MetricName' in params[0])
+        self.assertTrue('MetricName' in params[1])
+        self.assertEqual(params[0]['MetricName'], 'foo')
+        self.assertEqual(params[0]['Unit'], 'Bytes')
+        self.assertEqual(params[0]['Value'], 234333)
+        self.assertEqual(params[1]['MetricName'], 'foo2')
+        self.assertEqual(params[1]['Unit'], 'Bytes')
+        self.assertEqual(params[1]['Value'], 12345)
+
+    def test_extract_param_list_multiple_missing(self):
+        # Handle case where there is an empty list item
+        p = {'MetricData.member.1.MetricName': 'foo',
+              'MetricData.member.1.Unit': 'Bytes',
+              'MetricData.member.1.Value': 234333,
+              'MetricData.member.3.MetricName': 'foo2',
+              'MetricData.member.3.Unit': 'Bytes',
+              'MetricData.member.3.Value': 12345}
+        params = api_utils.extract_param_list(p, prefix='MetricData')
+        self.assertEqual(len(params), 3)
+        self.assertTrue('MetricName' in params[0])
+        self.assertTrue('MetricName' in params[2])
+        self.assertEqual(params[0]['MetricName'], 'foo')
+        self.assertEqual(params[0]['Unit'], 'Bytes')
+        self.assertEqual(params[0]['Value'], 234333)
+        self.assertEqual(params[2]['MetricName'], 'foo2')
+        self.assertEqual(params[2]['Unit'], 'Bytes')
+        self.assertEqual(params[2]['Value'], 12345)
+
+    def test_extract_param_list_badindex(self):
+        p = {'MetricData.member.xyz.MetricName': 'foo',
+              'MetricData.member.$!&^.Unit': 'Bytes',
+              'MetricData.member.+.Value': 234333,
+              'MetricData.member.--.MetricName': 'foo2',
+              'MetricData.member._3.Unit': 'Bytes',
+              'MetricData.member.-1000.Value': 12345}
+        params = api_utils.extract_param_list(p, prefix='MetricData')
+        self.assertEqual(len(params), 0)
+
     def test_reformat_dict_keys(self):
         keymap = {"foo": "bar"}
         data = {"foo": 123}
