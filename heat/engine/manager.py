@@ -488,11 +488,14 @@ class EngineManager(manager.Manager):
         '''
         if watch_name:
             try:
-                wrs = db_api.watch_rule_get(context, watch_name)
+                wr = db_api.watch_rule_get(context, watch_name)
             except Exception as ex:
                 logger.warn('show_watch (%s) db error %s' %
                             (watch_name, str(ex)))
-                return
+            if wr:
+                wrs = [wr]
+            else:
+                raise AttributeError('Unknown watch name %s' % watch_name)
         else:
             try:
                 wrs = db_api.watch_rule_get_all(context)
