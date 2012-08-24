@@ -26,6 +26,7 @@ from nose import with_setup
 
 from heat.common import context
 from heat.tests.v1_1 import fakes
+import heat.engine.api as engine_api
 from heat.engine import instance as instances
 import heat.db as db_api
 from heat.engine import parser
@@ -361,6 +362,44 @@ class stackManagerTest(unittest.TestCase):
         self.assertEqual(err, None)
         self.assertFalse('AWS::CloudFormation::Init' in metadata)
         self.assertEqual(metadata, test_metadata)
+
+    def test_show_watch(self):
+        # Insert two dummy watch rules into the DB
+        values = {'stack_name': u'wordpress_ha', 'state': 'NORMAL',
+                  'name': u'HttpFailureAlarm',
+                   'rule': {
+                        u'EvaluationPeriods': u'1',
+                        u'AlarmActions': [u'WebServerRestartPolicy'],
+                        u'AlarmDescription': u'Restart the WikiDatabase',
+                        u'Namespace': u'system/linux',
+                        u'Period': u'300',
+                        u'ComparisonOperator': u'GreaterThanThreshold',
+                        u'Statistic': u'SampleCount',
+                        u'Threshold': u'2',
+                        u'MetricName': u'ServiceFailure'}}
+        db_ret = db_api.watch_rule_create(self.ctx, values)
+        self.assertNotEqual(db_ret, None)
+        values['name'] = "AnotherWatch"
+        db_ret = db_api.watch_rule_create(self.ctx, values)
+        self.assertNotEqual(db_ret, None)
+
+        # watch_name=None should return both watches
+        result = self.man.show_watch(self.ctx, watch_name=None)
+        self.assertEqual(2, len(result))
+
+        # watch_name="HttpFailureAlarm" should return only one
+        result = self.man.show_watch(self.ctx, watch_name="HttpFailureAlarm")
+        self.assertEqual(1, len(result))
+
+        # watch_name="nonexistent" should raise an AttributeError
+        self.assertRaises(AttributeError,
+                          self.man.show_watch,
+                          self.ctx, watch_name="nonexistent")
+
+        # Check the response has all keys defined in the engine API
+        for key in engine_api.WATCH_KEYS:
+            self.assertTrue(key in result[0])
+
 
 # allows testing of the test directly
 if __name__ == '__main__':
