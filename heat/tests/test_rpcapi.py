@@ -165,3 +165,11 @@ class EngineRpcAPITestCase(unittest.TestCase):
         self._test_engine_api('create_watch_data', 'call',
                               watch_name='watch1',
                               stats_data={})
+
+    def test_show_watch(self):
+        self._test_engine_api('show_watch', 'call',
+                              watch_name='watch1')
+
+    def test_show_watch_metric(self):
+        self._test_engine_api('show_watch_metric', 'call',
+                              namespace=None, metric_name=None)
