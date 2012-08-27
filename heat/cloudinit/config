@@ -1,3 +1,6 @@
+runcmd:
+ - [ setenforce, 0 ]
+
 user: ec2-user
 
 cloud_config_modules:
@@ -7,3 +10,4 @@ cloud_config_modules:
  - timezone
  - update_etc_hosts
  - update_hostname
+ - runcmd
