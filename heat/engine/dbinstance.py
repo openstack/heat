@@ -77,6 +77,16 @@ mysql_template = r'''
 
 
   "Resources": {
+    "DatabaseInstanceCfnUser" : {
+      "Type" : "AWS::IAM::User"
+    },
+    "DatabaseInstanceKeys" : {
+      "Type" : "AWS::IAM::AccessKey",
+      "Properties" : {
+        "UserName" : {"Ref": "DatabaseInstanceCfnUser"}
+      }
+    },
+
     "DatabaseInstance": {
       "Type": "AWS::EC2::Instance",
       "Metadata": {
@@ -104,7 +114,21 @@ mysql_template = r'''
         "KeyName": { "Ref": "KeyName" },
         "UserData": { "Fn::Base64": { "Fn::Join": ["", [
           "#!/bin/bash -v\n",
-          "/opt/aws/bin/cfn-init\n",
+          "# Helper function\n",
+          "function error_exit\n",
+          "{\n",
+          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '",
+          { "Ref" : "WaitHandle" }, "'\n",
+          "  exit 1\n",
+          "}\n",
+
+          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" },
+          " -r DatabaseInstance",
+          " --access-key ", { "Ref" : "DatabaseInstanceKeys" },
+          " --secret-key ",
+          {"Fn::GetAtt": ["DatabaseInstanceKeys", "SecretAccessKey"]},
+          " --region ", { "Ref" : "AWS::Region" },
+          " || error_exit 'Failed to run cfn-init'\n",
           "# Setup MySQL root password and create a user\n",
           "mysqladmin -u root password '", {"Ref":"MasterUserPassword"},"'\n",
           "cat << EOF | mysql -u root --password='",
@@ -115,8 +139,25 @@ mysql_template = r'''
           "IDENTIFIED BY \"", { "Ref" : "MasterUserPassword" }, "\";\n",
           "FLUSH PRIVILEGES;\n",
           "EXIT\n",
-          "EOF\n"
+          "EOF\n",
+          "# Database setup completed, signal success\n",
+          "/opt/aws/bin/cfn-signal -e 0 -r \"MySQL server setup complete\" '",
+          { "Ref" : "WaitHandle" }, "'\n"
+
         ]]}}
+      }
+    },
+
+    "WaitHandle" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
+
+    "WaitCondition" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "DependsOn" : "DatabaseInstance",
+      "Properties" : {
+        "Handle" : {"Ref" : "WaitHandle"},
+        "Timeout" : "600"
       }
     }
   },
