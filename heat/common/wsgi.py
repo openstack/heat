@@ -48,8 +48,11 @@ from heat.openstack.common import importutils
 from heat.openstack.common import utils
 
 
-# TODO(shadower) remove this once eventlet with fix from #55 gets released
-eventlet.wsgi.MAX_REQUEST_LINE = 50000
+URL_LENGTH_LIMIT = 50000
+
+# TODO(shadower) remove this once eventlet 0.9.17 is in distros Heat
+# supports (notably Fedora 17 and Ubuntu 12.04 and newer)
+eventlet.wsgi.MAX_REQUEST_LINE = URL_LENGTH_LIMIT
 
 bind_opts = [
     cfg.StrOpt('bind_host', default='0.0.0.0'),
@@ -240,7 +243,9 @@ class Server(object):
         self.pool = eventlet.GreenPool(size=self.threads)
         try:
             eventlet.wsgi.server(self.sock, self.application,
-                    log=WritableLogger(self.logger), custom_pool=self.pool)
+                    url_length_limit=URL_LENGTH_LIMIT,
+                    custom_pool=self.pool,
+                    log=WritableLogger(self.logger))
         except socket.error, err:
             if err[0] != errno.EINVAL:
                 raise
@@ -249,7 +254,9 @@ class Server(object):
     def _single_run(self, application, sock):
         """Start a WSGI server in a new green thread."""
         self.logger.info(_("Starting single process server"))
-        eventlet.wsgi.server(sock, application, custom_pool=self.pool,
+        eventlet.wsgi.server(sock, application,
+                             custom_pool=self.pool,
+                             url_length_limit=URL_LENGTH_LIMIT,
                              log=WritableLogger(self.logger))
 
 
