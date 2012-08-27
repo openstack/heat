@@ -30,6 +30,7 @@ from nose.plugins.attrib import attr
 from nose import with_setup
 from nose.exc import SkipTest
 
+from glance import client as glance_client
 from novaclient.v1_1 import client
 from heat import utils
 from heat.engine import parser
@@ -43,6 +44,10 @@ class FuncUtils:
         os.environ['OS_AUTH_STRATEGY']
     except KeyError:
         raise SkipTest('OS_AUTH_STRATEGY not set, skipping functional test')
+
+    if os.environ['OS_AUTH_STRATEGY'] != 'keystone':
+        print 'keystone authentication required'
+        assert False
 
     creds = dict(username=os.environ['OS_USERNAME'],
             password=os.environ['OS_PASSWORD'],
@@ -69,6 +74,52 @@ class FuncUtils:
         if self.sftp != None:
             return self.sftp
         return None
+
+    def prepare_jeos(self, p_os, arch, type):
+        imagename = p_os + '-' + arch + '-' + type
+        creds = dict(username=os.environ['OS_USERNAME'],
+                password=os.environ['OS_PASSWORD'],
+                tenant=os.environ['OS_TENANT_NAME'],
+                auth_url=os.environ['OS_AUTH_URL'],
+                strategy=os.environ['OS_AUTH_STRATEGY'])
+
+        gclient = glance_client.Client(host="0.0.0.0", port=9292,
+            use_ssl=False, auth_tok=None, creds=creds)
+
+        # skip creating jeos if image already available
+        if not self.poll_glance(gclient, imagename, False):
+            if os.geteuid() != 0:
+                print 'test must be run as root to create jeos'
+                assert False
+
+            # -d: debug, -G: register with glance
+            subprocess.call(['heat-jeos', '-d', '-G', 'create', imagename])
+
+            # Nose seems to change the behavior of the subprocess call to be
+            # asynchronous. So poll glance until image is registered.
+            self.poll_glance(gclient, imagename, True)
+
+    def poll_glance(self, gclient, imagename, block):
+        imagelistname = None
+        tries = 0
+        while imagelistname != imagename:
+            tries += 1
+            assert tries < 50
+            if block:
+                time.sleep(15)
+            print "Checking glance for image registration"
+            imageslist = gclient.get_images()
+            for x in imageslist:
+                imagelistname = x['name']
+                if imagelistname == imagename:
+                    print "Found image registration for %s" % imagename
+                    # technically not necessary, but glance registers image
+                    # before completely through with its operations
+                    time.sleep(10)
+                    return True
+            if not block:
+                break
+        return False
 
     def create_stack(self, template_file, distribution):
         nt = client.Client(os.environ['OS_USERNAME'],

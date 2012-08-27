@@ -25,6 +25,7 @@ def test_template():
 
     func_utils = util.FuncUtils()
 
+    func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
     func_utils.create_stack(template, 'F17')
     func_utils.check_cfntools()
     func_utils.wait_for_provisioning()
