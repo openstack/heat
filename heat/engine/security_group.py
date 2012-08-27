@@ -49,7 +49,7 @@ class SecurityGroup(Resource):
                                           self.properties['GroupDescription'])
 
         self.instance_id_set(sec.id)
-        if 'SecurityGroupIngress' in self.properties:
+        if self.properties['SecurityGroupIngress']:
             rules_client = self.nova().security_group_rules
             for i in self.properties['SecurityGroupIngress']:
                 try:

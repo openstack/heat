@@ -85,10 +85,7 @@ class ElasticIpAssociation(Resource):
         super(ElasticIpAssociation, self).__init__(name, json_snippet, stack)
 
     def FnGetRefId(self):
-        if not 'EIP' in self.properties:
-            return unicode('0.0.0.0')
-        else:
-            return unicode(self.properties['EIP'])
+        return unicode(self.properties.get('EIP', '0.0.0.0'))
 
     def validate(self):
         '''

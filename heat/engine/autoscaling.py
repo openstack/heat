@@ -59,7 +59,7 @@ class AutoScalingGroup(Resource):
 
     def handle_create(self):
 
-        if 'DesiredCapacity' in self.properties:
+        if self.properties['DesiredCapacity']:
             num_to_create = int(self.properties['DesiredCapacity'])
         else:
             num_to_create = int(self.properties['MinSize'])

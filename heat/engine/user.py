@@ -44,10 +44,9 @@ class User(Resource):
 
     def handle_create(self):
         passwd = ''
-        if 'LoginProfile' in self.properties:
-            if self.properties['LoginProfile'] and \
-                'Password' in self.properties['LoginProfile']:
-                passwd = self.properties['LoginProfile']['Password']
+        if self.properties['LoginProfile'] and \
+            'Password' in self.properties['LoginProfile']:
+            passwd = self.properties['LoginProfile']['Password']
 
         tenant_id = self.context.tenant_id
         user = self.keystone().users.create(self.name, passwd,
