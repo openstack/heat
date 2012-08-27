@@ -306,7 +306,7 @@ class LoadBalancer(stack.Stack):
 
         health_chk = self.properties['HealthCheck']
         if health_chk:
-            if float(health_chk['Interval']) >= float(health_chk['Timeout']):
+            if float(health_chk['Interval']) < float(health_chk['Timeout']):
                 return {'Error':
                         'Interval must be larger than Timeout'}
 
