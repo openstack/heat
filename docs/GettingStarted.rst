@@ -20,8 +20,10 @@ Get Heat
 --------
 
 Clone the heat repository_ from GitHub at ``git://github.com/heat-api/heat.git``. Note that OpenStack must be installed before heat.
+Optionally, one may wish to install Heat via RPM. Creation instructions are in the readme in the heat-rpms_ repository at ``git://github.com/heat-api/heat-rpms.git``.
 
 .. _repository: https://github.com/heat-api/heat
+.. _heat-rpms: https://github.com/heat-api/heat-rpms
 
 Install OpenStack
 -----------------
