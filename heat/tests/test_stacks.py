@@ -400,6 +400,33 @@ class stackManagerTest(unittest.TestCase):
         for key in engine_api.WATCH_KEYS:
             self.assertTrue(key in result[0])
 
+    def test_show_watch_metric(self):
+        # Get one of the  watch rules created in test_show_watch
+        # And add a metric datapoint
+        watch = db_api.watch_rule_get(self.ctx, "HttpFailureAlarm")
+        self.assertNotEqual(watch, None)
+        values = {'watch_rule_id': watch.id,
+                  'data': {
+                        u'Namespace': u'system/linux',
+                        u'ServiceFailure': {
+                            u'Units': u'Counter', u'Value': 1}}}
+        watch = db_api.watch_data_create(self.ctx, values)
+
+        # Check there is one result returned
+        result = self.man.show_watch_metric(self.ctx, namespace=None,
+                                            metric_name=None)
+        self.assertEqual(1, len(result))
+
+        # Create another metric datapoint and check we get two
+        watch = db_api.watch_data_create(self.ctx, values)
+        result = self.man.show_watch_metric(self.ctx, namespace=None,
+                                            metric_name=None)
+        self.assertEqual(2, len(result))
+
+        # Check the response has all keys defined in the engine API
+        for key in engine_api.WATCH_DATA_KEYS:
+            self.assertTrue(key in result[0])
+
 
 # allows testing of the test directly
 if __name__ == '__main__':
