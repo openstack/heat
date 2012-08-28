@@ -19,6 +19,7 @@ Helper utilities related to the AWS API implementations
 
 import re
 import itertools
+from heat.api.aws import exception
 
 
 def format_response(action, response):
@@ -87,6 +88,19 @@ def extract_param_list(params, prefix=''):
     members = itertools.groupby(data, key_func)
 
     return [dict(kv for di, kv in m) for mi, m in members]
+
+
+def get_param_value(params, key):
+    """
+    Helper function, looks up an expected parameter in a parsed
+    params dict and returns the result.  If params does not contain
+    the requested key we raise an exception of the appropriate type
+    """
+    try:
+        return params[key]
+    except KeyError:
+        logger.error("Request does not contain %s parameter!" % key)
+        raise exception.HeatMissingParameterError(key)
 
 
 def reformat_dict_keys(keymap={}, inputdict={}):
