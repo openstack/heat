@@ -93,7 +93,4 @@ def reformat_dict_keys(keymap={}, inputdict={}):
     '''
     Utility function for mapping one dict format to another
     '''
-    result = {}
-    for key in keymap:
-        result[keymap[key]] = inputdict[key]
-    return result
+    return dict([(outk, inputdict[ink]) for ink, outk in keymap.items()])
