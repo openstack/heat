@@ -18,6 +18,7 @@ Helper utilities related to the AWS API implementations
 '''
 
 import re
+import itertools
 
 
 def format_response(action, response):
@@ -83,35 +84,27 @@ def extract_param_list(params, prefix=''):
     list containing two dicts
     """
 
-    key_re = re.compile(r"%s\.member\.([0-9]*?)\.(.*?)$" % (prefix))
-    result = []
-    for k in params:
-        keymatch = key_re.match(k)
-        if keymatch:
-            try:
-                index = int(keymatch.group(1))
-            except ValueError:
-                # Regex match should mean this never happens..
-                logger.error('Could not extract index %s' % keymatch.group(1))
-                continue
+    key_re = re.compile(r"%s\.member\.([0-9]+)\.(.*)" % (prefix))
 
-            key = keymatch.group(2)
-            try:
-                value = params[k]
-            except KeyError:
-                logger.error('Could not extract parameter for %s' % key)
-                continue
+    def get_param_data(params):
+        for param_name, value in params.items():
+            match = key_re.match(param_name)
+            if match:
+                try:
+                    index = int(match.group(1))
+                except ValueError:
+                    pass
+                else:
+                    key = match.group(2)
 
-            # We can't rely on list indexes being in-order, so
-            # populate the list with empty dicts up to the current
-            # index value if index > current list length
-            # We then merge the result into the appropriate dict
-            if index > len(result):
-                while len(result) < index:
-                    result.append({})
-            result[index - 1].update({key: value})
+                    yield (index, (key, value))
 
-    return result
+    # Sort and group by index
+    key_func = lambda d: d[0]
+    data = sorted(get_param_data(params), key=key_func)
+    members = itertools.groupby(data, key_func)
+
+    return [dict(kv for di, kv in m) for mi, m in members]
 
 
 def reformat_dict_keys(keymap={}, inputdict={}):

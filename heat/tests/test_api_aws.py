@@ -163,15 +163,15 @@ class AWSCommon(unittest.TestCase):
               'MetricData.member.3.Unit': 'Bytes',
               'MetricData.member.3.Value': 12345}
         params = api_utils.extract_param_list(p, prefix='MetricData')
-        self.assertEqual(len(params), 3)
+        self.assertEqual(len(params), 2)
         self.assertTrue('MetricName' in params[0])
-        self.assertTrue('MetricName' in params[2])
+        self.assertTrue('MetricName' in params[1])
         self.assertEqual(params[0]['MetricName'], 'foo')
         self.assertEqual(params[0]['Unit'], 'Bytes')
         self.assertEqual(params[0]['Value'], 234333)
-        self.assertEqual(params[2]['MetricName'], 'foo2')
-        self.assertEqual(params[2]['Unit'], 'Bytes')
-        self.assertEqual(params[2]['Value'], 12345)
+        self.assertEqual(params[1]['MetricName'], 'foo2')
+        self.assertEqual(params[1]['Unit'], 'Bytes')
+        self.assertEqual(params[1]['Value'], 12345)
 
     def test_extract_param_list_badindex(self):
         p = {'MetricData.member.xyz.MetricName': 'foo',
