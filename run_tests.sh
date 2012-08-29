@@ -6,23 +6,28 @@ function usage {
   echo ""
   echo "  -V, --virtual-env        Always use virtualenv.  Install automatically if not present"
   echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment (default)"
-  echo "  -f, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
-  echo "  -u, --unittests-only     Run unit tests only."
-  echo "  -p, --pep8               Just run pep8"
-  echo "  -P, --no-pep8            Don't run static code checks"
+  echo "  -F, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
+  echo "  -f, --func               Run functional tests"
+  echo "  -u, --unit               Run unit tests (default when nothing specified)"
+  echo "  -p, --pep8               Run pep8 tests"
+  echo "  -P, --pep8-only          Run pep8 tests exclusively"
+  echo "  --all                    Run all tests"
   echo "  -c, --coverage           Generate coverage report"
   echo "  -h, --help               Print this usage message"
   exit
 }
 
+# must not assign -a as an option, needed for selecting custom attributes
 function process_option {
   case "$1" in
-    -V|--virtual-env) let always_venv=1; let never_venv=0;;
-    -N|--no-virtual-env) let always_venv=0; let never_venv=1;;
-    -f|--force) let force=1;;
-    -u|--unittests-only) noseargs="$noseargs -a tag=unit";;
-    -p|--pep8) let just_pep8=1;;
-    -P|--no-pep8) no_pep8=1;;
+    -V|--virtual-env) always_venv=1; never_venv=0;;
+    -N|--no-virtual-env) always_venv=0; never_venv=1;;
+    -F|--force) force=1;;
+    -f|--func) test_func=1; noseargs="$noseargs -a tag=func";;
+    -u|--unit) test_unit=1; noseargs="$noseargs -a tag=unit";;
+    -p|--pep8) test_pep8=1;;
+    -P|--pep8-only) test_pep8=1; just_pep8=1;;
+    --all) test_func=1; test_unit=1; test_pep8=1; noseargs="$noseargs -a tag=func -a tag=unit";;
     -c|--coverage) coverage=1;;
     -h|--help) usage;;
     *) noseargs="$noseargs $1"
@@ -31,22 +36,21 @@ function process_option {
 
 venv=.venv
 with_venv=tools/with_venv.sh
-# change usage text if this option is changed:
-always_venv=0
-never_venv=1
-force=0
-noseargs=
 wrapper=""
-just_pep8=0
-no_pep8=0
-coverage=0
 
 for arg in "$@"; do
   process_option $arg
 done
 
+# run unit tests with pep8 when no arguments are specified
+if [[ "$test_func" != 1 && "$test_unit" != 1 ]]; then
+    noseargs="$noseargs -a tag=unit"
+    test_pep8=1
+fi
+
+
 # If enabled, tell nose to collect coverage data
-if [ $coverage -eq 1 ]; then
+if [ "$coverage" == 1 ]; then
     noseopts="$noseopts --with-coverage --cover-package=heat"
 fi
 
@@ -59,23 +63,23 @@ function run_tests {
 }
 
 function run_pep8 {
-  echo "Running pep8 ..."
+  echo "Running pep8..."
   PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat"
   PEP8_INCLUDE="bin/heat bin/heat-boto bin/heat-api bin/heat-engine heat tools setup.py heat/testing/runner.py"
   ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
 }
 
-if [ $never_venv -eq 0 ]
+if [ "$never_venv" == 0 ]
 then
   # Remove the virtual environment if --force used
-  if [ $force -eq 1 ]; then
+  if [ "$force" == 1 ]; then
     echo "Cleaning virtualenv..."
     rm -rf ${venv}
   fi
   if [ -e ${venv} ]; then
     wrapper="${with_venv}"
   else
-    if [ $always_venv -eq 1 ]; then
+    if [ "$always_venv" == 1 ]; then
       # Automatically install the virtualenv
       python tools/install_venv.py
       wrapper="${with_venv}"
@@ -92,28 +96,21 @@ then
 fi
 
 # Delete old coverage data from previous runs
-if [ $coverage -eq 1 ]; then
+if [ "$coverage" == 1 ]; then
     ${wrapper} coverage erase
 fi
 
-if [ $just_pep8 -eq 1 ]; then
+if [ "$test_pep8" == 1 ]; then
   run_pep8
-  exit
+fi
+
+if [ "$just_pep8" == 1 ]; then
+    exit
 fi
 
 run_tests
 
-# NOTE(sirp): we only want to run pep8 when we're running the full-test suite,
-# not when we're running tests individually. To handle this, we need to
-# distinguish between options (noseopts), which begin with a '-', and
-# arguments (noseargs).
-if [ -z "$noseargs" ]; then
-  if [ $no_pep8 -eq 0 ]; then
-    run_pep8
-  fi
-fi
-
-if [ $coverage -eq 1 ]; then
+if [ "$coverage" == 1 ]; then
     echo "Generating coverage report in covhtml/"
     # Don't compute coverage for common code, which is tested elsewhere
     ${wrapper} coverage html --include='heat/*' --omit='heat/openstack/common/*' -d covhtml -i
