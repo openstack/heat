@@ -37,10 +37,10 @@ class AWSCommon(unittest.TestCase):
         self.assert_(response == expected)
 
     def test_params_extract(self):
-        p = {'Parameters.member.Foo.ParameterKey': 'foo',
-             'Parameters.member.Foo.ParameterValue': 'bar',
-             'Parameters.member.Blarg.ParameterKey': 'blarg',
-             'Parameters.member.Blarg.ParameterValue': 'wibble'}
+        p = {'Parameters.member.1.ParameterKey': 'foo',
+             'Parameters.member.1.ParameterValue': 'bar',
+             'Parameters.member.2.ParameterKey': 'blarg',
+             'Parameters.member.2.ParameterValue': 'wibble'}
         params = api_utils.extract_param_pairs(p, prefix='Parameters',
                                               keyname='ParameterKey',
                                               valuename='ParameterValue')
@@ -51,24 +51,20 @@ class AWSCommon(unittest.TestCase):
         self.assertEqual(params['blarg'], 'wibble')
 
     def test_params_extract_dots(self):
-        p = {'Parameters.member.Foo.Bar.ParameterKey': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar',
-             'Parameters.member.Foo.Baz.ParameterKey': 'blarg',
-             'Parameters.member.Foo.Baz.ParameterValue': 'wibble'}
+        p = {'Parameters.member.1.1.ParameterKey': 'foo',
+             'Parameters.member.1.1.ParameterValue': 'bar',
+             'Parameters.member.2.1.ParameterKey': 'blarg',
+             'Parameters.member.2.1.ParameterValue': 'wibble'}
         params = api_utils.extract_param_pairs(p, prefix='Parameters',
                                               keyname='ParameterKey',
                                               valuename='ParameterValue')
-        self.assertEqual(len(params), 2)
-        self.assertTrue('foo' in params)
-        self.assertEqual(params['foo'], 'bar')
-        self.assertTrue('blarg' in params)
-        self.assertEqual(params['blarg'], 'wibble')
+        self.assertFalse(params)
 
     def test_params_extract_garbage(self):
-        p = {'Parameters.member.Foo.Bar.ParameterKey': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar',
-             'Foo.Baz.ParameterKey': 'blarg',
-             'Foo.Baz.ParameterValue': 'wibble'}
+        p = {'Parameters.member.1.ParameterKey': 'foo',
+             'Parameters.member.1.ParameterValue': 'bar',
+             'Foo.1.ParameterKey': 'blarg',
+             'Foo.1.ParameterValue': 'wibble'}
         params = api_utils.extract_param_pairs(p, prefix='Parameters',
                                               keyname='ParameterKey',
                                               valuename='ParameterValue')
@@ -85,8 +81,8 @@ class AWSCommon(unittest.TestCase):
         self.assertFalse(params)
 
     def test_params_extract_garbage_suffix(self):
-        p = {'Parameters.member.Foo.Bar.ParameterKeysuffix': 'foo',
-             'Parameters.member.Foo.Bar.ParameterValue': 'bar'}
+        p = {'Parameters.member.1.ParameterKeysuffix': 'foo',
+             'Parameters.member.1.ParameterValue': 'bar'}
         params = api_utils.extract_param_pairs(p, prefix='Parameters',
                                               keyname='ParameterKey',
                                               valuename='ParameterValue')

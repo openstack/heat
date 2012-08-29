@@ -44,29 +44,11 @@ def extract_param_pairs(params, prefix='', keyname='', valuename=''):
     We reformat this into a dict here to match the heat
     engine API expected format
     """
-    # Define the AWS key format to extract
-    LIST_KEYS = (
-    LIST_USER_KEY_re,
-    LIST_USER_VALUE_fmt,
-    ) = (
-    re.compile(r"%s\.member\.(.*?)\.%s$" % (prefix, keyname)),
-    '.'.join([prefix, 'member', '%s', valuename])
-    )
+    plist = extract_param_list(params, prefix)
+    kvs = [(p[keyname], p[valuename]) for p in plist
+                                      if keyname in p and valuename in p]
 
-    def get_param_pairs():
-        for k in params:
-            keymatch = LIST_USER_KEY_re.match(k)
-            if keymatch:
-                key = params[k]
-                v = LIST_USER_VALUE_fmt % keymatch.group(1)
-                try:
-                    value = params[v]
-                except KeyError:
-                    logger.error('Could not extract parameter %s' % key)
-
-                yield (key, value)
-
-    return dict(get_param_pairs())
+    return dict(kvs)
 
 
 def extract_param_list(params, prefix=''):
