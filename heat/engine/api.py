@@ -15,6 +15,7 @@
 import re
 from heat.common import utils as heat_utils
 from heat.engine import parser
+from heat.engine import watchrule
 
 from heat.openstack.common import log as logging
 
@@ -221,6 +222,12 @@ WATCH_RULE_KEYS = (
     'OKActions', 'Period', 'StateReason',
     'StateReasonData', 'StateUpdatedTimestamp', 'StateValue',
     'Statistic', 'Threshold', 'Unit', 'StackName')
+
+
+WATCH_STATES = (WATCH_STATE_OK, WATCH_STATE_ALARM, WATCH_STATE_NODATA
+    ) = (watchrule.WatchRule.NORMAL,
+         watchrule.WatchRule.ALARM,
+         watchrule.WatchRule.NODATA)
 
 
 def format_watch(watch):
