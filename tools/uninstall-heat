@@ -25,7 +25,7 @@ user_wants() {
     done
 }
 
-HEAT_PIDS=`pgrep '^heat-(api|engine|metadata)$'`
+HEAT_PIDS=`pgrep '^heat-(api|api-cfn|engine|metadata)$'`
 if [ -n "$HEAT_PIDS" ]; then
     echo 'The following Heat processes are running:' 1>&2
     ps $HEAT_PIDS 1>&2
@@ -60,6 +60,7 @@ if user_wants 'Delete Heat binaries?'; then
     sudo rm -f $BIN_PATH/heat-db-setup
     sudo rm -f $BIN_PATH/heat-metadata
     sudo rm -f $BIN_PATH/heat-api
+    sudo rm -f $BIN_PATH/heat-api-cfn
     sudo rm -f $BIN_PATH/heat-engine
     sudo rm -f $BIN_PATH/heat
 

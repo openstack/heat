@@ -44,7 +44,7 @@ setuptools.setup(
         'Environment :: No Input/Output (Daemon)',
     ],
     scripts=['bin/heat',
-             'bin/heat-api',
+             'bin/heat-api-cfn',
              'bin/heat-api-cloudwatch',
              'bin/heat-boto',
              'bin/heat-metadata',

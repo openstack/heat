@@ -43,7 +43,7 @@ LOG = logging.getLogger('heat.api')
 
 if __name__ == '__main__':
     try:
-        cfg.CONF(project='heat', prog='heat-api')
+        cfg.CONF(project='heat', prog='heat-api-cfn')
         config.setup_logging()
         config.register_api_opts()
 

@@ -12,6 +12,18 @@ mkdir -p $LOG_DIR
 mkdir -p $CONF_DIR
 
 pushd etc > /dev/null
+
+# Archive existing heat-api* config files in preparation
+# for change to heat-api-cfn*, and future use of heat-api*
+# the OpenStack API
+for ext in '.conf' '-paste.ini'; do
+    heat_api_file="${CONF_DIR}/heat-api${ext}"
+    if [ -e ${heat_api_file} ]; then
+        echo "archiving configuration file ${heat_api_file}"
+        mv $heat_api_file ${heat_api_file}.bak
+    fi
+done
+
 for f in *
 do
     if [ -d $f ]; then
