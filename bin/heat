@@ -43,7 +43,7 @@ scriptname = os.path.basename(sys.argv[0])
 gettext.install('heat', unicode=1)
 
 if scriptname == 'heat-boto':
-    from heat import  boto_client as heat_client
+    from heat import boto_client as heat_client
 else:
     from heat import client as heat_client
 from heat import version
