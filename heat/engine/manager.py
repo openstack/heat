@@ -423,36 +423,41 @@ class EngineManager(manager.Manager):
             self.run_rule(context, wr, now)
 
     def run_rule(self, context, wr, now=timeutils.utcnow()):
-        action_map = {'ALARM': 'AlarmActions',
-                      'NORMAL': 'OKActions',
-                      'NODATA': 'InsufficientDataActions'}
-
         watcher = watchrule.WatchRule(wr.rule, wr.watch_data,
                                       wr.last_evaluated, now)
         new_state = watcher.get_alarm_state()
 
         if new_state != wr.state:
-            logger.warn('WATCH: stack:%s, watch_name:%s %s',
-                        wr.stack_name, wr.name, new_state)
-
-            if not action_map[new_state] in wr.rule:
-                logger.info('no action for new state %s',
-                            new_state)
+            if self.rule_action(wr, new_state):
                 wr.state = new_state
-                wr.save()
-            else:
-                s = db_api.stack_get_by_name(None, wr.stack_name)
-                if s and s.status in ('CREATE_COMPLETE',
-                                      'UPDATE_COMPLETE'):
-                    user_creds = db_api.user_creds_get(s.user_creds_id)
-                    ctxt = ctxtlib.RequestContext.from_dict(dict(user_creds))
-                    stack = parser.Stack.load(ctxt, s.id)
-                    for a in wr.rule[action_map[new_state]]:
-                        greenpool.spawn_n(stack[a].alarm)
-                    wr.state = new_state
-                    wr.save()
 
         wr.last_evaluated = now
+        wr.save()
+
+    def rule_action(self, wr, new_state):
+        # TODO : push watch-rule processing into engine.watchrule
+        logger.warn('WATCH: stack:%s, watch_name:%s %s',
+                    wr.stack_name, wr.name, new_state)
+
+        actioned = False
+        if not watchrule.WatchRule.ACTION_MAP[new_state] in wr.rule:
+            logger.info('no action for new state %s',
+                        new_state)
+            actioned = True
+        else:
+            s = db_api.stack_get_by_name(None, wr.stack_name)
+            if s and s.status in (parser.Stack.CREATE_COMPLETE,
+                                  parser.Stack.UPDATE_COMPLETE):
+                user_creds = db_api.user_creds_get(s.user_creds_id)
+                ctxt = ctxtlib.RequestContext.from_dict(dict(user_creds))
+                stack = parser.Stack.load(ctxt, s.id)
+                for a in wr.rule[watchrule.WatchRule.ACTION_MAP[new_state]]:
+                    greenpool.spawn_n(stack[a].alarm)
+                actioned = True
+            else:
+                logger.warning("Could not process watch state %s for stack" %
+                               new_state)
+        return actioned
 
     def create_watch_data(self, context, watch_name, stats_data):
         '''
@@ -528,4 +533,42 @@ class EngineManager(manager.Manager):
             return
 
         result = [api.format_watch_data(w) for w in wds]
+        return result
+
+    def set_watch_state(self, context, watch_name, state):
+        '''
+        Temporarily set the state of a given watch
+        arg1 -> RPC context.
+        arg2 -> Name of the watch
+        arg3 -> State (must be one defined in WatchRule class
+        '''
+
+        if state not in watchrule.WatchRule.WATCH_STATES:
+            raise AttributeError('Unknown watch state %s' % state)
+
+        if watch_name:
+            try:
+                wr = db_api.watch_rule_get(context, watch_name)
+            except Exception as ex:
+                logger.warn('show_watch (%s) db error %s' %
+                            (watch_name, str(ex)))
+
+            if not wr:
+                raise AttributeError('Unknown watch name %s' % watch_name)
+
+        else:
+            raise AttributeError('Must pass watch_name')
+
+        if state != wr.state:
+            if self.rule_action(wr, state):
+                logger.debug("Overriding state %s for watch %s with %s" %
+                         (wr.state, watch_name, state))
+            else:
+                logger.warning("Unable to override state %s for watch %s" %
+                         (wr.state, watch_name))
+
+        # Return the watch with the state overriden to indicate success
+        # We do not update the timestamps as we are not modifying the DB
+        result = api.format_watch(wr)
+        result[api.WATCH_STATE_VALUE] = state
         return result

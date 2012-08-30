@@ -247,3 +247,14 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt, self.make_msg('show_watch_metric',
                          namespace=namespace, metric_name=metric_name),
                          topic=_engine_topic(self.topic, ctxt, None))
+
+    def set_watch_state(self, ctxt, watch_name, state):
+        '''
+        Temporarily set the state of a given watch
+        arg1 -> RPC context.
+        arg2 -> Name of the watch
+        arg3 -> State (must be one defined in WatchRule class)
+        '''
+        return self.call(ctxt, self.make_msg('set_watch_state',
+                         watch_name=watch_name, state=state),
+                         topic=_engine_topic(self.topic, ctxt, None))

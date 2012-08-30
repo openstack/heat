@@ -32,6 +32,7 @@ import heat.db as db_api
 from heat.engine import parser
 from heat.engine import manager
 from heat.engine import auth
+from heat.engine import watchrule
 
 
 tests_dir = os.path.dirname(os.path.realpath(__file__))
@@ -426,6 +427,66 @@ class stackManagerTest(unittest.TestCase):
         # Check the response has all keys defined in the engine API
         for key in engine_api.WATCH_DATA_KEYS:
             self.assertTrue(key in result[0])
+
+    def test_set_watch_state(self):
+        # Insert dummy watch rule into the DB
+        values = {'stack_name': u'wordpress_ha', 'state': 'NORMAL',
+                  'name': u'OverrideAlarm',
+                   'rule': {
+                        u'EvaluationPeriods': u'1',
+                        u'AlarmActions': [u'WebServerRestartPolicy'],
+                        u'AlarmDescription': u'Restart the WikiDatabase',
+                        u'Namespace': u'system/linux',
+                        u'Period': u'300',
+                        u'ComparisonOperator': u'GreaterThanThreshold',
+                        u'Statistic': u'SampleCount',
+                        u'Threshold': u'2',
+                        u'MetricName': u'ServiceFailure'}}
+        db_ret = db_api.watch_rule_create(self.ctx, values)
+        self.assertNotEqual(db_ret, None)
+
+        for state in watchrule.WatchRule.WATCH_STATES:
+            result = self.man.set_watch_state(self.ctx,
+                                              watch_name="OverrideAlarm",
+                                              state=state)
+            self.assertNotEqual(result, None)
+            self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
+
+        # Cleanup, delete the dummy rule
+        db_api.watch_rule_delete(self.ctx, "OverrideAlarm")
+
+    def test_set_watch_state_badstate(self):
+        # Insert dummy watch rule into the DB
+        values = {'stack_name': u'wordpress_ha', 'state': 'NORMAL',
+                  'name': u'OverrideAlarm2',
+                   'rule': {
+                        u'EvaluationPeriods': u'1',
+                        u'AlarmActions': [u'WebServerRestartPolicy'],
+                        u'AlarmDescription': u'Restart the WikiDatabase',
+                        u'Namespace': u'system/linux',
+                        u'Period': u'300',
+                        u'ComparisonOperator': u'GreaterThanThreshold',
+                        u'Statistic': u'SampleCount',
+                        u'Threshold': u'2',
+                        u'MetricName': u'ServiceFailure'}}
+        db_ret = db_api.watch_rule_create(self.ctx, values)
+        self.assertNotEqual(db_ret, None)
+
+        for state in ["HGJHGJHG", "1234", "!\*(&%"]:
+            self.assertRaises(AttributeError,
+                              self.man.set_watch_state,
+                              self.ctx, watch_name="OverrideAlarm2",
+                              state=state)
+
+        # Cleanup, delete the dummy rule
+        db_api.watch_rule_delete(self.ctx, "OverrideAlarm2")
+
+    def test_set_watch_state_noexist(self):
+        # watch_name="nonexistent" should raise an AttributeError
+        state = watchrule.WatchRule.ALARM   # State valid
+        self.assertRaises(AttributeError,
+                          self.man.set_watch_state,
+                          self.ctx, watch_name="nonexistent", state=state)
 
 
 # allows testing of the test directly

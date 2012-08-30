@@ -22,9 +22,12 @@ logger = logging.getLogger('heat.engine.watchrule')
 
 
 class WatchRule(object):
-    ALARM = 'ALARM'
-    NORMAL = 'NORMAL'
-    NODATA = 'NODATA'
+    WATCH_STATES = (ALARM, NORMAL, NODATA
+    ) = ('ALARM', 'NORMAL', 'NODATA')
+
+    ACTION_MAP = {ALARM: 'AlarmActions',
+                  NORMAL: 'OKActions',
+                  NODATA: 'InsufficientDataActions'}
 
     def __init__(self, rule, dataset, last_evaluated, now):
         self.rule = rule
