@@ -25,15 +25,17 @@ import time  # for sleep
 import nose
 import errno
 from pkg_resources import resource_string
+from lxml import etree
 
 from nose.plugins.attrib import attr
 from nose import with_setup
 from nose.exc import SkipTest
 
 from glance import client as glance_client
-from novaclient.v1_1 import client
+from novaclient.v1_1 import client as nova_client
 from heat import utils
 from heat.engine import parser
+from heat import client as heat_client
 
 
 class FuncUtils:
@@ -66,6 +68,8 @@ class FuncUtils:
     sftp = None
     novaclient = None
     glanceclient = None
+    heatclient = None
+    phys_rec_id = None
 
     def get_ssh_client(self):
         if self.ssh.get_transport() != None:
@@ -85,6 +89,11 @@ class FuncUtils:
     def get_glance_client(self):
         if self.glanceclient != None:
             return self.glanceclient
+        return None
+
+    def get_heat_client(self):
+        if self.heatclient != None:
+            return self.heatclient
         return None
 
     def prepare_jeos(self, p_os, arch, type):
@@ -129,7 +138,7 @@ class FuncUtils:
         return False
 
     def create_stack(self, template_file, distribution):
-        self.novaclient = client.Client(self.creds['username'],
+        self.novaclient = nova_client.Client(self.creds['username'],
             self.creds['password'], self.creds['tenant'],
             self.creds['auth_url'], service_type='compute')
 
@@ -144,7 +153,30 @@ class FuncUtils:
             ';KeyName=' + keyname +
             ';LinuxDistribution=' + distribution])
 
-        print "Waiting for OpenStack to initialize and assign network address"
+        self.heatclient = heat_client.get_client('0.0.0.0', 8000,
+            self.creds['username'], self.creds['password'],
+            self.creds['tenant'], self.creds['auth_url'],
+            self.creds['strategy'], None, None, False)
+
+        parameters = {}
+
+        alist = None
+        tries = 0
+        print 'Waiting for stack creation to be completed'
+        while not alist:
+            tries += 1
+            assert tries < 500
+            time.sleep(10)
+            events = self.heatclient.list_stack_events(**parameters)
+            root = etree.fromstring(events)
+            alist = root.xpath('//member[StackName="' + self.stackname +
+                '" and ResourceStatus="CREATE_COMPLETE" \
+                and ResourceType="AWS::EC2::Instance"]')
+
+        elem = alist.pop()
+        self.phys_rec_id = elem.findtext('PhysicalResourceId')
+
+        print "Checking network address assignment"
         ip = None
         tries = 0
         while ip is None:
@@ -153,8 +185,7 @@ class FuncUtils:
             time.sleep(10)
 
             for server in self.novaclient.servers.list():
-                # TODO: get PhysicalResourceId instead
-                if server.name == 'WikiDatabase':
+                if server.id == self.phys_rec_id:
                     address = server.addresses
                     print "Status: %s" % server.status
                     if address:
@@ -258,6 +289,8 @@ class FuncUtils:
                 break
 
     def check_user_data(self, template_file):
+        return  # until TODO is fixed
+
         transport = self.ssh.get_transport()
         channel = transport.open_session()
         channel.get_pty()
@@ -283,6 +316,7 @@ class FuncUtils:
         remote_file_list_u = map(unicode, remote_file_list)
         remote_file.close()
 
+        # TODO: make server name generic
         t_data = parsed_t['Resources']['WikiDatabase']['Properties']
         t_data = t_data['UserData']['Fn::Base64']['Fn::Join'].pop()
         joined_t_data = ''.join(t_data)
