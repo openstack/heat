@@ -64,6 +64,8 @@ class FuncUtils:
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     sftp = None
+    novaclient = None
+    glanceclient = None
 
     def get_ssh_client(self):
         if self.ssh.get_transport() != None:
@@ -75,19 +77,24 @@ class FuncUtils:
             return self.sftp
         return None
 
+    def get_nova_client(self):
+        if self.novaclient != None:
+            return self.novaclient
+        return None
+
+    def get_glance_client(self):
+        if self.glanceclient != None:
+            return self.glanceclient
+        return None
+
     def prepare_jeos(self, p_os, arch, type):
         imagename = p_os + '-' + arch + '-' + type
-        creds = dict(username=os.environ['OS_USERNAME'],
-                password=os.environ['OS_PASSWORD'],
-                tenant=os.environ['OS_TENANT_NAME'],
-                auth_url=os.environ['OS_AUTH_URL'],
-                strategy=os.environ['OS_AUTH_STRATEGY'])
 
-        gclient = glance_client.Client(host="0.0.0.0", port=9292,
-            use_ssl=False, auth_tok=None, creds=creds)
+        self.glanceclient = glance_client.Client(host="0.0.0.0", port=9292,
+            use_ssl=False, auth_tok=None, creds=self.creds)
 
         # skip creating jeos if image already available
-        if not self.poll_glance(gclient, imagename, False):
+        if not self.poll_glance(self.glanceclient, imagename, False):
             if os.geteuid() != 0:
                 print 'test must be run as root to create jeos'
                 assert False
@@ -97,7 +104,7 @@ class FuncUtils:
 
             # Nose seems to change the behavior of the subprocess call to be
             # asynchronous. So poll glance until image is registered.
-            self.poll_glance(gclient, imagename, True)
+            self.poll_glance(self.glanceclient, imagename, True)
 
     def poll_glance(self, gclient, imagename, block):
         imagelistname = None
@@ -122,11 +129,11 @@ class FuncUtils:
         return False
 
     def create_stack(self, template_file, distribution):
-        nt = client.Client(os.environ['OS_USERNAME'],
-            os.environ['OS_PASSWORD'], os.environ['OS_TENANT_NAME'],
-            os.environ['OS_AUTH_URL'], service_type='compute')
+        self.novaclient = client.Client(self.creds['username'],
+            self.creds['password'], self.creds['tenant'],
+            self.creds['auth_url'], service_type='compute')
 
-        keyname = nt.keypairs.list().pop().name
+        keyname = self.novaclient.keypairs.list().pop().name
 
         subprocess.call(['heat', '-d', 'create', self.stackname,
             '--template-file=' + self.basepath +
@@ -145,7 +152,7 @@ class FuncUtils:
             assert tries < 500
             time.sleep(10)
 
-            for server in nt.servers.list():
+            for server in self.novaclient.servers.list():
                 # TODO: get PhysicalResourceId instead
                 if server.name == 'WikiDatabase':
                     address = server.addresses
