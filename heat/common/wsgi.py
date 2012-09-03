@@ -242,9 +242,9 @@ class Server(object):
         eventlet.patcher.monkey_patch(all=False, socket=True)
         self.pool = eventlet.GreenPool(size=self.threads)
         try:
-            eventlet.wsgi.server(self.sock, self.application,
-                    url_length_limit=URL_LENGTH_LIMIT,
+            eventlet_wsgi_server(self.sock, self.application,
                     custom_pool=self.pool,
+                    url_length_limit=URL_LENGTH_LIMIT,
                     log=WritableLogger(self.logger))
         except socket.error, err:
             if err[0] != errno.EINVAL:
@@ -254,10 +254,23 @@ class Server(object):
     def _single_run(self, application, sock):
         """Start a WSGI server in a new green thread."""
         self.logger.info(_("Starting single process server"))
-        eventlet.wsgi.server(sock, application,
+        eventlet_wsgi_server(sock, application,
                              custom_pool=self.pool,
                              url_length_limit=URL_LENGTH_LIMIT,
                              log=WritableLogger(self.logger))
+
+
+def eventlet_wsgi_server(sock, application, **kwargs):
+    '''
+    Return a new instance of the eventlet wsgi server with the proper url limit
+    in a way that's compatible with eventlet 0.9.16 and 0.9.17.
+    '''
+    try:
+        return eventlet.wsgi.server(sock, application, **kwargs)
+    # TODO(shadower) remove this when we don't support eventlet 0.9.16 anymore
+    except TypeError:
+        kwargs.pop('url_length_limit', None)
+        return eventlet.wsgi.server(sock, application, **kwargs)
 
 
 class Middleware(object):
