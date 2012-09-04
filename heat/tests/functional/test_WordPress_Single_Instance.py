@@ -13,6 +13,7 @@
 #
 
 import util
+import verify
 import nose
 from nose.plugins.attrib import attr
 
@@ -33,11 +34,20 @@ def test_template():
 
         ssh = func_utils.get_ssh_client()
 
-        # ensure wordpress was installed
+        # ensure wordpress was installed by checking for expected
+        # configuration file over ssh
         wp_file = '/etc/wordpress/wp-config.php'
         stdin, stdout, sterr = ssh.exec_command('ls ' + wp_file)
         result = stdout.readlines().pop().rstrip()
         assert result == wp_file
         print "Wordpress installation detected"
+
+        # Verify the output URL parses as expected, ie check that
+        # the wordpress installation is operational
+        stack_url = func_utils.get_stack_output("WebsiteURL")
+        print "Got stack output WebsiteURL=%s, verifying" % stack_url
+        ver = verify.VerifyStack()
+        assert True == ver.verify_wordpress(stack_url)
+
     finally:
         func_utils.cleanup()
