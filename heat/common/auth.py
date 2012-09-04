@@ -200,7 +200,7 @@ class KeystoneStrategy(BaseStrategy):
                     logger.warn(msg)
                     continue
 
-                if service_type == 'heat':
+                if service_type == 'orchestration':
                     for ep in service['endpoints']:
                         if region is None or region == ep['region']:
                             if endpoint is not None:
