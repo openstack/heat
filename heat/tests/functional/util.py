@@ -350,6 +350,22 @@ class FuncUtils:
                 with open(filepaths[file]) as f:
                     assert data == f.read()
 
+    def get_stack_output(self, output_key):
+        '''
+        Extract a specified output from the DescribeStacks details
+        '''
+        # Get the DescribeStacks result for this stack
+        parameters = {'StackName': self.stackname}
+        c = self.get_heat_client()
+        result = c.describe_stacks(**parameters)
+
+        # Extract the OutputValue for the specified OutputKey
+        root = etree.fromstring(result)
+        output_list = root.xpath('//member[OutputKey="' + output_key + '"]')
+        output = output_list.pop()
+        value = output.findtext('OutputValue')
+        return value
+
     def cleanup(self):
         self.ssh.close()
         subprocess.call(['heat', 'delete', self.stackname])
