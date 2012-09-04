@@ -368,7 +368,9 @@ class FuncUtils:
 
     def cleanup(self):
         self.ssh.close()
-        subprocess.call(['heat', 'delete', self.stackname])
+        parameters = {'StackName': self.stackname}
+        c = self.get_heat_client()
+        c.delete_stack(**parameters)
 
 if __name__ == '__main__':
     sys.argv.append(__file__)
