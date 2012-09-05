@@ -21,6 +21,7 @@ import copy
 from heat.common import exception
 from heat.engine import checkeddict
 from heat.engine import dependencies
+from heat.engine import identifier
 from heat.engine import resources
 from heat.db import api as db_api
 
@@ -320,6 +321,13 @@ class Stack(object):
             self.id = new_s.id
 
         return self.id
+
+    def identifier(self):
+        '''
+        Return an identifier for this stack.
+        '''
+        return identifier.HeatIdentifier(self.context.tenant,
+                                         self.name, self.id)
 
     def __iter__(self):
         '''

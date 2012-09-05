@@ -356,6 +356,16 @@ class StackTest(unittest.TestCase):
         self.assertRaises(exception.NotFound, parser.Stack.load,
                           None, -1)
 
+    def test_identifier(self):
+        stack = parser.Stack(self.ctx, 'identifier_test',
+                             parser.Template({}))
+        stack.store()
+        identifier = stack.identifier()
+        self.assertEqual(identifier.tenant, self.ctx.tenant)
+        self.assertEqual(identifier.stack_name, 'identifier_test')
+        self.assertTrue(identifier.stack_id)
+        self.assertFalse(identifier.path)
+
     def test_created_time(self):
         stack = parser.Stack(self.ctx, 'creation_time_test',
                              parser.Template({}))
