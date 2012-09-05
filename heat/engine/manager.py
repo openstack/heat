@@ -61,6 +61,22 @@ class EngineManager(manager.Manager):
         """Load configuration options and connect to the hypervisor."""
         pass
 
+    def identify_stack(self, context, stack_name):
+        """
+        The identify_stack method returns the full stack identifier for a
+        single, live stack given the stack name.
+        arg1 -> RPC context.
+        arg2 -> Name of the stack to look up.
+        """
+        auth.authenticate(context)
+
+        s = db_api.stack_get_by_name(context, stack_name)
+        if s:
+            stack = parser.Stack.load(context, s.id)
+            return stack.identifier()
+        else:
+            raise AttributeError('Unknown stack name')
+
     def show_stack(self, context, stack_name, params):
         """
         The show_stack method returns the attributes of one stack.

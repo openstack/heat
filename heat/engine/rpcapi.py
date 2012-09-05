@@ -57,6 +57,21 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
                 topic=FLAGS.engine_topic,
                 default_version=self.BASE_RPC_API_VERSION)
 
+    def identify_stack(self, ctxt, stack_name):
+        """
+        The identify_stack method returns the full stack identifier for a
+        single, live stack given the stack name.
+
+        :param ctxt: RPC context.
+        :param stack_name: Name of the stack you want to see,
+                           or None to see all
+        """
+        return self.call(ctxt, self.make_msg('identify_stack',
+                                             stack_name=stack_name,
+                                             topic=_engine_topic(self.topic,
+                                                                 ctxt,
+                                                                 None)))
+
     def show_stack(self, ctxt, stack_name, params):
         """
         The show_stack method returns the attributes of one stack.

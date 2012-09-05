@@ -142,6 +142,7 @@ class stackManagerTest(unittest.TestCase):
         stack.store()
         stack.create()
         cls.stack = stack
+        cls.stack_identity = stack.identifier()
 
         m.UnsetStubs()
 
@@ -168,6 +169,14 @@ class stackManagerTest(unittest.TestCase):
 
     def tearDown(self):
         self.m.UnsetStubs()
+
+    def test_stack_identify(self):
+        identity = self.man.identify_stack(self.ctx, self.stack_name)
+        self.assertEqual(identity, self.stack_identity)
+
+    def test_stack_identify_nonexist(self):
+        self.assertRaises(AttributeError, self.man.identify_stack,
+                          self.ctx, 'wibble')
 
     def test_stack_event_list(self):
         el = self.man.list_events(self.ctx, self.stack_name, {})
