@@ -144,21 +144,35 @@ class FuncUtils:
 
         keyname = self.novaclient.keypairs.list().pop().name
 
-        subprocess.call(['heat', '-d', 'create', self.stackname,
-            '--template-file=' + self.basepath +
-            '/templates/' + template_file,
-            '--parameters=InstanceType=m1.xlarge;DBUsername=' +
-            self.dbusername +
-            ';DBPassword=' + os.environ['OS_PASSWORD'] +
-            ';KeyName=' + keyname +
-            ';LinuxDistribution=' + distribution])
-
         self.heatclient = heat_client.get_client('0.0.0.0', 8000,
             self.creds['username'], self.creds['password'],
             self.creds['tenant'], self.creds['auth_url'],
             self.creds['strategy'], None, None, False)
 
+        assert self.heatclient
+
+        # Dummy up the optparse.Values we get from CLI args in bin/heat
+        stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
+                         'DBUsername=' + self.dbusername,
+                         'DBPassword=' + os.environ['OS_PASSWORD'],
+                         'KeyName=' + keyname,
+                         'LinuxDistribution=' + distribution])
+        template_params = optparse.Values({'parameters': stack_paramstr})
+
+        # Format parameters and create the stack
         parameters = {}
+        parameters['StackName'] = self.stackname
+        template_path = self.basepath + '/templates/' + template_file
+        parameters['TemplateBody'] = open(template_path).read()
+        parameters.update(self.heatclient.format_parameters(template_params))
+        result = self.heatclient.create_stack(**parameters)
+
+        # Check result looks OK
+        root = etree.fromstring(result)
+        create_list = root.xpath('/CreateStackResponse/CreateStackResult' +
+                                 '[StackName="' + self.stackname + '"]')
+        assert create_list
+        assert len(create_list) == 1
 
         alist = None
         tries = 0
