@@ -13,6 +13,7 @@
 #
 
 import util
+import verify
 import nose
 from nose.plugins.attrib import attr
 
@@ -57,5 +58,12 @@ def test_template():
                 found = 1
                 break
         assert found == 1
+
+    # Verify the output URL parses as expected, ie check that
+    # the wordpress installation is operational
+    stack_url = func_utils.get_stack_output("WebsiteURL")
+    print "Got stack output WebsiteURL=%s, verifying" % stack_url
+    ver = verify.VerifyStack()
+    assert True == ver.verify_wordpress(stack_url)
 
     func_utils.cleanup()
