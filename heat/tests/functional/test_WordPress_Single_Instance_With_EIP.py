@@ -19,51 +19,53 @@ from nose.plugins.attrib import attr
 
 from heat.common import context
 from heat.engine import manager
+import unittest
 
 
 @attr(speed='slow')
 @attr(tag=['func', 'wordpress', 'eip'])
-def test_template():
+class WordPressEIPFunctionalTest(unittest.TestCase):
+    def setUp(self):
+        template = 'WordPress_Single_Instance_With_EIP.template'
 
-    template = 'WordPress_Single_Instance_With_EIP.template'
+        self.func_utils = util.FuncUtils()
 
-    func_utils = util.FuncUtils()
+        self.func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
+        self.func_utils.create_stack(template, 'F17')
+        self.func_utils.check_cfntools()
+        self.func_utils.wait_for_provisioning()
+        #self.func_utils.check_user_data(template)
 
-    func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
-    func_utils.create_stack(template, 'F17')
-    func_utils.check_cfntools()
-    func_utils.wait_for_provisioning()
-    #func_utils.check_user_data(template)
+        self.ssh = self.func_utils.get_ssh_client()
 
-    ssh = func_utils.get_ssh_client()
+    def test_instance(self):
+        # 1. ensure wordpress was installed
+        wp_file = '/etc/wordpress/wp-config.php'
+        stdin, stdout, sterr = self.ssh.exec_command('ls ' + wp_file)
+        result = stdout.readlines().pop().rstrip()
+        assert result == wp_file
+        print "Wordpress installation detected"
 
-    # 1. ensure wordpress was installed
-    wp_file = '/etc/wordpress/wp-config.php'
-    stdin, stdout, sterr = ssh.exec_command('ls ' + wp_file)
-    result = stdout.readlines().pop().rstrip()
-    assert result == wp_file
-    print "Wordpress installation detected"
+        # 2. check floating ip assignment
+        nclient = self.func_utils.get_nova_client()
+        if len(nclient.floating_ips.list()) == 0:
+            print 'zero floating IPs detected'
+            assert False
+        else:
+            found = 0
+            mylist = nclient.floating_ips.list()
+            for item in mylist:
+                if item.instance_id == self.func_utils.phys_rec_id:
+                    print 'floating IP found', item.ip
+                    found = 1
+                    break
+            assert found == 1
 
-    # 2. check floating ip assignment
-    nclient = func_utils.get_nova_client()
-    if len(nclient.floating_ips.list()) == 0:
-        print 'zero floating IPs detected'
-        assert False
-    else:
-        found = 0
-        mylist = nclient.floating_ips.list()
-        for item in mylist:
-            if item.instance_id == func_utils.phys_rec_id:
-                print 'floating IP found', item.ip
-                found = 1
-                break
-        assert found == 1
+        # Verify the output URL parses as expected, ie check that
+        # the wordpress installation is operational
+        stack_url = self.func_utils.get_stack_output("WebsiteURL")
+        print "Got stack output WebsiteURL=%s, verifying" % stack_url
+        ver = verify.VerifyStack()
+        assert True == ver.verify_wordpress(stack_url)
 
-    # Verify the output URL parses as expected, ie check that
-    # the wordpress installation is operational
-    stack_url = func_utils.get_stack_output("WebsiteURL")
-    print "Got stack output WebsiteURL=%s, verifying" % stack_url
-    ver = verify.VerifyStack()
-    assert True == ver.verify_wordpress(stack_url)
-
-    func_utils.cleanup()
+        self.func_utils.cleanup()
