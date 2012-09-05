@@ -15,7 +15,7 @@ from nose.plugins.attrib import attr
 @attr(speed='fast')
 class ExampleTest(unittest.TestCase):
     def test_a(self):
-        self.assert_(1 == 1)
+        self.assertEqual(1, 1)
 
     def setUp(self):
         print "test3 setup complete"

@@ -72,7 +72,7 @@ class StackControllerTest(unittest.TestCase):
                                                        'StackId': str(123)})
         expected = {'StackName': 'Foo',
                     'StackId': 'ahostname:8000:stack/Foo/123'}
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_list(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -130,7 +130,8 @@ class StackControllerTest(unittest.TestCase):
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
-        self.assert_(type(result) == exception.HeatInvalidParameterValueError)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
     def test_list_rmt_interr(self):
         params = {'Action': 'ListStacks'}
@@ -149,7 +150,7 @@ class StackControllerTest(unittest.TestCase):
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
-        self.assert_(type(result) == exception.HeatInternalFailureError)
+        self.assertEqual(type(result), exception.HeatInternalFailureError)
 
     def test_describe(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -230,7 +231,7 @@ class StackControllerTest(unittest.TestCase):
                 'DisableRollback': True,
                 'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
 
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_describe_aterr(self):
         stack_name = "wordpress"
@@ -249,7 +250,8 @@ class StackControllerTest(unittest.TestCase):
         self.m.ReplayAll()
 
         result = self.controller.describe(dummy_req)
-        self.assert_(type(result) == exception.HeatInvalidParameterValueError)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
     def test_get_template_int_body(self):
         ''' Test the internal _get_template function '''
@@ -257,7 +259,7 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
         result = self.controller._get_template(dummy_req)
         expected = "abcdef"
-        self.assert_(result == expected)
+        self.assertEqual(result, expected)
 
     # TODO : test the _get_template TemplateUrl case
 
@@ -299,7 +301,7 @@ class StackControllerTest(unittest.TestCase):
                         {u'StackName': u'wordpress',
                         u'StackId': u'ahostname:8000:stack/wordpress/1'}}}
 
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_create_err_no_template(self):
         # Format a dummy request with a missing template field
@@ -308,7 +310,7 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
 
         result = self.controller.create(dummy_req)
-        self.assert_(type(result) == exception.HeatMissingParameterError)
+        self.assertEqual(type(result), exception.HeatMissingParameterError)
 
     def test_create_err_inval_template(self):
         # Format a dummy request with an invalid TemplateBody
@@ -319,7 +321,8 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
 
         result = self.controller.create(dummy_req)
-        self.assert_(type(result) == exception.HeatInvalidParameterValueError)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
     def test_create_err_rpcerr(self):
         # Format a dummy request
@@ -352,7 +355,8 @@ class StackControllerTest(unittest.TestCase):
 
         result = self.controller.create(dummy_req)
 
-        self.assert_(type(result) == exception.HeatInvalidParameterValueError)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
     def test_update(self):
         # Format a dummy request
@@ -391,11 +395,11 @@ class StackControllerTest(unittest.TestCase):
                         {u'StackName': u'wordpress',
                         u'StackId': u'ahostname:8000:stack/wordpress/1'}}}
 
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_create_or_update_err(self):
         result = self.controller.create_or_update(req={}, action="dsdgfdf")
-        self.assert_(type(result) == exception.HeatInternalFailureError)
+        self.assertEqual(type(result), exception.HeatInternalFailureError)
 
     def test_get_template(self):
         # Format a dummy request
@@ -421,7 +425,7 @@ class StackControllerTest(unittest.TestCase):
         expected = {'GetTemplateResponse': {'GetTemplateResult':
                         {'TemplateBody': template}}}
 
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_get_template_err_rpcerr(self):
         stack_name = "wordpress"
@@ -443,7 +447,8 @@ class StackControllerTest(unittest.TestCase):
 
         result = self.controller.get_template(dummy_req)
 
-        self.assert_(type(result) == exception.HeatInvalidParameterValueError)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
     def test_get_template_err_none(self):
         stack_name = "wordpress"
@@ -466,7 +471,8 @@ class StackControllerTest(unittest.TestCase):
 
         result = self.controller.get_template(dummy_req)
 
-        self.assert_(type(result) == exception.HeatInvalidParameterValueError)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
     def test_validate_err_no_template(self):
         # Format a dummy request with a missing template field
@@ -475,7 +481,7 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
 
         result = self.controller.validate_template(dummy_req)
-        self.assert_(type(result) == exception.HeatMissingParameterError)
+        self.assertEqual(type(result), exception.HeatMissingParameterError)
 
     def test_validate_err_inval_template(self):
         # Format a dummy request with an invalid TemplateBody
@@ -485,7 +491,8 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
 
         result = self.controller.validate_template(dummy_req)
-        self.assert_(type(result) == exception.HeatInvalidParameterValueError)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
     def test_delete(self):
         # Format a dummy request
@@ -510,7 +517,7 @@ class StackControllerTest(unittest.TestCase):
 
         expected = {'DeleteStackResponse': {'DeleteStackResult': ''}}
 
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_delete_err_rpcerr(self):
         stack_name = "wordpress"
@@ -531,7 +538,8 @@ class StackControllerTest(unittest.TestCase):
 
         result = self.controller.delete(dummy_req)
 
-        self.assert_(type(result) == exception.HeatInvalidParameterValueError)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
     def test_events_list(self):
         # Format a dummy request
@@ -581,7 +589,7 @@ class StackControllerTest(unittest.TestCase):
                 'ResourceStatusData': u'state changed',
                 'LogicalResourceId': u'WikiDatabase'}]}}}
 
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_events_list_err_rpcerr(self):
         stack_name = "wordpress"
@@ -602,7 +610,7 @@ class StackControllerTest(unittest.TestCase):
 
         result = self.controller.events_list(dummy_req)
 
-        self.assert_(type(result) == exception.HeatInternalFailureError)
+        self.assertEqual(type(result), exception.HeatInternalFailureError)
 
     def test_describe_stack_resource(self):
         # Format a dummy request
@@ -658,7 +666,7 @@ class StackControllerTest(unittest.TestCase):
                     'Metadata': {u'wordpress': []},
                     'LogicalResourceId': u'WikiDatabase'}}}}
 
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_describe_stack_resources(self):
         # Format a dummy request
@@ -714,7 +722,7 @@ class StackControllerTest(unittest.TestCase):
                             u'a3455d8c-9f88-404d-a85b-5315293e67de',
                         'LogicalResourceId': u'WikiDatabase'}]}}}
 
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_describe_stack_resources_err_inval(self):
         # Format a dummy request containing both StackName and
@@ -726,7 +734,7 @@ class StackControllerTest(unittest.TestCase):
                   'PhysicalResourceId': "123456"}
         dummy_req = self._dummy_GET_request(params)
         ret = self.controller.describe_stack_resources(dummy_req)
-        self.assert_(type(ret) ==
+        self.assertEqual(type(ret),
             exception.HeatInvalidParameterCombinationError)
 
     def test_list_stack_resources(self):
@@ -772,7 +780,7 @@ class StackControllerTest(unittest.TestCase):
                         u'a3455d8c-9f88-404d-a85b-5315293e67de',
                      'LogicalResourceId': u'WikiDatabase'}]}}}
 
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def setUp(self):
         self.maxDiff = None

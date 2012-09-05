@@ -34,7 +34,7 @@ class AWSCommon(unittest.TestCase):
     def test_format_response(self):
         response = api_utils.format_response("Foo", "Bar")
         expected = {'FooResponse': {'FooResult': 'Bar'}}
-        self.assert_(response == expected)
+        self.assertEqual(response, expected)
 
     def test_params_extract(self):
         p = {'Parameters.member.1.ParameterKey': 'foo',
