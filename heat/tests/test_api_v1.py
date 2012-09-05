@@ -61,17 +61,19 @@ class StackControllerTest(unittest.TestCase):
 
     # The tests
     def test_stackid_addprefix(self):
-
-        # Stub socket.gethostname so it returns "ahostname"
-        self.m.StubOutWithMock(socket, 'gethostname')
-        socket.gethostname().AndReturn("ahostname")
-
         self.m.ReplayAll()
 
-        response = self.controller._stackid_addprefix({'StackName': 'Foo',
-                                                       'StackId': str(123)})
+        response = self.controller._stackid_format({
+            'StackName': 'Foo',
+            'StackId': {
+                u'tenant': u't',
+                u'stack_name': u'Foo',
+                u'stack_id': u'123',
+                u'path': u''
+            }
+        })
         expected = {'StackName': 'Foo',
-                    'StackId': 'ahostname:8000:stack/Foo/123'}
+                    'StackId': 'arn:openstack:heat::t:stacks/Foo/123'}
         self.assertEqual(response, expected)
 
     def test_list(self):
@@ -81,7 +83,10 @@ class StackControllerTest(unittest.TestCase):
 
         # Stub out the RPC call to the engine with a pre-canned response
         engine_resp = {u'stacks': [
-                        {u'stack_id': u'1',
+                        {u'stack_identity': {u'tenant': u't',
+                                             u'stack_name': u'wordpress',
+                                             u'stack_id': u'1',
+                                             u'path': u''},
                         u'updated_time': u'2012-07-09T09:13:11Z',
                         u'template_description': u'blah',
                         u'stack_status_reason': u'Stack successfully created',
@@ -95,17 +100,13 @@ class StackControllerTest(unittest.TestCase):
                                     'version': self.api_version}, None
                 ).AndReturn(engine_resp)
 
-        # Stub socket.gethostname so it returns "ahostname"
-        self.m.StubOutWithMock(socket, 'gethostname')
-        socket.gethostname().AndReturn("ahostname")
-
         self.m.ReplayAll()
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
         expected = {'ListStacksResponse': {'ListStacksResult':
             {'StackSummaries': [
-            {u'StackId': u'ahostname:8000:stack/wordpress/1',
+            {u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1',
             u'LastUpdatedTime': u'2012-07-09T09:13:11Z',
             u'TemplateDescription': u'blah',
             u'StackStatusReason': u'Stack successfully created',
@@ -162,7 +163,10 @@ class StackControllerTest(unittest.TestCase):
         # Note the engine returns a load of keys we don't actually use
         # so this is a subset of the real response format
         engine_resp = {u'stacks': [
-            {u'stack_id': u'6',
+            {u'stack_identity': {u'tenant': u't',
+                                 u'stack_name': u'wordpress',
+                                 u'stack_id': u'6',
+                                 u'path': u''},
             u'updated_time': u'2012-07-09T09:13:11Z',
             u'parameters':{
             u'DBUsername': {u'Default': u'admin'},
@@ -191,10 +195,6 @@ class StackControllerTest(unittest.TestCase):
                      'params': dict(dummy_req.params)},
             'version': self.api_version}, None).AndReturn(engine_resp)
 
-        # Stub socket.gethostname so it returns "ahostname"
-        self.m.StubOutWithMock(socket, 'gethostname')
-        socket.gethostname().AndReturn("ahostname")
-
         self.m.ReplayAll()
 
         # Call the list controller function and compare the response
@@ -202,7 +202,7 @@ class StackControllerTest(unittest.TestCase):
 
         expected = {'DescribeStacksResponse': {'DescribeStacksResult':
                 {'Stacks':
-                [{'StackId': u'ahostname:8000:stack/wordpress/6',
+                [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
                 'StackStatusReason': u'Stack successfully created',
                 'Description': u'blah',
                 'Parameters':
@@ -278,7 +278,10 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'StackName': u'wordpress', u'StackId': 1}
+        engine_resp = {u'tenant': u't',
+                       u'stack_name': u'wordpress',
+                       u'stack_id': u'1',
+                       u'path': u''}
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic, {'method': 'create_stack',
@@ -289,17 +292,17 @@ class StackControllerTest(unittest.TestCase):
             'args': engine_args},
             'version': self.api_version}, None).AndReturn(engine_resp)
 
-        # Stub socket.gethostname so it returns "ahostname"
-        self.m.StubOutWithMock(socket, 'gethostname')
-        socket.gethostname().AndReturn("ahostname")
-
         self.m.ReplayAll()
 
         response = self.controller.create(dummy_req)
 
-        expected = {'CreateStackResponse': {'CreateStackResult':
-                        {u'StackName': u'wordpress',
-                        u'StackId': u'ahostname:8000:stack/wordpress/1'}}}
+        expected = {
+            'CreateStackResponse': {
+                'CreateStackResult': {
+                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                }
+            }
+        }
 
         self.assertEqual(response, expected)
 
@@ -372,7 +375,10 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'StackName': u'wordpress', u'StackId': 1}
+        engine_resp = {u'tenant': u't',
+                       u'stack_name': u'wordpress',
+                       u'stack_id': u'1',
+                       u'path': u''}
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic, {'method': 'update_stack',
@@ -383,17 +389,17 @@ class StackControllerTest(unittest.TestCase):
             'args': engine_args},
             'version': self.api_version}, None).AndReturn(engine_resp)
 
-        # Stub socket.gethostname so it returns "ahostname"
-        self.m.StubOutWithMock(socket, 'gethostname')
-        socket.gethostname().AndReturn("ahostname")
-
         self.m.ReplayAll()
 
         response = self.controller.update(dummy_req)
 
-        expected = {'UpdateStackResponse': {'UpdateStackResult':
-                        {u'StackName': u'wordpress',
-                        u'StackId': u'ahostname:8000:stack/wordpress/1'}}}
+        expected = {
+            'UpdateStackResponse': {
+                'UpdateStackResult': {
+                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                }
+            }
+        }
 
         self.assertEqual(response, expected)
 
@@ -550,7 +556,10 @@ class StackControllerTest(unittest.TestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         engine_resp = {u'events': [{u'stack_name': u'wordpress',
                         u'event_time': u'2012-07-23T13:05:39Z',
-                        u'stack_id': 6,
+                        u'stack_identity': {u'tenant': u't',
+                                            u'stack_name': u'wordpress',
+                                            u'stack_id': u'6',
+                                            u'path': u''},
                         u'logical_resource_id': u'WikiDatabase',
                         u'resource_status_reason': u'state changed',
                         u'event_id': 42,
@@ -567,10 +576,6 @@ class StackControllerTest(unittest.TestCase):
             'params': dict(dummy_req.params)},
             'version': self.api_version}, None).AndReturn(engine_resp)
 
-        # Stub socket.gethostname so it returns "ahostname"
-        self.m.StubOutWithMock(socket, 'gethostname')
-        socket.gethostname().AndReturn("ahostname")
-
         self.m.ReplayAll()
 
         response = self.controller.events_list(dummy_req)
@@ -579,7 +584,7 @@ class StackControllerTest(unittest.TestCase):
             {'DescribeStackEventsResult':
             {'StackEvents':
                 [{'EventId': 42,
-                'StackId': u'ahostname:8000:stack/wordpress/6',
+                'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
                 'ResourceStatus': u'IN_PROGRESS',
                 'ResourceType': u'AWS::EC2::Instance',
                 'Timestamp': u'2012-07-23T13:05:39Z',
@@ -626,7 +631,10 @@ class StackControllerTest(unittest.TestCase):
                        u'logical_resource_id': u'WikiDatabase',
                        u'resource_status_reason': None,
                        u'updated_time': u'2012-07-23T13:06:00Z',
-                       u'stack_id': 6,
+                       u'stack_identity': {u'tenant': u't',
+                                           u'stack_name': u'wordpress',
+                                           u'stack_id': u'6',
+                                           u'path': u''},
                        u'resource_status': u'CREATE_COMPLETE',
                        u'physical_resource_id':
                             u'a3455d8c-9f88-404d-a85b-5315293e67de',
@@ -643,10 +651,6 @@ class StackControllerTest(unittest.TestCase):
             'args': args,
             'version': self.api_version}, None).AndReturn(engine_resp)
 
-        # Stub socket.gethostname so it returns "ahostname"
-        self.m.StubOutWithMock(socket, 'gethostname')
-        socket.gethostname().AndReturn("ahostname")
-
         self.m.ReplayAll()
 
         response = self.controller.describe_stack_resource(dummy_req)
@@ -654,7 +658,7 @@ class StackControllerTest(unittest.TestCase):
         expected = {'DescribeStackResourceResponse':
                     {'DescribeStackResourceResult':
                     {'StackResourceDetail':
-                    {'StackId': u'ahostname:8000:stack/wordpress/6',
+                    {'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
                     'ResourceStatus': u'CREATE_COMPLETE',
                     'Description': u'',
                     'ResourceType': u'AWS::EC2::Instance',
@@ -682,7 +686,10 @@ class StackControllerTest(unittest.TestCase):
                         u'logical_resource_id': u'WikiDatabase',
                         u'resource_status_reason': None,
                         u'updated_time': u'2012-07-23T13:06:00Z',
-                        u'stack_id': 6,
+                        u'stack_identity': {u'tenant': u't',
+                                            u'stack_name': u'wordpress',
+                                            u'stack_id': u'6',
+                                            u'path': u''},
                         u'resource_status': u'CREATE_COMPLETE',
                         u'physical_resource_id':
                             u'a3455d8c-9f88-404d-a85b-5315293e67de',
@@ -700,10 +707,6 @@ class StackControllerTest(unittest.TestCase):
             'args': args,
             'version': self.api_version}, None).AndReturn(engine_resp)
 
-        # Stub socket.gethostname so it returns "ahostname"
-        self.m.StubOutWithMock(socket, 'gethostname')
-        socket.gethostname().AndReturn("ahostname")
-
         self.m.ReplayAll()
 
         response = self.controller.describe_stack_resources(dummy_req)
@@ -711,7 +714,7 @@ class StackControllerTest(unittest.TestCase):
         expected = {'DescribeStackResourcesResponse':
                     {'DescribeStackResourcesResult':
                     {'StackResources':
-                        [{'StackId': u'ahostname:8000:stack/wordpress/6',
+                      [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
                         'ResourceStatus': u'CREATE_COMPLETE',
                         'Description': u'',
                         'ResourceType': u'AWS::EC2::Instance',
@@ -750,7 +753,10 @@ class StackControllerTest(unittest.TestCase):
                         u'logical_resource_id': u'WikiDatabase',
                         u'resource_status_reason': None,
                         u'updated_time': u'2012-07-23T13:06:00Z',
-                        u'stack_id': 6,
+                        u'stack_identity': {u'tenant': u't',
+                                            u'stack_name': u'wordpress',
+                                            u'stack_id': u'6',
+                                            u'path': u''},
                         u'resource_status': u'CREATE_COMPLETE',
                         u'physical_resource_id':
                             u'a3455d8c-9f88-404d-a85b-5315293e67de',

@@ -50,7 +50,7 @@ STACK_KEYS = (
     STACK_STATUS, STACK_STATUS_DATA, STACK_CAPABILITIES,
     STACK_DISABLE_ROLLBACK, STACK_TIMEOUT,
 ) = (
-    'stack_name', 'stack_id',
+    'stack_name', 'stack_identity',
     'creation_time', 'updated_time', 'deletion_time',
     'notification_topics',
     'description', 'template_description',
@@ -89,7 +89,7 @@ def format_stack(stack):
     '''
     info = {
         STACK_NAME: stack.name,
-        STACK_ID: stack.id,
+        STACK_ID: dict(stack.identifier()),
         STACK_CREATION_TIME: heat_utils.strtime(stack.created_time),
         STACK_UPDATED_TIME: heat_utils.strtime(stack.updated_time),
         STACK_NOTIFICATION_TOPICS: [],  # TODO Not implemented yet
@@ -138,7 +138,7 @@ def format_stack_resource(resource):
         RES_STATUS: resource.state,
         RES_STATUS_DATA: resource.state_description,
         RES_TYPE: resource.t['Type'],
-        RES_STACK_ID: resource.stack.id,
+        RES_STACK_ID: dict(resource.stack.identifier()),
         RES_STACK_NAME: resource.stack.name,
     }
 
@@ -162,12 +162,12 @@ EVENT_KEYS = (
 )
 
 
-def format_event(event):
-    s = event.stack
+def format_event(context, event):
+    stack = parser.Stack.load(context, event.stack.id)
     result = {
         EVENT_ID: event.id,
-        EVENT_STACK_ID: s.id,
-        EVENT_STACK_NAME: s.name,
+        EVENT_STACK_ID: dict(stack.identifier()),
+        EVENT_STACK_NAME: stack.name,
         EVENT_TIMESTAMP: heat_utils.strtime(event.created_at),
         EVENT_RES_NAME: event.logical_resource_id,
         EVENT_RES_PHYSICAL_ID: event.physical_resource_id,

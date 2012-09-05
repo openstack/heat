@@ -120,7 +120,7 @@ class EngineManager(manager.Manager):
         stack_id = stack.store()
         greenpool.spawn_n(stack.create)
 
-        return {'StackName': stack.name, 'StackId': stack.id}
+        return dict(stack.identifier())
 
     def update_stack(self, context, stack_name, template, params, args):
         """
@@ -160,7 +160,7 @@ class EngineManager(manager.Manager):
 
         greenpool.spawn_n(current_stack.update, updated_stack)
 
-        return {'StackName': current_stack.name, 'StackId': current_stack.id}
+        return dict(current_stack.identifier())
 
     def validate_template(self, context, template, params):
         """
@@ -255,7 +255,7 @@ class EngineManager(manager.Manager):
         else:
             events = db_api.event_get_all_by_tenant(context)
 
-        return {'events': [api.format_event(e) for e in events]}
+        return {'events': [api.format_event(context, e) for e in events]}
 
     def event_create(self, context, event):
 

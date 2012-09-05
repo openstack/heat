@@ -31,6 +31,7 @@ from heat.common import context
 from heat import utils
 from heat.engine import rpcapi as engine_rpcapi
 import heat.engine.api as engine_api
+from heat.engine import identifier
 
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
@@ -50,16 +51,14 @@ class StackController(object):
         self.options = options
         self.engine_rpcapi = engine_rpcapi.EngineAPI()
 
-    def _stackid_addprefix(self, resp):
+    def _stackid_format(self, resp):
         """
         Add a host:port:stack prefix, this formats the StackId in the response
         more like the AWS spec
         """
         if 'StackId' in resp:
-            hostportprefix = ":".join([socket.gethostname(),
-                str(self.options.bind_port), "stack"])
-            resp['StackId'] = "/".join([hostportprefix, resp['StackName'],
-                                       str(resp['StackId'])])
+            identity = identifier.HeatIdentifier(**resp['StackId'])
+            resp['StackId'] = identity.arn()
         return resp
 
     @staticmethod
@@ -107,7 +106,7 @@ class StackController(object):
             if engine_api.STACK_DELETION_TIME in s:
                 result['DeletionTime'] = s[engine_api.STACK_DELETION_TIME]
 
-            return self._stackid_addprefix(result)
+            return self._stackid_format(result)
 
         con = req.context
         parms = dict(req.params)
@@ -176,7 +175,7 @@ class StackController(object):
                 'ParameterValue':v.get('Default')}
                 for (k, v) in result['Parameters'].items()]
 
-            return self._stackid_addprefix(result)
+            return self._stackid_format(result)
 
         con = req.context
         parms = dict(req.params)
@@ -299,7 +298,8 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
-        return api_utils.format_response(action, self._stackid_addprefix(res))
+        identity = identifier.HeatIdentifier(**res)
+        return api_utils.format_response(action, {'StackId': identity.arn()})
 
     def get_template(self, req):
         """
@@ -411,7 +411,7 @@ class StackController(object):
 
             result = api_utils.reformat_dict_keys(keymap, e)
 
-            return self._stackid_addprefix(result)
+            return self._stackid_format(result)
 
         con = req.context
         parms = dict(req.params)
@@ -456,7 +456,7 @@ class StackController(object):
 
             result = api_utils.reformat_dict_keys(keymap, r)
 
-            return self._stackid_addprefix(result)
+            return self._stackid_format(result)
 
         con = req.context
 
@@ -508,7 +508,7 @@ class StackController(object):
 
             result = api_utils.reformat_dict_keys(keymap, r)
 
-            return self._stackid_addprefix(result)
+            return self._stackid_format(result)
 
         con = req.context
         stack_name = req.params.get('StackName')

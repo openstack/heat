@@ -205,7 +205,7 @@ class stackManagerTest(unittest.TestCase):
             self.assertTrue('resource_type' in ev)
             self.assertEqual(ev['resource_type'], 'AWS::EC2::Instance')
 
-            self.assertTrue('stack_id' in ev)
+            self.assertTrue('stack_identity' in ev)
 
             self.assertTrue('stack_name' in ev)
             self.assertEqual(ev['stack_name'], self.stack_name)
@@ -217,7 +217,7 @@ class stackManagerTest(unittest.TestCase):
 
         self.assertEqual(len(sl['stacks']), 1)
         for s in sl['stacks']:
-            self.assertNotEqual(s['stack_id'], None)
+            self.assertNotEqual(s['stack_identity'], None)
             self.assertNotEqual(s['description'].find('WordPress'), -1)
 
     def test_stack_describe_all_empty(self):
@@ -242,8 +242,8 @@ class stackManagerTest(unittest.TestCase):
         s = sl['stacks'][0]
         self.assertTrue('creation_time' in s)
         self.assertTrue('updated_time' in s)
-        self.assertTrue('stack_id' in s)
-        self.assertNotEqual(s['stack_id'], None)
+        self.assertTrue('stack_identity' in s)
+        self.assertNotEqual(s['stack_identity'], None)
         self.assertTrue('stack_name' in s)
         self.assertEqual(s['stack_name'], self.stack_name)
         self.assertTrue('stack_status' in s)
@@ -258,8 +258,8 @@ class stackManagerTest(unittest.TestCase):
 
         self.assertTrue('description' in r)
         self.assertTrue('updated_time' in r)
-        self.assertTrue('stack_id' in r)
-        self.assertNotEqual(r['stack_id'], None)
+        self.assertTrue('stack_identity' in r)
+        self.assertNotEqual(r['stack_identity'], None)
         self.assertTrue('stack_name' in r)
         self.assertEqual(r['stack_name'], self.stack_name)
         self.assertTrue('metadata' in r)
@@ -289,8 +289,8 @@ class stackManagerTest(unittest.TestCase):
         r = resources[0]
         self.assertTrue('description' in r)
         self.assertTrue('updated_time' in r)
-        self.assertTrue('stack_id' in r)
-        self.assertNotEqual(r['stack_id'], None)
+        self.assertTrue('stack_identity' in r)
+        self.assertNotEqual(r['stack_identity'], None)
         self.assertTrue('stack_name' in r)
         self.assertEqual(r['stack_name'], self.stack_name)
         self.assertTrue('resource_status' in r)
