@@ -179,7 +179,7 @@ class stackManagerTest(unittest.TestCase):
                           self.ctx, 'wibble')
 
     def test_stack_event_list(self):
-        el = self.man.list_events(self.ctx, self.stack_name, {})
+        el = self.man.list_events(self.ctx, self.stack_identity, {})
 
         self.assertTrue('events' in el)
         events = el['events']
@@ -239,12 +239,14 @@ class stackManagerTest(unittest.TestCase):
         self.assertEqual(len(sl['stacks']), 0)
 
     def test_stack_describe_nonexistent(self):
+        nonexist = dict(self.stack_identity)
+        nonexist['stack_name'] = 'wibble'
         self.assertRaises(AttributeError,
                           self.man.show_stack,
-                          self.ctx, 'wibble', {})
+                          self.ctx, nonexist, {})
 
     def test_stack_describe(self):
-        sl = self.man.show_stack(self.ctx, self.stack_name, {})
+        sl = self.man.show_stack(self.ctx, self.stack_identity, {})
 
         self.assertEqual(len(sl['stacks']), 1)
 
@@ -262,7 +264,7 @@ class stackManagerTest(unittest.TestCase):
         self.assertTrue('parameters' in s)
 
     def test_stack_resource_describe(self):
-        r = self.man.describe_stack_resource(self.ctx, self.stack_name,
+        r = self.man.describe_stack_resource(self.ctx, self.stack_identity,
                                              'WebServer')
 
         self.assertTrue('description' in r)
@@ -280,18 +282,20 @@ class stackManagerTest(unittest.TestCase):
         self.assertEqual(r['logical_resource_id'], 'WebServer')
 
     def test_stack_resource_describe_nonexist_stack(self):
+        nonexist = dict(self.stack_identity)
+        nonexist['stack_name'] = 'foo'
         self.assertRaises(AttributeError,
                           self.man.describe_stack_resource,
-                          self.ctx, 'foo', 'WebServer')
+                          self.ctx, nonexist, 'WebServer')
 
     def test_stack_resource_describe_nonexist_resource(self):
         self.assertRaises(AttributeError,
                           self.man.describe_stack_resource,
-                          self.ctx, self.stack_name, 'foo')
+                          self.ctx, self.stack_identity, 'foo')
 
     def test_stack_resources_describe(self):
         resources = self.man.describe_stack_resources(self.ctx,
-                                                      self.stack_name,
+                                                      self.stack_identity,
                                                       None, 'WebServer')
 
         self.assertEqual(len(resources), 1)
@@ -311,7 +315,7 @@ class stackManagerTest(unittest.TestCase):
 
     def test_stack_resources_describe_no_filter(self):
         resources = self.man.describe_stack_resources(self.ctx,
-                                                 self.stack_name,
+                                                 self.stack_identity,
                                                  None, None)
 
         self.assertEqual(len(resources), 1)
@@ -325,9 +329,11 @@ class stackManagerTest(unittest.TestCase):
                           self.ctx, None, None, 'WebServer')
 
     def test_stack_resources_describe_nonexist_stack(self):
+        nonexist = dict(self.stack_identity)
+        nonexist['stack_name'] = 'foo'
         self.assertRaises(AttributeError,
                           self.man.describe_stack_resources,
-                          self.ctx, 'foo', None, 'WebServer')
+                          self.ctx, nonexist, None, 'WebServer')
 
     def test_stack_resources_describe_nonexist_physid(self):
         self.assertRaises(AttributeError,
@@ -335,7 +341,8 @@ class stackManagerTest(unittest.TestCase):
                           self.ctx, None, 'foo', 'WebServer')
 
     def test_stack_resources_list(self):
-        resources = self.man.list_stack_resources(self.ctx, self.stack_name)
+        resources = self.man.list_stack_resources(self.ctx,
+                                                  self.stack_identity)
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
@@ -348,9 +355,11 @@ class stackManagerTest(unittest.TestCase):
         self.assertTrue('resource_type' in r)
 
     def test_stack_resources_list_nonexist_stack(self):
+        nonexist = dict(self.stack_identity)
+        nonexist['stack_name'] = 'foo'
         self.assertRaises(AttributeError,
                           self.man.list_stack_resources,
-                          self.ctx, 'foo')
+                          self.ctx, nonexist)
 
     def test_metadata(self):
         err, metadata = self.man.metadata_get_resource(None,

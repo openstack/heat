@@ -28,6 +28,7 @@ from heat.common import config
 from heat.common import utils as heat_utils
 from heat.common import context as ctxtlib
 from heat.engine import api
+from heat.engine import identifier
 from heat.engine import parser
 from heat.engine import resources
 from heat.engine import watchrule
@@ -77,7 +78,23 @@ class EngineManager(manager.Manager):
         else:
             raise AttributeError('Unknown stack name')
 
-    def show_stack(self, context, stack_name, params):
+    def _get_stack(self, context, stack_identity):
+        identity = identifier.HeatIdentifier(**stack_identity)
+
+        if identity.tenant != context.tenant:
+            raise AttributeError('Invalid tenant')
+
+        s = db_api.stack_get(context, identity.stack_id)
+
+        if s is None:
+            raise AttributeError('Stack not found')
+
+        if identity.path or s.name != identity.stack_name:
+            raise AttributeError('Invalid stack ID')
+
+        return s
+
+    def show_stack(self, context, stack_identity, params):
         """
         The show_stack method returns the attributes of one stack.
         arg1 -> RPC context.
@@ -86,12 +103,8 @@ class EngineManager(manager.Manager):
         """
         auth.authenticate(context)
 
-        if stack_name is not None:
-            s = db_api.stack_get_by_name(context, stack_name)
-            if s:
-                stacks = [s]
-            else:
-                raise AttributeError('Unknown stack name')
+        if stack_identity is not None:
+            stacks = [self._get_stack(context, stack_identity)]
         else:
             stacks = db_api.stack_get_by_tenant(context) or []
 
@@ -138,7 +151,7 @@ class EngineManager(manager.Manager):
 
         return dict(stack.identifier())
 
-    def update_stack(self, context, stack_name, template, params, args):
+    def update_stack(self, context, stack_identity, template, params, args):
         """
         The update_stack method updates an existing stack based on the
         provided template and parameters.
@@ -155,9 +168,7 @@ class EngineManager(manager.Manager):
         auth.authenticate(context)
 
         # Get the database representation of the existing stack
-        db_stack = db_api.stack_get_by_name(None, stack_name)
-        if not db_stack:
-            raise AttributeError('No stack exists with that name')
+        db_stack = self._get_stack(context, stack_identity)
 
         current_stack = parser.Stack.load(context, db_stack.id)
 
@@ -219,7 +230,7 @@ class EngineManager(manager.Manager):
         }
         return {'ValidateTemplateResult': result}
 
-    def get_template(self, context, stack_name, params):
+    def get_template(self, context, stack_identity, params):
         """
         Get the template.
         arg1 -> RPC context.
@@ -227,12 +238,12 @@ class EngineManager(manager.Manager):
         arg3 -> Dict of http request parameters passed in from API side.
         """
         auth.authenticate(context)
-        s = db_api.stack_get_by_name(context, stack_name)
+        s = self._get_stack(context, stack_identity)
         if s:
             return s.raw_template.template
         return None
 
-    def delete_stack(self, context, stack_name, params):
+    def delete_stack(self, context, stack_identity, params):
         """
         The delete_stack method deletes a given stack.
         arg1 -> RPC context.
@@ -242,17 +253,15 @@ class EngineManager(manager.Manager):
 
         auth.authenticate(context)
 
-        st = db_api.stack_get_by_name(context, stack_name)
-        if not st:
-            raise AttributeError('Unknown stack name')
+        st = self._get_stack(context, stack_identity)
 
-        logger.info('deleting stack %s' % stack_name)
+        logger.info('deleting stack %s' % st.name)
 
         stack = parser.Stack.load(context, st.id)
         greenpool.spawn_n(stack.delete)
         return None
 
-    def list_events(self, context, stack_name, params):
+    def list_events(self, context, stack_identity, params):
         """
         The list_events method lists all events associated with a given stack.
         arg1 -> RPC context.
@@ -262,10 +271,8 @@ class EngineManager(manager.Manager):
 
         auth.authenticate(context)
 
-        if stack_name is not None:
-            st = db_api.stack_get_by_name(context, stack_name)
-            if not st:
-                raise AttributeError('Unknown stack name')
+        if stack_identity is not None:
+            st = self._get_stack(context, stack_identity)
 
             events = db_api.event_get_all_by_stack(context, st.id)
         else:
@@ -303,12 +310,10 @@ class EngineManager(manager.Manager):
             msg = 'Error creating event'
             return [msg, None]
 
-    def describe_stack_resource(self, context, stack_name, resource_name):
+    def describe_stack_resource(self, context, stack_identity, resource_name):
         auth.authenticate(context)
 
-        s = db_api.stack_get_by_name(context, stack_name)
-        if not s:
-            raise AttributeError('Unknown stack name')
+        s = self._get_stack(context, stack_identity)
 
         stack = parser.Stack.load(context, s.id)
         if resource_name not in stack:
@@ -320,12 +325,12 @@ class EngineManager(manager.Manager):
 
         return api.format_stack_resource(stack[resource_name])
 
-    def describe_stack_resources(self, context, stack_name,
+    def describe_stack_resources(self, context, stack_identity,
                                  physical_resource_id, logical_resource_id):
         auth.authenticate(context)
 
-        if stack_name is not None:
-            s = db_api.stack_get_by_name(context, stack_name)
+        if stack_identity is not None:
+            s = self._get_stack(context, stack_identity)
         else:
             rs = db_api.resource_get_by_physical_resource_id(context,
                     physical_resource_id)
@@ -348,12 +353,10 @@ class EngineManager(manager.Manager):
                 for resource in stack if resource.id is not None and
                                          name_match(resource)]
 
-    def list_stack_resources(self, context, stack_name):
+    def list_stack_resources(self, context, stack_identity):
         auth.authenticate(context)
 
-        s = db_api.stack_get_by_name(context, stack_name)
-        if not s:
-            raise AttributeError('Unknown stack name')
+        s = self._get_stack(context, stack_identity)
 
         stack = parser.Stack.load(context, s.id)
 

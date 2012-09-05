@@ -77,6 +77,18 @@ class StackController(object):
                                             keyname='ParameterKey',
                                             valuename='ParameterValue')
 
+    def _get_identity(self, con, stack_name):
+        """
+        Generate a stack identifier from the given stack name or ARN.
+
+        In the case of a stack name, the identifier will be looked up in the
+        engine over RPC.
+        """
+        try:
+            return dict(identifier.HeatIdentifier.from_arn(stack_name))
+        except ValueError:
+            return self.engine_rpcapi.identify_stack(con, stack_name)
+
     def list(self, req):
         """
         Implements ListStacks API action
@@ -115,7 +127,7 @@ class StackController(object):
             # Note show_stack returns details for all stacks when called with
             # no stack_name, we only use a subset of the result here though
             stack_list = self.engine_rpcapi.show_stack(con,
-                                                       stack_name=None,
+                                                       stack_identity=None,
                                                        params=parms)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
@@ -183,13 +195,14 @@ class StackController(object):
         # If no StackName parameter is passed, we pass None into the engine
         # this returns results for all stacks (visible to this user), which
         # is the behavior described in the AWS DescribeStacks API docs
-        stack_name = None
-        if 'StackName' in req.params:
-            stack_name = req.params['StackName']
-
         try:
+            if 'StackName' in req.params:
+                identity = self._get_identity(con, req.params['StackName'])
+            else:
+                identity = None
+
             stack_list = self.engine_rpcapi.show_stack(con,
-                                                       stack_name=stack_name,
+                                                       stack_identity=identity,
                                                        params=parms)
 
         except rpc_common.RemoteError as ex:
@@ -289,12 +302,17 @@ class StackController(object):
             msg = _("The Template must be a JSON document.")
             return exception.HeatInvalidParameterValueError(detail=msg)
 
+        args = {'template': stack,
+                'params': stack_parms,
+                'args': create_args}
         try:
-            res = engine_action[action](con,
-                                        stack_name=req.params['StackName'],
-                                        template=stack,
-                                        params=stack_parms,
-                                        args=create_args)
+            stack_name = req.params['StackName']
+            if action == self.CREATE_STACK:
+                args['stack_name'] = stack_name
+            else:
+                args['stack_identity'] = self._get_identity(con, stack_name)
+
+            res = engine_action[action](con, **args)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
@@ -312,8 +330,9 @@ class StackController(object):
 
         logger.info('get_template')
         try:
+            identity = self._get_identity(con, req.params['StackName'])
             templ = self.engine_rpcapi.get_template(con,
-                                       stack_name=req.params['StackName'],
+                                       stack_identity=identity,
                                        params=parms)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
@@ -374,8 +393,9 @@ class StackController(object):
         parms = dict(req.params)
 
         try:
+            identity = self._get_identity(con, req.params['StackName'])
             res = self.engine_rpcapi.delete_stack(con,
-                                     stack_name=req.params['StackName'],
+                                     stack_identity=identity,
                                      params=parms,
                                      cast=False)
 
@@ -418,8 +438,9 @@ class StackController(object):
 
         stack_name = req.params.get('StackName', None)
         try:
+            identity = stack_name and self._get_identity(con, stack_name)
             event_res = self.engine_rpcapi.list_events(con,
-                                                       stack_name=stack_name,
+                                                       stack_identity=identity,
                                                        params=parms)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
@@ -461,8 +482,9 @@ class StackController(object):
         con = req.context
 
         try:
+            identity = self._get_identity(con, req.params['StackName'])
             resource_details = self.engine_rpcapi.describe_stack_resource(con,
-                        stack_name=req.params.get('StackName'),
+                        stack_identity=identity,
                         resource_name=req.params.get('LogicalResourceId'))
 
         except rpc_common.RemoteError as ex:
@@ -518,8 +540,9 @@ class StackController(object):
             return exception.HeatInvalidParameterCombinationError(detail=msg)
 
         try:
+            identity = self._get_identity(con, stack_name)
             resources = self.engine_rpcapi.describe_stack_resources(con,
-                stack_name=stack_name,
+                stack_identity=identity,
                 physical_resource_id=physical_resource_id,
                 logical_resource_id=req.params.get('LogicalResourceId'))
 
@@ -554,8 +577,9 @@ class StackController(object):
         con = req.context
 
         try:
+            identity = self._get_identity(con, req.params['StackName'])
             resources = self.engine_rpcapi.list_stack_resources(con,
-                             stack_name=req.params.get('StackName'))
+                    stack_identity=identity)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
