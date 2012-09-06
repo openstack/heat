@@ -37,7 +37,7 @@ from heat.api.aws import exception
 import heat.api.v1.stacks as stacks
 
 
-@attr(tag=['unit', 'api-v1-stacks', 'StackController'])
+@attr(tag=['unit', 'api-cfn-v1-stacks', 'StackController'])
 @attr(speed='fast')
 class StackControllerTest(unittest.TestCase):
     '''
