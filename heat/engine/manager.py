@@ -74,7 +74,7 @@ class EngineManager(manager.Manager):
         s = db_api.stack_get_by_name(context, stack_name)
         if s:
             stack = parser.Stack.load(context, s.id)
-            return stack.identifier()
+            return dict(stack.identifier())
         else:
             raise AttributeError('Unknown stack name')
 
