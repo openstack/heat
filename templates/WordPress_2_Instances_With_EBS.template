@@ -130,16 +130,16 @@
           "/opt/aws/bin/cfn-init\n",
 
           "# Wait for the volume to appear\n",
-          "while [ ! -e /dev/vdb ]; do echo Waiting for volume to attach; sleep 1; done\n",
-          "parted /dev/vdb mklabel msdos\n",
-          "parted /dev/vdb mkpart primary ext3 1 1000\n",
+          "while [ ! -e /dev/vdc ]; do echo Waiting for volume to attach; sleep 1; done\n",
+          "parted /dev/vdc mklabel msdos\n",
+          "parted /dev/vdc mkpart primary ext3 1 1000\n",
           "# Format the EBS volume and mount it\n",
           "systemctl stop mysqld.service\n",
           "sleep 1\n",
           "mv /var/lib/mysql /var/lib/mysql.data\n",
-          "/sbin/mkfs -t ext3 /dev/vdb1\n",
+          "/sbin/mkfs -t ext3 /dev/vdc1\n",
           "mkdir /var/lib/mysql\n",
-          "mount /dev/vdb1 /var/lib/mysql\n",
+          "mount /dev/vdc1 /var/lib/mysql\n",
           "chown mysql.mysql /var/lib/mysql\n",
           "mv -n /var/lib/mysql.data/* /var/lib/mysql\n",
           "systemctl start mysqld.service\n",
@@ -204,7 +204,7 @@
       "Properties" : {
         "InstanceId" : { "Ref" : "WikiDatabase" },
         "VolumeId"  : { "Ref" : "DataVolume" },
-        "Device" : "/dev/vdb"
+        "Device" : "/dev/vdc"
       }
     }
   },

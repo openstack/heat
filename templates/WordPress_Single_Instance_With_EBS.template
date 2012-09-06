@@ -157,6 +157,7 @@
           "EXIT\n",
           "EOF\n",
           "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n"
+          "systemctl restart httpd.service\n",
         ]]}}
       }
     },
