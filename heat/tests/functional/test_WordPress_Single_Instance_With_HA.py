@@ -21,22 +21,23 @@ import unittest
 @attr(speed='slow')
 @attr(tag=['func', 'wordpress', 'HA'])
 class HaFunctionalTest(unittest.TestCase):
+
+    func_utils = util.FuncUtils()
+
     def setUp(self):
         template = 'WordPress_Single_Instance_With_HA.template'
 
-        func_utils = util.FuncUtils()
+        self.func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
+        self.func_utils.create_stack(template, 'F17')
+        self.func_utils.check_cfntools()
+        self.func_utils.wait_for_provisioning()
+        self.func_utils.check_user_data(template)
 
-        func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
-        func_utils.create_stack(template, 'F17')
-        func_utils.check_cfntools()
-        func_utils.wait_for_provisioning()
-        func_utils.check_user_data(template)
-
-        self.ssh = func_utils.get_ssh_client()
+        self.ssh = self.func_utils.get_ssh_client()
 
     def service_is_running(self, name):
         stdin, stdout, sterr = \
-                self.ssh.exec_command('sudo service status %s' % name)
+            self.ssh.exec_command('systemctl status %s' % name + '.service')
 
         lines = stdout.readlines()
         for line in lines:
@@ -57,7 +58,7 @@ class HaFunctionalTest(unittest.TestCase):
         self.assertTrue(self.service_is_running('httpd'))
 
         # kill httpd
-        self.ssh.exec_command('sudo service stop httpd')
+        self.ssh.exec_command('sudo systemctl stop httpd.service')
 
         # check that httpd service recovers
         # should take less than 60 seconds, but no worse than 70 seconds
@@ -67,4 +68,4 @@ class HaFunctionalTest(unittest.TestCase):
             self.assertTrue(tries < 8)
             time.sleep(10)
 
-        func_utils.cleanup()
+        self.func_utils.cleanup()
