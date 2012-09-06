@@ -58,7 +58,8 @@
     "LinuxDistribution": {
       "Description" : "Distribution of choice",
       "Type": "String",
-      "AllowedValues" : [ "F16", "F17", "U10", "RHEL-6.1", "RHEL-6.2", "RHEL-6.3" ]
+      "AllowedValues" : [ "F16", "F17", "U10", "RHEL-6.1", "RHEL-6.2", "RHEL-6.3" ],
+      "Default": "F16"
     }
   },
 
