@@ -169,10 +169,15 @@ class FuncUtils:
 
         # Check result looks OK
         root = etree.fromstring(result)
-        create_list = root.xpath('/CreateStackResponse/CreateStackResult' +
-                                 '[StackName="' + self.stackname + '"]')
+        create_list = root.xpath('/CreateStackResponse/CreateStackResult')
         assert create_list
         assert len(create_list) == 1
+
+        # Extract StackId from the result, and check the StackName part
+        stackid = create_list[0].findtext('StackId')
+        idname = stackid.split('/')[1]
+        print "Checking %s contains name %s" % (stackid, self.stackname)
+        assert idname == self.stackname
 
         alist = None
         tries = 0
