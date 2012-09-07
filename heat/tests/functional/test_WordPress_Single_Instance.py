@@ -20,35 +20,28 @@ import unittest
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress'])
+@attr(tag=['func', 'wordpress', 'WordPress_Single_Instance.template'])
 class WordPressFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_Single_Instance.template'
 
-        self.func_utils = util.FuncUtils()
-
-        self.func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
-        self.func_utils.create_stack(template, 'F17')
-        self.func_utils.check_cfntools()
-        self.func_utils.wait_for_provisioning()
-        self.func_utils.check_user_data(template)
-
-        self.ssh = self.func_utils.get_ssh_client()
+        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools')
+        self.WikiDatabase = util.Instance('WikiDatabase')
+        self.WikiDatabase.check_cfntools()
+        self.WikiDatabase.wait_for_provisioning()
 
     def test_instance(self):
         # ensure wordpress was installed by checking for expected
         # configuration file over ssh
-        wp_file = '/etc/wordpress/wp-config.php'
-        stdin, stdout, sterr = self.ssh.exec_command('ls ' + wp_file)
-        result = stdout.readlines().pop().rstrip()
-        assert result == wp_file
+        self.assertTrue(self.WikiDatabase.file_present
+                        ('/etc/wordpress/wp-config.php'))
         print "Wordpress installation detected"
 
         # Verify the output URL parses as expected, ie check that
         # the wordpress installation is operational
-        stack_url = self.func_utils.get_stack_output("WebsiteURL")
+        stack_url = self.stack.get_stack_output("WebsiteURL")
         print "Got stack output WebsiteURL=%s, verifying" % stack_url
         ver = verify.VerifyStack()
-        assert True == ver.verify_wordpress(stack_url)
+        self.assertTrue(ver.verify_wordpress(stack_url))
 
-        self.func_utils.cleanup()
+        self.stack.cleanup()

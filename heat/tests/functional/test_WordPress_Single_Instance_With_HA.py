@@ -19,25 +19,21 @@ import unittest
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'HA'])
+@attr(tag=['func', 'wordpress', 'HA',
+      'WordPress_Single_Instance_With_HA.template'])
 class HaFunctionalTest(unittest.TestCase):
-
-    func_utils = util.FuncUtils()
-
     def setUp(self):
         template = 'WordPress_Single_Instance_With_HA.template'
 
-        self.func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
-        self.func_utils.create_stack(template, 'F17')
-        self.func_utils.check_cfntools()
-        self.func_utils.wait_for_provisioning()
-        self.func_utils.check_user_data(template)
-
-        self.ssh = self.func_utils.get_ssh_client()
+        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools')
+        self.WikiDatabase = util.Instance('WikiDatabase')
+        self.WikiDatabase.check_cfntools()
+        self.WikiDatabase.wait_for_provisioning()
 
     def service_is_running(self, name):
         stdin, stdout, sterr = \
-            self.ssh.exec_command('systemctl status %s' % name + '.service')
+            self.WikiDatabase.exec_command(
+                'systemctl status %s' % name + '.service')
 
         lines = stdout.readlines()
         for line in lines:
@@ -48,17 +44,15 @@ class HaFunctionalTest(unittest.TestCase):
     def test_instance(self):
 
         # ensure wordpress was installed
-        wp_file = '/etc/wordpress/wp-config.php'
-        stdin, stdout, sterr = self.ssh.exec_command('ls ' + wp_file)
-        result = stdout.readlines().pop().rstrip()
-        self.assertEqual(result, wp_file)
+        self.assertTrue(self.WikiDatabase.file_present
+                        ('/etc/wordpress/wp-config.php'))
         print "Wordpress installation detected"
 
         # check the httpd service is running
         self.assertTrue(self.service_is_running('httpd'))
 
         # kill httpd
-        self.ssh.exec_command('sudo systemctl stop httpd.service')
+        self.WikiDatabase.exec_command('sudo systemctl stop httpd.service')
 
         # check that httpd service recovers
         # should take less than 60 seconds, but no worse than 70 seconds
@@ -68,4 +62,4 @@ class HaFunctionalTest(unittest.TestCase):
             self.assertTrue(tries < 8)
             time.sleep(10)
 
-        self.func_utils.cleanup()
+        self.stack.cleanup()

@@ -23,38 +23,33 @@ import unittest
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'ebs'])
+@attr(tag=['func', 'wordpress', 'ebs',
+      'WordPress_Single_Instance_With_EBS.template'])
 class WordPressSingleEBSFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_Single_Instance_With_EBS.template'
 
-        self.func_utils = util.FuncUtils()
-
-        self.func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
-        self.func_utils.create_stack(template, 'F17')
-        self.func_utils.check_cfntools()
-        self.func_utils.wait_for_provisioning()
-        self.func_utils.check_user_data(template)
-
-        self.ssh = self.func_utils.get_ssh_client()
+        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools')
+        self.WikiDatabase = util.Instance('WikiDatabase')
+        self.WikiDatabase.check_cfntools()
+        self.WikiDatabase.wait_for_provisioning()
 
     def test_instance(self):
-        # 1. ensure wordpress was installed
-        wp_file = '/etc/wordpress/wp-config.php'
-        stdin, stdout, sterr = self.ssh.exec_command('ls ' + wp_file)
-        result = stdout.readlines().pop().rstrip()
-        self.assertEqual(result, wp_file)
+        # ensure wordpress was installed
+        self.assertTrue(self.WikiDatabase.file_present
+                        ('/etc/wordpress/wp-config.php'))
         print "Wordpress installation detected"
 
         # Verify the output URL parses as expected, ie check that
         # the wordpress installation is operational
-        stack_url = self.func_utils.get_stack_output("WebsiteURL")
+        stack_url = self.stack.get_stack_output("WebsiteURL")
         print "Got stack output WebsiteURL=%s, verifying" % stack_url
         ver = verify.VerifyStack()
         self.assertTrue(ver.verify_wordpress(stack_url))
 
         # Check EBS volume is present and mounted
-        stdin, stdout, sterr = self.ssh.exec_command('grep vdc /proc/mounts')
+        stdin, stdout, sterr = self.WikiDatabase.exec_command(
+                                'grep vdc /proc/mounts')
         result = stdout.readlines().pop().rstrip()
         self.assertTrue(len(result))
         print "Checking EBS volume is attached : %s" % result
@@ -63,4 +58,4 @@ class WordPressSingleEBSFunctionalTest(unittest.TestCase):
         mountpoint = result.split()[1]
         self.assertEqual(mountpoint, '/var/lib/mysql')
 
-        self.func_utils.cleanup()
+        self.stack.cleanup()
