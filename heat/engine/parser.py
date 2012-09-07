@@ -293,6 +293,9 @@ class Stack(object):
         stack = cls(context, s.name, template, params,
                     stack_id, s.status, s.status_reason, s.timeout)
 
+        for res in stack:
+            res.calculate_properties()
+
         return stack
 
     def store(self, owner=None):
