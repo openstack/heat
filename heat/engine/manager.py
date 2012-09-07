@@ -175,6 +175,7 @@ class EngineManager(manager.Manager):
         # Now parse the template and any parameters for the updated
         # stack definition.
         tmpl = parser.Template(template)
+        stack_name = current_stack.name
         template_params = parser.Parameters(stack_name, tmpl, params)
         common_params = api.extract_args(args)
 
