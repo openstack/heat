@@ -113,3 +113,6 @@ class HeatIdentifier(collections.Mapping):
 
     def __iter__(self):
         return iter(self.FIELDS)
+
+    def __repr__(self):
+        return repr(dict(self))
