@@ -472,6 +472,41 @@ class StackControllerTest(unittest.TestCase):
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
 
+    def test_create_err_engine(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        template = {u'Foo': u'bar'}
+        json_template = json.dumps(template)
+        params = {'Action': 'CreateStack', 'StackName': stack_name,
+                  'TemplateBody': '%s' % json_template,
+                  'TimeoutInMinutes': 30,
+                  'Parameters.member.1.ParameterKey': 'InstanceType',
+                  'Parameters.member.1.ParameterValue': 'm1.xlarge'}
+        engine_parms = {u'InstanceType': u'm1.xlarge'}
+        engine_args = {'timeout_mins': u'30'}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        self.m.StubOutWithMock(rpc, 'call')
+        engine_err = {'Description': 'Something went wrong'}
+
+        rpc.call(dummy_req.context, self.topic, {'method': 'create_stack',
+            'args':
+            {'stack_name': stack_name,
+            'template': template,
+            'params': engine_parms,
+            'args': engine_args},
+            'version': self.api_version}, None
+            ).AndReturn(engine_err)
+
+        self.m.ReplayAll()
+
+        result = self.controller.create(dummy_req)
+
+        expected = {'CreateStackResponse': {'CreateStackResult': engine_err}}
+
+        self.assertEqual(result, expected)
+
     def test_update(self):
         # Format a dummy request
         stack_name = "wordpress"

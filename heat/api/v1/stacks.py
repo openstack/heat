@@ -312,12 +312,18 @@ class StackController(object):
             else:
                 args['stack_identity'] = self._get_identity(con, stack_name)
 
-            res = engine_action[action](con, **args)
+            result = engine_action[action](con, **args)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
-        identity = identifier.HeatIdentifier(**res)
-        return api_utils.format_response(action, {'StackId': identity.arn()})
+        try:
+            identity = identifier.HeatIdentifier(**result)
+        except (ValueError, TypeError):
+            response = result
+        else:
+            response = {'StackId': identity.arn()}
+
+        return api_utils.format_response(action, response)
 
     def get_template(self, req):
         """
