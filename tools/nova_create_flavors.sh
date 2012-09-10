@@ -28,33 +28,71 @@
 # So for development purposes, we create all flavors, but with a maximum of
 # 2vcpus, 10G disk and 2G RAM (since we're all running on laptops..)
 
+
+# Nova rate limits actions so we need retry/sleep logic to avoid
+# spurious failures when doing sequential operations
+# we also sleep after every operation otherwise rate-limiting will definitely
+# cause lots of failures
+retry_cmd() {
+    MAX_TRIES=5
+    attempts=0
+    while [[ ${attempts} < ${MAX_TRIES} ]]
+    do
+        attempts=$((${attempts} + 1))
+        if ! $@ 2>/dev/null
+        then
+            echo "Command : \"$@\" failed, retry after 1s ${attempts}/${MAX_TRIES}"
+            sleep 1
+        else
+            echo "$@ : OK"
+            sleep 1
+            break
+        fi
+    done
+
+    if [[ ${attempts} == ${MAX_TRIES} ]]
+    then
+        echo "ERROR : persistent error attempting to run command \"$@\"!"
+    fi
+}
+
+
+# Sanity-test nova flavor-list, this should catch problems with credentials
+# or if nova is not running.  When calling from openstack install, it seems
+# that nova gives 400 errors despite the service showing as active via
+# systemctl, so we work around that by polling via retry_cmd before doing the
+# final check - this should mean we wait for the service to come up but still
+# exit if there is a non-transient problem
+retry_cmd "nova flavor-list"
+if ! nova flavor-list > /dev/null
+then
+    echo "ERROR, unable to do \"nova flavor-list\""
+    echo "Check keystone credentials and that nova services are running"
+    exit 1
+fi
+
 for f in $(nova flavor-list | grep "^| [0-9]" | awk '{print $2}')
 do
-    nova flavor-delete $f
+    retry_cmd "nova flavor-delete $f"
 done
 
-# Note, horrible sleep 1's are because nova starts failing requests due
-# to rate limiting without them..
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 t1.micro 1 256 0 1
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.tiny 2 256 0 1
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.small 3 512 0 1
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.medium 4 768 0 1
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.large 5 1024 0 1
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.xlarge 6 2048 0 1
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m2.xlarge 7 2048 0 2
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m2.2xlarge 8 2048 0 2
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m2.4xlarge 9 2048 0 2
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 c1.medium 10 2048 0 2
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 c1.xlarge 11 2048 0 2
-sleep 1
-nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 cc1.4xlarge 12 2048 0 2
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 t1.micro 1 256 0 1"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.tiny 2 256 0 1"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.small 3 512 0 1"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.medium 4 768 0 1"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.large 5 1024 0 1"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.xlarge 6 2048 0 1"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m2.xlarge 7 2048 0 2"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m2.2xlarge 8 2048 0 2"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m2.4xlarge 9 2048 0 2"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 c1.medium 10 2048 0 2"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 c1.xlarge 11 2048 0 2"
+retry_cmd "nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 cc1.4xlarge 12 2048 0 2"
+
+# Check we get the expected number of flavors on completion
+num_flavors=$(nova flavor-list | grep "[0-9]. *|" | wc -l)
+expected_flavors=12
+if [[ ${num_flavors} != ${expected_flavors} ]]
+then
+    echo "ERROR : problem creating flavors, created ${num_flavors}, expected ${expected_flavors}"
+fi
