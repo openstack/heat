@@ -40,13 +40,14 @@ If you use this method, you will need to manually create a guest network.  How t
 
 ..
     SUBNET=10.0.0.0/24
-    BIND_IP=10.0.0.1
 
 ::
 
     sudo nova-manage network create demonet ${SUBNET} 1 256 --bridge=demonetbr0
 
 Where ``${SUBNET}`` is of the form ``10.0.0.0/24``. The network range here, must *not* be one used on your existing physical network. It should be a range dedicated for the network that OpenStack will configure. So if ``10.0.0.0/24`` clashes with your local network, pick another subnet.
+
+Currently, the bridge is not created immediately upon running this command, but is actually added when Nova first requires it.
 
 If you wish to set up OpenStack manually on Fedora, read `Getting Started With OpenStack On Fedora`_.
 
@@ -88,15 +89,6 @@ Install heat from source
 In the heat directory, run the install script::
 
     sudo ./install.sh
-
-Configure the Metadata server
------------------------------
-
-The Heat Metadata server must be configured to bind to the IP address of the host machine on the Nova network created above (`demonetbr0`). This allows the launched instances to access the metadata server.
-
-Edit the file `/etc/heat/heat-metadata.conf` to change the `bind_host` value from the default `0.0.0.0` to the correct IP address::
-
-    sudo sed -i -e "/^bind_host *=/ s/0\.0\.0\.0/${BIND_IP}/" /etc/heat/heat-metadata.conf
 
 Download Fedora 16 DVD and copy it to libvirt images location
 -------------------------------------------------------------
@@ -196,7 +188,7 @@ Launch the Heat services
 
 ::
 
-    sudo -E bash -c 'heat-api-cfn & heat-engine & heat-metadata &'
+    sudo -E bash -c 'heat-api-cfn & heat-engine &'
 
 ..
     sleep 5
@@ -307,6 +299,16 @@ Note: This operation will show no running stack.
 Other Templates
 ===============
 Check out the ``Wordpress_2_Instances_with_EBS_EIP.template``.  This uses a few different APIs in OpenStack nova, such as the Volume API, the Floating IP API and the Security Groups API, as well as the general nova launching and monitoring APIs.
+
+Configure the Metadata server
+-----------------------------
+
+Some templates require the ``heat-metadata`` server also. The metadata server must be configured to bind to the IP address of the host machine on the Nova network created above (``demonetbr0``). This allows the launched instances to access the metadata server. However, the bridge interface is not actually created until an instance is launched in Nova. If you have completed the preceding steps the bridge will now have been created, so you can proceed to edit the file ``/etc/heat/heat-metadata.conf`` to change the ``bind_host`` value from the default ``0.0.0.0`` to the correct IP address and launch the metadata server::
+
+    BIND_IP=`ifconfig demonetbr0 | sed -e 's/ *inet addr:\([0-9.]\+\).*/\1/' -e t -e d`
+    sudo sed -i -e "/^bind_host *=/ s/0\.0\.0\.0/${BIND_IP}/" /etc/heat/heat-metadata.conf
+    
+    sudo -E bash -c 'heat-metadata &'
 
 Troubleshooting
 ===============
