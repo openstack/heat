@@ -35,9 +35,9 @@ done
 
 # Note, horrible sleep 1's are because nova starts failing requests due
 # to rate limiting without them..
-nova flavor-create --ephemeral 0 --swap 0 --rxtx-factor 1 t1.micro 1 256 0 1
+nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 t1.micro 1 256 0 1
 sleep 1
-nova flavor-create --ephemeral 0 --swap 0 --rxtx-factor 1 m1.tiny 2 256 0 1
+nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.tiny 2 256 0 1
 sleep 1
 nova flavor-create --ephemeral 10 --swap 0 --rxtx-factor 1 m1.small 3 512 0 1
 sleep 1
