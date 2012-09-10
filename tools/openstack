@@ -23,15 +23,50 @@ then
     echo "erase - permanently destroys an existing installation of OpenStack"
 fi
 
+OS_SERVICES=(qpidd mysqld openstack-keystone tgtd openstack-glance-api openstack-glance-registry openstack-nova-api openstack-nova-objectstore openstack-nova-compute openstack-nova-network openstack-nova-volume openstack-nova-scheduler openstack-nova-cert)
+
 function os_status() {
-    services=(qpidd mysqld openstack-keystone tgtd openstack-glance-api openstack-glance-registry openstack-nova-api openstack-nova-objectstore openstack-nova-compute openstack-nova-network openstack-nova-volume openstack-nova-scheduler openstack-nova-cert)
-    for service in ${services[@]}
+    for service in ${OS_SERVICES[@]}
     do
         output=$(systemctl show "$service.service" --property=ActiveState)
         running=(${output//=/ }) #ActiveState=active
         echo "$service ${running[1]}" | awk '{ printf "%-40s %s\n", $1, $2}'
     done
 }
+
+OS_STATUS="OK"
+function os_check_status() {
+    # If a service is not running, we try again up to MAX_TRIES times
+    MAX_TRIES=5
+    for service in ${OS_SERVICES[@]}
+    do
+        attempts=0
+        while [[ ${attempts} < ${MAX_TRIES} ]]
+        do
+            attempts=$((${attempts} + 1))
+            output=$(systemctl show "$service.service" --property=ActiveState)
+            running=${output#ActiveState=} #ActiveState=active
+            if [[ ${running} != "active" ]]
+            then
+                echo "Service ${service} does not seem to be running, waiting 1s ${attempts}/${MAX_TRIES}"
+                OS_STATUS="FAIL ${service} : ${running}"
+                sleep 1
+            else
+                echo "${service} ${running}" | awk '{ printf "%-40s %s\n", $1, $2}'
+                OS_STATUS="OK"
+                break
+            fi
+        done
+
+        # If we get here and OS_STATUS != OK then we return as something failed
+        if [[ ${OS_STATUS} != "OK" ]]
+        then
+            echo "Service ${service} has failed to start, check logs for errors"
+            break
+        fi
+    done
+}
+
 
 function os_start() {
     action=start
@@ -159,6 +194,15 @@ EOF
     os_start
     sleep 1
     echo "Installation Complete."
+
+    echo "Checking all expected services are running"
+    os_check_status
+    if [[ ${OS_STATUS} != "OK" ]]
+    then
+        echo "Service failed to start : ${OS_STATUS}, cannot continue"
+        exit 1
+    fi
+
     echo "Testing nova and glance.  If any errors are displayed, the install failed..."
     # Create additional flavors required by heat templates
     ${BASE_DIR}/nova_create_flavors.sh
