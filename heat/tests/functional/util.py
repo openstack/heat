@@ -37,6 +37,7 @@ from heat import utils
 from heat.engine import parser
 from heat import client as heat_client
 from heat import boto_client as heat_client_boto
+from keystoneclient.v2_0 import client
 
 
 class Instance(object):
@@ -455,14 +456,32 @@ class StackBoto(Stack):
 
         keyname = self.novaclient.keypairs.list().pop().name
 
-        # Note a properly configured /etc/boto.cfg is required, which
-        # contains the endpoint/host and ec2-credentials, most of the
-        # arguments passed to heat_client_boto are for compatibility
-        # with the non-boto client wrapper, and are actually ignored.
+        # Connect to the keystone client with the supplied credentials
+        # and extract the ec2-credentials, so we can pass them into the
+        # boto client
+        keystone = client.Client(username=self.creds['username'],
+                             password=self.creds['password'],
+                             tenant_name=self.creds['tenant'],
+                             auth_url=self.creds['auth_url'])
+        ksusers = keystone.users.list()
+        ksuid = [u.id for u in ksusers if u.name == self.creds['username']]
+        assert len(ksuid) == 1
+
+        ec2creds = keystone.ec2.list(ksuid[0])
+        assert len(ec2creds) == 1
+        assert ec2creds[0].access
+        assert ec2creds[0].secret
+        print "Got EC2 credentials from keystone"
+
+        # most of the arguments passed to heat_client_boto are for
+        # compatibility with the non-boto client wrapper, and are
+        # actually ignored, only the port and credentials are used
         self.heatclient = heat_client_boto.get_client('0.0.0.0', 8000,
             self.creds['username'], self.creds['password'],
             self.creds['tenant'], self.creds['auth_url'],
-            self.creds['strategy'], None, None, False)
+            self.creds['strategy'], None, None, False,
+            aws_access_key=ec2creds[0].access,
+            aws_secret_key=ec2creds[0].secret)
 
         assert self.heatclient
 
