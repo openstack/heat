@@ -26,4 +26,5 @@ WebOb
 python-keystoneclient
 glance
 python-memcached
+python-swiftclient
 

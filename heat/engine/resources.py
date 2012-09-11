@@ -18,6 +18,7 @@ from datetime import datetime
 
 from novaclient.v1_1 import client as nc
 from keystoneclient.v2_0 import client as kc
+from swiftclient import client as swiftclient
 
 from heat.common import exception
 from heat.common import config
@@ -159,6 +160,7 @@ class Resource(object):
             self.id = None
         self._nova = {}
         self._keystone = None
+        self._swift = None
 
     def __eq__(self, other):
         '''Allow == comparison of two resources'''
@@ -226,6 +228,17 @@ class Resource(object):
                                                      service_type=service_type,
                                                      service_name=None)
         return self._nova[service_type]
+
+    def swift(self):
+        if self._swift:
+            return self._swift
+
+        con = self.context
+        self._swift = swiftclient.Connection(
+            con.auth_url, con.username, con.password,
+            tenant_name=con.tenant, auth_version='2')
+
+        return self._swift
 
     def calculate_properties(self):
         for p, v in self.parsed_template('Properties').items():
