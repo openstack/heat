@@ -18,7 +18,14 @@ from datetime import datetime
 
 from novaclient.v1_1 import client as nc
 from keystoneclient.v2_0 import client as kc
-from swiftclient import client as swiftclient
+
+# swiftclient not available in all distributions - make s3 an optional
+# feature
+try:
+    from swiftclient import client as swiftclient
+    swiftclient_present = True
+except:
+    swiftclient_present = False
 
 from heat.common import exception
 from heat.common import config
@@ -230,6 +237,8 @@ class Resource(object):
         return self._nova[service_type]
 
     def swift(self):
+        if swiftclient_present == False:
+            return None
         if self._swift:
             return self._swift
 
