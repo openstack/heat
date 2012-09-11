@@ -36,6 +36,7 @@ from novaclient.v1_1 import client as nova_client
 from heat import utils
 from heat.engine import parser
 from heat import client as heat_client
+from heat import boto_client as heat_client_boto
 
 
 class Instance(object):
@@ -437,6 +438,107 @@ class Stack(object):
         output = output_list.pop()
         value = output.findtext('OutputValue')
         return value
+
+
+class StackBoto(Stack):
+    '''
+    Version of the Stack class which uses the boto client (hence AWS auth and
+    the CFN API).
+    '''
+    def __init__(self, template_file, distribution, arch, jeos_type):
+
+        self.prepare_jeos(distribution, arch, jeos_type)
+
+        self.novaclient = nova_client.Client(self.creds['username'],
+            self.creds['password'], self.creds['tenant'],
+            self.creds['auth_url'], service_type='compute')
+
+        keyname = self.novaclient.keypairs.list().pop().name
+
+        # Note a properly configured /etc/boto.cfg is required, which
+        # contains the endpoint/host and ec2-credentials, most of the
+        # arguments passed to heat_client_boto are for compatibility
+        # with the non-boto client wrapper, and are actually ignored.
+        self.heatclient = heat_client_boto.get_client('0.0.0.0', 8000,
+            self.creds['username'], self.creds['password'],
+            self.creds['tenant'], self.creds['auth_url'],
+            self.creds['strategy'], None, None, False)
+
+        assert self.heatclient
+
+        # Dummy up the optparse.Values we get from CLI args in bin/heat
+        stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
+                         'DBUsername=' + self.dbusername,
+                         'DBPassword=' + os.environ['OS_PASSWORD'],
+                         'KeyName=' + keyname,
+                         'LinuxDistribution=' + distribution])
+        template_params = optparse.Values({'parameters': stack_paramstr})
+
+        # Format parameters and create the stack
+        parameters = {}
+        parameters['StackName'] = self.stackname
+        template_path = self.basepath + '/templates/' + template_file
+        parameters['TemplateBody'] = open(template_path).read()
+        parameters.update(self.heatclient.format_parameters(template_params))
+        result = self.heatclient.create_stack(**parameters)
+
+        alist = None
+        tries = 0
+        print 'Waiting for stack creation to be completed'
+        while not alist:
+            tries += 1
+            assert tries < 500
+            time.sleep(10)
+            events = self.heatclient.list_stack_events(**parameters)
+            alist = [e for e in events
+                      if e.stack_name == self.stackname
+                      and e.resource_status == "CREATE_COMPLETE"
+                      and e.resource_type == "AWS::EC2::Instance"]
+
+        elem = alist.pop()
+        self.phys_rec_id = elem.physical_resource_id
+        print "CREATE_COMPLETE, physical_resource_id=%s" % self.phys_rec_id
+
+    # during nose test execution this file will be imported even if
+    # the unit tag was specified
+    try:
+        os.environ['OS_AUTH_STRATEGY']
+    except KeyError:
+        raise SkipTest('OS_AUTH_STRATEGY not set, skipping functional test')
+
+    if os.environ['OS_AUTH_STRATEGY'] != 'keystone':
+        print 'keystone authentication required'
+        assert False
+
+    creds = dict(username=os.environ['OS_USERNAME'],
+            password=os.environ['OS_PASSWORD'],
+            tenant=os.environ['OS_TENANT_NAME'],
+            auth_url=os.environ['OS_AUTH_URL'],
+            strategy=os.environ['OS_AUTH_STRATEGY'])
+    dbusername = 'testuser'
+    stackname = 'teststack'
+
+    # this test is in heat/tests/functional, so go up 3 dirs
+    basepath = os.path.abspath(
+            os.path.dirname(os.path.realpath(__file__)) + '/../../..')
+
+    novaclient = None
+    glanceclient = None
+    heatclient = None
+
+    def get_stack_output(self, output_key):
+        '''
+        Extract a specified output from the DescribeStacks details
+        '''
+        # Get the DescribeStacks result for this stack
+        parameters = {'StackName': self.stackname}
+        c = self.get_heat_client()
+        result = c.describe_stacks(**parameters)
+        assert len(result) == 1
+
+        for o in result[0].outputs:
+            if o.key == output_key:
+                return o.value
 
 
 if __name__ == '__main__':
