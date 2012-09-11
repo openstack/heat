@@ -274,17 +274,19 @@ def get_client(host, port=None, username=None,
                password=None, tenant=None,
                auth_url=None, auth_strategy=None,
                auth_token=None, region=None,
-               is_silent_upload=False, insecure=True):
+               is_silent_upload=False, insecure=True,
+               aws_access_key=None, aws_secret_key=None):
 
     """
     Returns a new boto Cloudformation client connection to a heat server
     """
 
-    # Note we pass None/None for the keys so boto reads /etc/boto.cfg
+    # Note we pass None/None for the keys by default
+    # This means boto reads /etc/boto.cfg, or ~/.boto
     # Also note is_secure is defaulted to False as HTTPS connections
     # don't seem to work atm, FIXME
-    cloudformation = BotoClient(aws_access_key_id=None,
-        aws_secret_access_key=None, is_secure=False,
+    cloudformation = BotoClient(aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key, is_secure=False,
         port=port, path="/v1")
     if cloudformation:
         logger.debug("Got CF connection object OK")
