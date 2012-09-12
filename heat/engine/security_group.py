@@ -45,7 +45,8 @@ class SecurityGroup(Resource):
                 break
 
         if not sec:
-            sec = self.nova().security_groups.create(self.name,
+            sec = self.nova().security_groups.create(
+                                          self.physical_resource_name(),
                                           self.properties['GroupDescription'])
 
         self.instance_id_set(sec.id)

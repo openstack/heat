@@ -49,7 +49,8 @@ class User(Resource):
             passwd = self.properties['LoginProfile']['Password']
 
         tenant_id = self.context.tenant_id
-        user = self.keystone().users.create(self.name, passwd,
+        user = self.keystone().users.create(self.physical_resource_name(),
+                                            passwd,
                                             '%s@heat-api.org' % self.name,
                                             tenant_id=tenant_id,
                                             enabled=True)

@@ -230,7 +230,8 @@ class Instance(resources.Resource):
             scheduler_hints = None
 
         server_userdata = self._build_userdata(userdata)
-        server = self.nova().servers.create(name=self.name, image=image_id,
+        server = self.nova().servers.create(name=self.physical_resource_name(),
+                                            image=image_id,
                                             flavor=flavor_id,
                                             key_name=key_name,
                                             security_groups=security_groups,

@@ -75,7 +75,7 @@ class instancesTest(unittest.TestCase):
                                 instance.t['Properties']['UserData'])
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(image=1, flavor=1, key_name='test',
-                name='test_resource_name', security_groups=None,
+                name='test_stack.test_resource_name', security_groups=None,
                 userdata=server_userdata, scheduler_hints=None,
                 meta=None).AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()

@@ -34,8 +34,9 @@ class WordPressWithLBFunctionalTest(unittest.TestCase):
             stack_paramstr)
 
         self.WikiServerOne = util.Instance('WikiServerOne')
-        self.LBInstance = util.Instance('LB_instance')
-        self.MySqlDatabaseServer = util.Instance('MySqlDatabaseServer')
+        self.LBInstance = util.Instance('LoadBalancer.LB_instance')
+        self.MySqlDatabaseServer = util.Instance(
+                'DatabaseServer.MySqlDatabaseServer')
 
         self.WikiServerOne.check_cfntools()
         self.LBInstance.check_cfntools()

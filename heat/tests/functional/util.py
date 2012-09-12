@@ -42,7 +42,7 @@ from keystoneclient.v2_0 import client
 
 class Instance(object):
     def __init__(self, instance_name):
-        self.name = instance_name
+        self.name = 'teststack.%s' % instance_name
 
         # during nose test execution this file will be imported even if
         # the unit tag was specified
@@ -80,7 +80,7 @@ class Instance(object):
         while ip is None:
             servers = self.novaclient.servers.list()
             for server in servers:
-                if server.name == instance_name:
+                if server.name == self.name:
                     address = server.addresses
                     if address:
                         ip = address.items()[0][1][0]['addr']

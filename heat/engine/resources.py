@@ -310,6 +310,9 @@ class Resource(object):
                 self.state_set(self.UPDATE_COMPLETE)
             return result
 
+    def physical_resource_name(self):
+        return '%s.%s' % (self.stack.name, self.name)
+
     def validate(self):
         logger.info('Validating %s' % str(self))
 

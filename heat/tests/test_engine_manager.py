@@ -77,7 +77,7 @@ def setup_mocks(mocks, stack):
     server_userdata = instance._build_userdata(instance.properties['UserData'])
     mocks.StubOutWithMock(fc.servers, 'create')
     fc.servers.create(image=744, flavor=3, key_name='test',
-                      name='WebServer', security_groups=None,
+                      name='%s.WebServer' % stack.name, security_groups=None,
                       userdata=server_userdata, scheduler_hints=None,
                       meta=None).AndReturn(fc.servers.list()[-1])
 

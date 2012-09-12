@@ -61,7 +61,7 @@ class S3Bucket(Resource):
 
     def handle_create(self):
         """Create a bucket."""
-        container = 'heat-%s-%s' % (self.name,
+        container = 'heat-%s-%s' % (self.resource_physical_name(),
                                     binascii.hexlify(os.urandom(10)))
         headers = {}
         logger.debug('S3Bucket create container %s with headers %s' %

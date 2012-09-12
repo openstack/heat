@@ -63,7 +63,7 @@ class Stack(Resource):
         params = parser.Parameters(self.name, template, self._params())
 
         self._nested = parser.Stack(self.context,
-                                    self.name,
+                                    self.physical_resource_name(),
                                     template,
                                     params)
 
