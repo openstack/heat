@@ -25,30 +25,26 @@ class WordPressComposedInstancesFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_Composed_Instances.template'
 
-        self.func_utils = util.FuncUtils()
+        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools')
 
-        self.func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
-        self.func_utils.create_stack(template, 'F17')
-        self.func_utils.check_cfntools()
-        self.func_utils.wait_for_provisioning()
-        self.func_utils.check_user_data(template)
+        self.WebServer = util.Instance('WebServer')
+        self.WebServer.check_cfntools()
+        self.WebServer.wait_for_provisioning()
 
-        self.ssh = self.func_utils.get_ssh_client()
+        self.MySqlDatabaseServer = util.Instance('MySqlDatabaseServer')
+        self.MySqlDatabaseServer.check_cfntools()
+        self.MySqlDatabaseServer.wait_for_provisioning()
 
     def test_instance(self):
-        # ensure wordpress was installed by checking for expected
-        # configuration file over ssh
-        wp_file = '/etc/wordpress/wp-config.php'
-        stdin, stdout, sterr = self.ssh.exec_command('ls ' + wp_file)
-        result = stdout.readlines().pop().rstrip()
-        assert result == wp_file
-        print "Wordpress installation detected"
+        self.assertTrue(self.WebServer.file_present
+                        ('/etc/wordpress/wp-config.php'))
+        print 'Wordpress installation detected.'
 
         # Verify the output URL parses as expected, ie check that
-        # the wordpress installation is operational
-        stack_url = self.func_utils.get_stack_output("WebsiteURL")
-        print "Got stack output WebsiteURL=%s, verifying" % stack_url
+        # thewordpress installation is operational
+        stack_url = self.stack.get_stack_output("WebsiteURL")
+        print "Verifying stack output from WebsiteUrl=(%s)." % stack_url
         ver = verify.VerifyStack()
-        assert True == ver.verify_wordpress(stack_url)
+        self.assertTrue(ver.verify_wordpress(stack_url))
 
-        self.func_utils.cleanup()
+        self.stack.cleanup()
