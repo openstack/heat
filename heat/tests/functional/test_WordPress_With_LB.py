@@ -38,6 +38,16 @@ class WordPressWithLBFunctionalTest(unittest.TestCase):
         self.MySqlDatabaseServer = util.Instance(
                 'DatabaseServer.MySqlDatabaseServer')
 
+    def tearDown(self):
+        self.stack.cleanup()
+
+    def test_instance(self):
+        self.stack.create()
+
+        self.WikiServerOne.wait_for_boot()
+        self.LBInstance.wait_for_boot()
+        self.MySqlDatabaseServer.wait_for_boot()
+
         self.WikiServerOne.check_cfntools()
         self.LBInstance.check_cfntools()
         self.MySqlDatabaseServer.check_cfntools()
@@ -46,7 +56,6 @@ class WordPressWithLBFunctionalTest(unittest.TestCase):
         self.LBInstance.wait_for_provisioning()
         self.MySqlDatabaseServer.wait_for_provisioning()
 
-    def test_instance(self):
         self.assertTrue(self.WikiServerOne.file_present
                         ('/etc/wordpress/wp-config.php'))
         print 'Wordpress installation detected.'
@@ -57,5 +66,3 @@ class WordPressWithLBFunctionalTest(unittest.TestCase):
         print "Verifying stack output from WebsiteUrl=(%s)." % stack_url
         ver = verify.VerifyStack()
         self.assertTrue(ver.verify_wordpress(stack_url))
-
-        self.stack.cleanup()

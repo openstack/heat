@@ -33,10 +33,17 @@ class WordPressBotoFunctionalTest(unittest.TestCase):
         self.stack = util.StackBoto(template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
         self.WikiDatabase = util.Instance('WikiDatabase')
+
+    def tearDown(self):
+        self.stack.cleanup()
+
+    def test_instance(self):
+        self.stack.create()
+
+        self.WikiDatabase.wait_for_boot()
         self.WikiDatabase.check_cfntools()
         self.WikiDatabase.wait_for_provisioning()
 
-    def test_instance(self):
         # ensure wordpress was installed by checking for expected
         # configuration file over ssh
         self.assertTrue(self.WikiDatabase.file_present

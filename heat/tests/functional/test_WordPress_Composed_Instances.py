@@ -34,14 +34,24 @@ class WordPressComposedInstancesFunctionalTest(unittest.TestCase):
             stack_paramstr)
 
         self.WebServer = util.Instance('WebServer')
+
+        self.MySqlDatabaseServer = util.Instance('MySqlDatabaseServer')
+
+    def tearDown(self):
+        self.stack.cleanup()
+
+    def test_instance(self):
+        self.stack.create()
+
+        self.WebServer.wait_for_boot()
+        self.MySqlDatabaseServer.wait_for_boot()
+
         self.WebServer.check_cfntools()
         self.WebServer.wait_for_provisioning()
 
-        self.MySqlDatabaseServer = util.Instance('MySqlDatabaseServer')
         self.MySqlDatabaseServer.check_cfntools()
         self.MySqlDatabaseServer.wait_for_provisioning()
 
-    def test_instance(self):
         self.assertTrue(self.WebServer.file_present
                         ('/etc/wordpress/wp-config.php'))
         print 'Wordpress installation detected.'
@@ -52,5 +62,3 @@ class WordPressComposedInstancesFunctionalTest(unittest.TestCase):
         print "Verifying stack output from WebsiteUrl=(%s)." % stack_url
         ver = verify.VerifyStack()
         self.assertTrue(ver.verify_wordpress(stack_url))
-
-        self.stack.cleanup()

@@ -37,10 +37,16 @@ class WordPressSingleEBSFunctionalTest(unittest.TestCase):
         self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
         self.WikiDatabase = util.Instance('WikiDatabase')
+
+    def tearDown(self):
+        self.stack.cleanup()
+
+    def test_instance(self):
+        self.stack.create()
+        self.WikiDatabase.wait_for_boot()
         self.WikiDatabase.check_cfntools()
         self.WikiDatabase.wait_for_provisioning()
 
-    def test_instance(self):
         # ensure wordpress was installed
         self.assertTrue(self.WikiDatabase.file_present
                         ('/etc/wordpress/wp-config.php'))
@@ -63,5 +69,3 @@ class WordPressSingleEBSFunctionalTest(unittest.TestCase):
         self.assertEqual(devname, '/dev/vdc1')
         mountpoint = result.split()[1]
         self.assertEqual(mountpoint, '/var/lib/mysql')
-
-        self.stack.cleanup()

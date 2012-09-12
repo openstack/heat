@@ -34,16 +34,25 @@ class WordPress2EBSEIPFunctionalTest(unittest.TestCase):
             stack_paramstr)
 
         self.webserver = util.Instance('WebServer')
+
+        self.database = util.Instance('WikiDatabase')
+
+    def tearDown(self):
+        self.stack.cleanup()
+
+    def test_instance(self):
+        self.stack.create()
+
+        self.webserver.wait_for_boot()
         self.webserver.check_cfntools()
         self.webserver.wait_for_provisioning()
         self.webserver.check_user_data(template)
 
-        self.database = util.Instance('WikiDatabase')
+        self.database.wait_for_boot()
         self.database.check_cfntools()
         self.database.wait_for_provisioning()
         self.database.check_user_data(template)
 
-    def test_instance(self):
         # Check wordpress installation
         wp_config_file = '/etc/wordpress/wp-config.php'
         self.assertTrue(self.webserver.file_present(wp_config_file),
@@ -78,7 +87,3 @@ class WordPress2EBSEIPFunctionalTest(unittest.TestCase):
         ver = verify.VerifyStack()
         self.assertTrue(ver.verify_wordpress(stack_url),
             'Wordpress is not accessible at: %s' % stack_url)
-
-    def tearDown(self):
-        self.stack.cleanup()
-        pass

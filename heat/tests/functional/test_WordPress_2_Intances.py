@@ -36,16 +36,23 @@ class WordPress2Instances(unittest.TestCase):
 
         self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
-
         self.DatabaseServer = util.Instance('DatabaseServer')
+        self.WebServer = util.Instance('WebServer')
+
+    def tearDown(self):
+        self.stack.cleanup()
+
+    def test_instance(self):
+        self.stack.create()
+
+        self.DatabaseServer.wait_for_boot()
         self.DatabaseServer.check_cfntools()
         self.DatabaseServer.wait_for_provisioning()
 
-        self.WebServer = util.Instance('WebServer')
+        self.WebServer.wait_for_boot()
         self.WebServer.check_cfntools()
         self.WebServer.wait_for_provisioning()
 
-    def test_instance(self):
         # ensure wordpress was installed
         self.assertTrue(self.WebServer.file_present
                         ('/etc/wordpress/wp-config.php'))
@@ -57,5 +64,3 @@ class WordPress2Instances(unittest.TestCase):
         print "Got stack output WebsiteURL=%s, verifying" % stack_url
         ver = verify.VerifyStack()
         self.assertTrue(ver.verify_wordpress(stack_url))
-
-        self.stack.cleanup()

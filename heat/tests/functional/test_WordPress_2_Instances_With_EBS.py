@@ -30,16 +30,23 @@ class WordPress2InstancesWithEBS(unittest.TestCase):
         template = 'WordPress_2_Instances_With_EBS.template'
 
         self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools')
-
         self.WikiDatabase = util.Instance('WikiDatabase')
+        self.WebServer = util.Instance('WebServer')
+
+    def tearDown(self):
+        self.stack.cleanup()
+
+    def test_instance(self):
+        self.stack.create()
+
+        self.WikiDatabase.wait_for_boot()
         self.WikiDatabase.check_cfntools()
         self.WikiDatabase.wait_for_provisioning()
 
-        self.WebServer = util.Instance('WebServer')
+        self.WebServer.wait_for_boot()
         self.WebServer.check_cfntools()
         self.WebServer.wait_for_provisioning()
 
-    def test_instance(self):
         # ensure wordpress was installed
         self.assertTrue(self.WebServer.file_present
                         ('/etc/wordpress/wp-config.php'))
@@ -62,5 +69,3 @@ class WordPress2InstancesWithEBS(unittest.TestCase):
         self.assertEqual(devname, '/dev/vdc1')
         mountpoint = result.split()[1]
         self.assertEqual(mountpoint, '/var/lib/mysql')
-
-        self.stack.cleanup()

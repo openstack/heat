@@ -76,6 +76,8 @@ class Instance(object):
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         self.ip = None
+
+    def wait_for_boot(self):
         tries = 0
         while self.ip is None:
             servers = self.novaclient.servers.list()
@@ -286,26 +288,31 @@ class Stack(object):
     def __init__(self, template_file, distribution, arch, jeos_type,
             stack_paramstr):
 
+        self.template_file = template_file
+        self.distribution = distribution
+        self.stack_paramstr = stack_paramstr
         self.prepare_jeos(distribution, arch, jeos_type)
 
         self.novaclient = nova_client.Client(self.creds['username'],
             self.creds['password'], self.creds['tenant'],
             self.creds['auth_url'], service_type='compute')
 
-        keyname = self.novaclient.keypairs.list().pop().name
-
         self.heatclient = self._create_heat_client()
+
+    def create(self):
+        keyname = self.novaclient.keypairs.list().pop().name
 
         assert self.heatclient
 
-        full_paramstr = stack_paramstr + ';' + ';'.join(['KeyName=' + keyname,
-                         'LinuxDistribution=' + distribution])
+        full_paramstr = ';'.join([self.stack_paramstr,
+                                  'KeyName=' + keyname,
+                                  'LinuxDistribution=' + self.distribution])
         template_params = optparse.Values({'parameters': full_paramstr})
 
         # Format parameters and create the stack
         parameters = {}
         parameters['StackName'] = self.stackname
-        template_path = self.basepath + '/templates/' + template_file
+        template_path = self.basepath + '/templates/' + self.template_file
         parameters['TemplateBody'] = open(template_path).read()
         parameters.update(self.heatclient.format_parameters(template_params))
         result = self.heatclient.create_stack(**parameters)

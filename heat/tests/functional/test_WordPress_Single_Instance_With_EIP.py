@@ -36,10 +36,16 @@ class WordPressEIPFunctionalTest(unittest.TestCase):
         self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
         self.WikiDatabase = util.Instance('WikiDatabase')
+
+    def tearDown(self):
+        self.stack.cleanup()
+
+    def test_instance(self):
+        self.stack.create()
+        self.WikiDatabase.wait_for_boot()
         self.WikiDatabase.check_cfntools()
         self.WikiDatabase.wait_for_provisioning()
 
-    def test_instance(self):
         # ensure wordpress was installed
         self.assertTrue(self.WikiDatabase.file_present
                         ('/etc/wordpress/wp-config.php'))
@@ -75,5 +81,3 @@ class WordPressEIPFunctionalTest(unittest.TestCase):
         print "Got stack output InstanceIPAddress=%s, verifying url %s" %\
               (stack_eip, eip_url)
         self.assertTrue(ver.verify_wordpress(eip_url))
-
-        self.stack.cleanup()

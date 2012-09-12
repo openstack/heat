@@ -33,8 +33,9 @@ class HaFunctionalTest(unittest.TestCase):
         self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
         self.WikiDatabase = util.Instance('WikiDatabase')
-        self.WikiDatabase.check_cfntools()
-        self.WikiDatabase.wait_for_provisioning()
+
+    def tearDown(self):
+        self.stack.cleanup()
 
     def service_is_running(self, name):
         stdin, stdout, sterr = \
@@ -48,6 +49,10 @@ class HaFunctionalTest(unittest.TestCase):
         return False
 
     def test_instance(self):
+        self.stack.create()
+        self.WikiDatabase.wait_for_boot()
+        self.WikiDatabase.check_cfntools()
+        self.WikiDatabase.wait_for_provisioning()
 
         # ensure wordpress was installed
         self.assertTrue(self.WikiDatabase.file_present
@@ -67,5 +72,3 @@ class HaFunctionalTest(unittest.TestCase):
             tries += 1
             self.assertTrue(tries < 8)
             time.sleep(10)
-
-        self.stack.cleanup()
