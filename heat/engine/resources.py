@@ -24,7 +24,7 @@ from keystoneclient.v2_0 import client as kc
 try:
     from swiftclient import client as swiftclient
     swiftclient_present = True
-except:
+except ImportError:
     swiftclient_present = False
 
 from heat.common import exception
