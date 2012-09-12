@@ -55,6 +55,22 @@ class VerifyStack:
     '''
 
     @VerifyRetry()
+    def verify_url(self, url, timeout, regex):
+
+        print "Reading html from %s" % url
+        try:
+            content = urllib2.urlopen(url).read()
+        except:
+            return False
+
+        matches = re.findall(regex, content)
+        if len(matches):
+            print "VERIFY : looks OK!"
+            return True
+        else:
+            return False
+
+    @VerifyRetry()
     def verify_wordpress(self, url, timeout=VERIFY_TIMEOUT):
         '''
         Verify the url provided has a functional wordpress installation
@@ -63,15 +79,8 @@ class VerifyStack:
         '''
         WORDPRESS_REGEX = "<p>Welcome to the famous five minute WordPress"
 
-        print "Reading html from %s" % url
-        try:
-            content = urllib2.urlopen(url).read()
-        except:
-            return False
+        return self.verify_url(url, timeout, WORDPRESS_REGEX)
 
-        matches = re.findall(WORDPRESS_REGEX, content)
-        if len(matches):
-            print "VERIFY WORDPRESS : looks OK!"
-            return True
-        else:
-            return False
+    def verify_openshift(self, url, timeout=VERIFY_TIMEOUT):
+        OPENSHIFT_REGEX = "<title>Welcome to OpenShift</title>"
+        return self.verify_url(url, timeout, OPENSHIFT_REGEX)
