@@ -275,7 +275,8 @@ class Instance(object):
 
 
 class Stack(object):
-    def __init__(self, template_file, distribution, arch, jeos_type):
+    def __init__(self, template_file, distribution, arch, jeos_type,
+            stack_paramstr):
 
         self.prepare_jeos(distribution, arch, jeos_type)
 
@@ -292,13 +293,9 @@ class Stack(object):
 
         assert self.heatclient
 
-        # Dummy up the optparse.Values we get from CLI args in bin/heat
-        stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
-                         'DBUsername=' + self.dbusername,
-                         'DBPassword=' + os.environ['OS_PASSWORD'],
-                         'KeyName=' + keyname,
+        full_paramstr = stack_paramstr + ';' + ';'.join(['KeyName=' + keyname,
                          'LinuxDistribution=' + distribution])
-        template_params = optparse.Values({'parameters': stack_paramstr})
+        template_params = optparse.Values({'parameters': full_paramstr})
 
         # Format parameters and create the stack
         parameters = {}
@@ -446,7 +443,8 @@ class StackBoto(Stack):
     Version of the Stack class which uses the boto client (hence AWS auth and
     the CFN API).
     '''
-    def __init__(self, template_file, distribution, arch, jeos_type):
+    def __init__(self, template_file, distribution, arch, jeos_type,
+            stack_paramstr):
 
         self.prepare_jeos(distribution, arch, jeos_type)
 
@@ -485,13 +483,9 @@ class StackBoto(Stack):
 
         assert self.heatclient
 
-        # Dummy up the optparse.Values we get from CLI args in bin/heat
-        stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
-                         'DBUsername=' + self.dbusername,
-                         'DBPassword=' + os.environ['OS_PASSWORD'],
-                         'KeyName=' + keyname,
+        full_paramstr = stack_paramstr + ';' + ';'.join(['KeyName=' + keyname,
                          'LinuxDistribution=' + distribution])
-        template_params = optparse.Values({'parameters': stack_paramstr})
+        template_params = optparse.Values({'parameters': full_paramstr})
 
         # Format parameters and create the stack
         parameters = {}

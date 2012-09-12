@@ -24,6 +24,9 @@ import unittest
 class WordPressRDSFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_With_RDS.template'
+        stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
+            'DBUsername=dbuser',
+            'DBPassword=' + os.environ['OS_PASSWORD']])
 
         self.func_utils = util.FuncUtils()
 

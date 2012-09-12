@@ -20,6 +20,7 @@ from nose.plugins.attrib import attr
 from heat.common import context
 from heat.engine import manager
 import unittest
+import os
 
 
 @attr(speed='slow')
@@ -29,7 +30,12 @@ class WordPressSingleEBSFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_Single_Instance_With_EBS.template'
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools')
+        stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
+            'DBUsername=dbuser',
+            'DBPassword=' + os.environ['OS_PASSWORD']])
+
+        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+            stack_paramstr)
         self.WikiDatabase = util.Instance('WikiDatabase')
         self.WikiDatabase.check_cfntools()
         self.WikiDatabase.wait_for_provisioning()

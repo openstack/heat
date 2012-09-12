@@ -17,6 +17,7 @@ import verify
 import nose
 from nose.plugins.attrib import attr
 import unittest
+import os
 
 
 @attr(speed='slow')
@@ -25,7 +26,12 @@ class WordPressWithLBFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_With_LB.template'
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools')
+        stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
+            'DBUsername=dbuser',
+            'DBPassword=' + os.environ['OS_PASSWORD']])
+
+        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+            stack_paramstr)
 
         self.WikiServerOne = util.Instance('WikiServerOne')
         self.LBInstance = util.Instance('LB_instance')
