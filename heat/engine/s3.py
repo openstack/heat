@@ -23,7 +23,7 @@ from heat.openstack.common import log as logging
 try:
     from swiftclient.client import ClientException
     swiftclient_present = True
-except:
+except ImportError:
     swiftclient_present = False
 
 logger = logging.getLogger('heat.engine.s3')
