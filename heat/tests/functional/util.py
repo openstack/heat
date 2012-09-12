@@ -437,6 +437,19 @@ class Stack(object):
         value = output.findtext('OutputValue')
         return value
 
+    def response_xml_item(self, response, prefix, key):
+        '''
+        Extract response item via xpath prefix and key name
+        we expect the prefix to map to a single Element item
+        '''
+        root = etree.fromstring(response)
+        output_list = root.xpath(prefix)
+        assert output_list
+        assert len(output_list) == 1
+        output = output_list.pop()
+        value = output.findtext(key)
+        return value
+
 
 class StackBoto(Stack):
     '''
