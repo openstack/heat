@@ -19,10 +19,8 @@
 
 import copy
 import logging
-import sys
 import traceback
 
-from heat.openstack.common import cfg
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils
@@ -108,7 +106,7 @@ class Connection(object):
         """
         raise NotImplementedError()
 
-    def create_consumer(self, conf, topic, proxy, fanout=False):
+    def create_consumer(self, topic, proxy, fanout=False):
         """Create a consumer on this connection.
 
         A consumer is associated with a message queue on the backend message
@@ -117,7 +115,6 @@ class Connection(object):
         off of the queue will determine which method gets called on the proxy
         object.
 
-        :param conf:  An openstack.common.cfg configuration object.
         :param topic: This is a name associated with what to consume from.
                       Multiple instances of a service may consume from the same
                       topic. For example, all instances of nova-compute consume
@@ -133,7 +130,7 @@ class Connection(object):
         """
         raise NotImplementedError()
 
-    def create_worker(self, conf, topic, proxy, pool_name):
+    def create_worker(self, topic, proxy, pool_name):
         """Create a worker on this connection.
 
         A worker is like a regular consumer of messages directed to a
@@ -143,7 +140,6 @@ class Connection(object):
         be asked to process it. Load is distributed across the members
         of the pool in round-robin fashion.
 
-        :param conf:  An openstack.common.cfg configuration object.
         :param topic: This is a name associated with what to consume from.
                       Multiple instances of a service may consume from the same
                       topic.

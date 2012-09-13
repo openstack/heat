@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import inspect
 import uuid
 
 from heat.openstack.common import cfg
@@ -28,16 +27,17 @@ from heat.openstack.common import timeutils
 LOG = logging.getLogger(__name__)
 
 notifier_opts = [
-    cfg.StrOpt('notification_driver',
-               default='heat.openstack.common.notifier.no_op_notifier',
-               help='Default driver for sending notifications'),
+    cfg.MultiStrOpt('notification_driver',
+                    default=[],
+                    deprecated_name='list_notifier_drivers',
+                    help='Driver or drivers to handle sending notifications'),
     cfg.StrOpt('default_notification_level',
                default='INFO',
                help='Default notification level for outgoing notifications'),
     cfg.StrOpt('default_publisher_id',
                default='$host',
                help='Default publisher_id for outgoing notifications'),
-    ]
+]
 
 CONF = cfg.CONF
 CONF.register_opts(notifier_opts)
@@ -122,21 +122,60 @@ def notify(context, publisher_id, event_type, priority, payload):
     """
     if priority not in log_levels:
         raise BadPriorityException(
-                 _('%s not in valid priorities') % priority)
+            _('%s not in valid priorities') % priority)
 
     # Ensure everything is JSON serializable.
     payload = jsonutils.to_primitive(payload, convert_instances=True)
 
-    driver = importutils.import_module(CONF.notification_driver)
     msg = dict(message_id=str(uuid.uuid4()),
-                   publisher_id=publisher_id,
-                   event_type=event_type,
-                   priority=priority,
-                   payload=payload,
-                   timestamp=str(timeutils.utcnow()))
-    try:
-        driver.notify(context, msg)
-    except Exception, e:
-        LOG.exception(_("Problem '%(e)s' attempting to "
-                        "send to notification system. Payload=%(payload)s") %
-                        locals())
+               publisher_id=publisher_id,
+               event_type=event_type,
+               priority=priority,
+               payload=payload,
+               timestamp=str(timeutils.utcnow()))
+
+    for driver in _get_drivers():
+        try:
+            driver.notify(context, msg)
+        except Exception, e:
+            LOG.exception(_("Problem '%(e)s' attempting to "
+              "send to notification system. Payload=%(payload)s") %
+                            locals())
+
+
+_drivers = None
+
+
+def _get_drivers():
+    """Instantiate, cache, and return drivers based on the CONF."""
+    global _drivers
+    if _drivers is None:
+        _drivers = {}
+        for notification_driver in CONF.notification_driver:
+            add_driver(notification_driver)
+
+    return _drivers.values()
+
+
+def add_driver(notification_driver):
+    """Add a notification driver at runtime."""
+    # Make sure the driver list is initialized.
+    _get_drivers()
+    if isinstance(notification_driver, basestring):
+        # Load and add
+        try:
+            driver = importutils.import_module(notification_driver)
+            _drivers[notification_driver] = driver
+        except ImportError as e:
+            LOG.exception(_("Failed to load notifier %s. "
+                            "These notifications will not be sent.") %
+                            notification_driver)
+    else:
+        # Driver is already loaded; just add the object.
+        _drivers[notification_driver] = notification_driver
+
+
+def _reset_drivers():
+    """Used by unit tests to reset the drivers."""
+    global _drivers
+    _drivers = None

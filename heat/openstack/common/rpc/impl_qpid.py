@@ -181,9 +181,8 @@ class TopicConsumer(ConsumerBase):
         """
 
         super(TopicConsumer, self).__init__(session, callback,
-                                            "%s/%s" % (conf.control_exchange,
-                                                       topic),
-                                            {}, name or topic, {})
+                "%s/%s" % (rpc_amqp.get_control_exchange(conf), topic),
+                {}, name or topic, {})
 
 
 class FanoutConsumer(ConsumerBase):
@@ -256,9 +255,8 @@ class TopicPublisher(Publisher):
     def __init__(self, conf, session, topic):
         """init a 'topic' publisher.
         """
-        super(TopicPublisher, self).__init__(
-            session,
-            "%s/%s" % (conf.control_exchange, topic))
+        super(TopicPublisher, self).__init__(session,
+                "%s/%s" % (rpc_amqp.get_control_exchange(conf), topic))
 
 
 class FanoutPublisher(Publisher):
@@ -276,10 +274,9 @@ class NotifyPublisher(Publisher):
     def __init__(self, conf, session, topic):
         """init a 'topic' publisher.
         """
-        super(NotifyPublisher, self).__init__(
-            session,
-            "%s/%s" % (conf.control_exchange, topic),
-            {"durable": True})
+        super(NotifyPublisher, self).__init__(session,
+                "%s/%s" % (rpc_amqp.get_control_exchange(conf), topic),
+                {"durable": True})
 
 
 class Connection(object):
@@ -329,7 +326,7 @@ class Connection(object):
         if self.conf.qpid_reconnect_interval:
             self.connection.reconnect_interval = (
                 self.conf.qpid_reconnect_interval)
-        self.connection.hearbeat = self.conf.qpid_heartbeat
+        self.connection.heartbeat = self.conf.qpid_heartbeat
         self.connection.protocol = self.conf.qpid_protocol
         self.connection.tcp_nodelay = self.conf.qpid_tcp_nodelay
 
