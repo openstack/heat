@@ -51,7 +51,8 @@ class User(Resource):
         tenant_id = self.context.tenant_id
         user = self.keystone().users.create(self.physical_resource_name(),
                                             passwd,
-                                            '%s@heat-api.org' % self.name,
+                                            '%s@heat-api.org' %
+                                            self.physical_resource_name(),
                                             tenant_id=tenant_id,
                                             enabled=True)
         self.instance_id_set(user.id)
@@ -65,8 +66,8 @@ class User(Resource):
         try:
             user = self.keystone().users.get(DummyId(self.instance_id))
         except Exception as ex:
-            logger.info('user %s/%s does not exist' % (self.name,
-                                                       self.instance_id))
+            logger.info('user %s/%s does not exist' %
+                        (self.physical_resource_name(), self.instance_id))
             return
 
         # tempory hack to work around an openstack bug.
@@ -96,17 +97,18 @@ class User(Resource):
             raise exception.Error(reason)
 
     def FnGetRefId(self):
-        return unicode(self.name)
+        return unicode(self.physical_resource_name())
 
     def FnGetAtt(self, key):
         res = None
         if key == 'Policies':
             res = self.properties['Policies']
         else:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
+            raise exception.InvalidTemplateAttribute(
+                    resource=self.physical_resource_name(), key=key)
 
-        logger.info('%s.GetAtt(%s) == %s' % (self.name, key, res))
+        logger.info('%s.GetAtt(%s) == %s' % (self.physical_resource_name(),
+                                             key, res))
         return unicode(res)
 
 
@@ -178,8 +180,9 @@ class AccessKey(Resource):
         if key == 'SecretAccessKey':
             res = self._secret_accesskey()
         else:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
+            raise exception.InvalidTemplateAttribute(
+                        resource=self.physical_resource_name(), key=key)
 
-        logger.info('%s.GetAtt(%s) == %s' % (self.name, key, res))
+        logger.info('%s.GetAtt(%s) == %s' % (self.physical_resource_name(),
+                                             key, res))
         return unicode(res)
