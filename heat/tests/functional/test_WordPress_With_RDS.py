@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #
 
+import os
 import util
 import verify
 import nose
@@ -28,24 +29,31 @@ class WordPressRDSFunctionalTest(unittest.TestCase):
             'DBUsername=dbuser',
             'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.func_utils = util.FuncUtils()
+        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+            stack_paramstr)
+        self.WebServer = util.Instance('WebServer')
 
-        self.func_utils.prepare_jeos('F17', 'x86_64', 'cfntools')
-        self.func_utils.create_stack(template, 'F17')
-        self.func_utils.check_cfntools()
-        self.func_utils.wait_for_provisioning()
-        self.func_utils.check_user_data(template)
-
-        self.ssh = self.func_utils.get_ssh_client()
+    def tearDown(self):
+        self.stack.cleanup()
 
     def test_instance(self):
+        self.stack.create()
+        self.WebServer.wait_for_boot()
+        self.WebServer.check_cfntools()
+        self.WebServer.wait_for_provisioning()
+
         # ensure wordpress was installed by checking for expected
         # configuration file over ssh
         wp_file = '/usr/share/wordpress/wp-config.php'
-        stdin, stdout, sterr = self.ssh.exec_command('ls ' + wp_file)
-        result = stdout.readlines().pop().rstrip()
-        self.assertTrue(result == wp_file)
+        self.assertTrue(self.WebServer.file_present(wp_file))
         print "Wordpress installation detected"
+
+        # Verify the output URL parses as expected, ie check that
+        # the wordpress installation is operational
+        stack_url = self.stack.get_stack_output("WebsiteURL")
+        print "Got stack output WebsiteURL=%s, verifying" % stack_url
+        ver = verify.VerifyStack()
+        self.assertTrue(ver.verify_wordpress(stack_url))
 
         # Check the DB_HOST value in the wordpress config is sane
         # ie not localhost, we don't have any way to get the IP of
@@ -54,16 +62,9 @@ class WordPressRDSFunctionalTest(unittest.TestCase):
         # one under /usr/share, the template only seds the RDS instance
         # IP into the /usr/share one, which seems to work but could be a
         # template bug..
-        stdin, stdout, sterr = self.ssh.exec_command('grep DB_HOST ' + wp_file)
+        stdin, stdout, sterr =\
+            self.WebServer.get_ssh_client().exec_command('grep DB_HOST '
+                                                         + wp_file)
         result = stdout.readlines().pop().rstrip().split('\'')
         print "Checking wordpress DB_HOST, got %s" % result[3]
         self.assertTrue("localhost" != result[3])
-
-        # Verify the output URL parses as expected, ie check that
-        # the wordpress installation is operational
-        stack_url = self.func_utils.get_stack_output("WebsiteURL")
-        print "Got stack output WebsiteURL=%s, verifying" % stack_url
-        ver = verify.VerifyStack()
-        self.assertTrue(ver.verify_wordpress(stack_url))
-
-        self.func_utils.cleanup()
