@@ -294,10 +294,7 @@ class Stack(object):
 
         keyname = self.novaclient.keypairs.list().pop().name
 
-        self.heatclient = heat_client.get_client('0.0.0.0', 8000,
-            self.creds['username'], self.creds['password'],
-            self.creds['tenant'], self.creds['auth_url'],
-            self.creds['strategy'], None, None, False)
+        self.heatclient = self._create_heat_client()
 
         assert self.heatclient
 
@@ -313,6 +310,20 @@ class Stack(object):
         parameters.update(self.heatclient.format_parameters(template_params))
         result = self.heatclient.create_stack(**parameters)
 
+        self._check_create_result(result)
+
+        alist = None
+        tries = 0
+
+        print 'Waiting for stack creation to be completed'
+        while self.in_state('CREATE_IN_PROGRESS'):
+            tries += 1
+            assert tries < 500
+            time.sleep(10)
+
+        assert self.in_state('CREATE_COMPLETE')
+
+    def _check_create_result(self, result):
         # Check result looks OK
         root = etree.fromstring(result)
         create_list = root.xpath('/CreateStackResponse/CreateStackResult')
@@ -325,16 +336,11 @@ class Stack(object):
         print "Checking %s contains name %s" % (stackid, self.stackname)
         assert idname == self.stackname
 
-        alist = None
-        tries = 0
-
-        print 'Waiting for stack creation to be completed'
-        while self.in_state('CREATE_IN_PROGRESS'):
-            tries += 1
-            assert tries < 500
-            time.sleep(10)
-
-        assert self.in_state('CREATE_COMPLETE')
+    def _create_heat_client(self):
+        return heat_client.get_client('0.0.0.0', 8000,
+            self.creds['username'], self.creds['password'],
+            self.creds['tenant'], self.creds['auth_url'],
+            self.creds['strategy'], None, None, False)
 
     # during nose test execution this file will be imported even if
     # the unit tag was specified
@@ -439,7 +445,9 @@ class Stack(object):
         parameters = {'StackName': self.stackname}
         c = self.get_heat_client()
         result = c.describe_stacks(**parameters)
+        return self._find_stack_output(result, output_key)
 
+    def _find_stack_output(self, result, output_key):
         # Extract the OutputValue for the specified OutputKey
         root = etree.fromstring(result)
         output_list = root.xpath('//member[OutputKey="' + output_key + '"]')
@@ -476,17 +484,10 @@ class StackBoto(Stack):
     Version of the Stack class which uses the boto client (hence AWS auth and
     the CFN API).
     '''
-    def __init__(self, template_file, distribution, arch, jeos_type,
-            stack_paramstr):
+    def _check_create_result(self, result):
+        pass
 
-        self.prepare_jeos(distribution, arch, jeos_type)
-
-        self.novaclient = nova_client.Client(self.creds['username'],
-            self.creds['password'], self.creds['tenant'],
-            self.creds['auth_url'], service_type='compute')
-
-        keyname = self.novaclient.keypairs.list().pop().name
-
+    def _create_heat_client(self):
         # Connect to the keystone client with the supplied credentials
         # and extract the ec2-credentials, so we can pass them into the
         # boto client
@@ -507,63 +508,12 @@ class StackBoto(Stack):
         # most of the arguments passed to heat_client_boto are for
         # compatibility with the non-boto client wrapper, and are
         # actually ignored, only the port and credentials are used
-        self.heatclient = heat_client_boto.get_client('0.0.0.0', 8000,
+        return heat_client_boto.get_client('0.0.0.0', 8000,
             self.creds['username'], self.creds['password'],
             self.creds['tenant'], self.creds['auth_url'],
             self.creds['strategy'], None, None, False,
             aws_access_key=ec2creds[0].access,
             aws_secret_key=ec2creds[0].secret)
-
-        assert self.heatclient
-
-        full_paramstr = stack_paramstr + ';' + ';'.join(['KeyName=' + keyname,
-                         'LinuxDistribution=' + distribution])
-        template_params = optparse.Values({'parameters': full_paramstr})
-
-        # Format parameters and create the stack
-        parameters = {}
-        parameters['StackName'] = self.stackname
-        template_path = self.basepath + '/templates/' + template_file
-        parameters['TemplateBody'] = open(template_path).read()
-        parameters.update(self.heatclient.format_parameters(template_params))
-        result = self.heatclient.create_stack(**parameters)
-
-        alist = None
-        tries = 0
-        print 'Waiting for stack creation to be completed'
-        while self.in_state('CREATE_IN_PROGRESS'):
-            tries += 1
-            assert tries < 500
-            time.sleep(10)
-
-        assert self.in_state('CREATE_COMPLETE')
-
-    # during nose test execution this file will be imported even if
-    # the unit tag was specified
-    try:
-        os.environ['OS_AUTH_STRATEGY']
-    except KeyError:
-        raise SkipTest('OS_AUTH_STRATEGY not set, skipping functional test')
-
-    if os.environ['OS_AUTH_STRATEGY'] != 'keystone':
-        print 'keystone authentication required'
-        assert False
-
-    creds = dict(username=os.environ['OS_USERNAME'],
-            password=os.environ['OS_PASSWORD'],
-            tenant=os.environ['OS_TENANT_NAME'],
-            auth_url=os.environ['OS_AUTH_URL'],
-            strategy=os.environ['OS_AUTH_STRATEGY'])
-    dbusername = 'testuser'
-    stackname = 'teststack'
-
-    # this test is in heat/tests/functional, so go up 3 dirs
-    basepath = os.path.abspath(
-            os.path.dirname(os.path.realpath(__file__)) + '/../../..')
-
-    novaclient = None
-    glanceclient = None
-    heatclient = None
 
     def in_state(self, state):
         stack_list = self.heatclient.list_stacks(StackName=self.stackname)
@@ -580,14 +530,7 @@ class StackBoto(Stack):
 
         return [e.physical_resource_id for e in events if match(e)]
 
-    def get_stack_output(self, output_key):
-        '''
-        Extract a specified output from the DescribeStacks details
-        '''
-        # Get the DescribeStacks result for this stack
-        parameters = {'StackName': self.stackname}
-        c = self.get_heat_client()
-        result = c.describe_stacks(**parameters)
+    def _find_stack_output(self, result, output_key):
         assert len(result) == 1
 
         for o in result[0].outputs:
