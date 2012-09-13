@@ -30,6 +30,6 @@ def notify(_context, message):
                            CONF.default_notification_level)
     priority = priority.lower()
     logger = logging.getLogger(
-            'heat.openstack.common.notification.%s' %
-            message['event_type'])
+        'heat.openstack.common.notification.%s' %
+        message['event_type'])
     getattr(logger, priority)(jsonutils.dumps(message))
