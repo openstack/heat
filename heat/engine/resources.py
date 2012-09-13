@@ -313,6 +313,12 @@ class Resource(object):
     def physical_resource_name(self):
         return '%s.%s' % (self.stack.name, self.name)
 
+    def physical_resource_name_find(self, resource_name):
+        if name in self.stack:
+            return '%s.%s' % (self.stack.name, name)
+        else:
+            raise IndexError('no such resource')
+
     def validate(self):
         logger.info('Validating %s' % str(self))
 

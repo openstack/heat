@@ -189,7 +189,12 @@ class Instance(resources.Resource):
         return self.mime_string
 
     def handle_create(self):
-        security_groups = self.properties.get('SecurityGroups')
+        if self.properties.get('SecurityGroups') == None:
+            security_groups = None
+        else:
+            security_groups = [self.physical_resource_name_find(sg) for sg in
+                    self.properties.get('SecurityGroups')]
+
         userdata = self.properties['UserData']
         userdata += '\ntouch /var/lib/cloud/instance/provision-finished\n'
         flavor = self.properties['InstanceType']
