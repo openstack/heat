@@ -315,7 +315,7 @@ class Resource(object):
 
     def physical_resource_name_find(self, resource_name):
         if name in self.stack:
-            return '%s.%s' % (self.stack.name, name)
+            return '%s.%s' % (self.stack.name, resource_name)
         else:
             raise IndexError('no such resource')
 
