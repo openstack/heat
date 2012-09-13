@@ -75,33 +75,34 @@ class Instance(object):
 
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        ip = None
+        self.ip = None
         tries = 0
-        while ip is None:
+        while self.ip is None:
             servers = self.novaclient.servers.list()
             for server in servers:
                 if server.name == self.name:
                     address = server.addresses
                     if address:
-                        ip = address.items()[0][1][0]['addr']
+                        self.ip = address.items()[0][1][0]['addr']
                 time.sleep(10)
                 tries += 1
                 assert tries < 500
-            print 'Instance (%s) ip (%s) status (%s)' % (self.name, ip,
+            print 'Instance (%s) ip (%s) status (%s)' % (self.name, self.ip,
                  server.status)
 
         tries = 0
         while True:
             try:
-                subprocess.check_output(['nc', '-z', ip, '22'])
+                subprocess.check_output(['nc', '-z', self.ip, '22'])
             except Exception:
                 print('Instance (%s) ip (%s) SSH not up yet, waiting...' %
-                      (self.name, ip))
+                      (self.name, self.ip))
                 time.sleep(10)
                 tries += 1
                 assert tries < 50
             else:
-                print 'Instance (%s) ip (%s) SSH detected.' % (self.name, ip)
+                print 'Instance (%s) ip (%s) SSH detected.' % (self.name,
+                        self.ip)
                 break
 
         tries = 0
@@ -109,8 +110,8 @@ class Instance(object):
             try:
                 tries += 1
                 assert tries < 50
-                self.ssh.connect(ip, username='ec2-user', allow_agent=True,
-                    look_for_keys=True, password='password')
+                self.ssh.connect(self.ip, username='ec2-user',
+                    allow_agent=True, look_for_keys=True, password='password')
             except paramiko.AuthenticationException:
                 print 'Authentication error'
                 time.sleep(2)
@@ -118,11 +119,11 @@ class Instance(object):
                 if e.errno != errno.EHOSTUNREACH:
                     raise
                 print('Instance (%s) ip (%s) connecting via SSH.' %
-                      (self.name, ip))
+                      (self.name, self.ip))
                 time.sleep(2)
             else:
                 print('Instance (%s) ip (%s) connected via SSH.' %
-                      (self.name, ip))
+                      (self.name, self.ip))
                 break
         self.sftp = self.ssh.open_sftp()
 
@@ -135,14 +136,14 @@ class Instance(object):
                 if e.errno == errno.ENOENT:
                     assert tries < 50
                     print("Instance (%s) ip (%s) not booted, waiting..." %
-                          (self.name, ip))
+                          (self.name, self.ip))
                     time.sleep(15)
                 else:
                     print e.errno
                     raise
             else:
                 print("Instance (%s) ip (%s) finished booting." %
-                      (self.name, ip))
+                      (self.name, self.ip))
                 break
 
     def exec_command(self, cmd):
@@ -155,6 +156,13 @@ class Instance(object):
         assert len(lines) == 1
         result = lines.pop().rstrip()
         return result == path
+
+    def floating_ip_present(self):
+        floating_ips = self.novaclient.floating_ips.list()
+        for eip in floating_ips:
+            if self.ip == eip.fixed_ip:
+                return True
+        return False
 
     def check_cfntools(self):
         stdin, stdout, stderr = \
