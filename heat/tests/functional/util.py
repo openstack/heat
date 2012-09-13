@@ -388,6 +388,14 @@ class Stack(object):
         c = self.get_heat_client()
         c.delete_stack(**parameters)
 
+        print 'Waiting for stack deletion to be completed'
+        while self.in_state('DELETE_IN_PROGRESS'):
+            tries += 1
+            assert tries < 50
+            time.sleep(10)
+
+        assert self.in_state('DELETE_COMPLETE')
+
     def get_nova_client(self):
         if self.novaclient != None:
             return self.novaclient
