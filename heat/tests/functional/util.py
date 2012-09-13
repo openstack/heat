@@ -327,19 +327,14 @@ class Stack(object):
 
         alist = None
         tries = 0
+
         print 'Waiting for stack creation to be completed'
-        while not alist:
+        while self.in_state('CREATE_IN_PROGRESS'):
             tries += 1
             assert tries < 500
             time.sleep(10)
-            events = self.heatclient.list_stack_events(**parameters)
-            root = etree.fromstring(events)
-            alist = root.xpath('//member[StackName="' + self.stackname +
-                '" and ResourceStatus="CREATE_COMPLETE" \
-                and ResourceType="AWS::EC2::Instance"]')
 
-        elem = alist.pop()
-        self.phys_rec_id = elem.findtext('PhysicalResourceId')
+        assert self.in_state('CREATE_COMPLETE')
 
     # during nose test execution this file will be imported even if
     # the unit tag was specified
@@ -367,6 +362,13 @@ class Stack(object):
     novaclient = None
     glanceclient = None
     heatclient = None
+
+    def in_state(self, state):
+        stack_list = self.heatclient.list_stacks(StackName=self.stackname)
+        root = etree.fromstring(stack_list)
+        xpq = '//member[StackName="%s" and StackStatus="%s"]'
+        alist = root.xpath(xpq % (self.stackname, state))
+        return bool(alist)
 
     def cleanup(self):
         parameters = {'StackName': self.stackname}
@@ -445,6 +447,16 @@ class Stack(object):
         value = output.findtext('OutputValue')
         return value
 
+    def instance_phys_ids(self):
+        events = self.heatclient.list_stack_events(StackName=self.stackname)
+        root = etree.fromstring(events)
+        xpq = ('//member[StackName="%s" and '
+               'ResourceStatus="CREATE_COMPLETE" and '
+               'ResourceType="AWS::EC2::Instance"]')
+        alist = root.xpath(xpq % self.stackname)
+
+        return [elem.findtext('PhysicalResourceId') for elem in alist]
+
     def response_xml_item(self, response, prefix, key):
         '''
         Extract response item via xpath prefix and key name
@@ -519,19 +531,12 @@ class StackBoto(Stack):
         alist = None
         tries = 0
         print 'Waiting for stack creation to be completed'
-        while not alist:
+        while self.in_state('CREATE_IN_PROGRESS'):
             tries += 1
             assert tries < 500
             time.sleep(10)
-            events = self.heatclient.list_stack_events(**parameters)
-            alist = [e for e in events
-                      if e.stack_name == self.stackname
-                      and e.resource_status == "CREATE_COMPLETE"
-                      and e.resource_type == "AWS::EC2::Instance"]
 
-        elem = alist.pop()
-        self.phys_rec_id = elem.physical_resource_id
-        print "CREATE_COMPLETE, physical_resource_id=%s" % self.phys_rec_id
+        assert self.in_state('CREATE_COMPLETE')
 
     # during nose test execution this file will be imported even if
     # the unit tag was specified
@@ -559,6 +564,21 @@ class StackBoto(Stack):
     novaclient = None
     glanceclient = None
     heatclient = None
+
+    def in_state(self, state):
+        stack_list = self.heatclient.list_stacks(StackName=self.stackname)
+        this = [s for s in stack_list if s.stack_name == self.stackname][0]
+        return this.resource_status == state
+
+    def instance_phys_ids(self):
+        events = self.heatclient.list_stack_events(StackName=self.stackname)
+
+        def match(e):
+            return (e.stack_name == self.stackname and
+                    e.resource_status == "CREATE_COMPLETE" and
+                    e.resource_type == "AWS::EC2::Instance")
+
+        return [e.physical_resource_id for e in events if match(e)]
 
     def get_stack_output(self, output_key):
         '''

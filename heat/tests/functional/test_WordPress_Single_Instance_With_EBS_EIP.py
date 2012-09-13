@@ -54,7 +54,7 @@ class WordPressEBSEIPFunctionalTest(unittest.TestCase):
             found = 0
             mylist = nclient.floating_ips.list()
             for item in mylist:
-                if item.instance_id == self.stack.phys_rec_id:
+                if item.instance_id == self.stack.instance_phys_ids()[0]:
                     print 'floating IP found', item.ip
                     found = 1
                     break
