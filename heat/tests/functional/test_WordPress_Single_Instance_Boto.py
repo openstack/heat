@@ -56,5 +56,3 @@ class WordPressBotoFunctionalTest(unittest.TestCase):
         print "Got stack output WebsiteURL=%s, verifying" % stack_url
         ver = verify.VerifyStack()
         self.assertTrue(ver.verify_wordpress(stack_url))
-
-        self.stack.cleanup()
