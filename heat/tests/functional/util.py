@@ -389,6 +389,7 @@ class Stack(object):
         c.delete_stack(**parameters)
 
         print 'Waiting for stack deletion to be completed'
+        tries = 0
         while self.in_state('DELETE_IN_PROGRESS'):
             tries += 1
             assert tries < 50
