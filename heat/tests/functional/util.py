@@ -24,6 +24,8 @@ import json
 import time  # for sleep
 import nose
 import errno
+import tempfile
+import stat
 from pkg_resources import resource_string
 from lxml import etree
 
@@ -566,6 +568,27 @@ class StackBoto(Stack):
         for o in result[0].outputs:
             if o.key == output_key:
                 return o.value
+
+
+def add_host(ip, hostname):
+    with open('/etc/hosts', 'a') as hostfile:
+        hostfile.write(ip + '\t' + hostname)
+
+
+def remove_host(ip, hostname):
+    data = None
+    with open('/etc/hosts', 'r') as hostfile:
+        data = hostfile.readlines()
+
+    perms = stat.S_IMODE(os.stat('/etc/hosts').st_mode)
+
+    with tempfile.NamedTemporaryFile('w', dir='/etc', delete=False) as tmp:
+        for line in data:
+            if line.rstrip() == ip + '\t' + hostname:
+                continue
+            tmp.write(line)
+        os.chmod(tmp.name, perms)
+        os.rename(tmp.name, '/etc/hosts')
 
 
 if __name__ == '__main__':
