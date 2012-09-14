@@ -376,12 +376,19 @@ class Stack(object):
     glanceclient = None
     heatclient = None
 
-    def in_state(self, state):
+    def get_state(self):
         stack_list = self.heatclient.list_stacks(StackName=self.stackname)
         root = etree.fromstring(stack_list)
-        xpq = '//member[StackName="%s" and StackStatus="%s"]'
-        alist = root.xpath(xpq % (self.stackname, state))
-        return bool(alist)
+        xpq = '//member[StackName="%s"]'
+        alist = root.xpath(xpq % (self.stackname))
+        result = None
+        if len(alist):
+            item = alist.pop()
+            result = item.findtext("StackStatus")
+        return result
+
+    def in_state(self, state):
+        return state == self.get_state()
 
     def cleanup(self):
         parameters = {'StackName': self.stackname}
@@ -395,7 +402,11 @@ class Stack(object):
             assert tries < 50
             time.sleep(10)
 
-        assert self.in_state('DELETE_COMPLETE')
+        # final state for all stacks is DELETE_COMPLETE, but then they
+        # dissappear hence no result from list_stacks/get_state
+        # depending on timing, we could get either result here
+        end_state = self.get_state()
+        assert (end_state == 'DELETE_COMPLETE' or end_state == None)
 
     def get_nova_client(self):
         if self.novaclient != None:
@@ -531,10 +542,13 @@ class StackBoto(Stack):
             aws_access_key=ec2creds[0].access,
             aws_secret_key=ec2creds[0].secret)
 
-    def in_state(self, state):
-        stack_list = self.heatclient.list_stacks(StackName=self.stackname)
-        this = [s for s in stack_list if s.stack_name == self.stackname][0]
-        return this.resource_status == state
+    def get_state(self):
+        stack_list = self.heatclient.list_stacks()
+        this = [s for s in stack_list if s.stack_name == self.stackname]
+        result = None
+        if len(this):
+            result = this[0].stack_status
+        return result
 
     def instance_phys_ids(self):
         events = self.heatclient.list_stack_events(StackName=self.stackname)
