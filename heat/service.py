@@ -235,6 +235,7 @@ def wait():
             LOG.debug('%(flag)s : %(flag_get)s' % locals())
     try:
         _launcher.wait()
+        rpc.cleanup()
     except KeyboardInterrupt:
+        rpc.cleanup()
         _launcher.stop()
-    rpc.cleanup()
