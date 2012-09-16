@@ -69,8 +69,6 @@ class EngineManager(manager.Manager):
         arg1 -> RPC context.
         arg2 -> Name of the stack to look up.
         """
-        auth.authenticate(context)
-
         s = db_api.stack_get_by_name(context, stack_name)
         if s:
             stack = parser.Stack.load(context, s.id)
@@ -101,8 +99,6 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the stack you want to see, or None to see all
         arg3 -> Dict of http request parameters passed in from API side.
         """
-        auth.authenticate(context)
-
         if stack_identity is not None:
             stacks = [self._get_stack(context, stack_identity)]
         else:
@@ -127,8 +123,6 @@ class EngineManager(manager.Manager):
         arg4 -> Request parameters/args passed from API
         """
         logger.info('template is %s' % template)
-
-        auth.authenticate(context)
 
         if db_api.stack_get_by_name(None, stack_name):
             raise AttributeError('Stack already exists with that name')
@@ -165,8 +159,6 @@ class EngineManager(manager.Manager):
         """
         logger.info('template is %s' % template)
 
-        auth.authenticate(context)
-
         # Get the database representation of the existing stack
         db_stack = self._get_stack(context, stack_identity)
 
@@ -199,8 +191,6 @@ class EngineManager(manager.Manager):
         arg3 -> Template of stack you want to create.
         arg4 -> Params passed from API.
         """
-        auth.authenticate(context)
-
         logger.info('validate_template')
         if template is None:
             msg = _("No Template provided.")
@@ -238,7 +228,6 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the stack you want to see.
         arg3 -> Dict of http request parameters passed in from API side.
         """
-        auth.authenticate(context)
         s = self._get_stack(context, stack_identity)
         if s:
             return s.raw_template.template
@@ -251,9 +240,6 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the stack you want to delete.
         arg3 -> Params passed from API.
         """
-
-        auth.authenticate(context)
-
         st = self._get_stack(context, stack_identity)
 
         logger.info('deleting stack %s' % st.name)
@@ -269,9 +255,6 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the stack you want to get events for.
         arg3 -> Params passed from API.
         """
-
-        auth.authenticate(context)
-
         if stack_identity is not None:
             st = self._get_stack(context, stack_identity)
 
@@ -282,9 +265,6 @@ class EngineManager(manager.Manager):
         return {'events': [api.format_event(context, e) for e in events]}
 
     def event_create(self, context, event):
-
-        auth.authenticate(context)
-
         stack_name = event['stack']
         resource_name = event['resource']
         stack = db_api.stack_get_by_name(context, stack_name)
@@ -312,8 +292,6 @@ class EngineManager(manager.Manager):
             return [msg, None]
 
     def describe_stack_resource(self, context, stack_identity, resource_name):
-        auth.authenticate(context)
-
         s = self._get_stack(context, stack_identity)
 
         stack = parser.Stack.load(context, s.id)
@@ -328,8 +306,6 @@ class EngineManager(manager.Manager):
 
     def describe_stack_resources(self, context, stack_identity,
                                  physical_resource_id, logical_resource_id):
-        auth.authenticate(context)
-
         if stack_identity is not None:
             s = self._get_stack(context, stack_identity)
         else:
@@ -355,8 +331,6 @@ class EngineManager(manager.Manager):
                                          name_match(resource)]
 
     def list_stack_resources(self, context, stack_identity):
-        auth.authenticate(context)
-
         s = self._get_stack(context, stack_identity)
 
         stack = parser.Stack.load(context, s.id)

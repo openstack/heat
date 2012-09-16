@@ -48,7 +48,6 @@ def create_context(mocks, user='stacks_test_user',
     mocks.StubOutWithMock(ctx, 'tenant')
     ctx.username = user
     ctx.tenant = tenant
-    mocks.StubOutWithMock(auth, 'authenticate')
     return ctx
 
 
@@ -133,7 +132,6 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.username = 'stack_manager_create_test_user'
         self.tenant = 'stack_manager_create_test_tenant'
         self.ctx = create_context(self.m, self.username, self.tenant)
-        auth.authenticate(self.ctx).AndReturn(True)
 
         self.man = manager.EngineManager()
 
@@ -360,7 +358,6 @@ class stackManagerTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.ctx = create_context(self.m, self.username, self.tenant)
-        auth.authenticate(self.ctx).AndReturn(True)
         setup_mocks(self.m, self.stack)
         self.m.ReplayAll()
 
