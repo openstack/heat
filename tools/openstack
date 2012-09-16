@@ -82,10 +82,9 @@ function os_start() {
     then
         sudo vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
     fi
-    for svc in api objectstore compute network volume scheduler cert
+    for svc in api cert objectstore compute network volume scheduler
     do
         sudo systemctl $action openstack-nova-$svc.service
-        sleep 1
     done
 }
 
