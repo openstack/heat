@@ -41,10 +41,12 @@ from heat import client as heat_client
 from heat import boto_client as heat_client_boto
 from keystoneclient.v2_0 import client
 
+DEFAULT_STACKNAME = 'teststack'
+
 
 class Instance(object):
-    def __init__(self, instance_name):
-        self.name = 'teststack.%s' % instance_name
+    def __init__(self, instance_name, stackname=DEFAULT_STACKNAME):
+        self.name = '%s.%s' % (stackname, instance_name)
 
         # during nose test execution this file will be imported even if
         # the unit tag was specified
@@ -63,7 +65,6 @@ class Instance(object):
                 auth_url=os.environ['OS_AUTH_URL'],
                 strategy=os.environ['OS_AUTH_STRATEGY'])
         dbusername = 'testuser'
-        stackname = 'teststack'
 
         # this test is in heat/tests/functional, so go up 3 dirs
         basepath = os.path.abspath(
@@ -288,8 +289,9 @@ class Instance(object):
 
 class Stack(object):
     def __init__(self, template_file, distribution, arch, jeos_type,
-            stack_paramstr):
+            stack_paramstr, stackname=DEFAULT_STACKNAME):
 
+        self.stackname = stackname
         self.template_file = template_file
         self.distribution = distribution
         self.stack_paramstr = stack_paramstr
@@ -368,7 +370,6 @@ class Stack(object):
             auth_url=os.environ['OS_AUTH_URL'],
             strategy=os.environ['OS_AUTH_STRATEGY'])
     dbusername = 'testuser'
-    stackname = 'teststack'
 
     # this test is in heat/tests/functional, so go up 3 dirs
     basepath = os.path.abspath(
