@@ -255,8 +255,8 @@ class LoadBalancer(stack.Stack):
         if health_chk:
             check = 'check inter %ss fall %s rise %s' % (
                     health_chk['Interval'],
-                    health_chk['UnHealthyTheshold'],
-                    health_chk['HealthyTheshold'])
+                    health_chk['UnhealthyThreshold'],
+                    health_chk['HealthyThreshold'])
             timeout_check = 'timeout check %ds' % (health_chk['Timeout'])
         else:
             check = ''
