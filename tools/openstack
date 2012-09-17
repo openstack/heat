@@ -82,10 +82,16 @@ function os_start() {
     then
         sudo vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
     fi
-    for svc in api cert objectstore compute network volume scheduler
+
+    for svc in api cert objectstore compute volume scheduler
     do
         sudo systemctl $action openstack-nova-$svc.service
     done
+
+    # This must be started after openstack-nova-cert due to an SELinux
+    # policy problem. See https://bugzilla.redhat.com/show_bug.cgi?id=857747
+    sleep 2
+    sudo systemctl $action openstack-nova-network.service
 }
 
 function os_stop() {
