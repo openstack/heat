@@ -30,9 +30,6 @@ from eventlet import semaphore
 from eventlet.green import subprocess
 
 from heat.openstack.common import exception
-from heat.openstack.common import timeutils
-
-PERFECT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 def chunkreadable(iter, chunk_size=65536):
@@ -67,18 +64,6 @@ def generate_uuid():
 
 def gen_uuid():
     return uuid.uuid4()
-
-
-def strtime(at=None, fmt=PERFECT_TIME_FORMAT):
-    """Returns formatted utcnow."""
-    if not at:
-        at = timeutils.utcnow()
-    return at.strftime(fmt)
-
-
-def parse_strtime(timestr, fmt=PERFECT_TIME_FORMAT):
-    """Turn a formatted time back into a datetime."""
-    return datetime.datetime.strptime(timestr, fmt)
 
 
 class LoopingCallDone(Exception):

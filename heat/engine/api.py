@@ -13,7 +13,7 @@
 #    under the License.
 
 import re
-from heat.common import utils as heat_utils
+from heat.openstack.common import timeutils
 from heat.engine import parser
 from heat.engine import watchrule
 
@@ -90,8 +90,8 @@ def format_stack(stack):
     info = {
         STACK_NAME: stack.name,
         STACK_ID: dict(stack.identifier()),
-        STACK_CREATION_TIME: heat_utils.strtime(stack.created_time),
-        STACK_UPDATED_TIME: heat_utils.strtime(stack.updated_time),
+        STACK_CREATION_TIME: timeutils.isotime(stack.created_time),
+        STACK_UPDATED_TIME: timeutils.isotime(stack.updated_time),
         STACK_NOTIFICATION_TOPICS: [],  # TODO Not implemented yet
         STACK_PARAMETERS: stack.t[parser.PARAMETERS],
         STACK_DESCRIPTION: stack.t[parser.DESCRIPTION],
@@ -131,7 +131,7 @@ def format_stack_resource(resource):
     last_updated_time = resource.updated_time or resource.created_time
     res = {
         RES_DESCRIPTION: resource.parsed_template().get('Description', ''),
-        RES_UPDATED_TIME: heat_utils.strtime(last_updated_time),
+        RES_UPDATED_TIME: timeutils.isotime(last_updated_time),
         RES_NAME: resource.name,
         RES_PHYSICAL_ID: resource.instance_id or '',
         RES_METADATA: resource.metadata,
@@ -168,7 +168,7 @@ def format_event(context, event):
         EVENT_ID: event.id,
         EVENT_STACK_ID: dict(stack.identifier()),
         EVENT_STACK_NAME: stack.name,
-        EVENT_TIMESTAMP: heat_utils.strtime(event.created_at),
+        EVENT_TIMESTAMP: timeutils.isotime(event.created_at),
         EVENT_RES_NAME: event.logical_resource_id,
         EVENT_RES_PHYSICAL_ID: event.physical_resource_id,
         EVENT_RES_STATUS: event.name,
@@ -236,7 +236,7 @@ def format_watch(watch):
         WATCH_ACTIONS_ENABLED: watch.rule.get(RULE_ACTIONS_ENABLED),
         WATCH_ALARM_ACTIONS: watch.rule.get(RULE_ALARM_ACTIONS),
         WATCH_TOPIC: watch.rule.get(RULE_TOPIC),
-        WATCH_UPDATED_TIME: heat_utils.strtime(watch.updated_at),
+        WATCH_UPDATED_TIME: timeutils.isotime(watch.updated_at),
         WATCH_DESCRIPTION: watch.rule.get(RULE_DESCRIPTION),
         WATCH_NAME: watch.name,
         WATCH_COMPARISON: watch.rule.get(RULE_COMPARISON),
@@ -249,7 +249,7 @@ def format_watch(watch):
         WATCH_PERIOD: watch.rule.get(RULE_PERIOD),
         WATCH_STATE_REASON: watch.rule.get(RULE_STATE_REASON),
         WATCH_STATE_REASON_DATA: watch.rule.get(RULE_STATE_REASON_DATA),
-        WATCH_STATE_UPDATED_TIME: heat_utils.strtime(
+        WATCH_STATE_UPDATED_TIME: timeutils.isotime(
                                   watch.rule.get(RULE_STATE_UPDATED_TIME)),
         WATCH_STATE_VALUE: watch.state,
         WATCH_STATISTIC: watch.rule.get(RULE_STATISTIC),
@@ -285,7 +285,7 @@ def format_watch_data(wd):
     result = {
         WATCH_DATA_ALARM: wd.watch_rule.name,
         WATCH_DATA_METRIC: metric_name,
-        WATCH_DATA_TIME: heat_utils.strtime(wd.created_at),
+        WATCH_DATA_TIME: timeutils.isotime(wd.created_at),
         WATCH_DATA_NAMESPACE: namespace,
         WATCH_DATA: metric_data
     }
