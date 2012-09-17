@@ -21,7 +21,8 @@ import os
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'composed', 'WordPressComposedInstances'])
+@attr(tag=['func', 'wordpress', 'composed',
+      'WordPress_Composed_Instances.template'])
 class WordPressComposedInstancesFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_Composed_Instances.template'
