@@ -403,7 +403,7 @@ class stackManagerTest(unittest.TestCase):
             user_data = ev['resource_properties']['UserData']
             self.assertNotEqual(user_data.find('wordpress'), -1)
             self.assertEqual(ev['resource_properties']['ImageId'],
-                             'F16-x86_64-gold')
+                             'F17-x86_64-gold')
             self.assertEqual(ev['resource_properties']['InstanceType'],
                              'm1.large')
 
