@@ -90,12 +90,12 @@ In the heat directory, run the install script::
 
     sudo ./install.sh
 
-Download Fedora 16 DVD and copy it to libvirt images location
+Download Fedora 17 DVD and copy it to libvirt images location
 -------------------------------------------------------------
 
 ::
 
-  sudo cp Downloads/Fedora-16-x86_64-DVD.iso /var/lib/libvirt/images
+  sudo cp Downloads/Fedora-17-x86_64-DVD.iso /var/lib/libvirt/images
 
 Source the keystone credentials created with tools/openstack
 ------------------------------------------------------------
@@ -156,7 +156,7 @@ Create a JEOS with heat_jeos tools
 ----------------------------------
 ::
 
-    sudo -E heat-jeos -y create F16-x86_64-cfntools --register-with-glance
+    sudo -E heat-jeos -y create F17-x86_64-cfntools --register-with-glance
 
 Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``heat-jeos`` is run as root.
 
@@ -169,7 +169,7 @@ You can run ``heat-jeos list`` to pick a different JEOS image.
 Verify JEOS registration
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Check that there is a ``F16-x86_64-cfntools`` JEOS in glance:
+Check that there is a ``F17-x86_64-cfntools`` JEOS in glance:
 
 ..
     GLANCE_INDEX=$(cat <<EOF
@@ -181,7 +181,7 @@ Check that there is a ``F16-x86_64-cfntools`` JEOS in glance:
 ..
     EOF
     )
-    $GLANCE_INDEX | grep -q "F16-x86_64-cfntools"
+    $GLANCE_INDEX | grep -q "F17-x86_64-cfntools"
 
 Launch the Heat services
 ------------------------
