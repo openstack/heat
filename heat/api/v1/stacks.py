@@ -184,7 +184,7 @@ class StackController(object):
             # This is a list-of-dict with nasty "ParameterKey" : key
             # "ParameterValue" : value format.
             result['Parameters'] = [{'ParameterKey':k,
-                'ParameterValue':v.get('Default')}
+                'ParameterValue':v}
                 for (k, v) in result['Parameters'].items()]
 
             return self._stackid_format(result)

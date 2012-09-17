@@ -174,12 +174,13 @@ class CfnApiFunctionalTest(unittest.TestCase):
         self.assertEqual(disable_rollback, self.stack_disable_rollback)
 
         # Create a dict to lookup the expected template parameters
-        template_parameters = {'DBUsername': 'admin',
-                                    'LinuxDistribution': 'F16',
-                                    'InstanceType': 'm1.large',
+        template_parameters = {'DBUsername': 'dbuser',
+                                    'LinuxDistribution': 'F17',
+                                    'InstanceType': 'm1.xlarge',
                                     'DBRootPassword': 'admin',
-                                    'KeyName': 'None',
-                                    'DBPassword': 'admin',
+                                    'KeyName': self.stack.keyname,
+                                    'DBPassword':
+                                        os.environ['OS_PASSWORD'],
                                     'DBName': 'wordpress'}
 
         # We do a fully qualified xpath lookup to extract the paramter
