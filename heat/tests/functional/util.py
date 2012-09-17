@@ -302,12 +302,12 @@ class Stack(object):
         self.heatclient = self._create_heat_client()
 
     def create(self):
-        keyname = self.novaclient.keypairs.list().pop().name
+        self.keyname = self.novaclient.keypairs.list().pop().name
 
         assert self.heatclient
 
         full_paramstr = ';'.join([self.stack_paramstr,
-                                  'KeyName=' + keyname,
+                                  'KeyName=' + self.keyname,
                                   'LinuxDistribution=' + self.distribution])
         template_params = optparse.Values({'parameters': full_paramstr})
 
