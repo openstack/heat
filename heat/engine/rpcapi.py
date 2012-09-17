@@ -75,7 +75,7 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         The show_stack method returns the attributes of one stack.
 
         :param ctxt: RPC context.
-        :param stack_name: Name of the stack you want to see,
+        :param stack_identity: Name of the stack you want to see,
                            or None to see all
         :param params: Dict of http request parameters passed in from API side.
         """
@@ -149,7 +149,7 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         The delete_stack method deletes a given stack.
 
         :param ctxt: RPC context.
-        :param stack_name: Name of the stack you want to delete.
+        :param stack_identity: Name of the stack you want to delete.
         :param params: Params passed from API.
         """
         rpc_method = self.cast if cast else self.call
@@ -162,7 +162,7 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         The list_events method lists all events associated with a given stack.
 
         :param ctxt: RPC context.
-        :param stack_name: Name of the stack you want to get events for.
+        :param stack_identity: Name of the stack you want to get events for.
         :param params: Params passed from API.
         """
         return self.call(ctxt, self.make_msg('list_events',
