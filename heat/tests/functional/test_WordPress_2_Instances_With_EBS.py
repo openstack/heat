@@ -20,6 +20,7 @@ from nose.plugins.attrib import attr
 from heat.common import context
 from heat.engine import manager
 import unittest
+import os
 
 
 @attr(speed='slow')
@@ -29,7 +30,13 @@ class WordPress2InstancesWithEBS(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_2_Instances_With_EBS.template'
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools')
+        stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
+            'DBUsername=dbuser',
+            'DBPassword=' + os.environ['OS_PASSWORD']])
+
+        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+            stack_paramstr)
+
         self.WikiDatabase = util.Instance('WikiDatabase')
         self.WebServer = util.Instance('WebServer')
 
