@@ -172,7 +172,7 @@ class StackControllerTest(unittest.TestCase):
             u'updated_time': u'2012-07-09T09:13:11Z',
             u'parameters':{
             u'DBUsername': u'admin',
-            u'LinuxDistribution': u'F16',
+            u'LinuxDistribution': u'F17',
             u'InstanceType': u'm1.large',
             u'DBRootPassword': u'admin',
             u'DBPassword': u'admin',
@@ -213,7 +213,7 @@ class StackControllerTest(unittest.TestCase):
                 'Parameters':
                     [{'ParameterValue': u'admin',
                     'ParameterKey': u'DBUsername'},
-                    {'ParameterValue': u'F16',
+                    {'ParameterValue': u'F17',
                     'ParameterKey': u'LinuxDistribution'},
                     {'ParameterValue': u'm1.large',
                     'ParameterKey': u'InstanceType'},
@@ -258,7 +258,7 @@ class StackControllerTest(unittest.TestCase):
             u'updated_time': u'2012-07-09T09:13:11Z',
             u'parameters':{
             u'DBUsername': u'admin',
-            u'LinuxDistribution': u'F16',
+            u'LinuxDistribution': u'F17',
             u'InstanceType': u'm1.large',
             u'DBRootPassword': u'admin',
             u'DBPassword': u'admin',
@@ -296,7 +296,7 @@ class StackControllerTest(unittest.TestCase):
                 'Parameters':
                     [{'ParameterValue': u'admin',
                     'ParameterKey': u'DBUsername'},
-                    {'ParameterValue': u'F16',
+                    {'ParameterValue': u'F17',
                     'ParameterKey': u'LinuxDistribution'},
                     {'ParameterValue': u'm1.large',
                     'ParameterKey': u'InstanceType'},

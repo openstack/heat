@@ -551,7 +551,7 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (200, {'images': [
             {'id': 1, 'name': 'CentOS 5.2'},
             {'id': 2, 'name': 'My Server Backup'},
-            {'id': 3, 'name': 'F16-x86_64-gold'}
+            {'id': 3, 'name': 'F17-x86_64-gold'}
         ]})
 
     def get_images_detail(self, **kw):
@@ -579,7 +579,7 @@ class FakeHTTPClient(base_client.HTTPClient):
             },
             {
                 "id": 744,
-                "name": "F16-x86_64-gold",
+                "name": "F17-x86_64-gold",
                 "serverId": 9999,
                 "updated": "2010-10-10T12:00:00Z",
                 "created": "2010-08-10T12:00:00Z",
