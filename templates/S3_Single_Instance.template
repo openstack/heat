@@ -4,7 +4,7 @@
   "Description" : "Template to test S3 Bucket resources",
 
   "Resources" : {
-    "S3Bucket" : {
+    "S3BucketWebsite" : {
       "Type" : "AWS::S3::Bucket",
       "Properties" : {
         "AccessControl" : "PublicRead",
@@ -12,19 +12,25 @@
           "IndexDocument" : "index.html",
           "ErrorDocument" : "error.html"
          },
-		"DeletionPolicy" : "Delete"
+         "DeletionPolicy" : "Delete"
+      }
+    },
+    "S3Bucket" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "AccessControl" : "Private"
       }
     }
   },
 
   "Outputs" : {
-	"WebsiteURL" : {
+    "WebsiteURL" : {
       "Value" : { "Fn::GetAtt" : [ "S3Bucket", "WebsiteURL" ] },
       "Description" : "URL for website hosted on S3"
     },
-	"DomainName" : {
-	   "Value" : { "Fn::GetAtt" : [ "S3Bucket", "DomainName" ] },
-	   "Description" : "Domain of S3 host"
+    "DomainName" : {
+      "Value" : { "Fn::GetAtt" : [ "S3Bucket", "DomainName" ] },
+      "Description" : "Domain of S3 host"
     }
   }
 }

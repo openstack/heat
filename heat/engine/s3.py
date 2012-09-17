@@ -59,19 +59,24 @@ class S3Bucket(Resource):
             return {'Error':
                     'S3 services unavaialble because of missing swiftclient.'}
 
+    @staticmethod
+    def _create_container_name(resource_name):
+        return 'heat-%s-%s' % (resource_name,
+                               binascii.hexlify(os.urandom(10)))
+
     def handle_create(self):
         """Create a bucket."""
-        container = 'heat-%s-%s' % (self.resource_physical_name(),
-                                    binascii.hexlify(os.urandom(10)))
+        container = S3Bucket._create_container_name(
+                            self.physical_resource_name())
         headers = {}
         logger.debug('S3Bucket create container %s with headers %s' %
                      (container, headers))
-        if 'WebsiteConfiguration' in self.properties:
-            site_cfg = self.properties['WebsiteConfiguration']
+        if self.properties['WebsiteConfiguration'] is not None:
+            sc = self.properties['WebsiteConfiguration']
             # we will assume that swift is configured for the staticweb
             # wsgi middleware
-            headers['X-Container-Meta-Web-Index'] = site_cfg['IndexDocument']
-            headers['X-Container-Meta-Web-Error'] = site_cfg['ErrorDocument']
+            headers['X-Container-Meta-Web-Index'] = sc['IndexDocument']
+            headers['X-Container-Meta-Web-Error'] = sc['ErrorDocument']
 
         con = self.context
         ac = self.properties['AccessControl']
