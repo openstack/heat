@@ -70,11 +70,11 @@ Install OZ
 
 It is recommended to install the latest upstream oz, as this supports Fedora 17 (and Ubuntu U10/U12) guests::
 
-    git clone https://github.com/clalancette/oz.git
+    git clone -q https://github.com/clalancette/oz.git
     pushd oz
     rm -f ~/rpmbuild/RPMS/noarch/oz-*
     make rpm
-    sudo yum localinstall -y ~/rpmbuild/RPMS/noarch/oz-*
+    sudo yum -q -y localinstall ~/rpmbuild/RPMS/noarch/oz-*
     popd
 
 Note: In the steps above, it's only necessary to be root for the yum localinstall, it's recommended not to be root while building the rpm.
@@ -147,7 +147,7 @@ Download heat-jeos via git
 
 ::
 
-    git clone git://github.com/heat-api/heat-jeos.git
+    git clone -q git://github.com/heat-api/heat-jeos.git
     pushd heat-jeos
     sudo python setup.py install
     popd
@@ -198,7 +198,7 @@ Launch a Wordpress instance
 
 ::
 
-    heat -d create wordpress --template-file=templates/WordPress_Single_Instance.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpass;KeyName=${USER}_key"
+    heat create wordpress --template-file=templates/WordPress_Single_Instance.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpass;KeyName=${USER}_key"
 
 List stacks
 -----------
@@ -260,7 +260,7 @@ Because the software takes some time to install from the repository, it may be a
     HOST=`echo $WebsiteURL | sed -r -e 's#http://([^/]+)/.*#\1#'`
     
     retries=9
-    while ! ping -q -c 1 $HOST && ((retries-- > 0)); do
+    while ! ping -q -c 1 $HOST >/dev/null && ((retries-- > 0)); do
         echo "Waiting for host networking..." >&2
         sleep 2
     done
