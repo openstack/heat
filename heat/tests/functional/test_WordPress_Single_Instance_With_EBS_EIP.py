@@ -24,7 +24,7 @@ import os
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'WordPress_Single_Instance_With_EBS_EIP.template',
+@attr(tag=['func', 'WordPress_Single_Instance_With_EBS_EIP.template', 'F17',
       'wordpress', 'ebs', 'eip'])
 class WordPressEBSEIPFunctionalTest(unittest.TestCase):
     def setUp(self):

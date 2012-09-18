@@ -21,7 +21,8 @@ import os
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'haproxy', 'HAProxy_Single_Instance.template'])
+@attr(tag=['func', 'wordpress', 'haproxy', 'F17',
+           'HAProxy_Single_Instance.template'])
 class HAProxyFunctionalTest(unittest.TestCase):
     def setUp(self):
         # The HAProxy template somewhat un-usefully load-balances a single

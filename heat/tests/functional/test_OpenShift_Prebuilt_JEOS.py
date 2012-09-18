@@ -21,7 +21,8 @@ import os
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'openshift', 'OpenShift_Prebuilt_JEOS.template'])
+@attr(tag=['func', 'openshift', 'F16-openshift',
+           'OpenShift_Prebuilt_JEOS.template'])
 class OpenShiftFunctionalTest(unittest.TestCase):
 
     def tearDown(self):

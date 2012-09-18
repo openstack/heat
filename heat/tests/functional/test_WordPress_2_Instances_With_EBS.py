@@ -24,7 +24,7 @@ import os
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', '2instance', 'ebs',
+@attr(tag=['func', 'wordpress', '2instance', 'ebs', 'F17',
       'WordPress_2_Instances_With_EBS.template'])
 class WordPress2InstancesWithEBS(unittest.TestCase):
     def setUp(self):

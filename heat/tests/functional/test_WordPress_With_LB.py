@@ -21,7 +21,7 @@ import os
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'LB', 'WordPress_With_LB.template'])
+@attr(tag=['func', 'wordpress', 'LB', 'F17', 'WordPress_With_LB.template'])
 class WordPressWithLBFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_With_LB.template'
