@@ -154,6 +154,13 @@ class Instance(object):
     def exec_command(self, cmd):
         return self.ssh.exec_command(cmd)
 
+    def exists(self):
+        servers = self.novaclient.servers.list()
+        for server in servers:
+            if server.name == self.name:
+                return True
+        return False
+
     def file_present(self, path):
         print "Verifying file '%s' exists" % path
         stdin, stdout, sterr = self.ssh.exec_command('ls "%s"' % path)
