@@ -269,7 +269,7 @@
   "Outputs" : {
     "URL" : {
       "Description" : "The URL of the website",
-      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]}]]}
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]}, "/wordpress"]] }
     }
   }
 }
