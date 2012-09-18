@@ -70,8 +70,10 @@ def authenticate(con, service_type='orchestration', service_name='heat'):
     """
 
     if con.password is not None:
-        nova = client.Client(con.username, con.password,
-                             con.tenant, con.auth_url,
+        nova = client.Client(username=con.username,
+                             api_key=con.password,
+                             project_id=con.tenant,
+                             auth_url=con.auth_url,
                              service_type=service_type,
                              service_name=service_name)
         nova.authenticate()
