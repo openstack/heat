@@ -316,6 +316,7 @@ class LoadBalancer(stack.Stack):
         save it to the db.
         rely on the cfn-hup to reconfigure HAProxy
         '''
+        self.calculate_properties()
         self.properties['Instances'] = inst_list
         templ = json.loads(lb_template)
         cfg = self._haproxy_config(templ)
