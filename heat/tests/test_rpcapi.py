@@ -20,6 +20,7 @@ Unit Tests for heat.engine.rpcapi
 
 
 import stubout
+from nose.plugins.attrib import attr
 import unittest
 
 from heat.common import config
@@ -29,6 +30,7 @@ from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 
 
+@attr(tag=['unit', 'rpcapi'])
 class EngineRpcAPITestCase(unittest.TestCase):
 
     def setUp(self):
@@ -85,7 +87,7 @@ class EngineRpcAPITestCase(unittest.TestCase):
             self.assertEqual(arg, expected_arg)
 
     def test_show_stack(self):
-        self._test_engine_api('show_stack', 'call', stack_name='wordpress',
+        self._test_engine_api('show_stack', 'call', stack_identity='wordpress',
                               params={'Action': 'ListStacks'})
 
     def test_create_stack(self):
@@ -95,7 +97,8 @@ class EngineRpcAPITestCase(unittest.TestCase):
                               args={'timeout_mins': u'30'})
 
     def test_update_stack(self):
-        self._test_engine_api('update_stack', 'call', stack_name='wordpress',
+        self._test_engine_api('update_stack', 'call',
+                              stack_identity='wordpress',
                               template={u'Foo': u'bar'},
                               params={u'InstanceType': u'm1.xlarge'},
                               args={})
@@ -106,34 +109,34 @@ class EngineRpcAPITestCase(unittest.TestCase):
 
     def test_get_template(self):
         self._test_engine_api('get_template', 'call',
-                              stack_name='wordpress', params={})
+                              stack_identity='wordpress', params={})
 
     def test_delete_stack_cast(self):
         self._test_engine_api('delete_stack', 'cast',
-                              stack_name='wordpress', params={})
+                              stack_identity='wordpress', params={})
 
     def test_delete_stack_call(self):
         self._test_engine_api('delete_stack', 'call',
-                              stack_name='wordpress', params={})
+                              stack_identity='wordpress', params={})
 
     def test_list_events(self):
         self._test_engine_api('list_events', 'call',
-                              stack_name='wordpress', params={})
+                              stack_identity='wordpress', params={})
 
     def test_describe_stack_resource(self):
         self._test_engine_api('describe_stack_resource', 'call',
-                              stack_name='wordpress',
+                              stack_identity='wordpress',
                               resource_name='LogicalResourceId')
 
     def test_describe_stack_resources(self):
         self._test_engine_api('describe_stack_resources', 'call',
-                              stack_name='wordpress',
+                              stack_identity='wordpress',
                               physical_resource_id=u'404d-a85b-5315293e67de',
                               logical_resource_id=u'WikiDatabase')
 
     def test_list_stack_resources(self):
         self._test_engine_api('list_stack_resources', 'call',
-                              stack_name='wordpress')
+                              stack_identity='wordpress')
 
     def test_metadata_list_stacks(self):
         self._test_engine_api('metadata_list_stacks', 'call')
