@@ -21,7 +21,7 @@ import unittest
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'RDS',
+@attr(tag=['func', 'wordpress', 'RDS', 'F17',
       'WordPress_With_RDS.template'])
 class WordPressRDSFunctionalTest(unittest.TestCase):
     def setUp(self):

@@ -20,7 +20,7 @@ import os
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'HA',
+@attr(tag=['func', 'wordpress', 'HA', 'F17',
       'WordPress_Single_Instance_With_HA.template'])
 class HaFunctionalTest(unittest.TestCase):
     def setUp(self):

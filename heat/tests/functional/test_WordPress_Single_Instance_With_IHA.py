@@ -22,7 +22,7 @@ import time
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'HA',
+@attr(tag=['func', 'wordpress', 'HA', 'F17',
       'WordPress_Single_Instance_With_IHA.template'])
 class WordPressIHAFunctionalTest(unittest.TestCase):
     def setUp(self):

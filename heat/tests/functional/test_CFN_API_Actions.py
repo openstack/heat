@@ -23,7 +23,7 @@ import json
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'api', 'cfn'])
+@attr(tag=['func', 'wordpress', 'api', 'cfn', 'F17'])
 class CfnApiFunctionalTest(unittest.TestCase):
     '''
     This test launches a wordpress stack then attempts to verify

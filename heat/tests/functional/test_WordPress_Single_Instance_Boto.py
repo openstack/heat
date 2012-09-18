@@ -21,7 +21,8 @@ import os
 
 
 @attr(speed='slow')
-@attr(tag=['func', 'wordpress', 'WordPress_Single_Instance.template', 'boto'])
+@attr(tag=['func', 'wordpress', 'F17',
+           'WordPress_Single_Instance.template', 'boto'])
 class WordPressBotoFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_Single_Instance.template'
