@@ -66,7 +66,7 @@ class EIPTest(unittest.TestCase):
         resource = eip.ElasticIp(resource_name,
                                       t['Resources'][resource_name],
                                       stack)
-        self.assertEquals(None, resource.validate())
+        self.assertEqual(None, resource.validate())
         self.assertEqual(None, resource.create())
         self.assertEqual(eip.ElasticIp.CREATE_COMPLETE, resource.state)
         return resource
@@ -75,7 +75,7 @@ class EIPTest(unittest.TestCase):
         resource = eip.ElasticIpAssociation(resource_name,
                                       t['Resources'][resource_name],
                                       stack)
-        self.assertEquals(None, resource.validate())
+        self.assertEqual(None, resource.validate())
         self.assertEqual(None, resource.create())
         self.assertEqual(eip.ElasticIpAssociation.CREATE_COMPLETE,
                          resource.state)
@@ -92,13 +92,13 @@ class EIPTest(unittest.TestCase):
         stack = self.parse_stack(t)
         resource = self.create_eip(t, stack, 'IPAddress')
 
-        self.assertEquals('11.0.0.1', resource.FnGetRefId())
+        self.assertEqual('11.0.0.1', resource.FnGetRefId())
         resource.ipaddress = None
-        self.assertEquals('11.0.0.1', resource.FnGetRefId())
+        self.assertEqual('11.0.0.1', resource.FnGetRefId())
 
-        self.assertEquals('1', resource.FnGetAtt('AllocationId'))
+        self.assertEqual('1', resource.FnGetAtt('AllocationId'))
 
-        self.assertEquals(eip.ElasticIp.UPDATE_REPLACE,
+        self.assertEqual(eip.ElasticIp.UPDATE_REPLACE,
                           resource.handle_update())
 
         try:
@@ -128,7 +128,7 @@ class EIPTest(unittest.TestCase):
         association = self.create_association(t, stack, 'IPAssoc')
 
         # TODO sbaker, figure out why this is an empty string
-        #self.assertEquals('', association.FnGetRefId())
+        #self.assertEqual('', association.FnGetRefId())
 
         association.delete()
         resource.delete()

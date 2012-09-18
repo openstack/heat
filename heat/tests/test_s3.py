@@ -29,7 +29,7 @@ from heat.engine import parser
 from utils import skip_if
 
 try:
-    from swiftclients import client as swiftclient
+    from swiftclient import client as swiftclient
 except:
     skip_test = True
 else:
@@ -106,10 +106,10 @@ class s3Test(unittest.TestCase):
         self.assertTrue(re.match(self.container_pattern,
                                  ref_id))
 
-        self.assertEquals('localhost', resource.FnGetAtt('DomainName'))
+        self.assertEqual('localhost', resource.FnGetAtt('DomainName'))
         url = 'http://localhost:8080/v_2/%s' % ref_id
 
-        self.assertEquals(url, resource.FnGetAtt('WebsiteURL'))
+        self.assertEqual(url, resource.FnGetAtt('WebsiteURL'))
 
         try:
             resource.FnGetAtt('Foo')
@@ -117,7 +117,7 @@ class s3Test(unittest.TestCase):
         except s3.exception.InvalidTemplateAttribute:
             pass
 
-        self.assertEquals(s3.S3Bucket.UPDATE_REPLACE, resource.handle_update())
+        self.assertEqual(s3.S3Bucket.UPDATE_REPLACE, resource.handle_update())
 
         resource.delete()
         self.m.VerifyAll()
