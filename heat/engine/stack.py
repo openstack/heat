@@ -60,7 +60,8 @@ class Stack(Resource):
         Handle the creation of the nested stack from a given JSON template.
         '''
         template = parser.Template(child_template)
-        params = parser.Parameters(self.name, template, self._params())
+        params = parser.Parameters(self.physical_resource_name(), template,
+                                   self._params())
 
         self._nested = parser.Stack(self.context,
                                     self.physical_resource_name(),
@@ -93,8 +94,8 @@ class Stack(Resource):
 
     def FnGetAtt(self, key):
         if not key.startswith('Outputs.'):
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
+            raise exception.InvalidTemplateAttribute(
+                        resource=self.physical_resource_name(), key=key)
 
         prefix, dot, op = key.partition('.')
         stack = self.nested()
@@ -102,7 +103,7 @@ class Stack(Resource):
             # This seems like a hack, to get past validation
             return ''
         if op not in stack.outputs:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
+            raise exception.InvalidTemplateAttribute(
+                        resource=self.physical_resource_name(), key=key)
 
         return stack.output(op)
