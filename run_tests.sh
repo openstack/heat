@@ -97,9 +97,12 @@ if [ "$coverage" == 1 ]; then
     ${wrapper} coverage erase
 fi
 
+result=0
+
 # If functional or unit tests have been selected, run them
 if [ ! -z "$noseargs" ]; then
   run_tests
+  result=$?
 fi
 
 # Run pep8 if it was selected
@@ -113,3 +116,5 @@ if [ "$coverage" == 1 ]; then
     # Don't compute coverage for common code, which is tested elsewhere
     ${wrapper} coverage html --include='heat/*' --omit='heat/openstack/common/*' -d covhtml -i
 fi
+
+exit $result
