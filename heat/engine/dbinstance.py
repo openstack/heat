@@ -107,7 +107,7 @@ mysql_template = r'''
         }
       },
       "Properties": {
-        "ImageId": "F16-x86_64-cfntools",
+        "ImageId": "F17-x86_64-cfntools",
         "InstanceType": { "Fn::FindInMap": [ "DBInstanceToInstance",
                                              { "Ref": "DBInstanceClass" },
                                              "Instance" ] },
