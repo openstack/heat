@@ -24,13 +24,13 @@ import os
 @attr(tag=['func', 'wordpress', 'eip', 'ebs', 'F17'])
 class WordPress2EBSEIPFunctionalTest(unittest.TestCase):
     def setUp(self):
-        template = 'WordPress_2_Instances_With_EBS_EIP.template'
+        self.template = 'WordPress_2_Instances_With_EBS_EIP.template'
 
         stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
             'DBUsername=dbuser',
             'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+        self.stack = util.Stack(self.template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
 
         self.webserver = util.Instance('WebServer')
@@ -46,12 +46,12 @@ class WordPress2EBSEIPFunctionalTest(unittest.TestCase):
         self.webserver.wait_for_boot()
         self.webserver.check_cfntools()
         self.webserver.wait_for_provisioning()
-        self.webserver.check_user_data(template)
+        self.webserver.check_user_data(self.template)
 
         self.database.wait_for_boot()
         self.database.check_cfntools()
         self.database.wait_for_provisioning()
-        self.database.check_user_data(template)
+        self.database.check_user_data(self.template)
 
         # Check wordpress installation
         wp_config_file = '/etc/wordpress/wp-config.php'
