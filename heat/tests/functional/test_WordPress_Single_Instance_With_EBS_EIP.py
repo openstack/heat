@@ -36,19 +36,19 @@ class WordPressEBSEIPFunctionalTest(unittest.TestCase):
 
         self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
-        self.WikiDatabase = util.Instance('WikiDatabase')
+        self.WikiServer = util.Instance('WikiServer')
 
     def tearDown(self):
         self.stack.cleanup()
 
     def test_instance(self):
         self.stack.create()
-        self.WikiDatabase.wait_for_boot()
-        self.WikiDatabase.check_cfntools()
-        self.WikiDatabase.wait_for_provisioning()
+        self.WikiServer.wait_for_boot()
+        self.WikiServer.check_cfntools()
+        self.WikiServer.wait_for_provisioning()
 
         # ensure wordpress was installed
-        self.assertTrue(self.WikiDatabase.file_present
+        self.assertTrue(self.WikiServer.file_present
                         ('/etc/wordpress/wp-config.php'))
         print "Wordpress installation detected"
 
@@ -84,7 +84,7 @@ class WordPressEBSEIPFunctionalTest(unittest.TestCase):
         self.assertTrue(ver.verify_wordpress(eip_url))
 
         # Check EBS volume is present and mounted
-        stdin, stdout, sterr = self.WikiDatabase.exec_command(
+        stdin, stdout, sterr = self.WikiServer.exec_command(
                                 'grep vdc /proc/mounts')
         result = stdout.readlines().pop().rstrip()
         self.assertTrue(len(result))

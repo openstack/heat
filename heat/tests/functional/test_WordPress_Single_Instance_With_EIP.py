@@ -36,19 +36,19 @@ class WordPressEIPFunctionalTest(unittest.TestCase):
 
         self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
-        self.WikiDatabase = util.Instance('WikiDatabase')
+        self.WebServer = util.Instance('WebServer')
 
     def tearDown(self):
         self.stack.cleanup()
 
     def test_instance(self):
         self.stack.create()
-        self.WikiDatabase.wait_for_boot()
-        self.WikiDatabase.check_cfntools()
-        self.WikiDatabase.wait_for_provisioning()
+        self.WebServer.wait_for_boot()
+        self.WebServer.check_cfntools()
+        self.WebServer.wait_for_provisioning()
 
         # ensure wordpress was installed
-        self.assertTrue(self.WikiDatabase.file_present
+        self.assertTrue(self.WebServer.file_present
                         ('/etc/wordpress/wp-config.php'))
         print "Wordpress installation detected"
 
