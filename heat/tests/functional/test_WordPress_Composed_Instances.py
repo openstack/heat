@@ -36,7 +36,8 @@ class WordPressComposedInstancesFunctionalTest(unittest.TestCase):
 
         self.WebServer = util.Instance('WebServer')
 
-        self.MySqlDatabaseServer = util.Instance('MySqlDatabaseServer')
+        self.MySqlDatabaseServer = \
+            util.Instance('DatabaseTemplate.MySqlDatabaseServer')
 
     def tearDown(self):
         self.stack.cleanup()
