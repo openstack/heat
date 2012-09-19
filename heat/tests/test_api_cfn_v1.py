@@ -824,7 +824,7 @@ class StackControllerTest(unittest.TestCase):
                 'StackName': u'wordpress',
                 'ResourceProperties': {u'UserData': u'blah'},
                 'PhysicalResourceId': None,
-                'ResourceStatusData': u'state changed',
+                'ResourceStatusReason': u'state changed',
                 'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(response, expected)

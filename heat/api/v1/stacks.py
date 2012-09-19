@@ -428,7 +428,7 @@ class StackController(object):
                 engine_api.EVENT_RES_PHYSICAL_ID: 'PhysicalResourceId',
                 engine_api.EVENT_RES_PROPERTIES: 'ResourceProperties',
                 engine_api.EVENT_RES_STATUS: 'ResourceStatus',
-                engine_api.EVENT_RES_STATUS_DATA: 'ResourceStatusData',
+                engine_api.EVENT_RES_STATUS_DATA: 'ResourceStatusReason',
                 engine_api.EVENT_RES_TYPE: 'ResourceType',
                 engine_api.EVENT_STACK_ID: 'StackId',
                 engine_api.EVENT_STACK_NAME: 'StackName',
