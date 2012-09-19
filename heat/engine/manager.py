@@ -443,7 +443,7 @@ class EngineManager(manager.Manager):
             if s and s.status in (parser.Stack.CREATE_COMPLETE,
                                   parser.Stack.UPDATE_COMPLETE):
                 user_creds = db_api.user_creds_get(s.user_creds_id)
-                ctxt = ctxtlib.RequestContext.from_dict(dict(user_creds))
+                ctxt = ctxtlib.RequestContext.from_dict(user_creds)
                 stack = parser.Stack.load(ctxt, s.id)
                 for a in wr.rule[watchrule.WatchRule.ACTION_MAP[new_state]]:
                     greenpool.spawn_n(stack[a].alarm)

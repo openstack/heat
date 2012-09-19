@@ -211,11 +211,13 @@ def user_creds_create(values):
 
 
 def user_creds_get(user_creds_id):
-    result = model_query(None, models.UserCreds).get(user_creds_id)
-    result.password = auth.decrypt(result.password)
-    result.service_password = auth.decrypt(result.service_password)
-    result.aws_creds = auth.decrypt(result.aws_creds)
-
+    db_result = model_query(None, models.UserCreds).get(user_creds_id)
+    # Return a dict copy of db results, do not decrypt details into db_result
+    # or it can be committed back to the DB in decrypted form
+    result = dict(db_result)
+    result['password'] = auth.decrypt(result['password'])
+    result['service_password'] = auth.decrypt(result['service_password'])
+    result['aws_creds'] = auth.decrypt(result['aws_creds'])
     return result
 
 
