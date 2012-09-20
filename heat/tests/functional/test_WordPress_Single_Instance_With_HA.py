@@ -63,7 +63,7 @@ class HaFunctionalTest(unittest.TestCase):
         self.assertTrue(self.service_is_running('httpd'))
 
         # kill httpd
-        self.WikiDatabase.exec_command('sudo systemctl stop httpd.service')
+        self.WikiDatabase.exec_sudo_command('systemctl stop httpd.service')
 
         # check that httpd service recovers
         # should take less than 60 seconds, but no worse than 70 seconds
