@@ -65,7 +65,7 @@ class WordPressIHAFunctionalTest(unittest.TestCase):
         # Now shut down the instance via SSH, and wait for HA to reprovision
         # note it may not come back on the same IP
         stdin, stdout, stderr =\
-            self.WikiDatabase.get_ssh_client().exec_command('sudo /sbin/halt')
+            self.WikiDatabase.exec_sudo_command('/sbin/halt')
 
         # Now poll the stack events, as the current WikiDatabase instance
         # should be replaced with a new one
@@ -74,6 +74,8 @@ class WordPressIHAFunctionalTest(unittest.TestCase):
         tries = 0
         while (tries <= 500):
                 pollids = self.stack.instance_phys_ids()
+                print "Waiting for Instance to be replaced %s/%s %s" %\
+                      (tries, 500, pollids)
                 if (len(pollids) == 2):
                     self.assertTrue(pollids[1] != phys_res_ids[0])
                     print "Instance replaced, new ID = %s" % pollids[1]
@@ -85,6 +87,11 @@ class WordPressIHAFunctionalTest(unittest.TestCase):
         self.assertTrue(tries < 500)
 
         # Create a new Instance object and wait for boot
+        # It seems to be necessary to close the old WikiDatabase
+        # instance SSH transport, or paramiko throws an exception
+        # when the SSH daemon starts on the new instance if it comes
+        # up on the same IP address, suspect paramiko bug, TBC
+        self.WikiDatabase.close_ssh_client()
         self.WikiDatabaseNew = util.Instance(self, 'WikiDatabase')
         self.WikiDatabaseNew.wait_for_boot()
         self.WikiDatabaseNew.check_cfntools()
