@@ -34,9 +34,9 @@ class WordPressSingleEBSFunctionalTest(unittest.TestCase):
             'DBUsername=dbuser',
             'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+        self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
-        self.WikiDatabase = util.Instance('WikiDatabase')
+        self.WikiDatabase = util.Instance(self, 'WikiDatabase')
 
     def tearDown(self):
         self.stack.cleanup()

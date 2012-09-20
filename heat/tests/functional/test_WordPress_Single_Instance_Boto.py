@@ -31,9 +31,10 @@ class WordPressBotoFunctionalTest(unittest.TestCase):
             'DBUsername=dbuser',
             'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.stack = util.StackBoto(template, 'F17', 'x86_64', 'cfntools',
-            stack_paramstr)
-        self.WikiDatabase = util.Instance('WikiDatabase')
+        self.stack = util.StackBoto(self, template,
+                                    'F17', 'x86_64', 'cfntools',
+                                    stack_paramstr)
+        self.WikiDatabase = util.Instance(self, 'WikiDatabase')
 
     def tearDown(self):
         self.stack.cleanup()

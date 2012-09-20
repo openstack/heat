@@ -34,9 +34,9 @@ class WordPressEIPFunctionalTest(unittest.TestCase):
             'DBUsername=dbuser',
             'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+        self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
-        self.WebServer = util.Instance('WebServer')
+        self.WebServer = util.Instance(self, 'WebServer')
 
     def tearDown(self):
         self.stack.cleanup()

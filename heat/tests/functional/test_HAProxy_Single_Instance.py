@@ -33,9 +33,11 @@ class HAProxyFunctionalTest(unittest.TestCase):
                          'DBUsername=dbuser',
                          'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.stack = util.Stack(wp_template, 'F17', 'x86_64', 'cfntools',
+        self.stack = util.Stack(self, wp_template, 'F17', 'x86_64', 'cfntools',
                                 wp_paramstr)
-        self.WikiDatabase = util.Instance('WikiDatabase')
+        self.WikiDatabase = util.Instance(self, 'WikiDatabase')
+
+        self.hap_stack = None
 
     def tearDown(self):
         self.stack.cleanup()
@@ -63,14 +65,16 @@ class HAProxyFunctionalTest(unittest.TestCase):
 
         # So wordpress instance is up, we now launch the HAProxy instance
         # and prove wordpress is accessable via the proxy instance IP
+        hap_stackname = 'hap_teststack'
         hap_template = 'HAProxy_Single_Instance.template'
         hap_paramstr = ';'.join(['InstanceType=m1.xlarge',
                        "Server1=%s:80" % self.WikiDatabase.ip])
 
-        self.hap_stack = util.Stack(hap_template, 'F17', 'x86_64', 'cfntools',
-                                    hap_paramstr, stackname='hap_teststack')
-        self.LoadBalancerInstance = util.Instance('LoadBalancerInstance',
-                                                  self.hap_stack.stackname)
+        self.hap_stack = util.Stack(self, hap_template,
+                                    'F17', 'x86_64', 'cfntools',
+                                    hap_paramstr, stackname=hap_stackname)
+        self.LoadBalancerInstance = util.Instance(self, 'LoadBalancerInstance',
+                                                  hap_stackname)
         self.hap_stack.create()
         self.LoadBalancerInstance.wait_for_boot()
         self.LoadBalancerInstance.check_cfntools()

@@ -31,9 +31,9 @@ class AutoScalingMultiAZSampleFunctionalTest(unittest.TestCase):
                          'DBUsername=dbuser',
                          'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+        self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
-        self.WebServerGroup0 = util.Instance('WebServerGroup-0')
+        self.WebServerGroup0 = util.Instance(self, 'WebServerGroup-0')
 
     def tearDown(self):
         pass
@@ -54,7 +54,7 @@ class AutoScalingMultiAZSampleFunctionalTest(unittest.TestCase):
         # Give the load balancer 2 minutes to react
         sleep(2 * 60)
 
-        self.WebServerGroup1 = util.Instance('WebServerGroup-1')
+        self.WebServerGroup1 = util.Instance(self, 'WebServerGroup-1')
         # Verify the second instance gets launched
         self.assertTrue(self.WebServerGroup1.exists())
         self.WebServerGroup1.wait_for_boot()

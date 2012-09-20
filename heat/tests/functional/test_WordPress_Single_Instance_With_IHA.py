@@ -31,9 +31,9 @@ class WordPressIHAFunctionalTest(unittest.TestCase):
             'DBUsername=dbuser',
             'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+        self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
-        self.WikiDatabase = util.Instance('WikiDatabase')
+        self.WikiDatabase = util.Instance(self, 'WikiDatabase')
 
     def tearDown(self):
         self.stack.cleanup()
@@ -85,7 +85,7 @@ class WordPressIHAFunctionalTest(unittest.TestCase):
         self.assertTrue(tries < 500)
 
         # Create a new Instance object and wait for boot
-        self.WikiDatabaseNew = util.Instance('WikiDatabase')
+        self.WikiDatabaseNew = util.Instance(self, 'WikiDatabase')
         self.WikiDatabaseNew.wait_for_boot()
         self.WikiDatabaseNew.check_cfntools()
         self.WikiDatabaseNew.wait_for_provisioning()

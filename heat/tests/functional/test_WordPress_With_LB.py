@@ -30,12 +30,12 @@ class WordPressWithLBFunctionalTest(unittest.TestCase):
             'DBUsername=dbuser',
             'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+        self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
 
-        self.WikiServerOne = util.Instance('WikiServerOne')
-        self.LBInstance = util.Instance('LoadBalancer.LB_instance')
-        self.MySqlDatabaseServer = util.Instance(
+        self.WikiServerOne = util.Instance(self, 'WikiServerOne')
+        self.LBInstance = util.Instance(self, 'LoadBalancer.LB_instance')
+        self.MySqlDatabaseServer = util.Instance(self,
                 'DatabaseServer.MySqlDatabaseServer')
 
     def tearDown(self):

@@ -41,7 +41,7 @@ class CfnApiFunctionalTest(unittest.TestCase):
     Contrary to the nose docs, the class can be a unittest.TestCase subclass
     '''
     @classmethod
-    def setupAll(self):
+    def setupAll(cls):
         print "SETUPALL"
         template = 'WordPress_Single_Instance.template'
 
@@ -49,37 +49,51 @@ class CfnApiFunctionalTest(unittest.TestCase):
                          'DBUsername=dbuser',
                          'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.logical_resource_name = 'WikiDatabase'
-        self.logical_resource_type = 'AWS::EC2::Instance'
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+        cls.logical_resource_name = 'WikiDatabase'
+        cls.logical_resource_type = 'AWS::EC2::Instance'
+
+        # Just to get the assert*() methods
+        class CfnApiFunctions(unittest.TestCase):
+            @unittest.skip('Not a real test case')
+            def runTest(self):
+                pass
+
+        inst = CfnApiFunctions()
+        cls.stack = util.Stack(inst, template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
-        self.WikiDatabase = util.Instance(self.logical_resource_name)
-        self.stack.create()
-        self.WikiDatabase.wait_for_boot()
-        self.WikiDatabase.check_cfntools()
-        self.WikiDatabase.wait_for_provisioning()
+        cls.WikiDatabase = util.Instance(inst, cls.logical_resource_name)
 
-        self.logical_resource_status = "CREATE_COMPLETE"
+        try:
+            cls.stack.create()
+            cls.WikiDatabase.wait_for_boot()
+            cls.WikiDatabase.check_cfntools()
+            cls.WikiDatabase.wait_for_provisioning()
 
-        # Save some compiled regexes and strings for response validation
-        self.stack_id_re = re.compile("^arn:openstack:heat::admin:stacks/"
-                                      + self.stack.stackname)
-        self.time_re = re.compile(
-            "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")
-        self.description_re = re.compile("^AWS CloudFormation Sample Template")
-        self.stack_status = "CREATE_COMPLETE"
-        self.stack_status_reason = "Stack successfully created"
-        self.stack_timeout = str(60)
-        self.stack_disable_rollback = "True"
+            cls.logical_resource_status = "CREATE_COMPLETE"
 
-        # Match the expected format for physical resource ID for an instance
-        self.phys_res_id_re = re.compile(
-            "^[0-9a-z]*-[0-9a-z]*-[0-9a-z]*-[0-9a-z]*-[0-9a-z]*$")
+            # Save some compiled regexes and strings for response validation
+            cls.stack_id_re = re.compile("^arn:openstack:heat::admin:stacks/"
+                                          + cls.stack.stackname)
+            cls.time_re = re.compile(
+                "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")
+            cls.description_re = re.compile(
+                "^AWS CloudFormation Sample Template")
+            cls.stack_status = "CREATE_COMPLETE"
+            cls.stack_status_reason = "Stack successfully created"
+            cls.stack_timeout = str(60)
+            cls.stack_disable_rollback = "True"
+
+            # Match the expected format for an instance's physical resource ID
+            cls.phys_res_id_re = re.compile(
+                "^[0-9a-z]*-[0-9a-z]*-[0-9a-z]*-[0-9a-z]*-[0-9a-z]*$")
+        except:
+            cls.stack.cleanup()
+            raise
 
     @classmethod
-    def teardownAll(self):
+    def teardownAll(cls):
         print "TEARDOWNALL"
-        self.stack.cleanup()
+        cls.stack.cleanup()
 
     def test_instance(self):
         # ensure wordpress was installed by checking for expected

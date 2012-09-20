@@ -35,6 +35,7 @@ from nose.exc import SkipTest
 
 from glance import client as glance_client
 from novaclient.v1_1 import client as nova_client
+import heat
 from heat import utils
 from heat.engine import parser
 from heat import client as heat_client
@@ -44,8 +45,13 @@ from keystoneclient.v2_0 import client
 DEFAULT_STACKNAME = 'teststack'
 
 
+# this test is in heat/tests/functional, so go up 3 dirs
+basepath = os.path.join(heat.__path__[0], os.path.pardir)
+
+
 class Instance(object):
-    def __init__(self, instance_name, stackname=DEFAULT_STACKNAME):
+    def __init__(self, testcase, instance_name, stackname=DEFAULT_STACKNAME):
+        self.testcase = testcase
         self.name = '%s.%s' % (stackname, instance_name)
 
         # during nose test execution this file will be imported even if
@@ -55,9 +61,9 @@ class Instance(object):
         except KeyError:
             raise SkipTest('OS_AUTH_STRATEGY unset, skipping functional test')
 
-        if os.environ['OS_AUTH_STRATEGY'] != 'keystone':
-            print 'keystone authentication required'
-            assert False
+        self.testcase.assertEqual(os.environ['OS_AUTH_STRATEGY'],
+                                  'keystone',
+                                  'keystone authentication required')
 
         self.creds = dict(username=os.environ['OS_USERNAME'],
                 password=os.environ['OS_PASSWORD'],
@@ -65,10 +71,6 @@ class Instance(object):
                 auth_url=os.environ['OS_AUTH_URL'],
                 strategy=os.environ['OS_AUTH_STRATEGY'])
         dbusername = 'testuser'
-
-        # this test is in heat/tests/functional, so go up 3 dirs
-        basepath = os.path.abspath(
-                os.path.dirname(os.path.realpath(__file__)) + '/../../..')
 
         self.novaclient = nova_client.Client(self.creds['username'],
             self.creds['password'], self.creds['tenant'],
@@ -91,7 +93,7 @@ class Instance(object):
                         self.ip = address.items()[0][1][0]['addr']
                 time.sleep(10)
                 tries += 1
-                assert tries < 500
+                self.testcase.assertTrue(tries < 500, 'Timed out')
             print 'Instance (%s) ip (%s) status (%s)' % (self.name, self.ip,
                  server.status)
 
@@ -104,7 +106,7 @@ class Instance(object):
                       (self.name, self.ip))
                 time.sleep(10)
                 tries += 1
-                assert tries < 50
+                self.testcase.assertTrue(tries < 50, 'Timed out')
             else:
                 print 'Instance (%s) ip (%s) SSH detected.' % (self.name,
                         self.ip)
@@ -114,7 +116,7 @@ class Instance(object):
         while True:
             try:
                 tries += 1
-                assert tries < 50
+                self.testcase.assertTrue(tries < 50, 'Timed out')
                 self.ssh.connect(self.ip, username='ec2-user',
                     allow_agent=True, look_for_keys=True, password='password')
             except paramiko.AuthenticationException:
@@ -139,7 +141,7 @@ class Instance(object):
             except IOError, e:
                 tries += 1
                 if e.errno == errno.ENOENT:
-                    assert tries < 50
+                    self.testcase.assertTrue(tries < 50, 'Timed out')
                     print("Instance (%s) ip (%s) not booted, waiting..." %
                           (self.name, self.ip))
                     time.sleep(15)
@@ -165,7 +167,7 @@ class Instance(object):
         print "Verifying file '%s' exists" % path
         stdin, stdout, sterr = self.ssh.exec_command('ls "%s"' % path)
         lines = stdout.readlines()
-        assert len(lines) == 1
+        self.testcase.assertEqual(len(lines), 1)
         result = lines.pop().rstrip()
         return result == path
 
@@ -195,7 +197,7 @@ class Instance(object):
             data = files.pop().split('  ')
             cur_file = data[1].rstrip()
             if cur_file in cfn_tools_files:
-                assert data[0] == cfntools[cur_file]
+                self.testcase.assertEqual(data[0], cfntools[cur_file])
         print 'Instance (%s) cfntools integrity verified.' % self.name
 
     def wait_for_provisioning(self):
@@ -207,7 +209,7 @@ class Instance(object):
             except IOError, e:
                 tries += 1
                 if e.errno == errno.ENOENT:
-                    assert tries < 500
+                    self.testcase.assertTrue(tries < 500, 'Timed out')
                     print("Instance (%s) provisioning incomplete, waiting..." %
                           self.name)
                     time.sleep(15)
@@ -229,7 +231,7 @@ class Instance(object):
 #            sudo chmod 777 /var/lib/cloud/instance/user-data.txt.i\n')
 #        time.sleep(1)  # necessary for sendall to complete
 
-        f = open(self.basepath + '/templates/' + template_file)
+        f = open(basepath + '/templates/' + template_file)
         t = json.loads(f.read())
         f.close()
 
@@ -255,15 +257,15 @@ class Instance(object):
         t_data_list.insert(len(t_data_list) - 1,
                 u'touch /var/lib/cloud/instance/provision-finished')
 
-        assert t_data_list == remote_file_list_u
+        self.testcase.assertEqual(t_data_list, remote_file_list_u)
 
         remote_file = self.sftp.open('/var/lib/cloud/instance/user-data.txt.i')
         msg = email.message_from_file(remote_file)
         remote_file.close()
 
         filepaths = {
-            'cloud-config': self.basepath + '/heat/cloudinit/config',
-            'part-handler.py': self.basepath +
+            'cloud-config': basepath + '/heat/cloudinit/config',
+            'part-handler.py': basepath +
             '/heat/cloudinit/part-handler.py'
         }
 
@@ -278,7 +280,7 @@ class Instance(object):
 
             if file in filepaths.keys():
                 with open(filepaths[file]) as f:
-                    assert data == f.read()
+                    self.testcase.assertEqual(data, f.read())
 
     def get_ssh_client(self):
         if self.ssh.get_transport() != None:
@@ -295,13 +297,27 @@ class Instance(object):
 
 
 class Stack(object):
-    def __init__(self, template_file, distribution, arch, jeos_type,
+
+    def __init__(self, testcase, template_file, distribution, arch, jeos_type,
             stack_paramstr, stackname=DEFAULT_STACKNAME):
 
+        self.testcase = testcase
         self.stackname = stackname
         self.template_file = template_file
         self.distribution = distribution
         self.stack_paramstr = stack_paramstr
+
+        self.creds = dict(username=os.environ['OS_USERNAME'],
+                          password=os.environ['OS_PASSWORD'],
+                          tenant=os.environ['OS_TENANT_NAME'],
+                          auth_url=os.environ['OS_AUTH_URL'],
+                          strategy=os.environ['OS_AUTH_STRATEGY'])
+        self.dbusername = 'testuser'
+
+        self.testcase.assertEqual(os.environ['OS_AUTH_STRATEGY'],
+                                  'keystone',
+                                  'keystone authentication required')
+
         self.prepare_jeos(distribution, arch, jeos_type)
 
         self.novaclient = nova_client.Client(self.creds['username'],
@@ -313,7 +329,7 @@ class Stack(object):
     def create(self):
         self.keyname = self.novaclient.keypairs.list().pop().name
 
-        assert self.heatclient
+        self.testcase.assertTrue(self.heatclient)
 
         full_paramstr = ';'.join([self.stack_paramstr,
                                   'KeyName=' + self.keyname,
@@ -323,7 +339,9 @@ class Stack(object):
         # Format parameters and create the stack
         parameters = {}
         parameters['StackName'] = self.stackname
-        template_path = self.basepath + '/templates/' + self.template_file
+        template_path = os.path.join(basepath,
+                                     'templates',
+                                     self.template_file)
         parameters['TemplateBody'] = open(template_path).read()
         parameters.update(self.heatclient.format_parameters(template_params))
         result = self.heatclient.create_stack(**parameters)
@@ -334,57 +352,31 @@ class Stack(object):
         tries = 0
 
         print 'Waiting for stack creation to be completed'
-        while self.in_state('CREATE_IN_PROGRESS'):
+        while self.get_state() == 'CREATE_IN_PROGRESS':
             tries += 1
-            assert tries < 500
+            self.testcase.assertTrue(tries < 500, 'Timed out')
             time.sleep(10)
 
-        assert self.in_state('CREATE_COMPLETE')
+        self.testcase.assertEqual(self.get_state(), 'CREATE_COMPLETE')
 
     def _check_create_result(self, result):
         # Check result looks OK
         root = etree.fromstring(result)
         create_list = root.xpath('/CreateStackResponse/CreateStackResult')
-        assert create_list
-        assert len(create_list) == 1
+        self.testcase.assertTrue(create_list)
+        self.testcase.assertEqual(len(create_list), 1)
 
         # Extract StackId from the result, and check the StackName part
         stackid = create_list[0].findtext('StackId')
         idname = stackid.split('/')[1]
         print "Checking %s contains name %s" % (stackid, self.stackname)
-        assert idname == self.stackname
+        self.testcase.assertEqual(idname, self.stackname)
 
     def _create_heat_client(self):
         return heat_client.get_client('0.0.0.0', 8000,
             self.creds['username'], self.creds['password'],
             self.creds['tenant'], self.creds['auth_url'],
             self.creds['strategy'], None, None, False)
-
-    # during nose test execution this file will be imported even if
-    # the unit tag was specified
-    try:
-        os.environ['OS_AUTH_STRATEGY']
-    except KeyError:
-        raise SkipTest('OS_AUTH_STRATEGY not set, skipping functional test')
-
-    if os.environ['OS_AUTH_STRATEGY'] != 'keystone':
-        print 'keystone authentication required'
-        assert False
-
-    creds = dict(username=os.environ['OS_USERNAME'],
-            password=os.environ['OS_PASSWORD'],
-            tenant=os.environ['OS_TENANT_NAME'],
-            auth_url=os.environ['OS_AUTH_URL'],
-            strategy=os.environ['OS_AUTH_STRATEGY'])
-    dbusername = 'testuser'
-
-    # this test is in heat/tests/functional, so go up 3 dirs
-    basepath = os.path.abspath(
-            os.path.dirname(os.path.realpath(__file__)) + '/../../..')
-
-    novaclient = None
-    glanceclient = None
-    heatclient = None
 
     def get_state(self):
         stack_list = self.heatclient.list_stacks(StackName=self.stackname)
@@ -395,10 +387,9 @@ class Stack(object):
         if len(alist):
             item = alist.pop()
             result = item.findtext("StackStatus")
+        if result and result.find('FAILED') >= 0:
+            print stack_list
         return result
-
-    def in_state(self, state):
-        return state == self.get_state()
 
     def cleanup(self):
         parameters = {'StackName': self.stackname}
@@ -407,16 +398,17 @@ class Stack(object):
 
         print 'Waiting for stack deletion to be completed'
         tries = 0
-        while self.in_state('DELETE_IN_PROGRESS'):
+        while self.get_state() == 'DELETE_IN_PROGRESS':
             tries += 1
-            assert tries < 50
+            self.testcase.assertTrue(tries < 50, 'Timed out')
             time.sleep(10)
 
         # final state for all stacks is DELETE_COMPLETE, but then they
         # dissappear hence no result from list_stacks/get_state
         # depending on timing, we could get either result here
         end_state = self.get_state()
-        assert (end_state == 'DELETE_COMPLETE' or end_state == None)
+        if end_state is not None:
+            self.testcase.assertEqual(end_state, 'DELETE_COMPLETE')
 
     def get_nova_client(self):
         if self.novaclient != None:
@@ -441,9 +433,8 @@ class Stack(object):
 
         # skip creating jeos if image already available
         if not self.poll_glance(self.glanceclient, imagename, False):
-            if os.geteuid() != 0:
-                print 'test must be run as root to create jeos'
-                assert False
+            self.testcase.assertEqual(os.geteuid(), 0,
+                                      'No JEOS found - run as root to create')
 
             # -d: debug, -G: register with glance
             subprocess.call(['heat-jeos', '-d', '-G', 'create', imagename])
@@ -457,7 +448,7 @@ class Stack(object):
         tries = 0
         while imagelistname != imagename:
             tries += 1
-            assert tries < 50
+            self.testcase.assertTrue(tries < 50, 'Timed out')
             if block:
                 time.sleep(15)
             print "Checking glance for image registration"
@@ -509,8 +500,8 @@ class Stack(object):
         '''
         root = etree.fromstring(response)
         output_list = root.xpath(prefix)
-        assert output_list
-        assert len(output_list) == 1
+        self.testcase.assertTrue(output_list)
+        self.testcase.assertEqual(len(output_list), 1)
         output = output_list.pop()
         value = output.findtext(key)
         return value
@@ -534,12 +525,12 @@ class StackBoto(Stack):
                              auth_url=self.creds['auth_url'])
         ksusers = keystone.users.list()
         ksuid = [u.id for u in ksusers if u.name == self.creds['username']]
-        assert len(ksuid) == 1
+        self.testcase.assertEqual(len(ksuid), 1)
 
         ec2creds = keystone.ec2.list(ksuid[0])
-        assert len(ec2creds) == 1
-        assert ec2creds[0].access
-        assert ec2creds[0].secret
+        self.testcase.assertEqual(len(ec2creds), 1)
+        self.testcase.assertTrue(ec2creds[0].access)
+        self.testcase.assertTrue(ec2creds[0].secret)
         print "Got EC2 credentials from keystone"
 
         # most of the arguments passed to heat_client_boto are for
@@ -571,7 +562,7 @@ class StackBoto(Stack):
         return [e.physical_resource_id for e in events if match(e)]
 
     def _find_stack_output(self, result, output_key):
-        assert len(result) == 1
+        self.testcase.assertEqual(len(result), 1)
 
         for o in result[0].outputs:
             if o.key == output_key:

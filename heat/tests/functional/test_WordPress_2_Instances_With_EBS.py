@@ -34,11 +34,11 @@ class WordPress2InstancesWithEBS(unittest.TestCase):
             'DBUsername=dbuser',
             'DBPassword=' + os.environ['OS_PASSWORD']])
 
-        self.stack = util.Stack(template, 'F17', 'x86_64', 'cfntools',
+        self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
             stack_paramstr)
 
-        self.WikiDatabase = util.Instance('WikiDatabase')
-        self.WebServer = util.Instance('WebServer')
+        self.WikiDatabase = util.Instance(self, 'WikiDatabase')
+        self.WebServer = util.Instance(self, 'WebServer')
 
     def tearDown(self):
         self.stack.cleanup()
