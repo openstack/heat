@@ -13,12 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
-import json
-import os
-
-from heat.common import exception
-from heat.db import api as db_api
 from heat.engine import instance
 from heat.engine.resources import Resource
 
