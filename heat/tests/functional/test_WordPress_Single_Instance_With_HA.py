@@ -17,6 +17,7 @@ import nose
 from nose.plugins.attrib import attr
 import unittest
 import os
+import time
 
 
 @attr(speed='slow')
