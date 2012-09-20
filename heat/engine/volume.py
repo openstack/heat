@@ -15,7 +15,6 @@
 
 import eventlet
 from heat.openstack.common import log as logging
-import re
 
 from heat.common import exception
 from heat.engine.resources import Resource
