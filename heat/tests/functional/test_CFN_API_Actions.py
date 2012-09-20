@@ -236,7 +236,7 @@ class CfnApiFunctionalTest(unittest.TestCase):
         self.assertTrue(self.time_re.match(update_time) != None)
 
         status_data = self.stack.response_xml_item(response, prefix,
-                                                      "ResourceStatusData")
+                                                      "ResourceStatusReason")
         self.assertEqual(status_data, "state changed")
 
         stack_name = self.stack.response_xml_item(response, prefix,
