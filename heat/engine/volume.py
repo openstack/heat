@@ -18,6 +18,7 @@ from heat.openstack.common import log as logging
 
 from heat.common import exception
 from heat.engine.resources import Resource
+from novaclient.exceptions import NotFound
 
 logger = logging.getLogger('heat.engine.volume')
 
@@ -99,18 +100,24 @@ class VolumeAttachment(Resource):
                     (server_id, volume_id))
 
         volapi = self.nova().volumes
-        volapi.delete_server_volume(server_id,
-                                    volume_id)
+        try:
+            volapi.delete_server_volume(server_id,
+                                        volume_id)
 
-        vol = self.nova('volume').volumes.get(volume_id)
-        logger.info('un-attaching %s, status %s' % (volume_id, vol.status))
-        while vol.status == 'in-use':
-            logger.info('trying to un-attach %s, but still %s' %
-                        (volume_id, vol.status))
-            eventlet.sleep(1)
-            try:
-                volapi.delete_server_volume(server_id,
-                                            volume_id)
-            except Exception:
-                pass
-            vol.get()
+            vol = self.nova('volume').volumes.get(volume_id)
+
+            logger.info('un-attaching %s, status %s' % (volume_id, vol.status))
+            while vol.status == 'in-use':
+                logger.info('trying to un-attach %s, but still %s' %
+                            (volume_id, vol.status))
+                eventlet.sleep(1)
+                try:
+                    volapi.delete_server_volume(server_id,
+                                                volume_id)
+                except Exception:
+                    pass
+                vol.get()
+        except NotFound as e:
+            logger.warning('Deleting VolumeAttachment %s %s - not found' %
+                    (server_id, volume_id))
+            return
