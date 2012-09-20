@@ -153,6 +153,17 @@ class Instance(object):
                       (self.name, self.ip))
                 break
 
+    def exec_sudo_command(self, cmd):
+        # Force a tty or sudo commands fail
+        channel = self.ssh.invoke_shell()
+        channel.sendall("sudo %s\n" % cmd)
+        channel.sendall('exit\n')
+        time.sleep(1)  # necessary for sendall to complete
+        stdin = channel.makefile('wb')
+        stdout = channel.makefile('rb')
+        stderr = channel.makefile_stderr('rb')
+        return stdin, stdout, stderr
+
     def exec_command(self, cmd):
         return self.ssh.exec_command(cmd)
 
