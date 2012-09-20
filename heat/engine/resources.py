@@ -138,7 +138,7 @@ class Resource(object):
 
         if cls != Resource:
             # Call is already for a subclass, so pass it through
-            return super(Resource, cls).__new__(cls, name, json, stack)
+            return super(Resource, cls).__new__(cls)
 
         # Select the correct subclass to instantiate
         import resource_types
