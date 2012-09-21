@@ -32,6 +32,9 @@ class DummyId:
     def __init__(self, id):
         self.id = id
 
+    def __eq__(self, other):
+        return self.id == other.id
+
 
 class User(Resource):
     properties_schema = {'Path': {'Type': 'String'},
@@ -100,16 +103,9 @@ class User(Resource):
         return unicode(self.physical_resource_name())
 
     def FnGetAtt(self, key):
-        res = None
-        if key == 'Policies':
-            res = self.properties['Policies']
-        else:
-            raise exception.InvalidTemplateAttribute(
-                    resource=self.physical_resource_name(), key=key)
-
-        logger.info('%s.GetAtt(%s) == %s' % (self.physical_resource_name(),
-                                             key, res))
-        return unicode(res)
+        #TODO Implement Arn attribute
+        raise exception.InvalidTemplateAttribute(
+                resource=self.physical_resource_name(), key=key)
 
 
 class AccessKey(Resource):
@@ -129,15 +125,16 @@ class AccessKey(Resource):
         tenant_id = self.context.tenant_id
         users = self.keystone().users.list(tenant_id=tenant_id)
         for u in users:
-            if u.name == self.properties['UserName']:
+            if u.name == username:
                 return u
         return None
 
     def handle_create(self):
-        user = self._user_from_name(self.properties['UserName'])
+        username = self.properties['UserName']
+        user = self._user_from_name(username)
         if user is None:
             raise exception.NotFound('could not find user %s' %
-                                     self.properties['UserName'])
+                                     username)
 
         tenant_id = self.context.tenant_id
         cred = self.keystone().ec2.create(user.id, tenant_id)
@@ -177,7 +174,7 @@ class AccessKey(Resource):
         res = None
         if key == 'UserName':
             res = self.properties['UserName']
-        if key == 'SecretAccessKey':
+        elif key == 'SecretAccessKey':
             res = self._secret_accesskey()
         else:
             raise exception.InvalidTemplateAttribute(
