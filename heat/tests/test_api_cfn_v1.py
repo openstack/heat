@@ -96,8 +96,7 @@ class StackControllerTest(unittest.TestCase):
                         u'stack_status': u'CREATE_COMPLETE'}]}
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
-                                    'args': {'stack_identity': None,
-                                    'params': dict(dummy_req.params)},
+                                    'args': {'stack_identity': None},
                                     'version': self.api_version}, None
                 ).AndReturn(engine_resp)
 
@@ -123,8 +122,7 @@ class StackControllerTest(unittest.TestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
-                                    'args': {'stack_identity': None,
-                                    'params': dict(dummy_req.params)},
+                                    'args': {'stack_identity': None},
                                     'version': self.api_version}, None
                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
@@ -143,8 +141,7 @@ class StackControllerTest(unittest.TestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
-                                    'args': {'stack_identity': None,
-                                    'params': dict(dummy_req.params)},
+                                    'args': {'stack_identity': None},
                                     'version': self.api_version}, None
                 ).AndRaise(rpc_common.RemoteError("Exception"))
 
@@ -196,8 +193,7 @@ class StackControllerTest(unittest.TestCase):
             'args': {'stack_name': stack_name},
             'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
-            'args': {'stack_identity': identity,
-                     'params': dict(dummy_req.params)},
+            'args': {'stack_identity': identity},
             'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -279,8 +275,7 @@ class StackControllerTest(unittest.TestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
-            'args': {'stack_identity': identity,
-                     'params': dict(dummy_req.params)},
+            'args': {'stack_identity': identity},
             'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -334,8 +329,7 @@ class StackControllerTest(unittest.TestCase):
             'args': {'stack_name': stack_name},
             'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
-            'args': {'stack_identity': identity,
-            'params': dict(dummy_req.params)},
+            'args': {'stack_identity': identity},
             'version': self.api_version}, None
             ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
@@ -595,8 +589,7 @@ class StackControllerTest(unittest.TestCase):
             'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic, {'method': 'get_template',
             'args':
-            {'stack_identity': identity,
-            'params': dict(dummy_req.params)},
+            {'stack_identity': identity},
             'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -623,8 +616,7 @@ class StackControllerTest(unittest.TestCase):
             'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic, {'method': 'get_template',
             'args':
-            {'stack_identity': identity,
-            'params': dict(dummy_req.params)},
+            {'stack_identity': identity},
             'version': self.api_version}, None
             ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
@@ -671,8 +663,7 @@ class StackControllerTest(unittest.TestCase):
             'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic, {'method': 'get_template',
             'args':
-            {'stack_identity': identity,
-            'params': dict(dummy_req.params)},
+            {'stack_identity': identity},
             'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -716,9 +707,7 @@ class StackControllerTest(unittest.TestCase):
             'version': self.api_version}, None).AndReturn(identity)
         # Engine returns None when delete successful
         rpc.call(dummy_req.context, self.topic, {'method': 'delete_stack',
-            'args':
-            {'stack_identity': identity,
-            'params': dict(dummy_req.params)},
+            'args': {'stack_identity': identity},
             'version': self.api_version}, None).AndReturn(None)
 
         self.m.ReplayAll()
@@ -744,9 +733,7 @@ class StackControllerTest(unittest.TestCase):
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         rpc.call(dummy_req.context, self.topic, {'method': 'delete_stack',
-            'args':
-            {'stack_identity': identity,
-            'params': dict(dummy_req.params)},
+            'args': {'stack_identity': identity},
             'version': self.api_version}, None
             ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
@@ -805,8 +792,7 @@ class StackControllerTest(unittest.TestCase):
             'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic, {'method': 'list_events',
             'args':
-            {'stack_identity': identity,
-            'params': dict(dummy_req.params)},
+            {'stack_identity': identity},
             'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -843,8 +829,7 @@ class StackControllerTest(unittest.TestCase):
             'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic, {'method': 'list_events',
             'args':
-            {'stack_identity': identity,
-            'params': dict(dummy_req.params)},
+            {'stack_identity': identity},
             'version': self.api_version}, None
             ).AndRaise(rpc_common.RemoteError("Exception"))
 

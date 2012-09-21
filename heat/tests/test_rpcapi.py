@@ -87,8 +87,7 @@ class EngineRpcAPITestCase(unittest.TestCase):
             self.assertEqual(arg, expected_arg)
 
     def test_show_stack(self):
-        self._test_engine_api('show_stack', 'call', stack_identity='wordpress',
-                              params={'Action': 'ListStacks'})
+        self._test_engine_api('show_stack', 'call', stack_identity='wordpress')
 
     def test_create_stack(self):
         self._test_engine_api('create_stack', 'call', stack_name='wordpress',
@@ -109,19 +108,19 @@ class EngineRpcAPITestCase(unittest.TestCase):
 
     def test_get_template(self):
         self._test_engine_api('get_template', 'call',
-                              stack_identity='wordpress', params={})
+                              stack_identity='wordpress')
 
     def test_delete_stack_cast(self):
         self._test_engine_api('delete_stack', 'cast',
-                              stack_identity='wordpress', params={})
+                              stack_identity='wordpress')
 
     def test_delete_stack_call(self):
         self._test_engine_api('delete_stack', 'call',
-                              stack_identity='wordpress', params={})
+                              stack_identity='wordpress')
 
     def test_list_events(self):
         self._test_engine_api('list_events', 'call',
-                              stack_identity='wordpress', params={})
+                              stack_identity='wordpress')
 
     def test_describe_stack_resource(self):
         self._test_engine_api('describe_stack_resource', 'call',
