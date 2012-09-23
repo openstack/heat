@@ -27,15 +27,20 @@ from nose.plugins.attrib import attr
 from nose import with_setup
 import unittest
 import shutil
-from nose.exc import SkipTest
+
+from utils import skip_if
+
 try:
     from heat.cfntools.cfn_helper import *
 except:
-    raise SkipTest("unable to import cfn helper, skipping")
+    skip_test = True
+else:
+    skip_test = False
 
 
 @attr(tag=['unit', 'cfn_helper'])
 @attr(speed='fast')
+@skip_if(skip_test, 'unable to import cfn_helper')
 def test_boolean():
 
     assert(to_boolean('true'))
@@ -73,6 +78,7 @@ def tearDown_credential_file():
 @with_setup(setUp_credential_file, tearDown_credential_file)
 @attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
+@skip_if(skip_test, 'unable to import cfn_helper')
 def test_hup_conf1():
     good = """
 [main]
@@ -91,6 +97,7 @@ interval=3
 @with_setup(setUp_credential_file, tearDown_credential_file)
 @attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
+@skip_if(skip_test, 'unable to import cfn_helper')
 def test_hup_default():
     good = """
 [main]
@@ -107,6 +114,7 @@ credential-file=/tmp/incredible
 @with_setup(setUp_credential_file, tearDown_credential_file)
 @attr(tag=['unit', 'cfn-hup'])
 @attr(speed='fast')
+@skip_if(skip_test, 'unable to import cfn_helper')
 def test_hup_hook():
     good = """
 [main]
@@ -152,6 +160,7 @@ class MetadataTest(unittest.TestCase):
 
     @attr(tag=['unit', 'cfn-metadata'])
     @attr(speed='fast')
+    @skip_if(skip_test, 'unable to import cfn_helper')
     def test_metadata_files(self):
         j = ''' {
         "AWS::CloudFormation::Init" : {
@@ -238,6 +247,7 @@ class CommandRunnerTest(unittest.TestCase):
 
     @attr(tag=['unit', 'cfn-helper'])
     @attr(speed='fast')
+    @skip_if(skip_test, 'unable to import cfn_helper')
     def test_runas(self):
         import subprocess
         self.m.StubOutWithMock(subprocess, 'Popen')
@@ -251,6 +261,7 @@ class CommandRunnerTest(unittest.TestCase):
 
     @attr(tag=['unit', 'cfn-helper'])
     @attr(speed='fast')
+    @skip_if(skip_test, 'unable to import cfn_helper')
     def test_default_runas(self):
         import subprocess
         self.m.StubOutWithMock(subprocess, 'Popen')
