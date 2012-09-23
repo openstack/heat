@@ -126,9 +126,7 @@ class StackController(object):
         try:
             # Note show_stack returns details for all stacks when called with
             # no stack_name, we only use a subset of the result here though
-            stack_list = self.engine_rpcapi.show_stack(con,
-                                                       stack_identity=None,
-                                                       params=parms)
+            stack_list = self.engine_rpcapi.show_stack(con, None)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
@@ -201,9 +199,7 @@ class StackController(object):
             else:
                 identity = None
 
-            stack_list = self.engine_rpcapi.show_stack(con,
-                                                       stack_identity=identity,
-                                                       params=parms)
+            stack_list = self.engine_rpcapi.show_stack(con, identity)
 
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
@@ -337,9 +333,7 @@ class StackController(object):
         logger.info('get_template')
         try:
             identity = self._get_identity(con, req.params['StackName'])
-            templ = self.engine_rpcapi.get_template(con,
-                                       stack_identity=identity,
-                                       params=parms)
+            templ = self.engine_rpcapi.get_template(con, identity)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
@@ -377,16 +371,14 @@ class StackController(object):
             return exception.HeatMissingParameterError(detail=msg)
 
         try:
-            stack = json.loads(templ)
+            template = json.loads(templ)
         except ValueError:
             msg = _("The Template must be a JSON document.")
             return exception.HeatInvalidParameterValueError(detail=msg)
 
         logger.info('validate_template')
         try:
-            return self.engine_rpcapi.validate_template(con,
-                                                        template=stack,
-                                                        params=parms)
+            return self.engine_rpcapi.validate_template(con, template)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
@@ -400,10 +392,7 @@ class StackController(object):
 
         try:
             identity = self._get_identity(con, req.params['StackName'])
-            res = self.engine_rpcapi.delete_stack(con,
-                                     stack_identity=identity,
-                                     params=parms,
-                                     cast=False)
+            res = self.engine_rpcapi.delete_stack(con, identity, cast=False)
 
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
@@ -445,9 +434,7 @@ class StackController(object):
         stack_name = req.params.get('StackName', None)
         try:
             identity = stack_name and self._get_identity(con, stack_name)
-            event_res = self.engine_rpcapi.list_events(con,
-                                                       stack_identity=identity,
-                                                       params=parms)
+            event_res = self.engine_rpcapi.list_events(con, identity)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 

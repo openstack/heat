@@ -215,8 +215,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
 
         self.m.ReplayAll()
 
-        self.assertEqual(self.man.delete_stack(self.ctx,
-                                               stack.identifier(), {}),
+        self.assertEqual(self.man.delete_stack(self.ctx, stack.identifier()),
                          None)
         self.m.VerifyAll()
 
@@ -228,7 +227,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
 
         self.assertRaises(AttributeError,
                           self.man.delete_stack,
-                          self.ctx, stack.identifier(), {})
+                          self.ctx, stack.identifier())
         self.m.VerifyAll()
 
     def test_stack_update(self):
@@ -379,7 +378,7 @@ class stackManagerTest(unittest.TestCase):
                           self.ctx, self.stack_name, self.stack.t, {}, {})
 
     def test_stack_event_list(self):
-        el = self.man.list_events(self.ctx, self.stack_identity, {})
+        el = self.man.list_events(self.ctx, self.stack_identity)
 
         self.assertTrue('events' in el)
         events = el['events']
@@ -422,7 +421,7 @@ class stackManagerTest(unittest.TestCase):
             self.assertTrue('event_time' in ev)
 
     def test_stack_describe_all(self):
-        sl = self.man.show_stack(self.ctx, None, {})
+        sl = self.man.show_stack(self.ctx, None)
 
         self.assertEqual(len(sl['stacks']), 1)
         for s in sl['stacks']:
@@ -434,7 +433,7 @@ class stackManagerTest(unittest.TestCase):
         self.tenant = 'stack_describe_all_empty_tenant'
         self.setUp()
 
-        sl = self.man.show_stack(self.ctx, None, {})
+        sl = self.man.show_stack(self.ctx, None)
 
         self.assertEqual(len(sl['stacks']), 0)
 
@@ -443,10 +442,10 @@ class stackManagerTest(unittest.TestCase):
         nonexist['stack_name'] = 'wibble'
         self.assertRaises(AttributeError,
                           self.man.show_stack,
-                          self.ctx, nonexist, {})
+                          self.ctx, nonexist)
 
     def test_stack_describe(self):
-        sl = self.man.show_stack(self.ctx, self.stack_identity, {})
+        sl = self.man.show_stack(self.ctx, self.stack_identity)
 
         self.assertEqual(len(sl['stacks']), 1)
 

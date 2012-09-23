@@ -70,7 +70,7 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
                                              stack_name=stack_name),
                          topic=_engine_topic(self.topic, ctxt, None))
 
-    def show_stack(self, ctxt, stack_identity, params):
+    def show_stack(self, ctxt, stack_identity):
         """
         The show_stack method returns the attributes of one stack.
 
@@ -80,7 +80,7 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         :param params: Dict of http request parameters passed in from API side.
         """
         return self.call(ctxt, self.make_msg('show_stack',
-                         stack_identity=stack_identity, params=params),
+                                             stack_identity=stack_identity),
                          topic=_engine_topic(self.topic, ctxt, None))
 
     def create_stack(self, ctxt, stack_name, template, params, args):
@@ -98,7 +98,8 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         """
         return self.call(ctxt,
                          self.make_msg('create_stack', stack_name=stack_name,
-                         template=template, params=params, args=args),
+                                       template=template,
+                                       params=params, args=args),
                          topic=_engine_topic(self.topic, ctxt, None))
 
     def update_stack(self, ctxt, stack_identity, template, params, args):
@@ -115,8 +116,9 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         :param args: Request parameters/args passed from API
         """
         return self.call(ctxt, self.make_msg('update_stack',
-                         stack_identity=stack_identity,
-                         template=template, params=params, args=args),
+                                             stack_identity=stack_identity,
+                                             template=template,
+                                             params=params, args=args),
                          topic=_engine_topic(self.topic, ctxt, None))
 
     def validate_template(self, ctxt, template, params):
@@ -129,10 +131,10 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         :param params: Params passed from API.
         """
         return self.call(ctxt, self.make_msg('validate_template',
-                         template=template, params=params),
+                                             template=template, params=params),
                          topic=_engine_topic(self.topic, ctxt, None))
 
-    def get_template(self, ctxt, stack_identity, params):
+    def get_template(self, ctxt, stack_identity):
         """
         Get the template.
 
@@ -141,10 +143,10 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         :param params: Dict of http request parameters passed in from API side.
         """
         return self.call(ctxt, self.make_msg('get_template',
-                         stack_identity=stack_identity, params=params),
+                                             stack_identity=stack_identity),
                          topic=_engine_topic(self.topic, ctxt, None))
 
-    def delete_stack(self, ctxt, stack_identity, params, cast=True):
+    def delete_stack(self, ctxt, stack_identity, cast=True):
         """
         The delete_stack method deletes a given stack.
 
@@ -154,10 +156,10 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         """
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt, self.make_msg('delete_stack',
-                  stack_identity=stack_identity, params=params),
+                                              stack_identity=stack_identity),
                   topic=_engine_topic(self.topic, ctxt, None))
 
-    def list_events(self, ctxt, stack_identity, params):
+    def list_events(self, ctxt, stack_identity):
         """
         The list_events method lists all events associated with a given stack.
 
@@ -166,13 +168,13 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         :param params: Params passed from API.
         """
         return self.call(ctxt, self.make_msg('list_events',
-                         stack_identity=stack_identity, params=params),
+                                             stack_identity=stack_identity),
                          topic=_engine_topic(self.topic, ctxt, None))
 
     def describe_stack_resource(self, ctxt, stack_identity, resource_name):
         return self.call(ctxt, self.make_msg('describe_stack_resource',
-                         stack_identity=stack_identity,
-                         resource_name=resource_name),
+                                             stack_identity=stack_identity,
+                                             resource_name=resource_name),
                          topic=_engine_topic(self.topic, ctxt, None))
 
     def describe_stack_resources(self, ctxt, stack_identity,
@@ -185,7 +187,7 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
 
     def list_stack_resources(self, ctxt, stack_identity):
         return self.call(ctxt, self.make_msg('list_stack_resources',
-                         stack_identity=stack_identity),
+                                             stack_identity=stack_identity),
                          topic=_engine_topic(self.topic, ctxt, None))
 
     def metadata_list_stacks(self, ctxt):

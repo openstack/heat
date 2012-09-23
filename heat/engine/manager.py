@@ -92,12 +92,11 @@ class EngineManager(manager.Manager):
 
         return s
 
-    def show_stack(self, context, stack_identity, params):
+    def show_stack(self, context, stack_identity):
         """
         The show_stack method returns the attributes of one stack.
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to see, or None to see all
-        arg3 -> Dict of http request parameters passed in from API side.
         """
         if stack_identity is not None:
             stacks = [self._get_stack(context, stack_identity)]
@@ -189,7 +188,7 @@ class EngineManager(manager.Manager):
 
         arg1 -> RPC context.
         arg3 -> Template of stack you want to create.
-        arg4 -> Params passed from API.
+        arg4 -> Stack Input Params
         """
         logger.info('validate_template')
         if template is None:
@@ -221,24 +220,22 @@ class EngineManager(manager.Manager):
         }
         return {'ValidateTemplateResult': result}
 
-    def get_template(self, context, stack_identity, params):
+    def get_template(self, context, stack_identity):
         """
         Get the template.
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to see.
-        arg3 -> Dict of http request parameters passed in from API side.
         """
         s = self._get_stack(context, stack_identity)
         if s:
             return s.raw_template.template
         return None
 
-    def delete_stack(self, context, stack_identity, params):
+    def delete_stack(self, context, stack_identity):
         """
         The delete_stack method deletes a given stack.
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to delete.
-        arg3 -> Params passed from API.
         """
         st = self._get_stack(context, stack_identity)
 
@@ -248,12 +245,11 @@ class EngineManager(manager.Manager):
         greenpool.spawn_n(stack.delete)
         return None
 
-    def list_events(self, context, stack_identity, params):
+    def list_events(self, context, stack_identity):
         """
         The list_events method lists all events associated with a given stack.
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to get events for.
-        arg3 -> Params passed from API.
         """
         if stack_identity is not None:
             st = self._get_stack(context, stack_identity)
