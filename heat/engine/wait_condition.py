@@ -14,7 +14,6 @@
 #    under the License.
 
 import eventlet
-import json
 
 from heat.common import exception
 from heat.engine import resources
@@ -80,23 +79,26 @@ class WaitCondition(resources.Resource):
             self.resource_id = handle_url.split('/')[-1]
         return self.resource_id
 
+    def _get_status_reason(self, handle):
+        return (handle.metadata.get('Status', WAITING),
+                handle.metadata.get('Reason', 'Reason not provided'))
+
+    def _create_timeout(self):
+        return eventlet.Timeout(self.timeout)
+
     def handle_create(self):
         tmo = None
         try:
             # keep polling our Metadata to see if the cfn-signal has written
             # it yet. The execution here is limited by timeout.
-            with eventlet.Timeout(self.timeout) as tmo:
+            with self._create_timeout() as tmo:
                 handle = self.stack[self._get_handle_resource_id()]
 
-                status = WAITING
-                reason = ''
+                (status, reason) = (WAITING, '')
                 sleep_time = 1
 
                 while status == WAITING:
-                    meta = handle.metadata
-                    status = meta.get('Status', WAITING)
-                    reason = meta.get('Reason', 'Reason not provided')
-                    logger.debug('got %s' % json.dumps(meta))
+                    (status, reason) = self._get_status_reason(handle)
                     if status == WAITING:
                         logger.debug('Waiting for the Metadata[Status]')
                         eventlet.sleep(sleep_time)
@@ -107,8 +109,7 @@ class WaitCondition(resources.Resource):
                 # not my timeout
                 raise
             else:
-                status = TIMEDOUT
-                reason = 'Timed out waiting for instance'
+                (status, reason) = (TIMEDOUT, 'Timed out waiting for instance')
 
         if status != SUCCESS:
             raise exception.Error(reason)

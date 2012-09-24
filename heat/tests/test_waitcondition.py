@@ -13,20 +13,19 @@
 #    under the License.
 
 
-from datetime import datetime
-import eventlet
 import json
 import logging
-import os
+import mox
 import sys
 
+import eventlet
 import nose
 import unittest
 from nose.plugins.attrib import attr
-from nose import with_setup
 
 import heat.db as db_api
 from heat.engine import parser
+from heat.engine import wait_condition as wc
 from heat.common import context
 
 logger = logging.getLogger('test_waitcondition')
@@ -56,7 +55,15 @@ test_template_waitcondition = '''
 @attr(speed='slow')
 class stacksTest(unittest.TestCase):
     def setUp(self):
-        self.greenpool = eventlet.GreenPool()
+        self.m = mox.Mox()
+        self.m.StubOutWithMock(wc.WaitCondition,
+                               '_get_status_reason')
+        self.m.StubOutWithMock(wc.WaitCondition,
+                               '_create_timeout')
+        self.m.StubOutWithMock(eventlet, 'sleep')
+
+    def tearDown(self):
+        self.m.UnsetStubs()
 
     def create_stack(self, stack_name, temp, params):
         template = parser.Template(temp)
@@ -68,33 +75,62 @@ class stacksTest(unittest.TestCase):
         return stack
 
     def test_post_success_to_handle(self):
-        params = {}
-        t = json.loads(test_template_waitcondition)
-        stack = self.create_stack('test_stack', t, params)
 
-        self.greenpool.spawn_n(stack.create)
-        eventlet.sleep(1)
-        self.assertEqual(stack.resources['WaitForTheHandle'].state,
-                         'IN_PROGRESS')
+        t = json.loads(test_template_waitcondition)
+        stack = self.create_stack('test_stack', t, {})
+
+        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
+        wc.WaitCondition._get_status_reason(
+                         mox.IgnoreArg()).AndReturn(('WAITING', ''))
+        eventlet.sleep(1).AndReturn(None)
+        wc.WaitCondition._get_status_reason(
+                         mox.IgnoreArg()).AndReturn(('WAITING', ''))
+        eventlet.sleep(1).AndReturn(None)
+        wc.WaitCondition._get_status_reason(
+                         mox.IgnoreArg()).AndReturn(('SUCCESS', 'woot toot'))
+
+        self.m.ReplayAll()
+
+        stack.create()
+
+        resource = stack.resources['WaitForTheHandle']
+        self.assertEqual(resource.state,
+                         'CREATE_COMPLETE')
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   stack.id)
         self.assertEqual(r.name, 'WaitHandle')
 
-        metadata = {"Status": "SUCCESS",
-                    "Reason": "woot toot",
-                    "Data": "Application has completed configuration.",
-                    "UniqueId": "00000"}
+        self.m.VerifyAll()
 
-        r.update_and_save({'rsrc_metadata': metadata})
+    def test_timeout(self):
 
-        eventlet.sleep(2)
+        t = json.loads(test_template_waitcondition)
+        stack = self.create_stack('test_stack', t, {})
 
-        logger.debug('state %s' % stack.resources['WaitForTheHandle'].state)
-        self.assertEqual(stack.resources['WaitForTheHandle'].state,
-                         'CREATE_COMPLETE')
+        tmo = eventlet.Timeout(6)
+        wc.WaitCondition._create_timeout().AndReturn(tmo)
+        wc.WaitCondition._get_status_reason(
+                         mox.IgnoreArg()).AndReturn(('WAITING', ''))
+        eventlet.sleep(1).AndReturn(None)
+        wc.WaitCondition._get_status_reason(
+                         mox.IgnoreArg()).AndReturn(('WAITING', ''))
+        eventlet.sleep(1).AndRaise(tmo)
 
-        self.greenpool.waitall()
+        self.m.ReplayAll()
+
+        stack.create()
+
+        resource = stack.resources['WaitForTheHandle']
+
+        self.assertEqual(resource.state,
+                         'CREATE_FAILED')
+        self.assertEqual(wc.WaitCondition.UPDATE_REPLACE,
+                  resource.handle_update())
+
+        stack.delete()
+
+        self.m.VerifyAll()
 
     # allows testing of the test directly
     if __name__ == '__main__':
