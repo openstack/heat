@@ -22,7 +22,7 @@ import os
 import json
 from heat.common import client as base_client
 from heat.common import exception
-from heat.cloudformations import *
+from heat.cloudformation import *
 
 from heat.openstack.common import log as logging
 
