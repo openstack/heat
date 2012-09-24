@@ -16,12 +16,12 @@
 
 import sqlalchemy.interfaces
 import sqlalchemy.orm
+import sqlalchemy.engine
 from sqlalchemy.exc import DisconnectionError
 
 from heat.openstack.common import log as logging
 
 from heat.db import api as db_api
-from heat.openstack.common import cfg
 
 logger = logging.getLogger('heat.db.sqlalchemy.session')
 _ENGINE = None
@@ -30,11 +30,10 @@ _MAKER = None
 
 def get_session(autocommit=True, expire_on_commit=False):
     """Return a SQLAlchemy session."""
-    global _ENGINE, _MAKER
+    global _MAKER
 
-    if _MAKER is None or _ENGINE is None:
-        _ENGINE = get_engine()
-        _MAKER = get_maker(_ENGINE, autocommit, expire_on_commit)
+    if _MAKER is None:
+        _MAKER = get_maker(get_engine(), autocommit, expire_on_commit)
     return _MAKER()
 
 
@@ -69,17 +68,21 @@ class MySQLPingListener(object):
 
 def get_engine():
     """Return a SQLAlchemy engine."""
-    connection_dict = sqlalchemy.engine.url.make_url(_get_sql_connection())
-    engine_args = {
-        "pool_recycle": _get_sql_idle_timeout(),
-        "echo": False,
-        'convert_unicode': True,
-    }
+    global _ENGINE
+    if _ENGINE is None:
+        connection_dict = sqlalchemy.engine.url.make_url(_get_sql_connection())
+        engine_args = {
+            "pool_recycle": _get_sql_idle_timeout(),
+            "echo": False,
+            'convert_unicode': True
+        }
 
-    if 'mysql' in connection_dict.drivername:
-        engine_args['listeners'] = [MySQLPingListener()]
+        if 'mysql' in connection_dict.drivername:
+            engine_args['listeners'] = [MySQLPingListener()]
 
-    return sqlalchemy.create_engine(_get_sql_connection(), **engine_args)
+        _ENGINE = sqlalchemy.create_engine(_get_sql_connection(),
+                                           **engine_args)
+    return _ENGINE
 
 
 def get_maker(engine, autocommit=True, expire_on_commit=False):

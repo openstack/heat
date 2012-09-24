@@ -16,6 +16,7 @@
 import sys
 import os
 
+import eventlet
 import json
 import nose
 import mox
@@ -41,6 +42,7 @@ class VolumeTest(unittest.TestCase):
         self.m.StubOutWithMock(self.fc.volumes, 'delete')
         self.m.StubOutWithMock(self.fc.volumes, 'create_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
+        self.m.StubOutWithMock(eventlet, 'sleep')
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -98,6 +100,7 @@ class VolumeTest(unittest.TestCase):
         # delete script
         vol.Volume.nova('volume').AndReturn(self.fc)
         self.fc.volumes.get('vol-123').AndReturn(fv)
+        eventlet.sleep(1).AndReturn(None)
 
         vol.Volume.nova('volume').AndReturn(self.fc)
         self.fc.volumes.get('vol-123').AndReturn(fv)
@@ -132,6 +135,8 @@ class VolumeTest(unittest.TestCase):
                         display_description='test_stack.DataVolume',
                         display_name='test_stack.DataVolume').AndReturn(fv)
 
+        eventlet.sleep(1).AndReturn(None)
+
         self.m.ReplayAll()
 
         t = self.load_template()
@@ -156,6 +161,7 @@ class VolumeTest(unittest.TestCase):
 
         vol.VolumeAttachment.nova('volume').AndReturn(self.fc)
         self.fc.volumes.get('vol-123').AndReturn(fv)
+        eventlet.sleep(1).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -181,6 +187,7 @@ class VolumeTest(unittest.TestCase):
 
         vol.VolumeAttachment.nova('volume').AndReturn(self.fc)
         self.fc.volumes.get('vol-123').AndReturn(fv)
+        eventlet.sleep(1).AndReturn(None)
 
         # delete script
 
@@ -190,6 +197,7 @@ class VolumeTest(unittest.TestCase):
                                              'vol-123').AndReturn(None)
         vol.VolumeAttachment.nova('volume').AndReturn(self.fc)
         self.fc.volumes.get('vol-123').AndReturn(fv)
+        eventlet.sleep(1).AndReturn(None)
 
         self.m.ReplayAll()
 

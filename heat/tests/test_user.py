@@ -16,6 +16,7 @@
 import sys
 import os
 
+import eventlet
 import json
 import nose
 import mox
@@ -48,6 +49,7 @@ class UserTest(unittest.TestCase):
         self.m.StubOutWithMock(self.fc.ec2, 'create')
         self.m.StubOutWithMock(self.fc.ec2, 'get')
         self.m.StubOutWithMock(self.fc.ec2, 'delete')
+        self.m.StubOutWithMock(eventlet, 'sleep')
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -108,6 +110,7 @@ class UserTest(unittest.TestCase):
         # delete script
         user.User.keystone().AndReturn(self.fc)
         self.fc.users.get(user.DummyId('1')).AndRaise(Exception('not found'))
+        eventlet.sleep(1).AndReturn(None)
 
         user.User.keystone().AndReturn(self.fc)
         self.fc.users.get(user.DummyId('1')).AndReturn(fake_user)

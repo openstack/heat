@@ -30,7 +30,7 @@ from heat.openstack.common import utils
 from heat.openstack.common import cfg
 import heat.utils
 
-SQL_CONNECTION = 'sqlite:///heat-test.db/'
+SQL_CONNECTION = 'sqlite://'
 SQL_IDLE_TIMEOUT = 3600
 db_opts = [
     cfg.StrOpt('db_backend',
