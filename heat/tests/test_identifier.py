@@ -130,34 +130,34 @@ class IdentifierTest(unittest.TestCase):
 
     def test_url_path(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', 'p')
-        self.assertEqual(hi.url_path(), '/t/stacks/s/i/p')
+        self.assertEqual(hi.url_path(), 't/stacks/s/i/p')
 
     def test_url_path_default(self):
         hi = identifier.HeatIdentifier('t', 's', 'i')
-        self.assertEqual(hi.url_path(), '/t/stacks/s/i')
+        self.assertEqual(hi.url_path(), 't/stacks/s/i')
 
     def test_tenant_escape(self):
         hi = identifier.HeatIdentifier(':/', 's', 'i')
         self.assertEqual(hi.tenant, ':/')
-        self.assertEqual(hi.url_path(), '/%3A%2F/stacks/s/i')
+        self.assertEqual(hi.url_path(), '%3A%2F/stacks/s/i')
         self.assertEqual(hi.arn(), 'arn:openstack:heat::%3A%2F:stacks/s/i')
 
     def test_name_escape(self):
         hi = identifier.HeatIdentifier('t', ':/', 'i')
         self.assertEqual(hi.stack_name, ':/')
-        self.assertEqual(hi.url_path(), '/t/stacks/%3A%2F/i')
+        self.assertEqual(hi.url_path(), 't/stacks/%3A%2F/i')
         self.assertEqual(hi.arn(), 'arn:openstack:heat::t:stacks/%3A%2F/i')
 
     def test_id_escape(self):
         hi = identifier.HeatIdentifier('t', 's', ':/')
         self.assertEqual(hi.stack_id, ':/')
-        self.assertEqual(hi.url_path(), '/t/stacks/s/%3A%2F')
+        self.assertEqual(hi.url_path(), 't/stacks/s/%3A%2F')
         self.assertEqual(hi.arn(), 'arn:openstack:heat::t:stacks/s/%3A%2F')
 
     def test_path_escape(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', ':/')
         self.assertEqual(hi.path, '/:/')
-        self.assertEqual(hi.url_path(), '/t/stacks/s/i/%3A/')
+        self.assertEqual(hi.url_path(), 't/stacks/s/i/%3A/')
         self.assertEqual(hi.arn(), 'arn:openstack:heat::t:stacks/s/i/%3A/')
 
     def test_tenant_decode(self):
