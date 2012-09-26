@@ -340,7 +340,7 @@ class Stack(object):
 
         self.heatclient = self._create_heat_client()
 
-    def create(self):
+    def format_parameters(self):
         self.keyname = self.novaclient.keypairs.list().pop().name
 
         self.testcase.assertTrue(self.heatclient)
@@ -358,6 +358,10 @@ class Stack(object):
                                      self.template_file)
         parameters['TemplateBody'] = open(template_path).read()
         parameters.update(self.heatclient.format_parameters(template_params))
+        return parameters
+
+    def create(self):
+        parameters = self.format_parameters()
         result = self.heatclient.create_stack(**parameters)
 
         self._check_create_result(result)
@@ -373,15 +377,42 @@ class Stack(object):
 
         self.testcase.assertEqual(self.get_state(), 'CREATE_COMPLETE')
 
+    def update(self):
+        parameters = self.format_parameters()
+        result = self.heatclient.update_stack(**parameters)
+
+        self._check_update_result(result)
+
+        alist = None
+        tries = 0
+
+        print 'Waiting for stack update to be completed'
+        while self.get_state() == 'UPDATE_IN_PROGRESS':
+            tries += 1
+            self.testcase.assertTrue(tries < 500, 'Timed out')
+            time.sleep(10)
+
+        self.testcase.assertEqual(self.get_state(), 'UPDATE_COMPLETE')
+
     def _check_create_result(self, result):
         # Check result looks OK
         root = etree.fromstring(result)
         create_list = root.xpath('/CreateStackResponse/CreateStackResult')
         self.testcase.assertTrue(create_list)
         self.testcase.assertEqual(len(create_list), 1)
+        self._check_stackid(create_list)
 
+    def _check_update_result(self, result):
+        # Check result looks OK
+        root = etree.fromstring(result)
+        update_list = root.xpath('/UpdateStackResponse/UpdateStackResult')
+        self.testcase.assertTrue(update_list)
+        self.testcase.assertEqual(len(update_list), 1)
+        self._check_stackid(update_list)
+
+    def _check_stackid(self, xpq_list):
         # Extract StackId from the result, and check the StackName part
-        stackid = create_list[0].findtext('StackId')
+        stackid = xpq_list[0].findtext('StackId')
         idname = stackid.split('/')[1]
         print "Checking %s contains name %s" % (stackid, self.stackname)
         self.testcase.assertEqual(idname, self.stackname)
@@ -527,6 +558,9 @@ class StackBoto(Stack):
     the CFN API).
     '''
     def _check_create_result(self, result):
+        pass
+
+    def _check_update_result(self, result):
         pass
 
     def _create_heat_client(self):
