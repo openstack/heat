@@ -103,8 +103,8 @@ def format_stack(stack):
         STACK_TIMEOUT: stack.timeout_mins,
     }
 
-    # only show the outputs on a completely created stack
-    if stack.state == stack.CREATE_COMPLETE:
+    # only show the outputs on a completely created or updated stack
+    if stack.state in (stack.CREATE_COMPLETE, stack.UPDATE_COMPLETE):
         info[STACK_OUTPUTS] = format_stack_outputs(stack, stack.outputs)
 
     return info
