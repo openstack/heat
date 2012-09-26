@@ -33,7 +33,10 @@ from nose.plugins.attrib import attr
 from nose import with_setup
 from nose.exc import SkipTest
 
-from glance import client as glance_client
+try:
+    from glanceclient import client as glance_client
+except ImportError:
+    from glance import client as glance_client
 from novaclient.v1_1 import client as nova_client
 import heat
 from heat import utils

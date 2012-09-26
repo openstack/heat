@@ -21,7 +21,10 @@ import base64
 from lxml import etree
 import re
 
-from glance import client as glance_client
+try:
+    from glanceclient import client as glance_client
+except ImportError:
+    from glance import client as glance_client
 from heat.common import exception
 
 from heat.openstack.common import log as logging
