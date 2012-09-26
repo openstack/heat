@@ -1,0 +1,56 @@
+#!/bin/bash
+
+set +e
+
+function get_id () {
+    echo `"$@" | grep ' id ' | awk '{print $4}'`
+}
+
+KEYSTONE_CONF=${KEYSTONE_CONF:-/etc/keystone/keystone.conf}
+
+# Extract some info from Keystone's configuration file
+if [[ -r "$KEYSTONE_CONF" ]]; then
+    CONFIG_SERVICE_TOKEN=$(sed 's/[[:space:]]//g' $KEYSTONE_CONF | grep ^admin_token= | cut -d'=' -f2)
+    CONFIG_ADMIN_PORT=$(sed 's/[[:space:]]//g' $KEYSTONE_CONF | grep ^admin_port= | cut -d'=' -f2)
+fi
+
+export SERVICE_TOKEN=${SERVICE_TOKEN:-$CONFIG_SERVICE_TOKEN}
+export SERVICE_ENDPOINT=${SERVICE_ENDPOINT:-http://127.0.0.1:${CONFIG_ADMIN_PORT:-35357}/v2.0}
+if [[ -z "$SERVICE_TOKEN" ]]; then
+    echo "No service token found."
+    echo "Set SERVICE_TOKEN manually from keystone.conf admin_token."
+    exit 1
+fi
+
+ADMIN_ROLE=$(keystone role-list | grep '\badmin\b' | awk '{ print $2 }')
+SERVICE_TENANT=$(keystone tenant-list | grep service | cut -d\| -f2)
+SERVICE_PASSWORD=${SERVICE_PASSWORD:-$OS_PASSWORD}
+if [[ "$SERVICE_PASSWORD" == "$OS_PASSWORD" ]]; then
+    echo "Using the OS_PASSWORD for the SERVICE_PASSWORD."
+fi
+
+echo ADMIN_ROLE $ADMIN_ROLE
+echo SERVICE_TENANT $SERVICE_TENANT
+echo SERVICE_PASSWORD $SERVICE_PASSWORD
+echo SERVICE_TOKEN $SERVICE_TOKEN
+
+
+# Services
+HEAT_SERVICE=$(get_id \
+keystone service-create --name=heat \
+                        --type=orchestration \
+                        --description="Heat Service")
+HEAT_USER=$(get_id keystone user-create --name=heat \
+                                        --pass="$SERVICE_PASSWORD" \
+                                        --tenant_id $SERVICE_TENANT \
+                                        --email=heat@example.com)
+echo HEAT_USER $HEAT_USER
+keystone user-role-add --tenant_id $SERVICE_TENANT \
+                       --user_id $HEAT_USER \
+                       --role_id $ADMIN_ROLE
+
+keystone endpoint-create --region RegionOne --service_id $HEAT_SERVICE \
+    --publicurl 'http://localhost:8000/v1' \
+    --adminurl 'http://localhost:8000/v1' \
+    --internalurl 'http://localhost:8000/v1'
+

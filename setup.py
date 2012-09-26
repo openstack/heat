@@ -50,5 +50,6 @@ setuptools.setup(
              'bin/heat-metadata',
              'bin/heat-engine',
              'bin/heat-watch',
-             'bin/heat-db-setup'],
+             'bin/heat-db-setup',
+             'bin/heat-keystone-setup'],
     py_modules=[])
