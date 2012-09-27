@@ -14,8 +14,9 @@
 #    under the License.
 
 """
-/stack endpoint for heat v1 API
+Stack endpoint for Heat CloudFormation v1 API.
 """
+
 import httplib
 import json
 import os
@@ -37,13 +38,13 @@ from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.api.v1.stacks')
+logger = logging.getLogger('heat.api.cfn.v1.stacks')
 
 
 class StackController(object):
 
     """
-    WSGI controller for stacks resource in heat v1 API
+    WSGI controller for stacks resource in Heat CloudFormation v1 API
     Implements the API actions
     """
 

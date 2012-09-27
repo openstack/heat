@@ -39,7 +39,7 @@ from heat.common import wsgi
 from heat.openstack.common import cfg
 from heat.openstack.common import log as logging
 
-LOG = logging.getLogger('heat.api')
+LOG = logging.getLogger('heat.api.cfn')
 
 if __name__ == '__main__':
     try:

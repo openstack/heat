@@ -21,7 +21,7 @@ import gettext
 
 gettext.install('heat', unicode=1)
 
-from heat.api.v1 import stacks
+from heat.api.cfn.v1 import stacks
 from heat.common import wsgi
 
 from webob import Request
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 class API(wsgi.Router):
 
     """
-    WSGI router for Heat v1 API requests.
+    WSGI router for Heat CloudFormation v1 API requests.
     """
 
     _actions = {

@@ -666,7 +666,7 @@ class AppFactory(BasePasteFactory):
 
       [app:apiv1app]
       paste.app_factory = heat.common.wsgi:app_factory
-      heat.app_factory = heat.api.v1:API
+      heat.app_factory = heat.api.cfn.v1:API
 
     The WSGI app constructor must accept a ConfigOpts object and a local config
     dict as its two arguments.
