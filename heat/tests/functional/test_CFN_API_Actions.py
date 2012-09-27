@@ -265,12 +265,14 @@ class CfnApiFunctionalTest(unittest.TestCase):
                                                   "PhysicalResourceId")
         self.assertTrue(self.phys_res_id_re.match(phys_res_id) != None)
 
-        # Check ResourceProperties, the format of this is not defined
-        # by the AWS API spec, so we just check one expected key is there
-        rp_prefix = prefix + '/ResourceProperties'
-        prop_type = self.stack.response_xml_item(response, rp_prefix,
-                                                  "InstanceType")
-        self.assertEqual(prop_type, "m1.xlarge")
+        # ResourceProperties format is defined as a string "blob" by AWS
+        # we return JSON encoded properies, so decode and check one key
+        prop_json = self.stack.response_xml_item(response, prefix,
+                                                  "ResourceProperties")
+        self.assertTrue(prop_json != None)
+
+        prop = json.loads(prop_json)
+        self.assertEqual(prop["InstanceType"], "m1.xlarge")
 
         print "DescribeStackEvents : OK"
 
