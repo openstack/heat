@@ -69,8 +69,9 @@ class NoAuthStrategy(BaseStrategy):
 class KeystoneStrategy(BaseStrategy):
     MAX_REDIRECTS = 10
 
-    def __init__(self, creds):
+    def __init__(self, creds, service_type):
         self.creds = creds
+        self.service_type = service_type
         super(KeystoneStrategy, self).__init__()
 
     def check_auth_params(self):
@@ -184,32 +185,26 @@ class KeystoneStrategy(BaseStrategy):
 
             We search the full service catalog for services
             matching both type and region. If the client
-            supplied no region then any 'heat' endpoint
+            supplied no region then any endpoint for the service
             is considered a match. There must be one -- and
             only one -- successful match in the catalog,
             otherwise we will raise an exception.
             """
-            # FIXME(sirp): for now just use the public url.
-            endpoint = None
             region = self.creds.get('region')
-            for service in service_catalog:
-                try:
-                    service_type = service['type']
-                except KeyError:
-                    msg = _('Encountered service with no "type": %s' % service)
-                    logger.warn(msg)
-                    continue
 
-                if service_type == 'orchestration':
-                    for ep in service['endpoints']:
-                        if region is None or region == ep['region']:
-                            if endpoint is not None:
-                                # This is a second match, abort
-                                raise exception.RegionAmbiguity(region=region)
-                            endpoint = ep
-            if endpoint is None:
+            service_type_matches = lambda s: s.get('type') == self.service_type
+            region_matches = lambda e: region is None or e['region'] == region
+
+            endpoints = [ep for s in service_catalog if service_type_matches(s)
+                            for ep in s['endpoints'] if region_matches(ep)]
+
+            if len(endpoints) > 1:
+                raise exception.RegionAmbiguity(region=region)
+            elif not endpoints:
                 raise exception.NoServiceEndpoint()
-            return endpoint['publicURL']
+            else:
+                # FIXME(sirp): for now just use the public url.
+                return endpoints[0]['publicURL']
 
         creds = self.creds
 
@@ -268,10 +263,10 @@ class KeystoneStrategy(BaseStrategy):
         return resp, resp_body
 
 
-def get_plugin_from_strategy(strategy, creds=None):
+def get_plugin_from_strategy(strategy, creds=None, service_type=None):
     if strategy == 'noauth':
         return NoAuthStrategy()
     elif strategy == 'keystone':
-        return KeystoneStrategy(creds)
+        return KeystoneStrategy(creds, service_type)
     else:
         raise Exception(_("Unknown auth strategy '%s'") % strategy)

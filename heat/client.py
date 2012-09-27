@@ -179,4 +179,5 @@ def get_client(host, port=None, username=None,
                 use_ssl=use_ssl,
                 auth_tok=auth_token,
                 creds=creds,
-                insecure=insecure)
+                insecure=insecure,
+                service_type='orchestration')

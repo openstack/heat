@@ -223,7 +223,7 @@ class BaseClient(object):
     def __init__(self, host, port=None, use_ssl=False, auth_tok=None,
                  creds=None, doc_root=None, key_file=None,
                  cert_file=None, ca_file=None, insecure=False,
-                 configure_via_auth=True):
+                 configure_via_auth=True, service_type=None):
         """
         Creates a new client to some service.
 
@@ -260,6 +260,7 @@ class BaseClient(object):
         self.creds = creds or {}
         self.connection = None
         self.configure_via_auth = configure_via_auth
+        self.service_type = service_type
         # doc_root can be a nullstring, which is valid, and why we
         # cannot simply do doc_root or self.DEFAULT_DOC_ROOT below.
         self.doc_root = (doc_root if doc_root is not None
@@ -368,7 +369,8 @@ class BaseClient(object):
         Returns an instantiated authentication plugin.
         """
         strategy = creds.get('strategy', 'noauth')
-        plugin = auth.get_plugin_from_strategy(strategy, creds)
+        plugin = auth.get_plugin_from_strategy(strategy,
+                                               creds, self.service_type)
         return plugin
 
     def get_connection_type(self):
