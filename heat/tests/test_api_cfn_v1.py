@@ -808,7 +808,7 @@ class StackControllerTest(unittest.TestCase):
                 'ResourceType': u'AWS::EC2::Instance',
                 'Timestamp': u'2012-07-23T13:05:39Z',
                 'StackName': u'wordpress',
-                'ResourceProperties': {u'UserData': u'blah'},
+                'ResourceProperties': json.dumps({u'UserData': u'blah'}),
                 'PhysicalResourceId': None,
                 'ResourceStatusReason': u'state changed',
                 'LogicalResourceId': u'WikiDatabase'}]}}}

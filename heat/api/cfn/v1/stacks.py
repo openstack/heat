@@ -426,6 +426,8 @@ class StackController(object):
             }
 
             result = api_utils.reformat_dict_keys(keymap, e)
+            result['ResourceProperties'] = json.dumps(
+                                           result['ResourceProperties'])
 
             return self._stackid_format(result)
 
