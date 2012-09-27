@@ -37,19 +37,14 @@ class Controller(object):
         """Respond to a request for all OpenStack API versions."""
         version_objs = [
             {
-                "id": "v1.1",
+                "id": "v1.0",
                 "status": "CURRENT",
                 "links": [
                     {
                         "rel": "self",
-                        "href": self.get_href(req)}]},
-            {
-                "id": "v1.0",
-                "status": "SUPPORTED",
-                "links": [
-                    {
-                        "rel": "self",
-                        "href": self.get_href(req)}]}]
+                        "href": self.get_href(req)
+                    }]
+            }]
 
         body = json.dumps(dict(versions=version_objs))
 

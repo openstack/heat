@@ -29,6 +29,9 @@ import webob
 from heat import utils
 from heat.common import context
 from heat.api.aws import exception
+from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+from heat.api.cloudwatch import versions
+
 
 from heat.openstack.common import log as logging
 
@@ -79,3 +82,8 @@ class API(wsgi.Router):
         mapper.connect("/", controller=controller_resource, action="index")
 
         super(API, self).__init__(mapper)
+
+
+def version_negotiation_filter(app, conf, **local_conf):
+    return VersionNegotiationFilter(versions.Controller, app,
+                                    conf, **local_conf)

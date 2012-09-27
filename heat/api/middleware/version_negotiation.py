@@ -23,7 +23,6 @@ import re
 
 from heat.openstack.common import log as logging
 
-from heat.api import versions
 from heat.common import wsgi
 
 logger = logging.getLogger('heat.api.middleware.version_negotiation')
@@ -31,8 +30,8 @@ logger = logging.getLogger('heat.api.middleware.version_negotiation')
 
 class VersionNegotiationFilter(wsgi.Middleware):
 
-    def __init__(self, app, conf, **local_conf):
-        self.versions_app = versions.Controller(conf)
+    def __init__(self, version_controller, app, conf, **local_conf):
+        self.versions_app = version_controller(conf)
         self.version_uri_regex = re.compile(r"^v(\d+)\.?(\d+)?")
         self.conf = conf
         super(VersionNegotiationFilter, self).__init__(app)

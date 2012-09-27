@@ -17,9 +17,6 @@ import json
 import urlparse
 import httplib
 import routes
-import gettext
-
-gettext.install('heat', unicode=1)
 
 from heat.api.cfn.v1 import stacks
 from heat.common import wsgi

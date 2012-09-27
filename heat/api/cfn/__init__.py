@@ -12,3 +12,15 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+import gettext
+
+gettext.install('heat', unicode=1)
+
+from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+from heat.api.cfn import versions
+
+
+def version_negotiation_filter(app, conf, **local_conf):
+    return VersionNegotiationFilter(versions.Controller, app,
+                                    conf, **local_conf)
