@@ -73,9 +73,9 @@ class HeatIdentifier(collections.Mapping):
     def url_path(self):
         '''
         Return a URL-encoded path segment of a URL in the form:
-            /<tenant>/stacks/<stack_name>/<stack_id><path>
+            <tenant>/stacks/<stack_name>/<stack_id><path>
         '''
-        return '/%s/%s' % (urllib.quote(self.tenant, ''), self._tenant_path())
+        return '/'.join((urllib.quote(self.tenant, ''), self._tenant_path()))
 
     def _tenant_path(self):
         '''

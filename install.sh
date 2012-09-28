@@ -14,22 +14,6 @@ LOG_DIR=/var/log/heat
 install -d $LOG_DIR
 
 
-archive_file() {
-    local f=$1
-
-    if [ -e $CONF_PREFIX/$f ]; then
-        echo "Archiving configuration file $CONF_PREFIX/$f" >&2
-        mv $CONF_PREFIX/$f $CONF_PREFIX/$f.bak
-    fi
-}
-
-# Archive existing heat-api* config files in preparation
-# for change to heat-api-cfn*, and future use of heat-api*
-# for the OpenStack API.
-archive_file etc/heat/heat-api.conf
-archive_file etc/heat/heat-api-paste.ini
-
-
 install_dir() {
     local dir=$1
     local prefix=$2
