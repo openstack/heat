@@ -21,12 +21,12 @@ import setuptools
 
 from heat.openstack.common import setup
 
-# import this after write_vcsversion because version imports vcsversion
 from heat import version
+version.write_git_sha()
 
 setuptools.setup(
     name='heat',
-    version=version.canonical_version_string(),
+    version=version.HEAT_VERSION,
     description='The heat project provides services for provisioning '
                 'virtual machines',
     license='Apache License (2.0)',

@@ -116,7 +116,7 @@ class Service(object):
         self.timers = []
 
     def start(self):
-        vcs_string = version.version_string_with_vcs()
+        vcs_string = version.version_string(type='long')
         LOG.info(_('Starting %(topic)s node (version %(vcs_string)s)'),
                   {'topic': self.topic, 'vcs_string': vcs_string})
         # TODO do we need this ? -> utils.cleanup_file_locks()
