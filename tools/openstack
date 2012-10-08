@@ -131,7 +131,7 @@ function os_erase() {
 
     sudo rm -f /var/lib/libvirt/qemu/save/instance-000*
     sudo rm -f /var/lib/libvirt/qemu/instance-000*
-    sudo yum -q -y erase python-glance python-nova* python-keystone* openstack-swift* openstack-dashboard
+    sudo yum -q -y erase python-glance* python-nova* python-keystone* openstack-swift* openstack-dashboard
 
     sudo systemctl start mysqld.service
     sleep 1
