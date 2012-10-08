@@ -189,7 +189,7 @@ class BotoCWClient(CloudWatchConnection):
         return '\n'.join(ret)
 
 
-def get_client(port=None):
+def get_client(port=None, aws_access_key=None, aws_secret_key=None):
     """
     Returns a new boto CloudWatch client connection to a heat server
     Note : Configuration goes in /etc/boto.cfg, not via arguments
@@ -198,8 +198,8 @@ def get_client(port=None):
     # Note we pass None/None for the keys so boto reads /etc/boto.cfg
     # Also note is_secure is defaulted to False as HTTPS connections
     # don't seem to work atm, FIXME
-    cloudwatch = BotoCWClient(aws_access_key_id=None,
-        aws_secret_access_key=None, is_secure=False,
+    cloudwatch = BotoCWClient(aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key, is_secure=False,
         port=port, path="/v1")
     if cloudwatch:
         logger.debug("Got CW connection object OK")
