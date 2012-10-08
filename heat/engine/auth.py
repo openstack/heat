@@ -75,7 +75,8 @@ def authenticate(con, service_type='orchestration', service_name='heat'):
                              project_id=con.tenant,
                              auth_url=con.auth_url,
                              service_type=service_type,
-                             service_name=service_name)
+                             service_name=service_name,
+                             no_cache=True)
         nova.authenticate()
         return nova
     else:
@@ -113,6 +114,7 @@ def authenticate(con, service_type='orchestration', service_name='heat'):
                              proxy_token=token_id,
                              proxy_tenant_id=con.tenant_id,
                              service_type=service_type,
-                             service_name=service_name)
+                             service_name=service_name,
+                             no_cache=True)
         nova.authenticate()
         return nova
