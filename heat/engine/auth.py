@@ -70,13 +70,26 @@ def authenticate(con, service_type='orchestration', service_name='heat'):
     """
 
     if con.password is not None:
-        nova = client.Client(username=con.username,
-                             api_key=con.password,
-                             project_id=con.tenant,
-                             auth_url=con.auth_url,
-                             service_type=service_type,
-                             service_name=service_name,
-                             no_cache=True)
+        try:
+            # Workaround for issues with python-keyring, need no_cache=True
+            # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
+            # TODO(shardy): May be able to remove when the bug above is fixed
+            nova = client.Client(username=con.username,
+                                api_key=con.password,
+                                project_id=con.tenant,
+                                auth_url=con.auth_url,
+                                service_type=service_type,
+                                service_name=service_name,
+                                no_cache=True)
+        except TypeError:
+            # for compatibility with essex, which doesn't have no_cache=True
+            # TODO(shardy): remove when we no longer support essex
+            nova = client.Client(username=con.username,
+                                api_key=con.password,
+                                project_id=con.tenant,
+                                auth_url=con.auth_url,
+                                service_type=service_type,
+                                service_name=service_name)
         nova.authenticate()
         return nova
     else:
@@ -109,12 +122,25 @@ def authenticate(con, service_type='orchestration', service_name='heat'):
             logger.info("AWS authentication failure.")
             raise exception.AuthorizationFailure()
 
-        nova = client.Client(con.service_user, con.service_password,
-                             con.tenant, con.auth_url,
-                             proxy_token=token_id,
-                             proxy_tenant_id=con.tenant_id,
-                             service_type=service_type,
-                             service_name=service_name,
-                             no_cache=True)
+        try:
+            # Workaround for issues with python-keyring, need no_cache=True
+            # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
+            # TODO(shardy): May be able to remove when the bug above is fixed
+            nova = client.Client(con.service_user, con.service_password,
+                                 con.tenant, con.auth_url,
+                                 proxy_token=token_id,
+                                 proxy_tenant_id=con.tenant_id,
+                                 service_type=service_type,
+                                 service_name=service_name,
+                                 no_cache=True)
+        except TypeError:
+            # for compatibility with essex, which doesn't have no_cache=True
+            # TODO(shardy): remove when we no longer support essex
+            nova = client.Client(con.service_user, con.service_password,
+                                 con.tenant, con.auth_url,
+                                 proxy_token=token_id,
+                                 proxy_tenant_id=con.tenant_id,
+                                 service_type=service_type,
+                                 service_name=service_name)
         nova.authenticate()
         return nova
