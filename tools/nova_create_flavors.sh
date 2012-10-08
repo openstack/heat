@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Create additional nova instance types (flavors)
 # to map to the AWS instance types we have in the templates
 
