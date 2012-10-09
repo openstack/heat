@@ -127,9 +127,9 @@ Register heat with keystone
 
 ::
 
-    sudo -E ./tools/heat-keystone-service
+    sudo -E ./bin/heat-keystone-setup
 
-Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``heat-keystone-service`` is run as root. This script needs to run as root in order to read the admin password.
+Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``heat-keystone-setup`` is run as root. This script needs to run as root in order to read the admin password.
 
 Register a SSH key-pair with OpenStack Nova
 -------------------------------------------

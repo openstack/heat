@@ -45,9 +45,17 @@ HEAT_USER=$(get_id keystone user-create --name=heat \
                                         --tenant_id $SERVICE_TENANT \
                                         --email=heat@example.com)
 echo HEAT_USER $HEAT_USER
-keystone user-role-add --tenant_id $SERVICE_TENANT \
-                       --user_id $HEAT_USER \
-                       --role_id $ADMIN_ROLE
+
+ver=`nova-manage version list | cut -d . -f1`
+if [ $ver -lt 2013 ]; then
+    keystone user-role-add --tenant_id $SERVICE_TENANT \
+                           --user $HEAT_USER \
+                           --role $ADMIN_ROLE
+else
+    keystone user-role-add --tenant_id $SERVICE_TENANT \
+                           --user_id $HEAT_USER \
+                           --role_id $ADMIN_ROLE
+fi
 
 keystone endpoint-create --region RegionOne --service_id $HEAT_SERVICE \
     --publicurl 'http://localhost:8000/v1' \
