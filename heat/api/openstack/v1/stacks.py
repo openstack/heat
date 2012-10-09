@@ -56,7 +56,7 @@ CREATE_PARAMS = (
 )
 
 
-def json_parse(self, data, data_type):
+def json_parse(data, data_type):
     try:
         return json.loads(data)
     except ValueError:
@@ -211,22 +211,25 @@ class StackController(object):
         """
         if PARAM_STACK_NAME not in req.params:
             raise exc.HTTPBadRequest(explanation=_("No stack name specified"))
-        stack_name = req.params[PARAMS_STACK_NAME]
+        stack_name = req.params[PARAM_STACK_NAME]
 
         stack_params = get_user_params(req)
         template = get_template(req)
         args = get_args(req)
 
         try:
-            identity = self.engine_rpcapi.create_stack(req.context,
-                                                       stack_name,
-                                                       template,
-                                                       stack_params,
-                                                       args)
+            result = self.engine_rpcapi.create_stack(req.context,
+                                                     stack_name,
+                                                     template,
+                                                     stack_params,
+                                                     args)
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
-        raise exc.HTTPCreated(location=stack_url(req, identity))
+        if 'Description' in result:
+            raise exc.HTTPBadRequest(explanation=result['Description'])
+
+        raise exc.HTTPCreated(location=stack_url(req, result))
 
     @tenant_local
     def lookup(self, req, stack_name):
@@ -295,6 +298,9 @@ class StackController(object):
                                                   stack_params, args)
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
+
+        if 'Description' in res:
+            raise exc.HTTPBadRequest(explanation=res['Description'])
 
         raise exc.HTTPAccepted()
 
