@@ -69,29 +69,25 @@ def authenticate(con, service_type='orchestration', service_name='heat'):
         username in the context so we can use it to key in the database.
     """
 
-    if con.password is not None:
-        try:
-            # Workaround for issues with python-keyring, need no_cache=True
-            # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
-            # TODO(shardy): May be able to remove when the bug above is fixed
-            nova = client.Client(username=con.username,
-                                api_key=con.password,
-                                project_id=con.tenant,
-                                auth_url=con.auth_url,
-                                service_type=service_type,
-                                service_name=service_name,
-                                no_cache=True)
-        except TypeError:
-            # for compatibility with essex, which doesn't have no_cache=True
-            # TODO(shardy): remove when we no longer support essex
-            nova = client.Client(username=con.username,
-                                api_key=con.password,
-                                project_id=con.tenant,
-                                auth_url=con.auth_url,
-                                service_type=service_type,
-                                service_name=service_name)
-        nova.authenticate()
-        return nova
+    args = {
+        'project_id': con.tenant,
+        'auth_url': con.auth_url,
+        'service_type': service_type,
+        'service_name': service_name,
+    }
+
+    if con.auth_token is not None:
+        credentials = {
+            'username': con.service_user,
+            'api_key': con.service_password,
+            'proxy_token': con.auth_token,
+            'proxy_tenant_id': con.tenant_id,
+        }
+    elif con.password is not None:
+        credentials = {
+            'username': con.username,
+            'api_key': con.password,
+        }
     else:
         # We'll have to do AWS style auth which is more complex.
         # First step is to get a token from the AWS creds.
@@ -122,25 +118,23 @@ def authenticate(con, service_type='orchestration', service_name='heat'):
             logger.info("AWS authentication failure.")
             raise exception.AuthorizationFailure()
 
-        try:
-            # Workaround for issues with python-keyring, need no_cache=True
-            # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
-            # TODO(shardy): May be able to remove when the bug above is fixed
-            nova = client.Client(con.service_user, con.service_password,
-                                 con.tenant, con.auth_url,
-                                 proxy_token=token_id,
-                                 proxy_tenant_id=con.tenant_id,
-                                 service_type=service_type,
-                                 service_name=service_name,
-                                 no_cache=True)
-        except TypeError:
-            # for compatibility with essex, which doesn't have no_cache=True
-            # TODO(shardy): remove when we no longer support essex
-            nova = client.Client(con.service_user, con.service_password,
-                                 con.tenant, con.auth_url,
-                                 proxy_token=token_id,
-                                 proxy_tenant_id=con.tenant_id,
-                                 service_type=service_type,
-                                 service_name=service_name)
-        nova.authenticate()
-        return nova
+        credentials = {
+            'username': con.service_user,
+            'api_key': con.service_password,
+            'proxy_token': token_id,
+            'proxy_tenant_id': con.tenant_id,
+        }
+
+    args.update(credentials)
+    try:
+        # Workaround for issues with python-keyring, need no_cache=True
+        # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
+        # TODO(shardy): May be able to remove when the bug above is fixed
+        nova = client.Client(no_cache=True, **args)
+    except TypeError:
+        # for compatibility with essex, which doesn't have no_cache=True
+        # TODO(shardy): remove when we no longer support essex
+        nova = client.Client(**args)
+
+    nova.authenticate()
+    return nova
