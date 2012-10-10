@@ -61,9 +61,9 @@ class InstantiationData(object):
         'parameters',
     )
 
-    def __init__(self, req):
+    def __init__(self, data):
         """Initialise from the request object."""
-        self.data = req.params
+        self.data = data
 
     @staticmethod
     def json_parse(data, data_type):
@@ -92,7 +92,7 @@ class InstantiationData(object):
         format.
         """
         if self.PARAM_TEMPLATE in self.data:
-            return self.json_parse(self.data[self.PARAM_TEMPLATE], 'Template')
+            return self.data[self.PARAM_TEMPLATE]
         elif self.PARAM_TEMPLATE_URL in self.data:
             template_url = self.data[self.PARAM_TEMPLATE_URL]
             logger.debug('Template URL %s' % template_url)
@@ -124,10 +124,7 @@ class InstantiationData(object):
         """
         Get the user-supplied parameters for the stack in JSON format.
         """
-        if self.PARAM_USER_PARAMS not in self.data:
-            return {}
-
-        return self.json_parse(self.data[self.PARAM_USER_PARAMS], 'Parameters')
+        return self.data.get(self.PARAM_USER_PARAMS, {})
 
     def args(self):
         """
@@ -230,12 +227,12 @@ class StackController(object):
         return {'stacks': [format_stack(req, s, summary_keys) for s in stacks]}
 
     @tenant_local
-    def create(self, req):
+    def create(self, req, body):
         """
         Create a new stack
         """
 
-        data = InstantiationData(req)
+        data = InstantiationData(body)
 
         try:
             result = self.engine_rpcapi.create_stack(req.context,
@@ -252,7 +249,7 @@ class StackController(object):
         raise exc.HTTPCreated(location=stack_url(req, result))
 
     @tenant_local
-    def lookup(self, req, stack_name):
+    def lookup(self, req, stack_name, body=None):
         """
         Redirect to the canonical URL for a stack
         """
@@ -303,11 +300,11 @@ class StackController(object):
         return json.dumps(templ)
 
     @identified_stack
-    def update(self, req, identity):
+    def update(self, req, identity, body):
         """
         Update an existing stack with a new template and/or parameters
         """
-        data = InstantiationData(req)
+        data = InstantiationData(body)
 
         try:
             res = self.engine_rpcapi.update_stack(req.context,
@@ -343,13 +340,13 @@ class StackController(object):
         raise exc.HTTPNoContent()
 
     @tenant_local
-    def validate_template(self, req):
+    def validate_template(self, req, body):
         """
         Implements the ValidateTemplate API action
         Validates the specified template
         """
 
-        data = InstantiationData(req)
+        data = InstantiationData(body)
 
         try:
             return self.engine_rpcapi.validate_template(req.context,
