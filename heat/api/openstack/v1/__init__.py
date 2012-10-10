@@ -74,8 +74,8 @@ class API(wsgi.Router):
                        conditions={'method': 'DELETE'})
 
         # Template handling
-        mapper.connect("stack", "/validate",
-                       controller=stacks_resource, action="validate",
+        mapper.connect("stack", "/{tenant_id}/validate",
+                       controller=stacks_resource, action="validate_template",
                        conditions={'method': 'POST'})
 
         super(API, self).__init__(mapper)

@@ -323,6 +323,7 @@ class StackController(object):
 
         raise exc.HTTPNoContent()
 
+    @tenant_local
     def validate_template(self, req):
         """
         Implements the ValidateTemplate API action
@@ -334,7 +335,7 @@ class StackController(object):
 
         try:
             return self.engine_rpcapi.validate_template(req.context,
-                                                        template, params)
+                                                        template, stack_params)
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
