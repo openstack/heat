@@ -249,6 +249,18 @@ class FakeHTTPClient(base_client.HTTPClient):
         r = {'server': self.get_servers_detail()[1]['servers'][0]}
         return (200, r)
 
+    def get_servers_WikiServerOne(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][0]}
+        return (200, r)
+
+    def get_servers_WikiServerOne1(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][0]}
+        return (200, r)
+
+    def get_servers_WikiServerOne2(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][0]}
+        return (200, r)
+
     def get_servers_5678(self, **kw):
         r = {'server': self.get_servers_detail()[1]['servers'][1]}
         return (200, r)
@@ -427,7 +439,7 @@ class FakeHTTPClient(base_client.HTTPClient):
     def get_flavors(self, **kw):
         return (200, {'flavors': [
             {'id': 1, 'name': '256 MB Server'},
-            {'id': 2, 'name': '512 MB Server'},
+            {'id': 2, 'name': 'm1.small'},
             {'id': 3, 'name': 'm1.large'}
         ]})
 
@@ -435,7 +447,7 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (200, {'flavors': [
             {'id': 1, 'name': '256 MB Server', 'ram': 256, 'disk': 10,
              'OS-FLV-EXT-DATA:ephemeral': 10},
-            {'id': 2, 'name': '512 MB Server', 'ram': 512, 'disk': 20,
+            {'id': 2, 'name': 'm1.small', 'ram': 512, 'disk': 20,
              'OS-FLV-EXT-DATA:ephemeral': 20},
             {'id': 3, 'name': 'm1.large', 'ram': 512, 'disk': 20,
              'OS-FLV-EXT-DATA:ephemeral': 30}
@@ -551,7 +563,8 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (200, {'images': [
             {'id': 1, 'name': 'CentOS 5.2'},
             {'id': 2, 'name': 'My Server Backup'},
-            {'id': 3, 'name': 'F17-x86_64-gold'}
+            {'id': 3, 'name': 'F17-x86_64-gold'},
+            {'id': 4, 'name': 'F17-x86_64-cfntools'}
         ]})
 
     def get_images_detail(self, **kw):
@@ -581,6 +594,16 @@ class FakeHTTPClient(base_client.HTTPClient):
                 "id": 744,
                 "name": "F17-x86_64-gold",
                 "serverId": 9999,
+                "updated": "2010-10-10T12:00:00Z",
+                "created": "2010-08-10T12:00:00Z",
+                "status": "SAVING",
+                "progress": 80,
+                "links": {},
+            },
+            {
+                "id": 745,
+                "name": "F17-x86_64-cfntools",
+                "serverId": 9998,
                 "updated": "2010-10-10T12:00:00Z",
                 "created": "2010-08-10T12:00:00Z",
                 "status": "SAVING",
