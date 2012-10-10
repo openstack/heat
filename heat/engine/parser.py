@@ -459,7 +459,11 @@ class Stack(object):
         Update will fail if it exceeds the specified timeout. The default is
         60 minutes, set in the constructor
         '''
-        self.state_set(self.UPDATE_IN_PROGRESS, 'Stack update started')
+        if self.state not in (self.CREATE_COMPLETE, self.UPDATE_COMPLETE):
+            self.state_set(self.UPDATE_FAILED, 'State invalid for update')
+            return
+        else:
+            self.state_set(self.UPDATE_IN_PROGRESS, 'Stack update started')
 
         # Now make the resources match the new stack definition
         failures = []
