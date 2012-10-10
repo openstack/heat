@@ -61,7 +61,7 @@ def decrypt(auth_info):
     return res
 
 
-def authenticate(con, service_type='orchestration', service_name='heat'):
+def authenticate(con, service_type='cloudformation', service_name='heat'):
     """ Authenticate a user context.  This authenticates either an
         EC2 style key context or a keystone user/pass context.
 

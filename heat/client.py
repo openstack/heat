@@ -180,4 +180,4 @@ def get_client(host, port=None, username=None,
                 auth_tok=auth_token,
                 creds=creds,
                 insecure=insecure,
-                service_type='orchestration')
+                service_type='cloudformation')
