@@ -172,14 +172,17 @@ class AccessKey(Resource):
 
     def FnGetAtt(self, key):
         res = None
+        log_res = None
         if key == 'UserName':
             res = self.properties['UserName']
+            log_res = res
         elif key == 'SecretAccessKey':
             res = self._secret_accesskey()
+            log_res = "<SANITIZED>"
         else:
             raise exception.InvalidTemplateAttribute(
                         resource=self.physical_resource_name(), key=key)
 
         logger.info('%s.GetAtt(%s) == %s' % (self.physical_resource_name(),
-                                             key, res))
+                                             key, log_res))
         return unicode(res)
