@@ -43,73 +43,98 @@ from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.api.openstack.v1.stacks')
 
-CREATE_PARAMS = (
-    PARAM_STACK_NAME,
-    PARAM_TEMPLATE,
-    PARAM_TEMPLATE_URL,
-    PARAM_USER_PARAMS,
-) = (
-    'stack_name',
-    'template',
-    'template_url',
-    'parameters',
-)
 
-
-def json_parse(data, data_type):
-    try:
-        return json.loads(data)
-    except ValueError:
-        err_reason = "%s not in valid JSON format" % data_type
-        raise exc.HTTPBadRequest(explanation=err_reason)
-
-
-def get_template(req):
+class InstantiationData(object):
     """
-    Get template file contents, either from local file or URL, in JSON format
+    The data accompanying a PUT or POST request to create or update a stack.
     """
-    if PARAM_TEMPLATE in req.params:
-        return json_parse(req.params[PARAM_TEMPLATE], 'Template')
-    elif PARAM_TEMPLATE_URL in req.params:
-        logger.debug('Template URL %s' % req.params[PARAM_TEMPLATE_URL])
-        url = urlparse.urlparse(req.params[PARAM_TEMPLATE_URL])
-        err_reason = _("Could not retrieve template")
+
+    PARAMS = (
+        PARAM_STACK_NAME,
+        PARAM_TEMPLATE,
+        PARAM_TEMPLATE_URL,
+        PARAM_USER_PARAMS,
+    ) = (
+        'stack_name',
+        'template',
+        'template_url',
+        'parameters',
+    )
+
+    def __init__(self, req):
+        """Initialise from the request object."""
+        self.data = req.params
+
+    @staticmethod
+    def json_parse(data, data_type):
+        """
+        Parse the supplied data as JSON, raising the appropriate exception
+        if it is in the wrong format.
+        """
 
         try:
-            ConnType = (url.scheme == 'https' and httplib.HTTPSConnection
-                                               or httplib.HTTPConnection)
-            conn = ConnType(url.netloc)
-
-            try:
-                conn.request("GET", url.path)
-                resp = conn.getresponse()
-                logger.info('status %d' % r1.status)
-
-                if resp.status != 200:
-                    raise exc.HTTPBadRequest(explanation=err_reason)
-
-                return json_parse(resp.read(), 'Template')
-            finally:
-                conn.close()
-        except socket.gaierror:
+            return json.loads(data)
+        except ValueError:
+            err_reason = "%s not in valid JSON format" % data_type
             raise exc.HTTPBadRequest(explanation=err_reason)
 
-    raise exc.HTTPBadRequest(explanation=_("No template specified"))
+    def stack_name(self):
+        """
+        Return the stack name.
+        """
+        if self.PARAM_STACK_NAME not in self.data:
+            raise exc.HTTPBadRequest(explanation=_("No stack name specified"))
+        return self.data[self.PARAM_STACK_NAME]
 
+    def template(self):
+        """
+        Get template file contents, either inline or from a URL, in JSON
+        format.
+        """
+        if self.PARAM_TEMPLATE in self.data:
+            return self.json_parse(self.data[self.PARAM_TEMPLATE], 'Template')
+        elif self.PARAM_TEMPLATE_URL in self.data:
+            template_url = self.data[self.PARAM_TEMPLATE_URL]
+            logger.debug('Template URL %s' % template_url)
+            url = urlparse.urlparse(template_url)
+            err_reason = _("Could not retrieve template")
 
-def get_user_params(req):
-    """
-    Get the user-supplied parameters for the stack in JSON format
-    """
-    if PARAM_USER_PARAMS not in req.params:
-        return {}
+            try:
+                ConnType = (url.scheme == 'https' and httplib.HTTPSConnection
+                                                   or httplib.HTTPConnection)
+                conn = ConnType(url.netloc)
 
-    return json_parse(req.params[PARAM_USER_PARAMS], 'User Parameters')
+                try:
+                    conn.request("GET", url.path)
+                    resp = conn.getresponse()
+                    logger.info('status %d' % r1.status)
 
+                    if resp.status != 200:
+                        raise exc.HTTPBadRequest(explanation=err_reason)
 
-def get_args(req):
-    params = req.params.items()
-    return dict((k, v) for k, v in params if k not in CREATE_PARAMS)
+                    return self.json_parse(resp.read(), 'Template')
+                finally:
+                    conn.close()
+            except socket.gaierror:
+                raise exc.HTTPBadRequest(explanation=err_reason)
+
+        raise exc.HTTPBadRequest(explanation=_("No template specified"))
+
+    def user_params(self):
+        """
+        Get the user-supplied parameters for the stack in JSON format.
+        """
+        if self.PARAM_USER_PARAMS not in self.data:
+            return {}
+
+        return self.json_parse(self.data[self.PARAM_USER_PARAMS], 'Parameters')
+
+    def args(self):
+        """
+        Get any additional arguments supplied by the user.
+        """
+        params = self.data.items()
+        return dict((k, v) for k, v in params if k not in self.PARAMS)
 
 
 def tenant_local(handler):
@@ -209,20 +234,15 @@ class StackController(object):
         """
         Create a new stack
         """
-        if PARAM_STACK_NAME not in req.params:
-            raise exc.HTTPBadRequest(explanation=_("No stack name specified"))
-        stack_name = req.params[PARAM_STACK_NAME]
 
-        stack_params = get_user_params(req)
-        template = get_template(req)
-        args = get_args(req)
+        data = InstantiationData(req)
 
         try:
             result = self.engine_rpcapi.create_stack(req.context,
-                                                     stack_name,
-                                                     template,
-                                                     stack_params,
-                                                     args)
+                                                     data.stack_name(),
+                                                     data.template(),
+                                                     data.user_params(),
+                                                     data.args())
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
@@ -287,15 +307,14 @@ class StackController(object):
         """
         Update an existing stack with a new template and/or parameters
         """
-        stack_params = get_user_params(req)
-        template = get_template(req)
-        args = get_args(req)
+        data = InstantiationData(req)
 
         try:
             res = self.engine_rpcapi.update_stack(req.context,
                                                   identity,
-                                                  template,
-                                                  stack_params, args)
+                                                  data.template(),
+                                                  data.user_params(),
+                                                  data.args())
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
@@ -330,12 +349,12 @@ class StackController(object):
         Validates the specified template
         """
 
-        template = get_template(req)
-        stack_params = get_user_params(req)
+        data = InstantiationData(req)
 
         try:
             return self.engine_rpcapi.validate_template(req.context,
-                                                        template, stack_params)
+                                                        data.template(),
+                                                        data.user_params())
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
