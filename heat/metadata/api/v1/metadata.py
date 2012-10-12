@@ -102,25 +102,6 @@ class MetadataController:
             return json_error(400, error)
         return json_response(201, event)
 
-    def create_watch_data(self, req, body, watch_name):
-        con = context.get_admin_context()
-        [error, watch_data] = self.engine_rpcapi.create_watch_data(con,
-                                   watch_name=watch_name,
-                                   stats_data=body)
-        if error:
-            return json_error(400, error)
-        return json_response(201, watch_data)
-
-    def list_watch_data(self, req, watch_name):
-        con = context.get_admin_context()
-        data = self.engine_rpcapi.list_watch_data(con,
-                    watch_name=watch_name)
-        if data:
-            return data
-        else:
-            return json_error(404,
-                              'The watch "%s" does not exist.' % watch_name)
-
 
 def create_resource(options):
     """
