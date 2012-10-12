@@ -86,6 +86,33 @@ class InstantiationData(object):
             raise exc.HTTPBadRequest(explanation=_("No stack name specified"))
         return self.data[self.PARAM_STACK_NAME]
 
+    def _load_template(self, template_url):
+        """
+        Retrieve a template from a URL, in JSON format.
+        """
+        logger.debug('Template URL %s' % template_url)
+        url = urlparse.urlparse(template_url)
+        err_reason = _("Could not retrieve template")
+
+        try:
+            ConnType = (url.scheme == 'https' and httplib.HTTPSConnection
+                                               or httplib.HTTPConnection)
+            conn = ConnType(url.netloc)
+
+            try:
+                conn.request("GET", url.path)
+                resp = conn.getresponse()
+                logger.info('status %d' % r1.status)
+
+                if resp.status != 200:
+                    raise exc.HTTPBadRequest(explanation=err_reason)
+
+                return self.json_parse(resp.read(), 'Template')
+            finally:
+                conn.close()
+        except socket.gaierror:
+            raise exc.HTTPBadRequest(explanation=err_reason)
+
     def template(self):
         """
         Get template file contents, either inline or from a URL, in JSON
@@ -94,29 +121,7 @@ class InstantiationData(object):
         if self.PARAM_TEMPLATE in self.data:
             return self.data[self.PARAM_TEMPLATE]
         elif self.PARAM_TEMPLATE_URL in self.data:
-            template_url = self.data[self.PARAM_TEMPLATE_URL]
-            logger.debug('Template URL %s' % template_url)
-            url = urlparse.urlparse(template_url)
-            err_reason = _("Could not retrieve template")
-
-            try:
-                ConnType = (url.scheme == 'https' and httplib.HTTPSConnection
-                                                   or httplib.HTTPConnection)
-                conn = ConnType(url.netloc)
-
-                try:
-                    conn.request("GET", url.path)
-                    resp = conn.getresponse()
-                    logger.info('status %d' % r1.status)
-
-                    if resp.status != 200:
-                        raise exc.HTTPBadRequest(explanation=err_reason)
-
-                    return self.json_parse(resp.read(), 'Template')
-                finally:
-                    conn.close()
-            except socket.gaierror:
-                raise exc.HTTPBadRequest(explanation=err_reason)
+            return self._load_template(self.data[self.PARAM_TEMPLATE_URL])
 
         raise exc.HTTPBadRequest(explanation=_("No template specified"))
 
