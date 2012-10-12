@@ -621,7 +621,7 @@ class stackManagerTest(unittest.TestCase):
     def test_show_watch_metric(self):
         # Get one of the  watch rules created in test_show_watch
         # And add a metric datapoint
-        watch = db_api.watch_rule_get(self.ctx, "HttpFailureAlarm")
+        watch = db_api.watch_rule_get_by_name(self.ctx, "HttpFailureAlarm")
         self.assertNotEqual(watch, None)
         values = {'watch_rule_id': watch.id,
                   'data': {

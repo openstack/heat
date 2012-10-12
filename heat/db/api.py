@@ -143,8 +143,12 @@ def event_create(context, values):
     return IMPL.event_create(context, values)
 
 
-def watch_rule_get(context, watch_rule_name):
-    return IMPL.watch_rule_get(context, watch_rule_name)
+def watch_rule_get(context, watch_rule_id):
+    return IMPL.watch_rule_get(context, watch_rule_id)
+
+
+def watch_rule_get_by_name(context, watch_rule_name):
+    return IMPL.watch_rule_get_by_name(context, watch_rule_name)
 
 
 def watch_rule_get_all(context):

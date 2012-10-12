@@ -258,7 +258,13 @@ def event_create(context, values):
     return event_ref
 
 
-def watch_rule_get(context, watch_rule_name):
+def watch_rule_get(context, watch_rule_id):
+    result = model_query(context, models.WatchRule).\
+                        filter_by(id=watch_rule_id).first()
+    return result
+
+
+def watch_rule_get_by_name(context, watch_rule_name):
     result = model_query(context, models.WatchRule).\
                         filter_by(name=watch_rule_name).first()
     return result

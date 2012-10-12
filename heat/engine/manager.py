@@ -454,7 +454,7 @@ class EngineManager(manager.Manager):
         This could be used by CloudWatch and WaitConditions
         and treat HA service events like any other CloudWatch.
         '''
-        wr = db_api.watch_rule_get(None, watch_name)
+        wr = db_api.watch_rule_get_by_name(None, watch_name)
         if wr is None:
             logger.warn('NoSuch watch:%s' % (watch_name))
             return ['NoSuch Watch Rule', None]
@@ -483,7 +483,7 @@ class EngineManager(manager.Manager):
         '''
         if watch_name:
             try:
-                wr = db_api.watch_rule_get(context, watch_name)
+                wr = db_api.watch_rule_get_by_name(context, watch_name)
             except Exception as ex:
                 logger.warn('show_watch (%s) db error %s' %
                             (watch_name, str(ex)))
@@ -538,7 +538,7 @@ class EngineManager(manager.Manager):
 
         if watch_name:
             try:
-                wr = db_api.watch_rule_get(context, watch_name)
+                wr = db_api.watch_rule_get_by_name(context, watch_name)
             except Exception as ex:
                 logger.warn('show_watch (%s) db error %s' %
                             (watch_name, str(ex)))
