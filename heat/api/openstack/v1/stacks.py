@@ -360,11 +360,16 @@ class StackController(object):
         data = InstantiationData(body)
 
         try:
-            return self.engine_rpcapi.validate_template(req.context,
-                                                        data.template(),
-                                                        data.user_params())
+            result = self.engine_rpcapi.validate_template(req.context,
+                                                          data.template(),
+                                                          data.user_params())
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex, True)
+
+        if 'Error' in result:
+            raise exc.HTTPBadRequest(explanation=result['Error'])
+
+        return result
 
 
 def create_resource(options):
