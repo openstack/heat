@@ -276,6 +276,17 @@ def watch_rule_create(context, values):
     return obj_ref
 
 
+def watch_rule_update(context, watch_id, values):
+    wr = watch_rule_get(context, watch_id)
+
+    if not wr:
+        raise NotFound('Attempt to update a watch with id: %s %s' %
+                        (watch_id, 'that does not exist'))
+
+    wr.update(values)
+    wr.save()
+
+
 def watch_rule_delete(context, watch_name):
     wr = model_query(context, models.WatchRule).\
                         filter_by(name=watch_name).first()
