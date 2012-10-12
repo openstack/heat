@@ -194,13 +194,19 @@ class StackController(object):
         self.options = options
         self.engine_rpcapi = engine_rpcapi.EngineAPI()
 
-    def _remote_error(self, ex):
+    def _remote_error(self, ex, force_exists=False):
         """
         Map rpc_common.RemoteError exceptions returned by the engine
         to webob exceptions which can be used to return
         properly formatted error responses.
         """
-        raise exc.HTTPBadRequest(explanation=str(ex))
+        if ex.exc_type in ('AttributeError', 'ValueError'):
+            if force_exists:
+                raise exc.HTTPBadRequest(explanation=str(ex))
+            else:
+                raise exc.HTTPNotFound(explanation=str(ex))
+
+        raise exc.HTTPInternalServerError(explanation=str(ex))
 
     def default(self, req, **args):
         raise exc.HTTPNotFound()
@@ -216,7 +222,7 @@ class StackController(object):
             # no stack_name, we only use a subset of the result here though
             stack_list = self.engine_rpcapi.show_stack(req.context, None)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return self._remote_error(ex, True)
 
         summary_keys = (engine_api.STACK_ID,
                         engine_api.STACK_NAME,
@@ -246,7 +252,7 @@ class StackController(object):
                                                      data.user_params(),
                                                      data.args())
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return self._remote_error(ex, True)
 
         if 'Description' in result:
             raise exc.HTTPBadRequest(explanation=result['Description'])
@@ -280,7 +286,7 @@ class StackController(object):
             return self._remote_error(ex)
 
         if not stack_list['stacks']:
-            raise exc.HTTPNotFound()
+            raise exc.HTTPInternalServerError()
 
         stack = stack_list['stacks'][0]
 
@@ -358,7 +364,7 @@ class StackController(object):
                                                         data.template(),
                                                         data.user_params())
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return self._remote_error(ex, True)
 
 
 def create_resource(options):
