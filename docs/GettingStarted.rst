@@ -310,6 +310,31 @@ Some templates require the ``heat-metadata`` server also. The metadata server mu
     
     sudo -E bash -c 'heat-metadata &'
 
+Open up port 8002 so that the guests can communicate with the heat-metadata server:
+
+::
+    sudo iptables -I INPUT -p tcp --dport 8002 -j ACCEPT -i demonetbr0
+
+Note the above rule will not persist across reboot, so you may wish to add it to /etc/sysconfig/iptables
+
+Configure Heat Cloudwatch server
+--------------------------------
+
+If you wish to try any of the HA or autoscaling templates (which collect stats from instances via the CloudWatch API), it is neccessary to start the heat-api-cloudwatch server::
+
+    sudo -E bash -c 'heat-api-cloudwatch &'
+
+Open up port 8003 so that the guests can communicate with the heat-api-cloudwatch server:
+
+::
+    sudo iptables -I INPUT -p tcp --dport 8003 -j ACCEPT -i demonetbr0
+
+Note the above rule will not persist across reboot, so you may wish to add it to /etc/sysconfig/iptables
+
+Further information on using the heat cloudwatch features is available in the Using-Cloudwatch_ wiki page
+
+.. _Using-Cloudwatch: https://github.com/heat-api/heat/wiki/Using-CloudWatch
+
 Troubleshooting
 ===============
 
