@@ -305,8 +305,8 @@ Configure the Metadata server
 
 Some templates require the ``heat-metadata`` server also. The metadata server must be configured to bind to the IP address of the host machine on the Nova network created above (``demonetbr0``). This allows the launched instances to access the metadata server. However, the bridge interface is not actually created until an instance is launched in Nova. If you have completed the preceding steps the bridge will now have been created, so you can proceed to edit the file ``/etc/heat/heat-metadata.conf`` to change the ``bind_host`` value from the default ``0.0.0.0`` to the correct IP address and launch the metadata server::
 
-    BIND_IP=`ifconfig demonetbr0 | sed -e 's/ *inet addr:\([0-9.]\+\).*/\1/' -e t -e d`
-    sudo sed -i -e "/^bind_host *=/ s/0\.0\.0\.0/${BIND_IP}/" /etc/heat/heat-metadata.conf
+    BIND_IP=`ifconfig demonetbr0 | sed -e 's/ *inet \(addr:\)\?\([0-9.]\+\).*/\2/' -e t -e d`
+    sudo sed -i -e "/^bind_host *=/ s/0\.0\.0\.0/${BIND_IP:?}/" /etc/heat/heat-metadata.conf
     
     sudo -E bash -c 'heat-metadata &'
 
