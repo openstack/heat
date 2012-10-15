@@ -52,6 +52,18 @@ from heat.common import exception
 from heat import utils
 
 
+def get_template_param(options):
+    '''
+    Helper function to extract the template in whatever
+    format has been specified by the cli options
+    '''
+    param={}
+    if options.template_file:
+        param['TemplateBody'] = open(options.template_file).read()
+    elif options.template_url:
+        param['TemplateUrl'] = options.template_url
+    return param
+
 @utils.catch_error('validate')
 def template_validate(options, arguments):
     '''
@@ -66,10 +78,9 @@ def template_validate(options, arguments):
     --template-url:  Specify a URL pointing to a stack description template.
     '''
     parameters = {}
-    if options.template_file:
-        parameters['TemplateBody'] = open(options.template_file).read()
-    elif options.template_url:
-        parameters['TemplateUrl'] = options.template_url
+    templ_param = get_template_param(options)
+    if templ_param:
+        parameters.update(templ_param)
     else:
         logging.error('Please specify a template file or url')
         return utils.FAILURE
@@ -90,10 +101,9 @@ def estimate_template_cost(options, arguments):
         logging.error("as the first argument")
         return utils.FAILURE
 
-    if options.template_file:
-        parameters['TemplateBody'] = open(options.template_file).read()
-    elif options.template_url:
-        parameters['TemplateUrl'] = options.template_url
+    templ_param = get_template_param(options)
+    if templ_param:
+        parameters.update(templ_param)
     else:
         logging.error('Please specify a template file or url')
         return utils.FAILURE
@@ -149,10 +159,9 @@ def stack_create(options, arguments):
 
     parameters['TimeoutInMinutes'] = options.timeout
 
-    if options.template_file:
-        parameters['TemplateBody'] = open(options.template_file).read()
-    elif options.template_url:
-        parameters['TemplateUrl'] = options.template_url
+    templ_param = get_template_param(options)
+    if templ_param:
+        parameters.update(templ_param)
     else:
         logging.error('Please specify a template file or url')
         return utils.FAILURE
@@ -191,10 +200,12 @@ def stack_update(options, arguments):
         logging.error("as the first argument")
         return utils.FAILURE
 
-    if options.template_file:
-        parameters['TemplateBody'] = open(options.template_file).read()
-    elif options.template_url:
-        parameters['TemplateUrl'] = options.template_url
+    templ_param = get_template_param(options)
+    if templ_param:
+        parameters.update(templ_param)
+    else:
+        logging.error('Please specify a template file or url')
+        return utils.FAILURE
 
     c = get_client(options)
     parameters.update(c.format_parameters(options))
