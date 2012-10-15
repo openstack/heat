@@ -18,8 +18,9 @@ import json
 import os
 
 from heat.common import exception
-from heat.db import api as db_api
+from heat.engine import watchrule
 from heat.engine.resources import Resource
+from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
 
@@ -63,15 +64,10 @@ class CloudWatchAlarm(Resource):
         return Resource.validate(self)
 
     def handle_create(self):
-        wr_values = {
-            'name': self.name,
-            'rule': self.parsed_template('Properties'),
-            'state': 'NORMAL',
-            'stack_name': self.stack.name
-        }
-
-        wr = db_api.watch_rule_create(self.context, wr_values)
-        self.instance_id = wr.id
+        wr = watchrule.WatchRule(context=self.context, watch_name=self.name,
+                                 rule=self.parsed_template('Properties'),
+                                 stack_name=self.stack.name)
+        wr.store()
 
     def handle_update(self):
         return self.UPDATE_REPLACE

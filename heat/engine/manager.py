@@ -26,7 +26,6 @@ from heat import manager
 from heat.db import api as db_api
 from heat.common import config
 from heat.common import utils as heat_utils
-from heat.common import context as ctxtlib
 from heat.engine import api
 from heat.engine import identifier
 from heat.engine import parser
@@ -399,81 +398,24 @@ class EngineManager(manager.Manager):
 
         now = timeutils.utcnow()
         try:
-            wrs = db_api.watch_rule_get_all(context)
+            wrn = [w.name for w in db_api.watch_rule_get_all(context)]
         except Exception as ex:
             logger.warn('periodic_task db error (%s) %s' %
                         ('watch rule removed?', str(ex)))
             return
-        for wr in wrs:
-            # has enough time progressed to run the rule
-            dt_period = datetime.timedelta(seconds=int(wr.rule['Period']))
-            if now < (wr.last_evaluated + dt_period):
-                continue
-
-            self.run_rule(context, wr, now)
-
-    def run_rule(self, context, wr, now=timeutils.utcnow()):
-        watcher = watchrule.WatchRule(wr.rule, wr.watch_data,
-                                      wr.last_evaluated, now)
-        new_state = watcher.get_alarm_state()
-
-        if new_state != wr.state:
-            if self.rule_action(wr, new_state):
-                wr.state = new_state
-
-        wr.last_evaluated = now
-        wr.save()
-
-    def rule_action(self, wr, new_state):
-        # TODO : push watch-rule processing into engine.watchrule
-        logger.warn('WATCH: stack:%s, watch_name:%s %s',
-                    wr.stack_name, wr.name, new_state)
-
-        actioned = False
-        if not watchrule.WatchRule.ACTION_MAP[new_state] in wr.rule:
-            logger.info('no action for new state %s',
-                        new_state)
-            actioned = True
-        else:
-            s = db_api.stack_get_by_name(None, wr.stack_name)
-            if s and s.status in (parser.Stack.CREATE_COMPLETE,
-                                  parser.Stack.UPDATE_COMPLETE):
-                user_creds = db_api.user_creds_get(s.user_creds_id)
-                ctxt = ctxtlib.RequestContext.from_dict(user_creds)
-                stack = parser.Stack.load(ctxt, s.id)
-                for a in wr.rule[watchrule.WatchRule.ACTION_MAP[new_state]]:
-                    greenpool.spawn_n(stack[a].alarm)
-                actioned = True
-            else:
-                logger.warning("Could not process watch state %s for stack" %
-                               new_state)
-        return actioned
+        for wr in wrn:
+            rule = watchrule.WatchRule.load(context, wr)
+            rule.evaluate()
 
     def create_watch_data(self, context, watch_name, stats_data):
         '''
         This could be used by CloudWatch and WaitConditions
         and treat HA service events like any other CloudWatch.
         '''
-        wr = db_api.watch_rule_get_by_name(None, watch_name)
-        if wr is None:
-            logger.warn('NoSuch watch:%s' % (watch_name))
-            return ['NoSuch Watch Rule', None]
-
-        if not wr.rule['MetricName'] in stats_data:
-            logger.warn('new data has incorrect metric:%s' %
-                        (wr.rule['MetricName']))
-            return ['MetricName %s missing' % wr.rule['MetricName'], None]
-
-        watch_data = {
-            'data': stats_data,
-            'watch_rule_id': wr.id
-        }
-        wd = db_api.watch_data_create(None, watch_data)
-        logger.debug('new watch:%s data:%s' % (watch_name, str(wd.data)))
-        if wr.rule['Statistic'] == 'SampleCount':
-            self.run_rule(None, wr)
-
-        return [None, wd.data]
+        rule = watchrule.WatchRule.load(context, watch_name)
+        rule.create_watch_data(stats_data)
+        logger.debug('new watch:%s data:%s' % (watch_name, str(stats_data)))
+        return stats_data
 
     def show_watch(self, context, watch_name):
         '''
@@ -482,22 +424,15 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the watch you want to see, or None to see all
         '''
         if watch_name:
-            try:
-                wr = db_api.watch_rule_get_by_name(context, watch_name)
-            except Exception as ex:
-                logger.warn('show_watch (%s) db error %s' %
-                            (watch_name, str(ex)))
-            if wr:
-                wrs = [wr]
-            else:
-                raise AttributeError('Unknown watch name %s' % watch_name)
+            wrn = [watch_name]
         else:
             try:
-                wrs = db_api.watch_rule_get_all(context)
+                wrn = [w.name for w in db_api.watch_rule_get_all(context)]
             except Exception as ex:
                 logger.warn('show_watch (all) db error %s' % str(ex))
                 return
 
+        wrs = [watchrule.WatchRule.load(context, w) for w in wrn]
         result = [api.format_watch(w) for w in wrs]
         return result
 
@@ -532,30 +467,8 @@ class EngineManager(manager.Manager):
         arg2 -> Name of the watch
         arg3 -> State (must be one defined in WatchRule class
         '''
-
-        if state not in watchrule.WatchRule.WATCH_STATES:
-            raise AttributeError('Unknown watch state %s' % state)
-
-        if watch_name:
-            try:
-                wr = db_api.watch_rule_get_by_name(context, watch_name)
-            except Exception as ex:
-                logger.warn('show_watch (%s) db error %s' %
-                            (watch_name, str(ex)))
-
-            if not wr:
-                raise AttributeError('Unknown watch name %s' % watch_name)
-
-        else:
-            raise AttributeError('Must pass watch_name')
-
-        if state != wr.state:
-            if self.rule_action(wr, state):
-                logger.debug("Overriding state %s for watch %s with %s" %
-                         (wr.state, watch_name, state))
-            else:
-                logger.warning("Unable to override state %s for watch %s" %
-                         (wr.state, watch_name))
+        wr = watchrule.WatchRule.load(context, watch_name)
+        wr.set_watch_state(state)
 
         # Return the watch with the state overriden to indicate success
         # We do not update the timestamps as we are not modifying the DB
