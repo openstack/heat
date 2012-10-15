@@ -102,7 +102,13 @@
         }
       },
       "Properties": {
-        "ImageId": "F16-x86_64-cfntools",
+        "ImageId" : {
+          "Fn::FindInMap" : [ "DistroArch2AMI",
+                              { "Ref" : "LinuxDistribution" },
+                              { "Fn::FindInMap" : [ "AWSInstanceType2Arch",
+                                                    { "Ref" : "InstanceType" },
+                                                    "Arch" ] } ]
+        },
         "InstanceType": { "Ref": "InstanceType" },
         "KeyName": { "Ref": "KeyName" },
         "UserData": { "Fn::Base64": { "Fn::Join": ["", [
