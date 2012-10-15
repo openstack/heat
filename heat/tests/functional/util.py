@@ -94,9 +94,9 @@ class Instance(object):
                     address = server.addresses
                     if address:
                         self.ip = address.items()[0][1][0]['addr']
-                time.sleep(10)
                 tries += 1
-                self.testcase.assertTrue(tries < 500, 'Timed out')
+                self.testcase.assertTrue(tries < 150, 'Timed out')
+                time.sleep(10)
             print 'Instance (%s) ip (%s) status (%s)' % (self.name, self.ip,
                  server.status)
 
@@ -107,9 +107,9 @@ class Instance(object):
             except Exception:
                 print('Instance (%s) ip (%s) SSH not up yet, waiting...' %
                       (self.name, self.ip))
-                time.sleep(10)
                 tries += 1
                 self.testcase.assertTrue(tries < 50, 'Timed out')
+                time.sleep(10)
             else:
                 print 'Instance (%s) ip (%s) SSH detected.' % (self.name,
                         self.ip)
@@ -223,7 +223,7 @@ class Instance(object):
             except IOError, e:
                 tries += 1
                 if e.errno == errno.ENOENT:
-                    self.testcase.assertTrue(tries < 500, 'Timed out')
+                    self.testcase.assertTrue(tries < 50, 'Timed out')
                     print("Instance (%s) provisioning incomplete, waiting..." %
                           self.name)
                     time.sleep(15)
@@ -372,7 +372,7 @@ class Stack(object):
         print 'Waiting for stack creation to be completed'
         while self.get_state() == 'CREATE_IN_PROGRESS':
             tries += 1
-            self.testcase.assertTrue(tries < 500, 'Timed out')
+            self.testcase.assertTrue(tries < 150, 'Timed out')
             time.sleep(10)
 
         self.testcase.assertEqual(self.get_state(), 'CREATE_COMPLETE')
@@ -389,7 +389,7 @@ class Stack(object):
         print 'Waiting for stack update to be completed'
         while self.get_state() == 'UPDATE_IN_PROGRESS':
             tries += 1
-            self.testcase.assertTrue(tries < 500, 'Timed out')
+            self.testcase.assertTrue(tries < 150, 'Timed out')
             time.sleep(10)
 
         self.testcase.assertEqual(self.get_state(), 'UPDATE_COMPLETE')
