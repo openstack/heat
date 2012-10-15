@@ -104,7 +104,7 @@ class EngineRpcAPITestCase(unittest.TestCase):
 
     def test_validate_template(self):
         self._test_engine_api('validate_template', 'call',
-                              template={u'Foo': u'bar'}, params={})
+                              template={u'Foo': u'bar'})
 
     def test_get_template(self):
         self._test_engine_api('get_template', 'call',

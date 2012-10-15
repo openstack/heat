@@ -121,7 +121,7 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
                                              params=params, args=args),
                          topic=_engine_topic(self.topic, ctxt, None))
 
-    def validate_template(self, ctxt, template, params):
+    def validate_template(self, ctxt, template):
         """
         The validate_template method uses the stack parser to check
         the validity of a template.
@@ -131,7 +131,7 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         :param params: Params passed from API.
         """
         return self.call(ctxt, self.make_msg('validate_template',
-                                             template=template, params=params),
+                                             template=template),
                          topic=_engine_topic(self.topic, ctxt, None))
 
     def get_template(self, ctxt, stack_identity):

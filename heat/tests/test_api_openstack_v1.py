@@ -670,9 +670,7 @@ class StackControllerTest(unittest.TestCase):
     def test_validate_template(self):
         template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
-        parameters = {u'InstanceType': u'm1.xlarge'}
-        body = {'template': template,
-                'parameters': parameters}
+        body = {'template': template}
 
         req = self._post('/validate', json.dumps(body))
 
@@ -693,8 +691,7 @@ class StackControllerTest(unittest.TestCase):
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'validate_template',
-                  'args': {'template': template,
-                           'params': parameters},
+                  'args': {'template': template},
                   'version': self.api_version},
                  None).AndReturn(engine_response)
         self.m.ReplayAll()
@@ -708,17 +705,14 @@ class StackControllerTest(unittest.TestCase):
     def test_validate_template_error(self):
         template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
-        parameters = {u'InstanceType': u'm1.xlarge'}
-        body = {'template': template,
-                'parameters': parameters}
+        body = {'template': template}
 
         req = self._post('/validate', json.dumps(body))
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'validate_template',
-                  'args': {'template': template,
-                           'params': parameters},
+                  'args': {'template': template},
                   'version': self.api_version},
                  None).AndReturn({'Error': 'fubar'})
         self.m.ReplayAll()

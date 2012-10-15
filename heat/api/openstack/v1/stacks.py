@@ -361,8 +361,7 @@ class StackController(object):
 
         try:
             result = self.engine_rpcapi.validate_template(req.context,
-                                                          data.template(),
-                                                          data.user_params())
+                                                          data.template())
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex, True)
 

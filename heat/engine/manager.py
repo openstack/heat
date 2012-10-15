@@ -180,7 +180,7 @@ class EngineManager(manager.Manager):
 
         return dict(current_stack.identifier())
 
-    def validate_template(self, context, template, params):
+    def validate_template(self, context, template):
         """
         The validate_template method uses the stack parser to check
         the validity of a template.
