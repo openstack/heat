@@ -220,19 +220,20 @@ class Instance(object):
         while True:
             try:
                 self.sftp.stat('/var/lib/cloud/instance/provision-finished')
-            except IOError, e:
-                tries += 1
-                if e.errno == errno.ENOENT:
-                    self.testcase.assertTrue(tries < 50, 'Timed out')
-                    print("Instance (%s) provisioning incomplete, waiting..." %
-                          self.name)
-                    time.sleep(15)
-                else:
-                    print e.errno
+            except paramiko.SSHException as e:
+                print e
+            except IOError as e:
+                if e.errno != errno.ENOENT:
                     raise
             else:
                 print "Instance (%s) provisioning completed." % self.name
-                break
+                return
+
+            tries += 1
+            self.testcase.assertTrue(tries < 50, 'Timed out')
+            print("Instance (%s) provisioning incomplete, waiting..." %
+                  self.name)
+            time.sleep(15)
 
     def check_user_data(self, template_file):
         return  # until TODO is fixed
