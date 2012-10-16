@@ -116,8 +116,7 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         self.assertTrue(ver.verify_wordpress(stack_url))
 
     def testListStacks(self):
-        client = self.stack.get_heat_client()
-        response = client.list_stacks()
+        response = self.stack.heatclient.list_stacks()
         prefix = '/ListStacksResponse/ListStacksResult/StackSummaries/member'
 
         # Extract the StackSummary for this stack
@@ -142,10 +141,9 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         print "ListStacks : OK"
 
     def testDescribeStacks(self):
-        client = self.stack.get_heat_client()
         parameters = {}
         parameters['StackName'] = self.stack.stackname
-        response = client.describe_stacks(**parameters)
+        response = self.stack.heatclient.describe_stacks(**parameters)
 
         # Extract the Stack object for this stack
         stacks = [s for s in response
@@ -200,11 +198,9 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         print "DescribeStacks : OK"
 
     def testDescribeStackEvents(self):
-
-        client = self.stack.get_heat_client()
         parameters = {}
         parameters['StackName'] = self.stack.stackname
-        response = client.list_stack_events(**parameters)
+        response = self.stack.heatclient.list_stack_events(**parameters)
         events = [e for e in response
                        if e.logical_resource_id == self.logical_resource_name
                        and e.resource_status == self.logical_resource_status]
@@ -239,10 +235,9 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         print "DescribeStackEvents : OK"
 
     def testGetTemplate(self):
-        client = self.stack.get_heat_client()
         parameters = {}
         parameters['StackName'] = self.stack.stackname
-        response = client.get_template(**parameters)
+        response = self.stack.heatclient.get_template(**parameters)
         self.assertTrue(response != None)
 
         result = response['GetTemplateResponse']['GetTemplateResult']
@@ -259,10 +254,9 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         print "GetTemplate : OK"
 
     def testDescribeStackResource(self):
-        client = self.stack.get_heat_client()
         parameters = {'StackName': self.stack.stackname,
             'LogicalResourceId': self.logical_resource_name}
-        response = client.describe_stack_resource(**parameters)
+        response = self.stack.heatclient.describe_stack_resource(**parameters)
 
         # Note boto_client response for this is a dict, if upstream
         # pull request ever gets merged, this will change, see note/
@@ -299,10 +293,9 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         print "DescribeStackResource : OK"
 
     def testDescribeStackResources(self):
-        client = self.stack.get_heat_client()
         parameters = {'NameOrPid': self.stack.stackname,
             'LogicalResourceId': self.logical_resource_name}
-        response = client.describe_stack_resources(**parameters)
+        response = self.stack.heatclient.describe_stack_resources(**parameters)
         self.assertEqual(len(response), 1)
 
         res = response[0]
@@ -328,10 +321,9 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         print "DescribeStackResources : OK"
 
     def testListStackResources(self):
-        client = self.stack.get_heat_client()
         parameters = {}
         parameters['StackName'] = self.stack.stackname
-        response = client.list_stack_resources(**parameters)
+        response = self.stack.heatclient.list_stack_resources(**parameters)
         self.assertEqual(len(response), 1)
 
         res = response[0]
@@ -353,11 +345,10 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         print "ListStackResources : OK"
 
     def testValidateTemplate(self):
-        client = self.stack.get_heat_client()
         # Use stack.format_parameters to get the TemplateBody
         params = self.stack.format_parameters()
         val_params = {'TemplateBody': params['TemplateBody']}
-        response = client.validate_template(**val_params)
+        response = self.stack.heatclient.validate_template(**val_params)
         # Check the response contains all the expected paramter keys
         templ_params = ['DBUsername', 'LinuxDistribution', 'InstanceType',
                         'DBRootPassword', 'KeyName', 'DBPassword', 'DBName']

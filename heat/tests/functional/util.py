@@ -333,6 +333,9 @@ class Stack(object):
                                   'keystone',
                                   'keystone authentication required')
 
+        self.glanceclient = glance_client.Client(host="0.0.0.0", port=9292,
+            use_ssl=False, auth_tok=None, creds=self.creds)
+
         self.prepare_jeos(distribution, arch, jeos_type)
 
         self.novaclient = nova_client.Client(self.creds['username'],
@@ -439,8 +442,7 @@ class Stack(object):
 
     def cleanup(self):
         parameters = {'StackName': self.stackname}
-        c = self.get_heat_client()
-        c.delete_stack(**parameters)
+        self.heatclient.delete_stack(**parameters)
 
         print 'Waiting for stack deletion to be completed'
         tries = 0
@@ -456,26 +458,8 @@ class Stack(object):
         if end_state is not None:
             self.testcase.assertEqual(end_state, 'DELETE_COMPLETE')
 
-    def get_nova_client(self):
-        if self.novaclient != None:
-            return self.novaclient
-        return None
-
-    def get_glance_client(self):
-        if self.glanceclient != None:
-            return self.glanceclient
-        return None
-
-    def get_heat_client(self):
-        if self.heatclient != None:
-            return self.heatclient
-        return None
-
     def prepare_jeos(self, p_os, arch, type):
         imagename = p_os + '-' + arch + '-' + type
-
-        self.glanceclient = glance_client.Client(host="0.0.0.0", port=9292,
-            use_ssl=False, auth_tok=None, creds=self.creds)
 
         # skip creating jeos if image already available
         if not self.poll_glance(self.glanceclient, imagename, False):
@@ -517,8 +501,7 @@ class Stack(object):
         '''
         # Get the DescribeStacks result for this stack
         parameters = {'StackName': self.stackname}
-        c = self.get_heat_client()
-        result = c.describe_stacks(**parameters)
+        result = self.heatclient.describe_stacks(**parameters)
         return self._find_stack_output(result, output_key)
 
     def _find_stack_output(self, result, output_key):
