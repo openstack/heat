@@ -53,6 +53,7 @@ from heat.common import exception
 from heat import utils
 from keystoneclient.v2_0 import client
 
+
 def get_swift_template(options):
     '''
     Retrieve a template from the swift object store, using
@@ -85,12 +86,13 @@ def get_swift_template(options):
 
     return template_body
 
+
 def get_template_param(options):
     '''
     Helper function to extract the template in whatever
     format has been specified by the cli options
     '''
-    param={}
+    param = {}
     if options.template_file:
         param['TemplateBody'] = open(options.template_file).read()
     elif options.template_url:
@@ -103,6 +105,7 @@ def get_template_param(options):
             logging.error("Error reading swift template")
 
     return param
+
 
 @utils.catch_error('validate')
 def template_validate(options, arguments):
