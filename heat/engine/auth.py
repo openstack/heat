@@ -76,17 +76,17 @@ def authenticate(con, service_type='cloudformation', service_name='heat'):
         'service_name': service_name,
     }
 
-    if con.auth_token is not None:
+    if con.password is not None:
+        credentials = {
+            'username': con.username,
+            'api_key': con.password,
+        }
+    elif con.auth_token is not None:
         credentials = {
             'username': con.service_user,
             'api_key': con.service_password,
             'proxy_token': con.auth_token,
             'proxy_tenant_id': con.tenant_id,
-        }
-    elif con.password is not None:
-        credentials = {
-            'username': con.username,
-            'api_key': con.password,
         }
     else:
         # We'll have to do AWS style auth which is more complex.
