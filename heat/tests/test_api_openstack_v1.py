@@ -675,17 +675,14 @@ class StackControllerTest(unittest.TestCase):
         req = self._post('/validate', json.dumps(body))
 
         engine_response = {
-            u'ValidateTemplateResult': {
-                u'Description': u'blah',
-                u'Parameters': [
-                    {
-                        u'NoEcho': u'false',
-                        u'ParameterKey': u'InstanceType',
-                        u'Description': u'Instance type'
-                    }
-                ]
-
-            }
+            u'Description': u'blah',
+            u'Parameters': [
+                {
+                    u'NoEcho': u'false',
+                    u'ParameterKey': u'InstanceType',
+                    u'Description': u'Instance type'
+                }
+            ]
         }
 
         self.m.StubOutWithMock(rpc, 'call')

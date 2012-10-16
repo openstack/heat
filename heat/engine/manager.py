@@ -217,7 +217,7 @@ class EngineManager(manager.Manager):
             'Description': template.get('Description', ''),
             'Parameters': parameters,
         }
-        return {'ValidateTemplateResult': result}
+        return result
 
     def get_template(self, context, stack_identity):
         """

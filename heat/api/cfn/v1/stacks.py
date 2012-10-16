@@ -379,7 +379,8 @@ class StackController(object):
 
         logger.info('validate_template')
         try:
-            return self.engine_rpcapi.validate_template(con, template)
+            res = self.engine_rpcapi.validate_template(con, template)
+            return api_utils.format_response('ValidateTemplate', res)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 

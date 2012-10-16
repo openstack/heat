@@ -267,7 +267,7 @@ class validateTest(unittest.TestCase):
 
         manager = managers.EngineManager()
         res = dict(manager.
-            validate_template(None, t)['ValidateTemplateResult'])
+            validate_template(None, t))
         print 'res %s' % res
         self.assertEqual(res['Description'], 'test.')
 
@@ -284,7 +284,7 @@ class validateTest(unittest.TestCase):
 
         manager = managers.EngineManager()
         res = dict(manager.
-            validate_template(None, t)['ValidateTemplateResult'])
+            validate_template(None, t))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
     def test_validate_findinmap_valid(self):
@@ -300,7 +300,7 @@ class validateTest(unittest.TestCase):
 
         manager = managers.EngineManager()
         res = dict(manager.
-            validate_template(None, t)['ValidateTemplateResult'])
+            validate_template(None, t))
         self.assertEqual(res['Description'], 'test.')
 
     def test_validate_findinmap_invalid(self):
@@ -316,7 +316,7 @@ class validateTest(unittest.TestCase):
 
         manager = managers.EngineManager()
         res = dict(manager.
-            validate_template(None, t)['ValidateTemplateResult'])
+            validate_template(None, t))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
     # allows testing of the test directly, shown below
