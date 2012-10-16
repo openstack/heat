@@ -29,6 +29,7 @@ import time
 import json
 import logging
 
+import httplib
 from urlparse import urlparse
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
@@ -50,7 +51,39 @@ from heat import version
 from heat.common import config
 from heat.common import exception
 from heat import utils
+from keystoneclient.v2_0 import client
 
+def get_swift_template(options):
+    '''
+    Retrieve a template from the swift object store, using
+    the provided URL.  We request a keystone token to authenticate
+    '''
+    template_body = None
+    if options.auth_strategy == 'keystone':
+        # we use the keystone credentials to get a token
+        # to pass in the request header
+        keystone = client.Client(username=options.username,
+                                 password=options.password,
+                                 tenant_name=options.tenant,
+                                 auth_url=options.auth_url)
+        logging.info("Getting template from swift URL: %s" %
+                     options.template_object)
+        url = urlparse(options.template_object)
+        if url.scheme == 'https':
+            conn = httplib.HTTPSConnection(url.netloc)
+        else:
+            conn = httplib.HTTPConnection(url.netloc)
+        headers = {'X-Auth-Token': keystone.auth_token}
+        conn.request("GET", url.path, headers=headers)
+        r1 = conn.getresponse()
+        logging.info('status %d' % r1.status)
+        if r1.status == 200:
+            template_body = r1.read()
+            conn.close()
+    else:
+        logging.error("template-object option requires keystone")
+
+    return template_body
 
 def get_template_param(options):
     '''
@@ -62,6 +95,13 @@ def get_template_param(options):
         param['TemplateBody'] = open(options.template_file).read()
     elif options.template_url:
         param['TemplateUrl'] = options.template_url
+    elif options.template_object:
+        template_body = get_swift_template(options)
+        if template_body:
+            param['TemplateBody'] = template_body
+        else:
+            logging.error("Error reading swift template")
+
     return param
 
 @utils.catch_error('validate')
@@ -439,6 +479,9 @@ def create_options(parser):
                       metavar="STRATEGY", default=None,
                       help="Authentication strategy (keystone or noauth)")
 
+    parser.add_option('-o', '--template-object',
+                      metavar="template_object", default=None,
+                      help="URL to retrieve template object (e.g from swift)")
     parser.add_option('-u', '--template-url', metavar="template_url",
                       default=None, help="URL of template. Default: None")
     parser.add_option('-f', '--template-file', metavar="template_file",
