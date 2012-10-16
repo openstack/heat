@@ -351,3 +351,18 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
                         != None)
 
         print "ListStackResources : OK"
+
+    def testValidateTemplate(self):
+        client = self.stack.get_heat_client()
+        # Use stack.format_parameters to get the TemplateBody
+        params = self.stack.format_parameters()
+        val_params = {'TemplateBody': params['TemplateBody']}
+        response = client.validate_template(**val_params)
+        # Check the response contains all the expected paramter keys
+        templ_params = ['DBUsername', 'LinuxDistribution', 'InstanceType',
+                        'DBRootPassword', 'KeyName', 'DBPassword', 'DBName']
+
+        resp_params = [p.parameter_key for p in response.template_parameters]
+        for param in templ_params:
+            self.assertTrue(param in resp_params)
+        print "ValidateTemplate : OK"
