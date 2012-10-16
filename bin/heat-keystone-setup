@@ -2,10 +2,6 @@
 
 set +e
 
-function get_id () {
-    echo `"$@" | grep ' id ' | awk '{print $4}'`
-}
-
 KEYSTONE_CONF=${KEYSTONE_CONF:-/etc/keystone/keystone.conf}
 
 # Extract some info from Keystone's configuration file
@@ -14,19 +10,150 @@ if [[ -r "$KEYSTONE_CONF" ]]; then
     CONFIG_ADMIN_PORT=$(sed 's/[[:space:]]//g' $KEYSTONE_CONF | grep ^admin_port= | cut -d'=' -f2)
 fi
 
-export SERVICE_TOKEN=${SERVICE_TOKEN:-$CONFIG_SERVICE_TOKEN}
-export SERVICE_ENDPOINT=${SERVICE_ENDPOINT:-http://127.0.0.1:${CONFIG_ADMIN_PORT:-35357}/v2.0}
+SERVICE_TOKEN=${SERVICE_TOKEN:-$CONFIG_SERVICE_TOKEN}
+SERVICE_ENDPOINT=${SERVICE_ENDPOINT:-http://127.0.0.1:${CONFIG_ADMIN_PORT:-35357}/v2.0}
 if [[ -z "$SERVICE_TOKEN" ]]; then
-    echo "No service token found."
-    echo "Set SERVICE_TOKEN manually from keystone.conf admin_token."
+    echo "No service token found." >&2
+    echo "Set SERVICE_TOKEN manually from keystone.conf admin_token." >&2
     exit 1
 fi
 
-ADMIN_ROLE=$(keystone role-list | grep '\badmin\b' | awk '{ print $2 }')
-SERVICE_TENANT=$(keystone tenant-list | grep service | cut -d\| -f2)
+set_admin_token() {
+    alias keystone="keystone --token $SERVICE_TOKEN \
+                             --endpoint $SERVICE_ENDPOINT"
+}
+
+unset_admin_token() {
+    unalias keystone
+}
+
+
+get_data() {
+    local match_column=$(($1 + 1))
+    local regex="$2"
+    local output_column=$(($3 + 1))
+    shift 3
+
+    echo $("$@" | \
+           awk -F'|' \
+               "! /^+/ && \$${match_column} ~ \"^ *${regex} *\$\" \
+                { print \$${output_column} }")
+}
+
+get_id () {
+    get_data 1 id 2 "$@"
+}
+
+get_user() {
+    local username=$1
+
+    local user_id=$(get_data 4 $username 1 keystone user-list)
+
+    if [ -n "$user_id" ]; then
+        echo "Found existing $username user" >&2
+        echo $user_id
+    else
+        echo "Creating $username user..." >&2
+        get_id keystone user-create --name=$username \
+                                    --pass="$SERVICE_PASSWORD" \
+                                    --tenant_id $SERVICE_TENANT \
+                                    --email=heat@example.com
+    fi
+}
+
+ver=`nova-manage version list | cut -d . -f1`
+if [ $ver -lt 2013 ]; then
+    user_arg=user
+    role_arg=role
+else
+    user_arg=user_id
+    role_arg=role_id
+fi
+
+add_role() {
+    local user_id=$1
+    local tenant=$2
+    local role_id=$3
+
+    keystone user-role-add --tenant_id $tenant \
+                           --$user_arg $user_id \
+                           --$role_arg $role_id
+}
+
+get_endpoint() {
+    local service_type=$1
+
+    unset_admin_token
+    keystone endpoint-get --service $service_type
+    set_admin_token
+}
+
+delete_endpoint() {
+    local service_type=$1
+
+    local url=$(get_data 1 "${service_type}[.]publicURL" 2 \
+                get_endpoint $service_type 2>/dev/null)
+
+    if [ -n "$url" ]; then
+        local endpoints=$(get_data 3 $url 1 keystone endpoint-list)
+
+        for endpoint in $endpoints; do
+            echo "Removing $service_type endpoint ${url}..." >&2
+            keystone endpoint-delete "$endpoint" >&2
+        done
+    else
+        false
+    fi
+}
+
+delete_all_endpoints() {
+    while delete_endpoint $1; do
+        true
+    done
+}
+
+delete_service() {
+    local service_type=$1
+
+    delete_all_endpoints $service_type
+
+    local service_ids=$(get_data 3 $service_type 1 keystone service-list)
+
+    for service in $service_ids; do
+        local service_name=$(get_data 1 $service 2 keystone service-list)
+        echo "Removing $service_name:$service_type service..." >&2
+        keystone service-delete $service >&2
+    done
+}
+
+get_service() {
+    local service_name=$1
+    local service_type=$2
+    local description="$3"
+
+    delete_service $service_type
+
+    get_id keystone service-create --name=$service_name \
+                                   --type=$service_type \
+                                   --description="$description"
+}
+
+add_endpoint() {
+    local service_id=$1
+    local url="$2"
+
+    keystone endpoint-create --region RegionOne --service_id $service_id \
+        --publicurl "$url" --adminurl "$url" --internalurl "$url" >&2
+}
+
+
+set_admin_token
+
+ADMIN_ROLE=$(get_data 2 admin 1 keystone role-list)
+SERVICE_TENANT=$(get_data 2 service 1 keystone tenant-list)
 SERVICE_PASSWORD=${SERVICE_PASSWORD:-$OS_PASSWORD}
 if [[ "$SERVICE_PASSWORD" == "$OS_PASSWORD" ]]; then
-    echo "Using the OS_PASSWORD for the SERVICE_PASSWORD."
+    echo "Using the OS_PASSWORD for the SERVICE_PASSWORD." >&2
 fi
 
 echo ADMIN_ROLE $ADMIN_ROLE
@@ -34,31 +161,12 @@ echo SERVICE_TENANT $SERVICE_TENANT
 echo SERVICE_PASSWORD $SERVICE_PASSWORD
 echo SERVICE_TOKEN $SERVICE_TOKEN
 
-
-# Services
-HEAT_SERVICE=$(get_id \
-keystone service-create --name=heat-cfn \
-                        --type=cloudformation \
-                        --description="Heat Service")
-HEAT_USER=$(get_id keystone user-create --name=heat \
-                                        --pass="$SERVICE_PASSWORD" \
-                                        --tenant_id $SERVICE_TENANT \
-                                        --email=heat@example.com)
+HEAT_USER=$(get_user heat)
 echo HEAT_USER $HEAT_USER
+add_role $HEAT_USER $SERVICE_TENANT $ADMIN_ROLE
 
-ver=`nova-manage version list | cut -d . -f1`
-if [ $ver -lt 2013 ]; then
-    keystone user-role-add --tenant_id $SERVICE_TENANT \
-                           --user $HEAT_USER \
-                           --role $ADMIN_ROLE
-else
-    keystone user-role-add --tenant_id $SERVICE_TENANT \
-                           --user_id $HEAT_USER \
-                           --role_id $ADMIN_ROLE
-fi
+HEAT_CFN_SERVICE=$(get_service heat-cfn cloudformation \
+                   "Heat CloudFormation API")
+add_endpoint $HEAT_CFN_SERVICE 'http://localhost:8000/v1'
 
-keystone endpoint-create --region RegionOne --service_id $HEAT_SERVICE \
-    --publicurl 'http://localhost:8000/v1' \
-    --adminurl 'http://localhost:8000/v1' \
-    --internalurl 'http://localhost:8000/v1'
-
+delete_all_endpoints orchestration
