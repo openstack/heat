@@ -510,7 +510,10 @@ class Resource(object):
             except Exception as ex:
                 logger.error('DB error %s' % str(ex))
 
-        elif new_state in (self.CREATE_COMPLETE, self.CREATE_FAILED):
+        # store resource in DB on transition to CREATE_IN_PROGRESS
+        # all other transistions (other than to DELETE_COMPLETE)
+        # should be handled by the update_and_save above..
+        elif new_state == self.CREATE_IN_PROGRESS:
             self._store()
 
         if new_state != old_state:
