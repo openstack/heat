@@ -65,12 +65,22 @@ class WaitCondition(resources.Resource):
                          'Count': {'Type': 'Number',
                                    'MinValue': '1'}}
 
+    # Sleep time between polling for wait completion
+    # is calculated as a fraction of timeout time
+    # bounded by MIN_SLEEP and MAX_SLEEP
+    MIN_SLEEP = 1  # seconds
+    MAX_SLEEP = 10
+    SLEEP_DIV = 100  # 1/100'th of timeout
+
     def __init__(self, name, json_snippet, stack):
         super(WaitCondition, self).__init__(name, json_snippet, stack)
         self.resource_id = None
 
         self.timeout = int(self.t['Properties']['Timeout'])
         self.count = int(self.t['Properties'].get('Count', '1'))
+        self.sleep_time = max(min(self.MAX_SLEEP,
+                              self.timeout / self.SLEEP_DIV),
+                              self.MIN_SLEEP)
 
     def _get_handle_resource_id(self):
         if self.resource_id is None:
@@ -95,14 +105,14 @@ class WaitCondition(resources.Resource):
                 handle = self.stack[self._get_handle_resource_id()]
 
                 (status, reason) = (WAITING, '')
-                sleep_time = 1
 
                 while status == WAITING:
                     (status, reason) = self._get_status_reason(handle)
                     if status == WAITING:
-                        logger.debug('Waiting for the Metadata[Status]')
-                        eventlet.sleep(sleep_time)
-                        sleep_time = min(sleep_time * 2, self.timeout / 4)
+                        logger.debug('Polling for WaitCondition completion,' +
+                                     ' sleeping for %s seconds, timeout %s' %
+                                     (self.sleep_time, self.timeout))
+                        eventlet.sleep(self.sleep_time)
 
         except eventlet.Timeout as t:
             if t is not tmo:
