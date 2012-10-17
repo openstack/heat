@@ -123,10 +123,9 @@ class CfnApiUpdateStackFunctionalTest(unittest.TestCase):
         self.assertTrue(tries < 500)
 
         # Now use DescribeStacks to check the parameter is updated
-        client = self.stack.get_heat_client()
         parameters = {}
         parameters['StackName'] = self.stack.stackname
-        response = client.describe_stacks(**parameters)
+        response = self.stack.heatclient.describe_stacks(**parameters)
         prefix = '/DescribeStacksResponse/DescribeStacksResult/Stacks/member'
         # value for each key, then check the extracted value
         param_prefix = prefix + '/Parameters/member[ParameterKey="DBUsername"]'

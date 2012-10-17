@@ -53,13 +53,12 @@ class WordPressEBSEIPFunctionalTest(unittest.TestCase):
         print "Wordpress installation detected"
 
         # 2. check floating ip assignment
-        nclient = self.stack.get_nova_client()
-        if len(nclient.floating_ips.list()) == 0:
+        if len(self.stack.novaclient.floating_ips.list()) == 0:
             print 'zero floating IPs detected'
             self.assertTrue(False)
         else:
             found = 0
-            mylist = nclient.floating_ips.list()
+            mylist = self.stack.novaclient.floating_ips.list()
             for item in mylist:
                 if item.instance_id == self.stack.instance_phys_ids()[0]:
                     print 'floating IP found', item.ip

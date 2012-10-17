@@ -112,8 +112,7 @@ class CfnApiFunctionalTest(unittest.TestCase):
         self.assertTrue(ver.verify_wordpress(stack_url))
 
     def testListStacks(self):
-        client = self.stack.get_heat_client()
-        response = client.list_stacks()
+        response = self.stack.heatclient.list_stacks()
         prefix = '/ListStacksResponse/ListStacksResult/StackSummaries/member'
 
         stack_id = self.stack.response_xml_item(response, prefix, "StackId")
@@ -146,10 +145,9 @@ class CfnApiFunctionalTest(unittest.TestCase):
         print "ListStacks : OK"
 
     def testDescribeStacks(self):
-        client = self.stack.get_heat_client()
         parameters = {}
         parameters['StackName'] = self.stack.stackname
-        response = client.describe_stacks(**parameters)
+        response = self.stack.heatclient.describe_stacks(**parameters)
         prefix = '/DescribeStacksResponse/DescribeStacksResult/Stacks/member'
 
         stack_id = self.stack.response_xml_item(response, prefix, "StackId")
@@ -222,10 +220,9 @@ class CfnApiFunctionalTest(unittest.TestCase):
         print "DescribeStacks : OK"
 
     def testDescribeStackEvents(self):
-        client = self.stack.get_heat_client()
         parameters = {}
         parameters['StackName'] = self.stack.stackname
-        response = client.list_stack_events(**parameters)
+        response = self.stack.heatclient.list_stack_events(**parameters)
         prefix = '/DescribeStackEventsResponse/DescribeStackEventsResult/' +\
                'StackEvents/member[LogicalResourceId="' +\
                 self.logical_resource_name + '" and ResourceStatus="' +\
@@ -277,10 +274,9 @@ class CfnApiFunctionalTest(unittest.TestCase):
         print "DescribeStackEvents : OK"
 
     def testGetTemplate(self):
-        client = self.stack.get_heat_client()
         parameters = {}
         parameters['StackName'] = self.stack.stackname
-        response = client.get_template(**parameters)
+        response = self.stack.heatclient.get_template(**parameters)
         prefix = '/GetTemplateResponse/GetTemplateResult'
 
         # Extract the JSON TemplateBody and prove it parses
@@ -298,10 +294,9 @@ class CfnApiFunctionalTest(unittest.TestCase):
         print "GetTemplate : OK"
 
     def testDescribeStackResource(self):
-        client = self.stack.get_heat_client()
         parameters = {'StackName': self.stack.stackname,
             'LogicalResourceId': self.logical_resource_name}
-        response = client.describe_stack_resource(**parameters)
+        response = self.stack.heatclient.describe_stack_resource(**parameters)
         prefix = '/DescribeStackResourceResponse/DescribeStackResourceResult'\
                + '/StackResourceDetail'
 
@@ -344,10 +339,9 @@ class CfnApiFunctionalTest(unittest.TestCase):
         print "DescribeStackResource : OK"
 
     def testDescribeStackResources(self):
-        client = self.stack.get_heat_client()
         parameters = {'NameOrPid': self.stack.stackname,
             'LogicalResourceId': self.logical_resource_name}
-        response = client.describe_stack_resources(**parameters)
+        response = self.stack.heatclient.describe_stack_resources(**parameters)
         prefix = '/DescribeStackResourcesResponse/' +\
                 'DescribeStackResourcesResult/StackResources/member'
 
@@ -385,10 +379,9 @@ class CfnApiFunctionalTest(unittest.TestCase):
         print "DescribeStackResources : OK"
 
     def testListStackResources(self):
-        client = self.stack.get_heat_client()
         parameters = {}
         parameters['StackName'] = self.stack.stackname
-        response = client.list_stack_resources(**parameters)
+        response = self.stack.heatclient.list_stack_resources(**parameters)
         prefix = '/ListStackResourcesResponse/ListStackResourcesResult' +\
                '/StackResourceSummaries/member'
 
@@ -419,11 +412,10 @@ class CfnApiFunctionalTest(unittest.TestCase):
         print "ListStackResources : OK"
 
     def testValidateTemplate(self):
-        client = self.stack.get_heat_client()
         # Use stack.format_parameters to get the TemplateBody
         params = self.stack.format_parameters()
         val_params = {'TemplateBody': params['TemplateBody']}
-        response = client.validate_template(**val_params)
+        response = self.stack.heatclient.validate_template(**val_params)
         prefix = '/ValidateTemplateResponse/ValidateTemplateResult' +\
                  '/Parameters/member'
         # Check the response contains all the expected paramter keys
