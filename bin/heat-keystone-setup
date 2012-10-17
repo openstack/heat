@@ -37,7 +37,7 @@ echo SERVICE_TOKEN $SERVICE_TOKEN
 
 # Services
 HEAT_SERVICE=$(get_id \
-keystone service-create --name=heat \
+keystone service-create --name=heat-cfn \
                         --type=cloudformation \
                         --description="Heat Service")
 HEAT_USER=$(get_id keystone user-create --name=heat \
