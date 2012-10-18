@@ -92,15 +92,18 @@ delete_endpoint() {
     local service_type=$1
 
     local url=$(get_data 1 "${service_type}[.]publicURL" 2 \
-                get_endpoint $service_type 2>/dev/null)
+                get_endpoint $service_type 2>/dev/null | \
+                    sed -e "s/${TENANT_ID}/%[(]tenant_id[)]s/")
 
     if [ -n "$url" ]; then
         local endpoints=$(get_data 3 $url 1 keystone endpoint-list)
 
         for endpoint in $endpoints; do
-            echo "Removing $service_type endpoint ${url}..." >&2
+            echo "Removing $service_type endpoint ${endpoint}..." >&2
             keystone endpoint-delete "$endpoint" >&2
         done
+
+        if [ -z "$endpoints" ]; then false; fi
     else
         false
     fi
@@ -147,6 +150,7 @@ add_endpoint() {
 }
 
 
+TENANT_ID=$(get_data 1 tenant_id 2 keystone token-get)
 set_admin_token
 
 ADMIN_ROLE=$(get_data 2 admin 1 keystone role-list)
@@ -169,4 +173,4 @@ HEAT_CFN_SERVICE=$(get_service heat-cfn cloudformation \
                    "Heat CloudFormation API")
 add_endpoint $HEAT_CFN_SERVICE 'http://localhost:8000/v1'
 
-delete_all_endpoints orchestration
+delete_service orchestration
