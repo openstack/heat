@@ -81,6 +81,11 @@ def setup_mocks(mocks, stack):
                       meta=None).AndReturn(fc.servers.list()[-1])
 
 
+class DummyGreenThread():
+    def link(self, gt, **kwargs):
+        pass
+
+
 @attr(tag=['unit', 'stack'])
 @attr(speed='slow')
 class stackCreateTest(unittest.TestCase):
@@ -159,8 +164,8 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn({'Description': 'Successfully validated'})
 
-        self.m.StubOutWithMock(manager.greenpool, 'spawn_n')
-        manager.greenpool.spawn_n(stack.create)
+        self.m.StubOutWithMock(manager.greenpool, 'spawn')
+        manager.greenpool.spawn(stack.create).AndReturn(DummyGreenThread())
 
         self.m.ReplayAll()
 
@@ -193,7 +198,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         error = {'Description': 'fubar'}
         stack.validate().AndReturn(error)
 
-        self.m.StubOutWithMock(manager.greenpool, 'spawn_n')
+        self.m.StubOutWithMock(manager.greenpool, 'spawn')
 
         self.m.ReplayAll()
 
@@ -257,8 +262,9 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn({'Description': 'Successfully validated'})
 
-        self.m.StubOutWithMock(manager.greenpool, 'spawn_n')
-        manager.greenpool.spawn_n(old_stack.update, stack)
+        self.m.StubOutWithMock(manager.greenpool, 'spawn')
+        manager.greenpool.spawn(old_stack.update, stack).AndReturn(
+                                DummyGreenThread())
 
         self.m.ReplayAll()
 
@@ -297,7 +303,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         error = {'Description': 'fubar'}
         stack.validate().AndReturn(error)
 
-        self.m.StubOutWithMock(manager.greenpool, 'spawn_n')
+        self.m.StubOutWithMock(manager.greenpool, 'spawn')
 
         self.m.ReplayAll()
 
