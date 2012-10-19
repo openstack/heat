@@ -27,7 +27,6 @@ import urlparse
 
 from heat.common import config
 from heat.common import context
-from heat.engine import auth
 from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
@@ -49,7 +48,6 @@ class WatchControllerTest(unittest.TestCase):
         ctx = context.get_admin_context()
         self.m.StubOutWithMock(ctx, 'username')
         ctx.username = user
-        self.m.StubOutWithMock(auth, 'authenticate')
         return ctx
 
     def _dummy_GET_request(self, params={}):

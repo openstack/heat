@@ -27,7 +27,6 @@ import webob.exc
 
 from heat.common import config
 from heat.common import context
-from heat.engine import auth
 from heat.engine import identifier
 from heat.openstack.common import cfg
 from heat.openstack.common import rpc
@@ -163,7 +162,6 @@ class StackControllerTest(unittest.TestCase):
         ctx.username = user
         self.m.StubOutWithMock(ctx, 'tenant_id')
         ctx.tenant_id = self.tenant
-        self.m.StubOutWithMock(auth, 'authenticate')
         return ctx
 
     def _environ(self, path):

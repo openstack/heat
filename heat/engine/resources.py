@@ -231,10 +231,41 @@ class Resource(object):
         if service_type in self._nova:
             return self._nova[service_type]
 
-        self._nova[service_type] = auth.authenticate(self.context,
-                                                     service_type=service_type,
-                                                     service_name=None)
-        return self._nova[service_type]
+        con = self.context
+        args = {
+            'project_id': con.tenant,
+            'auth_url': con.auth_url,
+            'service_type': service_type,
+        }
+
+        if con.password is not None:
+            args['username'] = con.username
+            args['api_key'] = con.password
+        elif con.auth_token is not None:
+            args['username'] = con.service_user
+            args['api_key'] = con.service_password
+            args['proxy_token'] = con.auth_token
+            args['proxy_tenant_id'] = con.tenant_id
+        else:
+            logger.error("Nova connection failed, no password or auth_token!")
+            return None
+
+        client = None
+        try:
+            # Workaround for issues with python-keyring, need no_cache=True
+            # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
+            # TODO(shardy): May be able to remove when the bug above is fixed
+            client = nc.Client(no_cache=True, **args)
+            client.authenticate()
+            self._nova[service_type] = client
+        except TypeError:
+            # for compatibility with essex, which doesn't have no_cache=True
+            # TODO(shardy): remove when we no longer support essex
+            client = nc.Client(**args)
+            client.authenticate()
+            self._nova[service_type] = client
+
+        return client
 
     def swift(self):
         if swiftclient_present == False:
