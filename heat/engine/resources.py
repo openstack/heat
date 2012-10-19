@@ -221,10 +221,27 @@ class Resource(object):
             return self._keystone
 
         con = self.context
-        self._keystone = kc.Client(username=con.username,
-                                   password=con.password,
-                                   tenant_name=con.tenant,
-                                   auth_url=con.auth_url)
+        args = {
+            'tenant_name': con.tenant,
+            'tenant_id': con.tenant_id,
+            'auth_url': con.auth_url,
+        }
+
+        if con.password is not None:
+            args['username'] = con.username
+            args['password'] = con.password
+        elif con.auth_token is not None:
+            args['username'] = con.service_user
+            args['password'] = con.service_password
+            args['token'] = con.auth_token
+        else:
+            logger.error("Keystone connectio failed, no password or " +
+                         "auth_token!")
+            return None
+
+        client = kc.Client(**args)
+        client.authenticate()
+        self._keystone = client
         return self._keystone
 
     def nova(self, service_type='compute'):
