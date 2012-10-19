@@ -89,41 +89,8 @@ def authenticate(con, service_type='cloudformation', service_name='heat-cfn'):
             'proxy_tenant_id': con.tenant_id,
         }
     else:
-        # We'll have to do AWS style auth which is more complex.
-        # First step is to get a token from the AWS creds.
-        headers = {'Content-Type': 'application/json'}
-
-        o = urlparse.urlparse(con.aws_auth_uri)
-        if o.scheme == 'http':
-            conn = httplib.HTTPConnection(o.netloc)
-        else:
-            conn = httplib.HTTPSConnection(o.netloc)
-        conn.request('POST', o.path, body=con.aws_creds, headers=headers)
-        response = conn.getresponse().read()
-        conn.close()
-
-        result = json.loads(response)
-        try:
-            token_id = result['access']['token']['id']
-            # We grab the username here because with token auth and EC2
-            # we never get it normally.  We could pass it in but then We
-            # are relying on user input to give us the correct username.
-            # This one is the result of the authentication and is verified.
-            username = result['access']['user']['username']
-            con.username = username
-
-            logger.info("AWS authentication successful.")
-        except (AttributeError, KeyError):
-            # FIXME: Should be 404 I think.
-            logger.info("AWS authentication failure.")
-            raise exception.AuthorizationFailure()
-
-        credentials = {
-            'username': con.service_user,
-            'api_key': con.service_password,
-            'proxy_token': token_id,
-            'proxy_tenant_id': con.tenant_id,
-        }
+        logger.error("Authentication failed, no password or auth_token!")
+        return None
 
     args.update(credentials)
     try:
