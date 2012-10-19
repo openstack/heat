@@ -78,7 +78,7 @@ class EngineManager(manager.Manager):
     def _get_stack(self, context, stack_identity):
         identity = identifier.HeatIdentifier(**stack_identity)
 
-        if identity.tenant != context.tenant:
+        if identity.tenant != context.tenant_id:
             raise AttributeError('Invalid tenant')
 
         s = db_api.stack_get(context, identity.stack_id)

@@ -80,7 +80,7 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
               .filter_by(nova_instance=physical_resource_id)
               .first())
     if (result is not None and context is not None and
-        result.stack.tenant != context.tenant):
+        result.stack.tenant != context.tenant_id):
         return None
     return result
 
@@ -120,7 +120,7 @@ def stack_get_by_name(context, stack_name, owner_id=None):
         result = model_query(context, models.Stack).\
                             filter_by(name=stack_name).first()
     if (result is not None and context is not None and
-        result.tenant != context.tenant):
+        result.tenant != context.tenant_id):
         return None
     return result
 
@@ -129,7 +129,7 @@ def stack_get(context, stack_id):
     result = model_query(context, models.Stack).get(stack_id)
 
     if (result is not None and context is not None and
-        result.tenant != context.tenant):
+        result.tenant != context.tenant_id):
         return None
 
     return result
@@ -144,7 +144,7 @@ def stack_get_all(context):
 def stack_get_by_tenant(context):
     results = model_query(context, models.Stack).\
                          filter_by(owner_id=None).\
-                         filter_by(tenant=context.tenant).all()
+                         filter_by(tenant=context.tenant_id).all()
     return results
 
 
@@ -235,7 +235,7 @@ def event_get_all(context):
 
 def event_get_all_by_tenant(context):
     stacks = model_query(context, models.Stack).\
-                          filter_by(tenant=context.tenant).all()
+                          filter_by(tenant=context.tenant_id).all()
     results = []
     for stack in stacks:
         results.extend(model_query(context, models.Event).

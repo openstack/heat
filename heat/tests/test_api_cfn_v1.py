@@ -49,6 +49,8 @@ class StackControllerTest(unittest.TestCase):
         ctx = context.get_admin_context()
         self.m.StubOutWithMock(ctx, 'username')
         ctx.username = user
+        self.m.StubOutWithMock(ctx, 'tenant_id')
+        ctx.tenant_id = 't'
         self.m.StubOutWithMock(auth, 'authenticate')
         return ctx
 

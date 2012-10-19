@@ -45,9 +45,9 @@ def create_context(mocks, user='stacks_test_user',
                    tenant='test_admin', ctx=None):
     ctx = ctx or context.get_admin_context()
     mocks.StubOutWithMock(ctx, 'username')
-    mocks.StubOutWithMock(ctx, 'tenant')
+    mocks.StubOutWithMock(ctx, 'tenant_id')
     ctx.username = user
-    ctx.tenant = tenant
+    ctx.tenant_id = tenant
     return ctx
 
 

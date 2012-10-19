@@ -142,7 +142,7 @@ class InstantiationData(object):
 def tenant_local(handler):
     @wraps(handler)
     def handle_stack_method(controller, req, tenant_id, **kwargs):
-        req.context.tenant = tenant_id
+        req.context.tenant_id = tenant_id
         return handler(controller, req, **kwargs)
 
     return handle_stack_method
@@ -152,7 +152,7 @@ def identified_stack(handler):
     @tenant_local
     @wraps(handler)
     def handle_stack_method(controller, req, stack_name, stack_id, **kwargs):
-        stack_identity = identifier.HeatIdentifier(req.context.tenant,
+        stack_identity = identifier.HeatIdentifier(req.context.tenant_id,
                                                    stack_name,
                                                    stack_id)
         return handler(controller, req, dict(stack_identity), **kwargs)

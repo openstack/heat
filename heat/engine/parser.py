@@ -309,7 +309,7 @@ class Stack(object):
             'owner_id': owner and owner.id,
             'user_creds_id': new_creds.id,
             'username': self.context.username,
-            'tenant': self.context.tenant,
+            'tenant': self.context.tenant_id,
             'status': self.state,
             'status_reason': self.state_description,
             'timeout': self.timeout_mins,
@@ -326,7 +326,7 @@ class Stack(object):
         '''
         Return an identifier for this stack.
         '''
-        return identifier.HeatIdentifier(self.context.tenant,
+        return identifier.HeatIdentifier(self.context.tenant_id,
                                          self.name, self.id)
 
     def __iter__(self):
