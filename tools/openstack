@@ -155,6 +155,8 @@ function os_install() {
     sudo yum -q -y install openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server mysql-server qpid-cpp-server-daemon
     sudo dd if=/dev/zero of=/var/lib/nova/nova-volumes.img bs=1M seek=20k count=0
     sudo systemctl start mysqld.service
+    sudo systemctl enable libvirtd.service
+    sudo systemctl start libvirtd.service
     sleep 1
     # Configure the databases
     sudo openstack-db --service nova --init $*
