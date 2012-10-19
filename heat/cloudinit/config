@@ -1,5 +1,5 @@
 runcmd:
- - type setenforce > /dev/null 2>&1 && setenforce 0
+ - setenforce 0 > /dev/null 2>&1 || :
 
 user: ec2-user
 
