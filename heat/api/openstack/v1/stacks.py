@@ -176,8 +176,9 @@ def format_stack(req, stack, keys=[]):
     def transform(key, value):
         if key == engine_api.STACK_ID:
             return 'URL', stack_url(req, value)
-        elif key == engine_api.STACK_PARAMETERS:
-            return key, json.dumps(value)
+        # TODO(zaneb): ensure parameters can be formatted for XML
+        #elif key == engine_api.STACK_PARAMETERS:
+        #    return key, json.dumps(value)
 
         return key, value
 
@@ -308,7 +309,7 @@ class StackController(object):
             raise exc.HTTPNotFound()
 
         # TODO(zaneb): always set Content-type to application/json
-        return json.dumps(templ)
+        return templ
 
     @identified_stack
     def update(self, req, identity, body):
@@ -375,5 +376,7 @@ def create_resource(options):
     """
     Stacks resource factory method.
     """
+    # TODO(zaneb) handle XML based on Content-type/Accepts
     deserializer = wsgi.JSONRequestDeserializer()
-    return wsgi.Resource(StackController(options), deserializer)
+    serializer = wsgi.JSONResponseSerializer()
+    return wsgi.Resource(StackController(options), deserializer, serializer)

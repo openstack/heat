@@ -474,7 +474,7 @@ class StackControllerTest(unittest.TestCase):
             'stack': {
                 'URL': self._url(identity),
                 u'updated_time': u'2012-07-09T09:13:11Z',
-                u'parameters': json.dumps(parameters),
+                u'parameters': parameters,
                 u'outputs': outputs,
                 u'description': u'blah',
                 u'stack_status_reason': u'Stack successfully created',
@@ -527,7 +527,7 @@ class StackControllerTest(unittest.TestCase):
                                             stack_name=identity.stack_name,
                                             stack_id=identity.stack_id)
 
-        self.assertEqual(response, json.dumps(template))
+        self.assertEqual(response, template)
         self.m.VerifyAll()
 
     def test_get_template_err_rpcerr(self):
