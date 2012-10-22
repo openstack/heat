@@ -437,6 +437,7 @@ class AuthProtocol(object):
             'X-Role': roles,
             'X-Admin-User': self.admin_user,
             'X-Admin-Pass': self.admin_password,
+            'X-Admin-Tenant-Name': self.admin_tenant_name,
             'X-Auth-Url': self.conf['auth_uri'],
         }
 

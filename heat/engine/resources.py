@@ -222,20 +222,21 @@ class Resource(object):
 
         con = self.context
         args = {
-            'tenant_name': con.tenant,
-            'tenant_id': con.tenant_id,
             'auth_url': con.auth_url,
         }
 
         if con.password is not None:
             args['username'] = con.username
             args['password'] = con.password
+            args['tenant_name'] = con.tenant
+            args['tenant_id'] = con.tenant_id
         elif con.auth_token is not None:
             args['username'] = con.service_user
             args['password'] = con.service_password
+            args['tenant_name'] = con.service_tenant
             args['token'] = con.auth_token
         else:
-            logger.error("Keystone connectio failed, no password or " +
+            logger.error("Keystone connection failed, no password or " +
                          "auth_token!")
             return None
 
@@ -261,6 +262,7 @@ class Resource(object):
         elif con.auth_token is not None:
             args['username'] = con.service_user
             args['api_key'] = con.service_password
+            args['project_id'] = con.service_tenant
             args['proxy_token'] = con.auth_token
             args['proxy_tenant_id'] = con.tenant_id
         else:
