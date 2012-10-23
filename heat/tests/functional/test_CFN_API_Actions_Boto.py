@@ -76,8 +76,8 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
             cls.logical_resource_status = "CREATE_COMPLETE"
 
             # Save some compiled regexes and strings for response validation
-            cls.stack_id_re = re.compile("^arn:openstack:heat::admin:stacks/"
-                                          + cls.stack.stackname)
+            cls.stack_id_re = re.compile("^arn:openstack:heat::[0-9a-z]{32}:" +
+                                         "stacks/" + cls.stack.stackname)
             cls.time_re = re.compile(
                 "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")
             cls.description_re = re.compile(
