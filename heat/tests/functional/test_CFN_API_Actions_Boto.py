@@ -279,7 +279,7 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         self.assertTrue(self.time_re.match(res['LastUpdatedTimestamp'])
                         != None)
 
-        self.assertEqual(res['ResourceStatusReason'], None)
+        self.assertEqual(res['ResourceStatusReason'], 'state changed')
 
         self.assertEqual(res['StackName'], self.stack.stackname)
 
@@ -309,7 +309,7 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
 
         self.assertEqual(type(res.timestamp), datetime.datetime)
 
-        self.assertEqual(res.resource_status_reason, 'None')
+        self.assertEqual(res.resource_status_reason, 'state changed')
 
         self.assertEqual(res.stack_name, self.stack.stackname)
 
@@ -331,7 +331,7 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
 
         self.assertEqual(res.resource_status, self.logical_resource_status)
 
-        self.assertEqual(res.resource_status_reason, 'None')
+        self.assertEqual(res.resource_status_reason, 'state changed')
 
         self.assertEqual(type(res.last_updated_timestamp), datetime.datetime)
 

@@ -318,7 +318,7 @@ class CfnApiFunctionalTest(unittest.TestCase):
 
         status_reason = self.stack.response_xml_item(response, prefix,
                                                       "ResourceStatusReason")
-        self.assertEqual(status_reason, "None")
+        self.assertEqual(status_reason, "state changed")
 
         stack_name = self.stack.response_xml_item(response, prefix,
                                                   "StackName")
@@ -363,7 +363,7 @@ class CfnApiFunctionalTest(unittest.TestCase):
 
         status_reason = self.stack.response_xml_item(response, prefix,
                                                       "ResourceStatusReason")
-        self.assertEqual(status_reason, "None")
+        self.assertEqual(status_reason, "state changed")
 
         stack_name = self.stack.response_xml_item(response, prefix,
                                                   "StackName")
@@ -392,7 +392,7 @@ class CfnApiFunctionalTest(unittest.TestCase):
 
         status_reason = self.stack.response_xml_item(response, prefix,
                                                       "ResourceStatusReason")
-        self.assertEqual(status_reason, "None")
+        self.assertEqual(status_reason, "state changed")
 
         update_time = self.stack.response_xml_item(response, prefix,
                                                    "LastUpdatedTimestamp")
