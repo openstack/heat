@@ -547,10 +547,10 @@ class StackBoto(Stack):
     the CFN API).
     '''
     def _check_create_result(self, result):
-        pass
+        self.check_stackid(result)
 
     def _check_update_result(self, result):
-        pass
+        self.check_stackid(result)
 
     def _create_heat_client(self):
         # Connect to the keystone client with the supplied credentials
