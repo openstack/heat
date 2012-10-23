@@ -26,7 +26,7 @@ except ImportError:
     version_info = {}
 
 HEAT_VERSION = '7'
-FINAL = False   # This becomes true at Release Candidate time
+FINAL = True
 
 
 def get_git_sha():
