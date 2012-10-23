@@ -154,19 +154,25 @@ class AccessKey(Resource):
         Return the user's access key, fetching it from keystone if necessary
         '''
         if self._secret is None:
-            user = self._user_from_name(self.properties['UserName'])
-            if user is None:
-                logger.warn('could not find user %s' %
-                            self.properties['UserName'])
-            else:
-                try:
-                    cred = self.keystone().ec2.get(user.id, self.instance_id)
-                    self._secret = cred.secret
-                    self.instance_id_set(cred.access)
-                except Exception as ex:
-                    logger.warn('could not get secret for %s Error:%s' %
-                                (self.properties['UserName'],
-                                 str(ex)))
+            try:
+                # Here we use the user_id of the user context of the request
+                # We need to avoid using _user_from_name, because users.list
+                # needs keystone admin role, and we want to allow an instance
+                # user to retrieve data about itself:
+                # - Users without admin role cannot create or delete, but they
+                #   can see their own secret key (but nobody elses)
+                # - Users with admin role can create/delete and view the
+                #   private keys of all users in their tenant
+                # This will allow "instance users" to retrieve resource
+                # metadata but not manipulate user resources in any other way
+                user_id = self.keystone().auth_user_id
+                cred = self.keystone().ec2.get(user_id, self.instance_id)
+                self._secret = cred.secret
+                self.instance_id_set(cred.access)
+            except Exception as ex:
+                logger.warn('could not get secret for %s Error:%s' %
+                            (self.properties['UserName'],
+                             str(ex)))
 
         return self._secret or '000-000-000'
 

@@ -165,7 +165,7 @@ class UserTest(unittest.TestCase):
 
         # fetch secret key
         user.AccessKey.keystone().AndReturn(self.fc)
-        self.fc.users.list(tenant_id='test_tenant').AndReturn([fake_user])
+        self.fc.auth_user_id = '1'
         user.AccessKey.keystone().AndReturn(self.fc)
         self.fc.ec2.get('1',
                 '03a4967889d94a9c8f707d267c127a3d').AndReturn(fake_cred)
