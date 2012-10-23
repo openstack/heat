@@ -25,7 +25,7 @@ try:
 except ImportError:
     version_info = {}
 
-HEAT_VERSION = '7'
+HEAT_VERSION = '8'
 FINAL = False   # This becomes true at Release Candidate time
 
 
