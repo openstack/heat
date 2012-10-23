@@ -76,8 +76,6 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
             cls.logical_resource_status = "CREATE_COMPLETE"
 
             # Save some compiled regexes and strings for response validation
-            cls.stack_id_re = re.compile("^arn:openstack:heat::[0-9a-z]{32}:" +
-                                         "stacks/" + cls.stack.stackname)
             cls.time_re = re.compile(
                 "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$")
             cls.description_re = re.compile(
@@ -127,7 +125,7 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         # Note the boto StackSummary object does not contain every item
         # output by our API (ie defined in the AWS docs), we can only
         # test what boto encapsulates in the StackSummary class
-        self.assertTrue(self.stack_id_re.match(summary[0].stack_id) != None)
+        self.stack.check_stackid(summary[0].stack_id)
 
         self.assertEqual(type(summary[0].creation_time), datetime.datetime)
 
@@ -152,7 +150,7 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
 
         self.assertEqual(type(stacks[0].creation_time), datetime.datetime)
 
-        self.assertTrue(self.stack_id_re.match(stacks[0].stack_id) != None)
+        self.stack.check_stackid(stacks[0].stack_id)
 
         self.assertTrue(self.description_re.match(stacks[0].description)
                         != None)
@@ -207,7 +205,7 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
 
         self.assertEqual(len(events), 1)
 
-        self.assertTrue(self.stack_id_re.match(events[0].stack_id) != None)
+        self.stack.check_stackid(events[0].stack_id)
 
         self.assertTrue(re.match("[0-9]*$", events[0].event_id) != None)
 
@@ -268,7 +266,7 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         res = desc_result['StackResourceDetail']
         self.assertTrue(res != None)
 
-        self.assertTrue(self.stack_id_re.match(res['StackId']) != None)
+        self.stack.check_stackid(res['StackId'])
 
         self.assertEqual(res['ResourceStatus'], self.logical_resource_status)
 
@@ -301,7 +299,7 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
         res = response[0]
         self.assertTrue(res != None)
 
-        self.assertTrue(self.stack_id_re.match(res.stack_id) != None)
+        self.stack.check_stackid(res.stack_id)
 
         self.assertEqual(res.resource_status, self.logical_resource_status)
 

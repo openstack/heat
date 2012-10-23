@@ -26,6 +26,7 @@ import nose
 import errno
 import tempfile
 import stat
+import re
 from pkg_resources import resource_string
 from lxml import etree
 
@@ -322,6 +323,9 @@ class Stack(object):
         self.distribution = distribution
         self.stack_paramstr = stack_paramstr
 
+        self.stack_id_re = re.compile("^arn:openstack:heat::[0-9a-z]{32}:" +
+                                      "stacks/" + self.stackname + "/[0-9]*$")
+
         self.creds = dict(username=os.environ['OS_USERNAME'],
                           password=os.environ['OS_PASSWORD'],
                           tenant=os.environ['OS_TENANT_NAME'],
@@ -404,7 +408,9 @@ class Stack(object):
         create_list = root.xpath('/CreateStackResponse/CreateStackResult')
         self.testcase.assertTrue(create_list)
         self.testcase.assertEqual(len(create_list), 1)
-        self._check_stackid(create_list)
+        stack_id = create_list[0].findtext('StackId')
+        self.testcase.assertTrue(stack_id != None)
+        self.check_stackid(stack_id)
 
     def _check_update_result(self, result):
         # Check result looks OK
@@ -412,14 +418,13 @@ class Stack(object):
         update_list = root.xpath('/UpdateStackResponse/UpdateStackResult')
         self.testcase.assertTrue(update_list)
         self.testcase.assertEqual(len(update_list), 1)
-        self._check_stackid(update_list)
+        stack_id = update_list[0].findtext('StackId')
+        self.testcase.assertTrue(stack_id != None)
+        self.check_stackid(stack_id)
 
-    def _check_stackid(self, xpq_list):
-        # Extract StackId from the result, and check the StackName part
-        stackid = xpq_list[0].findtext('StackId')
-        idname = stackid.split('/')[1]
-        print "Checking %s contains name %s" % (stackid, self.stackname)
-        self.testcase.assertEqual(idname, self.stackname)
+    def check_stackid(self, stack_id):
+        print "Checking %s matches expected format" % (stack_id)
+        self.testcase.assertTrue(self.stack_id_re.match(stack_id) != None)
 
     def _create_heat_client(self):
         return heat_client.get_client('0.0.0.0', 8000,
