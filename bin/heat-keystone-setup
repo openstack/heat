@@ -44,10 +44,21 @@ get_id () {
     get_data 1 id 2 "$@"
 }
 
+get_column_num() {
+    local name=$1
+    shift
+    $@ | awk -F'|' "NR == 2 { for (i=2; i<NF; i++) if (\$i ~ \"^ *${name} *\$\") print (i - 1) }"
+}
+
 get_user() {
     local username=$1
 
-    local user_id=$(get_data 4 $username 1 keystone user-list)
+    # Outut format of keystone user-list changed between essex and
+    # folsom - the columns have been re-ordered (!?), so detect what
+    # column to pass to get_data via get_column_num
+    namecol=$(get_column_num name keystone user-list)
+
+    local user_id=$(get_data $namecol $username 1 keystone user-list)
 
     if [ -n "$user_id" ]; then
         echo "Found existing $username user" >&2
