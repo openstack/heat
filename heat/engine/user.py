@@ -15,6 +15,7 @@
 
 import eventlet
 from heat.common import exception
+from heat.openstack.common import cfg
 from heat.engine.resources import Resource
 
 from heat.openstack.common import log as logging
@@ -59,6 +60,22 @@ class User(Resource):
                                             tenant_id=tenant_id,
                                             enabled=True)
         self.instance_id_set(user.id)
+
+        # We add the new user to a special keystone role
+        # This role is designed to allow easier differentiation of the
+        # heat-generated "stack users" which will generally have credentials
+        # deployed on an instance (hence are implicitly untrusted)
+        roles = self.keystone().roles.list()
+        stack_user_role = [r.id for r in roles
+                         if r.name == cfg.CONF.heat_stack_user_role]
+        if len(stack_user_role) == 1:
+            role_id = stack_user_role[0]
+            logger.debug("Adding user %s to role %s" % (user.id, role_id))
+            self.keystone().roles.add_user_role(user.id, role_id, tenant_id)
+        else:
+            logger.error("Failed to add user %s to role %s, check role exists!"
+                         % (self.physical_resource_name(),
+                            cfg.CONF.heat_stack_user_role))
 
     def handle_update(self):
         return self.UPDATE_REPLACE

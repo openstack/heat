@@ -25,11 +25,14 @@ import unittest
 from nose.plugins.attrib import attr
 
 from heat.common import exception
+from heat.common import config
 from heat.engine import parser
 from heat.engine import user
 from heat.tests.v1_1 import fakes
 from keystoneclient.v2_0 import users
+from keystoneclient.v2_0 import roles
 from keystoneclient.v2_0 import ec2
+from heat.openstack.common import cfg
 
 
 @attr(tag=['unit', 'resource'])
@@ -39,6 +42,7 @@ class UserTest(unittest.TestCase):
         self.m = mox.Mox()
         self.fc = fakes.FakeClient()
         self.fc.users = users.UserManager(None)
+        self.fc.roles = roles.RoleManager(None)
         self.fc.ec2 = ec2.CredentialsManager(None)
         self.m.StubOutWithMock(user.User, 'keystone')
         self.m.StubOutWithMock(user.AccessKey, 'keystone')
@@ -46,10 +50,14 @@ class UserTest(unittest.TestCase):
         self.m.StubOutWithMock(self.fc.users, 'get')
         self.m.StubOutWithMock(self.fc.users, 'delete')
         self.m.StubOutWithMock(self.fc.users, 'list')
+        self.m.StubOutWithMock(self.fc.roles, 'list')
+        self.m.StubOutWithMock(self.fc.roles, 'add_user_role')
         self.m.StubOutWithMock(self.fc.ec2, 'create')
         self.m.StubOutWithMock(self.fc.ec2, 'get')
         self.m.StubOutWithMock(self.fc.ec2, 'delete')
         self.m.StubOutWithMock(eventlet, 'sleep')
+        config.register_engine_opts()
+        cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -106,6 +114,14 @@ class UserTest(unittest.TestCase):
                              'test_stack.CfnUser@heat-api.org',
                              enabled=True,
                              tenant_id='test_tenant').AndReturn(fake_user)
+
+        fake_role = roles.Role(self.fc.roles, {'id': '123',
+                                               'name': 'stack_user_role'})
+        user.User.keystone().AndReturn(self.fc)
+        self.fc.roles.list().AndReturn([fake_role])
+
+        user.User.keystone().AndReturn(self.fc)
+        self.fc.roles.add_user_role('1', '123', 'test_tenant').AndReturn(None)
 
         # delete script
         user.User.keystone().AndReturn(self.fc)

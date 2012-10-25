@@ -80,6 +80,9 @@ cfg.IntOpt('osapi_volume_listen_port',
 cfg.StrOpt('heat_metadata_server_url',
            default="",
            help='URL of the Heat metadata server'),
+cfg.StrOpt('heat_stack_user_role',
+           default="heat_stack_user",
+           help='Keystone role for heat template-defined users'),
 ]
 db_opts = [
 cfg.StrOpt('sql_connection',
