@@ -62,17 +62,6 @@ class Metadata(object):
         rs = db_api.resource_get(resource.stack.context, resource.id)
         rs.update_and_save({'rsrc_metadata': metadata})
 
-    @staticmethod
-    def server():
-        '''
-        Get the address of the currently registered metadata server. Return
-        None if no server is registered.
-        '''
-        try:
-            return cfg.CONF.heat_metadata_server_url
-        except AttributeError:
-            return None
-
 
 class Resource(object):
     # Status strings

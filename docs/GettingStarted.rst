@@ -183,6 +183,17 @@ Check that there is a ``F17-x86_64-cfntools`` JEOS in glance:
     )
     $GLANCE_INDEX | grep -q "F17-x86_64-cfntools"
 
+Update heat engine configuration file
+-------------------------------------
+
+The heat engine configuration file should be updated with the address of the bridge device (demonetbr0), however this device is not created by nova-network until the first instance is launched, so we assume that $BRIDGE_IP is 10.0.0.1 if $SUBNET is 10.0.0.0/24 as in the instructions above:
+
+..
+    BRIDGE_IP=`echo $SUBNET | awk -F'[./]' '{printf "%d.%d.%d.%d", $1, $2, $3, or($4, 1)}'`
+
+::
+    sudo sed -i -e "/heat_metadata_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
+
 Launch the Heat services
 ------------------------
 
@@ -315,7 +326,12 @@ Open up port 8002 so that the guests can communicate with the heat-metadata serv
 ::
     sudo iptables -I INPUT -p tcp --dport 8002 -j ACCEPT -i demonetbr0
 
-Note the above rule will not persist across reboot, so you may wish to add it to /etc/sysconfig/iptables
+Note Instance/resource metadata is actually now served via the cloudformation API, so it is necessary to also open up port 8000 so that the guests can communicate with the heat-api-cfn server:
+
+::
+    sudo iptables -I INPUT -p tcp --dport 8000 -j ACCEPT -i demonetbr0
+
+Note the above rules will not persist across reboot, so you may wish to add them to /etc/sysconfig/iptables
 
 Configure Heat Cloudwatch server
 --------------------------------

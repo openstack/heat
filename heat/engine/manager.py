@@ -378,9 +378,6 @@ class EngineManager(manager.Manager):
         return [api.format_stack_resource(resource)
                 for resource in stack if resource.id is not None]
 
-    def metadata_register_address(self, context, url):
-        cfg.CONF.heat_metadata_server_url = url
-
     def metadata_list_stacks(self, context):
         """
         Return the names of the stacks registered with Heat.

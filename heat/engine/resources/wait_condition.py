@@ -20,6 +20,8 @@ from heat.engine.resources import resource
 
 from heat.openstack.common import log as logging
 
+from heat.openstack.common import cfg
+
 logger = logging.getLogger('heat.engine.wait_condition')
 
 
@@ -38,7 +40,7 @@ class WaitConditionHandle(resource.Resource):
 
     def handle_create(self):
         self.instance_id = '%s/stacks/%s/resources/%s' % \
-                           (resource.Metadata.server(),
+                           (cfg.CONF.heat_metadata_server_url,
                             self.stack.id,
                             self.name)
 

@@ -33,33 +33,13 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 gettext.install('heat', unicode=1)
 
-from heat.openstack.common import rpc
 from heat.common import config
 from heat.common import wsgi
-from heat.common import context
 
 from heat.openstack.common import log as logging
 from heat.openstack.common import cfg
 
 LOG = logging.getLogger('heat.metadata')
-
-
-def send_address_to_engine(host, port):
-    con = context.get_admin_context()
-    timeout = 2
-    while True:
-        try:
-            resp = rpc.call(con, 'engine',
-                            {'method': 'metadata_register_address',
-                             'args': {'url': 'http://%s:%s' % (host, port)}},
-                            timeout=timeout)
-        except rpc.common.Timeout:
-            LOG.info('Could not connect to the engine, retrying...')
-            if timeout < 30:
-                timeout *= 2
-        else:
-            LOG.info('registered the hostname and port with the engine.')
-            return
 
 
 if __name__ == '__main__':
@@ -73,7 +53,6 @@ if __name__ == '__main__':
 
         port = cfg.CONF.bind_port
         host = cfg.CONF.bind_host
-        send_address_to_engine(host, port)
         LOG.info(('Starting Heat Metadata on %s:%s') % (host, port))
         server = wsgi.Server()
         server.start(app, cfg.CONF, default_port=port)

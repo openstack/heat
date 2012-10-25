@@ -25,6 +25,8 @@ import heat
 from heat.engine.resources import resource
 from heat.common import exception
 
+from heat.openstack.common import cfg
+
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.instance')
@@ -176,10 +178,8 @@ class Instance(resource.Resource):
                 attachments.append((json.dumps(self.metadata),
                                     'cfn-init-data', 'x-cfninitdata'))
 
-            metadata_server = resource.Metadata.server()
-            if metadata_server is not None:
-                attachments.append((metadata_server,
-                                    'cfn-metadata-server', 'x-cfninitdata'))
+            attachments.append((cfg.CONF.heat_metadata_server_url,
+                                'cfn-metadata-server', 'x-cfninitdata'))
 
             subparts = [make_subpart(*args) for args in attachments]
             mime_blob = MIMEMultipart(_subparts=subparts)
