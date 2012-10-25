@@ -40,7 +40,7 @@ class WaitConditionHandle(resource.Resource):
 
     def handle_create(self):
         self.instance_id = '%s/stacks/%s/resources/%s' % \
-                           (cfg.CONF.heat_metadata_server_url,
+                           (cfg.CONF.heat_waitcondition_server_url,
                             self.stack.id,
                             self.name)
 
