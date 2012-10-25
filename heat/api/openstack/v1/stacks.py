@@ -18,6 +18,7 @@ Stack endpoint for Heat v1 ReST API.
 """
 
 import httplib
+import itertools
 import json
 import os
 import socket
@@ -170,19 +171,28 @@ def stack_url(req, identity):
     return req.relative_url(stack_identity.url_path(), True)
 
 
+def make_link(req, identity):
+    return {"href": stack_url(req, identity), "rel": "self"}
+
+
 def format_stack(req, stack, keys=[]):
     include_key = lambda k: k in keys if keys else True
 
     def transform(key, value):
+        if not include_key(key):
+            return
+
         if key == engine_api.STACK_ID:
-            return 'URL', stack_url(req, value)
-        # TODO(zaneb): ensure parameters can be formatted for XML
-        #elif key == engine_api.STACK_PARAMETERS:
-        #    return key, json.dumps(value)
+            yield ('id', value['stack_id'])
+            yield ('links', [make_link(req, value)])
+        else:
+            # TODO(zaneb): ensure parameters can be formatted for XML
+            #elif key == engine_api.STACK_PARAMETERS:
+            #    return key, json.dumps(value)
+            yield (key, value)
 
-        return key, value
-
-    return dict(transform(k, v) for k, v in stack.items() if include_key(k))
+    return dict(itertools.chain.from_iterable(
+        transform(k, v) for k, v in stack.items()))
 
 
 class StackController(object):
