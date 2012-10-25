@@ -34,25 +34,10 @@ class API(wsgi.Router):
         mapper.connect('/',
                        controller=metadata_controller, action='entry_point',
                        conditions=dict(method=['GET']))
-        mapper.connect('/stacks/',
-                       controller=metadata_controller, action='list_stacks',
-                       conditions=dict(method=['GET']))
-        mapper.connect('/stacks/:stack_name/resources/',
-                       controller=metadata_controller, action='list_resources',
-                       conditions=dict(method=['GET']))
-        mapper.connect('/stacks/:stack_name/resources/:resource_name',
-                       controller=metadata_controller, action='get_resource',
-                       conditions=dict(method=['GET']))
-        mapper.connect('/stacks/:stack_name',
-                       controller=metadata_controller, action='create_stack',
-                       conditions=dict(method=['PUT']))
         mapper.connect('/stacks/:stack_id/resources/:resource_name',
                        controller=metadata_controller,
                        action='update_metadata',
                        conditions=dict(method=['PUT']))
-        mapper.connect('/events/',
-                       controller=metadata_controller, action='create_event',
-                       conditions=dict(method=['POST']))
 
         # TODO(shadower): make sure all responses are JSON-encoded
         # currently, calling an unknown route uses the default handler which

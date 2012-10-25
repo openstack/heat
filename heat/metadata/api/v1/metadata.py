@@ -48,35 +48,6 @@ class MetadataController:
             'version': '1',
         }
 
-    def list_stacks(self, req):
-        con = context.get_admin_context()
-        resp = self.engine_rpcapi.metadata_list_stacks(con)
-        return resp
-
-    def list_resources(self, req, stack_name):
-        con = context.get_admin_context()
-        resources = self.engine_rpcapi.metadata_list_resources(con,
-                         stack_name=stack_name)
-        if resources:
-            return resources
-        else:
-            return json_error(404,
-                              'The stack "%s" does not exist.' % stack_name)
-
-    def get_resource(self, req, stack_name, resource_name):
-        con = context.get_admin_context()
-        [error, metadata] = self.engine_rpcapi.metadata_get_resource(con,
-                                 stack_name=stack_name,
-                                 resource_name=resource_name)
-        if error:
-            if error == 'stack':
-                return json_error(404,
-                            'The stack "%s" does not exist.' % stack_name)
-            else:
-                return json_error(404,
-                       'The resource "%s" does not exist.' % resource_name)
-        return metadata
-
     def update_metadata(self, req, body, stack_id, resource_name):
         con = context.get_admin_context()
         [error, metadata] = self.engine_rpcapi.metadata_update(con,
@@ -94,13 +65,6 @@ class MetadataController:
             'resource': resource_name,
             'metadata': body,
         })
-
-    def create_event(self, req, body=None):
-        con = context.get_admin_context()
-        [error, event] = self.engine_rpcapi.event_create(con, event=body)
-        if error:
-            return json_error(400, error)
-        return json_response(201, event)
 
 
 def create_resource(options):
