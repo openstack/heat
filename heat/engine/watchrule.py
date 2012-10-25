@@ -17,7 +17,7 @@
 import datetime
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
-from heat.engine import resources
+from heat.engine import timestamp
 from heat.db import api as db_api
 from heat.engine import parser
 from heat.common import context as ctxtlib
@@ -35,8 +35,8 @@ class WatchRule(object):
                   NORMAL: 'OKActions',
                   NODATA: 'InsufficientDataActions'}
 
-    created_at = resources.Timestamp(db_api.watch_rule_get, 'created_at')
-    updated_at = resources.Timestamp(db_api.watch_rule_get, 'updated_at')
+    created_at = timestamp.Timestamp(db_api.watch_rule_get, 'created_at')
+    updated_at = timestamp.Timestamp(db_api.watch_rule_get, 'updated_at')
 
     def __init__(self, context, watch_name, rule, stack_name, state=NORMAL,
                  wid=None, watch_data=[], last_evaluated=timeutils.utcnow()):

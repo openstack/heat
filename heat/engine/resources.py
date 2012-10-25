@@ -31,7 +31,7 @@ from heat.common import exception
 from heat.common import config
 from heat.db import api as db_api
 from heat.engine import checkeddict
-from heat.engine import auth
+from heat.engine import timestamp
 
 from heat.openstack.common import log as logging
 from heat.openstack.common import cfg
@@ -74,39 +74,6 @@ class Metadata(object):
             return None
 
 
-class Timestamp(object):
-    '''
-    A descriptor for fetching an up-to-date timestamp from the database.
-    '''
-
-    def __init__(self, db_fetch, attribute):
-        '''
-        Initialise with a function to fetch the database representation of an
-        object (given a context and ID) and the name of the attribute to
-        retrieve.
-        '''
-        self.db_fetch = db_fetch
-        self.attribute = attribute
-
-    def __get__(self, obj, obj_class):
-        '''
-        Get the latest data from the database for the given object and class.
-        '''
-        if obj is None or obj.id is None:
-            return None
-
-        o = self.db_fetch(obj.context, obj.id)
-        o.refresh(attrs=[self.attribute])
-        return getattr(o, self.attribute)
-
-    def __set__(self, obj, timestamp):
-        '''Update the timestamp for the given object.'''
-        if obj.id is None:
-            raise AttributeError("%s has not yet been created" % str(obj))
-        o = self.db_fetch(obj.context, obj.id)
-        o.update_and_save({self.attribute: timestamp})
-
-
 class Resource(object):
     # Status strings
     CREATE_IN_PROGRESS = 'IN_PROGRESS'
@@ -128,8 +95,8 @@ class Resource(object):
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
 
-    created_time = Timestamp(db_api.resource_get, 'created_at')
-    updated_time = Timestamp(db_api.resource_get, 'updated_at')
+    created_time = timestamp.Timestamp(db_api.resource_get, 'created_at')
+    updated_time = timestamp.Timestamp(db_api.resource_get, 'updated_at')
 
     metadata = Metadata()
 

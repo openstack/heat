@@ -23,6 +23,7 @@ from heat.engine import checkeddict
 from heat.engine import dependencies
 from heat.engine import identifier
 from heat.engine import resources
+from heat.engine import timestamp
 from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
@@ -240,8 +241,8 @@ class Stack(object):
     UPDATE_COMPLETE = 'UPDATE_COMPLETE'
     UPDATE_FAILED = 'UPDATE_FAILED'
 
-    created_time = resources.Timestamp(db_api.stack_get, 'created_at')
-    updated_time = resources.Timestamp(db_api.stack_get, 'updated_at')
+    created_time = timestamp.Timestamp(db_api.stack_get, 'created_at')
+    updated_time = timestamp.Timestamp(db_api.stack_get, 'updated_at')
 
     def __init__(self, context, stack_name, template, parameters=None,
                  stack_id=None, state=None, state_description='',
