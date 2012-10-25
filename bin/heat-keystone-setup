@@ -105,6 +105,18 @@ add_role() {
     fi
 }
 
+create_role() {
+    local role_name=$1
+
+    role_id=$(get_data 2 $role_name 1 keystone role-list)
+    if [ -n "$role_id" ]
+    then
+        echo "Role $role_name already exists : $role_id" >&2
+    else
+        keystone role-create --name $role_name
+    fi
+}
+
 get_endpoint() {
     local service_type=$1
 
@@ -194,6 +206,10 @@ HEAT_USERNAME="heat"
 HEAT_USERID=$(get_user $HEAT_USERNAME)
 echo HEAT_USERID $HEAT_USERID
 add_role $HEAT_USERID $SERVICE_TENANT $ADMIN_ROLE $HEAT_USERNAME
+
+# Create a special role which "instance users" are assigned to
+INSTANCE_ROLE="heat_instance"
+create_role $INSTANCE_ROLE
 
 HEAT_CFN_SERVICE=$(get_service heat-cfn cloudformation \
                    "Heat CloudFormation API")
