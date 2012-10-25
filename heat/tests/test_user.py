@@ -27,7 +27,7 @@ from nose.plugins.attrib import attr
 from heat.common import exception
 from heat.common import config
 from heat.engine import parser
-from heat.engine import user
+from heat.engine.resources import user
 from heat.tests.v1_1 import fakes
 from keystoneclient.v2_0 import users
 from keystoneclient.v2_0 import roles

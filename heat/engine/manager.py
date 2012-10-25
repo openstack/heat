@@ -30,7 +30,6 @@ from heat.common import utils as heat_utils
 from heat.engine import api
 from heat.engine import identifier
 from heat.engine import parser
-from heat.engine import resources
 from heat.engine import watchrule
 from heat.engine import auth
 

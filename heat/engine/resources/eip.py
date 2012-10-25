@@ -14,7 +14,7 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine.resources import Resource
+from heat.engine.resources import resource
 from novaclient.exceptions import NotFound
 
 from heat.openstack.common import log as logging
@@ -22,7 +22,7 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger('heat.engine.eip')
 
 
-class ElasticIp(Resource):
+class ElasticIp(resource.Resource):
     properties_schema = {'Domain': {'Type': 'String',
                                     'Implemented': False},
                          'InstanceId': {'Type': 'String'}}
@@ -52,12 +52,6 @@ class ElasticIp(Resource):
     def handle_update(self):
         return self.UPDATE_REPLACE
 
-    def validate(self):
-        '''
-        Validate the ip address here
-        '''
-        return Resource.validate(self)
-
     def handle_delete(self):
         """De-allocate a floating IP."""
         if self.instance_id is not None:
@@ -74,7 +68,7 @@ class ElasticIp(Resource):
                                                      key=key)
 
 
-class ElasticIpAssociation(Resource):
+class ElasticIpAssociation(resource.Resource):
     properties_schema = {'InstanceId': {'Type': 'String',
                                         'Required': True},
                          'EIP': {'Type': 'String'},
@@ -86,12 +80,6 @@ class ElasticIpAssociation(Resource):
 
     def FnGetRefId(self):
         return unicode(self.properties.get('EIP', '0.0.0.0'))
-
-    def validate(self):
-        '''
-        Validate the ip address here
-        '''
-        return Resource.validate(self)
 
     def handle_create(self):
         """Add a floating IP address to a server."""

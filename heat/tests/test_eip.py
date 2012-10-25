@@ -23,7 +23,7 @@ import json
 
 from nose.plugins.attrib import attr
 
-from heat.engine import eip
+from heat.engine.resources import eip
 from heat.engine import parser
 from heat.tests.v1_1 import fakes
 

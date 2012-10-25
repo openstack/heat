@@ -16,7 +16,7 @@
 import eventlet
 from heat.common import exception
 from heat.openstack.common import cfg
-from heat.engine.resources import Resource
+from heat.engine.resources import resource
 
 from heat.openstack.common import log as logging
 
@@ -37,7 +37,7 @@ class DummyId:
         return self.id == other.id
 
 
-class User(Resource):
+class User(resource.Resource):
     properties_schema = {'Path': {'Type': 'String'},
                          'Groups': {'Type': 'CommaDelimitedList'},
                          'LoginProfile': {'Type': 'List'},
@@ -125,7 +125,7 @@ class User(Resource):
                 resource=self.physical_resource_name(), key=key)
 
 
-class AccessKey(Resource):
+class AccessKey(resource.Resource):
     properties_schema = {'Serial': {'Type': 'Integer',
                                     'Implemented': False},
                          'UserName': {'Type': 'String',

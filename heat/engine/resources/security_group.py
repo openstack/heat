@@ -16,14 +16,14 @@
 from novaclient.exceptions import BadRequest
 from novaclient.exceptions import NotFound
 from heat.common import exception
-from heat.engine.resources import Resource
+from heat.engine.resources import resource
 
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.security_group')
 
 
-class SecurityGroup(Resource):
+class SecurityGroup(resource.Resource):
     properties_schema = {'GroupDescription': {'Type': 'String',
                                               'Required': True},
                          'VpcId': {'Type': 'String',

@@ -22,7 +22,7 @@ from email.mime.text import MIMEText
 from novaclient.exceptions import NotFound
 
 import heat
-from heat.engine import resources
+from heat.engine.resources import resource
 from heat.common import exception
 
 from heat.openstack.common import log as logging
@@ -30,7 +30,7 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger('heat.engine.instance')
 
 
-class Restarter(resources.Resource):
+class Restarter(resource.Resource):
     properties_schema = {'InstanceId': {'Type': 'String',
                                         'Required': True}}
 
@@ -58,7 +58,7 @@ class Restarter(resources.Resource):
         self.stack.restart_resource(victim.name)
 
 
-class Instance(resources.Resource):
+class Instance(resource.Resource):
     # AWS does not require KeyName and InstanceType but we seem to
     tags_schema = {'Key': {'Type': 'String',
                            'Required': True},
@@ -176,7 +176,7 @@ class Instance(resources.Resource):
                 attachments.append((json.dumps(self.metadata),
                                     'cfn-init-data', 'x-cfninitdata'))
 
-            metadata_server = resources.Metadata.server()
+            metadata_server = resource.Metadata.server()
             if metadata_server is not None:
                 attachments.append((metadata_server,
                                     'cfn-metadata-server', 'x-cfninitdata'))

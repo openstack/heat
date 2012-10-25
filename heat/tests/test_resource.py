@@ -21,7 +21,7 @@ import mox
 import json
 from heat.common import context
 from heat.engine import parser
-from heat.engine import resources
+from heat.engine.resources import resource
 
 
 @attr(tag=['unit', 'resource'])
@@ -33,32 +33,32 @@ class ResourceTest(unittest.TestCase):
 
     def test_state_defaults(self):
         tmpl = {'Type': 'Foo'}
-        res = resources.GenericResource('test_res_def', tmpl, self.stack)
+        res = resource.GenericResource('test_res_def', tmpl, self.stack)
         self.assertEqual(res.state, None)
         self.assertEqual(res.state_description, '')
 
     def test_state(self):
         tmpl = {'Type': 'Foo'}
-        res = resources.GenericResource('test_resource', tmpl, self.stack)
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
         res.state_set('bar')
         self.assertEqual(res.state, 'bar')
 
     def test_state_description(self):
         tmpl = {'Type': 'Foo'}
-        res = resources.GenericResource('test_resource', tmpl, self.stack)
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
         res.state_set('blarg', 'wibble')
         self.assertEqual(res.state_description, 'wibble')
 
     def test_created_time(self):
         tmpl = {'Type': 'Foo'}
-        res = resources.GenericResource('test_res_new', tmpl, self.stack)
+        res = resource.GenericResource('test_res_new', tmpl, self.stack)
         self.assertEqual(res.created_time, None)
         res._store()
         self.assertNotEqual(res.created_time, None)
 
     def test_updated_time(self):
         tmpl = {'Type': 'Foo'}
-        res = resources.GenericResource('test_res_upd', tmpl, self.stack)
+        res = resource.GenericResource('test_res_upd', tmpl, self.stack)
         res._store()
         stored_time = res.updated_time
         res.state_set(res.CREATE_IN_PROGRESS, 'testing')
@@ -70,7 +70,7 @@ class ResourceTest(unittest.TestCase):
             'Type': 'Foo',
             'foo': {'Fn::Join': [' ', ['bar', 'baz', 'quux']]}
         }
-        res = resources.GenericResource('test_resource', tmpl, self.stack)
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
 
         parsed_tmpl = res.parsed_template()
         self.assertEqual(parsed_tmpl['Type'], 'Foo')
@@ -81,13 +81,13 @@ class ResourceTest(unittest.TestCase):
 
     def test_parsed_template_default(self):
         tmpl = {'Type': 'Foo'}
-        res = resources.GenericResource('test_resource', tmpl, self.stack)
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual(res.parsed_template('foo'), {})
         self.assertEqual(res.parsed_template('foo', 'bar'), 'bar')
 
     def test_metadata_default(self):
         tmpl = {'Type': 'Foo'}
-        res = resources.GenericResource('test_resource', tmpl, self.stack)
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual(res.metadata, {})
 
 
@@ -105,7 +105,7 @@ class MetadataTest(unittest.TestCase):
         ctx.username = 'metadata_test_user'
         self.stack = parser.Stack(ctx, 'test_stack', parser.Template({}))
         self.stack.store()
-        self.res = resources.GenericResource('metadata_resource',
+        self.res = resource.GenericResource('metadata_resource',
                                              tmpl, self.stack)
         self.res.create()
 

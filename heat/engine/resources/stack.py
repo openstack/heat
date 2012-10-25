@@ -17,7 +17,7 @@ import urllib2
 import json
 
 from heat.common import exception
-from heat.engine.resources import Resource
+from heat.engine.resources import resource
 from heat.db import api as db_api
 from heat.engine import parser
 
@@ -31,14 +31,14 @@ logger = logging.getLogger(__file__)
  PROP_PARAMETERS) = ('TemplateURL', 'TimeoutInMinutes', 'Parameters')
 
 
-class Stack(Resource):
+class Stack(resource.Resource):
     properties_schema = {PROP_TEMPLATE_URL: {'Type': 'String',
                                              'Required': True},
                          PROP_TIMEOUT_MINS: {'Type': 'Number'},
                          PROP_PARAMETERS: {'Type': 'Map'}}
 
     def __init__(self, name, json_snippet, stack):
-        Resource.__init__(self, name, json_snippet, stack)
+        super(Stack, self).__init__(name, json_snippet, stack)
         self._nested = None
 
     def _params(self):

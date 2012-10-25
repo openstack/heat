@@ -25,7 +25,7 @@ from nose.plugins.attrib import attr
 
 import heat.db as db_api
 from heat.engine import parser
-from heat.engine import wait_condition as wc
+from heat.engine.resources import wait_condition as wc
 from heat.common import context
 
 logger = logging.getLogger('test_waitcondition')

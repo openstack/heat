@@ -24,7 +24,7 @@ import json
 
 from nose.plugins.attrib import attr
 
-from heat.engine import s3
+from heat.engine.resources import s3
 from heat.engine import parser
 from utils import skip_if
 

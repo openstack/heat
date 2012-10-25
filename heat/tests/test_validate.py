@@ -26,8 +26,8 @@ from nose.plugins.attrib import attr
 from nose import with_setup
 
 from heat.tests.v1_1 import fakes
-from heat.engine import instance as instances
-from heat.engine import volume as volumes
+from heat.engine.resources import instance as instances
+from heat.engine.resources import volume as volumes
 from heat.engine import manager as managers
 import heat.db as db_api
 from heat.engine import parser

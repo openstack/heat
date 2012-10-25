@@ -17,21 +17,18 @@
 Register of resource types and their mapping to Resource classes.
 """
 
-
-from heat.engine import resources
-
-from heat.engine import autoscaling
-from heat.engine import cloud_watch
-from heat.engine import dbinstance
-from heat.engine import eip
-from heat.engine import instance
-from heat.engine import loadbalancer
-from heat.engine import s3
-from heat.engine import security_group
-from heat.engine import stack
-from heat.engine import user
-from heat.engine import volume
-from heat.engine import wait_condition
+from heat.engine.resources import autoscaling
+from heat.engine.resources import cloud_watch
+from heat.engine.resources import dbinstance
+from heat.engine.resources import eip
+from heat.engine.resources import instance
+from heat.engine.resources import loadbalancer
+from heat.engine.resources import s3
+from heat.engine.resources import security_group
+from heat.engine.resources import stack
+from heat.engine.resources import user
+from heat.engine.resources import volume
+from heat.engine.resources import wait_condition
 
 
 _resource_classes = {
@@ -58,6 +55,5 @@ _resource_classes = {
 }
 
 
-def getClass(resource_type):
-    """Return the appropriate Resource class for the resource type."""
-    return _resource_classes.get(resource_type, resources.GenericResource)
+def get_class(resource_type):
+    return _resource_classes.get(resource_type)

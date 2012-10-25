@@ -24,9 +24,9 @@ import json
 from nose.plugins.attrib import attr
 
 from heat.common import exception
-from heat.engine import dbinstance as dbi
 from heat.engine import parser
-from heat.engine import stack
+from heat.engine.resources import stack
+from heat.engine.resources import dbinstance as dbi
 
 
 @attr(tag=['unit', 'resource'])

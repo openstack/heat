@@ -25,7 +25,7 @@ import unittest
 from nose.plugins.attrib import attr
 
 from heat.engine import parser
-from heat.engine import volume as vol
+from heat.engine.resources import volume as vol
 from heat.tests.v1_1 import fakes
 
 

@@ -25,11 +25,11 @@ import json
 from nose.plugins.attrib import attr
 
 from heat.common import exception
-from heat.engine import instance
-from heat.engine import loadbalancer as lb
 from heat.engine import parser
-from heat.engine import resources
-from heat.engine import stack
+from heat.engine.resources import instance
+from heat.engine.resources import loadbalancer as lb
+from heat.engine.resources.resource import Metadata
+from heat.engine.resources import stack
 from heat.tests.v1_1 import fakes
 
 
@@ -43,7 +43,7 @@ class LoadBalancerTest(unittest.TestCase):
         self.m.StubOutWithMock(lb.LoadBalancer, 'nova')
         self.m.StubOutWithMock(instance.Instance, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.m.StubOutWithMock(resources.Metadata, '__set__')
+        self.m.StubOutWithMock(Metadata, '__set__')
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -90,8 +90,8 @@ class LoadBalancerTest(unittest.TestCase):
                    scheduler_hints=None, userdata=mox.IgnoreArg(),
                    security_groups=None).AndReturn(self.fc.servers.list()[1])
         #stack.Stack.create_with_template(mox.IgnoreArg()).AndReturn(None)
-        resources.Metadata.__set__(mox.IgnoreArg(),
-                                   mox.IgnoreArg()).AndReturn(None)
+        Metadata.__set__(mox.IgnoreArg(),
+                         mox.IgnoreArg()).AndReturn(None)
 
         lb.LoadBalancer.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()

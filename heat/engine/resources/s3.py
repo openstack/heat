@@ -18,7 +18,7 @@ import os
 from urlparse import urlparse
 
 from heat.common import exception
-from heat.engine.resources import Resource
+from heat.engine.resources import resource
 from heat.openstack.common import log as logging
 try:
     from swiftclient.client import ClientException
@@ -29,7 +29,7 @@ except ImportError:
 logger = logging.getLogger('heat.engine.s3')
 
 
-class S3Bucket(Resource):
+class S3Bucket(resource.Resource):
     website_schema = {'IndexDocument': {'Type': 'String'},
                       'ErrorDocument': {'Type': 'String'}}
     properties_schema = {'AccessControl': {

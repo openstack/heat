@@ -23,8 +23,8 @@ import json
 
 from nose.plugins.attrib import attr
 
-from heat.engine import autoscaling as asc
-from heat.engine import loadbalancer
+from heat.engine.resources import autoscaling as asc
+from heat.engine.resources import loadbalancer
 from heat.engine import parser
 
 

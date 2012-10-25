@@ -27,11 +27,11 @@ from nose import with_setup
 from heat.common import context
 from heat.tests.v1_1 import fakes
 import heat.engine.api as engine_api
-from heat.engine import instance as instances
 import heat.db as db_api
 from heat.engine import parser
 from heat.engine import manager
 from heat.engine import auth
+from heat.engine.resources import instance as instances
 from heat.engine import watchrule
 
 

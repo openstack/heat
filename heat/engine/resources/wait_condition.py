@@ -16,14 +16,14 @@
 import eventlet
 
 from heat.common import exception
-from heat.engine import resources
+from heat.engine.resources import resource
 
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.wait_condition')
 
 
-class WaitConditionHandle(resources.Resource):
+class WaitConditionHandle(resource.Resource):
     '''
     the main point of this class is to :
     have no dependancies (so the instance can reference it)
@@ -38,7 +38,7 @@ class WaitConditionHandle(resources.Resource):
 
     def handle_create(self):
         self.instance_id = '%s/stacks/%s/resources/%s' % \
-                           (resources.Metadata.server(),
+                           (resource.Metadata.server(),
                             self.stack.id,
                             self.name)
 
@@ -56,7 +56,7 @@ WAIT_STATUSES = (
 )
 
 
-class WaitCondition(resources.Resource):
+class WaitCondition(resource.Resource):
     properties_schema = {'Handle': {'Type': 'String',
                                     'Required': True},
                          'Timeout': {'Type': 'Number',

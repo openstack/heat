@@ -19,7 +19,7 @@ import os
 
 from heat.common import exception
 from heat.engine import watchrule
-from heat.engine.resources import Resource
+from heat.engine.resources import resource
 from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
@@ -27,7 +27,7 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger('heat.engine.cloud_watch')
 
 
-class CloudWatchAlarm(Resource):
+class CloudWatchAlarm(resource.Resource):
     properties_schema = {'ComparisonOperator': {'Type': 'String',
                          'AllowedValues': ['GreaterThanOrEqualToThreshold',
                          'GreaterThanThreshold', 'LessThanThreshold',
@@ -56,12 +56,6 @@ class CloudWatchAlarm(Resource):
                   'Count/Second', None]}}
 
     strict_dependency = False
-
-    def validate(self):
-        '''
-        Validate the Properties
-        '''
-        return Resource.validate(self)
 
     def handle_create(self):
         wr = watchrule.WatchRule(context=self.context, watch_name=self.name,

@@ -17,13 +17,13 @@ import eventlet
 from heat.openstack.common import log as logging
 
 from heat.common import exception
-from heat.engine.resources import Resource
+from heat.engine.resources import resource
 from novaclient.exceptions import NotFound
 
 logger = logging.getLogger('heat.engine.volume')
 
 
-class Volume(Resource):
+class Volume(resource.Resource):
     properties_schema = {'AvailabilityZone': {'Type': 'String',
                                               'Required': True},
                          'Size': {'Type': 'Number'},
@@ -59,7 +59,7 @@ class Volume(Resource):
             self.nova('volume').volumes.delete(self.instance_id)
 
 
-class VolumeAttachment(Resource):
+class VolumeAttachment(resource.Resource):
     properties_schema = {'InstanceId': {'Type': 'String',
                                         'Required': True},
                          'VolumeId': {'Type': 'String',

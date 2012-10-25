@@ -13,15 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine import instance
-from heat.engine.resources import Resource
+from heat.engine.resources import instance
+from heat.engine.resources import resource
 
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.autoscaling')
 
 
-class AutoScalingGroup(Resource):
+class AutoScalingGroup(resource.Resource):
     tags_schema = {'Key': {'Type': 'String',
                            'Required': True},
                    'Value': {'Type': 'String',
@@ -145,7 +145,7 @@ class AutoScalingGroup(Resource):
         return unicode(self.name)
 
 
-class LaunchConfiguration(Resource):
+class LaunchConfiguration(resource.Resource):
     tags_schema = {'Key': {'Type': 'String',
                            'Required': True},
                    'Value': {'Type': 'String',
@@ -172,7 +172,7 @@ class LaunchConfiguration(Resource):
         super(LaunchConfiguration, self).__init__(name, json_snippet, stack)
 
 
-class ScalingPolicy(Resource):
+class ScalingPolicy(resource.Resource):
     properties_schema = {
         'AutoScalingGroupName': {'Type': 'String',
                                  'Required': True},

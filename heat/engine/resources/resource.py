@@ -108,8 +108,8 @@ class Resource(object):
             return super(Resource, cls).__new__(cls)
 
         # Select the correct subclass to instantiate
-        import resource_types
-        ResourceClass = resource_types.getClass(json['Type'])
+        from heat.engine.resources import register
+        ResourceClass = register.get_class(json['Type']) or GenericResource
         return ResourceClass(name, json, stack)
 
     def __init__(self, name, json_snippet, stack):
