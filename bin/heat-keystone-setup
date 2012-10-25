@@ -207,9 +207,12 @@ HEAT_USERID=$(get_user $HEAT_USERNAME)
 echo HEAT_USERID $HEAT_USERID
 add_role $HEAT_USERID $SERVICE_TENANT $ADMIN_ROLE $HEAT_USERNAME
 
-# Create a special role which "instance users" are assigned to
-INSTANCE_ROLE="heat_instance"
-create_role $INSTANCE_ROLE
+# Create a special role which template-defined "stack users" are
+# assigned to in the engine when they are created, this allows them
+# to be more easily differentiated from other users (e.g so we can
+# lock down these implicitly untrusted users via RBAC policy)
+STACK_USER_ROLE="heat_stack_user"
+create_role $STACK_USER_ROLE
 
 HEAT_CFN_SERVICE=$(get_service heat-cfn cloudformation \
                    "Heat CloudFormation API")
