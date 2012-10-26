@@ -246,7 +246,9 @@ class StackControllerTest(unittest.TestCase):
         expected = {
             'stacks': [
                 {
-                    'URL': self._url(identity),
+                    'links': [{"href": self._url(identity),
+                               "rel": "self"}],
+                    'id': '1',
                     u'updated_time': u'2012-07-09T09:13:11Z',
                     u'description': u'blah',
                     u'stack_status_reason': u'Stack successfully created',
@@ -470,7 +472,9 @@ class StackControllerTest(unittest.TestCase):
 
         expected = {
             'stack': {
-                'URL': self._url(identity),
+                'links': [{"href": self._url(identity),
+                           "rel": "self"}],
+                'id': '6',
                 u'updated_time': u'2012-07-09T09:13:11Z',
                 u'parameters': parameters,
                 u'outputs': outputs,
