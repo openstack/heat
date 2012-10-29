@@ -26,6 +26,13 @@ try:
     swiftclient_present = True
 except ImportError:
     swiftclient_present = False
+# quantumclient not available in all distributions - make quantum an optional
+# feature
+try:
+    from quantumclient.v2_0 import client as quantumclient
+    quantumclient_present = True
+except ImportError:
+    quantumclient_present = False
 
 from heat.common import exception
 from heat.common import config
@@ -124,6 +131,7 @@ class Resource(object):
         self._nova = {}
         self._keystone = None
         self._swift = None
+        self._quantum = None
 
     def __eq__(self, other):
         '''Allow == comparison of two resources'''
@@ -280,6 +288,38 @@ class Resource(object):
 
         self._swift = swiftclient.Connection(**args)
         return self._swift
+
+    def quantum(self):
+        if quantumclient_present == False:
+            return None
+        if self._quantum:
+            logger.debug('using existing _quantum')
+            return self._quantum
+
+        con = self.context
+        args = {
+            'auth_url': con.auth_url,
+            'service_type': 'network',
+        }
+
+        if con.password is not None:
+            args['username'] = con.username
+            args['password'] = con.password
+            args['tenant_name'] = con.tenant
+        elif con.auth_token is not None:
+            args['username'] = con.service_user
+            args['password'] = con.service_password
+            args['tenant_name'] = con.service_tenant
+            args['token'] = con.auth_token
+        else:
+            logger.error("Quantum connection failed, "
+                "no password or auth_token!")
+            return None
+        logger.debug('quantum args %s', args)
+
+        self._quantum = quantumclient.Client(**args)
+
+        return self._quantum
 
     def calculate_properties(self):
         for p, v in self.parsed_template('Properties').items():

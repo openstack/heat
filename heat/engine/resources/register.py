@@ -29,6 +29,11 @@ from heat.engine.resources import stack
 from heat.engine.resources import user
 from heat.engine.resources import volume
 from heat.engine.resources import wait_condition
+from heat.engine.resources.quantum import floatingip
+from heat.engine.resources.quantum import net
+from heat.engine.resources.quantum import port
+from heat.engine.resources.quantum import router
+from heat.engine.resources.quantum import subnet
 
 
 _resource_classes = {
@@ -52,6 +57,14 @@ _resource_classes = {
     'AWS::AutoScaling::AutoScalingGroup': autoscaling.AutoScalingGroup,
     'AWS::AutoScaling::ScalingPolicy': autoscaling.ScalingPolicy,
     'AWS::RDS::DBInstance': dbinstance.DBInstance,
+    'OS::Quantum::FloatingIP': floatingip.FloatingIP,
+    'OS::Quantum::FloatingIPAssociation': floatingip.FloatingIPAssociation,
+    'OS::Quantum::Net': net.Net,
+    'OS::Quantum::Port': port.Port,
+    'OS::Quantum::Router': router.Router,
+    'OS::Quantum::RouterInterface': router.RouterInterface,
+    'OS::Quantum::RouterGateway': router.RouterGateway,
+    'OS::Quantum::Subnet': subnet.Subnet,
 }
 
 
