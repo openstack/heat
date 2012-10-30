@@ -110,7 +110,7 @@ class Property(object):
             self._check_allowed(v)
 
         if SCHEMA in self.schema:
-            prop = Property({TYPE: MAP, SCHEMA: self.schema[SCHEMA]})
+            prop = Property(self.schema[SCHEMA])
             children = [prop.validate_data(d) for d in value]
         else:
             children = value

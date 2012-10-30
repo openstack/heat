@@ -231,7 +231,8 @@ class PropertyTest(unittest.TestCase):
 
     def test_list_schema_good(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
-        p = properties.Property({'Type': 'List', 'Schema': map_schema})
+        list_schema = {'Type': 'Map', 'Schema': map_schema}
+        p = properties.Property({'Type': 'List', 'Schema': list_schema})
         self.assertEqual(p.validate_data([{'valid': 'TRUE'},
                                           {'valid': 'False'}]),
                                          [{'valid': 'true'},
@@ -239,9 +240,20 @@ class PropertyTest(unittest.TestCase):
 
     def test_list_schema_bad_data(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
-        p = properties.Property({'Type': 'List', 'Schema': map_schema})
+        list_schema = {'Type': 'Map', 'Schema': map_schema}
+        p = properties.Property({'Type': 'List', 'Schema': list_schema})
         self.assertRaises(ValueError, p.validate_data, [{'valid': 'True'},
                                                         {'valid': 'fish'}])
+
+    def test_list_schema_int_good(self):
+        list_schema = {'Type': 'Integer'}
+        p = properties.Property({'Type': 'List', 'Schema': list_schema})
+        self.assertEqual(p.validate_data([1, 2, 3]), [1, 2, 3])
+
+    def test_list_schema_int_bad_data(self):
+        list_schema = {'Type': 'Integer'}
+        p = properties.Property({'Type': 'List', 'Schema': list_schema})
+        self.assertRaises(TypeError, p.validate_data, [42, 'fish'])
 
 
 @attr(tag=['unit', 'properties'])

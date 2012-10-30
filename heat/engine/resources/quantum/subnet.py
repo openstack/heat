@@ -41,7 +41,10 @@ class Subnet(quantum.QuantumResource):
                                       'Default': 4},
                         'gateway_ip': {'Type': 'String'},
                         'allocation_pools': {'Type': 'List',
-                                           'Schema': allocation_schema}
+                                             'Schema': {
+                                                 'Type': 'Map',
+                                                 'Schema': allocation_schema
+                                             }}
     }
 
     def __init__(self, name, json_snippet, stack):

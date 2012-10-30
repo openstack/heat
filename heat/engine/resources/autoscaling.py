@@ -43,8 +43,8 @@ class AutoScalingGroup(resource.Resource):
                             'AllowedValues': ['EC2', 'ELB'],
                             'Implemented': False},
         'LoadBalancerNames': {'Type': 'List'},
-        'Tags': {'Type': 'List',
-                 'Schema': tags_schema}
+        'Tags': {'Type': 'List', 'Schema': {'Type': 'Map',
+                                            'Schema': tags_schema}}
     }
 
     def __init__(self, name, json_snippet, stack):
@@ -163,7 +163,8 @@ class LaunchConfiguration(resource.Resource):
         'BlockDeviceMappings': {'Type': 'String',
                                 'Implemented': False},
         'NovaSchedulerHints': {'Type': 'List',
-                               'Schema': tags_schema},
+                               'Schema': {'Type': 'Map',
+                                          'Schema': tags_schema}},
     }
 
     def __init__(self, name, json_snippet, stack):

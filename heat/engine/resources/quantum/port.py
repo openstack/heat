@@ -33,7 +33,8 @@ class Port(quantum.QuantumResource):
                                        'Default': {}},
                         'admin_state_up': {'Default': True},
                         'fixed_ips': {'Type': 'List',
-                                    'Schema': fixed_ip_schema},
+                                      'Schema': {'Type': 'Map',
+                                                 'Schema': fixed_ip_schema}},
                         'mac_address': {'Type': 'String'},
                         'device_id': {'Type': 'String'},
     }

@@ -94,9 +94,13 @@ class Instance(resource.Resource):
                          'SubnetId': {'Type': 'String',
                                        'Implemented': False},
                          'Tags': {'Type': 'List',
-                                  'Schema': tags_schema},
+                                  'Schema': {'Type': 'Map',
+                                             'Schema': tags_schema}},
                          'NovaSchedulerHints': {'Type': 'List',
-                                                'Schema': tags_schema},
+                                                'Schema': {
+                                                    'Type': 'Map',
+                                                    'Schema': tags_schema
+                                                }},
                          'Tenancy': {'Type': 'String',
                                      'AllowedValues': ['dedicated', 'default'],
                                      'Implemented': False},
