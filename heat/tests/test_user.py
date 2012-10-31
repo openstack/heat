@@ -77,12 +77,15 @@ class UserTest(unittest.TestCase):
             username = 'test_username'
             password = 'password'
             auth_url = 'http://localhost:5000/v2.0'
-        t['Parameters']['KeyName']['Value'] = 'test'
-        t['Parameters']['DBRootPassword']['Value'] = 'test'
-        t['Parameters']['DBUsername']['Value'] = 'test'
-        t['Parameters']['DBPassword']['Value'] = 'test'
-        stack = parser.Stack(DummyContext(), 'test_stack', parser.Template(t),
-                             stack_id=-1)
+        template = parser.Template(t)
+        params = parser.Parameters('test_stack',
+                                   template,
+                                   {'KeyName': 'test',
+                                    'DBRootPassword': 'test',
+                                    'DBUsername': 'test',
+                                    'DBPassword': 'test'})
+        stack = parser.Stack(DummyContext(), 'test_stack', template,
+                             params, stack_id=-1)
 
         return stack
 

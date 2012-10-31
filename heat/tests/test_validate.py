@@ -252,8 +252,6 @@ class validateTest(unittest.TestCase):
 
     def test_validate_ref_valid(self):
         t = json.loads(test_template_ref % 'WikiDatabase')
-        t['Parameters']['KeyName']['Value'] = 'test'
-        params = {}
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -267,8 +265,6 @@ class validateTest(unittest.TestCase):
 
     def test_validate_ref_invalid(self):
         t = json.loads(test_template_ref % 'WikiDatabasez')
-        t['Parameters']['KeyName']['Value'] = 'test'
-        params = {}
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -281,8 +277,6 @@ class validateTest(unittest.TestCase):
 
     def test_validate_findinmap_valid(self):
         t = json.loads(test_template_findinmap_valid)
-        t['Parameters']['KeyName']['Value'] = 'test'
-        params = {}
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -295,8 +289,6 @@ class validateTest(unittest.TestCase):
 
     def test_validate_findinmap_invalid(self):
         t = json.loads(test_template_findinmap_invalid)
-        t['Parameters']['KeyName']['Value'] = 'test'
-        params = {}
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
