@@ -19,12 +19,12 @@ import functools
 import copy
 
 from heat.common import exception
-from heat.engine import checkeddict
 from heat.engine import dependencies
 from heat.engine import identifier
 from heat.engine import resources
 from heat.engine import template
 from heat.engine import timestamp
+from heat.engine.parameters import Parameters
 from heat.engine.template import Template
 from heat.db import api as db_api
 
@@ -33,51 +33,6 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger('heat.engine.parser')
 
 (PARAM_STACK_NAME, PARAM_REGION) = ('AWS::StackName', 'AWS::Region')
-
-
-class Parameters(checkeddict.CheckedDict):
-    '''
-    The parameters of a stack, with type checking, defaults &c. specified by
-    the stack's template.
-    '''
-
-    def __init__(self, stack_name, tmpl, user_params={}):
-        '''
-        Create the parameter container for a stack from the stack name and
-        template, optionally setting the initial set of parameters.
-        '''
-        checkeddict.CheckedDict.__init__(self, template.PARAMETERS)
-        self._init_schemata(tmpl[template.PARAMETERS])
-
-        self[PARAM_STACK_NAME] = stack_name
-        self.update(user_params)
-
-    def _init_schemata(self, schemata):
-        '''
-        Initialise the parameter schemata with the pseudo-parameters and the
-        list of schemata obtained from the template.
-        '''
-        self.addschema(PARAM_STACK_NAME, {"Description": "AWS StackName",
-                                          "Type": "String"})
-        self.addschema(PARAM_REGION, {
-            "Description": "AWS Regions",
-            "Default": "ap-southeast-1",
-            "Type": "String",
-            "AllowedValues": ["us-east-1", "us-west-1", "us-west-2",
-                              "sa-east-1", "eu-west-1", "ap-southeast-1",
-                              "ap-northeast-1"],
-            "ConstraintDescription": "must be a valid EC2 instance type.",
-        })
-
-        for param, schema in schemata.items():
-            self.addschema(param, copy.deepcopy(schema))
-
-    def user_parameters(self):
-        '''
-        Return a dictionary of all the parameters passed in by the user
-        '''
-        return dict((k, v['Value']) for k, v in self.data.iteritems()
-                                    if 'Value' in v)
 
 
 class Stack(object):
@@ -241,14 +196,16 @@ class Stack(object):
                             'Parameters': []}
                 return response
 
-        def format_param(p):
+        def describe_param(p):
             return {'NoEcho': 'false',
-                    'ParameterKey': p,
-                    'Description': self.parameters.get_attr(p, 'Description'),
-                    'DefaultValue': self.parameters.get_attr(p, 'Default')}
+                    'ParameterKey': p.name,
+                    'Description': p.description(),
+                    'DefaultValue': p.default()}
+
+        params = self.parameters.map(describe_param)
 
         response = {'Description': 'Successfully validated',
-                    'Parameters': [format_param(p) for p in self.parameters]}
+                    'Parameters': params.values()}
 
         return response
 

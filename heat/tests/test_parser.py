@@ -273,50 +273,6 @@ class TemplateTest(unittest.TestCase):
                           dict_snippet)
 
 
-params_schema = json.loads('''{
-  "Parameters" : {
-    "User" : { "Type": "String" },
-    "Defaulted" : {
-      "Type": "String",
-      "Default": "foobar"
-    }
-  }
-}''')
-
-
-@attr(tag=['unit', 'parser', 'parameters'])
-@attr(speed='fast')
-class ParametersTest(unittest.TestCase):
-    def test_pseudo_params(self):
-        params = parser.Parameters('test_stack', {"Parameters": {}})
-
-        self.assertEqual(params['AWS::StackName'], 'test_stack')
-        self.assertTrue('AWS::Region' in params)
-
-    def test_user_param(self):
-        params = parser.Parameters('test', params_schema, {'User': 'wibble'})
-        user_params = params.user_parameters()
-        self.assertEqual(user_params['User'], 'wibble')
-
-    def test_user_param_default(self):
-        params = parser.Parameters('test', params_schema)
-        user_params = params.user_parameters()
-        self.assertTrue('Defaulted' not in user_params)
-
-    def test_user_param_nonexist(self):
-        params = parser.Parameters('test', params_schema)
-        user_params = params.user_parameters()
-        self.assertTrue('User' not in user_params)
-
-    def test_schema_invariance(self):
-        params1 = parser.Parameters('test', params_schema)
-        params1['Defaulted'] = "wibble"
-        self.assertEqual(params1['Defaulted'], 'wibble')
-
-        params2 = parser.Parameters('test', params_schema)
-        self.assertEqual(params2['Defaulted'], 'foobar')
-
-
 @attr(tag=['unit', 'parser', 'stack'])
 @attr(speed='fast')
 class StackTest(unittest.TestCase):
