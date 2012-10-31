@@ -240,7 +240,7 @@ class EngineManager(manager.Manager):
                         'Every Resources object must contain a Type member.'}
 
         def describe_param(p):
-            description = {'NoEcho': 'false',
+            description = {'NoEcho': p.no_echo() and 'true' or 'false',
                            'ParameterKey': p.name,
                            'Description': p.description()}
             if p.has_default():

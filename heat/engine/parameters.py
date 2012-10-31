@@ -91,6 +91,13 @@ class Parameter(object):
 
         raise KeyError('Missing parameter %s' % self.name)
 
+    def no_echo(self):
+        '''
+        Return whether the parameter should be sanitised in any output to
+        the user.
+        '''
+        return self.schema.get(NO_ECHO, 'false').lower() == 'true'
+
     def description(self):
         '''Return the description of the parameter.'''
         return self.schema.get(DESCRIPTION, '')
@@ -105,7 +112,11 @@ class Parameter(object):
 
     def __str__(self):
         '''Return a string representation of the parameter'''
-        return self.value()
+        value = self.value()
+        if self.no_echo():
+            return '******'
+        else:
+            return value
 
 
 class NumberParam(Parameter):

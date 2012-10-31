@@ -76,6 +76,30 @@ class ParameterTest(unittest.TestCase):
         else:
             self.fail('ValueError not raised')
 
+    def test_no_echo_true(self):
+        p = parameters.Parameter('anechoic',
+                                 {'Type': 'String',
+                                 'NoEcho': 'true'},
+                                 'wibble')
+        self.assertTrue(p.no_echo())
+        self.assertNotEqual(str(p), 'wibble')
+
+    def test_no_echo_true_caps(self):
+        p = parameters.Parameter('anechoic',
+                                 {'Type': 'String',
+                                 'NoEcho': 'TrUe'},
+                                 'wibble')
+        self.assertTrue(p.no_echo())
+        self.assertNotEqual(str(p), 'wibble')
+
+    def test_no_echo_false(self):
+        p = parameters.Parameter('echoic',
+                                 {'Type': 'String',
+                                 'NoEcho': 'false'},
+                                 'wibble')
+        self.assertFalse(p.no_echo())
+        self.assertEqual(str(p), 'wibble')
+
     def test_description(self):
         description = 'Description of the parameter'
         p = parameters.Parameter('p', {'Type': 'String',

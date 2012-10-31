@@ -94,7 +94,7 @@ def format_stack(stack):
         STACK_CREATION_TIME: timeutils.isotime(stack.created_time),
         STACK_UPDATED_TIME: timeutils.isotime(stack.updated_time),
         STACK_NOTIFICATION_TOPICS: [],  # TODO Not implemented yet
-        STACK_PARAMETERS: dict(stack.parameters),
+        STACK_PARAMETERS: stack.parameters.map(str),
         STACK_DESCRIPTION: stack.t[template.DESCRIPTION],
         STACK_TMPL_DESCRIPTION: stack.t[template.DESCRIPTION],
         STACK_STATUS: stack.state,
