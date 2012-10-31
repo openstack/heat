@@ -23,17 +23,14 @@ from heat.engine import checkeddict
 from heat.engine import dependencies
 from heat.engine import identifier
 from heat.engine import resources
+from heat.engine import template
 from heat.engine import timestamp
+from heat.engine.template import Template
 from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.parser')
-
-SECTIONS = (VERSION, DESCRIPTION, MAPPINGS,
-            PARAMETERS, RESOURCES, OUTPUTS) = \
-           ('AWSTemplateFormatVersion', 'Description', 'Mappings',
-            'Parameters', 'Resources', 'Outputs')
 
 (PARAM_STACK_NAME, PARAM_REGION) = ('AWS::StackName', 'AWS::Region')
 
@@ -44,13 +41,13 @@ class Parameters(checkeddict.CheckedDict):
     the stack's template.
     '''
 
-    def __init__(self, stack_name, template, user_params={}):
+    def __init__(self, stack_name, tmpl, user_params={}):
         '''
         Create the parameter container for a stack from the stack name and
         template, optionally setting the initial set of parameters.
         '''
-        checkeddict.CheckedDict.__init__(self, PARAMETERS)
-        self._init_schemata(template[PARAMETERS])
+        checkeddict.CheckedDict.__init__(self, template.PARAMETERS)
+        self._init_schemata(tmpl[template.PARAMETERS])
 
         self[PARAM_STACK_NAME] = stack_name
         self.update(user_params)
@@ -83,151 +80,6 @@ class Parameters(checkeddict.CheckedDict):
                                     if 'Value' in v)
 
 
-class Template(object):
-    '''A stack template.'''
-
-    def __init__(self, template, template_id=None):
-        '''
-        Initialise the template with a JSON object and a set of Parameters
-        '''
-        self.id = template_id
-        self.t = template
-        self.maps = self[MAPPINGS]
-
-    @classmethod
-    def load(cls, context, template_id):
-        '''Retrieve a Template with the given ID from the database'''
-        t = db_api.raw_template_get(context, template_id)
-        return cls(t.template, template_id)
-
-    def store(self, context=None):
-        '''Store the Template in the database and return its ID'''
-        if self.id is None:
-            rt = {'template': self.t}
-            new_rt = db_api.raw_template_create(context, rt)
-            self.id = new_rt.id
-        return self.id
-
-    def __getitem__(self, section):
-        '''Get the relevant section in the template'''
-        if section not in SECTIONS:
-            raise KeyError('"%s" is not a valid template section' % section)
-        if section == VERSION:
-            return self.t[section]
-
-        if section == DESCRIPTION:
-            default = 'No description'
-        else:
-            default = {}
-
-        return self.t.get(section, default)
-
-    def resolve_find_in_map(self, s):
-        '''
-        Resolve constructs of the form { "Fn::FindInMap" : [ "mapping",
-                                                             "key",
-                                                             "value" ] }
-        '''
-        def handle_find_in_map(args):
-            try:
-                name, key, value = args
-                return self.maps[name][key][value]
-            except (ValueError, TypeError) as ex:
-                raise KeyError(str(ex))
-
-        return _resolve(lambda k, v: k == 'Fn::FindInMap',
-                        handle_find_in_map, s)
-
-    @staticmethod
-    def resolve_availability_zones(s):
-        '''
-            looking for { "Fn::GetAZs" : "str" }
-        '''
-        def match_get_az(key, value):
-            return (key == 'Fn::GetAZs' and
-                    isinstance(value, basestring))
-
-        def handle_get_az(ref):
-            return ['nova']
-
-        return _resolve(match_get_az, handle_get_az, s)
-
-    @staticmethod
-    def resolve_param_refs(s, parameters):
-        '''
-        Resolve constructs of the form { "Ref" : "string" }
-        '''
-        def match_param_ref(key, value):
-            return (key == 'Ref' and
-                    isinstance(value, basestring) and
-                    value in parameters)
-
-        def handle_param_ref(ref):
-            try:
-                return parameters[ref]
-            except (KeyError, ValueError):
-                raise exception.UserParameterMissing(key=ref)
-
-        return _resolve(match_param_ref, handle_param_ref, s)
-
-    @staticmethod
-    def resolve_resource_refs(s, resources):
-        '''
-        Resolve constructs of the form { "Ref" : "resource" }
-        '''
-        def match_resource_ref(key, value):
-            return key == 'Ref' and value in resources
-
-        def handle_resource_ref(arg):
-            return resources[arg].FnGetRefId()
-
-        return _resolve(match_resource_ref, handle_resource_ref, s)
-
-    @staticmethod
-    def resolve_attributes(s, resources):
-        '''
-        Resolve constructs of the form { "Fn::GetAtt" : [ "WebServer",
-                                                          "PublicIp" ] }
-        '''
-        def handle_getatt(args):
-            resource, att = args
-            try:
-                return resources[resource].FnGetAtt(att)
-            except KeyError:
-                raise exception.InvalidTemplateAttribute(resource=resource,
-                                                         key=att)
-
-        return _resolve(lambda k, v: k == 'Fn::GetAtt', handle_getatt, s)
-
-    @staticmethod
-    def resolve_joins(s):
-        '''
-        Resolve constructs of the form { "Fn::Join" : [ "delim", [ "str1",
-                                                                   "str2" ] }
-        '''
-        def handle_join(args):
-            if not isinstance(args, (list, tuple)):
-                raise TypeError('Arguments to "Fn::Join" must be a list')
-            delim, strings = args
-            if not isinstance(strings, (list, tuple)):
-                raise TypeError('Arguments to "Fn::Join" not fully resolved')
-            return delim.join(strings)
-
-        return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s)
-
-    @staticmethod
-    def resolve_base64(s):
-        '''
-        Resolve constructs of the form { "Fn::Base64" : "string" }
-        '''
-        def handle_base64(string):
-            if not isinstance(string, basestring):
-                raise TypeError('Arguments to "Fn::Base64" not fully resolved')
-            return string
-
-        return _resolve(lambda k, v: k == 'Fn::Base64', handle_base64, s)
-
-
 class Stack(object):
     CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
     CREATE_FAILED = 'CREATE_FAILED'
@@ -244,7 +96,7 @@ class Stack(object):
     created_time = timestamp.Timestamp(db_api.stack_get, 'created_at')
     updated_time = timestamp.Timestamp(db_api.stack_get, 'updated_at')
 
-    def __init__(self, context, stack_name, template, parameters=None,
+    def __init__(self, context, stack_name, tmpl, parameters=None,
                  stack_id=None, state=None, state_description='',
                  timeout_mins=60):
         '''
@@ -254,21 +106,22 @@ class Stack(object):
         '''
         self.id = stack_id
         self.context = context
-        self.t = template
+        self.t = tmpl
         self.name = stack_name
         self.state = state
         self.state_description = state_description
         self.timeout_mins = timeout_mins
 
         if parameters is None:
-            parameters = Parameters(stack_name, template)
+            parameters = Parameters(self.name, self.t)
         self.parameters = parameters
 
-        self.outputs = self.resolve_static_data(self.t[OUTPUTS])
+        self.outputs = self.resolve_static_data(self.t[template.OUTPUTS])
 
+        template_resources = self.t[template.RESOURCES]
         self.resources = dict((name,
                                resources.Resource(name, data, self))
-                              for (name, data) in self.t[RESOURCES].items())
+                              for (name, data) in template_resources.items())
 
         self.dependencies = self._get_dependencies(self.resources.itervalues())
 
@@ -544,7 +397,8 @@ class Stack(object):
                     # flip the template & parameters to the newstack values
                     self.t = newstack.t
                     self.parameters = newstack.parameters
-                    self.outputs = self.resolve_static_data(self.t[OUTPUTS])
+                    template_outputs = self.t[template.OUTPUTS]
+                    self.outputs = self.resolve_static_data(template_outputs)
                     self.dependencies = self._get_dependencies(
                         self.resources.itervalues())
                     self.store()
@@ -669,25 +523,3 @@ def transform(data, transformations):
     for t in transformations:
         data = t(data)
     return data
-
-
-def _resolve(match, handle, snippet):
-    '''
-    Resolve constructs in a snippet of a template. The supplied match function
-    should return True if a particular key-value pair should be substituted,
-    and the handle function should return the correct substitution when passed
-    the argument list as parameters.
-
-    Returns a copy of the original snippet with the substitutions performed.
-    '''
-    recurse = lambda s: _resolve(match, handle, s)
-
-    if isinstance(snippet, dict):
-        if len(snippet) == 1:
-            k, v = snippet.items()[0]
-            if match(k, v):
-                return handle(recurse(v))
-        return dict((k, recurse(v)) for k, v in snippet.items())
-    elif isinstance(snippet, list):
-        return [recurse(v) for v in snippet]
-    return snippet

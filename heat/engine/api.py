@@ -15,6 +15,7 @@
 import re
 from heat.openstack.common import timeutils
 from heat.engine import parser
+from heat.engine import template
 from heat.engine import watchrule
 
 from heat.openstack.common import log as logging
@@ -94,8 +95,8 @@ def format_stack(stack):
         STACK_UPDATED_TIME: timeutils.isotime(stack.updated_time),
         STACK_NOTIFICATION_TOPICS: [],  # TODO Not implemented yet
         STACK_PARAMETERS: dict(stack.parameters),
-        STACK_DESCRIPTION: stack.t[parser.DESCRIPTION],
-        STACK_TMPL_DESCRIPTION: stack.t[parser.DESCRIPTION],
+        STACK_DESCRIPTION: stack.t[template.DESCRIPTION],
+        STACK_TMPL_DESCRIPTION: stack.t[template.DESCRIPTION],
         STACK_STATUS: stack.state,
         STACK_STATUS_DATA: stack.state_description,
         STACK_CAPABILITIES: [],   # TODO Not implemented yet

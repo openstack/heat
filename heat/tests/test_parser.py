@@ -22,6 +22,7 @@ import json
 from heat.common import context
 from heat.common import exception
 from heat.engine import parser
+from heat.engine import template
 from heat.engine import checkeddict
 from heat.engine.resources import Resource
 
@@ -31,7 +32,7 @@ def join(raw):
         delim, strs = args
         return delim.join(strs)
 
-    return parser._resolve(lambda k, v: k == 'Fn::Join', handle_join, raw)
+    return template._resolve(lambda k, v: k == 'Fn::Join', handle_join, raw)
 
 
 @attr(tag=['unit', 'parser'])
@@ -124,16 +125,16 @@ class TemplateTest(unittest.TestCase):
     def test_defaults(self):
         empty = parser.Template({})
         try:
-            empty[parser.VERSION]
+            empty[template.VERSION]
         except KeyError:
             pass
         else:
             self.fail('Expected KeyError for version not present')
-        self.assertEqual(empty[parser.DESCRIPTION], 'No description')
-        self.assertEqual(empty[parser.MAPPINGS], {})
-        self.assertEqual(empty[parser.PARAMETERS], {})
-        self.assertEqual(empty[parser.RESOURCES], {})
-        self.assertEqual(empty[parser.OUTPUTS], {})
+        self.assertEqual(empty[template.DESCRIPTION], 'No description')
+        self.assertEqual(empty[template.MAPPINGS], {})
+        self.assertEqual(empty[template.PARAMETERS], {})
+        self.assertEqual(empty[template.RESOURCES], {})
+        self.assertEqual(empty[template.OUTPUTS], {})
 
     def test_invalid_section(self):
         tmpl = parser.Template({'Foo': ['Bar']})
