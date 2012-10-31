@@ -83,9 +83,9 @@ add_role() {
     # option "user-role-list" to detect we're on that newer version
     # This also allows us to detect when the user already has the
     # requested role_id, preventing an error on folsom
-    user_roles=$(keystone --os-username $username\
-                          --os-tenant-id $tenant\
-                          user-role-list 2>/dev/null)
+    user_roles=$(keystone user-role-list \
+                          --user_id $user_id\
+                          --tenant_id $tenant 2>/dev/null)
     if [ $? == 0 ]; then
         # Folsom
         existing_role=$(get_data 1 $role_id 1 echo "$user_roles")
