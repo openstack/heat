@@ -160,8 +160,8 @@ class EngineManager(manager.Manager):
                              **common_params)
 
         response = stack.validate()
-        if response['Description'] != 'Successfully validated':
-            return response
+        if response:
+            return {'Description': response}
 
         stack_id = stack.store()
 
@@ -203,8 +203,8 @@ class EngineManager(manager.Manager):
                                      template_params, **common_params)
 
         response = updated_stack.validate()
-        if response['Description'] != 'Successfully validated':
-            return response
+        if response:
+            return {'Description': response}
 
         # Spawn a greenthread to do the update, and register a
         # callback to remove the thread from stack_threads when done
@@ -239,17 +239,20 @@ class EngineManager(manager.Manager):
                 return {'Error':
                         'Every Resources object must contain a Type member.'}
 
-        parameters = []
-        for param_key, param in template.get('Parameters', {}).items():
-            parameters.append({
-                'NoEcho': param.get('NoEcho', 'false'),
-                'ParameterKey': param_key,
-                'Description': param.get('Description', '')
-            })
+        def describe_param(p):
+            description = {'NoEcho': 'false',
+                           'ParameterKey': p.name,
+                           'Description': p.description()}
+            if p.has_default():
+                description['DefaultValue'] = p.default()
+
+            return description
+
+        params = parser.Parameters(None, tmpl).map(describe_param)
 
         result = {
             'Description': template.get('Description', ''),
-            'Parameters': parameters,
+            'Parameters': params.values(),
         }
         return result
 

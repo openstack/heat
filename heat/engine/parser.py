@@ -191,23 +191,7 @@ class Stack(object):
                 result = str(ex)
 
             if result:
-                err_str = 'Malformed Query Response %s' % result
-                response = {'Description': err_str,
-                            'Parameters': []}
-                return response
-
-        def describe_param(p):
-            return {'NoEcho': 'false',
-                    'ParameterKey': p.name,
-                    'Description': p.description(),
-                    'DefaultValue': p.default()}
-
-        params = self.parameters.map(describe_param)
-
-        response = {'Description': 'Successfully validated',
-                    'Parameters': params.values()}
-
-        return response
+                return 'Malformed Query Response %s' % result
 
     def state_set(self, new_status, reason):
         '''Update the stack state in the database'''

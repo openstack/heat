@@ -162,7 +162,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
                      stack.t, stack.parameters).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
-        stack.validate().AndReturn({'Description': 'Successfully validated'})
+        stack.validate().AndReturn(None)
 
         self.m.StubOutWithMock(manager.greenpool, 'spawn')
         manager.greenpool.spawn(stack.create).AndReturn(DummyGreenThread())
@@ -195,7 +195,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
                      stack.t, stack.parameters).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
-        error = {'Description': 'fubar'}
+        error = 'fubar'
         stack.validate().AndReturn(error)
 
         self.m.StubOutWithMock(manager.greenpool, 'spawn')
@@ -204,7 +204,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
 
         result = self.man.create_stack(self.ctx, stack_name,
                                        template, params, {})
-        self.assertEqual(result, error)
+        self.assertEqual(result, {'Description': error})
         self.m.VerifyAll()
 
     def test_stack_delete(self):
@@ -260,7 +260,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
                      stack.t, stack.parameters).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
-        stack.validate().AndReturn({'Description': 'Successfully validated'})
+        stack.validate().AndReturn(None)
 
         self.m.StubOutWithMock(manager.greenpool, 'spawn')
         manager.greenpool.spawn(old_stack.update, stack).AndReturn(
@@ -300,7 +300,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
                      stack.t, stack.parameters).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
-        error = {'Description': 'fubar'}
+        error = 'fubar'
         stack.validate().AndReturn(error)
 
         self.m.StubOutWithMock(manager.greenpool, 'spawn')
@@ -309,7 +309,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
 
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, {})
-        self.assertEqual(result, error)
+        self.assertEqual(result, {'Description': error})
         self.m.VerifyAll()
 
     def test_stack_update_nonexist(self):
