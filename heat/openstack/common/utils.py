@@ -23,8 +23,8 @@ import logging
 import random
 import shlex
 
-from eventlet import greenthread
 from eventlet.green import subprocess
+from eventlet import greenthread
 
 from heat.openstack.common import exception
 from heat.openstack.common.gettextutils import _
@@ -62,50 +62,6 @@ def bool_from_string(subject):
         if subject.strip().lower() in ('true', 'on', 'yes', '1'):
             return True
     return False
-
-
-def parse_host_port(address, default_port=None):
-    """
-    Interpret a string as a host:port pair.
-    An IPv6 address MUST be escaped if accompanied by a port,
-    because otherwise ambiguity ensues: 2001:db8:85a3::8a2e:370:7334
-    means both [2001:db8:85a3::8a2e:370:7334] and
-    [2001:db8:85a3::8a2e:370]:7334.
-
-    >>> parse_host_port('server01:80')
-    ('server01', 80)
-    >>> parse_host_port('server01')
-    ('server01', None)
-    >>> parse_host_port('server01', default_port=1234)
-    ('server01', 1234)
-    >>> parse_host_port('[::1]:80')
-    ('::1', 80)
-    >>> parse_host_port('[::1]')
-    ('::1', None)
-    >>> parse_host_port('[::1]', default_port=1234)
-    ('::1', 1234)
-    >>> parse_host_port('2001:db8:85a3::8a2e:370:7334', default_port=1234)
-    ('2001:db8:85a3::8a2e:370:7334', 1234)
-
-    """
-    if address[0] == '[':
-        # Escaped ipv6
-        _host, _port = address[1:].split(']')
-        host = _host
-        if ':' in _port:
-            port = _port.split(':')[1]
-        else:
-            port = default_port
-    else:
-        if address.count(':') == 1:
-            host, port = address.split(':')
-        else:
-            # 0 means ipv4, >1 means ipv6.
-            # We prohibit unescaped ipv6 addresses with port.
-            host = address
-            port = default_port
-
-    return (host, None if port is None else int(port))
 
 
 def execute(*cmd, **kwargs):
