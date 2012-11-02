@@ -148,7 +148,22 @@ class StackController(object):
                 engine_api.OUTPUT_VALUE: 'OutputValue',
             }
 
-            return api_utils.reformat_dict_keys(keymap, o)
+            def replacecolon(d):
+                return dict(map(lambda (k, v):
+                    (k.replace(':', '.'), v), d.items()))
+
+            def transform(attrs):
+                """
+                Recursively replace all : with . in dict keys
+                so that they are not interpreted as xml namespaces.
+                """
+                new = replacecolon(attrs)
+                for key, value in new.items():
+                    if isinstance(value, dict):
+                        new[key] = transform(value)
+                return new
+
+            return api_utils.reformat_dict_keys(keymap, transform(o))
 
         def format_stack(s):
             """
