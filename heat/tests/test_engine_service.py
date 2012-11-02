@@ -20,19 +20,17 @@ import nose
 import unittest
 import mox
 import json
-import sqlalchemy
 from nose.plugins.attrib import attr
-from nose import with_setup
 
 from heat.common import context
 from heat.tests.v1_1 import fakes
 import heat.engine.api as engine_api
 import heat.db as db_api
 from heat.engine import parser
-from heat.engine import manager
-from heat.engine import auth
+from heat.engine import service
 from heat.engine.resources import instance as instances
 from heat.engine import watchrule
+from heat.openstack.common import threadgroup
 
 
 tests_dir = os.path.dirname(os.path.realpath(__file__))
@@ -81,8 +79,14 @@ def setup_mocks(mocks, stack):
                       meta=None).AndReturn(fc.servers.list()[-1])
 
 
-class DummyGreenThread():
-    def link(self, gt, **kwargs):
+class DummyThreadGroup(object):
+    def add_thread(self, callback, *args, **kwargs):
+        pass
+
+    def stop(self):
+        pass
+
+    def wait(self):
         pass
 
 
@@ -128,23 +132,23 @@ class stackCreateTest(unittest.TestCase):
         self.assertEqual(db_s.status, 'DELETE_COMPLETE')
 
 
-@attr(tag=['unit', 'engine-api', 'engine-manager'])
+@attr(tag=['unit', 'engine-api', 'engine-service'])
 @attr(speed='fast')
-class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
+class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
 
     def setUp(self):
         self.m = mox.Mox()
-        self.username = 'stack_manager_create_test_user'
-        self.tenant = 'stack_manager_create_test_tenant'
+        self.username = 'stack_service_create_test_user'
+        self.tenant = 'stack_service_create_test_tenant'
         self.ctx = create_context(self.m, self.username, self.tenant)
 
-        self.man = manager.EngineManager()
+        self.man = service.EngineService('a-host', 'a-topic')
 
     def tearDown(self):
         self.m.UnsetStubs()
 
     def test_stack_create(self):
-        stack_name = 'manager_create_test_stack'
+        stack_name = 'service_create_test_stack'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
@@ -164,8 +168,9 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
 
-        self.m.StubOutWithMock(manager.greenpool, 'spawn')
-        manager.greenpool.spawn(stack.create).AndReturn(DummyGreenThread())
+        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
+        name_match = mox.StrContains(stack.name)
+        threadgroup.ThreadGroup(name_match).AndReturn(DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -177,7 +182,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_stack_create_verify_err(self):
-        stack_name = 'manager_create_verify_err_test_stack'
+        stack_name = 'service_create_verify_err_test_stack'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
@@ -198,7 +203,8 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         error = 'fubar'
         stack.validate().AndReturn(error)
 
-        self.m.StubOutWithMock(manager.greenpool, 'spawn')
+        #self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
+        #threadgroup.ThreadGroup(stack_name).AndReturn(DummyThreadGroup())
 
         self.m.ReplayAll()
 
@@ -208,15 +214,15 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_stack_delete(self):
-        stack_name = 'manager_delete_test_stack'
+        stack_name = 'service_delete_test_stack'
         stack = get_wordpress_stack(stack_name, self.ctx)
         stack.store()
 
         self.m.StubOutWithMock(parser.Stack, 'load')
-        self.m.StubOutWithMock(manager.greenpool, 'spawn_n')
+        #self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
+        #threadgroup.ThreadGroup(stack_name).AndReturn(DummyThreadGroup())
 
         parser.Stack.load(self.ctx, stack.id).AndReturn(stack)
-        manager.greenpool.spawn_n(stack.delete)
 
         self.m.ReplayAll()
 
@@ -225,7 +231,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_stack_delete_nonexist(self):
-        stack_name = 'manager_delete_nonexist_test_stack'
+        stack_name = 'service_delete_nonexist_test_stack'
         stack = get_wordpress_stack(stack_name, self.ctx)
 
         self.m.ReplayAll()
@@ -236,7 +242,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_stack_update(self):
-        stack_name = 'manager_update_test_stack'
+        stack_name = 'service_update_test_stack'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
@@ -262,10 +268,6 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
 
-        self.m.StubOutWithMock(manager.greenpool, 'spawn')
-        manager.greenpool.spawn(old_stack.update, stack).AndReturn(
-                                DummyGreenThread())
-
         self.m.ReplayAll()
 
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
@@ -276,7 +278,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_stack_update_verify_err(self):
-        stack_name = 'manager_update_verify_err_test_stack'
+        stack_name = 'service_update_verify_err_test_stack'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
@@ -303,8 +305,6 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         error = 'fubar'
         stack.validate().AndReturn(error)
 
-        self.m.StubOutWithMock(manager.greenpool, 'spawn')
-
         self.m.ReplayAll()
 
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
@@ -313,7 +313,7 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_stack_update_nonexist(self):
-        stack_name = 'manager_update_nonexist_test_stack'
+        stack_name = 'service_update_nonexist_test_stack'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
         stack = get_wordpress_stack(stack_name, self.ctx)
@@ -326,16 +326,16 @@ class stackManagerCreateUpdateDeleteTest(unittest.TestCase):
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'engine-api', 'engine-manager'])
+@attr(tag=['unit', 'engine-api', 'engine-service'])
 @attr(speed='fast')
-class stackManagerTest(unittest.TestCase):
+class stackServiceTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         m = mox.Mox()
-        cls.username = 'stack_manager_test_user'
-        cls.tenant = 'stack_manager_test_tenant'
+        cls.username = 'stack_service_test_user'
+        cls.tenant = 'stack_service_test_tenant'
         ctx = create_context(m, cls.username, cls.tenant)
-        cls.stack_name = 'manager_test_stack'
+        cls.stack_name = 'service_test_stack'
 
         stack = get_wordpress_stack(cls.stack_name, ctx)
         setup_mocks(m, stack)
@@ -366,7 +366,7 @@ class stackManagerTest(unittest.TestCase):
         setup_mocks(self.m, self.stack)
         self.m.ReplayAll()
 
-        self.man = manager.EngineManager()
+        self.man = service.EngineService('a-host', 'a-topic')
 
     def tearDown(self):
         self.m.UnsetStubs()

@@ -11,27 +11,19 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-
 import sys
-import os
-
 import nose
 import unittest
 import mox
 import json
-import sqlalchemy
 
 from nose.plugins.attrib import attr
-from nose import with_setup
 
 from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
-from heat.engine.resources import volume as volumes
-from heat.engine import manager as managers
+from heat.engine import service
 import heat.db as db_api
 from heat.engine import parser
-from heat.engine import auth
 
 test_template_volumeattach = '''
 {
@@ -257,8 +249,8 @@ class validateTest(unittest.TestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        manager = managers.EngineManager()
-        res = dict(manager.
+        engine = service.EngineService('a', 't')
+        res = dict(engine.
             validate_template(None, t))
         print 'res %s' % res
         self.assertEqual(res['Description'], 'test.')
@@ -270,8 +262,8 @@ class validateTest(unittest.TestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        manager = managers.EngineManager()
-        res = dict(manager.
+        engine = service.EngineService('a', 't')
+        res = dict(engine.
             validate_template(None, t))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
@@ -282,8 +274,8 @@ class validateTest(unittest.TestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        manager = managers.EngineManager()
-        res = dict(manager.
+        engine = service.EngineService('a', 't')
+        res = dict(engine.
             validate_template(None, t))
         self.assertEqual(res['Description'], 'test.')
 
@@ -294,8 +286,8 @@ class validateTest(unittest.TestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        manager = managers.EngineManager()
-        res = dict(manager.
+        engine = service.EngineService('a', 't')
+        res = dict(engine.
             validate_template(None, t))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 

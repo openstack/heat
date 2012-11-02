@@ -13,40 +13,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-from copy import deepcopy
-import datetime
 import webob
-import json
-import urlparse
-import httplib
-import eventlet
-import collections
 
-from heat import manager
+from heat.common import context
 from heat.db import api as db_api
-from heat.common import config
-from heat.common import utils as heat_utils
 from heat.engine import api
 from heat.engine import identifier
 from heat.engine import parser
 from heat.engine import watchrule
-from heat.engine import auth
 
 from heat.openstack.common import cfg
-from heat.openstack.common import timeutils
 from heat.openstack.common import log as logging
-
-from novaclient.v1_1 import client
-from novaclient.exceptions import BadRequest
-from novaclient.exceptions import NotFound
-from novaclient.exceptions import AuthorizationFailure
-
-logger = logging.getLogger('heat.engine.manager')
-greenpool = eventlet.GreenPool()
+from heat.openstack.common import threadgroup
+from heat.openstack.common.gettextutils import _
+from heat.openstack.common.rpc import service
 
 
-class EngineManager(manager.Manager):
+logger = logging.getLogger(__name__)
+
+
+class EngineService(service.Service):
     """
     Manages the running instances from creation to destruction.
     All the methods in here are called from the RPC backend.  This is
@@ -56,35 +42,23 @@ class EngineManager(manager.Manager):
     are also dynamically added and will be named as keyword arguments
     by the RPC caller.
     """
+    def __init__(self, host, topic, manager=None):
+        super(EngineService, self).__init__(host, topic)
+        # stg == "Stack Thread Groups"
+        self.stg = {}
 
-    def __init__(self, *args, **kwargs):
-        """Load configuration options and connect to the hypervisor."""
+    def _start_in_thread(self, stack_id, stack_name, func, *args, **kwargs):
+        if stack_id not in self.stg:
+            thr_name = '%s-%s' % (stack_name, stack_id)
+            self.stg[stack_id] = threadgroup.ThreadGroup(thr_name)
+        self.stg[stack_id].add_thread(func, *args, **kwargs)
 
-        # Maintain a dict mapping stack ids to in-progress greenthreads
-        # allows us to kill any pending create|update before delete_stack
-        #
-        # Currently we should only ever have one outstanding thread, but
-        # the implementation makes this a dict-of-sets so we could use
-        # the same method to cancel multiple threads, e.g if long-running
-        # query actions need to be spawned instead of run immediately
-        self.stack_threads = collections.defaultdict(set)
-
-    def _gt_done_callback(self, gt, **kwargs):
-        '''
-        Callback function to be passed to GreenThread.link() when we spawn()
-        Removes the thread ID from the stack_threads set of pending threads
-        kwargs should contain 'stack_id'
-        '''
-        if not 'stack_id' in kwargs:
-            logger.error("_gt_done_callback called with no stack_id!")
-        else:
-            stack_id = kwargs['stack_id']
-            if stack_id in self.stack_threads:
-                logger.debug("Thread done callback for stack %s, %s" %
-                             (stack_id, gt))
-                self.stack_threads[stack_id].discard(gt)
-                if not len(self.stack_threads[stack_id]):
-                    del self.stack_threads[stack_id]
+    def start(self):
+        super(EngineService, self).start()
+        admin_context = context.get_admin_context()
+        self.tg.add_timer(cfg.CONF.periodic_interval,
+                    self._periodic_watcher_task,
+                    context=admin_context)
 
     def identify_stack(self, context, stack_name):
         """
@@ -165,11 +139,7 @@ class EngineManager(manager.Manager):
 
         stack_id = stack.store()
 
-        # Spawn a greenthread to do the create, and register a
-        # callback to remove the thread from stack_threads when done
-        gt = greenpool.spawn(stack.create)
-        gt.link(self._gt_done_callback, stack_id=stack_id)
-        self.stack_threads[stack_id].add(gt)
+        self._start_in_thread(stack_id, stack_name, stack.create)
 
         return dict(stack.identifier())
 
@@ -206,11 +176,9 @@ class EngineManager(manager.Manager):
         if response:
             return {'Description': response}
 
-        # Spawn a greenthread to do the update, and register a
-        # callback to remove the thread from stack_threads when done
-        gt = greenpool.spawn(current_stack.update, updated_stack)
-        gt.link(self._gt_done_callback, stack_id=db_stack.id)
-        self.stack_threads[db_stack.id].add(gt)
+        self._start_in_thread(db_stack.id, db_stack.name,
+                              current_stack.update,
+                              updated_stack)
 
         return dict(current_stack.identifier())
 
@@ -279,17 +247,13 @@ class EngineManager(manager.Manager):
 
         stack = parser.Stack.load(context, st.id)
 
-        # Kill any in-progress create or update threads
-        if st.id in self.stack_threads:
-            # Note we must use set.copy() here or we get an error when thread
-            # rescheduling happens on t.kill() and _gt_done_callback modifies
-            # stack_threads[st.id] mid-iteration
-            for t in self.stack_threads[st.id].copy():
-                logger.warning("Killing running thread %s for stack %s" %
-                               (t, st.name))
-                t.kill()
-
-        greenpool.spawn_n(stack.delete)
+        # TODO Angus do we need a kill or will stop do?
+        if st.id in self.stg:
+            self.stg[st.id].stop()
+            self.stg[st.id].wait()
+            del self.stg[st.id]
+        # use the service ThreadGroup for deletes
+        self.tg.add_thread(stack.delete)
         return None
 
     def list_events(self, context, stack_identity):
@@ -438,10 +402,7 @@ class EngineManager(manager.Manager):
 
         return [None, resource.metadata]
 
-    @manager.periodic_task
     def _periodic_watcher_task(self, context):
-
-        now = timeutils.utcnow()
         try:
             wrn = [w.name for w in db_api.watch_rule_get_all(context)]
         except Exception as ex:

@@ -14,11 +14,8 @@
 
 import util
 import verify
-import nose
 from nose.plugins.attrib import attr
 
-from heat.common import context
-from heat.engine import manager
 import unittest
 import os
 
