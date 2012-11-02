@@ -93,6 +93,15 @@
   },
 
   "Resources" : {
+    "CfnUser" : {
+      "Type" : "AWS::IAM::User"
+    },
+    "WebServerKeys" : {
+      "Type" : "AWS::IAM::AccessKey",
+      "Properties" : {
+        "UserName" : {"Ref": "CfnUser"}
+      }
+    },
     "WebServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
@@ -190,6 +199,16 @@
         "AWS::CloudFormation::Init" : {
           "config" : {
             "files" : {
+              "/etc/cfn/cfn-credentials" : {
+                "content" : { "Fn::Join" : ["", [
+                  "AWSAccessKeyId=", { "Ref" : "WebServerKeys" }, "\n",
+                  "AWSSecretKey=", {"Fn::GetAtt": ["WebServerKeys",
+                                    "SecretAccessKey"]}, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
               "/tmp/setup.mysql" : {
                 "content" : { "Fn::Join" : ["", [
                 "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
@@ -247,6 +266,11 @@
           "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" },
           " -r LaunchConfig ",
           " --region ", { "Ref" : "AWS::Region" }, "\n",
+
+          "# Update boto config (template created by heat-jeos tdl)\n",
+          "sed -i \"s/__GATEWAY_IP__/",
+          "$(/sbin/ip route | grep \"^default\" | awk '{print $3}')/\"",
+          " /etc/boto.cfg \n",
 
           "# Setup MySQL root password and create a user\n",
           "mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'\n",
