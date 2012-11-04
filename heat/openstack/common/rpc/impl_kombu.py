@@ -777,7 +777,7 @@ def cast_to_server(conf, context, server_params, topic, msg):
 
 def fanout_cast_to_server(conf, context, server_params, topic, msg):
     """Sends a message on a fanout exchange to a specific server."""
-    return rpc_amqp.cast_to_server(
+    return rpc_amqp.fanout_cast_to_server(
         conf, context, server_params, topic, msg,
         rpc_amqp.get_connection_pool(conf, Connection))
 
