@@ -113,7 +113,7 @@ def template_validate(options, arguments):
     Validate a template.  This command parses a template and verifies that
     it is in the correct format.
 
-    Usage: heat validate \\
+    Usage: heat-cfn validate \\
         [--template-file=<template file>|--template-url=<template URL>] \\
         [options]
 
@@ -180,7 +180,7 @@ def stack_create(options, arguments):
     '''
     Create a new stack from a template.
 
-    Usage: heat create <stack name> \\
+    Usage: heat-cfn create <stack name> \\
         [--template-file=<template file>|--template-url=<template URL>] \\
         [options]
 
@@ -220,7 +220,7 @@ def stack_update(options, arguments):
     '''
     Update an existing stack.
 
-    Usage: heat update <stack name> \\
+    Usage: heat-cfn update <stack name> \\
         [--template-file=<template file>|--template-url=<template URL>] \\
         [options]
 
@@ -263,7 +263,7 @@ def stack_delete(options, arguments):
     the stack and (perhaps wrongly) also removes all events associated
     with the given stack.
 
-    Usage: heat delete <stack name>
+    Usage: heat-cfn delete <stack name>
     '''
     parameters = {}
     try:
@@ -283,7 +283,7 @@ def stack_describe(options, arguments):
     '''
     Describes an existing stack.
 
-    Usage: heat describe <stack name>
+    Usage: heat-cfn describe <stack name>
     '''
     parameters = {}
     try:
@@ -301,7 +301,7 @@ def stack_events_list(options, arguments):
     '''
     List events associated with the given stack.
 
-    Usage: heat event-list <stack name>
+    Usage: heat-cfn event-list <stack name>
     '''
     parameters = {}
     try:
@@ -397,7 +397,7 @@ def stack_list(options, arguments):
     '''
     List all running stacks.
 
-    Usage: heat list
+    Usage: heat-cfn list
     '''
     c = get_client(options)
     result = c.list_stacks()

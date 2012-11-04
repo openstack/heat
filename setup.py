@@ -43,7 +43,7 @@ setuptools.setup(
         'Programming Language :: Python :: 2.6',
         'Environment :: No Input/Output (Daemon)',
     ],
-    scripts=['bin/heat',
+    scripts=['bin/heat-cfn',
              'bin/heat-api',
              'bin/heat-api-cfn',
              'bin/heat-api-cloudwatch',

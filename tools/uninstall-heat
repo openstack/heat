@@ -62,7 +62,7 @@ if user_wants 'Delete Heat binaries?'; then
     sudo rm -f $BIN_PATH/heat-api
     sudo rm -f $BIN_PATH/heat-api-cfn
     sudo rm -f $BIN_PATH/heat-engine
-    sudo rm -f $BIN_PATH/heat
+    sudo rm -f $BIN_PATH/heat-cfn
 
     echo 1>&2
 fi

@@ -210,21 +210,21 @@ Launch a Wordpress instance
 
 ::
 
-    heat create wordpress --template-file=templates/WordPress_Single_Instance.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpass;KeyName=${USER}_key"
+    heat-cfn create wordpress --template-file=templates/WordPress_Single_Instance.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpass;KeyName=${USER}_key"
 
 List stacks
 -----------
 
 ::
 
-    heat list
+    heat-cfn list
 
 List stack events
 -----------------
 
 ::
 
-    heat event-list wordpress
+    heat-cfn event-list wordpress
 
 Describe the ``wordpress`` stack
 --------------------------------
@@ -234,7 +234,7 @@ Describe the ``wordpress`` stack
 
 ::
 
-    heat describe wordpress
+    heat-cfn describe wordpress
 
 ..
     EOF
@@ -294,7 +294,7 @@ Because the software takes some time to install from the repository, it may be a
     echo "Pausing to wait for application startup..." >&2
     sleep 60
 
-Point a web browser at the location given by the ``WebsiteURL`` Output as shown by ``heat describe``::
+Point a web browser at the location given by the ``WebsiteURL`` Output as shown by ``heat-cfn describe``::
 
     wget ${WebsiteURL}
 
@@ -303,8 +303,8 @@ Delete the instance when done
 
 ::
 
-    heat delete wordpress
-    heat list
+    heat-cfn delete wordpress
+    heat-cfn list
 
 Note: This operation will show no running stack.
 
