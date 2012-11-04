@@ -6,7 +6,7 @@ _heat()
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     if [[ ${cur} == -* ]]; then
-        opts=$(heat --help | grep -A100 "^Options" | sed -r "s/^[[:space:]]*-[[:alpha:]]([[:space:]][[:alpha:]_]*,|,)[[:space:]]//" | cut -d "=" -f1 | grep "^--" | awk '{print $1}')
+        opts=$(heat-cfn --help | grep -A100 "^Options" | sed -r "s/^[[:space:]]*-[[:alpha:]]([[:space:]][[:alpha:]_]*,|,)[[:space:]]//" | cut -d "=" -f1 | grep "^--" | awk '{print $1}')
         COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
         return 0
     fi
@@ -14,9 +14,9 @@ _heat()
     if [[ ${#COMP_WORDS[@]} -gt 2 ]]; then
         return 0
     else
-        cmds=$(heat help  | awk '{print $1}' | egrep -v "^(Usage|Commands|$)")
+        cmds=$(heat-cfn help  | awk '{print $1}' | egrep -v "^(Usage|Commands|$)")
         COMPREPLY=( $(compgen -W "${cmds}" -- ${cur}) )
         return 0
     fi
 }
-complete -F _heat heat
+complete -F _heat heat-cfn

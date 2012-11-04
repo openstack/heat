@@ -46,7 +46,7 @@ function run_tests {
 function run_pep8 {
   echo "Running pep8..."
   PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat"
-  PEP8_INCLUDE="bin/heat bin/heat-boto bin/heat-api-cfn bin/heat-api bin/heat-engine heat tools setup.py heat/testing/runner.py"
+  PEP8_INCLUDE="bin/heat-cfn bin/heat-boto bin/heat-api-cfn bin/heat-api bin/heat-engine heat tools setup.py heat/testing/runner.py"
   ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
 }
 
