@@ -117,7 +117,8 @@ class LoadBalancerTest(unittest.TestCase):
         self.assertEqual('LoadBalancer', resource.FnGetRefId())
 
         templ = json.loads(lb.lb_template)
-        ha_cfg = resource._haproxy_config(templ)
+        ha_cfg = resource._haproxy_config(templ,
+                                          resource.properties['Instances'])
         self.assertRegexpMatches(ha_cfg, 'bind \*:80')
         self.assertRegexpMatches(ha_cfg, 'server server1 1\.2\.3\.4:80 '
                                  'check inter 30s fall 5 rise 3')

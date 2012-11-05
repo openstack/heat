@@ -223,7 +223,7 @@ class LoadBalancer(stack.Stack):
 
         return '0.0.0.0'
 
-    def _haproxy_config(self, templ):
+    def _haproxy_config(self, templ, instances):
         # initial simplifications:
         # - only one Listener
         # - only http (no tcp or ssl)
@@ -275,7 +275,7 @@ class LoadBalancer(stack.Stack):
 
         servers = []
         n = 1
-        for i in self.properties['Instances']:
+        for i in instances:
             ip = self._instance_to_ipaddress(i)
             logger.debug('haproxy server:%s' % ip)
             servers.append('%sserver server%d %s:%s %s' % (spaces, n,
@@ -291,7 +291,7 @@ class LoadBalancer(stack.Stack):
         if self.properties['Instances']:
             md = templ['Resources']['LB_instance']['Metadata']
             files = md['AWS::CloudFormation::Init']['config']['files']
-            cfg = self._haproxy_config(templ)
+            cfg = self._haproxy_config(templ, self.properties['Instances'])
             files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
         self.create_with_template(templ)
@@ -316,10 +316,8 @@ class LoadBalancer(stack.Stack):
         save it to the db.
         rely on the cfn-hup to reconfigure HAProxy
         '''
-        self.calculate_properties()
-        self.properties['Instances'] = inst_list
         templ = json.loads(lb_template)
-        cfg = self._haproxy_config(templ)
+        cfg = self._haproxy_config(templ, inst_list)
 
         md = self.nested()['LB_instance'].metadata
         files = md['AWS::CloudFormation::Init']['config']['files']
