@@ -95,8 +95,10 @@ class CheckedDict(collections.MutableMapping):
                     raise ValueError('%s: %s Value must be a map' %
                                      (self.name, key))
                 if 'Schema' in self.data[key]:
-                    cdict = Properties(key, self.data[key]['Schema'])
-                    cdict.data = self.data[key]['Schema']
+                    cdict = CheckedDict(key)
+                    schema = self.data[key]['Schema']
+                    for n, s in schema.items():
+                        cdict.addschema(n, s)
                     for k, v in value.items():
                         cdict[k] = v
 
@@ -106,7 +108,10 @@ class CheckedDict(collections.MutableMapping):
                                      (self.name, key, value))
                 if 'Schema' in self.data[key]:
                     for item in value:
-                        cdict = Properties(key, self.data[key]['Schema'])
+                        cdict = CheckedDict(key)
+                        schema = self.data[key]['Schema']
+                        for n, s in schema.items():
+                            cdict.addschema(n, s)
                         for k, v in item.items():
                             cdict[k] = v
 
@@ -152,29 +157,3 @@ class CheckedDict(collections.MutableMapping):
 
     def __delitem__(self, k):
         del self.data[k]
-
-
-class Properties(CheckedDict):
-    def __init__(self, name, schema):
-        CheckedDict.__init__(self, name)
-        self.data = deepcopy(schema)
-
-        # set some defaults
-        for s in self.data:
-            if not 'Implemented' in self.data[s]:
-                self.data[s]['Implemented'] = True
-            if not 'Required' in self.data[s]:
-                self.data[s]['Required'] = False
-
-    def validate(self):
-        for key in self.data:
-            # are there missing required Properties
-            if 'Required' in self.data[key]:
-                if self.data[key]['Required'] \
-                    and not 'Value' in self.data[key]:
-                    return '%s Property must be provided' % key
-
-            # are there unimplemented Properties
-            if not self.data[key]['Implemented'] and 'Value' in self.data[key]:
-                return '%s Property not implemented yet' % key
-        return None

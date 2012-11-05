@@ -77,8 +77,6 @@ class AutoScalingGroup(resource.Resource):
                 inst.destroy()
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
-        self.calculate_properties()
-
         inst_list = []
         if self.instance_id is not None:
             inst_list = sorted(self.instance_id.split(','))
@@ -190,7 +188,6 @@ class ScalingPolicy(resource.Resource):
         super(ScalingPolicy, self).__init__(name, json_snippet, stack)
 
     def alarm(self):
-        self.calculate_properties()
         group = self.stack.resources[self.properties['AutoScalingGroupName']]
 
         logger.info('%s Alarm, adjusting Group %s by %s' %

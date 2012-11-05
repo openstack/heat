@@ -110,7 +110,9 @@ class CheckedDictTest(unittest.TestCase):
                           'Schema': listeners_schema}
         }
 
-        cd = checkeddict.Properties('nested', properties_schema)
+        cd = checkeddict.CheckedDict('nested')
+        for p, s in properties_schema.items():
+            cd.addschema(p, s)
 
         hc = {'HealthyThreshold': 'bla', 'Interval': '45'}
         self.assertRaises(ValueError, cd.__setitem__, 'HealthCheck', hc)

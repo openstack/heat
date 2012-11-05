@@ -24,7 +24,7 @@ import json
 from nose.plugins.attrib import attr
 
 from heat.common import exception
-from heat.engine import checkeddict
+from heat.engine.resources import properties
 from heat.engine.resources.quantum import net
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.engine import parser
@@ -104,12 +104,12 @@ class QuantumTest(unittest.TestCase):
         return resource
 
     def test_validate_properties(self):
-        p = checkeddict.Properties('foo', net.Net.properties_schema)
         vs = {'router:external': True}
-        p.update({
+        data = {
             'admin_state_up': False,
             'value_specs': vs
-        })
+        }
+        p = properties.Properties(net.Net.properties_schema, data)
         self.assertEqual(None, qr.validate_properties(p))
 
         vs['shared'] = True
@@ -131,11 +131,11 @@ class QuantumTest(unittest.TestCase):
         self.assertEqual(None, qr.validate_properties(p))
 
     def test_prepare_properties(self):
-        p = checkeddict.Properties('foo', net.Net.properties_schema)
-        p.update({
+        data = {
             'admin_state_up': False,
             'value_specs': {'router:external': True}
-        })
+        }
+        p = properties.Properties(net.Net.properties_schema, data)
         props = qr.prepare_properties(p, 'resource_name')
         self.assertEqual({
             'name': 'resource_name',

@@ -105,7 +105,7 @@ class LoadBalancerTest(unittest.TestCase):
             'UnhealthyThreshold': '5',
             'Interval': '30',
             'Timeout': '5'}
-        resource.properties['HealthCheck'] = hc
+        resource.t['Properties']['HealthCheck'] = hc
         self.assertEqual(None, resource.validate())
 
         hc['Timeout'] = 35

@@ -264,9 +264,6 @@ class Stack(object):
         failures = []
         with eventlet.Timeout(self.timeout_mins * 60) as tmo:
             try:
-                for res in self:
-                    res.calculate_properties()
-
                 # First delete any resources which are not in newstack
                 for res in reversed(self):
                     if not res.name in newstack.keys():
@@ -366,9 +363,6 @@ class Stack(object):
         '''
         self.state_set(self.DELETE_IN_PROGRESS, 'Stack deletion started')
 
-        for res in self:
-            res.calculate_properties()
-
         failures = []
         for res in reversed(self):
             result = res.destroy()
@@ -398,9 +392,6 @@ class Stack(object):
         '''
         deps = self.dependencies[self[resource_name]]
         failed = False
-
-        for res in self:
-            res.calculate_properties()
 
         for res in reversed(deps):
             try:

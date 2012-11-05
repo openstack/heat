@@ -47,7 +47,6 @@ class Restarter(resource.Resource):
         return None
 
     def alarm(self):
-        self.calculate_properties()
         victim = self._find_resource(self.properties['InstanceId'])
 
         if victim is None:

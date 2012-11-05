@@ -86,7 +86,6 @@ class WaitCondition(resource.Resource):
 
     def _get_handle_resource_id(self):
         if self.resource_id is None:
-            self.calculate_properties()
             handle_url = self.properties['Handle']
             self.resource_id = handle_url.split('/')[-1]
         return self.resource_id

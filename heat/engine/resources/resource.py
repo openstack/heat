@@ -37,8 +37,8 @@ except ImportError:
 from heat.common import exception
 from heat.common import config
 from heat.db import api as db_api
-from heat.engine import checkeddict
 from heat.engine import timestamp
+from heat.engine.resources.properties import Properties
 
 from heat.openstack.common import log as logging
 from heat.openstack.common import cfg
@@ -114,7 +114,10 @@ class Resource(object):
         self.context = stack.context
         self.name = name
         self.t = stack.resolve_static_data(json_snippet)
-        self.properties = checkeddict.Properties(name, self.properties_schema)
+        self.properties = Properties(self.properties_schema,
+                                     self.t.get('Properties', {}),
+                                     self.stack.resolve_runtime_data,
+                                     self.name)
 
         resource = db_api.resource_get_by_name_and_stack(self.context,
                                                          name, stack.id)
@@ -321,10 +324,6 @@ class Resource(object):
 
         return self._quantum
 
-    def calculate_properties(self):
-        for p, v in self.parsed_template('Properties').items():
-            self.properties[p] = v
-
     def create(self):
         '''
         Create the resource. Subclasses should provide a handle_create() method
@@ -336,7 +335,6 @@ class Resource(object):
         logger.info('creating %s' % str(self))
 
         try:
-            self.calculate_properties()
             self.properties.validate()
             self.state_set(self.CREATE_IN_PROGRESS)
             if callable(getattr(self, 'handle_create', None)):
@@ -365,9 +363,6 @@ class Resource(object):
         try:
             self.state_set(self.UPDATE_IN_PROGRESS)
             self.t = self.stack.resolve_static_data(json_snippet)
-            self.properties = checkeddict.Properties(self.name,
-                                                     self.properties_schema)
-            self.calculate_properties()
             self.properties.validate()
             if callable(getattr(self, 'handle_update', None)):
                 result = self.handle_update()
@@ -394,10 +389,6 @@ class Resource(object):
     def validate(self):
         logger.info('Validating %s' % str(self))
 
-        try:
-            self.calculate_properties()
-        except ValueError as ex:
-                return str(ex)
         return self.properties.validate()
 
     def delete(self):
@@ -476,7 +467,6 @@ class Resource(object):
 
     def _add_event(self, new_state, reason):
         '''Add a state change event to the database'''
-        self.calculate_properties()
         ev = {'logical_resource_id': self.name,
               'physical_resource_id': self.instance_id,
               'stack_id': self.stack.id,

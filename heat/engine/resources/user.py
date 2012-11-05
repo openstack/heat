@@ -199,7 +199,6 @@ class AccessKey(resource.Resource):
     def FnGetAtt(self, key):
         res = None
         log_res = None
-        self.calculate_properties()
         if key == 'UserName':
             res = self.properties['UserName']
             log_res = res

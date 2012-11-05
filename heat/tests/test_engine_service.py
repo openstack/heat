@@ -70,7 +70,6 @@ def setup_mocks(mocks, stack):
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
 
     instance = stack.resources['WebServer']
-    instance.calculate_properties()
     server_userdata = instance._build_userdata(instance.properties['UserData'])
     mocks.StubOutWithMock(fc.servers, 'create')
     fc.servers.create(image=744, flavor=3, key_name='test',
