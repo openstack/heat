@@ -22,8 +22,8 @@ import json
 from heat.common import context
 from heat.common import exception
 from heat.engine import parser
+from heat.engine import parameters
 from heat.engine import template
-from heat.engine import checkeddict
 from heat.engine.resources import Resource
 
 
@@ -183,8 +183,8 @@ class TemplateTest(unittest.TestCase):
                          r_snippet)
 
     def test_param_ref_missing(self):
-        params = checkeddict.CheckedDict("test")
-        params.addschema('foo', {"Required": True})
+        tmpl = {'Parameters': {'foo': {'Type': 'String', 'Required': True}}}
+        params = parameters.Parameters('test', tmpl)
         snippet = {"Ref": "foo"}
         self.assertRaises(exception.UserParameterMissing,
                           parser.Template.resolve_param_refs,
