@@ -36,7 +36,7 @@ class AutoScalingGroup(resource.Resource):
         'MinSize': {'Required': True,
                     'Type': 'String'},
         'Cooldown': {'Type': 'String'},
-        'DesiredCapacity': {'Type': 'Integer'},
+        'DesiredCapacity': {'Type': 'Number'},
         'HealthCheckGracePeriod': {'Type': 'Integer',
                                    'Implemented': False},
         'HealthCheckType': {'Type': 'String',
@@ -176,14 +176,14 @@ class ScalingPolicy(resource.Resource):
     properties_schema = {
         'AutoScalingGroupName': {'Type': 'String',
                                  'Required': True},
-        'ScalingAdjustment': {'Type': 'Integer',
+        'ScalingAdjustment': {'Type': 'Number',
                               'Required': True},
         'AdjustmentType': {'Type': 'String',
                            'AllowedValues': ['ChangeInCapacity',
                                              'ExactCapacity',
                                              'PercentChangeInCapacity'],
                            'Required': True},
-        'Cooldown': {'Type': 'Integer'},
+        'Cooldown': {'Type': 'Number'},
     }
 
     def __init__(self, name, json_snippet, stack):

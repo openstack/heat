@@ -160,28 +160,28 @@ lb_template = '''
 class LoadBalancer(stack.Stack):
 
     listeners_schema = {
-        'InstancePort': {'Type': 'Integer',
+        'InstancePort': {'Type': 'Number',
                          'Required': True},
-        'LoadBalancerPort': {'Type': 'Integer',
+        'LoadBalancerPort': {'Type': 'Number',
                              'Required': True},
         'Protocol': {'Type': 'String',
                      'Required': True,
                      'AllowedValues': ['TCP', 'HTTP']},
         'SSLCertificateId': {'Type': 'String',
                              'Implemented': False},
-        'PolicyNames': {'Type': 'Map',
+        'PolicyNames': {'Type': 'List',
                         'Implemented': False}
     }
     healthcheck_schema = {
-        'HealthyThreshold': {'Type': 'Integer',
+        'HealthyThreshold': {'Type': 'Number',
                              'Required': True},
-        'Interval': {'Type': 'Integer',
+        'Interval': {'Type': 'Number',
                      'Required': True},
         'Target': {'Type': 'String',
                    'Required': True},
-        'Timeout': {'Type': 'Integer',
+        'Timeout': {'Type': 'Number',
                     'Required': True},
-        'UnhealthyThreshold': {'Type': 'Integer',
+        'UnhealthyThreshold': {'Type': 'Number',
                               'Required': True},
     }
 
