@@ -23,7 +23,8 @@ class Net(quantum.QuantumResource):
     properties_schema = {'name': {'Type': 'String'},
                         'value_specs': {'Type': 'Map',
                                        'Default': {}},
-                        'admin_state_up': {'Default': True},
+                        'admin_state_up': {'Default': True,
+                                          'Type': 'Boolean'},
     }
 
     def __init__(self, name, json_snippet, stack):

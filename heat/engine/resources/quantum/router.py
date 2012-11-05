@@ -25,7 +25,7 @@ class Router(quantum.QuantumResource):
                         'value_specs': {'Type': 'Map',
                                        'Default': {}},
                         'admin_state_up': {'Type': 'Boolean',
-                                      'Default': True},
+                                          'Default': True},
     }
 
     def __init__(self, name, json_snippet, stack):
