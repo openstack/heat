@@ -167,11 +167,15 @@ class PropertyTest(unittest.TestCase):
 
     def test_boolean_true(self):
         p = properties.Property({'Type': 'Boolean'})
-        self.assertEqual(p.validate_data('True'), 'true')
+        self.assertEqual(p.validate_data('True'), True)
+        self.assertEqual(p.validate_data('true'), True)
+        self.assertEqual(p.validate_data(True), True)
 
     def test_boolean_false(self):
         p = properties.Property({'Type': 'Boolean'})
-        self.assertEqual(p.validate_data('False'), 'false')
+        self.assertEqual(p.validate_data('False'), False)
+        self.assertEqual(p.validate_data('false'), False)
+        self.assertEqual(p.validate_data(False), False)
 
     def test_boolean_invalid(self):
         p = properties.Property({'Type': 'Boolean'})
@@ -212,7 +216,7 @@ class PropertyTest(unittest.TestCase):
     def test_map_schema_good(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
         p = properties.Property({'Type': 'Map', 'Schema': map_schema})
-        self.assertEqual(p.validate_data({'valid': 'TRUE'}), {'valid': 'true'})
+        self.assertEqual(p.validate_data({'valid': 'TRUE'}), {'valid': True})
 
     def test_map_schema_bad_data(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
@@ -235,8 +239,8 @@ class PropertyTest(unittest.TestCase):
         p = properties.Property({'Type': 'List', 'Schema': list_schema})
         self.assertEqual(p.validate_data([{'valid': 'TRUE'},
                                           {'valid': 'False'}]),
-                                         [{'valid': 'true'},
-                                          {'valid': 'false'}])
+                                         [{'valid': True},
+                                          {'valid': False}])
 
     def test_list_schema_bad_data(self):
         map_schema = {'valid': {'Type': 'Boolean'}}

@@ -118,11 +118,13 @@ class Property(object):
         return children
 
     def _validate_bool(self, value):
+        if isinstance(value, bool):
+            return value
         normalised = value.lower()
         if normalised not in ['true', 'false']:
             raise ValueError('"%s" is not a valid boolean')
 
-        return normalised
+        return normalised == 'true'
 
     def validate_data(self, value):
         t = self.type()
