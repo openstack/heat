@@ -1,0 +1,52 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Template to test Quantum resources",
+
+  "Parameters" : {
+
+    "external_network" : {
+      "Description" : "UUID of an existing external network",
+      "Type" : "String"
+    },
+    "internal_network" : {
+      "Description" : "UUID of an existing internal network",
+      "Type" : "String"
+    },
+    "internal_subnet" : {
+      "Description" : "UUID of an existing internal subnet",
+      "Type" : "String"
+    }
+  },
+
+  "Resources" : {
+
+    "port_floating": {
+      "Type": "OS::Quantum::Port",
+      "Properties": {
+        "network_id": { "Ref" : "internal_network" },
+        "fixed_ips": [{
+          "subnet_id": { "Ref" : "internal_subnet" },
+          "ip_address": "10.0.0.10"
+        }]
+      }
+    },
+
+    "floating_ip": {
+      "Type": "OS::Quantum::FloatingIP",
+      "Properties": {
+        "floating_network_id": { "Ref" : "external_network" }
+      }
+    },
+
+    "floating_ip_assoc": {
+      "Type": "OS::Quantum::FloatingIPAssociation",
+      "Properties": {
+        "floatingip_id": { "Ref" : "floating_ip" },
+        "port_id": { "Ref" : "port_floating" }
+      }
+    }
+  },
+  "Outputs" : {
+  }
+}
