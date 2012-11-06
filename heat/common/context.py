@@ -166,14 +166,12 @@ class ContextMiddleware(wsgi.Middleware):
             aws_creds = None
             aws_auth_uri = None
 
-            if headers.get('X-Auth-EC2-Creds') is not None:
+            if headers.get('X-Auth-User') is not None:
+                username = headers.get('X-Auth-User')
+                password = headers.get('X-Auth-Key')
+            elif headers.get('X-Auth-EC2-Creds') is not None:
                 aws_creds = headers.get('X-Auth-EC2-Creds')
                 aws_auth_uri = headers.get('X-Auth-EC2-Url')
-            else:
-                if 'KeyStoneCreds' in req.params:
-                    creds = json.loads(req.params['KeyStoneCreds'])
-                    username = creds['username']
-                    password = creds['password']
 
             token = headers.get('X-Auth-Token')
             service_user = headers.get('X-Admin-User')

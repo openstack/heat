@@ -44,7 +44,7 @@ class EC2Token(wsgi.Middleware):
     @webob.dec.wsgify(RequestClass=wsgi.Request)
     def __call__(self, req):
         # Read request signature and access id.
-        # If we find KeyStoneCreds in the params we ignore a key error
+        # If we find X-Auth-User in the headers we ignore a key error
         # here so that we can use both authentication methods.
         # Returning here just means the user didn't supply AWS
         # authentication and we'll let the app try native keystone next.
@@ -53,7 +53,7 @@ class EC2Token(wsgi.Middleware):
             signature = req.params['Signature']
         except KeyError:
             logger.info("No AWS Signature found.")
-            if 'KeyStoneCreds' in req.params:
+            if 'X-Auth-User' in req.headers:
                 return self.application
             else:
                 raise exception.HeatIncompleteSignatureError()
@@ -62,7 +62,7 @@ class EC2Token(wsgi.Middleware):
             access = req.params['AWSAccessKeyId']
         except KeyError:
             logger.info("No AWSAccessKeyId found.")
-            if 'KeyStoneCreds' in req.params:
+            if 'X-Auth-User' in req.headers:
                 return self.application
             else:
                 raise exception.HeatMissingAuthenticationTokenError()

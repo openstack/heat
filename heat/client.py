@@ -39,14 +39,15 @@ class V1Client(base_client.BaseClient):
         params['Version'] = '2010-05-15'
         params['SignatureVersion'] = '2'
         params['SignatureMethod'] = 'HmacSHA256'
-        params['KeyStoneCreds'] = json.dumps(self.creds)
 
     def stack_request(self, action, method, **kwargs):
         params = self._extract_params(kwargs, SUPPORTED_PARAMS)
         self._insert_common_parameters(params)
         params['Action'] = action
+        headers = {'X-Auth-User': self.creds['username'],
+                   'X-Auth-Key': self.creds['password']}
 
-        res = self.do_request(method, "/", params=params)
+        res = self.do_request(method, "/", params=params, headers=headers)
         doc = etree.fromstring(res.read())
         return etree.tostring(doc, pretty_print=True)
 
