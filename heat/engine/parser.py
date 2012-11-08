@@ -26,6 +26,7 @@ from heat.engine import template
 from heat.engine import timestamp
 from heat.engine.parameters import Parameters
 from heat.engine.template import Template
+from heat.engine.clients import Clients
 from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
@@ -61,6 +62,7 @@ class Stack(object):
         '''
         self.id = stack_id
         self.context = context
+        self.clients = Clients(context)
         self.t = tmpl
         self.name = stack_name
         self.state = state
