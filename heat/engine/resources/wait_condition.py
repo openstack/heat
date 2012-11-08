@@ -39,7 +39,7 @@ class WaitConditionHandle(resource.Resource):
         super(WaitConditionHandle, self).__init__(name, json_snippet, stack)
 
     def handle_create(self):
-        self.instance_id = '%s/stacks/%s/resources/%s' % \
+        self.resource_id = '%s/stacks/%s/resources/%s' % \
                            (cfg.CONF.heat_waitcondition_server_url,
                             self.stack.id,
                             self.name)

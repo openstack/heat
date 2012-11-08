@@ -88,7 +88,7 @@ class AutoScalingTest(unittest.TestCase):
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
 
         self.assertEqual('WebServerGroup', resource.FnGetRefId())
-        self.assertEqual('WebServerGroup-0', resource.instance_id)
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
         self.assertEqual(asc.AutoScalingGroup.UPDATE_REPLACE,
                   resource.handle_update())
 
@@ -99,46 +99,46 @@ class AutoScalingTest(unittest.TestCase):
         properties['DesiredCapacity'] = '3'
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
-                         resource.instance_id)
+                         resource.resource_id)
 
         # reduce to 1
         resource.adjust(-2)
-        self.assertEqual('WebServerGroup-0', resource.instance_id)
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
 
         # raise to 3
         resource.adjust(2)
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
-                         resource.instance_id)
+                         resource.resource_id)
 
         # set to 2
         resource.adjust(2, 'ExactCapacity')
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
-                         resource.instance_id)
+                         resource.resource_id)
 
         # raise above the max
         resource.adjust(2)
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
-                         resource.instance_id)
+                         resource.resource_id)
 
         # lower below the min
         resource.adjust(-2)
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
-                         resource.instance_id)
+                         resource.resource_id)
 
         # no change
         resource.adjust(0)
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
-                         resource.instance_id)
+                         resource.resource_id)
 
         # reduce by 50%
         resource.adjust(-50, 'PercentChangeInCapacity')
         self.assertEqual('WebServerGroup-0',
-                 resource.instance_id)
+                 resource.resource_id)
 
         # raise by 200%
         resource.adjust(200, 'PercentChangeInCapacity')
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
-                 resource.instance_id)
+                 resource.resource_id)
 
         resource.delete()
 
@@ -150,19 +150,19 @@ class AutoScalingTest(unittest.TestCase):
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = resource
 
-        self.assertEqual('WebServerGroup-0', resource.instance_id)
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
 
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
         up_policy.alarm()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
-                 resource.instance_id)
+                 resource.resource_id)
 
         down_policy = self.create_scaling_policy(t, stack,
                                                  'WebServerScaleDownPolicy')
         down_policy.alarm()
         self.assertEqual('WebServerGroup-0',
-                 resource.instance_id)
+                 resource.resource_id)
 
         resource.delete()
 

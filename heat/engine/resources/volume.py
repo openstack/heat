@@ -42,7 +42,7 @@ class Volume(resource.Resource):
             eventlet.sleep(1)
             vol.get()
         if vol.status == 'available':
-            self.instance_id_set(vol.id)
+            self.resource_id_set(vol.id)
         else:
             raise exception.Error(vol.status)
 
@@ -50,13 +50,13 @@ class Volume(resource.Resource):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
-        if self.instance_id is not None:
-            vol = self.nova('volume').volumes.get(self.instance_id)
+        if self.resource_id is not None:
+            vol = self.nova('volume').volumes.get(self.resource_id)
             if vol.status == 'in-use':
                 logger.warn('cant delete volume when in-use')
                 raise exception.Error("Volume in use")
 
-            self.nova('volume').volumes.delete(self.instance_id)
+            self.nova('volume').volumes.delete(self.resource_id)
 
 
 class VolumeAttachment(resource.Resource):
@@ -86,7 +86,7 @@ class VolumeAttachment(resource.Resource):
             eventlet.sleep(1)
             vol.get()
         if vol.status == 'in-use':
-            self.instance_id_set(va.id)
+            self.resource_id_set(va.id)
         else:
             raise exception.Error(vol.status)
 

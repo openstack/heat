@@ -89,4 +89,4 @@ class QuantumResource(resource.Resource):
         return self.UPDATE_REPLACE
 
     def FnGetRefId(self):
-        return unicode(self.instance_id)
+        return unicode(self.resource_id)

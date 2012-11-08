@@ -62,7 +62,7 @@ class User(resource.Resource):
                                             self.physical_resource_name(),
                                             tenant_id=tenant_id,
                                             enabled=True)
-        self.instance_id_set(user.id)
+        self.resource_id_set(user.id)
 
         # We add the new user to a special keystone role
         # This role is designed to allow easier differentiation of the
@@ -84,13 +84,13 @@ class User(resource.Resource):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
-        if self.instance_id is None:
+        if self.resource_id is None:
             return
         try:
-            user = self.keystone().users.get(DummyId(self.instance_id))
+            user = self.keystone().users.get(DummyId(self.resource_id))
         except Exception as ex:
             logger.info('user %s/%s does not exist' %
-                        (self.physical_resource_name(), self.instance_id))
+                        (self.physical_resource_name(), self.resource_id))
             return
 
         # tempory hack to work around an openstack bug.
@@ -158,7 +158,7 @@ class AccessKey(resource.Resource):
 
         tenant_id = self.context.tenant_id
         cred = self.keystone().ec2.create(user.id, tenant_id)
-        self.instance_id_set(cred.access)
+        self.resource_id_set(cred.access)
         self._secret = cred.secret
 
     def handle_update(self):
@@ -166,8 +166,8 @@ class AccessKey(resource.Resource):
 
     def handle_delete(self):
         user = self._user_from_name(self.properties['UserName'])
-        if user and self.instance_id:
-            self.keystone().ec2.delete(user.id, self.instance_id)
+        if user and self.resource_id:
+            self.keystone().ec2.delete(user.id, self.resource_id)
 
     def _secret_accesskey(self):
         '''
@@ -186,9 +186,9 @@ class AccessKey(resource.Resource):
                 # This will allow "instance users" to retrieve resource
                 # metadata but not manipulate user resources in any other way
                 user_id = self.keystone().auth_user_id
-                cred = self.keystone().ec2.get(user_id, self.instance_id)
+                cred = self.keystone().ec2.get(user_id, self.resource_id)
                 self._secret = cred.secret
-                self.instance_id_set(cred.access)
+                self.resource_id_set(cred.access)
             except Exception as ex:
                 logger.warn('could not get secret for %s Error:%s' %
                             (self.properties['UserName'],

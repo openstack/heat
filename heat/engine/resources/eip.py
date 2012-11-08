@@ -33,9 +33,9 @@ class ElasticIp(resource.Resource):
 
     def _ipaddress(self):
         if self.ipaddress is None:
-            if self.instance_id is not None:
+            if self.resource_id is not None:
                 try:
-                    ips = self.nova().floating_ips.get(self.instance_id)
+                    ips = self.nova().floating_ips.get(self.resource_id)
                 except NotFound as ex:
                     logger.warn("Floating IPs not found: %s" % str(ex))
                 else:
@@ -47,22 +47,22 @@ class ElasticIp(resource.Resource):
         ips = self.nova().floating_ips.create()
         logger.info('ElasticIp create %s' % str(ips))
         self.ipaddress = ips.ip
-        self.instance_id_set(ips.id)
+        self.resource_id_set(ips.id)
 
     def handle_update(self):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
         """De-allocate a floating IP."""
-        if self.instance_id is not None:
-            self.nova().floating_ips.delete(self.instance_id)
+        if self.resource_id is not None:
+            self.nova().floating_ips.delete(self.resource_id)
 
     def FnGetRefId(self):
         return unicode(self._ipaddress())
 
     def FnGetAtt(self, key):
         if key == 'AllocationId':
-            return unicode(self.instance_id)
+            return unicode(self.resource_id)
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
@@ -89,7 +89,7 @@ class ElasticIpAssociation(resource.Resource):
 
         server = self.nova().servers.get(self.properties['InstanceId'])
         server.add_floating_ip(self.properties['EIP'])
-        self.instance_id_set(self.properties['EIP'])
+        self.resource_id_set(self.properties['EIP'])
 
     def handle_delete(self):
         """Remove a floating IP address from a server."""

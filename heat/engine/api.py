@@ -134,7 +134,7 @@ def format_stack_resource(resource):
         RES_DESCRIPTION: resource.parsed_template().get('Description', ''),
         RES_UPDATED_TIME: timeutils.isotime(last_updated_time),
         RES_NAME: resource.name,
-        RES_PHYSICAL_ID: resource.instance_id or '',
+        RES_PHYSICAL_ID: resource.resource_id or '',
         RES_METADATA: resource.metadata,
         RES_STATUS: resource.state,
         RES_STATUS_DATA: resource.state_description,

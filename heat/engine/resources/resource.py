@@ -104,12 +104,12 @@ class Resource(object):
         resource = db_api.resource_get_by_name_and_stack(self.context,
                                                          name, stack.id)
         if resource:
-            self.instance_id = resource.nova_instance
+            self.resource_id = resource.nova_instance
             self.state = resource.state
             self.state_description = resource.state_description
             self.id = resource.id
         else:
-            self.instance_id = None
+            self.resource_id = None
             self.state = None
             self.state_description = ''
             self.id = None
@@ -255,7 +255,7 @@ class Resource(object):
             return 'Resource deletion already in progress'
 
         logger.info('deleting %s (inst:%s db_id:%s)' %
-                    (str(self), self.instance_id, str(self.id)))
+                    (str(self), self.resource_id, str(self.id)))
         self.state_set(self.DELETE_IN_PROGRESS)
 
         try:
@@ -291,12 +291,12 @@ class Resource(object):
 
         self.id = None
 
-    def instance_id_set(self, inst):
-        self.instance_id = inst
+    def resource_id_set(self, inst):
+        self.resource_id = inst
         if self.id is not None:
             try:
                 rs = db_api.resource_get(self.stack.context, self.id)
-                rs.update_and_save({'nova_instance': self.instance_id})
+                rs.update_and_save({'nova_instance': self.resource_id})
             except Exception as ex:
                 logger.warn('db error %s' % str(ex))
 
@@ -305,7 +305,7 @@ class Resource(object):
         try:
             rs = {'state': self.state,
                   'stack_id': self.stack.id,
-                  'nova_instance': self.instance_id,
+                  'nova_instance': self.resource_id,
                   'name': self.name,
                   'rsrc_metadata': self.metadata,
                   'stack_name': self.stack.name}
@@ -321,7 +321,7 @@ class Resource(object):
     def _add_event(self, new_state, reason):
         '''Add a state change event to the database'''
         ev = {'logical_resource_id': self.name,
-              'physical_resource_id': self.instance_id,
+              'physical_resource_id': self.resource_id,
               'stack_id': self.stack.id,
               'stack_name': self.stack.name,
               'resource_status': new_state,
@@ -343,7 +343,7 @@ class Resource(object):
                 rs = db_api.resource_get(self.context, self.id)
                 rs.update_and_save({'state': self.state,
                                     'state_description': reason,
-                                    'nova_instance': self.instance_id})
+                                    'nova_instance': self.resource_id})
 
                 self.stack.updated_time = datetime.utcnow()
             except Exception as ex:
@@ -363,8 +363,8 @@ class Resource(object):
         http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/\
         intrinsic-function-reference-ref.html
         '''
-        if self.instance_id is not None:
-            return unicode(self.instance_id)
+        if self.resource_id is not None:
+            return unicode(self.resource_id)
         else:
             return unicode(self.name)
 

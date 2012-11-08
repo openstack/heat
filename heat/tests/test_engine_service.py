@@ -107,7 +107,7 @@ class stackCreateTest(unittest.TestCase):
         stack.create()
 
         self.assertNotEqual(stack.resources['WebServer'], None)
-        self.assertTrue(stack.resources['WebServer'].instance_id > 0)
+        self.assertTrue(stack.resources['WebServer'].resource_id > 0)
         self.assertNotEqual(stack.resources['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_delete(self):
@@ -122,7 +122,7 @@ class stackCreateTest(unittest.TestCase):
         self.assertNotEqual(db_s, None)
 
         self.assertNotEqual(stack.resources['WebServer'], None)
-        self.assertTrue(stack.resources['WebServer'].instance_id > 0)
+        self.assertTrue(stack.resources['WebServer'].resource_id > 0)
 
         stack.delete()
 

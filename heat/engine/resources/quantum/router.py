@@ -34,18 +34,18 @@ class Router(quantum.QuantumResource):
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
         router = self.quantum().create_router({'router': props})['router']
-        self.instance_id_set(router['id'])
+        self.resource_id_set(router['id'])
 
     def handle_delete(self):
         client = self.quantum()
         try:
-            client.delete_router(self.instance_id)
+            client.delete_router(self.resource_id)
         except:
             pass
 
     def FnGetAtt(self, key):
         attributes = self.quantum().show_router(
-            self.instance_id)['router']
+            self.resource_id)['router']
         return self.handle_get_attributes(self.name, key, attributes)
 
 
@@ -64,12 +64,12 @@ class RouterInterface(quantum.QuantumResource):
         subnet_id = self.properties.get('subnet_id')
         self.quantum().add_interface_router(router_id,
             {'subnet_id': subnet_id})
-        self.instance_id_set('%s:%s' % (router_id, subnet_id))
+        self.resource_id_set('%s:%s' % (router_id, subnet_id))
 
     def handle_delete(self):
         client = self.quantum()
         try:
-            (router_id, subnet_id) = self.instance_id.split(':')
+            (router_id, subnet_id) = self.resource_id.split(':')
             client.remove_interface_router(router_id,
                 {'subnet_id': subnet_id})
         except:
@@ -91,12 +91,12 @@ class RouterGateway(quantum.QuantumResource):
         network_id = self.properties.get('network_id')
         self.quantum().add_gateway_router(router_id,
             {'network_id': network_id})
-        self.instance_id_set('%s:%s' % (router_id, network_id))
+        self.resource_id_set('%s:%s' % (router_id, network_id))
 
     def handle_delete(self):
         client = self.quantum()
         try:
-            (router_id, network_id) = self.instance_id.split(':')
+            (router_id, network_id) = self.resource_id.split(':')
             client.remove_gateway_router(router_id)
         except:
             pass

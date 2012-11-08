@@ -54,16 +54,16 @@ class Subnet(quantum.QuantumResource):
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
         subnet = self.quantum().create_subnet({'subnet': props})['subnet']
-        self.instance_id_set(subnet['id'])
+        self.resource_id_set(subnet['id'])
 
     def handle_delete(self):
         client = self.quantum()
         try:
-            client.delete_subnet(self.instance_id)
+            client.delete_subnet(self.resource_id)
         except:
             pass
 
     def FnGetAtt(self, key):
         attributes = self.quantum().show_subnet(
-            self.instance_id)['subnet']
+            self.resource_id)['subnet']
         return self.handle_get_attributes(self.name, key, attributes)

@@ -36,13 +36,13 @@ class Restarter(resource.Resource):
     properties_schema = {'InstanceId': {'Type': 'String',
                                         'Required': True}}
 
-    def _find_resource(self, instance_id):
+    def _find_resource(self, resource_id):
         '''
         Return the resource with the specified instance ID, or None if it
         cannot be found.
         '''
         for resource in self.stack:
-            if resource.instance_id == instance_id:
+            if resource.resource_id == resource_id:
                 return resource
         return None
 
@@ -128,7 +128,7 @@ class Instance(resource.Resource):
         '''
         if self.ipaddress is None:
             try:
-                server = self.nova().servers.get(self.instance_id)
+                server = self.nova().servers.get(self.resource_id)
             except NotFound as ex:
                 logger.warn('Instance IP address not found (%s)' % str(ex))
             else:
@@ -250,7 +250,7 @@ class Instance(resource.Resource):
             server.get()
             eventlet.sleep(1)
         if server.status == 'ACTIVE':
-            self.instance_id_set(server.id)
+            self.resource_id_set(server.id)
             self._set_ipaddress(server.networks)
         else:
             raise exception.Error('%s instance[%s] status[%s]' %
@@ -286,10 +286,10 @@ class Instance(resource.Resource):
         '''
         Delete an instance, blocking until it is disposed by OpenStack
         '''
-        if self.instance_id is None:
+        if self.resource_id is None:
             return
         try:
-            server = self.nova().servers.get(self.instance_id)
+            server = self.nova().servers.get(self.resource_id)
         except NotFound:
             pass
         else:
@@ -300,4 +300,4 @@ class Instance(resource.Resource):
                 except NotFound:
                     break
                 eventlet.sleep(0.2)
-        self.instance_id = None
+        self.resource_id = None

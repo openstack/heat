@@ -46,16 +46,16 @@ class Port(quantum.QuantumResource):
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
         port = self.quantum().create_port({'port': props})['port']
-        self.instance_id_set(port['id'])
+        self.resource_id_set(port['id'])
 
     def handle_delete(self):
         client = self.quantum()
         try:
-            client.delete_port(self.instance_id)
+            client.delete_port(self.resource_id)
         except:
             pass
 
     def FnGetAtt(self, key):
         attributes = self.quantum().show_port(
-            self.instance_id)['port']
+            self.resource_id)['port']
         return self.handle_get_attributes(self.name, key, attributes)

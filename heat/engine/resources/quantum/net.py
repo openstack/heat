@@ -33,16 +33,16 @@ class Net(quantum.QuantumResource):
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
         net = self.quantum().create_network({'network': props})['network']
-        self.instance_id_set(net['id'])
+        self.resource_id_set(net['id'])
 
     def handle_delete(self):
         client = self.quantum()
         try:
-            client.delete_network(self.instance_id)
+            client.delete_network(self.resource_id)
         except:
             pass
 
     def FnGetAtt(self, key):
         attributes = self.quantum().show_network(
-            self.instance_id)['network']
+            self.resource_id)['network']
         return self.handle_get_attributes(self.name, key, attributes)

@@ -94,7 +94,7 @@ class S3Bucket(resource.Resource):
             headers['X-Container-Write'] = tenant_username
 
         self.swift().put_container(container, headers)
-        self.instance_id_set(container)
+        self.resource_id_set(container)
 
     def handle_update(self):
         return self.UPDATE_REPLACE
@@ -103,15 +103,15 @@ class S3Bucket(resource.Resource):
         """Perform specified delete policy"""
         if self.properties['DeletionPolicy'] == 'Retain':
             return
-        logger.debug('S3Bucket delete container %s' % self.instance_id)
-        if self.instance_id is not None:
+        logger.debug('S3Bucket delete container %s' % self.resource_id)
+        if self.resource_id is not None:
             try:
-                self.swift().delete_container(self.instance_id)
+                self.swift().delete_container(self.resource_id)
             except ClientException as ex:
                 logger.warn("Delete container failed: %s" % str(ex))
 
     def FnGetRefId(self):
-        return unicode(self.instance_id)
+        return unicode(self.resource_id)
 
     def FnGetAtt(self, key):
         url, token_id = self.swift().get_auth()
@@ -120,7 +120,7 @@ class S3Bucket(resource.Resource):
             return parsed[1].split(':')[0]
         elif key == 'WebsiteURL':
             return '%s://%s%s/%s' % (parsed[0], parsed[1], parsed[2],
-                                      self.instance_id)
+                                      self.resource_id)
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)

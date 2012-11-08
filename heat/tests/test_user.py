@@ -143,18 +143,18 @@ class UserTest(unittest.TestCase):
         stack = self.parse_stack(t)
 
         resource = self.create_user(t, stack, 'CfnUser')
-        self.assertEqual('1', resource.instance_id)
+        self.assertEqual('1', resource.resource_id)
         self.assertEqual('test_stack.CfnUser', resource.FnGetRefId())
 
         self.assertEqual('CREATE_COMPLETE', resource.state)
         self.assertEqual(user.User.UPDATE_REPLACE,
                   resource.handle_update())
 
-        resource.instance_id = None
+        resource.resource_id = None
         self.assertEqual(None, resource.delete())
         self.assertEqual('DELETE_COMPLETE', resource.state)
 
-        resource.instance_id = '1'
+        resource.resource_id = '1'
         resource.state_set('CREATE_COMPLETE')
         self.assertEqual('CREATE_COMPLETE', resource.state)
 
@@ -206,7 +206,7 @@ class UserTest(unittest.TestCase):
         self.assertEqual(user.AccessKey.UPDATE_REPLACE,
                   resource.handle_update())
         self.assertEqual('03a4967889d94a9c8f707d267c127a3d',
-                         resource.instance_id)
+                         resource.resource_id)
 
         self.assertEqual('d5fd0c08f8cc417ead0355c67c529438',
                          resource._secret)

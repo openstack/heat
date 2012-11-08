@@ -49,7 +49,7 @@ class SecurityGroup(resource.Resource):
                                           self.physical_resource_name(),
                                           self.properties['GroupDescription'])
 
-        self.instance_id_set(sec.id)
+        self.resource_id_set(sec.id)
         if self.properties['SecurityGroupIngress']:
             rules_client = self.nova().security_group_rules
             for i in self.properties['SecurityGroupIngress']:
@@ -71,9 +71,9 @@ class SecurityGroup(resource.Resource):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
-        if self.instance_id is not None:
+        if self.resource_id is not None:
             try:
-                sec = self.nova().security_groups.get(self.instance_id)
+                sec = self.nova().security_groups.get(self.resource_id)
             except NotFound:
                 pass
             else:
@@ -84,7 +84,7 @@ class SecurityGroup(resource.Resource):
                         pass
 
                 self.nova().security_groups.delete(sec)
-            self.instance_id = None
+            self.resource_id = None
 
     def FnGetRefId(self):
         return unicode(self.name)

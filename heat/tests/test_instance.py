@@ -126,14 +126,14 @@ class instancesTest(unittest.TestCase):
                 meta=None).AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
 
-        instance.instance_id = 1234
+        instance.resource_id = 1234
         instance.create()
 
         # this makes sure the auto increment worked on instance creation
         self.assertTrue(instance.id > 0)
 
         instance.delete()
-        self.assertTrue(instance.instance_id is None)
+        self.assertTrue(instance.resource_id is None)
         self.assertEqual(instance.state, instance.DELETE_COMPLETE)
 
     # allows testing of the test directly, shown below

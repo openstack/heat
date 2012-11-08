@@ -49,7 +49,7 @@ class AutoScalingGroup(resource.Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(AutoScalingGroup, self).__init__(name, json_snippet, stack)
-        # instance_id is a list of resources
+        # resource_id is a list of resources
 
     def handle_create(self):
 
@@ -65,9 +65,9 @@ class AutoScalingGroup(resource.Resource):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
-        if self.instance_id is not None:
+        if self.resource_id is not None:
             conf = self.properties['LaunchConfigurationName']
-            inst_list = self.instance_id.split(',')
+            inst_list = self.resource_id.split(',')
             logger.debug('handle_delete %s' % str(inst_list))
             for victim in inst_list:
                 logger.debug('handle_delete %s' % victim)
@@ -78,8 +78,8 @@ class AutoScalingGroup(resource.Resource):
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
         inst_list = []
-        if self.instance_id is not None:
-            inst_list = sorted(self.instance_id.split(','))
+        if self.resource_id is not None:
+            inst_list = sorted(self.resource_id.split(','))
 
         capacity = len(inst_list)
         if adjustment_type == 'ChangeInCapacity':
@@ -112,7 +112,7 @@ class AutoScalingGroup(resource.Resource):
                                          self.stack.t['Resources'][conf],
                                          self.stack)
                 inst_list.append(name)
-                self.instance_id_set(','.join(inst_list))
+                self.resource_id_set(','.join(inst_list))
                 inst.create()
         else:
             # shrink (kill largest numbered first)
@@ -123,7 +123,7 @@ class AutoScalingGroup(resource.Resource):
                                          self.stack)
                 inst.destroy()
                 inst_list.remove(victim)
-                self.instance_id_set(','.join(inst_list))
+                self.resource_id_set(','.join(inst_list))
 
         # notify the LoadBalancer to reload it's config to include
         # the changes in instances we have just made.

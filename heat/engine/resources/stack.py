@@ -46,9 +46,9 @@ class Stack(resource.Resource):
         return p
 
     def nested(self):
-        if self._nested is None and self.instance_id is not None:
+        if self._nested is None and self.resource_id is not None:
             self._nested = parser.Stack.load(self.context,
-                                             self.instance_id)
+                                             self.resource_id)
 
             if self._nested is None:
                 raise exception.NotFound('Nested stack not found in DB')
@@ -69,7 +69,7 @@ class Stack(resource.Resource):
                                     params)
 
         nested_id = self._nested.store(self.stack)
-        self.instance_id_set(nested_id)
+        self.resource_id_set(nested_id)
         self._nested.create()
         if self._nested.state != self._nested.CREATE_COMPLETE:
             raise exception.Error(self._nested.state_description)
