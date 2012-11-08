@@ -165,11 +165,8 @@ class QuantumTest(unittest.TestCase):
         except exception.InvalidTemplateAttribute:
             pass
 
-        try:
-            resource.FnGetAtt('id')
-            raise Exception('Expected InvalidTemplateAttribute')
-        except exception.InvalidTemplateAttribute:
-            pass
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            resource.FnGetAtt('id'))
 
         self.assertEqual(net.Net.UPDATE_REPLACE, resource.handle_update())
 
