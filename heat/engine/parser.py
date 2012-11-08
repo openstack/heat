@@ -54,7 +54,7 @@ class Stack(object):
 
     def __init__(self, context, stack_name, tmpl, parameters=None,
                  stack_id=None, state=None, state_description='',
-                 timeout_mins=60):
+                 timeout_mins=60, resolve_data=True):
         '''
         Initialise from a context, name, Template object and (optionally)
         Parameters object. The database ID may also be initialised, if the
@@ -73,7 +73,10 @@ class Stack(object):
             parameters = Parameters(self.name, self.t)
         self.parameters = parameters
 
-        self.outputs = self.resolve_static_data(self.t[template.OUTPUTS])
+        if resolve_data:
+            self.outputs = self.resolve_static_data(self.t[template.OUTPUTS])
+        else:
+            self.outputs = {}
 
         template_resources = self.t[template.RESOURCES]
         self.resources = dict((name,
@@ -92,7 +95,7 @@ class Stack(object):
         return deps
 
     @classmethod
-    def load(cls, context, stack_id):
+    def load(cls, context, stack_id, resolve_data=True):
         '''Retrieve a Stack from the database'''
         s = db_api.stack_get(context, stack_id)
         if s is None:
@@ -102,7 +105,8 @@ class Stack(object):
         template = Template.load(context, s.raw_template_id)
         params = Parameters(s.name, template, s.parameters)
         stack = cls(context, s.name, template, params,
-                    stack_id, s.status, s.status_reason, s.timeout)
+                    stack_id, s.status, s.status_reason, s.timeout,
+                    resolve_data)
 
         return stack
 

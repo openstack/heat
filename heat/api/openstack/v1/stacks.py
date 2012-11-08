@@ -229,9 +229,7 @@ class StackController(object):
         """
 
         try:
-            # Note show_stack returns details for all stacks when called with
-            # no stack_name, we only use a subset of the result here though
-            stack_list = self.engine_rpcapi.show_stack(req.context, None)
+            stack_list = self.engine_rpcapi.list_stacks(req.context)
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex, True)
 

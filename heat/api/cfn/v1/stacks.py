@@ -125,9 +125,7 @@ class StackController(object):
         parms = dict(req.params)
 
         try:
-            # Note show_stack returns details for all stacks when called with
-            # no stack_name, we only use a subset of the result here though
-            stack_list = self.engine_rpcapi.show_stack(con, None)
+            stack_list = self.engine_rpcapi.list_stacks(con)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 

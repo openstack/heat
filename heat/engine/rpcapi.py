@@ -70,6 +70,15 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
                                              stack_name=stack_name),
                          topic=_engine_topic(self.topic, ctxt, None))
 
+    def list_stacks(self, ctxt):
+        """
+        The list_stacks method returns the attributes of all stacks.
+
+        :param ctxt: RPC context.
+        """
+        return self.call(ctxt, self.make_msg('list_stacks'),
+                         topic=_engine_topic(self.topic, ctxt, None))
+
     def show_stack(self, ctxt, stack_identity):
         """
         The show_stack method returns the attributes of one stack.
@@ -77,7 +86,6 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack you want to see,
                            or None to see all
-        :param params: Dict of http request parameters passed in from API side.
         """
         return self.call(ctxt, self.make_msg('show_stack',
                                              stack_identity=stack_identity),
