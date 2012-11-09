@@ -22,6 +22,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import ForeignKeyConstraint
 from sqlalchemy import types as types
 from json import dumps, loads
+from heat.common import utils
 from heat.openstack.common import timeutils
 from heat.db.sqlalchemy.session import get_session
 from sqlalchemy.orm.session import Session
@@ -144,7 +145,8 @@ class Stack(BASE, HeatBase):
 
     __tablename__ = 'stack'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(String, primary_key=True,
+        default=utils.generate_uuid)
     name = Column(String)
     raw_template_id = Column(Integer, ForeignKey('raw_template.id'),
                             nullable=False)
@@ -189,7 +191,7 @@ class Event(BASE, HeatBase):
     __tablename__ = 'event'
 
     id = Column(Integer, primary_key=True)
-    stack_id = Column(Integer, ForeignKey('stack.id'),
+    stack_id = Column(String, ForeignKey('stack.id'),
                         nullable=False)
     stack = relationship(Stack,
         backref=backref('events'))
@@ -215,7 +217,7 @@ class Resource(BASE, HeatBase):
     # odd name as "metadata" is reserved
     rsrc_metadata = Column('rsrc_metadata', Json)
 
-    stack_id = Column(Integer, ForeignKey('stack.id'),
+    stack_id = Column(String, ForeignKey('stack.id'),
                                  nullable=False)
     stack = relationship(Stack, backref=backref('resources'))
 
