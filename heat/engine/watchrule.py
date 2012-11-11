@@ -233,7 +233,7 @@ class WatchRule(object):
                                   parser.Stack.UPDATE_COMPLETE):
                 user_creds = db_api.user_creds_get(s.user_creds_id)
                 ctxt = ctxtlib.RequestContext.from_dict(user_creds)
-                stack = parser.Stack.load(ctxt, s.id)
+                stack = parser.Stack.load(ctxt, stack=s)
                 for a in self.rule[self.ACTION_MAP[new_state]]:
                     greenpool.spawn_n(stack[a].alarm)
                 actioned = True

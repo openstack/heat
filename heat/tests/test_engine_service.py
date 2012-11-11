@@ -215,13 +215,14 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
     def test_stack_delete(self):
         stack_name = 'service_delete_test_stack'
         stack = get_wordpress_stack(stack_name, self.ctx)
-        stack.store()
+        sid = stack.store()
 
+        s = db_api.stack_get(self.ctx, sid)
         self.m.StubOutWithMock(parser.Stack, 'load')
         #self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
         #threadgroup.ThreadGroup(stack_name).AndReturn(DummyThreadGroup())
 
-        parser.Stack.load(self.ctx, stack.id).AndReturn(stack)
+        parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
 
         self.m.ReplayAll()
 
@@ -246,13 +247,14 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
         template = '{ "Template": "data" }'
 
         old_stack = get_wordpress_stack(stack_name, self.ctx)
-        old_stack.store()
+        sid = old_stack.store()
+        s = db_api.stack_get(self.ctx, sid)
 
         stack = get_wordpress_stack(stack_name, self.ctx)
 
         self.m.StubOutWithMock(parser, 'Stack')
         self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, old_stack.id).AndReturn(old_stack)
+        parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
 
         self.m.StubOutWithMock(parser, 'Template')
         self.m.StubOutWithMock(parser, 'Parameters')
@@ -283,12 +285,14 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
 
         old_stack = get_wordpress_stack(stack_name, self.ctx)
         old_stack.store()
+        sid = old_stack.store()
+        s = db_api.stack_get(self.ctx, sid)
 
         stack = get_wordpress_stack(stack_name, self.ctx)
 
         self.m.StubOutWithMock(parser, 'Stack')
         self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.ctx, old_stack.id).AndReturn(old_stack)
+        parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
 
         self.m.StubOutWithMock(parser, 'Template')
         self.m.StubOutWithMock(parser, 'Parameters')
@@ -426,7 +430,7 @@ class stackServiceTest(unittest.TestCase):
             self.assertTrue('event_time' in ev)
 
     def test_stack_describe_all(self):
-        sl = self.man.show_stack(self.ctx, None)
+        sl = self.man.list_stacks(self.ctx)
 
         self.assertEqual(len(sl['stacks']), 1)
         for s in sl['stacks']:
@@ -438,7 +442,7 @@ class stackServiceTest(unittest.TestCase):
         self.tenant = 'stack_describe_all_empty_tenant'
         self.setUp()
 
-        sl = self.man.show_stack(self.ctx, None)
+        sl = self.man.list_stacks(self.ctx)
 
         self.assertEqual(len(sl['stacks']), 0)
 

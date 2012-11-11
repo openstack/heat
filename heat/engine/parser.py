@@ -95,17 +95,18 @@ class Stack(object):
         return deps
 
     @classmethod
-    def load(cls, context, stack_id, resolve_data=True):
+    def load(cls, context, stack_id=None, stack=None, resolve_data=True):
         '''Retrieve a Stack from the database'''
-        s = db_api.stack_get(context, stack_id)
-        if s is None:
+        if stack is None:
+            stack = db_api.stack_get(context, stack_id)
+        if stack is None:
             message = 'No stack exists with id "%s"' % str(stack_id)
             raise exception.NotFound(message)
 
-        template = Template.load(context, s.raw_template_id)
-        params = Parameters(s.name, template, s.parameters)
-        stack = cls(context, s.name, template, params,
-                    stack_id, s.status, s.status_reason, s.timeout,
+        template = Template.load(context, stack.raw_template_id)
+        params = Parameters(stack.name, template, stack.parameters)
+        stack = cls(context, stack.name, template, params,
+                    stack.id, stack.status, stack.status_reason, stack.timeout,
                     resolve_data)
 
         return stack

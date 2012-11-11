@@ -69,7 +69,7 @@ class EngineService(service.Service):
         """
         s = db_api.stack_get_by_name(context, stack_name)
         if s:
-            stack = parser.Stack.load(context, s.id)
+            stack = parser.Stack.load(context, stack=s)
             return dict(stack.identifier())
         else:
             raise AttributeError('Unknown stack name')
@@ -102,7 +102,7 @@ class EngineService(service.Service):
         stacks = [self._get_stack(context, stack_identity)]
 
         def format_stack_detail(s):
-            stack = parser.Stack.load(context, s.id)
+            stack = parser.Stack.load(context, stack=s)
             return api.format_stack(stack)
 
         return {'stacks': [format_stack_detail(s) for s in stacks]}
@@ -115,7 +115,7 @@ class EngineService(service.Service):
         stacks = db_api.stack_get_by_tenant(context) or []
 
         def format_stack_detail(s):
-            stack = parser.Stack.load(context, s.id, resolve_data=False)
+            stack = parser.Stack.load(context, stack=s, resolve_data=False)
             return api.format_stack(stack)
 
         return {'stacks': [format_stack_detail(s) for s in stacks]}
@@ -173,7 +173,7 @@ class EngineService(service.Service):
         # Get the database representation of the existing stack
         db_stack = self._get_stack(context, stack_identity)
 
-        current_stack = parser.Stack.load(context, db_stack.id)
+        current_stack = parser.Stack.load(context, stack=db_stack)
 
         # Now parse the template and any parameters for the updated
         # stack definition.
@@ -258,7 +258,7 @@ class EngineService(service.Service):
 
         logger.info('deleting stack %s' % st.name)
 
-        stack = parser.Stack.load(context, st.id)
+        stack = parser.Stack.load(context, stack=st)
 
         # TODO Angus do we need a kill or will stop do?
         if st.id in self.stg:
@@ -314,7 +314,7 @@ class EngineService(service.Service):
     def describe_stack_resource(self, context, stack_identity, resource_name):
         s = self._get_stack(context, stack_identity)
 
-        stack = parser.Stack.load(context, s.id)
+        stack = parser.Stack.load(context, stack=s)
         if resource_name not in stack:
             raise AttributeError('Unknown resource name')
 
@@ -339,7 +339,7 @@ class EngineService(service.Service):
         if not s:
             raise AttributeError("The specified stack doesn't exist")
 
-        stack = parser.Stack.load(context, s.id)
+        stack = parser.Stack.load(context, stack=s)
 
         if logical_resource_id is not None:
             name_match = lambda r: r.name == logical_resource_id
@@ -353,7 +353,7 @@ class EngineService(service.Service):
     def list_stack_resources(self, context, stack_identity):
         s = self._get_stack(context, stack_identity)
 
-        stack = parser.Stack.load(context, s.id)
+        stack = parser.Stack.load(context, stack=s)
 
         return [api.format_stack_resource(resource)
                 for resource in stack if resource.id is not None]
@@ -385,7 +385,7 @@ class EngineService(service.Service):
             logger.warn("Stack %s not found" % stack_name)
             return ['stack', None]
 
-        stack = parser.Stack.load(None, s.id)
+        stack = parser.Stack.load(None, stack=s)
         if resource_name not in stack:
             logger.warn("Resource not found %s:%s." % (stack_name,
                                                        resource_name))
@@ -404,7 +404,7 @@ class EngineService(service.Service):
             logger.warn("Stack %s not found" % stack_id)
             return ['stack', None]
 
-        stack = parser.Stack.load(None, s.id)
+        stack = parser.Stack.load(None, stack=s)
         if resource_name not in stack:
             logger.warn("Resource not found %s:%s." % (stack_id,
                                                        resource_name))

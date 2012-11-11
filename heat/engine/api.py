@@ -164,7 +164,7 @@ EVENT_KEYS = (
 
 
 def format_event(context, event):
-    stack = parser.Stack.load(context, event.stack.id)
+    stack = parser.Stack.load(context, stack=event.stack)
     result = {
         EVENT_ID: event.id,
         EVENT_STACK_ID: dict(stack.identifier()),

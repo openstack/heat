@@ -235,8 +235,8 @@ class StackControllerTest(unittest.TestCase):
         }
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
-                 {'method': 'show_stack',
-                  'args': {'stack_identity': None},
+                 {'method': 'list_stacks',
+                  'args': {},
                            'version': self.api_version},
                  None).AndReturn(engine_resp)
         self.m.ReplayAll()
@@ -266,8 +266,8 @@ class StackControllerTest(unittest.TestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
-                 {'method': 'show_stack',
-                  'args': {'stack_identity': None},
+                 {'method': 'list_stacks',
+                  'args': {},
                            'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("AttributeError"))
         self.m.ReplayAll()
@@ -282,8 +282,8 @@ class StackControllerTest(unittest.TestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
-                 {'method': 'show_stack',
-                  'args': {'stack_identity': None},
+                 {'method': 'list_stacks',
+                  'args': {},
                            'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("Exception"))
         self.m.ReplayAll()

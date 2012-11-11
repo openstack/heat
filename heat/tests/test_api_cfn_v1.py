@@ -95,8 +95,8 @@ class StackControllerTest(unittest.TestCase):
                         u'stack_name': u'wordpress',
                         u'stack_status': u'CREATE_COMPLETE'}]}
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
-                                    'args': {'stack_identity': None},
+        rpc.call(dummy_req.context, self.topic, {'method': 'list_stacks',
+                                    'args': {},
                                     'version': self.api_version}, None
                 ).AndReturn(engine_resp)
 
@@ -121,8 +121,8 @@ class StackControllerTest(unittest.TestCase):
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
-                                    'args': {'stack_identity': None},
+        rpc.call(dummy_req.context, self.topic, {'method': 'list_stacks',
+                                    'args': {},
                                     'version': self.api_version}, None
                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
 
@@ -140,8 +140,8 @@ class StackControllerTest(unittest.TestCase):
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic, {'method': 'show_stack',
-                                    'args': {'stack_identity': None},
+        rpc.call(dummy_req.context, self.topic, {'method': 'list_stacks',
+                                    'args': {},
                                     'version': self.api_version}, None
                 ).AndRaise(rpc_common.RemoteError("Exception"))
 
