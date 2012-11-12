@@ -869,6 +869,12 @@ class StackControllerTest(unittest.TestCase):
 
         # Stub out the RPC call to the engine with a pre-canned response
         engine_resp = {u'description': u'',
+                       u'resource_identity': {
+                           u'tenant': u't',
+                           u'stack_name': u'wordpress',
+                           u'stack_id': u'6',
+                           u'path': u'resources/WikiDatabase'
+                       },
                        u'stack_name': u'wordpress',
                        u'logical_resource_id': u'WikiDatabase',
                        u'resource_status_reason': None,
@@ -928,6 +934,12 @@ class StackControllerTest(unittest.TestCase):
 
         # Stub out the RPC call to the engine with a pre-canned response
         engine_resp = [{u'description': u'',
+                        u'resource_identity': {
+                            u'tenant': u't',
+                            u'stack_name': u'wordpress',
+                            u'stack_id': u'6',
+                            u'path': u'resources/WikiDatabase'
+                        },
                         u'stack_name': u'wordpress',
                         u'logical_resource_id': u'WikiDatabase',
                         u'resource_status_reason': None,
@@ -1020,6 +1032,12 @@ class StackControllerTest(unittest.TestCase):
 
         # Stub out the RPC call to the engine with a pre-canned response
         engine_resp = [{u'description': u'',
+                        u'resource_identity': {
+                            u'tenant': u't',
+                            u'stack_name': u'wordpress',
+                            u'stack_id': u'6',
+                            u'path': u'/resources/WikiDatabase'
+                        },
                         u'stack_name': u'wordpress',
                         u'logical_resource_id': u'WikiDatabase',
                         u'resource_status_reason': None,

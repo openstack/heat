@@ -115,12 +115,12 @@ RES_KEYS = (
     RES_DESCRIPTION, RES_UPDATED_TIME,
     RES_NAME, RES_PHYSICAL_ID, RES_METADATA,
     RES_STATUS, RES_STATUS_DATA, RES_TYPE,
-    RES_STACK_ID, RES_STACK_NAME,
+    RES_ID, RES_STACK_ID, RES_STACK_NAME,
 ) = (
     'description', 'updated_time',
     'logical_resource_id', 'physical_resource_id', 'metadata',
     'resource_status', 'resource_status_reason', 'resource_type',
-    STACK_ID, STACK_NAME,
+    'resource_identity', STACK_ID, STACK_NAME,
 )
 
 
@@ -139,6 +139,7 @@ def format_stack_resource(resource):
         RES_STATUS: resource.state,
         RES_STATUS_DATA: resource.state_description,
         RES_TYPE: resource.t['Type'],
+        RES_ID: dict(resource.identifier()),
         RES_STACK_ID: dict(resource.stack.identifier()),
         RES_STACK_NAME: resource.stack.name,
     }

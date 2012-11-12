@@ -489,6 +489,7 @@ class stackServiceTest(unittest.TestCase):
         r = self.man.describe_stack_resource(self.ctx, self.stack_identity,
                                              'WebServer')
 
+        self.assertTrue('resource_identity' in r)
         self.assertTrue('description' in r)
         self.assertTrue('updated_time' in r)
         self.assertTrue('stack_identity' in r)
@@ -522,6 +523,7 @@ class stackServiceTest(unittest.TestCase):
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
+        self.assertTrue('resource_identity' in r)
         self.assertTrue('description' in r)
         self.assertTrue('updated_time' in r)
         self.assertTrue('stack_identity' in r)
@@ -568,6 +570,7 @@ class stackServiceTest(unittest.TestCase):
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
+        self.assertTrue('resource_identity' in r)
         self.assertTrue('updated_time' in r)
         self.assertTrue('physical_resource_id' in r)
         self.assertTrue('logical_resource_id' in r)
