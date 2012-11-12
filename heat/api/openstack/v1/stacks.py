@@ -20,25 +20,15 @@ Stack endpoint for Heat v1 ReST API.
 import httplib
 import itertools
 import json
-import os
 import socket
-import sys
-import re
 import urlparse
-import webob
 from webob import exc
-from functools import wraps
 
+from heat.api.openstack.v1 import util
 from heat.common import wsgi
-from heat.common import config
-from heat.common import context
-from heat.common import exception
-from heat import utils
 from heat.engine import api as engine_api
-from heat.engine import identifier
 from heat.engine import rpcapi as engine_rpcapi
 
-from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
 
@@ -140,41 +130,6 @@ class InstantiationData(object):
         return dict((k, v) for k, v in params if k not in self.PARAMS)
 
 
-def tenant_local(handler):
-    @wraps(handler)
-    def handle_stack_method(controller, req, tenant_id, **kwargs):
-        req.context.tenant_id = tenant_id
-        return handler(controller, req, **kwargs)
-
-    return handle_stack_method
-
-
-def identified_stack(handler):
-    @tenant_local
-    @wraps(handler)
-    def handle_stack_method(controller, req, stack_name, stack_id, **kwargs):
-        stack_identity = identifier.HeatIdentifier(req.context.tenant_id,
-                                                   stack_name,
-                                                   stack_id)
-        return handler(controller, req, dict(stack_identity), **kwargs)
-
-    return handle_stack_method
-
-
-def stack_url(req, identity):
-    try:
-        stack_identity = identifier.HeatIdentifier(**identity)
-    except ValueError:
-        err_reason = _("Invalid Stack address")
-        raise exc.HTTPInternalServerError(explanation=err_reason)
-
-    return req.relative_url(stack_identity.url_path(), True)
-
-
-def make_link(req, identity):
-    return {"href": stack_url(req, identity), "rel": "self"}
-
-
 def format_stack(req, stack, keys=[]):
     include_key = lambda k: k in keys if keys else True
 
@@ -184,7 +139,7 @@ def format_stack(req, stack, keys=[]):
 
         if key == engine_api.STACK_ID:
             yield ('id', value['stack_id'])
-            yield ('links', [make_link(req, value)])
+            yield ('links', [util.make_link(req, value)])
         else:
             # TODO(zaneb): ensure parameters can be formatted for XML
             #elif key == engine_api.STACK_PARAMETERS:
@@ -222,7 +177,7 @@ class StackController(object):
     def default(self, req, **args):
         raise exc.HTTPNotFound()
 
-    @tenant_local
+    @util.tenant_local
     def index(self, req):
         """
         Lists summary information for all stacks
@@ -246,7 +201,7 @@ class StackController(object):
 
         return {'stacks': [format_stack(req, s, summary_keys) for s in stacks]}
 
-    @tenant_local
+    @util.tenant_local
     def create(self, req, body):
         """
         Create a new stack
@@ -266,9 +221,9 @@ class StackController(object):
         if 'Description' in result:
             raise exc.HTTPBadRequest(explanation=result['Description'])
 
-        raise exc.HTTPCreated(location=stack_url(req, result))
+        raise exc.HTTPCreated(location=util.make_url(req, result))
 
-    @tenant_local
+    @util.tenant_local
     def lookup(self, req, stack_name, body=None):
         """
         Redirect to the canonical URL for a stack
@@ -280,9 +235,9 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return self._remote_error(ex)
 
-        raise exc.HTTPFound(location=stack_url(req, identity))
+        raise exc.HTTPFound(location=util.make_url(req, identity))
 
-    @identified_stack
+    @util.identified_stack
     def show(self, req, identity):
         """
         Gets detailed information for a stack
@@ -301,7 +256,7 @@ class StackController(object):
 
         return {'stack': format_stack(req, stack)}
 
-    @identified_stack
+    @util.identified_stack
     def template(self, req, identity):
         """
         Get the template body for an existing stack
@@ -319,7 +274,7 @@ class StackController(object):
         # TODO(zaneb): always set Content-type to application/json
         return templ
 
-    @identified_stack
+    @util.identified_stack
     def update(self, req, identity, body):
         """
         Update an existing stack with a new template and/or parameters
@@ -340,7 +295,7 @@ class StackController(object):
 
         raise exc.HTTPAccepted()
 
-    @identified_stack
+    @util.identified_stack
     def delete(self, req, identity):
         """
         Delete the specified stack
@@ -359,7 +314,7 @@ class StackController(object):
 
         raise exc.HTTPNoContent()
 
-    @tenant_local
+    @util.tenant_local
     def validate_template(self, req, body):
         """
         Implements the ValidateTemplate API action
