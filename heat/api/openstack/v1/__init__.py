@@ -46,36 +46,45 @@ class API(wsgi.Router):
 
         stacks_resource = stacks.create_resource(conf)
 
-        # Stack collection
-        mapper.connect("stack", "/{tenant_id}/stacks",
-                       controller=stacks_resource, action="index",
-                       conditions={'method': 'GET'})
-        mapper.connect("stack", "/{tenant_id}/stacks",
-                       controller=stacks_resource, action="create",
-                       conditions={'method': 'POST'})
+        with mapper.submapper(controller=stacks_resource,
+                              path_prefix="/{tenant_id}") as stack_mapper:
+            # Template handling
+            stack_mapper.connect("template_validate",
+                                 "/validate",
+                                 action="validate_template",
+                                 conditions={'method': 'POST'})
 
-        # Stack data
-        mapper.connect("stack", "/{tenant_id}/stacks/{stack_name}",
-                       controller=stacks_resource, action="lookup")
-        mapper.connect("stack", "/{tenant_id}/stacks/{stack_name}/{stack_id}",
-                       controller=stacks_resource, action="show",
-                       conditions={'method': 'GET'})
-        mapper.connect("stack",
-                       "/{tenant_id}/stacks/{stack_name}/{stack_id}/template",
-                       controller=stacks_resource, action="template",
-                       conditions={'method': 'GET'})
+            # Stack collection
+            stack_mapper.connect("stack_index",
+                                 "/stacks",
+                                 action="index",
+                                 conditions={'method': 'GET'})
+            stack_mapper.connect("stack_create",
+                                 "/stacks",
+                                 action="create",
+                                 conditions={'method': 'POST'})
 
-        # Stack update/delete
-        mapper.connect("stack", "/{tenant_id}/stacks/{stack_name}/{stack_id}",
-                       controller=stacks_resource, action="update",
-                       conditions={'method': 'PUT'})
-        mapper.connect("stack", "/{tenant_id}/stacks/{stack_name}/{stack_id}",
-                       controller=stacks_resource, action="delete",
-                       conditions={'method': 'DELETE'})
+            # Stack data
+            stack_mapper.connect("stack_lookup",
+                                 "/stacks/{stack_name}",
+                                 action="lookup")
+            stack_mapper.connect("stack_show",
+                                 "/stacks/{stack_name}/{stack_id}",
+                                 action="show",
+                                 conditions={'method': 'GET'})
+            stack_mapper.connect("stack_template",
+                                 "/stacks/{stack_name}/{stack_id}/template",
+                                 action="template",
+                                 conditions={'method': 'GET'})
 
-        # Template handling
-        mapper.connect("stack", "/{tenant_id}/validate",
-                       controller=stacks_resource, action="validate_template",
-                       conditions={'method': 'POST'})
+            # Stack update/delete
+            stack_mapper.connect("stack_update",
+                                 "/stacks/{stack_name}/{stack_id}",
+                                 action="update",
+                                 conditions={'method': 'PUT'})
+            stack_mapper.connect("stack_delete",
+                                 "/stacks/{stack_name}/{stack_id}",
+                                 action="delete",
+                                 conditions={'method': 'DELETE'})
 
         super(API, self).__init__(mapper)
