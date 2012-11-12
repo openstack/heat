@@ -194,6 +194,7 @@ The heat engine configuration file should be updated with the address of the bri
 ::
     sudo sed -i -e "/heat_metadata_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
     sudo sed -i -e "/heat_waitcondition_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
+    sudo sed -i -e "/heat_watch_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
 
 Launch the Heat services
 ------------------------

@@ -181,6 +181,9 @@ class Instance(resource.Resource):
                 attachments.append((json.dumps(self.metadata),
                                     'cfn-init-data', 'x-cfninitdata'))
 
+            attachments.append((cfg.CONF.heat_watch_server_url,
+                                'cfn-watch-server', 'x-cfninitdata'))
+
             attachments.append((cfg.CONF.heat_metadata_server_url,
                                 'cfn-metadata-server', 'x-cfninitdata'))
 
