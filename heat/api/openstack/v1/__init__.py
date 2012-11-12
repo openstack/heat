@@ -22,6 +22,7 @@ import gettext
 gettext.install('heat', unicode=1)
 
 from heat.api.openstack.v1 import stacks
+from heat.api.openstack.v1 import resources
 from heat.common import wsgi
 
 from webob import Request
@@ -86,5 +87,27 @@ class API(wsgi.Router):
                                  "/stacks/{stack_name}/{stack_id}",
                                  action="delete",
                                  conditions={'method': 'DELETE'})
+
+        # Resources
+        resources_resource = resources.create_resource(conf)
+        stack_path = "/{tenant_id}/stacks/{stack_name}/{stack_id}"
+        with mapper.submapper(controller=resources_resource,
+                              path_prefix=stack_path) as res_mapper:
+
+            # Resource collection
+            res_mapper.connect("resource_index",
+                               "/resources",
+                               action="index",
+                               conditions={'method': 'GET'})
+
+            # Resource data
+            res_mapper.connect("resource_show",
+                               "/resources/{resource_name}",
+                               action="show",
+                               conditions={'method': 'GET'})
+            res_mapper.connect("resource_metadata_show",
+                               "/resources/{resource_name}/metadata",
+                               action="metadata",
+                               conditions={'method': 'GET'})
 
         super(API, self).__init__(mapper)

@@ -86,6 +86,7 @@ GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/template
 
 Parameters:
 
+* `tenant_id` The unique identifier of the tenant or account
 * `stack_name` The name of the stack to look up
 * `stack_id` The unique identifier of the stack to look up
 
@@ -161,3 +162,44 @@ Parameters:
 * `template_url` The URL of the template to validate
 * `template` A JSON template to validate - this takes precendence over the `template_url` if both are supplied.
 * `keyn`, `valuen` User-defined parameters to pass to the Template
+
+List Stack Resources
+--------------------
+
+```
+GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/resources
+```
+
+Parameters:
+
+* `tenant_id` The unique identifier of the tenant or account
+* `stack_name` The name of the stack to look up
+* `stack_id` The unique identifier of the stack to look up
+
+Get Resource
+------------
+
+```
+GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/resources/{resource_name}
+```
+
+Parameters:
+
+* `tenant_id` The unique identifier of the tenant or account
+* `stack_name` The name of the stack to look up
+* `stack_id` The unique identifier of the stack to look up
+* `resource_name` The name of the resource in the template
+
+Get Resource Metadata
+---------------------
+
+```
+GET /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/resources/{resource_name}/metadata
+```
+
+Parameters:
+
+* `tenant_id` The unique identifier of the tenant or account
+* `stack_name` The name of the stack to look up
+* `stack_id` The unique identifier of the stack to look up
+* `resource_name` The name of the resource in the template

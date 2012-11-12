@@ -34,6 +34,7 @@ import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
 
 import heat.api.openstack.v1.stacks as stacks
+import heat.api.openstack.v1.resources as resources
 
 
 @attr(tag=['unit', 'api-openstack-v1'])
@@ -730,6 +731,250 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
         self.assertRaises(webob.exc.HTTPBadRequest,
                           self.controller.validate_template,
                           req, tenant_id=self.tenant, body=body)
+        self.m.VerifyAll()
+
+
+@attr(tag=['unit', 'api-openstack-v1', 'ResourceController'])
+@attr(speed='fast')
+class ResourceControllerTest(ControllerTest, unittest.TestCase):
+    '''
+    Tests the API class which acts as the WSGI controller,
+    the endpoint processing API requests after they are routed
+    '''
+
+    def setUp(self):
+        # Create WSGI controller instance
+        class DummyConfig():
+            bind_port = 8004
+        cfgopts = DummyConfig()
+        self.controller = resources.ResourceController(options=cfgopts)
+
+    def test_index(self):
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '1')
+        res_identity = identifier.ResourceIdentifier(stack_identity,
+                                                     res_name)
+
+        req = self._get(stack_identity._tenant_path() + '/resources')
+
+        engine_resp = [
+            {
+                u'resource_identity': dict(res_identity),
+                u'stack_name': stack_identity.stack_name,
+                u'logical_resource_id': res_name,
+                u'resource_status_reason': None,
+                u'updated_time': u'2012-07-23T13:06:00Z',
+                u'stack_identity': stack_identity,
+                u'resource_status': u'CREATE_COMPLETE',
+                u'physical_resource_id':
+                    u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_stack_resources',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        result = self.controller.index(req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id)
+
+        expected = {
+            'resources': [
+                {
+                    'links': [
+                        {'href': self._url(res_identity), 'rel': 'self'},
+                        {'href': self._url(stack_identity), 'rel': 'stack'},
+                    ],
+                    u'logical_resource_id': res_name,
+                    u'resource_status_reason': None,
+                    u'updated_time': u'2012-07-23T13:06:00Z',
+                    u'resource_status': u'CREATE_COMPLETE',
+                    u'physical_resource_id':
+                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                    u'resource_type': u'AWS::EC2::Instance',
+                }
+            ]
+        }
+
+        self.assertEqual(result, expected)
+        self.m.VerifyAll()
+
+    def test_index_nonexist(self):
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'rubbish', '1')
+
+        req = self._get(stack_identity._tenant_path() + '/resources')
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_stack_resources',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.index,
+                          req, tenant_id=self.tenant,
+                          stack_name=stack_identity.stack_name,
+                          stack_id=stack_identity.stack_id)
+        self.m.VerifyAll()
+
+    def test_show(self):
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+        res_identity = identifier.ResourceIdentifier(stack_identity,
+                                                     res_name)
+
+        req = self._get(stack_identity._tenant_path())
+
+        engine_resp = {
+            u'description': u'',
+            u'resource_identity': dict(res_identity),
+            u'stack_name': stack_identity.stack_name,
+            u'logical_resource_id': res_name,
+            u'resource_status_reason': None,
+            u'updated_time': u'2012-07-23T13:06:00Z',
+            u'stack_identity': dict(stack_identity),
+            u'resource_status': u'CREATE_COMPLETE',
+            u'physical_resource_id':
+                u'a3455d8c-9f88-404d-a85b-5315293e67de',
+            u'resource_type': u'AWS::EC2::Instance',
+            u'metadata': {u'ensureRunning': u'true'}
+        }
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'describe_stack_resource',
+                  'args': {'stack_identity': stack_identity,
+                           'resource_name': res_name},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        result = self.controller.show(req, tenant_id=self.tenant,
+                                      stack_name=stack_identity.stack_name,
+                                      stack_id=stack_identity.stack_id,
+                                      resource_name=res_name)
+
+        expected = {
+            'resource': {
+                'links': [
+                    {'href': self._url(res_identity), 'rel': 'self'},
+                    {'href': self._url(stack_identity), 'rel': 'stack'},
+                ],
+                u'description': u'',
+                u'logical_resource_id': res_name,
+                u'resource_status_reason': None,
+                u'updated_time': u'2012-07-23T13:06:00Z',
+                u'resource_status': u'CREATE_COMPLETE',
+                u'physical_resource_id':
+                    u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        }
+
+        self.assertEqual(result, expected)
+        self.m.VerifyAll()
+
+    def test_show_nonexist(self):
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'rubbish', '1')
+        res_identity = identifier.ResourceIdentifier(stack_identity,
+                                                     res_name)
+
+        req = self._get(res_identity._tenant_path())
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'describe_stack_resource',
+                  'args': {'stack_identity': stack_identity,
+                           'resource_name': res_name},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.show,
+                          req, tenant_id=self.tenant,
+                          stack_name=stack_identity.stack_name,
+                          stack_id=stack_identity.stack_id,
+                          resource_name=res_name)
+        self.m.VerifyAll()
+
+    def test_show(self):
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+        res_identity = identifier.ResourceIdentifier(stack_identity,
+                                                     res_name)
+
+        req = self._get(stack_identity._tenant_path())
+
+        engine_resp = {
+            u'description': u'',
+            u'resource_identity': dict(res_identity),
+            u'stack_name': stack_identity.stack_name,
+            u'logical_resource_id': res_name,
+            u'resource_status_reason': None,
+            u'updated_time': u'2012-07-23T13:06:00Z',
+            u'stack_identity': dict(stack_identity),
+            u'resource_status': u'CREATE_COMPLETE',
+            u'physical_resource_id':
+                u'a3455d8c-9f88-404d-a85b-5315293e67de',
+            u'resource_type': u'AWS::EC2::Instance',
+            u'metadata': {u'ensureRunning': u'true'}
+        }
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'describe_stack_resource',
+                  'args': {'stack_identity': stack_identity,
+                           'resource_name': res_name},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        result = self.controller.metadata(req, tenant_id=self.tenant,
+                                          stack_name=stack_identity.stack_name,
+                                          stack_id=stack_identity.stack_id,
+                                          resource_name=res_name)
+
+        expected = {'metadata': {u'ensureRunning': u'true'}}
+
+        self.assertEqual(result, expected)
+        self.m.VerifyAll()
+
+    def test_metadata_show_nonexist(self):
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'rubbish', '1')
+        res_identity = identifier.ResourceIdentifier(stack_identity,
+                                                     res_name)
+
+        req = self._get(res_identity._tenant_path() + '/metadata')
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'describe_stack_resource',
+                  'args': {'stack_identity': stack_identity,
+                           'resource_name': res_name},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.metadata,
+                          req, tenant_id=self.tenant,
+                          stack_name=stack_identity.stack_name,
+                          stack_id=stack_identity.stack_id,
+                          resource_name=res_name)
         self.m.VerifyAll()
 
 
