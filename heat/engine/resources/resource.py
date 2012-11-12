@@ -188,7 +188,9 @@ class Resource(object):
         logger.info('creating %s' % str(self))
 
         try:
-            self.properties.validate()
+            err = self.properties.validate()
+            if err:
+                return err
             self.state_set(self.CREATE_IN_PROGRESS)
             if callable(getattr(self, 'handle_create', None)):
                 self.handle_create()
@@ -216,7 +218,9 @@ class Resource(object):
         try:
             self.state_set(self.UPDATE_IN_PROGRESS)
             self.t = self.stack.resolve_static_data(json_snippet)
-            self.properties.validate()
+            err = self.properties.validate()
+            if err:
+                return err
             if callable(getattr(self, 'handle_update', None)):
                 result = self.handle_update()
         except Exception as ex:
