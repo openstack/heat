@@ -260,10 +260,9 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(context, stack=st)
 
-        # TODO Angus do we need a kill or will stop do?
+        # Kill any pending threads by calling ThreadGroup.stop()
         if st.id in self.stg:
             self.stg[st.id].stop()
-            self.stg[st.id].wait()
             del self.stg[st.id]
         # use the service ThreadGroup for deletes
         self.tg.add_thread(stack.delete)
