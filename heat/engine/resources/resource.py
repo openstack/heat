@@ -19,6 +19,7 @@ from datetime import datetime
 from heat.common import exception
 from heat.common import config
 from heat.db import api as db_api
+from heat.engine import identifier
 from heat.engine import timestamp
 from heat.engine.resources.properties import Properties
 
@@ -132,6 +133,11 @@ class Resource(object):
         if result is NotImplemented:
             return result
         return not result
+
+    def identifier(self):
+        '''Return an identifier for this resource'''
+        return identifier.ResourceIdentifier(self.stack.identifier(),
+                                             self.name)
 
     def parsed_template(self, section=None, default={}):
         '''

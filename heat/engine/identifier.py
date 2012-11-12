@@ -72,6 +72,12 @@ class HeatIdentifier(collections.Mapping):
                    urllib.unquote(path.group(2)),
                    urllib.unquote(path.group(3)))
 
+    def stack(self):
+        '''
+        Return a HeatIdentifier for the top-level stack
+        '''
+        return HeatIdentifier(self.tenant, self.stack_name, self.stack_id)
+
     def arn(self):
         '''
         Return an ARN of the form:
@@ -126,3 +132,13 @@ class HeatIdentifier(collections.Mapping):
 
     def __repr__(self):
         return repr(dict(self))
+
+
+class ResourceIdentifier(HeatIdentifier):
+    def __init__(self, stack_identifier, resource_id):
+        path = (stack_identifier.path.rstrip('/') +
+                '/resources/%s' % resource_id)
+        super(ResourceIdentifier, self).__init__(stack_identifier.tenant,
+                                                 stack_identifier.stack_name,
+                                                 stack_identifier.stack_id,
+                                                 path)

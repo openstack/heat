@@ -234,6 +234,21 @@ class IdentifierTest(unittest.TestCase):
                 utils.generate_uuid()))
 
 
+@attr(tag=['unit', 'identifier'])
+@attr(speed='fast')
+class ResourceIdentifierTest(unittest.TestCase):
+    def test_resource_init_no_path(self):
+        si = identifier.HeatIdentifier('t', 's', 'i')
+        ri = identifier.ResourceIdentifier(si, 'r')
+        self.assertEqual(ri.path, '/resources/r')
+
+    def test_resource_init_path(self):
+        si = identifier.HeatIdentifier('t', 's', 'i')
+        pi = identifier.ResourceIdentifier(si, 'p')
+        ri = identifier.ResourceIdentifier(pi, 'r')
+        self.assertEqual(ri.path, '/resources/p/resources/r')
+
+
 # allows testing of the test directly, shown below
 if __name__ == '__main__':
     sys.argv.append(__file__)
