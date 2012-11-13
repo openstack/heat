@@ -20,6 +20,7 @@ import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from novaclient.exceptions import NotFound
+from urlparse import urlparse
 
 import heat
 from heat.engine.resources import resource
@@ -186,6 +187,21 @@ class Instance(resource.Resource):
 
             attachments.append((cfg.CONF.heat_metadata_server_url,
                                 'cfn-metadata-server', 'x-cfninitdata'))
+
+            # Create a boto config which the cfntools on the host use to know
+            # where the cfn and cw API's are to be accessed
+            cfn_url = urlparse(cfg.CONF.heat_metadata_server_url)
+            cw_url = urlparse(cfg.CONF.heat_watch_server_url)
+            boto_cfg = "\n".join(["[Boto]",
+                                  "debug = 0",
+                                  "cfn_region_name = heat",
+                                  "cfn_region_endpoint = %s" %
+                                  cfn_url.hostname,
+                                  "cloudwatch_region_name = heat",
+                                  "cloudwatch_region_endpoint = %s" %
+                                  cw_url.hostname])
+            attachments.append((boto_cfg,
+                                'cfn-boto-cfg', 'x-cfninitdata'))
 
             subparts = [make_subpart(*args) for args in attachments]
             mime_blob = MIMEMultipart(_subparts=subparts)

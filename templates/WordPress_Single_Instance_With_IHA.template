@@ -187,11 +187,6 @@
           " --region ", { "Ref" : "AWS::Region" },
           " || error_exit 'Failed to run cfn-init'\n",
 
-          "# Update boto config (template created by heat-jeos tdl)\n",
-          "sed -i \"s/__GATEWAY_IP__/",
-          "$(/sbin/ip route | grep \"^default\" | awk '{print $3}')/\"",
-          " /etc/boto.cfg \n",
-
           "# Setup MySQL root password and create a user\n",
           "mysqladmin -u root password '", { "Ref" : "DBRootPassword" },
           "' || error_exit 'Failed to initialize root password'\n",
