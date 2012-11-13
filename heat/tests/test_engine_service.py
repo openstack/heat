@@ -22,6 +22,7 @@ import mox
 import json
 from nose.plugins.attrib import attr
 
+from heat.common import config
 from heat.common import context
 from heat.tests.v1_1 import fakes
 import heat.engine.api as engine_api
@@ -94,6 +95,7 @@ class DummyThreadGroup(object):
 class stackCreateTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
+        config.register_engine_opts()
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -341,6 +343,7 @@ class stackServiceTest(unittest.TestCase):
         cls.stack_name = 'service_test_stack'
 
         stack = get_wordpress_stack(cls.stack_name, ctx)
+
         setup_mocks(m, stack)
         m.ReplayAll()
 
@@ -376,6 +379,10 @@ class stackServiceTest(unittest.TestCase):
 
     def test_stack_identify(self):
         identity = self.man.identify_stack(self.ctx, self.stack_name)
+        self.assertEqual(identity, self.stack_identity)
+
+    def test_stack_identify_uuid(self):
+        identity = self.man.identify_stack(self.ctx, self.stack.id)
         self.assertEqual(identity, self.stack_identity)
 
     def test_stack_identify_nonexist(self):

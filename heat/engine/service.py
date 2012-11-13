@@ -65,9 +65,12 @@ class EngineService(service.Service):
         The identify_stack method returns the full stack identifier for a
         single, live stack given the stack name.
         arg1 -> RPC context.
-        arg2 -> Name of the stack to look up.
+        arg2 -> Name or UUID of the stack to look up.
         """
-        s = db_api.stack_get_by_name(context, stack_name)
+        if identifier.HeatIdentifier.is_uuid(stack_name):
+            s = db_api.stack_get(context, stack_name)
+        else:
+            s = db_api.stack_get_by_name(context, stack_name)
         if s:
             stack = parser.Stack.load(context, stack=s)
             return dict(stack.identifier())

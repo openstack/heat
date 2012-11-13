@@ -20,6 +20,7 @@ import mox
 import json
 
 from heat.engine import identifier
+from heat.common import utils
 
 
 @attr(tag=['unit', 'identifier'])
@@ -220,6 +221,17 @@ class IdentifierTest(unittest.TestCase):
         self.assertFalse({'tenant': 't',
                           'stack_name': 's',
                           'stack_id': 'i'} == hi1)
+
+    def test_uuid_match(self):
+        uuid = utils.generate_uuid()
+        self.assertTrue(identifier.HeatIdentifier.is_uuid(uuid))
+        self.assertFalse(identifier.HeatIdentifier.is_uuid('a' + uuid))
+        self.assertFalse(identifier.HeatIdentifier.is_uuid(
+            'zzzzzzzz-zzzz-zzzz-zzzzzzzzzzzz'))
+        self.assertFalse(identifier.HeatIdentifier.is_uuid(uuid + 'a'))
+        for i in xrange(100):
+            self.assertTrue(identifier.HeatIdentifier.is_uuid(
+                utils.generate_uuid()))
 
 
 # allows testing of the test directly, shown below
