@@ -136,7 +136,7 @@
     "MEMAlarmHigh": {
      "Type": "AWS::CloudWatch::Alarm",
      "Properties": {
-        "AlarmDescription": "Scale-up if MEM > 90% for 10 minutes",
+        "AlarmDescription": "Scale-up if MEM > 50% for 1 minute",
         "MetricName": "MemoryUtilization",
         "Namespace": "system/linux",
         "Statistic": "Average",
@@ -156,7 +156,7 @@
     "MEMAlarmLow": {
      "Type": "AWS::CloudWatch::Alarm",
      "Properties": {
-        "AlarmDescription": "Scale-down if MEM < 70% for 10 minutes",
+        "AlarmDescription": "Scale-down if MEM < 15% for 1 minute",
         "MetricName": "MemoryUtilization",
         "Namespace": "system/linux",
         "Statistic": "Average",
