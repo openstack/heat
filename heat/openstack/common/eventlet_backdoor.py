@@ -73,6 +73,6 @@ def initialize_if_enabled():
             pprint.pprint(val)
     sys.displayhook = displayhook
 
-    eventlet.spawn(eventlet.backdoor.backdoor_server,
-                   eventlet.listen(('localhost', CONF.backdoor_port)),
-                   locals=backdoor_locals)
+    eventlet.spawn_n(eventlet.backdoor.backdoor_server,
+                     eventlet.listen(('localhost', CONF.backdoor_port)),
+                     locals=backdoor_locals)

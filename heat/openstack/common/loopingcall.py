@@ -78,7 +78,7 @@ class LoopingCall(object):
 
         self.done = done
 
-        greenthread.spawn(_inner)
+        greenthread.spawn_n(_inner)
         return self.done
 
     def stop(self):

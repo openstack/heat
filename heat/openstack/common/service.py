@@ -191,7 +191,7 @@ class ProcessLauncher(object):
         # Close write to ensure only parent has it open
         os.close(self.writepipe)
         # Create greenthread to watch for parent to close pipe
-        eventlet.spawn(self._pipe_watcher)
+        eventlet.spawn_n(self._pipe_watcher)
 
         # Reseed random number generator
         random.seed()
@@ -275,6 +275,10 @@ class ProcessLauncher(object):
 
     def wait(self):
         """Loop waiting on children to die and respawning as necessary"""
+
+        LOG.debug(_('Full set of CONF:'))
+        CONF.log_opt_values(LOG, std_logging.DEBUG)
+
         while self.running:
             wrap = self._wait_child()
             if not wrap:
