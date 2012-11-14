@@ -192,6 +192,7 @@ The heat engine configuration file should be updated with the address of the bri
     BRIDGE_IP=`echo $SUBNET | awk -F'[./]' '{printf "%d.%d.%d.%d", $1, $2, $3, or($4, 1)}'`
 
 ::
+
     sudo sed -i -e "/heat_metadata_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
     sudo sed -i -e "/heat_waitcondition_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
     sudo sed -i -e "/heat_watch_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
@@ -323,14 +324,12 @@ Some templates require the ``heat-metadata`` server also. The metadata server mu
     
     sudo -E bash -c 'heat-metadata &'
 
-Open up port 8002 so that the guests can communicate with the heat-metadata server:
+Open up port 8002 so that the guests can communicate with the heat-metadata server::
 
-::
     sudo iptables -I INPUT -p tcp --dport 8002 -j ACCEPT -i demonetbr0
 
-Note Instance/resource metadata is actually now served via the cloudformation API, so it is necessary to also open up port 8000 so that the guests can communicate with the heat-api-cfn server:
+Note Instance/resource metadata is actually now served via the cloudformation API, so it is necessary to also open up port 8000 so that the guests can communicate with the heat-api-cfn server::
 
-::
     sudo iptables -I INPUT -p tcp --dport 8000 -j ACCEPT -i demonetbr0
 
 Note the above rules will not persist across reboot, so you may wish to add them to /etc/sysconfig/iptables
@@ -342,9 +341,8 @@ If you wish to try any of the HA or autoscaling templates (which collect stats f
 
     sudo -E bash -c 'heat-api-cloudwatch &'
 
-Open up port 8003 so that the guests can communicate with the heat-api-cloudwatch server:
+Open up port 8003 so that the guests can communicate with the heat-api-cloudwatch server::
 
-::
     sudo iptables -I INPUT -p tcp --dport 8003 -j ACCEPT -i demonetbr0
 
 Note the above rule will not persist across reboot, so you may wish to add it to /etc/sysconfig/iptables
