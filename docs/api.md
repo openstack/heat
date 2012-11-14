@@ -176,6 +176,26 @@ Parameters:
 * `stack_name` The name of the stack to look up
 * `stack_id` The unique identifier of the stack to look up
 
+Find Stack Resources by Name
+----------------------------
+
+```
+GET /v1/{tenant_id}/stacks/{stack_name}/resources
+```
+
+Parameters:
+
+* `stack_name` The name of the stack to look up
+
+Result:
+
+```
+HTTP/1.1 302 Found
+Location: http://heat.example.com:8004/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/resources
+```
+
+This is a shortcut to go directly to the list of stack resources when only the stack name is known.
+
 Get Resource
 ------------
 

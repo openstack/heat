@@ -433,6 +433,49 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
                           req, tenant_id=self.tenant, stack_name=stack_name)
         self.m.VerifyAll()
 
+    def test_lookup_resource(self):
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
+
+        req = self._get('/stacks/%(stack_name)s/resources' % identity)
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'identify_stack',
+                  'args': {'stack_name': identity.stack_name},
+                  'version': self.api_version},
+                 None).AndReturn(identity)
+
+        self.m.ReplayAll()
+
+        try:
+            result = self.controller.lookup(req, tenant_id=identity.tenant,
+                                            stack_name=identity.stack_name,
+                                            path='resources')
+        except webob.exc.HTTPFound as found:
+            self.assertEqual(found.location, self._url(identity) +
+                                             '/resources')
+        else:
+            self.fail('No redirect generated')
+        self.m.VerifyAll()
+
+    def test_lookup_resource_nonexistant(self):
+        stack_name = 'wibble'
+
+        req = self._get('/stacks/%(stack_name)s/resources' % locals())
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'identify_stack',
+                  'args': {'stack_name': stack_name},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound, self.controller.lookup,
+                          req, tenant_id=self.tenant, stack_name=stack_name,
+                          path='resources')
+        self.m.VerifyAll()
+
     def test_show(self):
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
 

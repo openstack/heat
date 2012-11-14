@@ -210,7 +210,7 @@ class StackController(object):
         raise exc.HTTPCreated(location=util.make_url(req, result))
 
     @util.tenant_local
-    def lookup(self, req, stack_name, body=None):
+    def lookup(self, req, stack_name, path='', body=None):
         """
         Redirect to the canonical URL for a stack
         """
@@ -221,7 +221,11 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
 
-        raise exc.HTTPFound(location=util.make_url(req, identity))
+        location = util.make_url(req, identity)
+        if path:
+            location = '/'.join([location, path])
+
+        raise exc.HTTPFound(location=location)
 
     @util.identified_stack
     def show(self, req, identity):

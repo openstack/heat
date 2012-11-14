@@ -69,6 +69,10 @@ class API(wsgi.Router):
             stack_mapper.connect("stack_lookup",
                                  "/stacks/{stack_name}",
                                  action="lookup")
+            stack_mapper.connect("stack_lookup_subpath",
+                                 "/stacks/{stack_name}/{path:resources}",
+                                 action="lookup",
+                                 conditions={'method': 'GET'})
             stack_mapper.connect("stack_show",
                                  "/stacks/{stack_name}/{stack_id}",
                                  action="show",
