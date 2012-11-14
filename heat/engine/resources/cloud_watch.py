@@ -56,7 +56,7 @@ class CloudWatchAlarm(resource.Resource):
     def handle_create(self):
         wr = watchrule.WatchRule(context=self.context, watch_name=self.name,
                                  rule=self.parsed_template('Properties'),
-                                 stack_name=self.stack.name)
+                                 stack_id=self.stack.id)
         wr.store()
 
     def handle_update(self):

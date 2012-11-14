@@ -230,8 +230,11 @@ class WatchRule(BASE, HeatBase):
     name = Column('name', String, nullable=False)
     rule = Column('rule', Json)
     state = Column('state', String)
-    stack_name = Column('stack_name', String)
     last_evaluated = Column(DateTime, default=timeutils.utcnow)
+
+    stack_id = Column(String, ForeignKey('stack.id'),
+                                 nullable=False)
+    stack = relationship(Stack, backref=backref('watch_rule'))
 
 
 class WatchData(BASE, HeatBase):

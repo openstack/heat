@@ -192,7 +192,7 @@ WATCH_KEYS = (
     WATCH_INSUFFICIENT_ACTIONS, WATCH_METRIC_NAME, WATCH_NAMESPACE,
     WATCH_OK_ACTIONS, WATCH_PERIOD, WATCH_STATE_REASON,
     WATCH_STATE_REASON_DATA, WATCH_STATE_UPDATED_TIME, WATCH_STATE_VALUE,
-    WATCH_STATISTIC, WATCH_THRESHOLD, WATCH_UNIT, WATCH_STACK_NAME
+    WATCH_STATISTIC, WATCH_THRESHOLD, WATCH_UNIT, WATCH_STACK_ID
     ) = (
     'actions_enabled', 'actions', 'topic',
     'updated_time', 'description', 'name',
@@ -200,7 +200,7 @@ WATCH_KEYS = (
     'insufficient_actions', 'metric_name', 'namespace',
     'ok_actions', 'period', 'state_reason',
     'state_reason_data', 'state_updated_time', 'state_value',
-    'statistic', 'threshold', 'unit', 'stack_name')
+    'statistic', 'threshold', 'unit', 'stack_id')
 
 
 # Alternate representation of a watch rule to align with DB format
@@ -259,7 +259,7 @@ def format_watch(watch):
         WATCH_STATISTIC: watch.rule.get(RULE_STATISTIC),
         WATCH_THRESHOLD: watch.rule.get(RULE_THRESHOLD),
         WATCH_UNIT: watch.rule.get(RULE_UNIT),
-        WATCH_STACK_NAME: watch.stack_name
+        WATCH_STACK_ID: watch.stack_id
     }
 
     return result

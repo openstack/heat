@@ -596,7 +596,8 @@ class stackServiceTest(unittest.TestCase):
 
     def test_show_watch(self):
         # Insert two dummy watch rules into the DB
-        values = {'stack_name': u'wordpress_ha', 'state': 'NORMAL',
+        values = {'stack_id': self.stack.id,
+                  'state': 'NORMAL',
                   'name': u'HttpFailureAlarm',
                    'rule': {
                         u'EvaluationPeriods': u'1',
@@ -631,8 +632,28 @@ class stackServiceTest(unittest.TestCase):
         for key in engine_api.WATCH_KEYS:
             self.assertTrue(key in result[0])
 
+        # Cleanup, delete the dummy rules
+        db_api.watch_rule_delete(self.ctx, "HttpFailureAlarm")
+        db_api.watch_rule_delete(self.ctx, "AnotherWatch")
+
     def test_show_watch_metric(self):
-        # Get one of the  watch rules created in test_show_watch
+        # Insert dummy watch rule into the DB
+        values = {'stack_id': self.stack.id,
+                  'state': 'NORMAL',
+                  'name': u'HttpFailureAlarm',
+                   'rule': {
+                        u'EvaluationPeriods': u'1',
+                        u'AlarmActions': [u'WebServerRestartPolicy'],
+                        u'AlarmDescription': u'Restart the WikiDatabase',
+                        u'Namespace': u'system/linux',
+                        u'Period': u'300',
+                        u'ComparisonOperator': u'GreaterThanThreshold',
+                        u'Statistic': u'SampleCount',
+                        u'Threshold': u'2',
+                        u'MetricName': u'ServiceFailure'}}
+        db_ret = db_api.watch_rule_create(self.ctx, values)
+        self.assertNotEqual(db_ret, None)
+
         # And add a metric datapoint
         watch = db_api.watch_rule_get_by_name(self.ctx, "HttpFailureAlarm")
         self.assertNotEqual(watch, None)
@@ -654,13 +675,17 @@ class stackServiceTest(unittest.TestCase):
                                             metric_name=None)
         self.assertEqual(2, len(result))
 
+        # Cleanup, delete the dummy rule
+        db_api.watch_rule_delete(self.ctx, "HttpFailureAlarm")
+
         # Check the response has all keys defined in the engine API
         for key in engine_api.WATCH_DATA_KEYS:
             self.assertTrue(key in result[0])
 
     def test_set_watch_state(self):
         # Insert dummy watch rule into the DB
-        values = {'stack_name': u'wordpress_ha', 'state': 'NORMAL',
+        values = {'stack_id': self.stack.id,
+                  'state': 'NORMAL',
                   'name': u'OverrideAlarm',
                    'rule': {
                         u'EvaluationPeriods': u'1',
@@ -675,7 +700,19 @@ class stackServiceTest(unittest.TestCase):
         db_ret = db_api.watch_rule_create(self.ctx, values)
         self.assertNotEqual(db_ret, None)
 
+        class DummyAction:
+            alarm = "dummyfoo"
+
+        self.m.StubOutWithMock(parser.Stack, '__getitem__')
+        parser.Stack.__getitem__(
+            'WebServerRestartPolicy').AndReturn(DummyAction())
+
+        self.m.StubOutWithMock(watchrule.greenpool, 'spawn_n')
+        watchrule.greenpool.spawn_n("dummyfoo").AndReturn(None)
+        self.m.ReplayAll()
+
         for state in watchrule.WatchRule.WATCH_STATES:
+
             result = self.man.set_watch_state(self.ctx,
                                               watch_name="OverrideAlarm",
                                               state=state)
@@ -687,7 +724,8 @@ class stackServiceTest(unittest.TestCase):
 
     def test_set_watch_state_badstate(self):
         # Insert dummy watch rule into the DB
-        values = {'stack_name': u'wordpress_ha', 'state': 'NORMAL',
+        values = {'stack_id': self.stack.id,
+                  'state': 'NORMAL',
                   'name': u'OverrideAlarm2',
                    'rule': {
                         u'EvaluationPeriods': u'1',
