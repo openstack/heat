@@ -228,7 +228,7 @@ class WatchRule(object):
                         new_state)
             actioned = True
         else:
-            s = db_api.stack_get_by_name(None, self.stack_name)
+            s = db_api.stack_get_by_name(self.context, self.stack_name)
             if s and s.status in (parser.Stack.CREATE_COMPLETE,
                                   parser.Stack.UPDATE_COMPLETE):
                 user_creds = db_api.user_creds_get(s.user_creds_id)

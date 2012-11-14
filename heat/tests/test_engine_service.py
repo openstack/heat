@@ -393,6 +393,13 @@ class stackServiceTest(unittest.TestCase):
         self.assertRaises(AttributeError, self.man.create_stack,
                           self.ctx, self.stack_name, self.stack.t, {}, {})
 
+    def test_stack_by_name_tenants(self):
+        self.assertEqual(self.stack.id,
+            db_api.stack_get_by_name(self.ctx, self.stack_name).id)
+        ctx2 = create_context(self.m, self.username,
+            'stack_service_test_tenant2')
+        self.assertEqual(None, db_api.stack_get_by_name(ctx2, self.stack_name))
+
     def test_stack_event_list(self):
         el = self.man.list_events(self.ctx, self.stack_identity)
 
@@ -577,7 +584,7 @@ class stackServiceTest(unittest.TestCase):
                           self.ctx, nonexist)
 
     def test_metadata(self):
-        err, metadata = self.man.metadata_get_resource(None,
+        err, metadata = self.man.metadata_get_resource(self.ctx,
                                                        self.stack_name,
                                                        'WebServer')
         self.assertEqual(err, None)
@@ -590,7 +597,7 @@ class stackServiceTest(unittest.TestCase):
         self.assertEqual(err, None)
         self.assertEqual(result, test_metadata)
 
-        err, metadata = self.man.metadata_get_resource(None,
+        err, metadata = self.man.metadata_get_resource(self.ctx,
                                                        self.stack_name,
                                                        'WebServer')
         self.assertEqual(err, None)

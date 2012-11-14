@@ -137,7 +137,7 @@ class EngineService(service.Service):
         """
         logger.info('template is %s' % template)
 
-        if db_api.stack_get_by_name(None, stack_name):
+        if db_api.stack_get_by_name(context, stack_name):
             raise AttributeError('Stack already exists with that name')
 
         tmpl = parser.Template(template)
@@ -371,7 +371,7 @@ class EngineService(service.Service):
         """
         Return the resource IDs of the given stack.
         """
-        stack = db_api.stack_get_by_name(None, stack_name)
+        stack = db_api.stack_get_by_name(context, stack_name)
         if stack:
             return [res.name for res in stack.resources]
         else:
@@ -382,7 +382,7 @@ class EngineService(service.Service):
         Get the metadata for the given resource.
         """
 
-        s = db_api.stack_get_by_name(None, stack_name)
+        s = db_api.stack_get_by_name(context, stack_name)
         if not s:
             logger.warn("Stack %s not found" % stack_name)
             return ['stack', None]
