@@ -99,8 +99,8 @@ def stack_get_all(context):
     return IMPL.stack_get_all(context)
 
 
-def stack_get_by_tenant(context):
-    return IMPL.stack_get_by_tenant(context)
+def stack_get_all_by_tenant(context):
+    return IMPL.stack_get_all_by_tenant(context)
 
 
 def stack_create(context, values):

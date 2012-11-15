@@ -137,7 +137,7 @@ def stack_get_all(context):
     return results
 
 
-def stack_get_by_tenant(context):
+def stack_get_all_by_tenant(context):
     results = model_query(context, models.Stack).\
                          filter_by(owner_id=None).\
                          filter_by(tenant=context.tenant_id).all()

@@ -115,7 +115,7 @@ class EngineService(service.Service):
         The list_stacks method returns attributes of all stacks.
         arg1 -> RPC context.
         """
-        stacks = db_api.stack_get_by_tenant(context) or []
+        stacks = db_api.stack_get_all_by_tenant(context) or []
 
         def format_stack_detail(s):
             stack = parser.Stack.load(context, stack=s, resolve_data=False)
