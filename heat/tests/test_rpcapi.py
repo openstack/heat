@@ -137,18 +137,6 @@ class EngineRpcAPITestCase(unittest.TestCase):
         self._test_engine_api('list_stack_resources', 'call',
                               stack_identity='wordpress')
 
-    def test_metadata_list_stacks(self):
-        self._test_engine_api('metadata_list_stacks', 'call')
-
-    def test_metadata_list_resources(self):
-        self._test_engine_api('metadata_list_resources', 'call',
-                              stack_name='wordpress')
-
-    def test_metadata_get_resource(self):
-        self._test_engine_api('metadata_get_resource', 'call',
-                              stack_name='wordpress',
-                              resource_name='LogicalResourceId')
-
     def test_metadata_update(self):
         self._test_engine_api('metadata_update', 'call',
                               stack_id=6,

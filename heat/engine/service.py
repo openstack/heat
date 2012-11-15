@@ -360,43 +360,6 @@ class EngineService(service.Service):
         return [api.format_stack_resource(resource)
                 for resource in stack if resource.id is not None]
 
-    def metadata_list_stacks(self, context):
-        """
-        Return the names of the stacks registered with Heat.
-        """
-        stacks = db_api.stack_get_all(context)
-        return [s.name for s in stacks]
-
-    def metadata_list_resources(self, context, stack_name):
-        """
-        Return the resource IDs of the given stack.
-        """
-        stack = db_api.stack_get_by_name(context, stack_name)
-        if stack:
-            return [res.name for res in stack.resources]
-        else:
-            return None
-
-    def metadata_get_resource(self, context, stack_name, resource_name):
-        """
-        Get the metadata for the given resource.
-        """
-
-        s = db_api.stack_get_by_name(context, stack_name)
-        if not s:
-            logger.warn("Stack %s not found" % stack_name)
-            return ['stack', None]
-
-        stack = parser.Stack.load(None, stack=s)
-        if resource_name not in stack:
-            logger.warn("Resource not found %s:%s." % (stack_name,
-                                                       resource_name))
-            return ['resource', None]
-
-        resource = stack[resource_name]
-
-        return [None, resource.metadata]
-
     def metadata_update(self, context, stack_id, resource_name, metadata):
         """
         Update the metadata for the given resource.

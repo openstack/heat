@@ -198,29 +198,6 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
                                              stack_identity=stack_identity),
                          topic=_engine_topic(self.topic, ctxt, None))
 
-    def metadata_list_stacks(self, ctxt):
-        """
-        Return the names of the stacks registered with Heat.
-        """
-        return self.call(ctxt, self.make_msg('metadata_list_stacks'),
-                         topic=_engine_topic(self.topic, ctxt, None))
-
-    def metadata_list_resources(self, ctxt, stack_name):
-        """
-        Return the resource IDs of the given stack.
-        """
-        return self.call(ctxt, self.make_msg('metadata_list_resources',
-                         stack_name=stack_name),
-                         topic=_engine_topic(self.topic, ctxt, None))
-
-    def metadata_get_resource(self, ctxt, stack_name, resource_name):
-        """
-        Get the metadata for the given resource.
-        """
-        return self.call(ctxt, self.make_msg('metadata_get_resource',
-                         stack_name=stack_name, resource_name=resource_name),
-                         topic=_engine_topic(self.topic, ctxt, None))
-
     def metadata_update(self, ctxt, stack_id, resource_name, metadata):
         """
         Update the metadata for the given resource.

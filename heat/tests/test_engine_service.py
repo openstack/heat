@@ -584,25 +584,12 @@ class stackServiceTest(unittest.TestCase):
                           self.ctx, nonexist)
 
     def test_metadata(self):
-        err, metadata = self.man.metadata_get_resource(self.ctx,
-                                                       self.stack_name,
-                                                       'WebServer')
-        self.assertEqual(err, None)
-        self.assertTrue('AWS::CloudFormation::Init' in metadata)
-
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
         err, result = self.man.metadata_update(None,
                                                self.stack.id, 'WebServer',
                                                test_metadata)
         self.assertEqual(err, None)
         self.assertEqual(result, test_metadata)
-
-        err, metadata = self.man.metadata_get_resource(self.ctx,
-                                                       self.stack_name,
-                                                       'WebServer')
-        self.assertEqual(err, None)
-        self.assertFalse('AWS::CloudFormation::Init' in metadata)
-        self.assertEqual(metadata, test_metadata)
 
     def test_show_watch(self):
         # Insert two dummy watch rules into the DB
