@@ -207,11 +207,6 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
                          resource_name=resource_name, metadata=metadata),
                          topic=_engine_topic(self.topic, ctxt, None))
 
-    def event_create(self, ctxt, event):
-        return self.call(ctxt, self.make_msg('event_create',
-                         event=event),
-                         topic=_engine_topic(self.topic, ctxt, None))
-
     def create_watch_data(self, ctxt, watch_name, stats_data):
         '''
         This could be used by CloudWatch and WaitConditions

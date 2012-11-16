@@ -143,14 +143,6 @@ class EngineRpcAPITestCase(unittest.TestCase):
                               resource_name='LogicalResourceId',
                               metadata={u'wordpress': []})
 
-    def test_event_create(self):
-        self._test_engine_api('event_create', 'call',
-                              event={
-                                     'stack': 'wordpress',
-                                     'resource': 'LogicalResourceId',
-                                     'message': 'Foo',
-                                     'reason': 'Bar'})
-
     def test_create_watch_data(self):
         self._test_engine_api('create_watch_data', 'call',
                               watch_name='watch1',
