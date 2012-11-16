@@ -36,7 +36,7 @@ from heat.common.wsgi import Request
 import heat.api.openstack.v1.stacks as stacks
 
 
-@attr(tag=['unit', 'api-openstack-v1-stacks'])
+@attr(tag=['unit', 'api-openstack-v1'])
 @attr(speed='fast')
 class InstantiationDataTest(unittest.TestCase):
 
@@ -128,15 +128,14 @@ class InstantiationDataTest(unittest.TestCase):
         self.assertEqual(data.args(), {'timeout_mins': 60})
 
 
-@attr(tag=['unit', 'api-openstack-v1-stacks', 'StackController'])
-@attr(speed='fast')
-class StackControllerTest(unittest.TestCase):
-    '''
-    Tests the API class which acts as the WSGI controller,
-    the endpoint processing API requests after they are routed
-    '''
+class ControllerTest(object):
+    """
+    Common utilities for testing API Controllers.
+    """
 
-    def setUp(self):
+    def __init__(self, *args, **kwargs):
+        super(ControllerTest, self).__init__(*args, **kwargs)
+
         self.maxDiff = None
         self.m = mox.Mox()
 
@@ -146,12 +145,6 @@ class StackControllerTest(unittest.TestCase):
         self.topic = '%s.%s' % (cfg.CONF.engine_topic, cfg.CONF.host)
         self.api_version = '1.0'
         self.tenant = 't'
-
-        # Create WSGI controller instance
-        class DummyConfig():
-            bind_port = 8004
-        cfgopts = DummyConfig()
-        self.controller = stacks.StackController(options=cfgopts)
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -208,6 +201,22 @@ class StackControllerTest(unittest.TestCase):
         path = '/v1/%(tenant)s/stacks/%(stack_name)s/%(stack_id)s%(path)s' % id
         return 'http://%s%s' % (host, path)
 
+
+@attr(tag=['unit', 'api-openstack-v1', 'StackController'])
+@attr(speed='fast')
+class StackControllerTest(ControllerTest, unittest.TestCase):
+    '''
+    Tests the API class which acts as the WSGI controller,
+    the endpoint processing API requests after they are routed
+    '''
+
+    def setUp(self):
+        # Create WSGI controller instance
+        class DummyConfig():
+            bind_port = 8004
+        cfgopts = DummyConfig()
+        self.controller = stacks.StackController(options=cfgopts)
+
     def test_index(self):
         req = self._get('/stacks')
 
@@ -237,7 +246,7 @@ class StackControllerTest(unittest.TestCase):
         rpc.call(req.context, self.topic,
                  {'method': 'list_stacks',
                   'args': {},
-                           'version': self.api_version},
+                  'version': self.api_version},
                  None).AndReturn(engine_resp)
         self.m.ReplayAll()
 
@@ -268,7 +277,7 @@ class StackControllerTest(unittest.TestCase):
         rpc.call(req.context, self.topic,
                  {'method': 'list_stacks',
                   'args': {},
-                           'version': self.api_version},
+                  'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("AttributeError"))
         self.m.ReplayAll()
 
@@ -284,7 +293,7 @@ class StackControllerTest(unittest.TestCase):
         rpc.call(req.context, self.topic,
                  {'method': 'list_stacks',
                   'args': {},
-                           'version': self.api_version},
+                  'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("Exception"))
         self.m.ReplayAll()
 
@@ -392,7 +401,7 @@ class StackControllerTest(unittest.TestCase):
         rpc.call(req.context, self.topic,
                  {'method': 'identify_stack',
                   'args': {'stack_name': identity.stack_name},
-                           'version': self.api_version},
+                  'version': self.api_version},
                  None).AndReturn(identity)
 
         self.m.ReplayAll()
@@ -415,7 +424,7 @@ class StackControllerTest(unittest.TestCase):
         rpc.call(req.context, self.topic,
                  {'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
-                           'version': self.api_version},
+                  'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("AttributeError"))
         self.m.ReplayAll()
 
@@ -461,7 +470,7 @@ class StackControllerTest(unittest.TestCase):
         rpc.call(req.context, self.topic,
                  {'method': 'show_stack',
                   'args': {'stack_identity': dict(identity)},
-                           'version': self.api_version},
+                  'version': self.api_version},
                  None).AndReturn(engine_resp)
         self.m.ReplayAll()
 
