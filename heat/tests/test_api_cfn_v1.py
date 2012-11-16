@@ -1031,8 +1031,7 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = [{u'description': u'',
-                        u'resource_identity': {
+        engine_resp = [{u'resource_identity': {
                             u'tenant': u't',
                             u'stack_name': u'wordpress',
                             u'stack_id': u'6',
@@ -1049,8 +1048,7 @@ class StackControllerTest(unittest.TestCase):
                         u'resource_status': u'CREATE_COMPLETE',
                         u'physical_resource_id':
                             u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                        u'resource_type': u'AWS::EC2::Instance',
-                        u'metadata': {}}]
+                        u'resource_type': u'AWS::EC2::Instance'}]
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic, {'method': 'identify_stack',

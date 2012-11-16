@@ -357,7 +357,7 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(context, stack=s)
 
-        return [api.format_stack_resource(resource)
+        return [api.format_stack_resource(resource, detail=False)
                 for resource in stack if resource.id is not None]
 
     def metadata_update(self, context, stack_id, resource_name, metadata):

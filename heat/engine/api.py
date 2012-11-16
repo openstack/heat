@@ -124,14 +124,13 @@ RES_KEYS = (
 )
 
 
-def format_stack_resource(resource):
+def format_stack_resource(resource, detail=True):
     '''
     Return a representation of the given resource that matches the API output
     expectations.
     '''
     last_updated_time = resource.updated_time or resource.created_time
     res = {
-        RES_DESCRIPTION: resource.parsed_template().get('Description', ''),
         RES_UPDATED_TIME: timeutils.isotime(last_updated_time),
         RES_NAME: resource.name,
         RES_PHYSICAL_ID: resource.resource_id or '',
@@ -143,6 +142,10 @@ def format_stack_resource(resource):
         RES_STACK_ID: dict(resource.stack.identifier()),
         RES_STACK_NAME: resource.stack.name,
     }
+
+    if detail:
+        res[RES_DESCRIPTION] = resource.parsed_template('Description', '')
+        res[RES_METADATA] = resource.metadata
 
     return res
 
