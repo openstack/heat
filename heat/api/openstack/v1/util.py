@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from webob import exc
 from functools import wraps
 
 from heat.engine import identifier
@@ -61,3 +62,18 @@ def make_url(req, identity):
 def make_link(req, identity, relationship='self'):
     '''Return a link structure for the supplied identity dictionary.'''
     return {'href': make_url(req, identity), 'rel': relationship}
+
+
+def remote_error(ex, force_exists=False):
+    """
+    Map rpc_common.RemoteError exceptions returned by the engine
+    to webob exceptions which can be used to return
+    properly formatted error responses.
+    """
+    if ex.exc_type in ('AttributeError', 'ValueError'):
+        if force_exists:
+            raise exc.HTTPBadRequest(explanation=str(ex))
+        else:
+            raise exc.HTTPNotFound(explanation=str(ex))
+
+    raise exc.HTTPInternalServerError(explanation=str(ex))

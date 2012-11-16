@@ -160,20 +160,6 @@ class StackController(object):
         self.options = options
         self.engine_rpcapi = engine_rpcapi.EngineAPI()
 
-    def _remote_error(self, ex, force_exists=False):
-        """
-        Map rpc_common.RemoteError exceptions returned by the engine
-        to webob exceptions which can be used to return
-        properly formatted error responses.
-        """
-        if ex.exc_type in ('AttributeError', 'ValueError'):
-            if force_exists:
-                raise exc.HTTPBadRequest(explanation=str(ex))
-            else:
-                raise exc.HTTPNotFound(explanation=str(ex))
-
-        raise exc.HTTPInternalServerError(explanation=str(ex))
-
     def default(self, req, **args):
         raise exc.HTTPNotFound()
 
@@ -186,7 +172,7 @@ class StackController(object):
         try:
             stack_list = self.engine_rpcapi.list_stacks(req.context)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex, True)
+            return util.remote_error(ex, True)
 
         summary_keys = (engine_api.STACK_ID,
                         engine_api.STACK_NAME,
@@ -216,7 +202,7 @@ class StackController(object):
                                                      data.user_params(),
                                                      data.args())
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex, True)
+            return util.remote_error(ex, True)
 
         if 'Description' in result:
             raise exc.HTTPBadRequest(explanation=result['Description'])
@@ -233,7 +219,7 @@ class StackController(object):
             identity = self.engine_rpcapi.identify_stack(req.context,
                                                          stack_name)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return util.remote_error(ex)
 
         raise exc.HTTPFound(location=util.make_url(req, identity))
 
@@ -247,7 +233,7 @@ class StackController(object):
             stack_list = self.engine_rpcapi.show_stack(req.context,
                                                        identity)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return util.remote_error(ex)
 
         if not stack_list['stacks']:
             raise exc.HTTPInternalServerError()
@@ -266,7 +252,7 @@ class StackController(object):
             templ = self.engine_rpcapi.get_template(req.context,
                                                     identity)
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return util.remote_error(ex)
 
         if templ is None:
             raise exc.HTTPNotFound()
@@ -288,7 +274,7 @@ class StackController(object):
                                                   data.user_params(),
                                                   data.args())
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return util.remote_error(ex)
 
         if 'Description' in res:
             raise exc.HTTPBadRequest(explanation=res['Description'])
@@ -307,7 +293,7 @@ class StackController(object):
                                                   cast=False)
 
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex)
+            return util.remote_error(ex)
 
         if res is not None:
             raise exc.HTTPBadRequest(explanation=res['Error'])
@@ -327,7 +313,7 @@ class StackController(object):
             result = self.engine_rpcapi.validate_template(req.context,
                                                           data.template())
         except rpc_common.RemoteError as ex:
-            return self._remote_error(ex, True)
+            return util.remote_error(ex, True)
 
         if 'Error' in result:
             raise exc.HTTPBadRequest(explanation=result['Error'])
