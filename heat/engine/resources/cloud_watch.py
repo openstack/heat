@@ -54,7 +54,8 @@ class CloudWatchAlarm(resource.Resource):
     strict_dependency = False
 
     def handle_create(self):
-        wr = watchrule.WatchRule(context=self.context, watch_name=self.name,
+        wr = watchrule.WatchRule(context=self.context,
+                                 watch_name=self.physical_resource_name(),
                                  rule=self.parsed_template('Properties'),
                                  stack_id=self.stack.id)
         wr.store()
@@ -64,9 +65,10 @@ class CloudWatchAlarm(resource.Resource):
 
     def handle_delete(self):
         try:
-            db_api.watch_rule_delete(self.context, self.name)
+            db_api.watch_rule_delete(self.context,
+                                     self.physical_resource_name())
         except exception.NotFound:
             pass
 
     def FnGetRefId(self):
-        return unicode(self.name)
+        return unicode(self.physical_resource_name())
