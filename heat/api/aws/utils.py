@@ -21,6 +21,10 @@ import re
 import itertools
 from heat.api.aws import exception
 
+from heat.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
+
 
 def format_response(action, response):
     """
@@ -99,7 +103,7 @@ def get_param_value(params, key):
     try:
         return params[key]
     except KeyError:
-        logger.error("Request does not contain %s parameter!" % key)
+        LOG.error("Request does not contain %s parameter!" % key)
         raise exception.HeatMissingParameterError(key)
 
 

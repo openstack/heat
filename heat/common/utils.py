@@ -26,6 +26,11 @@ import uuid
 from eventlet import event
 from eventlet import greenthread
 
+from heat.openstack.common import log as logging
+
+
+LOG = logging.getLogger(__name__)
+
 
 def chunkreadable(iter, chunk_size=65536):
     """
