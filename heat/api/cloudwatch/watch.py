@@ -270,7 +270,7 @@ class WatchController(object):
                     'Dimensions': dimensions}}
 
         try:
-            res = self.engine_rpcapi.create_watch_data(con, watch_name, data)
+            self.engine_rpcapi.create_watch_data(con, watch_name, data)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
@@ -310,8 +310,8 @@ class WatchController(object):
 
         logger.debug("setting %s to %s" % (name, state_map[state]))
         try:
-            ret = self.engine_rpcapi.set_watch_state(con, watch_name=name,
-                                                       state=state_map[state])
+            self.engine_rpcapi.set_watch_state(con, watch_name=name,
+                                               state=state_map[state])
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 

@@ -293,7 +293,6 @@ class Instance(resource.Resource):
             return
         else:
             keypairs = self.nova().keypairs.list()
-            valid_key = False
             for k in keypairs:
                 if k.name == key_name:
                     return

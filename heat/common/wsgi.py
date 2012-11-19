@@ -493,7 +493,6 @@ class XMLResponseSerializer(object):
         # Assumption : root node is dict with single key
         root = data.keys()[0]
         eltree = etree.Element(root)
-        doc = etree.ElementTree(eltree)
         self.object_to_element(data.get(root), eltree)
         response = etree.tostring(eltree)
         logging.debug("XML response : %s" % response)

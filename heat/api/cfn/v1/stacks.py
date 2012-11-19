@@ -118,8 +118,6 @@ class StackController(object):
             return self._stackid_format(result)
 
         con = req.context
-        parms = dict(req.params)
-
         try:
             stack_list = self.engine_rpcapi.list_stacks(con)
         except rpc_common.RemoteError as ex:
@@ -198,8 +196,6 @@ class StackController(object):
             return self._stackid_format(result)
 
         con = req.context
-        parms = dict(req.params)
-
         # If no StackName parameter is passed, we pass None into the engine
         # this returns results for all stacks (visible to this user), which
         # is the behavior described in the AWS DescribeStacks API docs
@@ -350,9 +346,6 @@ class StackController(object):
         """
 
         con = req.context
-        parms = dict(req.params)
-
-        logger.info('get_template')
         try:
             identity = self._get_identity(con, req.params['StackName'])
             templ = self.engine_rpcapi.get_template(con, identity)
@@ -381,8 +374,6 @@ class StackController(object):
         """
 
         con = req.context
-        parms = dict(req.params)
-
         try:
             templ = self._get_template(req)
         except socket.gaierror:
@@ -411,8 +402,6 @@ class StackController(object):
         Deletes the specified stack
         """
         con = req.context
-        parms = dict(req.params)
-
         try:
             identity = self._get_identity(con, req.params['StackName'])
             res = self.engine_rpcapi.delete_stack(con, identity, cast=False)
@@ -454,8 +443,6 @@ class StackController(object):
             return self._stackid_format(result)
 
         con = req.context
-        parms = dict(req.params)
-
         stack_name = req.params.get('StackName', None)
         try:
             identity = stack_name and self._get_identity(con, stack_name)
