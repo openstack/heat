@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import urlparse
 import httplib
 import gettext
@@ -21,6 +20,7 @@ import gettext
 gettext.install('heat', unicode=1)
 
 from heat.common import wsgi
+from heat.openstack.common import jsonutils as json
 
 import webob
 from heat.api.aws import exception
@@ -81,7 +81,7 @@ class EC2Token(wsgi.Middleware):
         try:
             creds_json = json.dumps(creds)
         except TypeError:
-            creds_json = json.dumps(to_primitive(creds))
+            creds_json = json.dumps(json.to_primitive(creds))
         headers = {'Content-Type': 'application/json'}
 
         # Disable 'has no x member' pylint error
