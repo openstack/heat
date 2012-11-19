@@ -80,6 +80,10 @@ def setup_mocks(mocks, stack):
 
 
 class DummyThreadGroup(object):
+    def add_timer(self, interval, callback, initial_delay=None,
+                  *args, **kwargs):
+        pass
+
     def add_thread(self, callback, *args, **kwargs):
         pass
 
