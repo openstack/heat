@@ -38,14 +38,15 @@ class WatchRule(object):
     created_at = timestamp.Timestamp(db_api.watch_rule_get, 'created_at')
     updated_at = timestamp.Timestamp(db_api.watch_rule_get, 'updated_at')
 
-    def __init__(self, context, watch_name, rule, stack_name, state=NORMAL,
-                 wid=None, watch_data=[], last_evaluated=timeutils.utcnow()):
+    def __init__(self, context, watch_name, rule, stack_id=None,
+                 state=NORMAL, wid=None, watch_data=[],
+                 last_evaluated=timeutils.utcnow()):
         self.context = context
         self.now = timeutils.utcnow()
         self.name = watch_name
         self.state = state
         self.rule = rule
-        self.stack_name = stack_name
+        self.stack_id = stack_id
         self.timeperiod = datetime.timedelta(seconds=int(rule['Period']))
         self.id = wid
         self.watch_data = watch_data
@@ -68,7 +69,7 @@ class WatchRule(object):
             return cls(context=context,
                        watch_name=dbwr.name,
                        rule=dbwr.rule,
-                       stack_name=dbwr.stack_name,
+                       stack_id=dbwr.stack_id,
                        state=dbwr.state,
                        wid=dbwr.id,
                        watch_data=dbwr.watch_data,
@@ -84,7 +85,7 @@ class WatchRule(object):
             'name': self.name,
             'rule': self.rule,
             'state': self.state,
-            'stack_name': self.stack_name
+            'stack_id': self.stack_id
         }
 
         if not self.id:
@@ -220,7 +221,7 @@ class WatchRule(object):
 
     def rule_action(self, new_state):
         logger.warn('WATCH: stack:%s, watch_name:%s %s',
-                    self.stack_name, self.name, new_state)
+                    self.stack_id, self.name, new_state)
 
         actioned = False
         if not self.ACTION_MAP[new_state] in self.rule:
@@ -232,19 +233,19 @@ class WatchRule(object):
             # scoping, this is the simplest possible solution to the
             # HA/Autoscaling regression described in bug/1078779
             # Further work in-progress here (shardy) as this
-            # breaks when stack_name is not unique accross tenants
+            # breaks when stack_id is not unique accross tenants
             sl = [x for x in
                   db_api.stack_get_all(self.context)
-                  if x.name == self.stack_name]
+                  if x.id == self.stack_id]
             s = None
             if len(sl) == 1:
                 s = sl[0]
             elif len(sl) > 1:
-                logger.error("stack %s name not unique, " % self.stack_name
+                logger.error("stack %s not unique, " % self.stack_id
                              + "cannot action watch rule")
             else:
-                logger.error("stack %s name could not be found, " %
-                             self.stack_name + "cannot action watch rule")
+                logger.error("stack %s could not be found, " %
+                             self.stack_id + "cannot action watch rule")
 
             if s and s.status in (parser.Stack.CREATE_COMPLETE,
                                   parser.Stack.UPDATE_COMPLETE):

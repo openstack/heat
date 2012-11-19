@@ -96,10 +96,10 @@ class WatchController(object):
             engine_api.WATCH_THRESHOLD: 'Threshold',
             engine_api.WATCH_UNIT: 'Unit'}
 
-            # AWS doesn't return StackName in the main MetricAlarm
-            # structure, so we add StackName as a dimension to all responses
-            a[engine_api.WATCH_DIMENSIONS].append({'StackName':
-                                           a[engine_api.WATCH_STACK_NAME]})
+            # AWS doesn't return StackId in the main MetricAlarm
+            # structure, so we add StackId as a dimension to all responses
+            a[engine_api.WATCH_DIMENSIONS].append({'StackId':
+                                           a[engine_api.WATCH_STACK_ID]})
 
             # Reformat dimensions list into AWS API format
             a[engine_api.WATCH_DIMENSIONS] = self._reformat_dimensions(

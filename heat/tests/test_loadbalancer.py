@@ -25,6 +25,8 @@ import json
 from nose.plugins.attrib import attr
 
 from heat.common import exception
+from heat.common import context
+from heat.common import config
 from heat.engine import parser
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
@@ -33,17 +35,27 @@ from heat.engine.resources import stack
 from heat.tests.v1_1 import fakes
 
 
+def create_context(mocks, user='lb_test_user',
+                   tenant='test_admin', ctx=None):
+    ctx = ctx or context.get_admin_context()
+    mocks.StubOutWithMock(ctx, 'username')
+    mocks.StubOutWithMock(ctx, 'tenant_id')
+    ctx.username = user
+    ctx.tenant_id = tenant
+    return ctx
+
+
 @attr(tag=['unit', 'resource'])
 @attr(speed='fast')
 class LoadBalancerTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(parser.Stack, 'store')
         self.m.StubOutWithMock(lb.LoadBalancer, 'nova')
         self.m.StubOutWithMock(instance.Instance, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.m.StubOutWithMock(Metadata, '__set__')
+        config.register_engine_opts()
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -58,16 +70,11 @@ class LoadBalancerTest(unittest.TestCase):
         return t
 
     def parse_stack(self, t):
-        class DummyContext():
-            tenant = 'test_tenant'
-            tenant_id = '1234abcd'
-            username = 'test_username'
-            password = 'password'
-            auth_url = 'http://localhost:5000/v2.0'
         template = parser.Template(t)
         params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
-        stack = parser.Stack(DummyContext(), 'test_stack', template,
-                             params, stack_id=-1)
+        stack = parser.Stack(create_context(self.m), 'test_stack', template,
+                             params, stack_id=None)
+        stack.store()
 
         return stack
 
@@ -82,7 +89,7 @@ class LoadBalancerTest(unittest.TestCase):
 
     def test_loadbalancer(self):
         lb.LoadBalancer.nova().AndReturn(self.fc)
-        parser.Stack.store(mox.IgnoreArg()).AndReturn('5678')
+#        parser.Stack.store(mox.IgnoreArg()).AndReturn('5678')
         instance.Instance.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(flavor=2, image=745, key_name='test',
                    meta=None, name=u'test_stack.LoadBalancer.LB_instance',
