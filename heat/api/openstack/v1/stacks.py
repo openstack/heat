@@ -93,7 +93,7 @@ class InstantiationData(object):
             try:
                 conn.request("GET", url.path)
                 resp = conn.getresponse()
-                logger.info('status %d' % r1.status)
+                logger.info('status %d' % resp.status)
 
                 if resp.status != 200:
                     raise exc.HTTPBadRequest(explanation=err_reason)
