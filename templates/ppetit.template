@@ -25,7 +25,7 @@
       "MinValue": "1",
       "MaxValue": "100",
       "Description" : "Number of instances to create",
-      "Type": "Integer"
+      "Type": "Number"
     }
   },
 
