@@ -154,6 +154,10 @@ def watch_rule_get_all(context):
     return IMPL.watch_rule_get_all(context)
 
 
+def watch_rule_get_all_by_stack(context, stack_id):
+    return IMPL.watch_rule_get_all_by_stack(context, stack_id)
+
+
 def watch_rule_create(context, values):
     return IMPL.watch_rule_create(context, values)
 
