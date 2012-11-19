@@ -21,6 +21,7 @@ import httplib
 import json
 import socket
 import urlparse
+import errno
 from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
 from heat.common import wsgi
@@ -231,14 +232,26 @@ class StackController(object):
                 conn = httplib.HTTPSConnection(url.netloc)
             else:
                 conn = httplib.HTTPConnection(url.netloc)
-            conn.request("GET", url.path)
+
+            try:
+                conn.request("GET", url.path)
+            except Exception as e:
+                if e.errno == errno.ECONNREFUSED:
+                    msg = _('Connection refused to %s' % url.netloc)
+                    raise exception.HeatInvalidParameterValueError(detail=msg)
+                raise
+
             r1 = conn.getresponse()
             logger.info('status %d' % r1.status)
-            if r1.status == 200:
+            if r1.status == 200:  # OK
                 data = r1.read()
                 conn.close()
+            elif r1.status == 404:  # NOT_FOUND
+                msg = _('No match found for %s' % req.params['TemplateUrl'])
+                raise exception.HeatInvalidParameterValueError(detail=msg)
             else:
-                data = None
+                msg = _('Unexpected error, request returned %d' % r1.status)
+                raise exception.HeatInvalidParameterValueError(detail=msg)
             return data
 
         return None
