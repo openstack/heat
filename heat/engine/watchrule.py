@@ -229,29 +229,10 @@ class WatchRule(object):
                         new_state)
             actioned = True
         else:
-            # FIXME : hack workaround for new stack_get_by_name tenant
-            # scoping, this is the simplest possible solution to the
-            # HA/Autoscaling regression described in bug/1078779
-            # Further work in-progress here (shardy) as this
-            # breaks when stack_id is not unique accross tenants
-            sl = [x for x in
-                  db_api.stack_get_all(self.context)
-                  if x.id == self.stack_id]
-            s = None
-            if len(sl) == 1:
-                s = sl[0]
-            elif len(sl) > 1:
-                logger.error("stack %s not unique, " % self.stack_id
-                             + "cannot action watch rule")
-            else:
-                logger.error("stack %s could not be found, " %
-                             self.stack_id + "cannot action watch rule")
-
+            s = db_api.stack_get(self.context, self.stack_id)
             if s and s.status in (parser.Stack.CREATE_COMPLETE,
-                                  parser.Stack.UPDATE_COMPLETE):
-                user_creds = db_api.user_creds_get(s.user_creds_id)
-                ctxt = ctxtlib.RequestContext.from_dict(user_creds)
-                stack = parser.Stack.load(ctxt, stack=s)
+                                          parser.Stack.UPDATE_COMPLETE):
+                stack = parser.Stack.load(self.context, stack=s)
                 for a in self.rule[self.ACTION_MAP[new_state]]:
                     greenpool.spawn_n(stack[a].alarm)
                 actioned = True

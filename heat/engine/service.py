@@ -53,12 +53,48 @@ class EngineService(service.Service):
             self.stg[stack_id] = threadgroup.ThreadGroup(thr_name)
         self.stg[stack_id].add_thread(func, *args, **kwargs)
 
+    def _timer_in_thread(self, stack_id, stack_name, func, *args, **kwargs):
+        """
+        Define a periodic task, to be run in a separate thread, in the stack
+        threadgroups.  Periodicity is cfg.CONF.periodic_interval
+        """
+        if stack_id not in self.stg:
+            thr_name = '%s-%s' % (stack_name, stack_id)
+            self.stg[stack_id] = threadgroup.ThreadGroup(thr_name)
+        self.stg[stack_id].add_timer(cfg.CONF.periodic_interval,
+                                     func, *args, **kwargs)
+
+    def _service_task(self):
+        """
+        This is a dummy task which gets queued on the service.Service
+        threadgroup.  Without this service.Service sees nothing running
+        i.e has nothing to wait() on, so the process exits..
+        This could also be used to trigger periodic non-stack-specific
+        housekeeping tasks
+        """
+        pass
+
     def start(self):
         super(EngineService, self).start()
-        admin_context = context.get_admin_context()
+
+        # Create dummy service task, because when there is nothing queued
+        # on self.tg the process exits
         self.tg.add_timer(cfg.CONF.periodic_interval,
-                    self._periodic_watcher_task,
-                    context=admin_context)
+                          self._service_task)
+
+        # Create a periodic_watcher_task per-stack
+        # We use the admin context to get the list of all stacks
+        # then retrieve the stored per-stack context to be passed to
+        # the periodic task
+        admin_context = context.get_admin_context()
+        stacks = db_api.stack_get_all(admin_context)
+        for s in stacks:
+            user_creds = db_api.user_creds_get(s.user_creds_id)
+            stack_context = context.RequestContext.from_dict(user_creds)
+            self._timer_in_thread(s.id, s.name,
+                                  self._periodic_watcher_task,
+                                  context=stack_context,
+                                  sid=s.id)
 
     def identify_stack(self, context, stack_name):
         """
@@ -156,6 +192,12 @@ class EngineService(service.Service):
         stack_id = stack.store()
 
         self._start_in_thread(stack_id, stack_name, stack.create)
+
+        # Schedule a periodic watcher task for this stack
+        self._timer_in_thread(stack_id, stack_name,
+                              self._periodic_watcher_task,
+                              context=context,
+                              sid=stack_id)
 
         return dict(stack.identifier())
 
@@ -353,9 +395,10 @@ class EngineService(service.Service):
 
         return [None, resource.metadata]
 
-    def _periodic_watcher_task(self, context):
+    def _periodic_watcher_task(self, context, sid):
         try:
-            wrn = [w.name for w in db_api.watch_rule_get_all(context)]
+            wrn = [w.name for w in
+                   db_api.watch_rule_get_all_by_stack(context, sid)]
         except Exception as ex:
             logger.warn('periodic_task db error (%s) %s' %
                         ('watch rule removed?', str(ex)))
