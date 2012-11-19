@@ -53,27 +53,27 @@ class WatchRule(object):
         self.last_evaluated = last_evaluated
 
     @classmethod
-    def load(cls, context, watch_name):
+    def load(cls, context, watch_name=None, watch=None):
         '''
-        Load the watchrule from the DB by name
+        Load the watchrule object, either by name or via an existing DB object
         '''
-        dbwr = None
-        try:
-            dbwr = db_api.watch_rule_get_by_name(context, watch_name)
-        except Exception as ex:
-            logger.warn('show_watch (%s) db error %s' %
-                        (watch_name, str(ex)))
-        if not dbwr:
+        if watch == None:
+            try:
+                watch = db_api.watch_rule_get_by_name(context, watch_name)
+            except Exception as ex:
+                logger.warn('WatchRule.load (%s) db error %s' %
+                            (watch_name, str(ex)))
+        if watch == None:
             raise AttributeError('Unknown watch name %s' % watch_name)
         else:
             return cls(context=context,
-                       watch_name=dbwr.name,
-                       rule=dbwr.rule,
-                       stack_id=dbwr.stack_id,
-                       state=dbwr.state,
-                       wid=dbwr.id,
-                       watch_data=dbwr.watch_data,
-                       last_evaluated=dbwr.last_evaluated)
+                       watch_name=watch.name,
+                       rule=watch.rule,
+                       stack_id=watch.stack_id,
+                       state=watch.state,
+                       wid=watch.id,
+                       watch_data=watch.watch_data,
+                       last_evaluated=watch.last_evaluated)
 
     def store(self):
         '''

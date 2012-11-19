@@ -397,14 +397,13 @@ class EngineService(service.Service):
 
     def _periodic_watcher_task(self, context, sid):
         try:
-            wrn = [w.name for w in
-                   db_api.watch_rule_get_all_by_stack(context, sid)]
+            wrs = db_api.watch_rule_get_all_by_stack(context, sid)
         except Exception as ex:
             logger.warn('periodic_task db error (%s) %s' %
                         ('watch rule removed?', str(ex)))
             return
-        for wr in wrn:
-            rule = watchrule.WatchRule.load(context, wr)
+        for wr in wrs:
+            rule = watchrule.WatchRule.load(context, watch=wr)
             rule.evaluate()
 
     def create_watch_data(self, context, watch_name, stats_data):
