@@ -13,9 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-import urlparse
-import httplib
 import routes
 import gettext
 
@@ -25,10 +22,6 @@ from heat.api.cloudwatch import watch
 from heat.common import wsgi
 
 from webob import Request
-import webob
-from heat import utils
-from heat.common import context
-from heat.api.aws import exception
 from heat.api.middleware.version_negotiation import VersionNegotiationFilter
 from heat.api.cloudwatch import versions
 

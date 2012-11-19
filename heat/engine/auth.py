@@ -13,22 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-import httplib
-import urlparse
 import base64
-from novaclient.v1_1 import client
-from novaclient.exceptions import BadRequest
-from novaclient.exceptions import NotFound
-from novaclient.exceptions import AuthorizationFailure
-from heat.common import context
-from heat.openstack.common import log as logging
 
 from Crypto.Cipher import AES
 from Crypto import Random
 
 from heat.openstack.common import cfg
-from heat.openstack.common import importutils
+from heat.openstack.common import log as logging
 
 
 auth_opts = [

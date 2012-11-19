@@ -20,16 +20,11 @@
 System-level utilities and helper functions.
 """
 
-import datetime
 import sys
 import uuid
 
 from eventlet import event
 from eventlet import greenthread
-from eventlet import semaphore
-from eventlet.green import subprocess
-
-from heat.openstack.common import exception
 
 
 def chunkreadable(iter, chunk_size=65536):

@@ -13,10 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
-import json
-import os
-
 from heat.common import exception
 from heat.engine import watchrule
 from heat.engine.resources import resource

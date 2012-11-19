@@ -14,9 +14,7 @@
 #    under the License.
 
 import eventlet
-import json
 import functools
-import copy
 
 from heat.common import exception
 from heat.engine import dependencies

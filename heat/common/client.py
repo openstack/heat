@@ -21,14 +21,14 @@ import collections
 import errno
 import functools
 import httplib
-import logging
 import os
 import urllib
 import urlparse
 
 try:
-    from eventlet.green import socket, ssl
+    from eventlet.green import socket, socket, ssl
 except ImportError:
+    import select
     import socket
     import ssl
 

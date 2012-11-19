@@ -17,14 +17,12 @@ import base64
 from datetime import datetime
 
 from heat.common import exception
-from heat.common import config
 from heat.db import api as db_api
 from heat.engine import identifier
 from heat.engine import timestamp
 from heat.engine.resources.properties import Properties
 
 from heat.openstack.common import log as logging
-from heat.openstack.common import cfg
 
 logger = logging.getLogger('heat.engine.resources')
 

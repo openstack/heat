@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import re
 from heat.openstack.common import timeutils
 from heat.engine import parser
 from heat.engine import template

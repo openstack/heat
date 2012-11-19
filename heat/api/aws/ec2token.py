@@ -16,17 +16,13 @@
 import json
 import urlparse
 import httplib
-import routes
 import gettext
 
 gettext.install('heat', unicode=1)
 
 from heat.common import wsgi
 
-from webob import Request
 import webob
-from heat import utils
-from heat.common import context
 from heat.api.aws import exception
 
 from heat.openstack.common import log as logging

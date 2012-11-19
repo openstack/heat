@@ -16,7 +16,6 @@
 import eventlet
 import os
 import json
-import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from novaclient.exceptions import NotFound

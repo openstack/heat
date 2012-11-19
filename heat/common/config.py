@@ -22,14 +22,12 @@ import logging
 import logging.config
 import logging.handlers
 import os
-import socket
-# TODO ^ eventlet.socket ?
 import sys
 
-from heat import version
+from eventlet.green import socket
+
 from heat.common import wsgi
 from heat.openstack.common import cfg
-from heat.openstack.common import rpc
 
 DEFAULT_PORT = 8000
 

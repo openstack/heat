@@ -13,9 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-import urlparse
-import httplib
 import routes
 import gettext
 
@@ -24,11 +21,6 @@ gettext.install('heat', unicode=1)
 from heat.api.openstack.v1 import stacks
 from heat.api.openstack.v1 import resources
 from heat.common import wsgi
-
-from webob import Request
-import webob
-from heat import utils
-from heat.common import context
 
 from heat.openstack.common import log as logging
 

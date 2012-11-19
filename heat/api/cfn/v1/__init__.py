@@ -13,20 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-import urlparse
-import httplib
 import routes
+
+from webob import Request
 
 from heat.api.cfn.v1 import stacks
 from heat.common import wsgi
-
-from webob import Request
-import webob
-from heat import utils
-from heat.common import context
-from heat.api.aws import exception
-
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)

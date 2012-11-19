@@ -19,7 +19,6 @@ from sqlalchemy import *
 from sqlalchemy.orm import relationship, backref, object_mapper
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.schema import ForeignKeyConstraint
 from sqlalchemy import types as types
 from json import dumps, loads
 from heat.common import utils

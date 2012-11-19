@@ -26,9 +26,8 @@ The underlying driver is loaded . SQLAlchemy is currently the only
 supported backend.
 '''
 import heat.utils
-from heat.openstack.common import utils
 from heat.openstack.common import cfg
-import heat.utils
+
 
 SQL_CONNECTION = 'sqlite://'
 SQL_IDLE_TIMEOUT = 3600

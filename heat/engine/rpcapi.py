@@ -19,9 +19,7 @@ Client side of the heat engine RPC API.
 """
 
 from heat.openstack.common import cfg
-from heat.openstack.common import exception
 from heat.openstack.common import rpc
-from heat.openstack.common.rpc import common as rpc_common
 import heat.openstack.common.rpc.proxy
 
 

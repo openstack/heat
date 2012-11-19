@@ -13,13 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urllib2
 import json
 
 from heat.common import exception
 from heat.engine.resources import stack
-from heat.db import api as db_api
-from heat.engine import parser
 from novaclient.exceptions import NotFound
 
 from heat.openstack.common import log as logging

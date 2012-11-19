@@ -21,6 +21,8 @@ import sqlalchemy
 import migrate
 from migrate.versioning import util as migrate_util
 
+from heat.openstack.common import exception
+
 _REPOSITORY = None
 
 

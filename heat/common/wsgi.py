@@ -28,9 +28,7 @@ import os
 import signal
 import sys
 import time
-import re
 from lxml import etree
-
 
 import eventlet
 import eventlet.greenio
@@ -45,7 +43,6 @@ import webob.exc
 from heat.common import exception
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
-from heat.openstack.common import utils
 
 
 URL_LENGTH_LIMIT = 50000

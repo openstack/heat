@@ -19,7 +19,6 @@ from heat.common import wsgi
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
 from heat.common import utils as heat_utils
-import json
 
 
 def generate_request_id():

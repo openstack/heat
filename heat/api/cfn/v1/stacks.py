@@ -19,24 +19,19 @@ Stack endpoint for Heat CloudFormation v1 API.
 
 import httplib
 import json
-import os
 import socket
-import sys
 import urlparse
-import webob
 from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
 from heat.common import wsgi
-from heat.common import config
-from heat.common import context
-from heat import utils
 from heat.engine import rpcapi as engine_rpcapi
 import heat.engine.api as engine_api
 from heat.engine import identifier
 
-from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
+
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger('heat.api.cfn.v1.stacks')
 
