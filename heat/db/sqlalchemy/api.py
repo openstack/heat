@@ -271,6 +271,12 @@ def watch_rule_get_all(context):
     return results
 
 
+def watch_rule_get_all_by_stack(context, stack_id):
+    results = model_query(context, models.WatchRule).\
+                          filter_by(stack_id=stack_id).all()
+    return results
+
+
 def watch_rule_create(context, values):
     obj_ref = models.WatchRule()
     obj_ref.update(values)
