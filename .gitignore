@@ -10,3 +10,5 @@ heat-test.db
 .venv
 AUTHORS
 ChangeLog
+templates/cloudformation-examples
+
