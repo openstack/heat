@@ -19,6 +19,7 @@ from heat.common import wsgi
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
 from heat.common import utils as heat_utils
+from heat.db import api as db_api
 
 
 def generate_request_id():
@@ -64,9 +65,16 @@ class RequestContext(object):
         self.owner_is_tenant = owner_is_tenant
         if overwrite or not hasattr(local.store, 'context'):
             self.update_store()
+        self._session = None
 
     def update_store(self):
         local.store.context = self
+
+    @property
+    def session(self):
+        if self._session is None:
+            self._session = db_api.get_session()
+        return self._session
 
     def to_dict(self):
         return {'auth_token': self.auth_token,
