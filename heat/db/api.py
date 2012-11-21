@@ -48,6 +48,10 @@ def configure():
     SQL_IDLE_TIMEOUT = cfg.CONF.sql_idle_timeout
 
 
+def get_session():
+    return IMPL.get_session()
+
+
 def raw_template_get(context, template_id):
     return IMPL.raw_template_get(context, template_id)
 

@@ -303,7 +303,7 @@ class Resource(object):
         self.resource_id = inst
         if self.id is not None:
             try:
-                rs = db_api.resource_get(self.stack.context, self.id)
+                rs = db_api.resource_get(self.context, self.id)
                 rs.update_and_save({'nova_instance': self.resource_id})
             except Exception as ex:
                 logger.warn('db error %s' % str(ex))

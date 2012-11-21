@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import webob
 
 from heat.common import context
@@ -30,6 +31,15 @@ from heat.openstack.common.rpc import service
 
 
 logger = logging.getLogger(__name__)
+
+
+def request_context(func):
+    @functools.wraps(func)
+    def wrapped(self, ctx, *args, **kwargs):
+        if ctx is not None and not isinstance(ctx, context.RequestContext):
+            ctx = context.RequestContext.from_dict(ctx.to_dict())
+        return func(self, ctx, *args, **kwargs)
+    return wrapped
 
 
 class EngineService(service.Service):
@@ -90,6 +100,7 @@ class EngineService(service.Service):
                                   self._periodic_watcher_task,
                                   sid=s.id)
 
+    @request_context
     def identify_stack(self, context, stack_name):
         """
         The identify_stack method returns the full stack identifier for a
@@ -123,6 +134,7 @@ class EngineService(service.Service):
 
         return s
 
+    @request_context
     def show_stack(self, context, stack_identity):
         """
         The show_stack method returns the attributes of one stack.
@@ -140,6 +152,7 @@ class EngineService(service.Service):
 
         return {'stacks': [format_stack_detail(s) for s in stacks]}
 
+    @request_context
     def list_stacks(self, context):
         """
         The list_stacks method returns attributes of all stacks.
@@ -153,6 +166,7 @@ class EngineService(service.Service):
 
         return {'stacks': [format_stack_detail(s) for s in stacks]}
 
+    @request_context
     def create_stack(self, context, stack_name, template, params, args):
         """
         The create_stack method creates a new stack using the template
@@ -194,6 +208,7 @@ class EngineService(service.Service):
 
         return dict(stack.identifier())
 
+    @request_context
     def update_stack(self, context, stack_identity, template, params, args):
         """
         The update_stack method updates an existing stack based on the
@@ -233,6 +248,7 @@ class EngineService(service.Service):
 
         return dict(current_stack.identifier())
 
+    @request_context
     def validate_template(self, context, template):
         """
         The validate_template method uses the stack parser to check
@@ -275,6 +291,7 @@ class EngineService(service.Service):
         }
         return result
 
+    @request_context
     def get_template(self, context, stack_identity):
         """
         Get the template.
@@ -286,6 +303,7 @@ class EngineService(service.Service):
             return s.raw_template.template
         return None
 
+    @request_context
     def delete_stack(self, context, stack_identity):
         """
         The delete_stack method deletes a given stack.
@@ -306,6 +324,7 @@ class EngineService(service.Service):
         self.tg.add_thread(stack.delete)
         return None
 
+    @request_context
     def list_events(self, context, stack_identity):
         """
         The list_events method lists all events associated with a given stack.
@@ -321,6 +340,7 @@ class EngineService(service.Service):
 
         return {'events': [api.format_event(context, e) for e in events]}
 
+    @request_context
     def describe_stack_resource(self, context, stack_identity, resource_name):
         s = self._get_stack(context, stack_identity)
 
@@ -334,6 +354,7 @@ class EngineService(service.Service):
 
         return api.format_stack_resource(stack[resource_name])
 
+    @request_context
     def describe_stack_resources(self, context, stack_identity,
                                  physical_resource_id, logical_resource_id):
         if stack_identity is not None:
@@ -360,6 +381,7 @@ class EngineService(service.Service):
                 for resource in stack if resource.id is not None and
                                          name_match(resource)]
 
+    @request_context
     def list_stack_resources(self, context, stack_identity):
         s = self._get_stack(context, stack_identity)
 
@@ -368,6 +390,7 @@ class EngineService(service.Service):
         return [api.format_stack_resource(resource, detail=False)
                 for resource in stack if resource.id is not None]
 
+    @request_context
     def metadata_update(self, context, stack_id, resource_name, metadata):
         """
         Update the metadata for the given resource.
@@ -418,6 +441,7 @@ class EngineService(service.Service):
             rule = watchrule.WatchRule.load(stack_context, watch=wr)
             rule.evaluate()
 
+    @request_context
     def create_watch_data(self, context, watch_name, stats_data):
         '''
         This could be used by CloudWatch and WaitConditions
@@ -428,6 +452,7 @@ class EngineService(service.Service):
         logger.debug('new watch:%s data:%s' % (watch_name, str(stats_data)))
         return stats_data
 
+    @request_context
     def show_watch(self, context, watch_name):
         '''
         The show_watch method returns the attributes of one watch/alarm
@@ -447,6 +472,7 @@ class EngineService(service.Service):
         result = [api.format_watch(w) for w in wrs]
         return result
 
+    @request_context
     def show_watch_metric(self, context, namespace=None, metric_name=None):
         '''
         The show_watch method returns the datapoints for a metric
@@ -471,6 +497,7 @@ class EngineService(service.Service):
         result = [api.format_watch_data(w) for w in wds]
         return result
 
+    @request_context
     def set_watch_state(self, context, watch_name, state):
         '''
         Temporarily set the state of a given watch
