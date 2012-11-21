@@ -83,17 +83,11 @@ class EngineService(service.Service):
                           self._service_task)
 
         # Create a periodic_watcher_task per-stack
-        # We use the admin context to get the list of all stacks
-        # then retrieve the stored per-stack context to be passed to
-        # the periodic task
         admin_context = context.get_admin_context()
         stacks = db_api.stack_get_all(admin_context)
         for s in stacks:
-            user_creds = db_api.user_creds_get(s.user_creds_id)
-            stack_context = context.RequestContext.from_dict(user_creds)
             self._timer_in_thread(s.id, s.name,
                                   self._periodic_watcher_task,
-                                  context=stack_context,
                                   sid=s.id)
 
     def identify_stack(self, context, stack_name):
@@ -196,7 +190,6 @@ class EngineService(service.Service):
         # Schedule a periodic watcher task for this stack
         self._timer_in_thread(stack_id, stack_name,
                               self._periodic_watcher_task,
-                              context=context,
                               sid=stack_id)
 
         return dict(stack.identifier())
@@ -395,15 +388,34 @@ class EngineService(service.Service):
 
         return [None, resource.metadata]
 
-    def _periodic_watcher_task(self, context, sid):
+    def _periodic_watcher_task(self, sid):
+        """
+        Periodic task, created for each stack, triggers watch-rule
+        evaluation for all rules defined for the stack
+        sid = stack ID
+        """
+        # Retrieve the stored credentials & create context
+        # Require admin=True to the stack_get to defeat tenant
+        # scoping otherwise we fail to retrieve the stack
+        logger.debug("Periodic watcher task for stack %s" % sid)
+        admin_context = context.get_admin_context()
+        stack = db_api.stack_get(admin_context, sid, admin=True)
+        if not stack:
+            logger.error("Unable to retrieve stack %s for periodic task" %
+                        sid)
+            return
+        user_creds = db_api.user_creds_get(stack.user_creds_id)
+        stack_context = context.RequestContext.from_dict(user_creds)
+
+        # Get all watchrules for this stack and evaluate them
         try:
-            wrs = db_api.watch_rule_get_all_by_stack(context, sid)
+            wrs = db_api.watch_rule_get_all_by_stack(stack_context, sid)
         except Exception as ex:
             logger.warn('periodic_task db error (%s) %s' %
                         ('watch rule removed?', str(ex)))
             return
         for wr in wrs:
-            rule = watchrule.WatchRule.load(context, watch=wr)
+            rule = watchrule.WatchRule.load(stack_context, watch=wr)
             rule.evaluate()
 
     def create_watch_data(self, context, watch_name, stats_data):
