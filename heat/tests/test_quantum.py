@@ -23,6 +23,7 @@ import json
 
 from nose.plugins.attrib import attr
 
+from heat.common import context
 from heat.common import exception
 from heat.engine.resources import properties
 from heat.engine.resources.quantum import net
@@ -85,12 +86,12 @@ class QuantumTest(unittest.TestCase):
         return t
 
     def parse_stack(self, t):
-        class DummyContext():
-            tenant = 'test_tenant'
-            username = 'test_username'
-            password = 'password'
-            auth_url = 'http://localhost:5000/v2.0'
-        stack = parser.Stack(DummyContext(), 'test_stack', parser.Template(t),
+        ctx = context.RequestContext.from_dict({
+            'tenant': 'test_tenant',
+            'username': 'test_username',
+            'password': 'password',
+            'auth_url': 'http://localhost:5000/v2.0'})
+        stack = parser.Stack(ctx, 'test_stack', parser.Template(t),
             stack_id=-1, parameters={'external_network': 'abcd1234'})
 
         return stack
