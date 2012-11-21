@@ -121,8 +121,13 @@ def stack_get_by_name(context, stack_name, owner_id=None):
     return query.first()
 
 
-def stack_get(context, stack_id):
+def stack_get(context, stack_id, admin=False):
     result = model_query(context, models.Stack).get(stack_id)
+
+    # If the admin flag is True, we allow retrieval of a specific
+    # stack without the tenant scoping
+    if admin:
+        return result
 
     if (result is not None and context is not None and
         result.tenant != context.tenant_id):
