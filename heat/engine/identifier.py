@@ -72,12 +72,6 @@ class HeatIdentifier(collections.Mapping):
                    urllib.unquote(path.group(2)),
                    urllib.unquote(path.group(3)))
 
-    def stack(self):
-        '''
-        Return a HeatIdentifier for the top-level stack
-        '''
-        return HeatIdentifier(self.tenant, self.stack_name, self.stack_id)
-
     def arn(self):
         '''
         Return an ARN of the form:
@@ -102,6 +96,10 @@ class HeatIdentifier(collections.Mapping):
         return 'stacks/%s/%s%s' % (urllib.quote(self.stack_name, ''),
                                    urllib.quote(self.stack_id, ''),
                                    urllib.quote(self.path))
+
+    def _path_components(self):
+        '''Return a list of the path components'''
+        return self.path.lstrip('/').split('/')
 
     def __getattr__(self, attr):
         '''
@@ -135,10 +133,37 @@ class HeatIdentifier(collections.Mapping):
 
 
 class ResourceIdentifier(HeatIdentifier):
-    def __init__(self, stack_identifier, resource_id):
-        path = (stack_identifier.path.rstrip('/') +
-                '/resources/%s' % resource_id)
-        super(ResourceIdentifier, self).__init__(stack_identifier.tenant,
-                                                 stack_identifier.stack_name,
-                                                 stack_identifier.stack_id,
+    '''An identifier for a resource'''
+
+    RESOURCE_NAME = 'resource_name'
+
+    def __init__(self, tenant, stack_name, stack_id, path,
+                 resource_name=None):
+        '''
+        Return a new Resource identifier based on the identifier components of
+        the owning stack and the resource name.
+        '''
+        if resource_name is not None:
+            path = '/'.join([path.rstrip('/'), 'resources', resource_name])
+        super(ResourceIdentifier, self).__init__(tenant,
+                                                 stack_name,
+                                                 stack_id,
                                                  path)
+
+    def __getattr__(self, attr):
+        '''
+        Return one of the components of the identity when accessed as an
+        attribute.
+        '''
+
+        if attr == self.RESOURCE_NAME:
+            return self._path_components()[-1]
+
+        return HeatIdentifier.__getattr__(self, attr)
+
+    def stack(self):
+        '''
+        Return a HeatIdentifier for the owning stack
+        '''
+        return HeatIdentifier(self.tenant, self.stack_name, self.stack_id,
+                              '/'.join(self._path_components()[:-2]))

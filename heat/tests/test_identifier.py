@@ -222,6 +222,10 @@ class IdentifierTest(unittest.TestCase):
                           'stack_name': 's',
                           'stack_id': 'i'} == hi1)
 
+    def test_path_components(self):
+        hi = identifier.HeatIdentifier('t', 's', 'i', 'p1/p2/p3')
+        self.assertEqual(hi._path_components(), ['p1', 'p2', 'p3'])
+
     def test_uuid_match(self):
         uuid = utils.generate_uuid()
         self.assertTrue(identifier.HeatIdentifier.is_uuid(uuid))
@@ -239,14 +243,28 @@ class IdentifierTest(unittest.TestCase):
 class ResourceIdentifierTest(unittest.TestCase):
     def test_resource_init_no_path(self):
         si = identifier.HeatIdentifier('t', 's', 'i')
-        ri = identifier.ResourceIdentifier(si, 'r')
+        ri = identifier.ResourceIdentifier(resource_name='r', **si)
         self.assertEqual(ri.path, '/resources/r')
 
     def test_resource_init_path(self):
         si = identifier.HeatIdentifier('t', 's', 'i')
-        pi = identifier.ResourceIdentifier(si, 'p')
-        ri = identifier.ResourceIdentifier(pi, 'r')
+        pi = identifier.ResourceIdentifier(resource_name='p', **si)
+        ri = identifier.ResourceIdentifier(resource_name='r', **pi)
         self.assertEqual(ri.path, '/resources/p/resources/r')
+
+    def test_resource_init_from_dict(self):
+        hi = identifier.HeatIdentifier('t', 's', 'i', '/resources/r')
+        ri = identifier.ResourceIdentifier(**hi)
+        self.assertEqual(ri, hi)
+
+    def test_resource_stack(self):
+        si = identifier.HeatIdentifier('t', 's', 'i')
+        ri = identifier.ResourceIdentifier(resource_name='r', **si)
+        self.assertEqual(ri.stack(), si)
+
+    def test_resource_id(self):
+        ri = identifier.ResourceIdentifier('t', 's', 'i', '', 'r')
+        self.assertEqual(ri.resource_name, 'r')
 
 
 # allows testing of the test directly, shown below

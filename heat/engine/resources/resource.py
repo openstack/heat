@@ -134,8 +134,8 @@ class Resource(object):
 
     def identifier(self):
         '''Return an identifier for this resource'''
-        return identifier.ResourceIdentifier(self.stack.identifier(),
-                                             self.name)
+        return identifier.ResourceIdentifier(resource_name=self.name,
+                                             **self.stack.identifier())
 
     def parsed_template(self, section=None, default={}):
         '''

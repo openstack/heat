@@ -31,7 +31,7 @@ def format_resource(req, stack, keys=[]):
             return
 
         if key == engine_api.RES_ID:
-            identity = identifier.HeatIdentifier(**value)
+            identity = identifier.ResourceIdentifier(**value)
             yield ('links', [util.make_link(req, identity),
                              util.make_link(req, identity.stack(), 'stack')])
         elif (key == engine_api.RES_STACK_NAME or

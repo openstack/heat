@@ -796,8 +796,8 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
-        res_identity = identifier.ResourceIdentifier(stack_identity,
-                                                     res_name)
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
 
         req = self._get(stack_identity._tenant_path() + '/resources')
 
@@ -873,8 +873,8 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
-        res_identity = identifier.ResourceIdentifier(stack_identity,
-                                                     res_name)
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
 
         req = self._get(stack_identity._tenant_path())
 
@@ -930,8 +930,8 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'rubbish', '1')
-        res_identity = identifier.ResourceIdentifier(stack_identity,
-                                                     res_name)
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
 
         req = self._get(res_identity._tenant_path())
 
@@ -956,8 +956,8 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
-        res_identity = identifier.ResourceIdentifier(stack_identity,
-                                                     res_name)
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
 
         req = self._get(stack_identity._tenant_path())
 
@@ -998,8 +998,8 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'rubbish', '1')
-        res_identity = identifier.ResourceIdentifier(stack_identity,
-                                                     res_name)
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
 
         req = self._get(res_identity._tenant_path() + '/metadata')
 
