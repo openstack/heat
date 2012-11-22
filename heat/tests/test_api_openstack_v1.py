@@ -35,6 +35,7 @@ from heat.common.wsgi import Request
 
 import heat.api.openstack.v1.stacks as stacks
 import heat.api.openstack.v1.resources as resources
+import heat.api.openstack.v1.events as events
 
 
 @attr(tag=['unit', 'api-openstack-v1'])
@@ -1018,6 +1019,407 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
                           stack_name=stack_identity.stack_name,
                           stack_id=stack_identity.stack_id,
                           resource_name=res_name)
+        self.m.VerifyAll()
+
+
+@attr(tag=['unit', 'api-openstack-v1', 'EventController'])
+@attr(speed='fast')
+class EventControllerTest(ControllerTest, unittest.TestCase):
+    '''
+    Tests the API class which acts as the WSGI controller,
+    the endpoint processing API requests after they are routed
+    '''
+
+    def setUp(self):
+        # Create WSGI controller instance
+        class DummyConfig():
+            bind_port = 8004
+        cfgopts = DummyConfig()
+        self.controller = events.EventController(options=cfgopts)
+
+    def test_resource_index(self):
+        event_id = '42'
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        ev_identity = identifier.EventIdentifier(event_id=event_id,
+                                                 **res_identity)
+
+        req = self._get(stack_identity._tenant_path() +
+                        '/resources/' + res_name + '/events')
+
+        engine_resp = {u'events': [
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'logical_resource_id': res_name,
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            },
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'logical_resource_id': 'SomeOtherResource',
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]}
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_events',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        result = self.controller.index(req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id,
+                                       resource_name=res_name)
+
+        expected = {
+            'events': [
+                {
+                    'id': event_id,
+                    'links': [
+                        {'href': self._url(ev_identity), 'rel': 'self'},
+                        {'href': self._url(res_identity), 'rel': 'resource'},
+                        {'href': self._url(stack_identity), 'rel': 'stack'},
+                    ],
+                    u'logical_resource_id': res_name,
+                    u'resource_status_reason': u'state changed',
+                    u'event_time': u'2012-07-23T13:05:39Z',
+                    u'resource_status': u'IN_PROGRESS',
+                    u'physical_resource_id': None,
+                }
+            ]
+        }
+
+        self.assertEqual(result, expected)
+        self.m.VerifyAll()
+
+    def test_stack_index(self):
+        event_id = '42'
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        ev_identity = identifier.EventIdentifier(event_id=event_id,
+                                                 **res_identity)
+
+        req = self._get(stack_identity._tenant_path() + '/events')
+
+        engine_resp = {u'events': [
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'logical_resource_id': res_name,
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]}
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_events',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        result = self.controller.index(req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id)
+
+        expected = {
+            'events': [
+                {
+                    'id': event_id,
+                    'links': [
+                        {'href': self._url(ev_identity), 'rel': 'self'},
+                        {'href': self._url(res_identity), 'rel': 'resource'},
+                        {'href': self._url(stack_identity), 'rel': 'stack'},
+                    ],
+                    u'logical_resource_id': res_name,
+                    u'resource_status_reason': u'state changed',
+                    u'event_time': u'2012-07-23T13:05:39Z',
+                    u'resource_status': u'IN_PROGRESS',
+                    u'physical_resource_id': None,
+                }
+            ]
+        }
+
+        self.assertEqual(result, expected)
+        self.m.VerifyAll()
+
+    def test_index_stack_nonexist(self):
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wibble', '6')
+
+        req = self._get(stack_identity._tenant_path() + '/events')
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_events',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.index,
+                          req, tenant_id=self.tenant,
+                          stack_name=stack_identity.stack_name,
+                          stack_id=stack_identity.stack_id)
+        self.m.VerifyAll()
+
+    def test_index_resource_nonexist(self):
+        event_id = '42'
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        ev_identity = identifier.EventIdentifier(event_id=event_id,
+                                                 **res_identity)
+
+        req = self._get(stack_identity._tenant_path() +
+                        '/resources/' + res_name + '/events')
+
+        engine_resp = {u'events': [
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'logical_resource_id': 'SomeOtherResource',
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]}
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_events',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.index,
+                          req, tenant_id=self.tenant,
+                          stack_name=stack_identity.stack_name,
+                          stack_id=stack_identity.stack_id,
+                          resource_name=res_name)
+        self.m.VerifyAll()
+
+    def test_show(self):
+        event_id = '42'
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        ev1_identity = identifier.EventIdentifier(event_id='41',
+                                                  **res_identity)
+        ev_identity = identifier.EventIdentifier(event_id=event_id,
+                                                 **res_identity)
+
+        req = self._get(stack_identity._tenant_path() +
+                        '/resources/' + res_name + '/events/' + event_id)
+
+        engine_resp = {u'events': [
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'logical_resource_id': res_name,
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev1_identity),
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            },
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:06:00Z',
+                u'stack_identity': dict(stack_identity),
+                u'logical_resource_id': res_name,
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_status': u'CREATE_COMPLETE',
+                u'physical_resource_id':
+                    u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]}
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_events',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        result = self.controller.show(req, tenant_id=self.tenant,
+                                      stack_name=stack_identity.stack_name,
+                                      stack_id=stack_identity.stack_id,
+                                      resource_name=res_name,
+                                      event_id=event_id)
+
+        expected = {
+            'event': {
+                'id': event_id,
+                'links': [
+                    {'href': self._url(ev_identity), 'rel': 'self'},
+                    {'href': self._url(res_identity), 'rel': 'resource'},
+                    {'href': self._url(stack_identity), 'rel': 'stack'},
+                ],
+                u'logical_resource_id': res_name,
+                u'resource_status_reason': u'state changed',
+                u'event_time': u'2012-07-23T13:06:00Z',
+                u'resource_status': u'CREATE_COMPLETE',
+                u'physical_resource_id':
+                    u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                u'resource_type': u'AWS::EC2::Instance',
+                u'resource_properties': {u'UserData': u'blah'},
+            }
+        }
+
+        self.assertEqual(result, expected)
+        self.m.VerifyAll()
+
+    def test_show_nonexist(self):
+        event_id = '42'
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        ev_identity = identifier.EventIdentifier(event_id='41',
+                                                  **res_identity)
+
+        req = self._get(stack_identity._tenant_path() +
+                        '/resources/' + res_name + '/events/' + event_id)
+
+        engine_resp = {u'events': [
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'logical_resource_id': res_name,
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]}
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_events',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.show,
+                          req, tenant_id=self.tenant,
+                          stack_name=stack_identity.stack_name,
+                          stack_id=stack_identity.stack_id,
+                          resource_name=res_name, event_id=event_id)
+        self.m.VerifyAll()
+
+    def test_show_bad_resource(self):
+        event_id = '42'
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '6')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+        ev_identity = identifier.EventIdentifier(event_id='41',
+                                                  **res_identity)
+
+        req = self._get(stack_identity._tenant_path() +
+                        '/resources/' + res_name + '/events/' + event_id)
+
+        engine_resp = {u'events': [
+            {
+                u'stack_name': u'wordpress',
+                u'event_time': u'2012-07-23T13:05:39Z',
+                u'stack_identity': dict(stack_identity),
+                u'logical_resource_id': 'SomeOtherResourceName',
+                u'resource_status_reason': u'state changed',
+                u'event_identity': dict(ev_identity),
+                u'resource_status': u'IN_PROGRESS',
+                u'physical_resource_id': None,
+                u'resource_properties': {u'UserData': u'blah'},
+                u'resource_type': u'AWS::EC2::Instance',
+            }
+        ]}
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_events',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.show,
+                          req, tenant_id=self.tenant,
+                          stack_name=stack_identity.stack_name,
+                          stack_id=stack_identity.stack_id,
+                          resource_name=res_name, event_id=event_id)
+        self.m.VerifyAll()
+
+    def test_show_stack_nonexist(self):
+        event_id = '42'
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wibble', '6')
+
+        req = self._get(stack_identity._tenant_path() +
+                        '/resources/' + res_name + '/events/' + event_id)
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_events',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.show,
+                          req, tenant_id=self.tenant,
+                          stack_name=stack_identity.stack_name,
+                          stack_id=stack_identity.stack_id,
+                          resource_name=res_name, event_id=event_id)
         self.m.VerifyAll()
 
 

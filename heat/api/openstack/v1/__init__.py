@@ -20,6 +20,7 @@ gettext.install('heat', unicode=1)
 
 from heat.api.openstack.v1 import stacks
 from heat.api.openstack.v1 import resources
+from heat.api.openstack.v1 import events
 from heat.common import wsgi
 
 from heat.openstack.common import log as logging
@@ -61,8 +62,10 @@ class API(wsgi.Router):
             stack_mapper.connect("stack_lookup",
                                  "/stacks/{stack_name}",
                                  action="lookup")
+            subpaths = ['resources', 'events']
+            path = "{path:%s}" % '|'.join(subpaths)
             stack_mapper.connect("stack_lookup_subpath",
-                                 "/stacks/{stack_name}/{path:resources}",
+                                 "/stacks/{stack_name}/" + path,
                                  action="lookup",
                                  conditions={'method': 'GET'})
             stack_mapper.connect("stack_show",
@@ -105,5 +108,27 @@ class API(wsgi.Router):
                                "/resources/{resource_name}/metadata",
                                action="metadata",
                                conditions={'method': 'GET'})
+
+        # Events
+        events_resource = events.create_resource(conf)
+        with mapper.submapper(controller=events_resource,
+                              path_prefix=stack_path) as ev_mapper:
+
+            # Stack event collection
+            ev_mapper.connect("event_index_stack",
+                              "/events",
+                              action="index",
+                              conditions={'method': 'GET'})
+            # Resource event collection
+            ev_mapper.connect("event_index_resource",
+                              "/resources/{resource_name}/events",
+                              action="index",
+                              conditions={'method': 'GET'})
+
+            # Event data
+            ev_mapper.connect("event_show",
+                              "/resources/{resource_name}/events/{event_id}",
+                              action="show",
+                              conditions={'method': 'GET'})
 
         super(API, self).__init__(mapper)
