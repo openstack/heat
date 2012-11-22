@@ -267,6 +267,41 @@ class ResourceIdentifierTest(unittest.TestCase):
         self.assertEqual(ri.resource_name, 'r')
 
 
+@attr(tag=['unit', 'identifier'])
+@attr(speed='fast')
+class EventIdentifierTest(unittest.TestCase):
+    def test_event_init(self):
+        si = identifier.HeatIdentifier('t', 's', 'i')
+        pi = identifier.ResourceIdentifier(resource_name='p', **si)
+        ei = identifier.EventIdentifier(event_id='e', **pi)
+        self.assertEqual(ei.path, '/resources/p/events/e')
+
+    def test_event_init_from_dict(self):
+        hi = identifier.HeatIdentifier('t', 's', 'i', '/resources/p/events/42')
+        ei = identifier.EventIdentifier(**hi)
+        self.assertEqual(ei, hi)
+
+    def test_event_stack(self):
+        si = identifier.HeatIdentifier('t', 's', 'i')
+        pi = identifier.ResourceIdentifier(resource_name='r', **si)
+        ei = identifier.EventIdentifier(event_id='e', **pi)
+        self.assertEqual(ei.stack(), si)
+
+    def test_event_resource(self):
+        si = identifier.HeatIdentifier('t', 's', 'i')
+        pi = identifier.ResourceIdentifier(resource_name='r', **si)
+        ei = identifier.EventIdentifier(event_id='e', **pi)
+        self.assertEqual(ei.resource(), pi)
+
+    def test_resource_name(self):
+        ei = identifier.EventIdentifier('t', 's', 'i', '/resources/p', 'e')
+        self.assertEqual(ei.resource_name, 'p')
+
+    def test_event_id(self):
+        ei = identifier.EventIdentifier('t', 's', 'i', '/resources/p', 'e')
+        self.assertEqual(ei.event_id, 'e')
+
+
 # allows testing of the test directly, shown below
 if __name__ == '__main__':
     sys.argv.append(__file__)
