@@ -48,7 +48,8 @@ class StackController(object):
         self.options = options
         self.engine_rpcapi = engine_rpcapi.EngineAPI()
 
-    def _stackid_format(self, resp):
+    @staticmethod
+    def _id_format(resp):
         """
         Format the StackId field in the response as an ARN, and process other
         IDs into the correct format.
@@ -118,7 +119,7 @@ class StackController(object):
             if engine_api.STACK_DELETION_TIME in s:
                 result['DeletionTime'] = s[engine_api.STACK_DELETION_TIME]
 
-            return self._stackid_format(result)
+            return self._id_format(result)
 
         con = req.context
         try:
@@ -196,7 +197,7 @@ class StackController(object):
                 'ParameterValue':v}
                 for (k, v) in result['Parameters'].items()]
 
-            return self._stackid_format(result)
+            return self._id_format(result)
 
         con = req.context
         # If no StackName parameter is passed, we pass None into the engine
@@ -443,7 +444,7 @@ class StackController(object):
             result['ResourceProperties'] = json.dumps(
                                            result['ResourceProperties'])
 
-            return self._stackid_format(result)
+            return self._id_format(result)
 
         con = req.context
         stack_name = req.params.get('StackName', None)
@@ -485,7 +486,7 @@ class StackController(object):
 
             result = api_utils.reformat_dict_keys(keymap, r)
 
-            return self._stackid_format(result)
+            return self._id_format(result)
 
         con = req.context
 
@@ -538,7 +539,7 @@ class StackController(object):
 
             result = api_utils.reformat_dict_keys(keymap, r)
 
-            return self._stackid_format(result)
+            return self._id_format(result)
 
         con = req.context
         stack_name = req.params.get('StackName')

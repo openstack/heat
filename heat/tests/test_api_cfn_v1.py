@@ -64,7 +64,7 @@ class StackControllerTest(unittest.TestCase):
     def test_stackid_addprefix(self):
         self.m.ReplayAll()
 
-        response = self.controller._stackid_format({
+        response = self.controller._id_format({
             'StackName': 'Foo',
             'StackId': {
                 u'tenant': u't',
