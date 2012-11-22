@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import yaml
+import json
+import re
+from heat.engine import format
+
+def main():
+    path = sys.argv[1]
+    if os.path.isdir(path):
+        convert_directory(path)
+    elif os.path.isfile(path):
+        convert_file()
+    else:
+        print 'File or directory not valid: %s' % path
+
+def convert_file(path):
+    f = open(path, 'r')
+    print json2yaml(f)
+
+def convert_directory(dirpath):
+    for path in os.listdir(dirpath):
+        if not path.endswith('.template') and not path.endswith('.json'):
+            continue
+        yamlpath = re.sub('\..*$', '.yaml', path)
+        print 'Writing to %s' % yamlpath
+        f = open(os.path.join(dirpath, path), 'r')
+        out = open(os.path.join(dirpath, yamlpath), 'w')
+        yml = format.convert_json_to_yaml(f.read())
+        out.write(yml)
+        out.close()
+
+if __name__ == '__main__':
+    main()
