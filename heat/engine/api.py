@@ -157,7 +157,7 @@ EVENT_KEYS = (
     EVENT_RES_STATUS, EVENT_RES_STATUS_DATA, EVENT_RES_TYPE,
     EVENT_RES_PROPERTIES,
 ) = (
-    'event_id',
+    'event_identity',
     STACK_ID, STACK_NAME,
     "event_time",
     RES_NAME, RES_PHYSICAL_ID,
@@ -170,7 +170,7 @@ def format_event(event):
     stack_identifier = event.stack.identifier()
 
     result = {
-        EVENT_ID: event.id,
+        EVENT_ID: dict(event.identifier()),
         EVENT_STACK_ID: dict(stack_identifier),
         EVENT_STACK_NAME: stack_identifier.stack_name,
         EVENT_TIMESTAMP: timeutils.isotime(event.timestamp),

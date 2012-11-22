@@ -412,8 +412,9 @@ class stackServiceTest(unittest.TestCase):
 
         self.assertEqual(len(events), 2)
         for ev in events:
-            self.assertTrue('event_id' in ev)
-            self.assertTrue(ev['event_id'] > 0)
+            self.assertTrue('event_identity' in ev)
+            self.assertEqual(type(ev['event_identity']), dict)
+            self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
             self.assertTrue('logical_resource_id' in ev)
             self.assertEqual(ev['logical_resource_id'], 'WebServer')

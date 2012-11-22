@@ -779,7 +779,12 @@ class StackControllerTest(unittest.TestCase):
                                             u'path': u''},
                         u'logical_resource_id': u'WikiDatabase',
                         u'resource_status_reason': u'state changed',
-                        u'event_id': 42,
+                        u'event_identity': {
+                            u'tenant': u't',
+                            u'stack_name': u'wordpress',
+                            u'stack_id': u'6',
+                            u'path': u'/resources/WikiDatabase/events/42'
+                        },
                         u'resource_status': u'IN_PROGRESS',
                         u'physical_resource_id': None,
                         u'resource_properties':
@@ -802,7 +807,7 @@ class StackControllerTest(unittest.TestCase):
         expected = {'DescribeStackEventsResponse':
             {'DescribeStackEventsResult':
             {'StackEvents':
-                [{'EventId': 42,
+                [{'EventId': u'42',
                 'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
                 'ResourceStatus': u'IN_PROGRESS',
                 'ResourceType': u'AWS::EC2::Instance',

@@ -50,12 +50,15 @@ class StackController(object):
 
     def _stackid_format(self, resp):
         """
-        Add a host:port:stack prefix, this formats the StackId in the response
-        more like the AWS spec
+        Format the StackId field in the response as an ARN, and process other
+        IDs into the correct format.
         """
         if 'StackId' in resp:
             identity = identifier.HeatIdentifier(**resp['StackId'])
             resp['StackId'] = identity.arn()
+        if 'EventId' in resp:
+            identity = identifier.EventIdentifier(**resp['EventId'])
+            resp['EventId'] = identity.event_id
         return resp
 
     @staticmethod
