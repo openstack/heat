@@ -16,6 +16,7 @@
 import base64
 from datetime import datetime
 
+from heat.engine.resources import event
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import identifier
@@ -331,17 +332,12 @@ class Resource(object):
 
     def _add_event(self, new_state, reason):
         '''Add a state change event to the database'''
-        ev = {'logical_resource_id': self.name,
-              'physical_resource_id': self.resource_id,
-              'stack_id': self.stack.id,
-              'stack_name': self.stack.name,
-              'resource_status': new_state,
-              'name': new_state,
-              'resource_status_reason': reason,
-              'resource_type': self.type(),
-              'resource_properties': dict(self.properties)}
+        ev = event.Event(self.context, self.stack, self,
+                         new_state, reason,
+                         self.resource_id, self.properties)
+
         try:
-            db_api.event_create(self.context, ev)
+            ev.store()
         except Exception as ex:
             logger.error('DB error %s' % str(ex))
 

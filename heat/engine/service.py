@@ -19,6 +19,7 @@ import webob
 from heat.common import context
 from heat.db import api as db_api
 from heat.engine import api
+from heat.engine.resources.event import Event
 from heat.engine import identifier
 from heat.engine import parser
 from heat.engine import watchrule
@@ -338,7 +339,9 @@ class EngineService(service.Service):
         else:
             events = db_api.event_get_all_by_tenant(context)
 
-        return {'events': [api.format_event(context, e) for e in events]}
+        output = [api.format_event(Event.load(context, e.id)) for e in events]
+
+        return {'events': output}
 
     @request_context
     def describe_stack_resource(self, context, stack_identity, resource_name):

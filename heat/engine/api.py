@@ -166,18 +166,19 @@ EVENT_KEYS = (
 )
 
 
-def format_event(context, event):
-    stack = parser.Stack.load(context, stack=event.stack)
+def format_event(event):
+    stack_identifier = event.stack.identifier()
+
     result = {
         EVENT_ID: event.id,
-        EVENT_STACK_ID: dict(stack.identifier()),
-        EVENT_STACK_NAME: stack.name,
-        EVENT_TIMESTAMP: timeutils.isotime(event.created_at),
-        EVENT_RES_NAME: event.logical_resource_id,
+        EVENT_STACK_ID: dict(stack_identifier),
+        EVENT_STACK_NAME: stack_identifier.stack_name,
+        EVENT_TIMESTAMP: timeutils.isotime(event.timestamp),
+        EVENT_RES_NAME: event.resource.name,
         EVENT_RES_PHYSICAL_ID: event.physical_resource_id,
-        EVENT_RES_STATUS: event.name,
-        EVENT_RES_STATUS_DATA: event.resource_status_reason,
-        EVENT_RES_TYPE: event.resource_type,
+        EVENT_RES_STATUS: event.new_state,
+        EVENT_RES_STATUS_DATA: event.reason,
+        EVENT_RES_TYPE: event.resource.type(),
         EVENT_RES_PROPERTIES: event.resource_properties,
     }
 
