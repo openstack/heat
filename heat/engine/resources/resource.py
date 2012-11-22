@@ -132,6 +132,9 @@ class Resource(object):
             return result
         return not result
 
+    def type(self):
+        return self.t['Type']
+
     def identifier(self):
         '''Return an identifier for this resource'''
         return identifier.ResourceIdentifier(resource_name=self.name,
@@ -335,7 +338,7 @@ class Resource(object):
               'resource_status': new_state,
               'name': new_state,
               'resource_status_reason': reason,
-              'resource_type': self.t['Type'],
+              'resource_type': self.type(),
               'resource_properties': dict(self.properties)}
         try:
             db_api.event_create(self.context, ev)
@@ -399,9 +402,7 @@ class GenericResource(Resource):
     properties_schema = {}
 
     def handle_create(self):
-        logger.warning('Creating generic resource (Type "%s")' %
-                self.t['Type'])
+        logger.warning('Creating generic resource (Type "%s")' % self.type())
 
     def handle_update(self):
-        logger.warning('Updating generic resource (Type "%s")' %
-                self.t['Type'])
+        logger.warning('Updating generic resource (Type "%s")' % self.type())

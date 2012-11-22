@@ -49,6 +49,11 @@ class ResourceTest(unittest.TestCase):
         res.state_set('blarg', 'wibble')
         self.assertEqual(res.state_description, 'wibble')
 
+    def test_type(self):
+        tmpl = {'Type': 'Foo'}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        self.assertEqual(res.type(), 'Foo')
+
     def test_created_time(self):
         tmpl = {'Type': 'Foo'}
         res = resource.GenericResource('test_res_new', tmpl, self.stack)
