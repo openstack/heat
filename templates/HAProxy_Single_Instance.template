@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
 
-  "Description": "A Database instance running a local MySQL server",
+  "Description": "A load balancer instance running a local HAproxy",
 
   "Parameters": {
 
@@ -16,7 +16,7 @@
     },
 
     "InstanceType": {
-      "Description": "Database server EC2 instance type",
+      "Description": "HAProxy server EC2 instance type",
       "Default": "m1.small",
       "Type": "String",
       "AllowedValues": [ "t1.micro", "m1.small", "m1.large", "m1.xlarge", "m2.xlarge", "m2.2xlarge", "m2.4xlarge", "c1.medium", "c1.xlarge", "cc1.4xlarge" ],
