@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
 from heat.common import exception
 from heat.openstack.common import cfg
 from heat.engine import resource
@@ -27,14 +26,6 @@ logger = logging.getLogger('heat.engine.user')
 #
 # For now support users and accesskeys.
 #
-
-
-class DummyId:
-    def __init__(self, id):
-        self.id = id
-
-    def __eq__(self, other):
-        return self.id == other.id
 
 
 class User(resource.Resource):
@@ -55,69 +46,18 @@ class User(resource.Resource):
             'Password' in self.properties['LoginProfile']:
             passwd = self.properties['LoginProfile']['Password']
 
-        tenant_id = self.context.tenant_id
-        user = self.keystone().users.create(self.physical_resource_name(),
-                                            passwd,
-                                            '%s@heat-api.org' %
-                                            self.physical_resource_name(),
-                                            tenant_id=tenant_id,
-                                            enabled=True)
-        self.resource_id_set(user.id)
-
-        # We add the new user to a special keystone role
-        # This role is designed to allow easier differentiation of the
-        # heat-generated "stack users" which will generally have credentials
-        # deployed on an instance (hence are implicitly untrusted)
-        roles = self.keystone().roles.list()
-        stack_user_role = [r.id for r in roles
-                         if r.name == cfg.CONF.heat_stack_user_role]
-        if len(stack_user_role) == 1:
-            role_id = stack_user_role[0]
-            logger.debug("Adding user %s to role %s" % (user.id, role_id))
-            self.keystone().roles.add_user_role(user.id, role_id, tenant_id)
-        else:
-            logger.error("Failed to add user %s to role %s, check role exists!"
-                         % (self.physical_resource_name(),
-                            cfg.CONF.heat_stack_user_role))
+        uid = self.keystone().create_stack_user(self.physical_resource_name(),
+                                                 passwd)
+        self.resource_id_set(uid)
 
     def handle_update(self):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
         if self.resource_id is None:
+            logger.error("Cannot delete User resource before user created!")
             return
-        try:
-            user = self.keystone().users.get(DummyId(self.resource_id))
-        except Exception as ex:
-            logger.info('user %s/%s does not exist' %
-                        (self.physical_resource_name(), self.resource_id))
-            return
-
-        # tempory hack to work around an openstack bug.
-        # seems you can't delete a user first time - you have to try
-        # a couple of times - go figure!
-        tmo = eventlet.Timeout(10)
-        status = 'WAITING'
-        reason = 'Timed out trying to delete user'
-        try:
-            while status == 'WAITING':
-                try:
-                    user.delete()
-                    status = 'DELETED'
-                except Exception as ce:
-                    reason = str(ce)
-                    eventlet.sleep(1)
-        except eventlet.Timeout as t:
-            if t is not tmo:
-                # not my timeout
-                raise
-            else:
-                status = 'TIMEDOUT'
-        finally:
-            tmo.cancel()
-
-        if status != 'DELETED':
-            raise exception.Error(reason)
+        self.keystone().delete_stack_user(self.resource_id)
 
     def FnGetRefId(self):
         return unicode(self.physical_resource_name())
@@ -141,58 +81,53 @@ class AccessKey(resource.Resource):
         super(AccessKey, self).__init__(name, json_snippet, stack)
         self._secret = None
 
-    def _user_from_name(self, username):
-        tenant_id = self.context.tenant_id
-        users = self.keystone().users.list(tenant_id=tenant_id)
-        for u in users:
-            if u.name == username:
-                return u
-        return None
-
     def handle_create(self):
         username = self.properties['UserName']
-        user = self._user_from_name(username)
-        if user is None:
+        user_id = self.keystone().get_user_by_name(username)
+        if user_id is None:
             raise exception.NotFound('could not find user %s' %
                                      username)
 
-        tenant_id = self.context.tenant_id
-        cred = self.keystone().ec2.create(user.id, tenant_id)
-        self.resource_id_set(cred.access)
-        self._secret = cred.secret
+        kp = self.keystone().get_ec2_keypair(user_id)
+        if not kp:
+            raise exception.Error("Error creating ec2 keypair for user %s" %
+                                  user_id)
+        else:
+            self.resource_id_set(kp.access)
+            self._secret = kp.secret
 
     def handle_update(self):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
-        user = self._user_from_name(self.properties['UserName'])
-        if user and self.resource_id:
-            self.keystone().ec2.delete(user.id, self.resource_id)
+        self.resource_id_set(None)
+        self._secret = None
+        user_id = self.keystone().get_user_by_name(self.properties['UserName'])
+        if user_id and self.resource_id:
+            self.keystone().delete_ec2_keypair(user_id, self.resource_id)
 
     def _secret_accesskey(self):
         '''
         Return the user's access key, fetching it from keystone if necessary
         '''
+        user_id = self.keystone().get_user_by_name(self.properties['UserName'])
         if self._secret is None:
-            try:
-                # Here we use the user_id of the user context of the request
-                # We need to avoid using _user_from_name, because users.list
-                # needs keystone admin role, and we want to allow an instance
-                # user to retrieve data about itself:
-                # - Users without admin role cannot create or delete, but they
-                #   can see their own secret key (but nobody elses)
-                # - Users with admin role can create/delete and view the
-                #   private keys of all users in their tenant
-                # This will allow "instance users" to retrieve resource
-                # metadata but not manipulate user resources in any other way
-                user_id = self.keystone().auth_user_id
-                cred = self.keystone().ec2.get(user_id, self.resource_id)
-                self._secret = cred.secret
-                self.resource_id_set(cred.access)
-            except Exception as ex:
+            if not self.resource_id:
                 logger.warn('could not get secret for %s Error:%s' %
                             (self.properties['UserName'],
-                             str(ex)))
+                            "resource_id not yet set"))
+            else:
+                try:
+                    kp = self.keystone().get_ec2_keypair(user_id)
+                except Exception as ex:
+                    logger.warn('could not get secret for %s Error:%s' %
+                                (self.properties['UserName'],
+                                 str(ex)))
+                if kp.access == self.resource_id:
+                    self._secret = kp.secret
+                else:
+                    logger.error("Unexpected ec2 keypair, for %s access %s" %
+                                 (user_id, kp.access))
 
         return self._secret or '000-000-000'
 

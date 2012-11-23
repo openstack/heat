@@ -15,7 +15,6 @@
 
 
 from novaclient.v1_1 import client as nc
-from keystoneclient.v2_0 import client as kc
 
 # swiftclient not available in all distributions - make s3 an optional
 # feature
@@ -32,6 +31,8 @@ try:
 except ImportError:
     quantumclient_present = False
 
+from heat.common import heat_keystoneclient as kc
+from heat.openstack.common import cfg
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger('heat.engine.clients')
@@ -53,29 +54,7 @@ class Clients(object):
         if self._keystone:
             return self._keystone
 
-        con = self.context
-        args = {
-            'auth_url': con.auth_url,
-        }
-
-        if con.password is not None:
-            args['username'] = con.username
-            args['password'] = con.password
-            args['tenant_name'] = con.tenant
-            args['tenant_id'] = con.tenant_id
-        elif con.auth_token is not None:
-            args['username'] = con.service_user
-            args['password'] = con.service_password
-            args['tenant_name'] = con.service_tenant
-            args['token'] = con.auth_token
-        else:
-            logger.error("Keystone connection failed, no password or " +
-                         "auth_token!")
-            return None
-
-        client = kc.Client(**args)
-        client.authenticate()
-        self._keystone = client
+        self._keystone = kc.KeystoneClient(self.context)
         return self._keystone
 
     def nova(self, service_type='compute'):
