@@ -26,6 +26,7 @@ from webob import exc
 
 from heat.api.openstack.v1 import util
 from heat.common import wsgi
+from heat.engine import format
 from heat.engine import api as engine_api
 from heat.engine import rpcapi as engine_rpcapi
 
@@ -57,16 +58,16 @@ class InstantiationData(object):
         self.data = data
 
     @staticmethod
-    def json_parse(data, data_type):
+    def format_parse(data, data_type):
         """
-        Parse the supplied data as JSON, raising the appropriate exception
-        if it is in the wrong format.
+        Parse the supplied data as JSON or YAML, raising the appropriate
+        exception if it is in the wrong format.
         """
 
         try:
-            return json.loads(data)
+            return format.parse_to_template(data)
         except ValueError:
-            err_reason = "%s not in valid JSON format" % data_type
+            err_reason = "%s not in valid format" % data_type
             raise exc.HTTPBadRequest(explanation=err_reason)
 
     def stack_name(self):
@@ -79,7 +80,8 @@ class InstantiationData(object):
 
     def _load_template(self, template_url):
         """
-        Retrieve a template from a URL, in JSON format.
+        Retrieve a template from a URL, in JSON
+        or YAML format.
         """
         logger.debug('Template URL %s' % template_url)
         url = urlparse.urlparse(template_url)
@@ -98,7 +100,7 @@ class InstantiationData(object):
                 if resp.status != 200:
                     raise exc.HTTPBadRequest(explanation=err_reason)
 
-                return self.json_parse(resp.read(), 'Template')
+                return self.format_parse(resp.read(), 'Template')
             finally:
                 conn.close()
         except socket.gaierror:
@@ -107,10 +109,14 @@ class InstantiationData(object):
     def template(self):
         """
         Get template file contents, either inline or from a URL, in JSON
-        format.
+        or YAML format.
         """
         if self.PARAM_TEMPLATE in self.data:
-            return self.data[self.PARAM_TEMPLATE]
+            tpl = self.data[self.PARAM_TEMPLATE]
+            if isinstance(tpl, dict):
+                return tpl
+            return self.format_parse(self.data[self.PARAM_TEMPLATE],
+                'Template')
         elif self.PARAM_TEMPLATE_URL in self.data:
             return self._load_template(self.data[self.PARAM_TEMPLATE_URL])
 

@@ -18,6 +18,7 @@ import socket
 import nose
 import mox
 import json
+import yaml
 import unittest
 from nose.plugins.attrib import attr
 
@@ -48,16 +49,16 @@ class InstantiationDataTest(unittest.TestCase):
     def tearDown(self):
         self.m.UnsetStubs()
 
-    def test_json_parse(self):
+    def test_format_parse(self):
         data = {"key1": ["val1[0]", "val1[1]"], "key2": "val2"}
         json_repr = '{ "key1": [ "val1[0]", "val1[1]" ], "key2": "val2" }'
-        parsed = stacks.InstantiationData.json_parse(json_repr, 'foo')
+        parsed = stacks.InstantiationData.format_parse(json_repr, 'foo')
         self.assertEqual(parsed, data)
 
-    def test_json_parse_invalid(self):
+    def test_format_parse_invalid(self):
         self.assertRaises(webob.exc.HTTPBadRequest,
-                          stacks.InstantiationData.json_parse,
-                          'not json', 'Garbage')
+                          stacks.InstantiationData.format_parse,
+                          '!@#$%^&not json', 'Garbage')
 
     def test_stack_name(self):
         body = {'stack_name': 'wibble'}
@@ -74,6 +75,20 @@ class InstantiationDataTest(unittest.TestCase):
         body = {'template': template}
         data = stacks.InstantiationData(body)
         self.assertEqual(data.template(), template)
+
+    def test_template_string_json(self):
+        template = '{"foo": "bar", "blarg": "wibble"}'
+        body = {'template': template}
+        data = stacks.InstantiationData(body)
+        self.assertEqual(data.template(), json.loads(template))
+
+    def test_template_string_yaml(self):
+        template = '''foo: bar
+blarg: wibble
+'''
+        body = {'template': template}
+        data = stacks.InstantiationData(body)
+        self.assertEqual(data.template(), yaml.load(template))
 
     def test_template_url(self):
         template = {'foo': 'bar', 'blarg': 'wibble'}
