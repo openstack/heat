@@ -21,6 +21,7 @@ import json
 
 from heat.common import context
 from heat.common import exception
+from heat.engine import format
 from heat.engine import parser
 from heat.engine import parameters
 from heat.engine import template
@@ -98,7 +99,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(join(raw), 'foo bar\nbaz')
 
 
-mapping_template = json.loads('''{
+mapping_template = format.parse_to_template('''{
   "Mappings" : {
     "ValidMapping" : {
       "TestKey" : { "TestValue" : "wibble" }

@@ -27,6 +27,7 @@ from nose.plugins.attrib import attr
 from heat.common import exception
 from heat.common import context
 from heat.common import config
+from heat.engine import format
 from heat.engine import parser
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
@@ -65,7 +66,7 @@ class LoadBalancerTest(unittest.TestCase):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
             replace('heat/tests', 'templates')
         f = open("%s/WordPress_With_LB.template" % self.path)
-        t = json.loads(f.read())
+        t = format.parse_to_template(f.read())
         f.close()
         return t
 
@@ -123,7 +124,7 @@ class LoadBalancerTest(unittest.TestCase):
 
         self.assertEqual('LoadBalancer', resource.FnGetRefId())
 
-        templ = json.loads(lb.lb_template)
+        templ = format.parse_to_template(lb.lb_template)
         ha_cfg = resource._haproxy_config(templ,
                                           resource.properties['Instances'])
         self.assertRegexpMatches(ha_cfg, 'bind \*:80')

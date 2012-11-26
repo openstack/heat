@@ -27,6 +27,7 @@ from heat.common import context
 from heat.tests.v1_1 import fakes
 import heat.engine.api as engine_api
 import heat.db as db_api
+from heat.engine import format
 from heat.engine import parser
 from heat.engine import service
 from heat.engine.resources import instance as instances
@@ -54,7 +55,7 @@ def get_wordpress_stack(stack_name, ctx):
     tmpl_path = os.path.join(templates_dir,
                              'WordPress_Single_Instance_gold.template')
     with open(tmpl_path) as f:
-        t = json.load(f)
+        t = format.parse_to_template(f.read())
 
     template = parser.Template(t)
     parameters = parser.Parameters(stack_name, template,

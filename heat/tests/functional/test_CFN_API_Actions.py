@@ -21,6 +21,8 @@ from nose.plugins.attrib import attr
 import unittest
 import json
 
+from heat.engine import format
+
 
 @attr(speed='slow')
 @attr(tag=['func', 'wordpress', 'api', 'cfn', 'F17'])
@@ -280,7 +282,7 @@ class CfnApiFunctionalTest(unittest.TestCase):
         # Extract the JSON TemplateBody and prove it parses
         template = self.stack.response_xml_item(response, prefix,
                                                 "TemplateBody")
-        json_load = json.loads(template)
+        json_load = format.parse_to_template(template)
         self.assertTrue(json_load != None)
 
         # Then sanity check content - I guess we could diff

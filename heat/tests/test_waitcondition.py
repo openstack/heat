@@ -24,6 +24,7 @@ import unittest
 from nose.plugins.attrib import attr
 
 import heat.db as db_api
+from heat.engine import format
 from heat.engine import parser
 from heat.engine.resources import wait_condition as wc
 from heat.common import context
@@ -76,7 +77,7 @@ class stacksTest(unittest.TestCase):
 
     def test_post_success_to_handle(self):
 
-        t = json.loads(test_template_waitcondition)
+        t = format.parse_to_template(test_template_waitcondition)
         stack = self.create_stack('test_stack', t, {})
 
         wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
@@ -105,7 +106,7 @@ class stacksTest(unittest.TestCase):
 
     def test_timeout(self):
 
-        t = json.loads(test_template_waitcondition)
+        t = format.parse_to_template(test_template_waitcondition)
         stack = self.create_stack('test_stack', t, {})
 
         tmo = eventlet.Timeout(6)

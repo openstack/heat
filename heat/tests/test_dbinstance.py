@@ -25,6 +25,7 @@ from nose.plugins.attrib import attr
 
 from heat.common import context
 from heat.common import exception
+from heat.engine import format
 from heat.engine import parser
 from heat.engine.resources import stack
 from heat.engine.resources import dbinstance as dbi
@@ -46,7 +47,7 @@ class DBInstanceTest(unittest.TestCase):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
             replace('heat/tests', 'templates')
         f = open("%s/WordPress_With_RDS.template" % self.path)
-        t = json.loads(f.read())
+        t = format.parse_to_template(f.read())
         f.close()
         return t
 
