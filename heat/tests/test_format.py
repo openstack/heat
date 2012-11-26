@@ -94,3 +94,66 @@ Outputs: {}
         tpl1 = format.parse_to_template(yaml1)
         tpl2 = format.parse_to_template(yaml2)
         self.assertEqual(tpl1, tpl2)
+
+
+@attr(tag=['unit'])
+class JsonYamlResolvedCompareTest(unittest.TestCase):
+
+    def setUp(self):
+        self.longMessage = True
+        self.maxDiff = None
+
+    def load_template(self, file_name):
+        self.path = os.path.dirname(os.path.realpath(__file__)).\
+            replace('heat/tests', 'templates')
+        f = open("%s/%s" % (self.path, file_name))
+        t = format.parse_to_template(f.read())
+        f.close()
+        return t
+
+    def parse_stack(self, t, parameters):
+        ctx = context.RequestContext.from_dict({
+            'tenant': 'test_tenant',
+            'username': 'test_username',
+            'password': 'password',
+            'auth_url': 'http://localhost:5000/v2.0'})
+        template = parser.Template(t)
+        params = parser.Parameters('test_stack', template, parameters)
+        stack = parser.Stack(ctx, 'test_stack', parser.Template(t),
+            stack_id=-1, parameters=params)
+
+        return stack
+
+    def compare_stacks(self, json_file, yaml_file, parameters):
+        t1 = self.load_template(json_file)
+        format.default_for_missing(t1, 'AWSTemplateFormatVersion',
+            format.CFN_VERSIONS)
+        del(t1[u'AWSTemplateFormatVersion'])
+
+        t2 = self.load_template(yaml_file)
+        del(t2[u'HeatTemplateFormatVersion'])
+
+        stack1 = self.parse_stack(t1, parameters)
+        stack2 = self.parse_stack(t2, parameters)
+
+        # compare resources separately so that resolved static data
+        # is compared
+        t1nr = dict(stack1.t.t)
+        del(t1nr['Resources'])
+
+        t2nr = dict(stack2.t.t)
+        del(t2nr['Resources'])
+        self.assertEqual(t1nr, t2nr)
+
+        self.assertEquals(set(stack1.resources.keys()),
+            set(stack2.resources.keys()))
+        for key in stack1.resources:
+            self.assertEqual(stack1.resources[key].t, stack2.resources[key].t)
+
+    def test_quantum_resolved(self):
+        self.compare_stacks('Quantum.template', 'Quantum.yaml', {})
+
+    def test_wordpress_resolved(self):
+        self.compare_stacks('WordPress_Single_Instance.template',
+            'WordPress_Single_Instance.yaml',
+            {'KeyName': 'test'})
