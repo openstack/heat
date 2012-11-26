@@ -10,7 +10,7 @@
 # libxml2-dev(el) and libxslt-dev(el) packages.
 
 PyCrypto
-boto==2.1.1
+boto>=2.4.0
 eventlet>=0.9.17
 greenlet>=0.3.1
 httplib2
