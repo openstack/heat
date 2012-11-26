@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-
 from heat.common import exception
+from heat.engine import format
 from heat.engine.resources import stack
 from novaclient.exceptions import NotFound
 
@@ -284,7 +283,7 @@ class LoadBalancer(stack.Stack):
         return '%s%s%s%s\n' % (gl, frontend, backend, '\n'.join(servers))
 
     def handle_create(self):
-        templ = json.loads(lb_template)
+        templ = format.parse_to_template(lb_template)
 
         if self.properties['Instances']:
             md = templ['Resources']['LB_instance']['Metadata']
@@ -314,7 +313,7 @@ class LoadBalancer(stack.Stack):
         save it to the db.
         rely on the cfn-hup to reconfigure HAProxy
         '''
-        templ = json.loads(lb_template)
+        templ = format.parse_to_template(lb_template)
         cfg = self._haproxy_config(templ, inst_list)
 
         md = self.nested()['LB_instance'].metadata

@@ -13,11 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-
 from heat.common import exception
 from heat.engine.resources import stack
-
+from heat.engine import format
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__file__)
@@ -221,7 +219,7 @@ class DBInstance(stack.Stack):
         return p
 
     def handle_create(self):
-        templ = json.loads(mysql_template)
+        templ = format.parse_to_template(mysql_template)
         self.create_with_template(templ)
 
     def FnGetAtt(self, key):
