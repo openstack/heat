@@ -17,6 +17,9 @@ import re
 import yaml
 import json
 
+HEAT_VERSIONS = (u'2012-12-12',)
+CFN_VERSIONS = (u'2010-09-09',)
+
 
 def _construct_yaml_str(self, node):
     # Override the default string handling function
@@ -33,11 +36,34 @@ def parse_to_template(tmpl_str):
     JSON or YAML format.
     '''
     if tmpl_str.startswith('{'):
-        return json.loads(tmpl_str)
-    try:
-        return yaml.load(tmpl_str)
-    except yaml.scanner.ScannerError as e:
-        raise ValueError(e)
+        tpl = json.loads(tmpl_str)
+    else:
+        try:
+            tpl = yaml.load(tmpl_str)
+        except yaml.scanner.ScannerError as e:
+            raise ValueError(e)
+        else:
+            if tpl == None:
+                tpl = {}
+            default_for_missing(tpl, u'HeatTemplateFormatVersion',
+                HEAT_VERSIONS)
+    return tpl
+
+
+def default_for_missing(tpl, version_param, versions):
+    '''
+    Checks a parsed template for missing version and sections.
+
+    This is currently only applied to YAML templates.
+    '''
+    # if version is missing, implicitly use the lastest one
+    if not version_param in tpl:
+        tpl[version_param] = versions[-1]
+
+    # create empty placeholders for any of the main dict sections
+    for param in (u'Parameters', u'Mappings', u'Resources', u'Outputs'):
+        if not param in tpl:
+            tpl[param] = {}
 
 
 def convert_json_to_yaml(json_str):

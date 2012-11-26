@@ -86,9 +86,17 @@ class InstantiationDataTest(unittest.TestCase):
         template = '''foo: bar
 blarg: wibble
 '''
+        parsed = {u'HeatTemplateFormatVersion': u'2012-12-12',
+            u'Mappings': {},
+            u'Outputs': {},
+            u'Parameters': {},
+            u'Resources': {},
+            u'blarg': u'wibble',
+            u'foo': u'bar'}
+
         body = {'template': template}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.template(), yaml.load(template))
+        self.assertEqual(data.template(), parsed)
 
     def test_template_url(self):
         template = {'foo': 'bar', 'blarg': 'wibble'}

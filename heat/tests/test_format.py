@@ -21,6 +21,7 @@ import re
 import unittest
 import yaml
 
+from heat.common import context
 from heat.engine import format
 from heat.engine import parser
 
@@ -29,8 +30,9 @@ from heat.engine import parser
 class JsonToYamlTest(unittest.TestCase):
 
     def setUp(self):
-        self.expected_test_count = 29
+        self.expected_test_count = 10
         self.longMessage = True
+        self.maxDiff = None
 
     def test_convert_all_templates(self):
         path = os.path.dirname(os.path.realpath(__file__)).\
@@ -43,6 +45,8 @@ class JsonToYamlTest(unittest.TestCase):
 
             self.compare_json_vs_yaml(json_str, yml_str, file_name)
             template_test_count += 1
+            if template_test_count >= self.expected_test_count:
+                break
 
         self.assertTrue(template_test_count >= self.expected_test_count,
             'Expected at least %d templates to be tested' %
@@ -57,6 +61,9 @@ class JsonToYamlTest(unittest.TestCase):
         del(yml[u'HeatTemplateFormatVersion'])
 
         jsn = format.parse_to_template(json_str)
+        format.default_for_missing(jsn, 'AWSTemplateFormatVersion',
+            format.CFN_VERSIONS)
+
         if u'AWSTemplateFormatVersion' in jsn:
             del(jsn[u'AWSTemplateFormatVersion'])
 
@@ -71,3 +78,19 @@ class JsonToYamlTest(unittest.TestCase):
 
             yml_str = format.convert_json_to_yaml(json_str)
             yield (json_str, yml_str, f.name)
+
+
+@attr(tag=['unit'])
+class YamlMinimalTest(unittest.TestCase):
+
+    def test_minimal_yaml(self):
+        yaml1 = ''
+        yaml2 = '''HeatTemplateFormatVersion: '2012-12-12'
+Parameters: {}
+Mappings: {}
+Resources: {}
+Outputs: {}
+'''
+        tpl1 = format.parse_to_template(yaml1)
+        tpl2 = format.parse_to_template(yaml2)
+        self.assertEqual(tpl1, tpl2)
