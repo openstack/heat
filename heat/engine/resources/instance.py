@@ -19,9 +19,9 @@ import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from novaclient.exceptions import NotFound
+import pkgutil
 from urlparse import urlparse
 
-import heat
 from heat.engine import resource
 from heat.common import exception
 
@@ -166,9 +166,7 @@ class Instance(resource.Resource):
                 return msg
 
             def read_cloudinit_file(fn):
-                with open(os.path.join(heat.__path__[0], 'cloudinit', fn),
-                          'r') as fp:
-                    return fp.read()
+                return pkgutil.get_data('heat', 'cloudinit/%s' % fn)
 
             attachments = [(read_cloudinit_file('config'), 'cloud-config'),
                            (read_cloudinit_file('part-handler.py'),
