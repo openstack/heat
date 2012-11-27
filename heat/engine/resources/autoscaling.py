@@ -13,8 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine.resources import instance
 from heat.engine import resource
+from heat.engine.resources import instance
 
 from heat.openstack.common import log as logging
 
@@ -64,16 +64,18 @@ class AutoScalingGroup(resource.Resource):
     def handle_update(self):
         return self.UPDATE_REPLACE
 
+    def _make_instance(self, name):
+        conf = self.properties['LaunchConfigurationName']
+        instance_definition = self.stack.t['Resources'][conf]
+        return instance.Instance(name, instance_definition, self.stack)
+
     def handle_delete(self):
         if self.resource_id is not None:
-            conf = self.properties['LaunchConfigurationName']
             inst_list = self.resource_id.split(',')
             logger.debug('handle_delete %s' % str(inst_list))
             for victim in inst_list:
                 logger.debug('handle_delete %s' % victim)
-                inst = instance.Instance(victim,
-                                         self.stack.t['Resources'][conf],
-                                         self.stack)
+                inst = self._make_instance(victim)
                 inst.destroy()
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
@@ -103,14 +105,11 @@ class AutoScalingGroup(resource.Resource):
         logger.debug('adjusting capacity from %d to %d' % (capacity,
                                                            new_capacity))
 
-        conf = self.properties['LaunchConfigurationName']
         if new_capacity > capacity:
             # grow
             for x in range(capacity, new_capacity):
                 name = '%s-%d' % (self.name, x)
-                inst = instance.Instance(name,
-                                         self.stack.t['Resources'][conf],
-                                         self.stack)
+                inst = self._make_instance(name)
                 inst_list.append(name)
                 self.resource_id_set(','.join(inst_list))
                 inst.create()
@@ -118,9 +117,7 @@ class AutoScalingGroup(resource.Resource):
             # shrink (kill largest numbered first)
             del_list = inst_list[new_capacity:]
             for victim in reversed(del_list):
-                inst = instance.Instance(victim,
-                                         self.stack.t['Resources'][conf],
-                                         self.stack)
+                inst = self._make_instance(victim)
                 inst.destroy()
                 inst_list.remove(victim)
                 self.resource_id_set(','.join(inst_list))
@@ -131,9 +128,7 @@ class AutoScalingGroup(resource.Resource):
             # convert the list of instance names into a list of instance id's
             id_list = []
             for inst_name in inst_list:
-                inst = instance.Instance(inst_name,
-                                         self.stack.t['Resources'][conf],
-                                         self.stack)
+                inst = self._make_instance(inst_name)
                 id_list.append(inst.FnGetRefId())
 
             for lb in self.properties['LoadBalancerNames']:
