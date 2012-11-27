@@ -196,3 +196,11 @@ class ScalingPolicy(resource.Resource):
                      self.properties['ScalingAdjustment']))
         group.adjust(int(self.properties['ScalingAdjustment']),
                      self.properties['AdjustmentType'])
+
+
+def resource_mapping():
+    return {
+        'AWS::AutoScaling::LaunchConfiguration': LaunchConfiguration,
+        'AWS::AutoScaling::AutoScalingGroup': AutoScalingGroup,
+        'AWS::AutoScaling::ScalingPolicy': ScalingPolicy,
+    }

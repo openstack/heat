@@ -346,3 +346,9 @@ class LoadBalancer(stack.Stack):
             return stack.Stack.FnGetAtt(self, 'Outputs.PublicIp')
         else:
             return ''
+
+
+def resource_mapping():
+    return {
+        'AWS::ElasticLoadBalancing::LoadBalancer': LoadBalancer,
+    }

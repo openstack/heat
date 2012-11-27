@@ -46,3 +46,9 @@ class Net(quantum.QuantumResource):
         attributes = self.quantum().show_network(
             self.resource_id)['network']
         return self.handle_get_attributes(self.name, key, attributes)
+
+
+def resource_mapping():
+    return {
+        'OS::Quantum::Net': Net,
+    }

@@ -124,3 +124,9 @@ class S3Bucket(resource.Resource):
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
+
+
+def resource_mapping():
+    return {
+        'AWS::S3::Bucket': S3Bucket,
+    }

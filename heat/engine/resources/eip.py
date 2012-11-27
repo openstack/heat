@@ -99,3 +99,10 @@ class ElasticIpAssociation(resource.Resource):
                 server.remove_floating_ip(self.properties['EIP'])
         except NotFound as ex:
             pass
+
+
+def resource_mapping():
+    return {
+        'AWS::EC2::EIP': ElasticIp,
+        'AWS::EC2::EIPAssociation': ElasticIpAssociation,
+    }

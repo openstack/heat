@@ -152,3 +152,10 @@ class WaitCondition(resource.Resource):
 
         logger.debug('%s.GetAtt(%s) == %s' % (self.name, key, res))
         return unicode(res)
+
+
+def resource_mapping():
+    return {
+        'AWS::CloudFormation::WaitCondition': WaitCondition,
+        'AWS::CloudFormation::WaitConditionHandle': WaitConditionHandle,
+    }

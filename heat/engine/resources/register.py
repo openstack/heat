@@ -35,38 +35,33 @@ from heat.engine.resources.quantum import port
 from heat.engine.resources.quantum import router
 from heat.engine.resources.quantum import subnet
 
+from heat.openstack.common import log as logging
 
-_resource_classes = {
-    'AWS::CloudFormation::Stack': stack.Stack,
-    'AWS::CloudFormation::WaitCondition': wait_condition.WaitCondition,
-    'AWS::CloudFormation::WaitConditionHandle':
-        wait_condition.WaitConditionHandle,
-    'AWS::CloudWatch::Alarm': cloud_watch.CloudWatchAlarm,
-    'AWS::EC2::EIP': eip.ElasticIp,
-    'AWS::EC2::EIPAssociation': eip.ElasticIpAssociation,
-    'AWS::EC2::Instance': instance.Instance,
-    'AWS::EC2::SecurityGroup': security_group.SecurityGroup,
-    'AWS::EC2::Volume': volume.Volume,
-    'AWS::EC2::VolumeAttachment': volume.VolumeAttachment,
-    'AWS::ElasticLoadBalancing::LoadBalancer': loadbalancer.LoadBalancer,
-    'AWS::S3::Bucket': s3.S3Bucket,
-    'AWS::IAM::User': user.User,
-    'AWS::IAM::AccessKey': user.AccessKey,
-    'HEAT::HA::Restarter': instance.Restarter,
-    'AWS::AutoScaling::LaunchConfiguration': autoscaling.LaunchConfiguration,
-    'AWS::AutoScaling::AutoScalingGroup': autoscaling.AutoScalingGroup,
-    'AWS::AutoScaling::ScalingPolicy': autoscaling.ScalingPolicy,
-    'AWS::RDS::DBInstance': dbinstance.DBInstance,
-    'OS::Quantum::FloatingIP': floatingip.FloatingIP,
-    'OS::Quantum::FloatingIPAssociation': floatingip.FloatingIPAssociation,
-    'OS::Quantum::Net': net.Net,
-    'OS::Quantum::Port': port.Port,
-    'OS::Quantum::Router': router.Router,
-    'OS::Quantum::RouterInterface': router.RouterInterface,
-    'OS::Quantum::RouterGateway': router.RouterGateway,
-    'OS::Quantum::Subnet': subnet.Subnet,
-}
+logger = logging.getLogger('heat.engine.resources.register')
+
+
+_modules = [
+    autoscaling, cloud_watch, dbinstance, eip, instance, loadbalancer, s3,
+    security_group, stack, user, volume, wait_condition, floatingip, net, port,
+    router, subnet,
+]
+
+_resource_classes = {}
 
 
 def get_class(resource_type):
     return _resource_classes.get(resource_type)
+
+
+def _register_class(resource_type, resource_class):
+    logger.info(_('Registering resource type %s') % resource_type)
+    if resource_type in _resource_classes:
+        logger.warning(_('Replacing existing resource type %s') %
+                resource_type)
+
+    _resource_classes[resource_type] = resource_class
+
+
+for m in _modules:
+    for res_type, res_class in m.resource_mapping().items():
+        _register_class(res_type, res_class)

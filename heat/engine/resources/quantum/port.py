@@ -59,3 +59,9 @@ class Port(quantum.QuantumResource):
         attributes = self.quantum().show_port(
             self.resource_id)['port']
         return self.handle_get_attributes(self.name, key, attributes)
+
+
+def resource_mapping():
+    return {
+        'OS::Quantum::Port': Port,
+    }

@@ -121,3 +121,10 @@ class VolumeAttachment(resource.Resource):
             logger.warning('Deleting VolumeAttachment %s %s - not found' %
                     (server_id, volume_id))
             return
+
+
+def resource_mapping():
+    return {
+        'AWS::EC2::Volume': Volume,
+        'AWS::EC2::VolumeAttachment': VolumeAttachment,
+    }

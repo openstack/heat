@@ -100,3 +100,11 @@ class RouterGateway(quantum.QuantumResource):
             client.remove_gateway_router(router_id)
         except:
             pass
+
+
+def resource_mapping():
+    return {
+        'OS::Quantum::Router': Router,
+        'OS::Quantum::RouterInterface': RouterInterface,
+        'OS::Quantum::RouterGateway': RouterGateway,
+    }

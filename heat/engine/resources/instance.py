@@ -318,3 +318,10 @@ class Instance(resource.Resource):
                     break
                 eventlet.sleep(0.2)
         self.resource_id = None
+
+
+def resource_mapping():
+    return {
+        'AWS::EC2::Instance': Instance,
+        'HEAT::HA::Restarter': Restarter,
+    }

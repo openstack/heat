@@ -236,3 +236,9 @@ class DBInstance(stack.Stack):
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
+
+
+def resource_mapping():
+    return {
+        'AWS::RDS::DBInstance': DBInstance,
+    }

@@ -212,3 +212,10 @@ class AccessKey(resource.Resource):
         logger.info('%s.GetAtt(%s) == %s' % (self.physical_resource_name(),
                                              key, log_res))
         return unicode(res)
+
+
+def resource_mapping():
+    return {
+        'AWS::IAM::User': User,
+        'AWS::IAM::AccessKey': AccessKey,
+    }

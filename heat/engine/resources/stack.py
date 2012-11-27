@@ -107,3 +107,9 @@ class Stack(resource.Resource):
                         resource=self.physical_resource_name(), key=key)
 
         return stack.output(op)
+
+
+def resource_mapping():
+    return {
+        'AWS::CloudFormation::Stack': Stack,
+    }

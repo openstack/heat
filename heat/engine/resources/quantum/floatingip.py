@@ -75,3 +75,10 @@ class FloatingIPAssociation(quantum.QuantumResource):
                 {'floatingip': {'port_id': None}})
         except:
             pass
+
+
+def resource_mapping():
+    return {
+        'OS::Quantum::FloatingIP': FloatingIP,
+        'OS::Quantum::FloatingIPAssociation': FloatingIPAssociation,
+    }

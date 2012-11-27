@@ -67,3 +67,9 @@ class Subnet(quantum.QuantumResource):
         attributes = self.quantum().show_subnet(
             self.resource_id)['subnet']
         return self.handle_get_attributes(self.name, key, attributes)
+
+
+def resource_mapping():
+    return {
+        'OS::Quantum::Subnet': Subnet,
+    }

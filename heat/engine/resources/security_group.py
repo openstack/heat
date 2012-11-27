@@ -87,3 +87,9 @@ class SecurityGroup(resource.Resource):
 
     def FnGetRefId(self):
         return unicode(self.name)
+
+
+def resource_mapping():
+    return {
+        'AWS::EC2::SecurityGroup': SecurityGroup,
+    }
