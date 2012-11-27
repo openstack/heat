@@ -4,7 +4,7 @@ Description: 'AWS CloudFormation Sample Template WordPress_Single_Instance:
   template installs a single-instance WordPress deployment using a local MySQL database
   to store the data.'
 Parameters:
-  KeyName: 
+  KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
     Type: String
   InstanceType:
