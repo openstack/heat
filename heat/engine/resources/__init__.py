@@ -12,3 +12,37 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+
+def _register_resources(type_pairs):
+    from heat.engine import resource
+
+    for res_name, res_class in type_pairs:
+        resource._register_class(res_name, res_class)
+
+
+def _get_module_resources(module):
+    if callable(getattr(module, 'resource_mapping', None)):
+        try:
+            return module.resource_mapping().iteritems()
+        except Exception as ex:
+            logger.error(_('Failed to load resources from %s') % str(module))
+    else:
+        return []
+
+
+def _register_modules(modules):
+    import itertools
+
+    resource_lists = (_get_module_resources(m) for m in modules)
+    _register_resources(itertools.chain.from_iterable(resource_lists))
+
+
+def _initialise():
+    import sys
+    from heat.common import plugin_loader
+
+    _register_modules(plugin_loader.load_modules(sys.modules[__name__]))
+
+
+_initialise()

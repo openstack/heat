@@ -28,6 +28,22 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 
+_resource_classes = {}
+
+
+def get_class(resource_type):
+    return _resource_classes.get(resource_type)
+
+
+def _register_class(resource_type, resource_class):
+    logger.info(_('Registering resource type %s') % resource_type)
+    if resource_type in _resource_classes:
+        logger.warning(_('Replacing existing resource type %s') %
+                resource_type)
+
+    _resource_classes[resource_type] = resource_class
+
+
 class Metadata(object):
     '''
     A descriptor for accessing the metadata of a resource while ensuring the
@@ -86,8 +102,7 @@ class Resource(object):
             return super(Resource, cls).__new__(cls)
 
         # Select the correct subclass to instantiate
-        from heat.engine.resources import register
-        ResourceClass = register.get_class(json['Type']) or GenericResource
+        ResourceClass = get_class(json['Type']) or GenericResource
         return ResourceClass(name, json, stack)
 
     def __init__(self, name, json_snippet, stack):
