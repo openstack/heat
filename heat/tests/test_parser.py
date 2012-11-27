@@ -18,6 +18,7 @@ import unittest
 from nose.plugins.attrib import attr
 import mox
 import json
+import sys
 
 from heat.common import context
 from heat.common import exception
@@ -29,11 +30,7 @@ from heat.engine.resources import Resource
 
 
 def join(raw):
-    def handle_join(args):
-        delim, strs = args
-        return delim.join(strs)
-
-    return template._resolve(lambda k, v: k == 'Fn::Join', handle_join, raw)
+    return parser.Template.resolve_joins(raw)
 
 
 @attr(tag=['unit', 'parser'])
@@ -209,6 +206,23 @@ class TemplateTest(unittest.TestCase):
         self.assertEqual(parser.Template.resolve_resource_refs(p_snippet,
                                                                resources),
                          p_snippet)
+
+    def test_join_reduce(self):
+        join = {"Fn::Join": [" ", ["foo", "bar", "baz", {'Ref': 'baz'},
+            "bink", "bonk"]]}
+        self.assertEqual(parser.Template.reduce_joins(join),
+            {"Fn::Join": [" ", ["foo bar baz", {'Ref': 'baz'},
+            "bink bonk"]]})
+
+        join = {"Fn::Join": [" ", ["foo", {'Ref': 'baz'},
+            "bink"]]}
+        self.assertEqual(parser.Template.reduce_joins(join),
+            {"Fn::Join": [" ", ["foo", {'Ref': 'baz'},
+            "bink"]]})
+
+        join = {"Fn::Join": [" ", [{'Ref': 'baz'}]]}
+        self.assertEqual(parser.Template.reduce_joins(join),
+            {"Fn::Join": [" ", [{'Ref': 'baz'}]]})
 
     def test_join(self):
         join = {"Fn::Join": [" ", ["foo", "bar"]]}

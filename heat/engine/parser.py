@@ -439,7 +439,8 @@ def resolve_static_data(template, parameters, snippet):
                      [functools.partial(template.resolve_param_refs,
                                         parameters=parameters),
                       template.resolve_availability_zones,
-                      template.resolve_find_in_map])
+                      template.resolve_find_in_map,
+                      template.reduce_joins])
 
 
 def resolve_runtime_data(template, resources, snippet):

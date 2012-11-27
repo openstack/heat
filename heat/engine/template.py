@@ -150,6 +150,37 @@ class Template(collections.Mapping):
         return _resolve(lambda k, v: k == 'Fn::GetAtt', handle_getatt, s)
 
     @staticmethod
+    def reduce_joins(s):
+        '''
+        Reduces contiguous strings in Fn::Join to a single joined string
+        eg the following
+        { "Fn::Join" : [ " ", [ "str1", "str2", {"f": "b"}, "str3", "str4"]}
+        is reduced to
+        { "Fn::Join" : [ " ", [ "str1 str2", {"f": "b"}, "str3 str4"]}
+        '''
+        def handle_join(args):
+            if not isinstance(args, (list, tuple)):
+                raise TypeError('Arguments to "Fn::Join" must be a list')
+            delim, items = args
+            if not isinstance(items, (list, tuple)):
+                raise TypeError('Arguments to "Fn::Join" not fully resolved')
+            reduced = []
+            contiguous = []
+            for item in items:
+                if isinstance(item, (str, unicode)):
+                    contiguous.append(item)
+                else:
+                    if contiguous:
+                        reduced.append(delim.join(contiguous))
+                        contiguous = []
+                    reduced.append(item)
+            if contiguous:
+                reduced.append(delim.join(contiguous))
+            return {'Fn::Join': [delim, reduced]}
+
+        return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s)
+
+    @staticmethod
     def resolve_joins(s):
         '''
         Resolve constructs of the form { "Fn::Join" : [ "delim", [ "str1",
