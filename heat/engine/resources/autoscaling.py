@@ -65,9 +65,10 @@ class AutoScalingGroup(resource.Resource):
         return self.UPDATE_REPLACE
 
     def _make_instance(self, name):
+        Instance = resource.get_class('AWS::EC2::Instance')
         conf = self.properties['LaunchConfigurationName']
         instance_definition = self.stack.t['Resources'][conf]
-        return instance.Instance(name, instance_definition, self.stack)
+        return Instance(name, instance_definition, self.stack)
 
     def handle_delete(self):
         if self.resource_id is not None:
