@@ -17,7 +17,7 @@ from heat.engine.resources.quantum import quantum
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.quantum')
+logger = logging.getLogger(__name__)
 
 
 class Router(quantum.QuantumResource):

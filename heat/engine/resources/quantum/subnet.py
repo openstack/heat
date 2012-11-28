@@ -18,7 +18,7 @@ from heat.common import exception
 from heat.openstack.common import log as logging
 from heat.engine.resources.quantum import quantum
 
-logger = logging.getLogger('heat.engine.quantum')
+logger = logging.getLogger(__name__)
 
 
 class Subnet(quantum.QuantumResource):

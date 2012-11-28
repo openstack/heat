@@ -14,7 +14,6 @@
 
 
 import json
-import logging
 import mox
 import sys
 import uuid
@@ -32,8 +31,6 @@ from heat.engine import parser
 from heat.engine.resources import wait_condition as wc
 from heat.common import context
 from heat.openstack.common import cfg
-
-logger = logging.getLogger('test_waitcondition')
 
 test_template_waitcondition = '''
 {

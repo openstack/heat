@@ -24,7 +24,7 @@ from heat.rpc import api as rpc_api
 from heat.common import context as ctxtlib
 import eventlet
 
-logger = logging.getLogger('heat.engine.watchrule')
+logger = logging.getLogger(__name__)
 greenpool = eventlet.GreenPool()
 
 

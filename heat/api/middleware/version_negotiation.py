@@ -25,7 +25,7 @@ from heat.openstack.common import log as logging
 
 from heat.common import wsgi
 
-logger = logging.getLogger('heat.api.middleware.version_negotiation')
+logger = logging.getLogger(__name__)
 
 
 class VersionNegotiationFilter(wsgi.Middleware):

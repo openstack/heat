@@ -33,7 +33,7 @@ from heat.rpc import client as rpc_client
 import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.api.openstack.v1.stacks')
+logger = logging.getLogger(__name__)
 
 
 class InstantiationData(object):

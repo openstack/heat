@@ -19,7 +19,7 @@ from heat.engine import resource
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.user')
+logger = logging.getLogger(__name__)
 
 #
 # We are ignoring Policies and Groups as keystone does not support them.

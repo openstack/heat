@@ -18,7 +18,7 @@ from heat.engine import resource
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.quantum')
+logger = logging.getLogger(__name__)
 
 
 class QuantumResource(resource.Resource):

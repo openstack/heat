@@ -26,7 +26,7 @@ try:
 except ImportError:
     swiftclient_present = False
 
-logger = logging.getLogger('heat.engine.s3')
+logger = logging.getLogger(__name__)
 
 
 class S3Bucket(resource.Resource):

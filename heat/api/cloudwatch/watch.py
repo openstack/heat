@@ -25,7 +25,7 @@ from heat.rpc import api as engine_api
 import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.api.cloudwatch.controller')
+logger = logging.getLogger(__name__)
 
 
 class WatchController(object):

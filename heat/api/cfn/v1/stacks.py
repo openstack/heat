@@ -35,7 +35,7 @@ import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
 
-logger = logging.getLogger('heat.api.cfn.v1.stacks')
+logger = logging.getLogger(__name__)
 
 
 class StackController(object):

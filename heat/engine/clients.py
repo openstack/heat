@@ -35,7 +35,7 @@ from heat.common import heat_keystoneclient as kc
 from heat.openstack.common import cfg
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.clients')
+logger = logging.getLogger(__name__)
 
 
 class Clients(object):

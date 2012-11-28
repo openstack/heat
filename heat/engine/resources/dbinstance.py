@@ -18,7 +18,7 @@ from heat.engine.resources import stack
 from heat.common import template_format
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 mysql_template = r'''
 {

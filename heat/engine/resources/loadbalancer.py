@@ -20,7 +20,7 @@ from novaclient.exceptions import NotFound
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 lb_template = '''
 {

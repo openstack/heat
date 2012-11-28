@@ -23,7 +23,7 @@ from heat.openstack.common import log as logging
 
 from heat.db import api as db_api
 
-logger = logging.getLogger('heat.db.sqlalchemy.session')
+logger = logging.getLogger(__name__)
 _ENGINE = None
 _MAKER = None
 

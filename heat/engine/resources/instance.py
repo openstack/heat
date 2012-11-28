@@ -29,7 +29,7 @@ from heat.openstack.common import cfg
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.instance')
+logger = logging.getLogger(__name__)
 
 
 class Restarter(resource.Resource):

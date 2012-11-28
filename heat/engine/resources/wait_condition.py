@@ -35,7 +35,7 @@ try:
 except ImportError:
     from heat.common.ec2signer import Ec2Signer
 
-logger = logging.getLogger('heat.engine.wait_condition')
+logger = logging.getLogger(__name__)
 
 
 class WaitConditionHandle(resource.Resource):

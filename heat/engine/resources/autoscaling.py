@@ -18,7 +18,7 @@ from heat.engine.resources import instance
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.autoscaling')
+logger = logging.getLogger(__name__)
 
 
 class AutoScalingGroup(resource.Resource):

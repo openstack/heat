@@ -20,7 +20,7 @@ from heat.engine import watchrule
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.manager')
+logger = logging.getLogger(__name__)
 
 
 def extract_args(params):

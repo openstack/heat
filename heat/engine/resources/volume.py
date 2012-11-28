@@ -20,7 +20,7 @@ from heat.common import exception
 from heat.engine import resource
 from novaclient.exceptions import NotFound
 
-logger = logging.getLogger('heat.engine.volume')
+logger = logging.getLogger(__name__)
 
 
 class Volume(resource.Resource):

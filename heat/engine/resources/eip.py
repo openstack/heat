@@ -19,7 +19,7 @@ from novaclient.exceptions import NotFound
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.eip')
+logger = logging.getLogger(__name__)
 
 
 class ElasticIp(resource.Resource):

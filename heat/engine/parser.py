@@ -29,7 +29,7 @@ from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.parser')
+logger = logging.getLogger(__name__)
 
 (PARAM_STACK_NAME, PARAM_REGION) = ('AWS::StackName', 'AWS::Region')
 

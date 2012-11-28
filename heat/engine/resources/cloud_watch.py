@@ -20,7 +20,7 @@ from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.cloud_watch')
+logger = logging.getLogger(__name__)
 
 
 class CloudWatchAlarm(resource.Resource):

@@ -19,7 +19,7 @@ from heat.engine import resource
 
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.security_group')
+logger = logging.getLogger(__name__)
 
 
 class SecurityGroup(resource.Resource):
