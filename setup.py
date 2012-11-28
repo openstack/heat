@@ -48,7 +48,6 @@ setuptools.setup(
              'bin/heat-api-cfn',
              'bin/heat-api-cloudwatch',
              'bin/heat-boto',
-             'bin/heat-metadata',
              'bin/heat-engine',
              'bin/heat-watch',
              'bin/heat-db-setup',

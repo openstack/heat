@@ -113,12 +113,6 @@ cfg.StrOpt('engine_topic',
 ]
 
 
-def register_metadata_opts():
-    cfg.CONF.register_opts(service_opts)
-    cfg.CONF.register_opts(bind_opts)
-    cfg.CONF.register_opts(rpc_opts)
-
-
 def register_api_opts():
     cfg.CONF.register_opts(bind_opts)
     cfg.CONF.register_opts(rpc_opts)

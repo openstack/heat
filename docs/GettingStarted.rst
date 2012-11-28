@@ -314,38 +314,27 @@ Other Templates
 ===============
 Check out the ``Wordpress_2_Instances_with_EBS_EIP.template``.  This uses a few different APIs in OpenStack nova, such as the Volume API, the Floating IP API and the Security Groups API, as well as the general nova launching and monitoring APIs.
 
-Configure the Metadata server
------------------------------
+IPtables rules
+--------------
 
-Some templates require the ``heat-metadata`` server also. The metadata server must be configured to bind to the IP address of the host machine on the Nova network created above (``demonetbr0``). This allows the launched instances to access the metadata server. However, the bridge interface is not actually created until an instance is launched in Nova. If you have completed the preceding steps the bridge will now have been created, so you can proceed to edit the file ``/etc/heat/heat-metadata.conf`` to change the ``bind_host`` value from the default ``0.0.0.0`` to the correct IP address and launch the metadata server::
+Some templates require the instances to be able to connect to the heat CFN API (for metadata update via cfn-hup and waitcondition notification via cfn-signal):
 
-    BIND_IP=`ifconfig demonetbr0 | sed -e 's/ *inet \(addr:\)\?\([0-9.]\+\).*/\2/' -e t -e d`
-    sudo sed -i -e "/^bind_host *=/ s/0\.0\.0\.0/${BIND_IP:?}/" /etc/heat/heat-metadata.conf
-    
-    sudo -E bash -c 'heat-metadata &'
-
-Open up port 8002 so that the guests can communicate with the heat-metadata server::
-
-    sudo iptables -I INPUT -p tcp --dport 8002 -j ACCEPT -i demonetbr0
-
-Note Instance/resource metadata is actually now served via the cloudformation API, so it is necessary to also open up port 8000 so that the guests can communicate with the heat-api-cfn server::
+Open up port 8000 so that the guests can communicate with the heat-api-cfn server::
 
     sudo iptables -I INPUT -p tcp --dport 8000 -j ACCEPT -i demonetbr0
-
-Note the above rules will not persist across reboot, so you may wish to add them to /etc/sysconfig/iptables
-
-Configure Heat Cloudwatch server
---------------------------------
-
-If you wish to try any of the HA or autoscaling templates (which collect stats from instances via the CloudWatch API), it is neccessary to start the heat-api-cloudwatch server::
-
-    sudo -E bash -c 'heat-api-cloudwatch &'
 
 Open up port 8003 so that the guests can communicate with the heat-api-cloudwatch server::
 
     sudo iptables -I INPUT -p tcp --dport 8003 -j ACCEPT -i demonetbr0
 
-Note the above rule will not persist across reboot, so you may wish to add it to /etc/sysconfig/iptables
+Note the above rules will not persist across reboot, so you may wish to add them to /etc/sysconfig/iptables
+
+Start the Heat Cloudwatch server
+--------------------------------
+
+If you wish to try any of the HA or autoscaling templates (which collect stats from instances via the CloudWatch API), it is neccessary to start the heat-api-cloudwatch server::
+
+    sudo -E bash -c 'heat-api-cloudwatch &'
 
 Further information on using the heat cloudwatch features is available in the Using-Cloudwatch_ wiki page
 
