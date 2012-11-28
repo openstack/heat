@@ -19,7 +19,7 @@ import functools
 from heat.common import exception
 from heat.engine import dependencies
 from heat.engine import identifier
-from heat.engine import resources
+from heat.engine import resource
 from heat.engine import template
 from heat.engine import timestamp
 from heat.engine.parameters import Parameters
@@ -78,7 +78,7 @@ class Stack(object):
 
         template_resources = self.t[template.RESOURCES]
         self.resources = dict((name,
-                               resources.Resource(name, data, self))
+                               resource.Resource(name, data, self))
                               for (name, data) in template_resources.items())
 
         self.dependencies = self._get_dependencies(self.resources.itervalues())

@@ -26,7 +26,7 @@ from heat.engine import format
 from heat.engine import parser
 from heat.engine import parameters
 from heat.engine import template
-from heat.engine.resources import Resource
+from heat.engine.resource import Resource
 
 
 def join(raw):

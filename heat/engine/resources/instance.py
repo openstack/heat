@@ -22,7 +22,7 @@ from novaclient.exceptions import NotFound
 from urlparse import urlparse
 
 import heat
-from heat.engine.resources import resource
+from heat.engine import resource
 from heat.common import exception
 
 from heat.openstack.common import cfg

@@ -15,7 +15,7 @@
 
 from novaclient.exceptions import BadRequest
 from novaclient.exceptions import NotFound
-from heat.engine.resources import resource
+from heat.engine import resource
 
 from heat.openstack.common import log as logging
 

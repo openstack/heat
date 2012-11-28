@@ -31,7 +31,7 @@ from heat.engine import format
 from heat.engine import parser
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer as lb
-from heat.engine.resources.resource import Metadata
+from heat.engine.resource import Metadata
 from heat.engine.resources import stack
 from heat.tests.v1_1 import fakes
 

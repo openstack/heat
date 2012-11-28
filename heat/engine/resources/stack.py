@@ -18,7 +18,7 @@ import json
 
 from heat.common import exception
 from heat.engine import format
-from heat.engine.resources import resource
+from heat.engine import resource
 from heat.engine import parser
 
 from heat.openstack.common import log as logging

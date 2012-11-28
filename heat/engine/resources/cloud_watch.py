@@ -15,7 +15,7 @@
 
 from heat.common import exception
 from heat.engine import watchrule
-from heat.engine.resources import resource
+from heat.engine import resource
 from heat.db import api as db_api
 
 from heat.openstack.common import log as logging

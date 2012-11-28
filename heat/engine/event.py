@@ -18,7 +18,7 @@ from heat.common import exception
 from heat.engine import identifier
 from heat.openstack.common import log as logging
 
-logger = logging.getLogger('heat.engine.resources.event')
+logger = logging.getLogger(__name__)
 
 
 class Event(object):

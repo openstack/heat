@@ -26,7 +26,7 @@ from nose.plugins.attrib import attr
 from heat.common import context
 from heat.common import exception
 from heat.engine import format
-from heat.engine.resources import properties
+from heat.engine import properties
 from heat.engine.resources.quantum import net
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.engine import parser

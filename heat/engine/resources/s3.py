@@ -18,7 +18,7 @@ import os
 from urlparse import urlparse
 
 from heat.common import exception
-from heat.engine.resources import resource
+from heat.engine import resource
 from heat.openstack.common import log as logging
 try:
     from swiftclient.client import ClientException

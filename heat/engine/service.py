@@ -19,7 +19,7 @@ import webob
 from heat.common import context
 from heat.db import api as db_api
 from heat.engine import api
-from heat.engine.resources.event import Event
+from heat.engine.event import Event
 from heat.engine import identifier
 from heat.engine import parser
 from heat.engine import watchrule

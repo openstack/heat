@@ -17,7 +17,7 @@ import unittest
 from nose.plugins.attrib import attr
 import mox
 
-from heat.engine.resources import properties
+from heat.engine import properties
 
 
 @attr(tag=['unit', 'properties'])

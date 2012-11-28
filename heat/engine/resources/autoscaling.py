@@ -14,7 +14,7 @@
 #    under the License.
 
 from heat.engine.resources import instance
-from heat.engine.resources import resource
+from heat.engine import resource
 
 from heat.openstack.common import log as logging
 

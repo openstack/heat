@@ -14,7 +14,7 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine.resources import resource
+from heat.engine import resource
 from novaclient.exceptions import NotFound
 
 from heat.openstack.common import log as logging
