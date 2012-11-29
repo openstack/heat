@@ -84,3 +84,39 @@ class FakeClient(object):
 
     def authenticate(self):
         pass
+
+
+class FakeKeystoneClient():
+    def __init__(self, username='test_user', user_id='1234', access='4567',
+                 secret='8901'):
+        self.username = username
+        self.user_id = user_id
+        self.access = access
+        self.secret = secret
+        self.creds = None
+
+    def create_stack_user(self, username, password=''):
+        self.username = username
+        return self.user_id
+
+    def delete_stack_user(self, user_id):
+        self.user_id = None
+
+    def get_user_by_name(self, username):
+        if username == self.username:
+            return self.user_id
+
+    def get_ec2_keypair(self, user_id):
+        if user_id == self.user_id:
+            if not self.creds:
+                class FakeCred:
+                    access = self.access
+                    secret = self.secret
+                self.creds = FakeCred()
+            return self.creds
+
+    def delete_ec2_keypair(self, user_id, access):
+        if user_id == self.user_id and access == self.creds.access:
+            self.creds = None
+        else:
+            raise Exception('Incorrect user_id or access')

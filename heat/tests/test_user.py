@@ -30,10 +30,7 @@ from heat.common import config
 from heat.engine import format
 from heat.engine import parser
 from heat.engine.resources import user
-from heat.tests.v1_1 import fakes
-from keystoneclient.v2_0 import users
-from keystoneclient.v2_0 import roles
-from keystoneclient.v2_0 import ec2
+from heat.tests import fakes
 from heat.openstack.common import cfg
 
 
@@ -42,22 +39,7 @@ from heat.openstack.common import cfg
 class UserTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
-        self.fc = fakes.FakeClient()
-        self.fc.users = users.UserManager(None)
-        self.fc.roles = roles.RoleManager(None)
-        self.fc.ec2 = ec2.CredentialsManager(None)
-        self.m.StubOutWithMock(user.User, 'keystone')
-        self.m.StubOutWithMock(user.AccessKey, 'keystone')
-        self.m.StubOutWithMock(self.fc.users, 'create')
-        self.m.StubOutWithMock(self.fc.users, 'get')
-        self.m.StubOutWithMock(self.fc.users, 'delete')
-        self.m.StubOutWithMock(self.fc.users, 'list')
-        self.m.StubOutWithMock(self.fc.roles, 'list')
-        self.m.StubOutWithMock(self.fc.roles, 'add_user_role')
-        self.m.StubOutWithMock(self.fc.ec2, 'create')
-        self.m.StubOutWithMock(self.fc.ec2, 'get')
-        self.m.StubOutWithMock(self.fc.ec2, 'delete')
-        self.m.StubOutWithMock(eventlet, 'sleep')
+        self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
         config.register_engine_opts()
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
@@ -112,32 +94,8 @@ class UserTest(unittest.TestCase):
 
     def test_user(self):
 
-        fake_user = users.User(self.fc.users, {'id': '1'})
-        user.User.keystone().AndReturn(self.fc)
-        self.fc.users.create('test_stack.CfnUser',
-                             '',
-                             'test_stack.CfnUser@heat-api.org',
-                             enabled=True,
-                             tenant_id='test_tenant').AndReturn(fake_user)
-
-        fake_role = roles.Role(self.fc.roles, {'id': '123',
-                                               'name': 'stack_user_role'})
-        user.User.keystone().AndReturn(self.fc)
-        self.fc.roles.list().AndReturn([fake_role])
-
-        user.User.keystone().AndReturn(self.fc)
-        self.fc.roles.add_user_role('1', '123', 'test_tenant').AndReturn(None)
-
-        # delete script
-        user.User.keystone().AndReturn(self.fc)
-        self.fc.users.get(user.DummyId('1')).AndRaise(Exception('not found'))
-        eventlet.sleep(1).AndReturn(None)
-
-        user.User.keystone().AndReturn(self.fc)
-        self.fc.users.get(user.DummyId('1')).AndReturn(fake_user)
-        self.fc.users.delete(fake_user).AndRaise(Exception('delete failed'))
-
-        self.fc.users.delete(fake_user).AndReturn(None)
+        self.m.StubOutWithMock(user.User, 'keystone')
+        user.User.keystone().MultipleTimes().AndReturn(self.fc)
 
         self.m.ReplayAll()
 
@@ -145,7 +103,7 @@ class UserTest(unittest.TestCase):
         stack = self.parse_stack(t)
 
         resource = self.create_user(t, stack, 'CfnUser')
-        self.assertEqual('1', resource.resource_id)
+        self.assertEqual(self.fc.user_id, resource.resource_id)
         self.assertEqual('test_stack.CfnUser', resource.FnGetRefId())
 
         self.assertEqual('CREATE_COMPLETE', resource.state)
@@ -156,7 +114,7 @@ class UserTest(unittest.TestCase):
         self.assertEqual(None, resource.delete())
         self.assertEqual('DELETE_COMPLETE', resource.state)
 
-        resource.resource_id = '1'
+        resource.resource_id = self.fc.access
         resource.state_set('CREATE_COMPLETE')
         self.assertEqual('CREATE_COMPLETE', resource.state)
 
@@ -172,31 +130,8 @@ class UserTest(unittest.TestCase):
 
     def test_access_key(self):
 
-        fake_user = users.User(self.fc.users, {'id': '1',
-                                               'name': 'test_stack.CfnUser'})
-        fake_cred = ec2.EC2(self.fc.ec2, {
-                        'access': '03a4967889d94a9c8f707d267c127a3d',
-                        'secret': 'd5fd0c08f8cc417ead0355c67c529438'})
-
-        user.AccessKey.keystone().AndReturn(self.fc)
-        self.fc.users.list(tenant_id='test_tenant').AndReturn([fake_user])
-
-        user.AccessKey.keystone().AndReturn(self.fc)
-        self.fc.ec2.create('1', 'test_tenant').AndReturn(fake_cred)
-
-        # fetch secret key
-        user.AccessKey.keystone().AndReturn(self.fc)
-        self.fc.auth_user_id = '1'
-        user.AccessKey.keystone().AndReturn(self.fc)
-        self.fc.ec2.get('1',
-                '03a4967889d94a9c8f707d267c127a3d').AndReturn(fake_cred)
-
-        # delete script
-        user.AccessKey.keystone().AndReturn(self.fc)
-        self.fc.users.list(tenant_id='test_tenant').AndReturn([fake_user])
-        user.AccessKey.keystone().AndReturn(self.fc)
-        self.fc.ec2.delete('1',
-                           '03a4967889d94a9c8f707d267c127a3d').AndReturn(None)
+        self.m.StubOutWithMock(user.AccessKey, 'keystone')
+        user.AccessKey.keystone().MultipleTimes().AndReturn(self.fc)
 
         self.m.ReplayAll()
 
@@ -207,16 +142,16 @@ class UserTest(unittest.TestCase):
 
         self.assertEqual(user.AccessKey.UPDATE_REPLACE,
                   resource.handle_update())
-        self.assertEqual('03a4967889d94a9c8f707d267c127a3d',
+        self.assertEqual(self.fc.access,
                          resource.resource_id)
 
-        self.assertEqual('d5fd0c08f8cc417ead0355c67c529438',
+        self.assertEqual(self.fc.secret,
                          resource._secret)
 
         self.assertEqual(resource.FnGetAtt('UserName'), 'test_stack.CfnUser')
         resource._secret = None
         self.assertEqual(resource.FnGetAtt('SecretAccessKey'),
-                         'd5fd0c08f8cc417ead0355c67c529438')
+                         self.fc.secret)
         try:
             resource.FnGetAtt('Foo')
         except exception.InvalidTemplateAttribute:
@@ -229,18 +164,20 @@ class UserTest(unittest.TestCase):
 
     def test_access_key_no_user(self):
 
-        user.AccessKey.keystone().AndReturn(self.fc)
-        self.fc.users.list(tenant_id='test_tenant').AndReturn([])
+        self.m.StubOutWithMock(user.AccessKey, 'keystone')
+        user.AccessKey.keystone().MultipleTimes().AndReturn(self.fc)
 
         self.m.ReplayAll()
 
         t = self.load_template()
         stack = self.parse_stack(t)
 
+        # Set the resource properties to an unknown user
+        t['Resources']['HostKeys']['Properties']['UserName'] = 'NoExist'
         resource = user.AccessKey('HostKeys',
-                                      t['Resources']['HostKeys'],
-                                      stack)
-        self.assertEqual('could not find user test_stack.CfnUser',
+                                  t['Resources']['HostKeys'],
+                                  stack)
+        self.assertEqual('could not find user NoExist',
                          resource.create())
         self.assertEqual(user.AccessKey.CREATE_FAILED,
                          resource.state)
