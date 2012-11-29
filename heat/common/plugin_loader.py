@@ -13,6 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+'''
+Utilities to dynamically load plugin modules.
+
+Modules imported this way remain accessible to static imports, regardless of
+the order in which they are imported. For modules that are not part of an
+existing package tree, use create_subpackage() to dynamically create a package
+for them before loading them.
+'''
+
 import pkgutil
 import sys
 import types
@@ -23,10 +32,19 @@ logger = logging.getLogger(__name__)
 
 
 def _module_name(*components):
+    '''Assemble a fully-qualified module name from its components'''
     return '.'.join(components)
 
 
 def create_subpackage(path, parent_package_name, subpackage_name="plugins"):
+    '''
+    Dynamically create a package into which to load plugins.
+
+    This allows us to not include an __init__.py in the plugins directory. We
+    must still create a package for plugins to go in, otherwise we get warning
+    messages during import. This also provides a convenient place to store the
+    path(s) to the plugins directory.
+    '''
     package_name = _module_name(parent_package_name, subpackage_name)
 
     package = types.ModuleType(package_name)
@@ -37,7 +55,14 @@ def create_subpackage(path, parent_package_name, subpackage_name="plugins"):
 
 
 def _import_module(importer, module_name, package):
+    '''
+    Import a module dynamically into the specified package, given its name and
+    PEP302 Importer object (which knows the path to look in).
+    '''
     fullname = _module_name(package.__name__, module_name)
+
+    # Duplicate copies of modules are bad, so check if this has already been
+    # imported statically
     if fullname in sys.modules:
         return sys.modules[fullname]
 
@@ -46,11 +71,13 @@ def _import_module(importer, module_name, package):
         return None
 
     module = loader.load_module(fullname)
+    # Make this accessible through the parent package for static imports
     setattr(package, module_name, module)
     return module
 
 
 def load_modules(package, ignore_error=False):
+    '''Dynamically load all modules from a given package.'''
     path = package.__path__
     for importer, module_name, is_package in pkgutil.walk_packages(path):
         try:
