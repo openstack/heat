@@ -44,7 +44,6 @@ from heat.openstack.common import service
 
 from heat.common import config
 from heat.db import api as db_api
-from heat.engine import service as engine
 
 
 logger = logging.getLogger('heat.engine')
@@ -56,6 +55,8 @@ if __name__ == '__main__':
     config.setup_logging()
     config.register_engine_opts()
     db_api.configure()
+
+    from heat.engine import service as engine
 
     srv = engine.EngineService(cfg.CONF.host,
                                 'engine')
