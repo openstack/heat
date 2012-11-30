@@ -15,7 +15,7 @@
 
 from heat.db import api as db_api
 from heat.common import exception
-from heat.engine import identifier
+from heat.common import identifier
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)

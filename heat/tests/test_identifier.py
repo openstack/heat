@@ -19,7 +19,7 @@ from nose.plugins.attrib import attr
 import mox
 import json
 
-from heat.engine import identifier
+from heat.common import identifier
 
 
 @attr(tag=['unit', 'identifier'])

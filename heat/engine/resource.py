@@ -19,7 +19,7 @@ from datetime import datetime
 from heat.engine import event
 from heat.common import exception
 from heat.db import api as db_api
-from heat.engine import identifier
+from heat.common import identifier
 from heat.engine import timestamp
 from heat.engine.properties import Properties
 

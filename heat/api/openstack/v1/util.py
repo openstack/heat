@@ -16,7 +16,7 @@
 from webob import exc
 from functools import wraps
 
-from heat.engine import identifier
+from heat.common import identifier
 
 
 def tenant_local(handler):

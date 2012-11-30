@@ -28,7 +28,7 @@ from heat.common import wsgi
 from heat.engine import rpcapi as engine_rpcapi
 from heat.engine import format
 import heat.engine.api as engine_api
-from heat.engine import identifier
+from heat.common import identifier
 
 import heat.openstack.common.rpc.common as rpc_common
 

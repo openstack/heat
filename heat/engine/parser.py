@@ -18,7 +18,7 @@ import functools
 
 from heat.common import exception
 from heat.engine import dependencies
-from heat.engine import identifier
+from heat.common import identifier
 from heat.engine import resource
 from heat.engine import template
 from heat.engine import timestamp

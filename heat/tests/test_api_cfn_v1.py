@@ -27,7 +27,7 @@ import urlparse
 
 from heat.common import config
 from heat.common import context
-from heat.engine import identifier
+from heat.common import identifier
 from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
