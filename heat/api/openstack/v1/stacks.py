@@ -27,8 +27,8 @@ from webob import exc
 from heat.api.openstack.v1 import util
 from heat.common import wsgi
 from heat.common import template_format
-from heat.engine import api as engine_api
-from heat.engine import rpcapi as engine_rpcapi
+from heat.rpc import api as engine_api
+from heat.rpc import client as rpc_client
 
 import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
@@ -164,7 +164,7 @@ class StackController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine_rpcapi = engine_rpcapi.EngineAPI()
+        self.engine = rpc_client.EngineClient()
 
     def default(self, req, **args):
         raise exc.HTTPNotFound()
@@ -176,7 +176,7 @@ class StackController(object):
         """
 
         try:
-            stack_list = self.engine_rpcapi.list_stacks(req.context)
+            stack_list = self.engine.list_stacks(req.context)
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex, True)
 
@@ -202,11 +202,11 @@ class StackController(object):
         data = InstantiationData(body)
 
         try:
-            result = self.engine_rpcapi.create_stack(req.context,
-                                                     data.stack_name(),
-                                                     data.template(),
-                                                     data.user_params(),
-                                                     data.args())
+            result = self.engine.create_stack(req.context,
+                                              data.stack_name(),
+                                              data.template(),
+                                              data.user_params(),
+                                              data.args())
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex, True)
 
@@ -222,8 +222,8 @@ class StackController(object):
         """
 
         try:
-            identity = self.engine_rpcapi.identify_stack(req.context,
-                                                         stack_name)
+            identity = self.engine.identify_stack(req.context,
+                                                  stack_name)
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
 
@@ -240,8 +240,8 @@ class StackController(object):
         """
 
         try:
-            stack_list = self.engine_rpcapi.show_stack(req.context,
-                                                       identity)
+            stack_list = self.engine.show_stack(req.context,
+                                                identity)
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
 
@@ -259,8 +259,8 @@ class StackController(object):
         """
 
         try:
-            templ = self.engine_rpcapi.get_template(req.context,
-                                                    identity)
+            templ = self.engine.get_template(req.context,
+                                             identity)
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
 
@@ -278,11 +278,11 @@ class StackController(object):
         data = InstantiationData(body)
 
         try:
-            res = self.engine_rpcapi.update_stack(req.context,
-                                                  identity,
-                                                  data.template(),
-                                                  data.user_params(),
-                                                  data.args())
+            res = self.engine.update_stack(req.context,
+                                           identity,
+                                           data.template(),
+                                           data.user_params(),
+                                           data.args())
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
 
@@ -298,9 +298,9 @@ class StackController(object):
         """
 
         try:
-            res = self.engine_rpcapi.delete_stack(req.context,
-                                                  identity,
-                                                  cast=False)
+            res = self.engine.delete_stack(req.context,
+                                           identity,
+                                           cast=False)
 
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
@@ -320,8 +320,8 @@ class StackController(object):
         data = InstantiationData(body)
 
         try:
-            result = self.engine_rpcapi.validate_template(req.context,
-                                                          data.template())
+            result = self.engine.validate_template(req.context,
+                                                   data.template())
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex, True)
 

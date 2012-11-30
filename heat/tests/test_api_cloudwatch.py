@@ -33,7 +33,7 @@ import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
 from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches
-import heat.engine.api as engine_api
+from heat.rpc import api as engine_api
 
 
 @attr(tag=['unit', 'api-cloudwatch', 'WatchController'])

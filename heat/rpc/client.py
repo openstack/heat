@@ -40,7 +40,7 @@ def _engine_topic(topic, ctxt, host):
     return rpc.queue_get_for(ctxt, topic, host)
 
 
-class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
+class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
     '''Client side of the heat engine rpc API.
 
     API version history:
@@ -51,7 +51,7 @@ class EngineAPI(heat.openstack.common.rpc.proxy.RpcProxy):
     BASE_RPC_API_VERSION = '1.0'
 
     def __init__(self):
-        super(EngineAPI, self).__init__(
+        super(EngineClient, self).__init__(
                 topic=FLAGS.engine_topic,
                 default_version=self.BASE_RPC_API_VERSION)
 

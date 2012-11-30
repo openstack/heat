@@ -20,6 +20,7 @@ from heat.openstack.common import timeutils
 from heat.engine import timestamp
 from heat.db import api as db_api
 from heat.engine import parser
+from heat.rpc import api as rpc_api
 from heat.common import context as ctxtlib
 import eventlet
 
@@ -28,9 +29,15 @@ greenpool = eventlet.GreenPool()
 
 
 class WatchRule(object):
-    WATCH_STATES = (ALARM, NORMAL, NODATA
-    ) = ('ALARM', 'NORMAL', 'NODATA')
-
+    WATCH_STATES = (
+        ALARM,
+        NORMAL,
+        NODATA
+    ) = (
+        rpc_api.WATCH_STATE_ALARM,
+        rpc_api.WATCH_STATE_OK,
+        rpc_api.WATCH_STATE_NODATA
+    )
     ACTION_MAP = {ALARM: 'AlarmActions',
                   NORMAL: 'OKActions',
                   NODATA: 'InsufficientDataActions'}

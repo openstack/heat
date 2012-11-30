@@ -25,9 +25,9 @@ import errno
 from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
 from heat.common import wsgi
-from heat.engine import rpcapi as engine_rpcapi
+from heat.rpc import client as rpc_client
 from heat.common import template_format
-import heat.engine.api as engine_api
+from heat.rpc import api as engine_api
 from heat.common import identifier
 
 import heat.openstack.common.rpc.common as rpc_common
@@ -47,7 +47,7 @@ class StackController(object):
 
     def __init__(self, options):
         self.options = options
-        self.engine_rpcapi = engine_rpcapi.EngineAPI()
+        self.engine_rpcapi = rpc_client.EngineClient()
 
     @staticmethod
     def _id_format(resp):

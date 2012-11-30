@@ -15,7 +15,7 @@
 #    under the License.
 
 """
-Unit Tests for heat.engine.rpcapi
+Unit Tests for heat.rpc.client
 """
 
 
@@ -25,7 +25,7 @@ import unittest
 
 from heat.common import config
 from heat.common import context
-from heat.engine import rpcapi as engine_rpcapi
+from heat.rpc import client as rpc_client
 from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 
@@ -54,7 +54,7 @@ class EngineRpcAPITestCase(unittest.TestCase):
             rpcapi_class = kwargs['rpcapi_class']
             del kwargs['rpcapi_class']
         else:
-            rpcapi_class = engine_rpcapi.EngineAPI
+            rpcapi_class = rpc_client.EngineClient
         rpcapi = rpcapi_class()
         expected_retval = 'foo' if method == 'call' else None
 

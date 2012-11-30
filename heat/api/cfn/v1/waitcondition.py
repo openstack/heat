@@ -19,7 +19,7 @@ from webob.exc import Response
 
 from heat.common import wsgi
 from heat.common import context
-from heat.engine import rpcapi as engine_rpcapi
+from heat.rpc import client as rpc_client
 from heat.openstack.common import rpc
 
 
@@ -40,11 +40,11 @@ def json_error(http_status, message):
 class WaitConditionController:
     def __init__(self, options):
         self.options = options
-        self.engine_rpcapi = engine_rpcapi.EngineAPI()
+        self.engine = rpc_client.EngineClient()
 
     def update_waitcondition(self, req, body, stack_id, resource_name):
         con = req.context
-        [error, metadata] = self.engine_rpcapi.metadata_update(con,
+        [error, metadata] = self.engine.metadata_update(con,
                                  stack_id=stack_id,
                                  resource_name=resource_name,
                                  metadata=body)
