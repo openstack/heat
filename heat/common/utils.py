@@ -21,7 +21,6 @@ System-level utilities and helper functions.
 """
 
 import sys
-import uuid
 
 from eventlet import event
 from eventlet import greenthread
@@ -56,14 +55,6 @@ def chunkiter(fp, chunk_size=65536):
             yield chunk
         else:
             break
-
-
-def generate_uuid():
-    return str(uuid.uuid4())
-
-
-def gen_uuid():
-    return uuid.uuid4()
 
 
 class LoopingCallDone(Exception):
