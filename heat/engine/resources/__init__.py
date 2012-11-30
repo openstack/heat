@@ -44,5 +44,11 @@ def _initialise():
 
     _register_modules(plugin_loader.load_modules(sys.modules[__name__]))
 
+    from heat.openstack.common import cfg
+
+    plugin_pkg = plugin_loader.create_subpackage(cfg.CONF.plugin_dirs,
+                                                 'heat.engine')
+    _register_modules(plugin_loader.load_modules(plugin_pkg, True))
+
 
 _initialise()

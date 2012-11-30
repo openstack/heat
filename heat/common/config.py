@@ -100,7 +100,10 @@ cfg.IntOpt('sql_idle_timeout',
 engine_opts = [
 cfg.StrOpt('instance_driver',
            default='heat.engine.nova',
-           help='Driver to use for controlling instances')
+           help='Driver to use for controlling instances'),
+cfg.ListOpt('plugin_dirs',
+            default=['/usr/lib64/heat', '/usr/lib/heat'],
+            help='List of directories to search for Plugins'),
 ]
 rpc_opts = [
 cfg.StrOpt('host',
