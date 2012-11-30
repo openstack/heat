@@ -30,6 +30,7 @@ from heat.openstack.common import log as logging
 from heat.openstack.common import threadgroup
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common.rpc import service
+from heat.openstack.common import uuidutils
 
 
 logger = logging.getLogger(__name__)
@@ -110,7 +111,7 @@ class EngineService(service.Service):
         arg1 -> RPC context.
         arg2 -> Name or UUID of the stack to look up.
         """
-        if identifier.HeatIdentifier.is_uuid(stack_name):
+        if uuidutils.is_uuid_like(stack_name):
             s = db_api.stack_get(context, stack_name)
         else:
             s = db_api.stack_get_by_name(context, stack_name)

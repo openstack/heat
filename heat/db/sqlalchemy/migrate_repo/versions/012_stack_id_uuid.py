@@ -1,6 +1,6 @@
 from sqlalchemy import *
 from migrate import *
-from heat.common import utils
+from heat.openstack.common import uuidutils
 
 
 def upgrade(migrate_engine):
@@ -28,7 +28,7 @@ def upgrade(migrate_engine):
                                  name=fkey_name).drop()
 
     stack.c.id.alter(String(36), primary_key=True,
-        default=utils.generate_uuid)
+        default=uuidutils.generate_uuid)
     event.c.stack_id.alter(String(36), nullable=False)
     resource.c.stack_id.alter(String(36), nullable=False)
 

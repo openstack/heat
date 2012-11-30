@@ -18,12 +18,12 @@ from heat.common import exception
 from heat.common import wsgi
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
-from heat.common import utils as heat_utils
+from heat.openstack.common import uuidutils
 from heat.db import api as db_api
 
 
 def generate_request_id():
-    return 'req-' + str(heat_utils.gen_uuid())
+    return 'req-' + uuidutils.generate_uuid()
 
 
 class RequestContext(object):

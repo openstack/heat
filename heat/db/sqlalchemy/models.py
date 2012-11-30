@@ -21,7 +21,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import types as types
 from json import dumps, loads
-from heat.common import utils
+from heat.openstack.common import uuidutils
 from heat.openstack.common import timeutils
 from heat.db.sqlalchemy.session import get_session
 from sqlalchemy.orm.session import Session
@@ -145,7 +145,7 @@ class Stack(BASE, HeatBase):
     __tablename__ = 'stack'
 
     id = Column(String, primary_key=True,
-        default=utils.generate_uuid)
+        default=uuidutils.generate_uuid)
     name = Column(String)
     raw_template_id = Column(Integer, ForeignKey('raw_template.id'),
                             nullable=False)
