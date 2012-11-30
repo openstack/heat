@@ -26,7 +26,6 @@ from nose.plugins.attrib import attr
 
 from heat.common import context
 from heat.common import exception
-from heat.common import config
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import user
@@ -40,7 +39,6 @@ class UserTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
-        config.register_engine_opts()
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
     def tearDown(self):

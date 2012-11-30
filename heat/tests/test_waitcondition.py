@@ -31,7 +31,6 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import wait_condition as wc
 from heat.common import context
-from heat.common import config
 from heat.openstack.common import cfg
 
 logger = logging.getLogger('test_waitcondition')
@@ -68,7 +67,6 @@ class WaitConditionTest(unittest.TestCase):
                                '_create_timeout')
         self.m.StubOutWithMock(eventlet, 'sleep')
 
-        config.register_engine_opts()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
 
@@ -156,7 +154,6 @@ class WaitConditionTest(unittest.TestCase):
 class WaitConditionHandleTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
-        config.register_engine_opts()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
 

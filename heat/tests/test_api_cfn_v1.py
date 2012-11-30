@@ -25,7 +25,6 @@ import httplib
 import json
 import urlparse
 
-from heat.common import config
 from heat.common import context
 from heat.common import identifier
 from heat.openstack.common import cfg
@@ -1104,7 +1103,6 @@ class StackControllerTest(unittest.TestCase):
         self.maxDiff = None
         self.m = mox.Mox()
 
-        config.register_engine_opts()
         cfg.CONF.set_default('engine_topic', 'engine')
         cfg.CONF.set_default('host', 'host')
         self.topic = '%s.%s' % (cfg.CONF.engine_topic, cfg.CONF.host)

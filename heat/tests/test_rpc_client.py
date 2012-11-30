@@ -23,7 +23,6 @@ import stubout
 from nose.plugins.attrib import attr
 import unittest
 
-from heat.common import config
 from heat.common import context
 from heat.rpc import client as rpc_client
 from heat.openstack.common import cfg
@@ -35,7 +34,6 @@ class EngineRpcAPITestCase(unittest.TestCase):
 
     def setUp(self):
         self.context = context.get_admin_context()
-        config.register_engine_opts()
         cfg.CONF.set_default('rpc_backend',
                              'heat.openstack.common.rpc.impl_fake')
         cfg.CONF.set_default('verbose', True)

@@ -22,7 +22,6 @@ import mox
 import json
 from nose.plugins.attrib import attr
 
-from heat.common import config
 from heat.common import context
 from heat.tests.v1_1 import fakes
 import heat.engine.api as engine_api
@@ -100,7 +99,6 @@ class DummyThreadGroup(object):
 class stackCreateTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
-        config.register_engine_opts()
 
     def tearDown(self):
         self.m.UnsetStubs()

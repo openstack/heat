@@ -26,7 +26,6 @@ from nose.plugins.attrib import attr
 
 from heat.common import exception
 from heat.common import context
-from heat.common import config
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import instance
@@ -56,7 +55,6 @@ class LoadBalancerTest(unittest.TestCase):
         self.m.StubOutWithMock(instance.Instance, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.m.StubOutWithMock(Metadata, '__set__')
-        config.register_engine_opts()
 
     def tearDown(self):
         self.m.UnsetStubs()

@@ -53,11 +53,10 @@ if __name__ == '__main__':
     cfg.CONF(project='heat', prog='heat-engine')
 
     config.setup_logging()
-    config.register_engine_opts()
-    db_api.configure()
 
     from heat.engine import service as engine
 
+    db_api.configure()
     srv = engine.EngineService(cfg.CONF.host,
                                 'engine')
     launcher = service.launch(srv)
