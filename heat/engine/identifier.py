@@ -26,12 +26,6 @@ class HeatIdentifier(collections.Mapping):
     )
     path_re = re.compile(r'stacks/([^/]+)/([^/]+)(.*)')
 
-    HEX_ELEM = '[0-9A-Fa-f]'
-    UUID_PATTERN = '-'.join([HEX_ELEM + '{8}', HEX_ELEM + '{4}',
-                         HEX_ELEM + '{4}', HEX_ELEM + '{4}',
-                         HEX_ELEM + '{12}'])
-    uuid_re = re.compile(r'^' + UUID_PATTERN + '$')
-
     def __init__(self, tenant, stack_name, stack_id, path=''):
         '''
         Initialise a HeatIdentifier from a Tenant ID, Stack name, Stack ID
@@ -47,10 +41,6 @@ class HeatIdentifier(collections.Mapping):
             self.STACK_ID: str(stack_id),
             self.PATH: path,
         }
-
-    @classmethod
-    def is_uuid(cls, uuid):
-        return HeatIdentifier.uuid_re.match(uuid)
 
     @classmethod
     def from_arn(cls, arn):

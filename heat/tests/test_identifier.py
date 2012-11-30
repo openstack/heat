@@ -20,7 +20,6 @@ import mox
 import json
 
 from heat.engine import identifier
-from heat.common import utils
 
 
 @attr(tag=['unit', 'identifier'])
@@ -225,17 +224,6 @@ class IdentifierTest(unittest.TestCase):
     def test_path_components(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', 'p1/p2/p3')
         self.assertEqual(hi._path_components(), ['p1', 'p2', 'p3'])
-
-    def test_uuid_match(self):
-        uuid = utils.generate_uuid()
-        self.assertTrue(identifier.HeatIdentifier.is_uuid(uuid))
-        self.assertFalse(identifier.HeatIdentifier.is_uuid('a' + uuid))
-        self.assertFalse(identifier.HeatIdentifier.is_uuid(
-            'zzzzzzzz-zzzz-zzzz-zzzzzzzzzzzz'))
-        self.assertFalse(identifier.HeatIdentifier.is_uuid(uuid + 'a'))
-        for i in xrange(100):
-            self.assertTrue(identifier.HeatIdentifier.is_uuid(
-                utils.generate_uuid()))
 
 
 @attr(tag=['unit', 'identifier'])
