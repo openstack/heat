@@ -50,7 +50,7 @@ from heat.openstack.common import notifier
 log_opts = [
     cfg.StrOpt('logging_context_format_string',
                default='%(asctime)s %(levelname)s %(name)s [%(request_id)s '
-                       '%(user_id)s %(project_id)s] %(instance)s'
+                       '%(user)s %(tenant)s] %(instance)s'
                        '%(message)s',
                help='format string to use for log messages with context'),
     cfg.StrOpt('logging_default_format_string',
@@ -174,7 +174,7 @@ class ContextAdapter(logging.LoggerAdapter):
         self.log(logging.AUDIT, msg, *args, **kwargs)
 
     def deprecated(self, msg, *args, **kwargs):
-        stdmsg = _("Deprecated Config: %s") % msg
+        stdmsg = _("Deprecated: %s") % msg
         if CONF.fatal_deprecations:
             self.critical(stdmsg, *args, **kwargs)
             raise DeprecatedConfig(msg=stdmsg)

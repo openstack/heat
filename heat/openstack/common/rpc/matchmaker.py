@@ -21,10 +21,10 @@ return keys for direct exchanges, per (approximate) AMQP parlance.
 import contextlib
 import itertools
 import json
-import logging
 
 from heat.openstack.common import cfg
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import log as logging
 
 
 matchmaker_opts = [
