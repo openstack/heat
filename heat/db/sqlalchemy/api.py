@@ -19,7 +19,7 @@ from sqlalchemy.orm.session import Session
 from heat.common.exception import NotFound
 from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy.session import get_session
-from heat.engine import auth
+from heat.common import crypt
 
 
 def model_query(context, *args):
@@ -205,9 +205,9 @@ def user_creds_create(context):
     values = context.to_dict()
     user_creds_ref = models.UserCreds()
     user_creds_ref.update(values)
-    user_creds_ref.password = auth.encrypt(values['password'])
-    user_creds_ref.service_password = auth.encrypt(values['service_password'])
-    user_creds_ref.aws_creds = auth.encrypt(values['aws_creds'])
+    user_creds_ref.password = crypt.encrypt(values['password'])
+    user_creds_ref.service_password = crypt.encrypt(values['service_password'])
+    user_creds_ref.aws_creds = crypt.encrypt(values['aws_creds'])
     user_creds_ref.save(_session(context))
     return user_creds_ref
 
@@ -217,9 +217,9 @@ def user_creds_get(user_creds_id):
     # Return a dict copy of db results, do not decrypt details into db_result
     # or it can be committed back to the DB in decrypted form
     result = dict(db_result)
-    result['password'] = auth.decrypt(result['password'])
-    result['service_password'] = auth.decrypt(result['service_password'])
-    result['aws_creds'] = auth.decrypt(result['aws_creds'])
+    result['password'] = crypt.decrypt(result['password'])
+    result['service_password'] = crypt.decrypt(result['service_password'])
+    result['aws_creds'] = crypt.decrypt(result['aws_creds'])
     return result
 
 

@@ -30,7 +30,7 @@ auth_opts = [
 
 cfg.CONF.register_opts(auth_opts)
 
-logger = logging.getLogger('heat.engine.auth')
+logger = logging.getLogger(__name__)
 
 
 def encrypt(auth_info):
