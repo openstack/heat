@@ -27,7 +27,7 @@ from nose.plugins.attrib import attr
 from heat.tests import fakes
 
 import heat.db as db_api
-from heat.engine import format
+from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import wait_condition as wc
 from heat.common import context
@@ -88,7 +88,7 @@ class WaitConditionTest(unittest.TestCase):
 
     def test_post_success_to_handle(self):
 
-        t = format.parse_to_template(test_template_waitcondition)
+        t = template_format.parse(test_template_waitcondition)
         stack = self.create_stack('test_stack', t, {})
 
         wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
@@ -120,7 +120,7 @@ class WaitConditionTest(unittest.TestCase):
 
     def test_timeout(self):
 
-        t = format.parse_to_template(test_template_waitcondition)
+        t = template_format.parse(test_template_waitcondition)
         stack = self.create_stack('test_stack', t, {})
 
         tmo = eventlet.Timeout(6)
@@ -166,7 +166,7 @@ class WaitConditionHandleTest(unittest.TestCase):
         self.m.UnsetStubs()
 
     def create_stack(self, stack_name='test_stack2', params={}):
-        temp = format.parse_to_template(test_template_waitcondition)
+        temp = template_format.parse(test_template_waitcondition)
         template = parser.Template(temp)
         parameters = parser.Parameters(stack_name, template, params)
         stack = parser.Stack(context.get_admin_context(), stack_name,

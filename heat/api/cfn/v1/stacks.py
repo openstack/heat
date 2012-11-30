@@ -26,7 +26,7 @@ from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
 from heat.common import wsgi
 from heat.engine import rpcapi as engine_rpcapi
-from heat.engine import format
+from heat.common import template_format
 import heat.engine.api as engine_api
 from heat.common import identifier
 
@@ -316,7 +316,7 @@ class StackController(object):
             return exception.HeatMissingParameterError(detail=msg)
 
         try:
-            stack = format.parse_to_template(templ)
+            stack = template_format.parse(templ)
         except ValueError:
             msg = _("The Template must be a JSON document.")
             return exception.HeatInvalidParameterValueError(detail=msg)

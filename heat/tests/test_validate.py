@@ -20,7 +20,7 @@ import json
 from nose.plugins.attrib import attr
 
 from heat.tests.v1_1 import fakes
-from heat.engine import format
+from heat.common import template_format
 from heat.engine.resources import instance as instances
 from heat.engine import service
 import heat.db as db_api
@@ -220,7 +220,7 @@ class validateTest(unittest.TestCase):
         print "volumeTest teardown complete"
 
     def test_validate_volumeattach_valid(self):
-        t = format.parse_to_template(test_template_volumeattach % 'vdq')
+        t = template_format.parse(test_template_volumeattach % 'vdq')
         stack = parser.Stack(None, 'test_stack', parser.Template(t))
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
@@ -232,7 +232,7 @@ class validateTest(unittest.TestCase):
         self.assertTrue(volumeattach.validate() is None)
 
     def test_validate_volumeattach_invalid(self):
-        t = format.parse_to_template(test_template_volumeattach % 'sda')
+        t = template_format.parse(test_template_volumeattach % 'sda')
         stack = parser.Stack(None, 'test_stack', parser.Template(t))
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
@@ -244,7 +244,7 @@ class validateTest(unittest.TestCase):
         self.assertTrue(volumeattach.validate())
 
     def test_validate_ref_valid(self):
-        t = format.parse_to_template(test_template_ref % 'WikiDatabase')
+        t = template_format.parse(test_template_ref % 'WikiDatabase')
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -257,7 +257,7 @@ class validateTest(unittest.TestCase):
         self.assertEqual(res['Description'], 'test.')
 
     def test_validate_ref_invalid(self):
-        t = format.parse_to_template(test_template_ref % 'WikiDatabasez')
+        t = template_format.parse(test_template_ref % 'WikiDatabasez')
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -269,7 +269,7 @@ class validateTest(unittest.TestCase):
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
     def test_validate_findinmap_valid(self):
-        t = format.parse_to_template(test_template_findinmap_valid)
+        t = template_format.parse(test_template_findinmap_valid)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -281,7 +281,7 @@ class validateTest(unittest.TestCase):
         self.assertEqual(res['Description'], 'test.')
 
     def test_validate_findinmap_invalid(self):
-        t = format.parse_to_template(test_template_findinmap_invalid)
+        t = template_format.parse(test_template_findinmap_invalid)
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)

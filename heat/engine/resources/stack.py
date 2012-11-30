@@ -17,7 +17,7 @@ import urllib2
 import json
 
 from heat.common import exception
-from heat.engine import format
+from heat.common import template_format
 from heat.engine import resource
 from heat.engine import parser
 
@@ -76,7 +76,7 @@ class Stack(resource.Resource):
 
     def handle_create(self):
         response = urllib2.urlopen(self.properties[PROP_TEMPLATE_URL])
-        template = format.parse_to_template(response)
+        template = template_format.parse(response)
 
         self.create_with_template(template)
 

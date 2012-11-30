@@ -21,7 +21,7 @@ from nose.plugins.attrib import attr
 import unittest
 import json
 
-from heat.engine import format
+from heat.common import template_format
 
 
 @attr(speed='slow')
@@ -282,7 +282,7 @@ class CfnApiFunctionalTest(unittest.TestCase):
         # Extract the JSON TemplateBody and prove it parses
         template = self.stack.response_xml_item(response, prefix,
                                                 "TemplateBody")
-        json_load = format.parse_to_template(template)
+        json_load = template_format.parse(template)
         self.assertTrue(json_load != None)
 
         # Then sanity check content - I guess we could diff

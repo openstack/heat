@@ -19,7 +19,7 @@ import os
 import yaml
 import json
 import re
-from heat.engine import format
+from heat.common import template_format
 
 def main():
     path = sys.argv[1]
@@ -32,7 +32,7 @@ def main():
 
 def convert_file(path):
     f = open(path, 'r')
-    print format.convert_json_to_yaml(f.read())
+    print template_format.convert_json_to_yaml(f.read())
 
 def convert_directory(dirpath):
     for path in os.listdir(dirpath):
@@ -42,7 +42,7 @@ def convert_directory(dirpath):
         print 'Writing to %s' % yamlpath
         f = open(os.path.join(dirpath, path), 'r')
         out = open(os.path.join(dirpath, yamlpath), 'w')
-        yml = format.convert_json_to_yaml(f.read())
+        yml = template_format.convert_json_to_yaml(f.read())
         out.write(yml)
         out.close()
 

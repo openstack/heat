@@ -15,7 +15,7 @@
 
 from heat.common import exception
 from heat.engine.resources import stack
-from heat.engine import format
+from heat.common import template_format
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__file__)
@@ -219,7 +219,7 @@ class DBInstance(stack.Stack):
         return p
 
     def handle_create(self):
-        templ = format.parse_to_template(mysql_template)
+        templ = template_format.parse(mysql_template)
         self.create_with_template(templ)
 
     def FnGetAtt(self, key):

@@ -430,7 +430,7 @@ def resolve_static_data(template, parameters, snippet):
 
     Example:
 
-    >>> template = Template(format.parse_to_template(template_path))
+    >>> template = Template(template_format.parse(template_path))
     >>> parameters = Parameters('stack', template, {'KeyName': 'my_key'})
     >>> resolve_static_data(template, parameters, {'Ref': 'KeyName'})
     'my_key'

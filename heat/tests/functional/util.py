@@ -41,7 +41,7 @@ except ImportError:
 from novaclient.v1_1 import client as nova_client
 import heat
 from heat import utils
-from heat.engine import format
+from heat.common import template_format
 from heat.engine import parser
 from heat import client as heat_client
 from heat import boto_client as heat_client_boto
@@ -249,7 +249,7 @@ class Instance(object):
 #        time.sleep(1)  # necessary for sendall to complete
 
         f = open(basepath + '/templates/' + template_file)
-        t = format.parse_to_template(f.read())
+        t = template_format.parse(f.read())
         f.close()
 
         template = parser.Template(t)

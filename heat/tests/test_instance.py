@@ -28,7 +28,7 @@ from nose import with_setup
 from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
 import heat.db as db_api
-from heat.engine import format
+from heat.common import template_format
 from heat.engine import parser
 
 
@@ -47,7 +47,7 @@ class instancesTest(unittest.TestCase):
 
     def test_instance_create(self):
         f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
-        t = format.parse_to_template(f.read())
+        t = template_format.parse(f.read())
         f.close()
 
         template = parser.Template(t)
@@ -89,7 +89,7 @@ class instancesTest(unittest.TestCase):
 
     def test_instance_create_delete(self):
         f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
-        t = format.parse_to_template(f.read())
+        t = template_format.parse(f.read())
         f.close()
 
         template = parser.Template(t)

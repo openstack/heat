@@ -25,7 +25,7 @@ import unittest
 from nose.plugins.attrib import attr
 
 from heat.common import context
-from heat.engine import format
+from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import volume as vol
 from heat.tests.v1_1 import fakes
@@ -54,7 +54,7 @@ class VolumeTest(unittest.TestCase):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
             replace('heat/tests', 'templates')
         f = open("%s/WordPress_2_Instances_With_EBS.template" % self.path)
-        t = format.parse_to_template(f.read())
+        t = template_format.parse(f.read())
         f.close()
         return t
 

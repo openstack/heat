@@ -22,7 +22,7 @@ import unittest
 import yaml
 
 from heat.common import context
-from heat.engine import format
+from heat.common import template_format
 from heat.engine import parser
 
 
@@ -53,16 +53,16 @@ class JsonToYamlTest(unittest.TestCase):
             self.expected_test_count)
 
     def compare_json_vs_yaml(self, json_str, yml_str, file_name):
-        yml = format.parse_to_template(yml_str)
+        yml = template_format.parse(yml_str)
 
         self.assertEqual(u'2012-12-12', yml[u'HeatTemplateFormatVersion'],
             file_name)
         self.assertFalse(u'AWSTemplateFormatVersion' in yml, file_name)
         del(yml[u'HeatTemplateFormatVersion'])
 
-        jsn = format.parse_to_template(json_str)
-        format.default_for_missing(jsn, 'AWSTemplateFormatVersion',
-            format.CFN_VERSIONS)
+        jsn = template_format.parse(json_str)
+        template_format.default_for_missing(jsn, 'AWSTemplateFormatVersion',
+            template_format.CFN_VERSIONS)
 
         if u'AWSTemplateFormatVersion' in jsn:
             del(jsn[u'AWSTemplateFormatVersion'])
@@ -76,7 +76,7 @@ class JsonToYamlTest(unittest.TestCase):
             f = open(os.path.join(dirpath, path), 'r')
             json_str = f.read()
 
-            yml_str = format.convert_json_to_yaml(json_str)
+            yml_str = template_format.convert_json_to_yaml(json_str)
             yield (json_str, yml_str, f.name)
 
 
@@ -91,8 +91,8 @@ Mappings: {}
 Resources: {}
 Outputs: {}
 '''
-        tpl1 = format.parse_to_template(yaml1)
-        tpl2 = format.parse_to_template(yaml2)
+        tpl1 = template_format.parse(yaml1)
+        tpl2 = template_format.parse(yaml2)
         self.assertEqual(tpl1, tpl2)
 
 
@@ -107,7 +107,7 @@ class JsonYamlResolvedCompareTest(unittest.TestCase):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
             replace('heat/tests', 'templates')
         f = open("%s/%s" % (self.path, file_name))
-        t = format.parse_to_template(f.read())
+        t = template_format.parse(f.read())
         f.close()
         return t
 
@@ -126,8 +126,8 @@ class JsonYamlResolvedCompareTest(unittest.TestCase):
 
     def compare_stacks(self, json_file, yaml_file, parameters):
         t1 = self.load_template(json_file)
-        format.default_for_missing(t1, 'AWSTemplateFormatVersion',
-            format.CFN_VERSIONS)
+        template_format.default_for_missing(t1, 'AWSTemplateFormatVersion',
+            template_format.CFN_VERSIONS)
         del(t1[u'AWSTemplateFormatVersion'])
 
         t2 = self.load_template(yaml_file)

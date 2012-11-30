@@ -26,7 +26,7 @@ from webob import exc
 
 from heat.api.openstack.v1 import util
 from heat.common import wsgi
-from heat.engine import format
+from heat.common import template_format
 from heat.engine import api as engine_api
 from heat.engine import rpcapi as engine_rpcapi
 
@@ -65,7 +65,7 @@ class InstantiationData(object):
         """
 
         try:
-            return format.parse_to_template(data)
+            return template_format.parse(data)
         except ValueError:
             err_reason = "%s not in valid format" % data_type
             raise exc.HTTPBadRequest(explanation=err_reason)

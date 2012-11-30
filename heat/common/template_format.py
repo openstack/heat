@@ -29,7 +29,7 @@ yaml.Loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 
 
-def parse_to_template(tmpl_str):
+def parse(tmpl_str):
     '''
     Takes a string and returns a dict containing the parsed structure.
     This includes determination of whether the string is using the

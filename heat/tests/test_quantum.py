@@ -25,7 +25,7 @@ from nose.plugins.attrib import attr
 
 from heat.common import context
 from heat.common import exception
-from heat.engine import format
+from heat.common import template_format
 from heat.engine import properties
 from heat.engine.resources.quantum import net
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
@@ -82,7 +82,7 @@ class QuantumTest(unittest.TestCase):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
             replace('heat/tests', 'templates')
         f = open("%s/Quantum.template" % self.path)
-        t = format.parse_to_template(f.read())
+        t = template_format.parse(f.read())
         f.close()
         return t
 

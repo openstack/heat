@@ -25,7 +25,7 @@ import json
 from nose.plugins.attrib import attr
 
 from heat.common import context
-from heat.engine import format
+from heat.common import template_format
 from heat.engine.resources import s3
 from heat.engine import parser
 from utils import skip_if
@@ -59,7 +59,7 @@ class s3Test(unittest.TestCase):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
             replace('heat/tests', 'templates')
         f = open("%s/S3_Single_Instance.template" % self.path)
-        t = format.parse_to_template(f.read())
+        t = template_format.parse(f.read())
         f.close()
         return t
 

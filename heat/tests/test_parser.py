@@ -22,7 +22,7 @@ import sys
 
 from heat.common import context
 from heat.common import exception
-from heat.engine import format
+from heat.common import template_format
 from heat.engine import parser
 from heat.engine import parameters
 from heat.engine import template
@@ -96,7 +96,7 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(join(raw), 'foo bar\nbaz')
 
 
-mapping_template = format.parse_to_template('''{
+mapping_template = template_format.parse('''{
   "Mappings" : {
     "ValidMapping" : {
       "TestKey" : { "TestValue" : "wibble" }
