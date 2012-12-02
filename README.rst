@@ -2,12 +2,8 @@
 HEAT
 ====
 
-This is an OpenStack style project that provides a REST API to orchestrate
-multiple cloud applications implementing well-known standards such as AWS
-CloudFormation and TOSCA.
-
-Currently the developers are focusing on AWS CloudFormation but are watching
-the development of the TOSCA specification.
+Heat is a service to orchestrate multiple composite cloud applications using
+templates, through both an OpenStack-native ReST API and a CloudFormation-compatible Query API.
 
 Why heat? It makes the clouds rise and keeps them there.
 
@@ -16,10 +12,14 @@ Getting Started
 
 If you'd like to run from the master branch, you can clone the git repo:
 
-    git clone git@github.com:heat-api/heat.git
+    git clone git@github.com:openstack/heat.git
 
-Follow the steps:
-https://github.com/heat-api/heat/wiki/HeatGettingStarted
+Wiki: http://wiki.openstack.org/Heat
+GettingStarted: http://wiki.openstack.org/Heat/GettingStartedUsingDevstack
+
+Python client
+-------------
+https://github.com/openstack/python-heatclient
 
 References
 ----------
@@ -28,9 +28,9 @@ References
 * http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
 * http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=tosca
 
-Related projects
-----------------
-* http://wiki.openstack.org/Donabe
-* http://wiki.openstack.org/DatabaseAsAService (could be used to provide AWS::RDS::DBInstance)
-* http://wiki.openstack.org/QueueService (could be used to provide AWS::SQS::Queue)
-
+We have integration with
+------------------------
+* https://github.com/openstack/python-novaclient (instance)
+* https://github.com/openstack/python-keystoneclient (auth)
+* https://github.com/openstack/python-swiftclient (s3)
+* https://github.com/openstack/python-quantumclient (networking)
