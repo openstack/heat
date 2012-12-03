@@ -110,6 +110,9 @@ cfg.StrOpt('host',
            default=socket.gethostname(),
            help='Name of the engine node.  This can be an opaque identifier.'
                 'It is not necessarily a hostname, FQDN, or IP address.'),
+cfg.StrOpt('control_exchange',
+           default='heat',
+           help='AMQP exchange to connect to if using RabbitMQ or Qpid'),
 cfg.StrOpt('engine_topic',
            default='engine',
            help='the topic engine nodes listen on')
