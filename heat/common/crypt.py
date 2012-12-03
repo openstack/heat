@@ -24,7 +24,7 @@ from heat.openstack.common import log as logging
 
 auth_opts = [
     cfg.StrOpt('auth_encryption_key',
-               default='notgood',
+               default='notgood but just long enough i think',
                help="Encryption key used for authentication info in database")
 ]
 
