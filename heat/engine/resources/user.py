@@ -81,12 +81,28 @@ class AccessKey(resource.Resource):
         super(AccessKey, self).__init__(name, json_snippet, stack)
         self._secret = None
 
+    def _get_userid(self):
+        """
+        Helper function to derive the keystone userid, which is stored in the
+        resource_id of the User associated with this key.  We want to avoid
+        looking the name up via listing keystone users, as this requires admin
+        rights in keystone, so FnGetAtt which calls _secret_accesskey won't
+        work for normal non-admin users
+        """
+        # Lookup User resource by intrinsic reference (which is what is passed
+        # into the UserName parameter.  Would be cleaner to just make the User
+        # resource return resource_id for FnGetRefId but the AWS definition of
+        # user does say it returns a user name not ID
+        for r in self.stack.resources:
+            refid = self.stack.resources[r].FnGetRefId()
+            if refid == self.properties['UserName']:
+                return self.stack.resources[r].resource_id
+
     def handle_create(self):
-        username = self.properties['UserName']
-        user_id = self.keystone().get_user_by_name(username)
+        user_id = self._get_userid()
         if user_id is None:
             raise exception.NotFound('could not find user %s' %
-                                     username)
+                                     self.properties['UserName'])
 
         kp = self.keystone().get_ec2_keypair(user_id)
         if not kp:
@@ -102,7 +118,7 @@ class AccessKey(resource.Resource):
     def handle_delete(self):
         self.resource_id_set(None)
         self._secret = None
-        user_id = self.keystone().get_user_by_name(self.properties['UserName'])
+        user_id = self._get_userid()
         if user_id and self.resource_id:
             self.keystone().delete_ec2_keypair(user_id, self.resource_id)
 
@@ -110,7 +126,7 @@ class AccessKey(resource.Resource):
         '''
         Return the user's access key, fetching it from keystone if necessary
         '''
-        user_id = self.keystone().get_user_by_name(self.properties['UserName'])
+        user_id = self._get_userid()
         if self._secret is None:
             if not self.resource_id:
                 logger.warn('could not get secret for %s Error:%s' %

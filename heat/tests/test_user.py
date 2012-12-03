@@ -33,7 +33,7 @@ from heat.tests import fakes
 from heat.openstack.common import cfg
 
 
-@attr(tag=['unit', 'resource'])
+@attr(tag=['unit', 'resource', 'Unit'])
 @attr(speed='fast')
 class UserTest(unittest.TestCase):
     def setUp(self):
@@ -80,16 +80,6 @@ class UserTest(unittest.TestCase):
         self.assertEqual(user.User.CREATE_COMPLETE, resource.state)
         return resource
 
-    def create_access_key(self, t, stack, resource_name):
-        resource = user.AccessKey(resource_name,
-                                      t['Resources'][resource_name],
-                                      stack)
-        self.assertEqual(None, resource.validate())
-        self.assertEqual(None, resource.create())
-        self.assertEqual(user.AccessKey.CREATE_COMPLETE,
-                         resource.state)
-        return resource
-
     def test_user(self):
 
         self.m.StubOutWithMock(user.User, 'keystone')
@@ -126,15 +116,29 @@ class UserTest(unittest.TestCase):
         self.assertEqual('DELETE_COMPLETE', resource.state)
         self.m.VerifyAll()
 
-    def test_access_key(self):
+    def create_access_key(self, t, stack, resource_name):
+        resource = user.AccessKey(resource_name,
+                                      t['Resources'][resource_name],
+                                      stack)
+        self.assertEqual(None, resource.validate())
+        self.assertEqual(None, resource.create())
+        self.assertEqual(user.AccessKey.CREATE_COMPLETE,
+                         resource.state)
+        return resource
 
+    def test_access_key(self):
         self.m.StubOutWithMock(user.AccessKey, 'keystone')
         user.AccessKey.keystone().MultipleTimes().AndReturn(self.fc)
 
         self.m.ReplayAll()
 
         t = self.load_template()
+        # Override the Ref for UserName with a hard-coded name,
+        # so we don't need to create the User resource
+        t['Resources']['HostKeys']['Properties']['UserName'] =\
+            'test_stack.CfnUser'
         stack = self.parse_stack(t)
+        stack.resources['CfnUser'].resource_id = self.fc.user_id
 
         resource = self.create_access_key(t, stack, 'HostKeys')
 
@@ -161,28 +165,26 @@ class UserTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_access_key_no_user(self):
-
-        self.m.StubOutWithMock(user.AccessKey, 'keystone')
-        user.AccessKey.keystone().MultipleTimes().AndReturn(self.fc)
-
         self.m.ReplayAll()
 
         t = self.load_template()
+        # Set the resource properties UserName to an unknown user
+        t['Resources']['HostKeys']['Properties']['UserName'] =\
+            'test_stack.NoExist'
         stack = self.parse_stack(t)
+        stack.resources['CfnUser'].resource_id = self.fc.user_id
 
-        # Set the resource properties to an unknown user
-        t['Resources']['HostKeys']['Properties']['UserName'] = 'NoExist'
         resource = user.AccessKey('HostKeys',
                                   t['Resources']['HostKeys'],
                                   stack)
-        self.assertEqual('could not find user NoExist',
+        self.assertEqual('could not find user test_stack.NoExist',
                          resource.create())
         self.assertEqual(user.AccessKey.CREATE_FAILED,
                          resource.state)
 
         self.m.VerifyAll()
 
-    # allows testing of the test directly, shown below
-    if __name__ == '__main__':
-        sys.argv.append(__file__)
-        nose.main()
+# allows testing of the test directly, shown below
+if __name__ == '__main__':
+    sys.argv.append(__file__)
+    nose.main()
