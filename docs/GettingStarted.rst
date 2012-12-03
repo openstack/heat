@@ -90,6 +90,13 @@ In the heat directory, run the install script::
 
     sudo ./install.sh
 
+Install heat pip dependency
+---------------------------
+
+Heat requires the extras module, which is not currently packaged for Fedora, so it is necessary to manually install it::
+
+    sudo pip-python install extras
+
 Download Fedora 17 DVD and copy it to libvirt images location
 -------------------------------------------------------------
 
