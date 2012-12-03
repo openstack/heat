@@ -102,10 +102,6 @@ class FakeKeystoneClient():
     def delete_stack_user(self, user_id):
         self.user_id = None
 
-    def get_user_by_name(self, username):
-        if username == self.username:
-            return self.user_id
-
     def get_ec2_keypair(self, user_id):
         if user_id == self.user_id:
             if not self.creds:

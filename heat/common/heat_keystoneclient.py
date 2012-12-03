@@ -86,16 +86,6 @@ class KeystoneClient(object):
 
         return user.id
 
-    def get_user_by_name(self, username):
-        """
-        Return the ID for the specified username
-        """
-        users = self.client.users.list(tenant_id=self.context.tenant_id)
-        for u in users:
-            if u.name == username:
-                return u.id
-        return None
-
     def delete_stack_user(self, user_id):
 
         user = self.client.users.get(user_id)
