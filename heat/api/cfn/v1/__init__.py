@@ -75,7 +75,7 @@ class API(wsgi.Router):
         # This is not part of the main CFN API spec, hence handle it
         # separately via a different path
         waitcondition_controller = waitcondition.create_resource(conf)
-        mapper.connect('/waitcondition/:stack_id/resources/:resource_name',
+        mapper.connect('/waitcondition/{arn:.*}',
                        controller=waitcondition_controller,
                        action='update_waitcondition',
                        conditions=dict(method=['PUT']))

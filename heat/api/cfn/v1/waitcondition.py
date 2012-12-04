@@ -21,6 +21,7 @@ from heat.common import wsgi
 from heat.common import context
 from heat.rpc import client as rpc_client
 from heat.openstack.common import rpc
+from heat.common import identifier
 
 
 def json_response(http_status, data):
@@ -42,21 +43,23 @@ class WaitConditionController:
         self.options = options
         self.engine = rpc_client.EngineClient()
 
-    def update_waitcondition(self, req, body, stack_id, resource_name):
+    def update_waitcondition(self, req, body, arn):
         con = req.context
+        identity = identifier.ResourceIdentifier.from_arn(arn)
         [error, metadata] = self.engine.metadata_update(con,
-                                 stack_id=stack_id,
-                                 resource_name=resource_name,
+                                 stack_id=identity.stack_id,
+                                 resource_name=identity.resource_name,
                                  metadata=body)
         if error:
             if error == 'stack':
                 return json_error(404,
-                        'The stack "%s" does not exist.' % stack_id)
+                        'The stack "%s" does not exist.' % identity.stack_id)
             else:
                 return json_error(404,
-                        'The resource "%s" does not exist.' % resource_name)
+                        'The resource "%s" does not exist.' %
+                        identity.resource_name)
         return json_response(201, {
-            'resource': resource_name,
+            'resource': identity.resource_name,
             'metadata': body,
         })
 

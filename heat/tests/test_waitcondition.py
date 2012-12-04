@@ -27,6 +27,7 @@ from heat.tests import fakes
 
 import heat.db as db_api
 from heat.common import template_format
+from heat.common import identifier
 from heat.engine import parser
 from heat.engine.resources import wait_condition as wc
 from heat.common import context
@@ -99,6 +100,11 @@ class WaitConditionTest(unittest.TestCase):
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
 
+        id = identifier.ResourceIdentifier('test_tenant', stack.name,
+                                           stack.id, '', 'WaitHandle')
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
+        wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+
         self.m.ReplayAll()
 
         stack.create()
@@ -129,6 +135,11 @@ class WaitConditionTest(unittest.TestCase):
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
+
+        id = identifier.ResourceIdentifier('test_tenant', stack.name,
+                                           stack.id, '', 'WaitHandle')
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
+        wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
 
         self.m.ReplayAll()
 
@@ -186,6 +197,11 @@ class WaitConditionHandleTest(unittest.TestCase):
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
 
+        id = identifier.ResourceIdentifier('test_tenant', stack.name,
+                                           stack.id, '', 'WaitHandle')
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
+        wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+
         # Stub time to a fixed value so we can get an expected signature
         t = time.gmtime(1354196977)
         self.m.StubOutWithMock(time, 'gmtime')
@@ -198,14 +214,18 @@ class WaitConditionHandleTest(unittest.TestCase):
         self.assertEqual(resource.state, 'CREATE_COMPLETE')
 
         expected_url = "".join(
-                       ["http://127.0.0.1:8000/v1/waitcondition/STACKABCD1234",
-                       "/resources/WaitHandle",
-                       "?Timestamp=2012-11-29T13%3A49%3A37Z",
-                       "&SignatureMethod=HmacSHA256",
-                       "&AWSAccessKeyId=4567",
-                       "&SignatureVersion=2",
-                       "&Signature=",
-                       "%2BY5r9xvxTzTrRkz%2Br5T1wGeFwoU1wTh2c5u8a2sCurQ%3D"])
+                       ['http://127.0.0.1:8000/v1/waitcondition/',
+                        'arn%3Aopenstack%3Aheat%3A%3Atest_tenant%3Astacks%2F',
+                        'test_stack2%2FSTACKABCD1234%2Fresources%2F',
+                        'WaitHandle?',
+                        'Timestamp=2012-11-29T13%3A49%3A37Z&',
+                        'SignatureMethod=HmacSHA256&',
+                        'AWSAccessKeyId=4567&',
+                        'SignatureVersion=2&',
+                        'Signature=',
+                        'ePyTwmC%2F1kSigeo%2Fha7kP8Avvb45G9Y7WOQWe4F%2BnXM%3D'
+                       ])
+
         self.assertEqual(expected_url, resource.FnGetRefId())
 
         self.assertEqual(resource.UPDATE_REPLACE,

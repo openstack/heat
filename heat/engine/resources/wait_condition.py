@@ -19,6 +19,7 @@ import urllib
 import urlparse
 
 from heat.common import exception
+from heat.common import identifier
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
@@ -59,9 +60,14 @@ class WaitConditionHandle(resource.Resource):
         Also see boto/auth.py::QuerySignatureV2AuthHandler
         """
         host_url = urlparse.urlparse(cfg.CONF.heat_waitcondition_server_url)
+        # Note the WSGI spec apparently means that the webob request we end up
+        # prcessing in the CFN API (ec2token.py) has an unquoted path, so we
+        # need to calculate the signature with the path component unquoted, but
+        # ensure the actual URL contains the quoted version...
+        unquoted_path = urllib.unquote(host_url.path + path)
         request = {'host': host_url.netloc.lower(),
                    'verb': 'PUT',
-                   'path': host_url.path + path,
+                   'path': unquoted_path,
                    'params': {'SignatureMethod': 'HmacSHA256',
                               'SignatureVersion': '2',
                               'AWSAccessKeyId': credentials.access,
@@ -100,7 +106,7 @@ class WaitConditionHandle(resource.Resource):
         Override the default resource FnGetRefId so we return the signed URL
         '''
         if self.resource_id:
-            urlpath = '/%s/resources/%s' % (self.stack.id, self.name)
+            urlpath = self.identifier().arn_url_path()
             ec2_creds = self.keystone().get_ec2_keypair(self.resource_id)
             signed_url = self._sign_url(ec2_creds, urlpath)
             return unicode(signed_url)
@@ -148,7 +154,8 @@ class WaitCondition(resource.Resource):
     def _get_handle_resource_id(self):
         if self.resource_id is None:
             handle_url = self.properties['Handle']
-            self.resource_id = handle_url.split('/')[-1].split('?')[0]
+            handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
+            self.resource_id_set(handle_id.resource_name)
         return self.resource_id
 
     def _get_status_reason(self, handle):
