@@ -36,6 +36,7 @@ setuptools.setup(
     cmdclass=setup.get_cmdclass(),
     packages=setuptools.find_packages(exclude=['bin']),
     include_package_data=True,
+    install_requires=['extras'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: Apache Software License',
