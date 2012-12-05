@@ -24,6 +24,8 @@ from heat.openstack.common import setup
 from heat import version
 version.write_git_sha()
 
+requires = setup.parse_requirements()
+
 setuptools.setup(
     name='heat',
     version=version.HEAT_VERSION,
@@ -36,7 +38,7 @@ setuptools.setup(
     cmdclass=setup.get_cmdclass(),
     packages=setuptools.find_packages(exclude=['bin']),
     include_package_data=True,
-    install_requires=['extras'],
+    install_requires=requires,
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: Apache Software License',
