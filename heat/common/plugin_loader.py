@@ -59,27 +59,34 @@ def _import_module(importer, module_name, package):
     Import a module dynamically into the specified package, given its name and
     PEP302 Importer object (which knows the path to look in).
     '''
-    fullname = _module_name(package.__name__, module_name)
 
     # Duplicate copies of modules are bad, so check if this has already been
     # imported statically
-    if fullname in sys.modules:
-        return sys.modules[fullname]
+    if module_name in sys.modules:
+        return sys.modules[module_name]
 
-    loader = importer.find_module(fullname)
+    loader = importer.find_module(module_name)
     if loader is None:
         return None
 
-    module = loader.load_module(fullname)
+    module = loader.load_module(module_name)
+
     # Make this accessible through the parent package for static imports
-    setattr(package, module_name, module)
+    local_name = module_name.partition(package.__name__ + '.')[2]
+    module_components = local_name.split('.')
+    parent = reduce(getattr, module_components[:-1], package)
+    setattr(parent, module_components[-1], module)
+
     return module
 
 
 def load_modules(package, ignore_error=False):
     '''Dynamically load all modules from a given package.'''
     path = package.__path__
-    for importer, module_name, is_package in pkgutil.walk_packages(path):
+    pkg_prefix = package.__name__ + '.'
+
+    for importer, module_name, is_package in pkgutil.walk_packages(path,
+                                                                   pkg_prefix):
         try:
             module = _import_module(importer, module_name, package)
         except ImportError as ex:

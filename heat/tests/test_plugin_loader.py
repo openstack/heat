@@ -56,11 +56,12 @@ class PluginLoaderTest(unittest.TestCase):
 
     def test_import_module_existing(self):
         import heat.engine.service
+        existing = heat.engine.service
         importer = pkgutil.ImpImporter(heat.engine.__path__[0])
         loaded = plugin_loader._import_module(importer,
-                                              'service',
+                                              'heat.engine.service',
                                               heat.engine)
-        self.assertTrue(loaded is heat.engine.service)
+        self.assertTrue(loaded is existing)
 
     def test_import_module_garbage(self):
         importer = pkgutil.ImpImporter(heat.engine.__path__[0])
