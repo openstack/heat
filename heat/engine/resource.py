@@ -136,9 +136,11 @@ class Resource(object):
     def __eq__(self, other):
         '''Allow == comparison of two resources'''
         # For the purposes of comparison, we declare two resource objects
-        # equal if their parsed_templates are the same
+        # equal if their names and parsed_templates are the same
         if isinstance(other, Resource):
-            return self.parsed_template() == other.parsed_template()
+            return (self.name == other.name) and (
+                self.parsed_template() == self.parsed_template(
+                    template=other.t))
         return NotImplemented
 
     def __ne__(self, other):
@@ -156,14 +158,14 @@ class Resource(object):
         return identifier.ResourceIdentifier(resource_name=self.name,
                                              **self.stack.identifier())
 
-    def parsed_template(self, section=None, default={}):
+    def parsed_template(self, section=None, default={}, template=None):
         '''
         Return the parsed template data for the resource. May be limited to
         only one section of the data, in which case a default value may also
         be supplied.
         '''
         if section is None:
-            template = self.t
+            template = template or self.t
         else:
             template = self.t.get(section, default)
         return self.stack.resolve_runtime_data(template)

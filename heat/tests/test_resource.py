@@ -95,6 +95,27 @@ class ResourceTest(unittest.TestCase):
         res = resource.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual(res.metadata, {})
 
+    def test_equals_different_stacks(self):
+        tmpl1 = {'Type': 'Foo'}
+        tmpl2 = {'Type': 'Foo'}
+        tmpl3 = {'Type': 'Bar'}
+        stack2 = parser.Stack(None, 'test_stack', parser.Template({}),
+                                  stack_id=-1)
+        res1 = resource.GenericResource('test_resource', tmpl1, self.stack)
+        res2 = resource.GenericResource('test_resource', tmpl2, stack2)
+        res3 = resource.GenericResource('test_resource2', tmpl3, stack2)
+
+        self.assertEqual(res1, res2)
+        self.assertNotEqual(res1, res3)
+
+    def test_equals_names(self):
+        tmpl1 = {'Type': 'Foo'}
+        tmpl2 = {'Type': 'Foo'}
+        res1 = resource.GenericResource('test_resource1', tmpl1, self.stack)
+        res2 = resource.GenericResource('test_resource2', tmpl2, self.stack)
+
+        self.assertNotEqual(res1, res2)
+
 
 @attr(tag=['unit', 'resource'])
 @attr(speed='fast')
