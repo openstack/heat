@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
 from heat.engine import parser
+from heat.common import urlfetch
 
 from heat.openstack.common import log as logging
 
@@ -75,8 +76,8 @@ class Stack(resource.Resource):
             raise exception.Error(self._nested.state_description)
 
     def handle_create(self):
-        response = urllib2.urlopen(self.properties[PROP_TEMPLATE_URL])
-        template = template_format.parse(response.read())
+        template_data = urlfetch.get(self.properties[PROP_TEMPLATE_URL])
+        template = template_format.parse(template_data)
 
         self.create_with_template(template)
 

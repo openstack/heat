@@ -17,11 +17,7 @@
 Stack endpoint for Heat v1 ReST API.
 """
 
-import httplib
 import itertools
-import json
-import socket
-import urlparse
 from webob import exc
 
 from heat.api.openstack.v1 import util
@@ -29,6 +25,7 @@ from heat.common import wsgi
 from heat.common import template_format
 from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
+from heat.common import urlfetch
 
 import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
@@ -78,49 +75,27 @@ class InstantiationData(object):
             raise exc.HTTPBadRequest(explanation=_("No stack name specified"))
         return self.data[self.PARAM_STACK_NAME]
 
-    def _load_template(self, template_url):
-        """
-        Retrieve a template from a URL, in JSON
-        or YAML format.
-        """
-        logger.debug('Template URL %s' % template_url)
-        url = urlparse.urlparse(template_url)
-        err_reason = _("Could not retrieve template")
-
-        try:
-            ConnType = (url.scheme == 'https' and httplib.HTTPSConnection
-                                               or httplib.HTTPConnection)
-            conn = ConnType(url.netloc)
-
-            try:
-                conn.request("GET", url.path)
-                resp = conn.getresponse()
-                logger.info('status %d' % resp.status)
-
-                if resp.status != 200:
-                    raise exc.HTTPBadRequest(explanation=err_reason)
-
-                return self.format_parse(resp.read(), 'Template')
-            finally:
-                conn.close()
-        except socket.gaierror:
-            raise exc.HTTPBadRequest(explanation=err_reason)
-
     def template(self):
         """
         Get template file contents, either inline or from a URL, in JSON
         or YAML format.
         """
         if self.PARAM_TEMPLATE in self.data:
-            tpl = self.data[self.PARAM_TEMPLATE]
-            if isinstance(tpl, dict):
-                return tpl
-            return self.format_parse(self.data[self.PARAM_TEMPLATE],
-                'Template')
+            template_data = self.data[self.PARAM_TEMPLATE]
+            if isinstance(template_data, dict):
+                return template_data
         elif self.PARAM_TEMPLATE_URL in self.data:
-            return self._load_template(self.data[self.PARAM_TEMPLATE_URL])
+            url = self.data[self.PARAM_TEMPLATE_URL]
+            logger.debug('TemplateUrl %s' % url)
+            try:
+                template_data = urlfetch.get(url)
+            except IOError as ex:
+                err_reason = _('Could not retrieve template: %s') % str(ex)
+                raise exc.HTTPBadRequest(explanation=err_reason)
+        else:
+            raise exc.HTTPBadRequest(explanation=_("No template specified"))
 
-        raise exc.HTTPBadRequest(explanation=_("No template specified"))
+        return self.format_parse(template_data, 'Template')
 
     def user_params(self):
         """

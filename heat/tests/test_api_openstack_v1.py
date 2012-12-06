@@ -14,16 +14,12 @@
 
 
 import sys
-import socket
 import nose
 import mox
 import json
-import yaml
 import unittest
 from nose.plugins.attrib import attr
 
-import httplib
-import urlparse
 import webob.exc
 
 from heat.common import context
@@ -32,6 +28,7 @@ from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
+from heat.common import urlfetch
 
 import heat.api.openstack.v1.stacks as stacks
 import heat.api.openstack.v1.resources as resources
@@ -103,8 +100,8 @@ blarg: wibble
         body = {'template_url': url}
         data = stacks.InstantiationData(body)
 
-        self.m.StubOutWithMock(data, '_load_template')
-        data._load_template(url).AndReturn(template)
+        self.m.StubOutWithMock(urlfetch, 'get')
+        urlfetch.get(url).AndReturn(json.dumps(template))
         self.m.ReplayAll()
 
         self.assertEqual(data.template(), template)
@@ -116,7 +113,7 @@ blarg: wibble
         body = {'template': template, 'template_url': url}
         data = stacks.InstantiationData(body)
 
-        self.m.StubOutWithMock(data, '_load_template')
+        self.m.StubOutWithMock(urlfetch, 'get')
         self.m.ReplayAll()
 
         self.assertEqual(data.template(), template)

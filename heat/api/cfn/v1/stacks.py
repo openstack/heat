@@ -17,11 +17,9 @@
 Stack endpoint for Heat CloudFormation v1 API.
 """
 
-import httplib
 import json
 import socket
-import urlparse
-import errno
+
 from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
 from heat.common import wsgi
@@ -29,6 +27,7 @@ from heat.rpc import client as rpc_client
 from heat.common import template_format
 from heat.rpc import api as engine_api
 from heat.common import identifier
+from heat.common import urlfetch
 
 import heat.openstack.common.rpc.common as rpc_common
 
@@ -224,36 +223,16 @@ class StackController(object):
         Get template file contents, either from local file or URL
         """
         if 'TemplateBody' in req.params:
-            logger.info('TemplateBody ...')
+            logger.debug('TemplateBody ...')
             return req.params['TemplateBody']
         elif 'TemplateUrl' in req.params:
-            logger.info('TemplateUrl %s' % req.params['TemplateUrl'])
-            url = urlparse.urlparse(req.params['TemplateUrl'])
-            if url.scheme == 'https':
-                conn = httplib.HTTPSConnection(url.netloc)
-            else:
-                conn = httplib.HTTPConnection(url.netloc)
-
+            url = req.params['TemplateUrl']
+            logger.debug('TemplateUrl %s' % url)
             try:
-                conn.request("GET", url.path)
-            except Exception as e:
-                if e.errno == errno.ECONNREFUSED:
-                    msg = _('Connection refused to %s' % url.netloc)
-                    raise exception.HeatInvalidParameterValueError(detail=msg)
-                raise
-
-            r1 = conn.getresponse()
-            logger.info('status %d' % r1.status)
-            if r1.status == 200:  # OK
-                data = r1.read()
-                conn.close()
-            elif r1.status == 404:  # NOT_FOUND
-                msg = _('No match found for %s' % req.params['TemplateUrl'])
+                return urlfetch.get(url)
+            except IOError as exc:
+                msg = _('Failed to fetch template: %s') % str(exc)
                 raise exception.HeatInvalidParameterValueError(detail=msg)
-            else:
-                msg = _('Unexpected error, request returned %d' % r1.status)
-                raise exception.HeatInvalidParameterValueError(detail=msg)
-            return data
 
         return None
 
