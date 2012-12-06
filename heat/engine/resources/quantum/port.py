@@ -50,10 +50,7 @@ class Port(quantum.QuantumResource):
 
     def handle_delete(self):
         client = self.quantum()
-        try:
-            client.delete_port(self.resource_id)
-        except:
-            pass
+        client.delete_port(self.resource_id)
 
     def FnGetAtt(self, key):
         attributes = self.quantum().show_port(
