@@ -205,8 +205,6 @@ Option values may reference other values using PEP 292 string substitution::
 
 Note that interpolation can be avoided by using '$$'.
 
-FIXME(markmc): document add_cli_subparsers()
-
 Options may be declared as required so that an error is raised if the user
 does not supply a value for the option.
 
@@ -234,6 +232,28 @@ in order to support a common usage pattern in OpenStack::
 
     def start(server, app):
         server.start(app, CONF.bind_port, CONF.bind_host)
+
+Positional command line arguments are supported via a 'positional' Opt
+constructor argument::
+
+    >>> CONF.register_cli_opt(MultiStrOpt('bar', positional=True))
+    True
+    >>> CONF(['a', 'b'])
+    >>> CONF.bar
+    ['a', 'b']
+
+It is also possible to use argparse "sub-parsers" to parse additional
+command line arguments using the SubCommandOpt class:
+
+    >>> def add_parsers(subparsers):
+    ...     list_action = subparsers.add_parser('list')
+    ...     list_action.add_argument('id')
+    ...
+    >>> CONF.register_cli_opt(SubCommandOpt('action', handler=add_parsers))
+    True
+    >>> CONF(['list', '10'])
+    >>> CONF.action.name, CONF.action.id
+    ('list', '10')
 
 """
 
@@ -612,7 +632,8 @@ class Opt(object):
             kwargs['dest'] = dest
         else:
             kwargs['nargs'] = '?'
-        kwargs.update({'metavar': self.metavar,
+        kwargs.update({'default': None,
+                       'metavar': self.metavar,
                        'help': self.help, })
         return kwargs
 
@@ -786,6 +807,57 @@ class MultiStrOpt(Opt):
         return cparser.get(section, [self.dest], multi=True)
 
 
+class SubCommandOpt(Opt):
+
+    """
+    Sub-command options allow argparse sub-parsers to be used to parse
+    additional command line arguments.
+
+    The handler argument to the SubCommandOpt contructor is a callable
+    which is supplied an argparse subparsers object. Use this handler
+    callable to add sub-parsers.
+
+    The opt value is SubCommandAttr object with the name of the chosen
+    sub-parser stored in the 'name' attribute and the values of other
+    sub-parser arguments available as additional attributes.
+    """
+
+    def __init__(self, name, dest=None, handler=None,
+                 title=None, description=None, help=None):
+        """Construct an sub-command parsing option.
+
+        This behaves similarly to other Opt sub-classes but adds a
+        'handler' argument. The handler is a callable which is supplied
+        an subparsers object when invoked. The add_parser() method on
+        this subparsers object can be used to register parsers for
+        sub-commands.
+
+        :param name: the option's name
+        :param dest: the name of the corresponding ConfigOpts property
+        :param title: title of the sub-commands group in help output
+        :param description: description of the group in help output
+        :param help: a help string giving an overview of available sub-commands
+        """
+        super(SubCommandOpt, self).__init__(name, dest=dest, help=help)
+        self.handler = handler
+        self.title = title
+        self.description = description
+
+    def _add_to_cli(self, parser, group=None):
+        """Add argparse sub-parsers and invoke the handler method."""
+        dest = self.dest
+        if group is not None:
+            dest = group.name + '_' + dest
+
+        subparsers = parser.add_subparsers(dest=dest,
+                                           title=self.title,
+                                           description=self.description,
+                                           help=self.help)
+
+        if not self.handler is None:
+            self.handler(subparsers)
+
+
 class OptGroup(object):
 
     """
@@ -951,9 +1023,6 @@ class ConfigOpts(collections.Mapping):
 
         self._args = None
 
-        # for subparser support, a root parser should be initialized earlier
-        # and conserved for later use
-        self._pre_init_parser = None
         self._oparser = None
         self._cparser = None
         self._cli_values = {}
@@ -969,18 +1038,7 @@ class ConfigOpts(collections.Mapping):
         if default_config_files is None:
             default_config_files = find_config_files(project, prog)
 
-        # if _pre_init_parser does not exist, create one
-        if self._pre_init_parser is None:
-            self._oparser = argparse.ArgumentParser(prog=prog, usage=usage)
-        # otherwise, use the pre-initialized parser with subparsers
-        # and re-initialize parser
-        else:
-            self._oparser = self._pre_init_parser
-            self._oparser.prog = prog
-            self._oparser.version = version
-            self._oparser.usage = usage
-            self._pre_init_parser = None
-
+        self._oparser = argparse.ArgumentParser(prog=prog, usage=usage)
         self._oparser.add_argument('--version',
                                    action='version',
                                    version=version)
@@ -1101,13 +1159,6 @@ class ConfigOpts(collections.Mapping):
         """Return the number of options and option groups."""
         return len(self._opts) + len(self._groups)
 
-    def add_cli_subparsers(self, **kwargs):
-        # only add subparsers to pre-initialized root parser
-        # to avoid cleared by self.clear()
-        if self._pre_init_parser is None:
-            self._pre_init_parser = argparse.ArgumentParser()
-        return self._pre_init_parser.add_subparsers(**kwargs)
-
     def reset(self):
         """Clear the object state and unset overrides and defaults."""
         self._unset_defaults_and_overrides()
@@ -1115,10 +1166,14 @@ class ConfigOpts(collections.Mapping):
 
     @__clear_cache
     def clear(self):
-        """Clear the state of the object to before it was called."""
+        """Clear the state of the object to before it was called.
+
+        Any subparsers added using the add_cli_subparsers() will also be
+        removed as a side-effect of this method.
+        """
         self._args = None
         self._cli_values.clear()
-        self._oparser = None
+        self._oparser = argparse.ArgumentParser()
         self._cparser = None
         self.unregister_opts(self._config_opts)
         for group in self._groups.values():
@@ -1408,6 +1463,9 @@ class ConfigOpts(collections.Mapping):
         info = self._get_opt_info(name, group)
         opt = info['opt']
 
+        if isinstance(opt, SubCommandOpt):
+            return self.SubCommandAttr(self, group, opt.dest)
+
         if 'override' in info:
             return info['override']
 
@@ -1599,6 +1657,40 @@ class ConfigOpts(collections.Mapping):
         def __len__(self):
             """Return the number of options and option groups."""
             return len(self._group._opts)
+
+    class SubCommandAttr(object):
+
+        """
+        A helper class representing the name and arguments of an argparse
+        sub-parser.
+        """
+
+        def __init__(self, conf, group, dest):
+            """Construct a SubCommandAttr object.
+
+            :param conf: a ConfigOpts object
+            :param group: an OptGroup object
+            :param dest: the name of the sub-parser
+            """
+            self._conf = conf
+            self._group = group
+            self._dest = dest
+
+        def __getattr__(self, name):
+            """Look up a sub-parser name or argument value."""
+            if name == 'name':
+                name = self._dest
+                if self._group is not None:
+                    name = self._group.name + '_' + name
+                return self._conf._cli_values[name]
+
+            if name in self._conf:
+                raise DuplicateOptError(name)
+
+            try:
+                return self._conf._cli_values[name]
+            except KeyError:
+                raise NoSuchOptError(name)
 
     class StrSubWrapper(object):
 
