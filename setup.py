@@ -20,15 +20,13 @@ import subprocess
 import setuptools
 
 from heat.openstack.common import setup
-
-from heat import version
-version.write_git_sha()
+from heat.version import version_info as version
 
 requires = setup.parse_requirements()
 
 setuptools.setup(
     name='heat',
-    version=version.HEAT_VERSION,
+    version=version.canonical_version_string(always=True),
     description='The heat project provides services for provisioning '
                 'virtual machines',
     license='Apache License (2.0)',
