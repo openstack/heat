@@ -38,10 +38,7 @@ class Router(quantum.QuantumResource):
 
     def handle_delete(self):
         client = self.quantum()
-        try:
-            client.delete_router(self.resource_id)
-        except:
-            pass
+        client.delete_router(self.resource_id)
 
     def FnGetAtt(self, key):
         attributes = self.quantum().show_router(
@@ -68,12 +65,9 @@ class RouterInterface(quantum.QuantumResource):
 
     def handle_delete(self):
         client = self.quantum()
-        try:
-            (router_id, subnet_id) = self.resource_id.split(':')
-            client.remove_interface_router(router_id,
-                {'subnet_id': subnet_id})
-        except:
-            pass
+        (router_id, subnet_id) = self.resource_id.split(':')
+        client.remove_interface_router(router_id,
+            {'subnet_id': subnet_id})
 
 
 class RouterGateway(quantum.QuantumResource):
@@ -95,11 +89,8 @@ class RouterGateway(quantum.QuantumResource):
 
     def handle_delete(self):
         client = self.quantum()
-        try:
-            (router_id, network_id) = self.resource_id.split(':')
-            client.remove_gateway_router(router_id)
-        except:
-            pass
+        (router_id, network_id) = self.resource_id.split(':')
+        client.remove_gateway_router(router_id)
 
 
 def resource_mapping():

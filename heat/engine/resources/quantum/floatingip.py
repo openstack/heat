@@ -36,10 +36,7 @@ class FloatingIP(quantum.QuantumResource):
 
     def handle_delete(self):
         client = self.quantum()
-        try:
-            client.delete_floatingip(self.resource_id)
-        except:
-            pass
+        client.delete_floatingip(self.resource_id)
 
     def FnGetAtt(self, key):
         attributes = self.quantum().show_floatingip(
@@ -69,12 +66,9 @@ class FloatingIPAssociation(quantum.QuantumResource):
 
     def handle_delete(self):
         client = self.quantum()
-        try:
-            (floatingip_id, port_id) = self.resource_id.split(':')
-            client.update_floatingip(floatingip_id,
-                {'floatingip': {'port_id': None}})
-        except:
-            pass
+        (floatingip_id, port_id) = self.resource_id.split(':')
+        client.update_floatingip(floatingip_id,
+            {'floatingip': {'port_id': None}})
 
 
 def resource_mapping():
