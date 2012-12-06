@@ -76,7 +76,7 @@ class Stack(resource.Resource):
 
     def handle_create(self):
         response = urllib2.urlopen(self.properties[PROP_TEMPLATE_URL])
-        template = template_format.parse(response)
+        template = template_format.parse(response.read())
 
         self.create_with_template(template)
 
