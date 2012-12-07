@@ -188,7 +188,7 @@ class ContextMiddleware(wsgi.Middleware):
             tenant_id = headers.get('X-Tenant-Id')
             auth_url = headers.get('X-Auth-Url')
             roles = headers.get('X-Roles')
-        except:
+        except Exception:
             raise exception.NotAuthenticated()
 
         req.context = self.make_context(auth_token=token,

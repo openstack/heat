@@ -241,7 +241,7 @@ class KeystoneStrategy(BaseStrategy):
             try:
                 body = json.loads(resp_body)
                 msg = body['error']['message']
-            except:
+            except (ValueError, KeyError):
                 msg = resp_body
             raise exception.KeystoneError(resp.status, msg)
 

@@ -482,7 +482,7 @@ class XMLResponseSerializer(object):
                         # otherwise quotes get mangled and json.loads breaks
                         try:
                             subelement.text = json.dumps(value)
-                        except:
+                        except TypeError:
                             subelement.text = str(value)
                 else:
                     self.object_to_element(value, subelement)
@@ -583,7 +583,7 @@ class Resource(object):
                 try:
                     err_body = action_result.get_unserialized_body()
                     serializer.default(action_result, err_body)
-                except:
+                except Exception:
                     logging.warning("Unable to serialize exception response")
 
             return action_result

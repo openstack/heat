@@ -81,7 +81,7 @@ class V1Client(base_client.BaseClient):
             try:
                 result = self.stack_request("DescribeStackResources", "GET",
                                         **parameters)
-            except:
+            except Exception:
                 logger.debug("Failed to lookup resource details with key %s:%s"
                              % (lookup_key, lookup_value))
             else:
