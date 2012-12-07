@@ -114,10 +114,9 @@ def resource_get_all_by_stack(context, stack_id):
 def stack_get_by_name(context, stack_name, owner_id=None):
     query = model_query(context, models.Stack).\
                         filter_by(tenant=context.tenant_id).\
-                        filter_by(name=stack_name)
+                        filter_by(name=stack_name).\
+                        filter_by(owner_id=owner_id)
 
-    if owner_id:
-        query = query.filter_by(owner_id=owner_id)
     return query.first()
 
 
