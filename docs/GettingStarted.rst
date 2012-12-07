@@ -28,11 +28,15 @@ Optionally, one may wish to install Heat via RPM. Creation instructions are in t
 Install OpenStack
 -----------------
 
-Installing OpenStack on Fedora 16 and 17
+Installing OpenStack on Fedora 16/17/18
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note: on Fedora 16 you have to enable the `Preview Repository`_ to install the required OpenStack Essex release.
-A script called "``openstack``" in the tools directory of the repository will install and start OpenStack for you on Fedora 16/17::
+Note:
+    - On Fedora 16 you have to enable the `Preview Repository`_ to install the required OpenStack Essex release.
+    - On Fedora 17 you can use the included OpenStack Essex release, or optionally enable the `Preview Repository`_ to install the newer OpenStack Folsom release.
+    - On Fedora 18 you can use the included OpenStack Folsom release
+
+A script called "``openstack``" in the tools directory of the repository will install and start OpenStack for you on Fedora::
 
     ./tools/openstack install -y -r ${MYSQL_ROOT_PASSWORD}
 
