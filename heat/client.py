@@ -22,11 +22,18 @@ import os
 import json
 from heat.common import client as base_client
 from heat.common import exception
-from heat.cloudformation import *
 
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
+
+
+SUPPORTED_PARAMS = ('StackName', 'TemplateBody', 'TemplateUrl',
+                    'NotificationARNs', 'Parameters', 'Version',
+                    'SignatureVersion', 'Timestamp', 'AWSAccessKeyId',
+                    'Signature', 'TimeoutInMinutes',
+                    'LogicalResourceId', 'PhysicalResourceId', 'NextToken',
+)
 
 
 class V1Client(base_client.BaseClient):
