@@ -13,61 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
-import os
-import os.path
-import sys
-import base64
-from lxml import etree
-import re
-
-try:
-    from glanceclient import client as glance_client
-except ImportError:
-    from glance import client as glance_client
-from heat.common import exception
-
-from heat.openstack.common import log as logging
-
-LOG = logging.getLogger(__name__)
-
-SUCCESS = 0
-FAILURE = 1
-
-
-def catch_error(action):
-    """Decorator to provide sensible default error handling for CLI actions."""
-    def wrap(func):
-        @functools.wraps(func)
-        def wrapper(*arguments, **kwargs):
-            try:
-                ret = func(*arguments, **kwargs)
-                return SUCCESS if ret is None else ret
-            except exception.NotAuthorized:
-                LOG.error("Not authorized to make this request. Check " +
-                      "your credentials (OS_USERNAME, OS_PASSWORD, " +
-                      "OS_TENANT_NAME, OS_AUTH_URL and OS_AUTH_STRATEGY).")
-                return FAILURE
-            except exception.ClientConfigurationError:
-                raise
-            except exception.KeystoneError, e:
-                LOG.error("Keystone did not finish the authentication and "
-                              "returned the following message:\n\n%s"
-                              % e.message)
-                return FAILURE
-            except Exception, e:
-                options = arguments[0]
-                if options.debug:
-                    raise
-                LOG.error("Failed to %s. Got error:" % action)
-                pieces = unicode(e).split('\n')
-                for piece in pieces:
-                    LOG.error(piece)
-                return FAILURE
-
-        return wrapper
-    return wrap
-
 
 class LazyPluggable(object):
     """A pluggable backend loaded lazily based on some value."""
