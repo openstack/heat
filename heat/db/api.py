@@ -25,7 +25,7 @@ Usage:
 The underlying driver is loaded . SQLAlchemy is currently the only
 supported backend.
 '''
-import heat.utils
+from heat.db import utils
 from heat.openstack.common import cfg
 
 
@@ -37,7 +37,7 @@ db_opts = [
                help='The backend to use for db'),
     ]
 
-IMPL = heat.utils.LazyPluggable('db_backend',
+IMPL = utils.LazyPluggable('db_backend',
                            sqlalchemy='heat.db.sqlalchemy.api')
 
 

@@ -14,7 +14,7 @@
 
 """Database setup and migration commands."""
 
-from heat import utils
+from heat.db import utils
 
 
 IMPL = utils.LazyPluggable('db_backend',

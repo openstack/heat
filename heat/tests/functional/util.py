@@ -40,7 +40,6 @@ except ImportError:
     from glance import client as glance_client
 from novaclient.v1_1 import client as nova_client
 import heat
-from heat import utils
 from heat.common import template_format
 from heat.engine import parser
 from heat import client as heat_client
