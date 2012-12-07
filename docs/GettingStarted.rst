@@ -122,7 +122,7 @@ Allocate Floating IP Addresses to OpenStack
 
 If you want to use templates that depend on ``AWS::EC2::EIP`` or ``AWS::EC2::EIPAssociation`` (multi-instance stacks often do, single-instance less often but it's still possible), see the wiki page on `Configuring Floating IPs`_.
 
-.. _Configuring Floating IPs: https://github.com/heat-api/heat/wiki/Configuring-Floating-IPs
+.. _Configuring Floating IPs: http://wiki.openstack.org/Heat/Configuring-Floating-IPs
 
 Setup the MySQL database for Heat
 ---------------------------------
@@ -349,14 +349,14 @@ If you wish to try any of the HA or autoscaling templates (which collect stats f
 
 Further information on using the heat cloudwatch features is available in the Using-Cloudwatch_ wiki page
 
-.. _Using-Cloudwatch: https://github.com/heat-api/heat/wiki/Using-CloudWatch
+.. _Using-Cloudwatch: http://wiki.openstack.org/Heat/Using-CloudWatch
 
 Troubleshooting
 ===============
 
 If you encounter issues running heat, see if the solution to the issue is documented on the Troubleshooting_ wiki page. If not, let us know about the problem in the #heat IRC channel on freenode.
 
-.. _Troubleshooting: https://github.com/heat-api/heat/wiki/Troubleshooting
+.. _Troubleshooting: http://wiki.openstack.org/Heat/TroubleShooting
 
 ..
     echo; echo 'Success!'
