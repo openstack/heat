@@ -30,14 +30,6 @@ from heat.engine import properties
 from heat.engine.resources.quantum import net
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.engine import parser
-from utils import skip_if
-
-try:
-    from quantumclient.v2_0 import client as quantumclient
-except:
-    skip_test = True
-else:
-    skip_test = False
 
 
 class FakeQuantum():
@@ -68,10 +60,8 @@ class FakeQuantum():
 @attr(tag=['unit', 'resource'])
 @attr(speed='fast')
 class QuantumTest(unittest.TestCase):
-    @skip_if(skip_test, 'unable to import quantumclient')
     def setUp(self):
         self.m = mox.Mox()
-        self.m.CreateMock(quantumclient)
         self.m.StubOutWithMock(net.Net, 'quantum')
 
     def tearDown(self):
@@ -145,7 +135,6 @@ class QuantumTest(unittest.TestCase):
             'admin_state_up': False
         }, props)
 
-    @skip_if(skip_test, 'unable to import quantumclient')
     def test_net(self):
         fq = FakeQuantum()
         net.Net.quantum().MultipleTimes().AndReturn(fq)
