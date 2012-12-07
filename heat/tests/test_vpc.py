@@ -25,14 +25,6 @@ from heat.common import context
 from heat.common import template_format
 from heat.engine.resources import vpc
 from heat.engine import parser
-from utils import skip_if
-
-try:
-    from quantumclient.v2_0 import client as quantumclient
-except:
-    skip_test = True
-else:
-    skip_test = False
 
 test_template_vpc = '''
 Resources:
@@ -74,10 +66,8 @@ class FakeQuantum():
 @attr(tag=['unit', 'resource'])
 @attr(speed='fast')
 class QuantumTest(unittest.TestCase):
-    @skip_if(skip_test, 'unable to import quantumclient')
     def setUp(self):
         self.m = mox.Mox()
-        self.m.CreateMock(quantumclient)
         self.m.StubOutWithMock(vpc.VPC, 'quantum')
 
     def tearDown(self):
@@ -103,7 +93,6 @@ class QuantumTest(unittest.TestCase):
         self.assertEqual(vpc.VPC.CREATE_COMPLETE, resource.state)
         return resource
 
-    @skip_if(skip_test, 'unable to import quantumclient')
     def test_vpc(self):
         fq = FakeQuantum()
         vpc.VPC.quantum().MultipleTimes().AndReturn(fq)
