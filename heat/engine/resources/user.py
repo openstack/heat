@@ -139,11 +139,13 @@ class AccessKey(resource.Resource):
                     logger.warn('could not get secret for %s Error:%s' %
                                 (self.properties['UserName'],
                                  str(ex)))
-                if kp.access == self.resource_id:
-                    self._secret = kp.secret
                 else:
-                    logger.error("Unexpected ec2 keypair, for %s access %s" %
-                                 (user_id, kp.access))
+                    if kp.access == self.resource_id:
+                        self._secret = kp.secret
+                    else:
+                        msg = ("Unexpected ec2 keypair, for %s access %s" %
+                               (user_id, kp.access))
+                        logger.error(msg)
 
         return self._secret or '000-000-000'
 
