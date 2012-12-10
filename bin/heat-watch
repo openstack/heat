@@ -43,7 +43,7 @@ scriptname = os.path.basename(sys.argv[0])
 gettext.install('heat', unicode=1)
 
 from heat import  boto_client_cloudwatch as heat_client
-from heat import version
+from heat.version import version_info as version
 from heat.common import config
 from heat.common import exception
 from heat import utils
@@ -257,8 +257,8 @@ Commands:
     metric-put-data             Publish data-point for specified  metric
 
 """
-    oparser = optparse.OptionParser(version='%%prog %s'
-                                    % version.version_string(),
+    deferred_string = version.deferred_version_string(prefix='%prog ')
+    oparser = optparse.OptionParser(version=str(deferred_string),
                                     usage=usage.strip())
     create_options(oparser)
     (opts, cmd, args) = parse_options(oparser, sys.argv[1:])
