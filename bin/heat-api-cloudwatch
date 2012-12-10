@@ -19,6 +19,9 @@ CloudWatch API and translates it into a native representation.  It then
 calls the heat-engine via AMQP RPC to implement them.
 """
 
+import eventlet
+eventlet.monkey_patch(os=False)
+
 import gettext
 import os
 import sys
