@@ -66,7 +66,7 @@ class VolumeTest(unittest.TestCase):
             'auth_url': 'http://localhost:5000/v2.0'})
         template = parser.Template(t)
         params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
-        stack = parser.Stack(ctx, stack_name, template, params, stack_id=-1)
+        stack = parser.Stack(ctx, stack_name, template, params)
 
         return stack
 
@@ -147,8 +147,15 @@ class VolumeTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_volume_attachment_error(self):
+        fv = FakeVolume('creating', 'available')
         fva = FakeVolume('attaching', 'error')
         stack_name = 'test_volume_attach_error_stack'
+
+        # volume create
+        vol.Volume.nova('volume').MultipleTimes().AndReturn(self.fc)
+        self.fc.volumes.create(u'1',
+                display_description='%s.DataVolume' % stack_name,
+                display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
         vol.VolumeAttachment.nova().MultipleTimes().AndReturn(self.fc)
@@ -165,6 +172,8 @@ class VolumeTest(unittest.TestCase):
         t = self.load_template()
         stack = self.parse_stack(t, stack_name)
 
+        self.assertEqual(stack['DataVolume'].create(), None)
+        self.assertEqual(fv.status, 'available')
         resource = vol.VolumeAttachment('MountPoint',
                                         t['Resources']['MountPoint'],
                                         stack)
@@ -173,8 +182,15 @@ class VolumeTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_volume_attachment(self):
+        fv = FakeVolume('creating', 'available')
         fva = FakeVolume('attaching', 'in-use')
         stack_name = 'test_volume_attach_stack'
+
+        # volume create
+        vol.Volume.nova('volume').MultipleTimes().AndReturn(self.fc)
+        self.fc.volumes.create(u'1',
+                display_description='%s.DataVolume' % stack_name,
+                display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
         vol.VolumeAttachment.nova().MultipleTimes().AndReturn(self.fc)
@@ -197,6 +213,8 @@ class VolumeTest(unittest.TestCase):
         t = self.load_template()
         stack = self.parse_stack(t, stack_name)
 
+        self.assertEqual(stack['DataVolume'].create(), None)
+        self.assertEqual(fv.status, 'available')
         resource = self.create_attachment(t, stack, 'MountPoint')
 
         self.assertEqual(resource.handle_update(), vol.Volume.UPDATE_REPLACE)
