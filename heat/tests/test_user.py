@@ -66,8 +66,7 @@ class UserTest(unittest.TestCase):
                                     'DBRootPassword': 'test',
                                     'DBUsername': 'test',
                                     'DBPassword': 'test'})
-        stack = parser.Stack(ctx, 'test_stack', template,
-                             params, stack_id=-1)
+        stack = parser.Stack(ctx, 'test_stack', template, params)
 
         return stack
 
