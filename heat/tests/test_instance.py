@@ -30,6 +30,7 @@ from heat.engine.resources import instance as instances
 import heat.db as db_api
 from heat.common import template_format
 from heat.engine import parser
+from heat.openstack.common import uuidutils
 
 
 @attr(tag=['unit', 'resource', 'instance'])
@@ -53,8 +54,8 @@ class instancesTest(unittest.TestCase):
         stack_name = 'instance_create_test_stack'
         template = parser.Template(t)
         params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
-        stack = parser.Stack(None, stack_name, template,
-                             params, stack_id=-1)
+        stack = parser.Stack(None, stack_name, template, params,
+                             stack_id=uuidutils.generate_uuid())
 
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
@@ -92,8 +93,8 @@ class instancesTest(unittest.TestCase):
         stack_name = 'instance_create_delete_test_stack'
         template = parser.Template(t)
         params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
-        stack = parser.Stack(None, stack_name, template,
-                             params, stack_id=-1)
+        stack = parser.Stack(None, stack_name, template, params,
+                             stack_id=uuidutils.generate_uuid())
 
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \

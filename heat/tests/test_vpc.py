@@ -80,8 +80,11 @@ class QuantumTest(unittest.TestCase):
             'username': 'test_username',
             'password': 'password',
             'auth_url': 'http://localhost:5000/v2.0'})
-        stack = parser.Stack(ctx, 'test_stack', parser.Template(t),
-            stack_id=-1, parameters={'external_network': 'abcd1234'})
+        stack_name = 'test_stack'
+        tmpl = parser.Template(t)
+        params = parser.Parameters(stack_name, tmpl,
+                                   {'external_network': 'abcd1234'})
+        stack = parser.Stack(ctx, stack_name, tmpl, params)
 
         return stack
 

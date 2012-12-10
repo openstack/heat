@@ -117,10 +117,10 @@ class JsonYamlResolvedCompareTest(unittest.TestCase):
             'username': 'test_username',
             'password': 'password',
             'auth_url': 'http://localhost:5000/v2.0'})
+        stack_name = 'test_stack'
         template = parser.Template(t)
-        params = parser.Parameters('test_stack', template, parameters)
-        stack = parser.Stack(ctx, 'test_stack', parser.Template(t),
-            stack_id=-1, parameters=params)
+        params = parser.Parameters(stack_name, template, parameters)
+        stack = parser.Stack(ctx, stack_name, parser.Template(t), params)
 
         return stack
 

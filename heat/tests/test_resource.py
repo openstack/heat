@@ -22,6 +22,7 @@ import json
 from heat.common import context
 from heat.engine import parser
 from heat.engine import resource
+from heat.openstack.common import uuidutils
 
 
 @attr(tag=['unit', 'resource'])
@@ -29,7 +30,7 @@ from heat.engine import resource
 class ResourceTest(unittest.TestCase):
     def setUp(self):
         self.stack = parser.Stack(None, 'test_stack', parser.Template({}),
-                                  stack_id=-1)
+                                  stack_id=uuidutils.generate_uuid())
 
     def test_state_defaults(self):
         tmpl = {'Type': 'Foo'}

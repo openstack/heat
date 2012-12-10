@@ -60,8 +60,7 @@ class DBInstanceTest(unittest.TestCase):
             'auth_url': 'http://localhost:5000/v2.0'})
         template = parser.Template(t)
         params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
-        stack = parser.Stack(ctx, 'test_stack', template,
-                             params, stack_id=-1)
+        stack = parser.Stack(ctx, 'test_stack', template, params)
 
         return stack
 

@@ -69,8 +69,7 @@ class s3Test(unittest.TestCase):
             'username': 'test_username',
             'password': 'password',
             'auth_url': 'http://localhost:5000/v2.0'})
-        stack = parser.Stack(ctx, 'test_stack', parser.Template(t),
-                             stack_id=-1)
+        stack = parser.Stack(ctx, 'test_stack', parser.Template(t))
 
         return stack
 
