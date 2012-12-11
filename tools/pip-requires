@@ -27,7 +27,6 @@ pysendfile
 SQLAlchemy>=0.7.8,<=0.7.9
 WebOb==1.0.8
 python-keystoneclient
-python-glanceclient
 python-memcached
 python-swiftclient
 python-quantumclient

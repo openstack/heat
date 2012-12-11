@@ -6,6 +6,7 @@ mox==0.5.3
 nose
 nosexcover
 openstack.nose_plugin>=0.7
-pep8==1.1
-sphinx>=1.1.2
 paramiko
+pep8==1.1
+python-glanceclient
+sphinx>=1.1.2
