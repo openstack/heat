@@ -25,6 +25,7 @@ from heat.common import identifier
 @attr(tag=['unit', 'identifier'])
 @attr(speed='fast')
 class IdentifierTest(unittest.TestCase):
+    url_prefix = 'http://1.2.3.4/foo/'
 
     def test_attrs(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', 'p')
@@ -58,6 +59,11 @@ class IdentifierTest(unittest.TestCase):
         hi = identifier.HeatIdentifier('t', 's', 'i', 'p')
         self.assertEqual(hi.arn(), 'arn:openstack:heat::t:stacks/s/i/p')
 
+    def test_arn_url(self):
+        hi = identifier.HeatIdentifier('t', 's', 'i', 'p')
+        self.assertEqual(hi.arn_url_path(),
+                         '/arn%3Aopenstack%3Aheat%3A%3At%3Astacks%2Fs%2Fi%2Fp')
+
     def test_arn_id_int(self):
         hi = identifier.HeatIdentifier('t', 's', 42, 'p')
         self.assertEqual(hi.arn(), 'arn:openstack:heat::t:stacks/s/42/p')
@@ -65,6 +71,14 @@ class IdentifierTest(unittest.TestCase):
     def test_arn_parse(self):
         arn = 'arn:openstack:heat::t:stacks/s/i/p'
         hi = identifier.HeatIdentifier.from_arn(arn)
+        self.assertEqual(hi.tenant, 't')
+        self.assertEqual(hi.stack_name, 's')
+        self.assertEqual(hi.stack_id, 'i')
+        self.assertEqual(hi.path, '/p')
+
+    def test_arn_url_parse(self):
+        url = self.url_prefix + 'arn%3Aopenstack%3Aheat%3A%3At%3Astacks/s/i/p'
+        hi = identifier.HeatIdentifier.from_arn_url(url)
         self.assertEqual(hi.tenant, 't')
         self.assertEqual(hi.stack_name, 's')
         self.assertEqual(hi.stack_id, 'i')
@@ -78,34 +92,111 @@ class IdentifierTest(unittest.TestCase):
         self.assertEqual(hi.stack_id, 'i')
         self.assertEqual(hi.path, '')
 
+    def test_arn_url_parse_default(self):
+        url = self.url_prefix + 'arn%3Aopenstack%3Aheat%3A%3At%3Astacks/s/i'
+        hi = identifier.HeatIdentifier.from_arn_url(url)
+        self.assertEqual(hi.tenant, 't')
+        self.assertEqual(hi.stack_name, 's')
+        self.assertEqual(hi.stack_id, 'i')
+        self.assertEqual(hi.path, '')
+
     def test_arn_parse_upper(self):
         arn = 'ARN:openstack:heat::t:stacks/s/i/p'
         hi = identifier.HeatIdentifier.from_arn(arn)
         self.assertEqual(hi.stack_name, 's')
+        self.assertEqual(hi.stack_id, 'i')
+        self.assertEqual(hi.path, '/p')
+
+    def test_arn_url_parse_upper(self):
+        url = self.url_prefix + 'ARN%3Aopenstack%3Aheat%3A%3At%3Astacks/s/i/p'
+        hi = identifier.HeatIdentifier.from_arn_url(url)
+        self.assertEqual(hi.tenant, 't')
+        self.assertEqual(hi.stack_name, 's')
+        self.assertEqual(hi.stack_id, 'i')
+        self.assertEqual(hi.path, '/p')
+
+    def test_arn_url_parse_qs(self):
+        url = self.url_prefix +\
+              'arn%3Aopenstack%3Aheat%3A%3At%3Astacks/s/i/p?foo=bar'
+        hi = identifier.HeatIdentifier.from_arn_url(url)
+        self.assertEqual(hi.tenant, 't')
+        self.assertEqual(hi.stack_name, 's')
+        self.assertEqual(hi.stack_id, 'i')
+        self.assertEqual(hi.path, '/p')
 
     def test_arn_parse_arn_invalid(self):
         arn = 'urn:openstack:heat::t:stacks/s/i'
         self.assertRaises(ValueError, identifier.HeatIdentifier.from_arn, arn)
 
+    def test_arn_url_parse_arn_invalid(self):
+        url = self.url_prefix + 'urn:openstack:heat::t:stacks/s/i/p'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
+
     def test_arn_parse_os_invalid(self):
         arn = 'arn:aws:heat::t:stacks/s/i'
         self.assertRaises(ValueError, identifier.HeatIdentifier.from_arn, arn)
+
+    def test_arn_url_parse_os_invalid(self):
+        url = self.url_prefix + 'arn:aws:heat::t:stacks/s/i/p'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
 
     def test_arn_parse_heat_invalid(self):
         arn = 'arn:openstack:cool::t:stacks/s/i'
         self.assertRaises(ValueError, identifier.HeatIdentifier.from_arn, arn)
 
+    def test_arn_url_parse_heat_invalid(self):
+        url = self.url_prefix + 'arn:openstack:cool::t:stacks/s/i/p'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
+
     def test_arn_parse_stacks_invalid(self):
         arn = 'arn:openstack:heat::t:sticks/s/i'
         self.assertRaises(ValueError, identifier.HeatIdentifier.from_arn, arn)
+
+    def test_arn_url_parse_stacks_invalid(self):
+        url = self.url_prefix + 'arn%3Aopenstack%3Aheat%3A%3At%3Asticks/s/i/p'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
 
     def test_arn_parse_missing_field(self):
         arn = 'arn:openstack:heat::t:stacks/s'
         self.assertRaises(ValueError, identifier.HeatIdentifier.from_arn, arn)
 
+    def test_arn_url_parse_missing_field(self):
+        url = self.url_prefix + 'arn%3Aopenstack%3Aheat%3A%3At%3Asticks/s/'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
+
     def test_arn_parse_empty_field(self):
         arn = 'arn:openstack:heat::t:stacks//i'
         self.assertRaises(ValueError, identifier.HeatIdentifier.from_arn, arn)
+
+    def test_arn_url_parse_empty_field(self):
+        url = self.url_prefix + 'arn%3Aopenstack%3Aheat%3A%3At%3Asticks//i'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
+
+    def test_arn_url_parse_leading_char(self):
+        url = self.url_prefix + 'Aarn%3Aopenstack%3Aheat%3A%3At%3Asticks/s/i/p'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
+
+    def test_arn_url_parse_leading_space(self):
+        url = self.url_prefix + ' arn%3Aopenstack%3Aheat%3A%3At%3Asticks/s/i/p'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
+
+    def test_arn_url_parse_badurl_proto(self):
+        url = 'htt://1.2.3.4/foo/arn%3Aopenstack%3Aheat%3A%3At%3Asticks/s/i/p'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
+
+    def test_arn_url_parse_badurl_host(self):
+        url = 'htt:///foo/arn%3Aopenstack%3Aheat%3A%3At%3Asticks/s/i/p'
+        self.assertRaises(ValueError,
+                          identifier.HeatIdentifier.from_arn_url, url)
 
     def test_arn_round_trip(self):
         hii = identifier.HeatIdentifier('t', 's', 'i', 'p')
@@ -119,6 +210,12 @@ class IdentifierTest(unittest.TestCase):
         arn = 'arn:openstack:heat::t:stacks/s/i/p'
         hi = identifier.HeatIdentifier.from_arn(arn)
         self.assertEqual(hi.arn(), arn)
+
+    def test_arn_url_parse_round_trip(self):
+        arn = '/arn%3Aopenstack%3Aheat%3A%3At%3Astacks%2Fs%2Fi%2Fp'
+        url = 'http://1.2.3.4/foo' + arn
+        hi = identifier.HeatIdentifier.from_arn_url(url)
+        self.assertEqual(hi.arn_url_path(), arn)
 
     def test_dict_round_trip(self):
         hii = identifier.HeatIdentifier('t', 's', 'i', 'p')
@@ -165,9 +262,21 @@ class IdentifierTest(unittest.TestCase):
         hi = identifier.HeatIdentifier.from_arn(arn)
         self.assertEqual(hi.tenant, ':/')
 
+    def test_url_tenant_decode(self):
+        enc_arn = 'arn%3Aopenstack%3Aheat%3A%3A%253A%252F%3Astacks%2Fs%2Fi'
+        url = self.url_prefix + enc_arn
+        hi = identifier.HeatIdentifier.from_arn_url(url)
+        self.assertEqual(hi.tenant, ':/')
+
     def test_name_decode(self):
         arn = 'arn:openstack:heat::t:stacks/%3A%2F/i'
         hi = identifier.HeatIdentifier.from_arn(arn)
+        self.assertEqual(hi.stack_name, ':/')
+
+    def test_url_name_decode(self):
+        enc_arn = 'arn%3Aopenstack%3Aheat%3A%3At%3Astacks%2F%253A%252F%2Fi'
+        url = self.url_prefix + enc_arn
+        hi = identifier.HeatIdentifier.from_arn_url(url)
         self.assertEqual(hi.stack_name, ':/')
 
     def test_id_decode(self):
@@ -175,9 +284,21 @@ class IdentifierTest(unittest.TestCase):
         hi = identifier.HeatIdentifier.from_arn(arn)
         self.assertEqual(hi.stack_id, ':/')
 
+    def test_url_id_decode(self):
+        enc_arn = 'arn%3Aopenstack%3Aheat%3A%3At%3Astacks%2Fs%2F%253A%252F'
+        url = self.url_prefix + enc_arn
+        hi = identifier.HeatIdentifier.from_arn_url(url)
+        self.assertEqual(hi.stack_id, ':/')
+
     def test_path_decode(self):
         arn = 'arn:openstack:heat::t:stacks/s/i/%3A%2F'
         hi = identifier.HeatIdentifier.from_arn(arn)
+        self.assertEqual(hi.path, '/:/')
+
+    def test_url_path_decode(self):
+        enc_arn = 'arn%3Aopenstack%3Aheat%3A%3At%3Astacks%2Fs%2Fi%2F%253A%252F'
+        url = self.url_prefix + enc_arn
+        hi = identifier.HeatIdentifier.from_arn_url(url)
         self.assertEqual(hi.path, '/:/')
 
     def test_arn_escape_decode_round_trip(self):
@@ -192,6 +313,16 @@ class IdentifierTest(unittest.TestCase):
         arn = 'arn:openstack:heat::%3A%2F:stacks/%3A%2F/%3A%2F/%3A/'
         hi = identifier.HeatIdentifier.from_arn(arn)
         self.assertEqual(hi.arn(), arn)
+
+    def test_arn_url_decode_escape_round_trip(self):
+        enc_arn = "".join(['arn%3Aopenstack%3Aheat%3A%3A%253A%252F%3A',
+                  'stacks%2F%253A%252F%2F%253A%252F%2F%253A'])
+        url = self.url_prefix + enc_arn
+        hi = identifier.HeatIdentifier.from_arn_url(url)
+        print "SHDEBUG hi.arn()=%s" % hi.arn()
+        hi2 = identifier.HeatIdentifier.from_arn_url(self.url_prefix +
+                                                     hi.arn_url_path())
+        self.assertEqual(hi, hi2)
 
     def test_equal(self):
         hi1 = identifier.HeatIdentifier('t', 's', 'i', 'p')
