@@ -36,6 +36,9 @@ class HeatIdentifier(collections.Mapping):
         if path and not path.startswith('/'):
             path = '/' + path
 
+        if '/' in stack_name:
+            raise ValueError('Stack name may not contain "/"')
+
         self.identity = {
             self.TENANT: tenant,
             self.STACK_NAME: stack_name,
@@ -163,6 +166,8 @@ class ResourceIdentifier(HeatIdentifier):
         the owning stack and the resource name.
         '''
         if resource_name is not None:
+            if '/' in resource_name:
+                raise ValueError('Resource name may not contain "/"')
             path = '/'.join([path.rstrip('/'), 'resources', resource_name])
         super(ResourceIdentifier, self).__init__(tenant,
                                                  stack_name,

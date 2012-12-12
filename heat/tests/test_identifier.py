@@ -194,7 +194,7 @@ class IdentifierTest(unittest.TestCase):
                           identifier.HeatIdentifier.from_arn_url, url)
 
     def test_arn_url_parse_badurl_host(self):
-        url = 'htt:///foo/arn%3Aopenstack%3Aheat%3A%3At%3Asticks/s/i/p'
+        url = 'http:///foo/arn%3Aopenstack%3Aheat%3A%3At%3Asticks/s/i/p'
         self.assertRaises(ValueError,
                           identifier.HeatIdentifier.from_arn_url, url)
 
@@ -240,10 +240,10 @@ class IdentifierTest(unittest.TestCase):
         self.assertEqual(hi.arn(), 'arn:openstack:heat::%3A%2F:stacks/s/i')
 
     def test_name_escape(self):
-        hi = identifier.HeatIdentifier('t', ':/', 'i')
-        self.assertEqual(hi.stack_name, ':/')
-        self.assertEqual(hi.url_path(), 't/stacks/%3A%2F/i')
-        self.assertEqual(hi.arn(), 'arn:openstack:heat::t:stacks/%3A%2F/i')
+        hi = identifier.HeatIdentifier('t', ':%', 'i')
+        self.assertEqual(hi.stack_name, ':%')
+        self.assertEqual(hi.url_path(), 't/stacks/%3A%25/i')
+        self.assertEqual(hi.arn(), 'arn:openstack:heat::t:stacks/%3A%25/i')
 
     def test_id_escape(self):
         hi = identifier.HeatIdentifier('t', 's', ':/')
@@ -269,15 +269,15 @@ class IdentifierTest(unittest.TestCase):
         self.assertEqual(hi.tenant, ':/')
 
     def test_name_decode(self):
-        arn = 'arn:openstack:heat::t:stacks/%3A%2F/i'
+        arn = 'arn:openstack:heat::t:stacks/%3A%25/i'
         hi = identifier.HeatIdentifier.from_arn(arn)
-        self.assertEqual(hi.stack_name, ':/')
+        self.assertEqual(hi.stack_name, ':%')
 
     def test_url_name_decode(self):
-        enc_arn = 'arn%3Aopenstack%3Aheat%3A%3At%3Astacks%2F%253A%252F%2Fi'
+        enc_arn = 'arn%3Aopenstack%3Aheat%3A%3At%3Astacks%2F%253A%2525%2Fi'
         url = self.url_prefix + enc_arn
         hi = identifier.HeatIdentifier.from_arn_url(url)
-        self.assertEqual(hi.stack_name, ':/')
+        self.assertEqual(hi.stack_name, ':%')
 
     def test_id_decode(self):
         arn = 'arn:openstack:heat::t:stacks/s/%3A%2F'
@@ -302,7 +302,7 @@ class IdentifierTest(unittest.TestCase):
         self.assertEqual(hi.path, '/:/')
 
     def test_arn_escape_decode_round_trip(self):
-        hii = identifier.HeatIdentifier(':/', ':/', ':/', ':/')
+        hii = identifier.HeatIdentifier(':/', ':%', ':/', ':/')
         hio = identifier.HeatIdentifier.from_arn(hii.arn())
         self.assertEqual(hio.tenant, hii.tenant)
         self.assertEqual(hio.stack_name, hii.stack_name)
@@ -310,19 +310,23 @@ class IdentifierTest(unittest.TestCase):
         self.assertEqual(hio.path, hii.path)
 
     def test_arn_decode_escape_round_trip(self):
-        arn = 'arn:openstack:heat::%3A%2F:stacks/%3A%2F/%3A%2F/%3A/'
+        arn = 'arn:openstack:heat::%3A%2F:stacks/%3A%25/%3A%2F/%3A/'
         hi = identifier.HeatIdentifier.from_arn(arn)
         self.assertEqual(hi.arn(), arn)
 
     def test_arn_url_decode_escape_round_trip(self):
         enc_arn = "".join(['arn%3Aopenstack%3Aheat%3A%3A%253A%252F%3A',
-                  'stacks%2F%253A%252F%2F%253A%252F%2F%253A'])
+                  'stacks%2F%253A%2525%2F%253A%252F%2F%253A'])
         url = self.url_prefix + enc_arn
         hi = identifier.HeatIdentifier.from_arn_url(url)
         print "SHDEBUG hi.arn()=%s" % hi.arn()
         hi2 = identifier.HeatIdentifier.from_arn_url(self.url_prefix +
                                                      hi.arn_url_path())
         self.assertEqual(hi, hi2)
+
+    def test_stack_name_slash(self):
+        self.assertRaises(ValueError, identifier.HeatIdentifier,
+                          't', 's/s', 'i', 'p')
 
     def test_equal(self):
         hi1 = identifier.HeatIdentifier('t', 's', 'i', 'p')
@@ -384,6 +388,10 @@ class ResourceIdentifierTest(unittest.TestCase):
     def test_resource_id(self):
         ri = identifier.ResourceIdentifier('t', 's', 'i', '', 'r')
         self.assertEqual(ri.resource_name, 'r')
+
+    def test_resource_name_slash(self):
+        self.assertRaises(ValueError, identifier.ResourceIdentifier,
+                          't', 's', 'i', 'p', 'r/r')
 
 
 @attr(tag=['unit', 'identifier'])
