@@ -360,8 +360,8 @@ class Resource(object):
         except Exception as ex:
             logger.error('DB error %s' % str(ex))
 
-    def state_set(self, new_state, reason="state changed"):
-        self.state, old_state = new_state, self.state
+    def _store_or_update(self, new_state, reason):
+        self.state = new_state
         self.state_description = reason
 
         if self.id is not None:
@@ -380,6 +380,10 @@ class Resource(object):
         # should be handled by the update_and_save above..
         elif new_state == self.CREATE_IN_PROGRESS:
             self._store()
+
+    def state_set(self, new_state, reason="state changed"):
+        old_state = self.state
+        self._store_or_update(new_state, reason)
 
         if new_state != old_state:
             self._add_event(new_state, reason)
