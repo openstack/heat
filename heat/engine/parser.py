@@ -309,7 +309,9 @@ class Stack(object):
                 # Currently all resource have a default handle_update method
                 # which returns "requires replacement" (res.UPDATE_REPLACE)
                 for res in newstack:
-                    if self[res.name] != res:
+                    if self.resolve_runtime_data(
+                        self[res.name].t) != self.resolve_runtime_data(res.t):
+
                         # Can fail if underlying resource class does not
                         # implement update logic or update requires replacement
                         retval = self[res.name].update(res.parsed_template())
