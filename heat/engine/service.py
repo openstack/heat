@@ -412,19 +412,16 @@ class EngineService(service.Service):
         """
         s = db_api.stack_get(None, stack_id)
         if s is None:
-            logger.warn("Stack %s not found" % stack_id)
-            return ['stack', None]
+            raise AttributeError("Stack %s not found" % stack_id)
 
         stack = parser.Stack.load(None, stack=s)
         if resource_name not in stack:
-            logger.warn("Resource not found %s:%s." % (stack_id,
-                                                       resource_name))
-            return ['resource', None]
+            raise AttributeError("Resource not found %s" % resource_name)
 
         resource = stack[resource_name]
         resource.metadata = metadata
 
-        return [None, resource.metadata]
+        return resource.metadata
 
     def _periodic_watcher_task(self, sid):
         """
