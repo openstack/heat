@@ -15,11 +15,13 @@
 
 import functools
 import webob
+import sqlalchemy.exc
 
 from heat.common import context
 from heat.db import api as db_api
 from heat.engine import api
 from heat.engine.event import Event
+from heat.common import exception
 from heat.common import identifier
 from heat.engine import parser
 from heat.engine import resources
@@ -161,13 +163,21 @@ class EngineService(service.Service):
         The list_stacks method returns attributes of all stacks.
         arg1 -> RPC context.
         """
+
+        def format_stack_details(stacks):
+            for s in stacks:
+                try:
+                    stack = parser.Stack.load(context, stack=s,
+                        resolve_data=False)
+                except exception.NotFound:
+                    # The stack may have been deleted between listing
+                    # and formatting
+                    pass
+                else:
+                    yield api.format_stack(stack)
+
         stacks = db_api.stack_get_all_by_tenant(context) or []
-
-        def format_stack_detail(s):
-            stack = parser.Stack.load(context, stack=s, resolve_data=False)
-            return api.format_stack(stack)
-
-        return {'stacks': [format_stack_detail(s) for s in stacks]}
+        return {'stacks': list(format_stack_details(stacks))}
 
     @request_context
     def create_stack(self, context, stack_name, template, params, args):
