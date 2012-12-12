@@ -217,6 +217,25 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
         self.assertEqual(result, {'Description': error})
         self.m.VerifyAll()
 
+    def test_stack_create_invalid_stack_name(self):
+        stack_name = 'service_create/test_stack'
+        stack = get_wordpress_stack('test_stack', self.ctx)
+
+        self.assertRaises(ValueError, self.man.create_stack,
+                                      self.ctx, stack_name,
+                                      stack.t, {}, {})
+
+    def test_stack_create_invalid_resource_name(self):
+        stack_name = 'service_create_test_stack_invalid_res'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        tmpl = dict(stack.t)
+        tmpl['Resources']['Web/Server'] = tmpl['Resources']['WebServer']
+        del tmpl['Resources']['WebServer']
+
+        self.assertRaises(ValueError, self.man.create_stack,
+                                      self.ctx, stack_name,
+                                      stack.t, {}, {})
+
     def test_stack_delete(self):
         stack_name = 'service_delete_test_stack'
         stack = get_wordpress_stack(stack_name, self.ctx)

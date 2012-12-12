@@ -106,6 +106,9 @@ class Resource(object):
         return ResourceClass(name, json, stack)
 
     def __init__(self, name, json_snippet, stack):
+        if '/' in name:
+            raise ValueError(_('Resource name may not contain "/"'))
+
         self.references = []
         self.stack = stack
         self.context = stack.context

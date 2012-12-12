@@ -58,6 +58,10 @@ class Stack(object):
         Parameters object. The database ID may also be initialised, if the
         stack is already in the database.
         '''
+
+        if '/' in stack_name:
+            raise ValueError(_('Stack name may not contain "/"'))
+
         self.id = stack_id
         self.context = context
         self.clients = Clients(context)
