@@ -65,10 +65,22 @@ class AutoScalingGroup(resource.Resource):
         return self.UPDATE_REPLACE
 
     def _make_instance(self, name):
+
         Instance = resource.get_class('AWS::EC2::Instance')
+
+        class AutoScalingGroupInstance(Instance):
+            '''
+            Subclass instance.Instance to supress event transitions, since the
+            scaling-group instances are not "real" resources, ie defined in the
+            template, which causes problems for event handling since we can't
+            look up the resources via parser.Stack
+            '''
+            def state_set(self, new_state, reason="state changed"):
+                self._store_or_update(new_state, reason)
+
         conf = self.properties['LaunchConfigurationName']
         instance_definition = self.stack.t['Resources'][conf]
-        return Instance(name, instance_definition, self.stack)
+        return AutoScalingGroupInstance(name, instance_definition, self.stack)
 
     def handle_delete(self):
         if self.resource_id is not None:
