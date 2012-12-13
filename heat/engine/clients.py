@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.openstack.common import cfg
+from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
@@ -32,7 +34,15 @@ except ImportError:
     logger.info('quantumclient not available')
 
 
-class Clients(object):
+cloud_opts = [
+    cfg.StrOpt('cloud_backend',
+               default=None,
+               help="Cloud module to use as a backend. Defaults to OpenStack.")
+]
+cfg.CONF.register_opts(cloud_opts)
+
+
+class OpenStackClients(object):
     '''
     Convenience class to create and cache client instances.
     '''
@@ -162,3 +172,12 @@ class Clients(object):
         self._quantum = quantumclient.Client(**args)
 
         return self._quantum
+
+
+if cfg.CONF.cloud_backend:
+    cloud_backend_module = importutils.import_module(cfg.CONF.cloud_backend)
+    Clients = cloud_backend_module.Clients
+else:
+    Clients = OpenStackClients
+
+logger.debug('Using backend %s' % Clients)
