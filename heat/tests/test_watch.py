@@ -17,16 +17,12 @@ import datetime
 import mox
 from nose.plugins.attrib import attr
 import unittest
-from nose.exc import SkipTest
 import logging
 from heat.common import context
 import heat.db as db_api
 
 from heat.openstack.common import timeutils
-try:
-    from heat.engine import watchrule
-except:
-    raise SkipTest("unable to import watchrule, skipping")
+from heat.engine import watchrule
 
 
 logger = logging.getLogger('test_watch')
