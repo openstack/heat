@@ -29,7 +29,7 @@ from utils import skip_if
 
 try:
     from swiftclient import client as swiftclient
-except:
+except ImportError:
     skip_test = True
 else:
     skip_test = False

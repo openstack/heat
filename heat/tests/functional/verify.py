@@ -60,7 +60,7 @@ class VerifyStack:
         print "Reading html from %s" % url
         try:
             content = urllib2.urlopen(url).read()
-        except:
+        except IOError:
             return False
 
         matches = re.findall(regex, content)

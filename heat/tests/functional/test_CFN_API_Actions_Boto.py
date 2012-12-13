@@ -88,9 +88,8 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
             # Match the expected format for an instance's physical resource ID
             cls.phys_res_id_re = re.compile(
                 "^[0-9a-z]*-[0-9a-z]*-[0-9a-z]*-[0-9a-z]*-[0-9a-z]*$")
-        except:
+        finally:
             cls.stack.cleanup()
-            raise
 
     @classmethod
     def teardownAll(cls):
