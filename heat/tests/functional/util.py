@@ -42,8 +42,8 @@ from novaclient.v1_1 import client as nova_client
 import heat
 from heat.common import template_format
 from heat.engine import parser
-from heat import client as heat_client
-from heat import boto_client as heat_client_boto
+from heat.cfn_client import client as heat_client
+from heat.cfn_client import boto_client as heat_client_boto
 from keystoneclient.v2_0 import client
 
 DEFAULT_STACKNAME = 'teststack'

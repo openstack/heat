@@ -84,7 +84,7 @@ class ImageBodyIterator(object):
     """
     A class that acts as an iterator over an image file's
     chunks of data.  This is returned as part of the result
-    tuple from `heat.client.Client.get_image`
+    tuple from `heat.cfn_client.client.Client.get_image`
     """
 
     def __init__(self, source):

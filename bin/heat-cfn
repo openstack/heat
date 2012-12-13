@@ -44,13 +44,13 @@ scriptname = os.path.basename(sys.argv[0])
 gettext.install('heat', unicode=1)
 
 if scriptname == 'heat-boto':
-    from heat import boto_client as heat_client
+    from heat.cfn_client import boto_client as heat_client
 else:
-    from heat import client as heat_client
+    from heat.cfn_client import client as heat_client
 from heat.version import version_info as version
 from heat.common import config
 from heat.common import exception
-from heat import utils
+from heat.cfn_client import utils
 from keystoneclient.v2_0 import client
 
 
