@@ -125,21 +125,11 @@ class KeystoneClient(object):
         self.client.ec2.delete(user_id, accesskey)
 
     def get_ec2_keypair(self, user_id):
-        # Here we use the user_id of the user context of the request.  We need
-        # to avoid using users.list because it needs keystone admin role, and
-        # we want to allow an instance user to retrieve data about itself:
-        # - Users without admin role cannot create or delete, but they
-        #   can see their own secret key (but nobody elses)
-        # - Users with admin role can create/delete and view the
-        #   private keys of all users in their tenant
-        # This will allow "instance users" to retrieve resource
-        # metadata but not manipulate user resources in any other way
-        user_id = self.client.auth_user_id
-        cred = self.client.ec2.list(user_id)
         # We make the assumption that each user will only have one
         # ec2 keypair, it's not clear if AWS allow multiple AccessKey resources
         # to be associated with a single User resource, but for simplicity
         # we assume that here for now
+        cred = self.client.ec2.list(user_id)
         if len(cred) == 0:
             return self.client.ec2.create(user_id, self.context.tenant_id)
         if len(cred) == 1:
