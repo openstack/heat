@@ -611,11 +611,21 @@ class stackServiceTest(unittest.TestCase):
 
     def test_metadata(self):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
-        err, result = self.man.metadata_update(None,
-                                               self.stack.id, 'WebServer',
+        result = self.man.metadata_update(None, self.stack.id, 'WebServer',
                                                test_metadata)
-        self.assertEqual(err, None)
         self.assertEqual(result, test_metadata)
+
+    def test_metadata_err_stack(self):
+        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
+        self.assertRaises(AttributeError,
+                          self.man.metadata_update,
+                          None, 'noexistid', 'WebServer', test_metadata)
+
+    def test_metadata_err_resource(self):
+        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
+        self.assertRaises(AttributeError,
+                          self.man.metadata_update,
+                          None, self.stack.id, 'NooServer', test_metadata)
 
     def test_show_watch(self):
         # Insert two dummy watch rules into the DB
