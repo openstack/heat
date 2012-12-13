@@ -13,9 +13,7 @@
 #    under the License.
 
 
-import sys
 import socket
-import nose
 import json
 import unittest
 from nose.plugins.attrib import attr
@@ -191,8 +189,3 @@ class AWSCommon(unittest.TestCase):
 
     def tearDown(self):
         print "teardown complete"
-
-
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

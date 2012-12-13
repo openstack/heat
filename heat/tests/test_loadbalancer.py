@@ -14,10 +14,8 @@
 
 
 import re
-import sys
 import os
 
-import nose
 import unittest
 import mox
 import json
@@ -164,8 +162,3 @@ class LoadBalancerTest(unittest.TestCase):
             msg = '%s: %r not found in %r' % (msg,
                                               expected_regexp.pattern, text)
             raise self.failureException(msg)
-
-    # allows testing of the test directly, shown below
-    if __name__ == '__main__':
-        sys.argv.append(__file__)
-        nose.main()

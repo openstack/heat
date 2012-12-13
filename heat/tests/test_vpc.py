@@ -13,9 +13,6 @@
 #    under the License.
 
 
-import sys
-
-import nose
 import unittest
 import mox
 
@@ -114,8 +111,3 @@ class QuantumTest(unittest.TestCase):
 
         self.assertEqual(None, resource.delete())
         self.m.VerifyAll()
-
-    # allows testing of the test directly, shown below
-    if __name__ == '__main__':
-        sys.argv.append(__file__)
-        nose.main()

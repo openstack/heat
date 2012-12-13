@@ -14,7 +14,6 @@
 #    under the License.
 
 import mox
-import nose
 from nose.plugins.attrib import attr
 import StringIO
 import unittest

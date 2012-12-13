@@ -13,10 +13,8 @@
 #    under the License.
 
 
-import sys
 import os
 
-import nose
 import unittest
 import mox
 import json
@@ -788,9 +786,3 @@ class stackServiceTest(unittest.TestCase):
         self.assertRaises(AttributeError,
                           self.man.set_watch_state,
                           self.ctx, watch_name="nonexistent", state=state)
-
-
-# allows testing of the test directly
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

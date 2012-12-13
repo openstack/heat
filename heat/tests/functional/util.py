@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import sys
 import os
 import optparse
 import paramiko
@@ -22,7 +21,6 @@ import hashlib
 import email
 import json
 import time  # for sleep
-import nose
 import errno
 import tempfile
 import stat
@@ -625,8 +623,3 @@ def remove_host(ip, hostname):
             tmp.write(line)
         os.chmod(tmp.name, perms)
         os.rename(tmp.name, '/etc/hosts')
-
-
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

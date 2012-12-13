@@ -15,7 +15,6 @@
 import os
 import util
 import verify
-import nose
 from nose.plugins.attrib import attr
 import unittest
 import time

@@ -13,12 +13,10 @@
 #    under the License.
 
 
-import sys
 import os
 
 import eventlet
 import json
-import nose
 import mox
 import unittest
 
@@ -222,11 +220,6 @@ class VolumeTest(unittest.TestCase):
         self.assertEqual(resource.delete(), None)
 
         self.m.VerifyAll()
-
-    # allows testing of the test directly, shown below
-    if __name__ == '__main__':
-        sys.argv.append(__file__)
-        nose.main()
 
 
 class FakeVolume:

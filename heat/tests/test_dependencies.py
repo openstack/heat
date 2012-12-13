@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import nose
 import unittest
 from nose.plugins.attrib import attr
 
@@ -193,9 +192,3 @@ class dependenciesTest(unittest.TestCase):
         for n in ('last', 'mid1', 'mid2', 'mid3'):
             self.assertTrue(n in order,
                             "'%s' not found in dependency order" % n)
-
-
-# allows testing of the test directly, shown below
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

@@ -14,7 +14,6 @@
 
 import json
 import mox
-import nose
 from nose.plugins.attrib import attr
 import os
 import re

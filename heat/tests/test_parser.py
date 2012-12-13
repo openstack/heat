@@ -13,12 +13,10 @@
 #    under the License.
 
 
-import nose
 import unittest
 from nose.plugins.attrib import attr
 import mox
 import json
-import sys
 
 from heat.common import context
 from heat.common import exception
@@ -354,8 +352,3 @@ class StackTest(unittest.TestCase):
         stack.state_set(stack.CREATE_IN_PROGRESS, 'testing')
         self.assertNotEqual(stack.updated_time, None)
         self.assertNotEqual(stack.updated_time, stored_time)
-
-# allows testing of the test directly, shown below
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

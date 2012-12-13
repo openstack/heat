@@ -13,10 +13,8 @@
 #    under the License.
 
 
-import sys
 import os
 
-import nose
 import unittest
 import mox
 import json
@@ -166,8 +164,3 @@ class AutoScalingTest(unittest.TestCase):
                  resource.resource_id)
 
         resource.delete()
-
-    # allows testing of the test directly, shown below
-    if __name__ == '__main__':
-        sys.argv.append(__file__)
-        nose.main()

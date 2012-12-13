@@ -13,8 +13,6 @@
 #    under the License.
 
 
-import sys
-import nose
 import mox
 import json
 import unittest
@@ -1439,8 +1437,3 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
                           stack_id=stack_identity.stack_id,
                           resource_name=res_name, event_id=event_id)
         self.m.VerifyAll()
-
-
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

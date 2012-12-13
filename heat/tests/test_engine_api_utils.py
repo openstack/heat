@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import nose
 import unittest
 from nose.plugins.attrib import attr
 

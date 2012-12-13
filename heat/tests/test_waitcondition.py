@@ -15,12 +15,10 @@
 
 import json
 import mox
-import sys
 import uuid
 import time
 
 import eventlet
-import nose
 import unittest
 from nose.plugins.attrib import attr
 from heat.tests import fakes
@@ -234,8 +232,3 @@ class WaitConditionHandleTest(unittest.TestCase):
         stack.delete()
 
         self.m.VerifyAll()
-
-# allows testing of the test directly
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

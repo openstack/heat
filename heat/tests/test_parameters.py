@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import nose
 import unittest
 from nose.plugins.attrib import attr
 import mox
@@ -323,9 +322,3 @@ class ParametersTest(unittest.TestCase):
                     'AWS::StackName': True}
 
         self.assertEqual(params.map(lambda p: p.has_default()), expected)
-
-
-# allows testing of the test directly, shown below
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import nose
 import unittest
 from nose.plugins.attrib import attr
 import mox
@@ -147,8 +146,3 @@ class MetadataTest(unittest.TestCase):
         test_data = {'Test': 'Newly-written data'}
         self.res.metadata = test_data
         self.assertEqual(self.res.metadata, test_data)
-
-# allows testing of the test directly, shown below
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

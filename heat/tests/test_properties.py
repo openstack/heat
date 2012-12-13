@@ -339,9 +339,3 @@ class PropertiesValidationTest(unittest.TestCase):
         schema = {'foo': {'Type': 'String'}}
         props = properties.Properties(schema, {'foo': 42})
         self.assertNotEqual(props.validate(), None)
-
-
-# allows testing of the test directly, shown below
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

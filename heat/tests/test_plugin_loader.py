@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import nose
 import pkgutil
 import sys
 import unittest

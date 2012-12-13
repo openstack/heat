@@ -11,8 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import sys
-import nose
+
+
 import unittest
 import mox
 import json
@@ -291,8 +291,3 @@ class validateTest(unittest.TestCase):
         res = dict(engine.
             validate_template(None, t))
         self.assertNotEqual(res['Description'], 'Successfully validated')
-
-    # allows testing of the test directly, shown below
-    if __name__ == '__main__':
-        sys.argv.append(__file__)
-        nose.main()

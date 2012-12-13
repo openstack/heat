@@ -13,9 +13,7 @@
 #    under the License.
 
 
-import sys
 import socket
-import nose
 import mox
 import json
 import unittest
@@ -478,8 +476,3 @@ class WatchControllerTest(unittest.TestCase):
         self.m.UnsetStubs()
         self.m.VerifyAll()
         print "teardown complete"
-
-
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()

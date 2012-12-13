@@ -16,7 +16,6 @@ import os
 import util
 import verify
 import re
-import nose
 from nose.plugins.attrib import attr
 import unittest
 import json

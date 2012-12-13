@@ -13,7 +13,6 @@
 #
 
 import util
-import nose
 from nose.plugins.attrib import attr
 import unittest
 import os
