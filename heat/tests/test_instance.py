@@ -17,15 +17,11 @@ import os
 
 import unittest
 import mox
-import json
-import sqlalchemy
 
 from nose.plugins.attrib import attr
-from nose import with_setup
 
 from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
-import heat.db as db_api
 from heat.common import template_format
 from heat.engine import parser
 from heat.openstack.common import uuidutils

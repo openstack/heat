@@ -18,8 +18,6 @@ Client classes for callers of a heat system
 """
 
 from lxml import etree
-import os
-import json
 from heat.common import client as base_client
 from heat.common import exception
 

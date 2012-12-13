@@ -21,7 +21,6 @@ from heat.engine import timestamp
 from heat.db import api as db_api
 from heat.engine import parser
 from heat.rpc import api as rpc_api
-from heat.common import context as ctxtlib
 import eventlet
 
 logger = logging.getLogger(__name__)

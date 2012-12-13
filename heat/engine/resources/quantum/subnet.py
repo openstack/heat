@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
-
 from heat.openstack.common import log as logging
 from heat.engine.resources.quantum import quantum
 

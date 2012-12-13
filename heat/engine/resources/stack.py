@@ -13,9 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urllib2
-import json
-
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource

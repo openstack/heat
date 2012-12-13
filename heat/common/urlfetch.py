@@ -20,8 +20,6 @@ Utility for fetching a resource (e.g. a template) from a URL.
 import urllib2
 import urlparse
 
-from heat.common import exception
-
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)

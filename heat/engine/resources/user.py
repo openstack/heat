@@ -14,7 +14,6 @@
 #    under the License.
 
 from heat.common import exception
-from heat.openstack.common import cfg
 from heat.engine import resource
 
 from heat.openstack.common import log as logging

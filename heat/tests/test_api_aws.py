@@ -13,12 +13,9 @@
 #    under the License.
 
 
-import socket
-import json
 import unittest
 from nose.plugins.attrib import attr
 
-import re
 from heat.api.aws import utils as api_utils
 
 

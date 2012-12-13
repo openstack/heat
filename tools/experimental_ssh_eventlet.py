@@ -3,7 +3,6 @@
 import eventlet
 from eventlet.green import socket
 import libssh2
-import time
 import os
 import random
 

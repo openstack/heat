@@ -16,7 +16,6 @@
 import datetime
 import mox
 from nose.plugins.attrib import attr
-from nose import with_setup
 import unittest
 from nose.exc import SkipTest
 import logging

@@ -19,7 +19,6 @@ import paramiko
 import subprocess
 import hashlib
 import email
-import json
 import time  # for sleep
 import errno
 import tempfile
@@ -28,8 +27,6 @@ import re
 from pkg_resources import resource_string
 from lxml import etree
 
-from nose.plugins.attrib import attr
-from nose import with_setup
 from nose.exc import SkipTest
 
 try:

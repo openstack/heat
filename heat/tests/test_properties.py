@@ -15,7 +15,6 @@
 
 import unittest
 from nose.plugins.attrib import attr
-import mox
 
 from heat.engine import properties
 

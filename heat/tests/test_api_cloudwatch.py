@@ -13,20 +13,13 @@
 #    under the License.
 
 
-import socket
 import mox
-import json
 import unittest
 from nose.plugins.attrib import attr
-
-import httplib
-import json
-import urlparse
 
 from heat.common import context
 from heat.openstack.common import cfg
 from heat.openstack.common import rpc
-import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
 from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches

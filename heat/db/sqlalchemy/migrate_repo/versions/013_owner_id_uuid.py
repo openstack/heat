@@ -1,6 +1,5 @@
 from sqlalchemy import *
 from migrate import *
-from heat.common import utils
 
 
 def upgrade(migrate_engine):

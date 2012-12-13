@@ -16,7 +16,6 @@
 import os
 
 import eventlet
-import json
 import mox
 import unittest
 

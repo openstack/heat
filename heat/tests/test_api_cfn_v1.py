@@ -13,15 +13,12 @@
 #    under the License.
 
 
-import socket
 import mox
 import json
 import unittest
 from nose.plugins.attrib import attr
 
-import httplib
 import json
-import urlparse
 
 from heat.common import context
 from heat.common import identifier

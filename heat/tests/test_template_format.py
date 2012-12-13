@@ -13,10 +13,8 @@
 #    under the License.
 
 import json
-import mox
 from nose.plugins.attrib import attr
 import os
-import re
 import unittest
 import yaml
 

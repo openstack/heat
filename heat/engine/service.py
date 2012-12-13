@@ -15,7 +15,6 @@
 
 import functools
 import webob
-import sqlalchemy.exc
 
 from heat.common import context
 from heat.db import api as db_api

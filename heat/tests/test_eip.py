@@ -17,7 +17,6 @@ import os
 
 import unittest
 import mox
-import json
 
 from nose.plugins.attrib import attr
 

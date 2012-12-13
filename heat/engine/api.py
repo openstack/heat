@@ -14,9 +14,7 @@
 
 from heat.rpc.api import *
 from heat.openstack.common import timeutils
-from heat.engine import parser
 from heat.engine import template
-from heat.engine import watchrule
 
 from heat.openstack.common import log as logging
 

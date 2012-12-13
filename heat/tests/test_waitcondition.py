@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import json
 import mox
 import uuid
 import time

@@ -15,10 +15,8 @@
 import os
 import util
 import verify
-import re
 from nose.plugins.attrib import attr
 import unittest
-import json
 
 
 @attr(speed='slow')

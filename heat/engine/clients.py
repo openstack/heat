@@ -32,7 +32,6 @@ except ImportError:
     quantumclient_present = False
 
 from heat.common import heat_keystoneclient as kc
-from heat.openstack.common import cfg
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)

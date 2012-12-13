@@ -17,7 +17,6 @@ import unittest
 from nose.plugins.attrib import attr
 import mox
 
-import json
 from heat.common import context
 from heat.engine import parser
 from heat.engine import resource

@@ -21,7 +21,6 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 from boto.cloudformation import CloudFormationConnection
-import json
 
 
 class BotoClient(CloudFormationConnection):

@@ -26,10 +26,8 @@ import os
 import os.path
 import sys
 import time
-import json
 import logging
 
-from urlparse import urlparse
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
 possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),

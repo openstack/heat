@@ -18,7 +18,6 @@ import __builtin__
 setattr(__builtin__, '_', lambda x: x)
 
 import os
-import shutil
 
 from heat.db.sqlalchemy.session import get_engine
 

@@ -13,12 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from webob.exc import Response
-
 from heat.common import wsgi
 from heat.common import context
 from heat.rpc import client as rpc_client
-from heat.openstack.common import rpc
 from heat.common import identifier
 from heat.api.aws import exception
 import heat.openstack.common.rpc.common as rpc_common
