@@ -26,12 +26,12 @@ install_dir() {
         elif [ -f $prefix/$f ]; then
             echo "NOT replacing existing config file $prefix/$f" >&2
             diff -u $prefix/$f $f
-        elif [ $fn = 'heat-engine.conf' ]; then
-            cat $f | sed s/%ENCRYPTION_KEY%/`hexdump -n 16 -v -e '/1 "%02x"' /dev/random`/ > $prefix/$f
         else
-
             echo "Installing $fn in $prefix/$dir" >&2
             install -m 664 $f $prefix/$dir
+            if [ $fn = 'heat-engine.conf' ]; then
+                sed -i "s/%ENCRYPTION_KEY%/`hexdump -n 16 -v -e '/1 "%02x"' /dev/random`/" $prefix/$f
+            fi
         fi
     done
 }
