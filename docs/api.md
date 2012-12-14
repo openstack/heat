@@ -149,10 +149,6 @@ POST /v1/{tenant_id}/validate
 
 {
     "template_url": "{template_url}",
-    "parameters": {
-        "{key1}": "{value1}",
-        "{key2}": "{value2}"
-    }
 }
 ```
 
@@ -161,7 +157,6 @@ Parameters:
 * `tenant_id` The unique identifier of the tenant or account
 * `template_url` The URL of the template to validate
 * `template` A JSON template to validate - this takes precendence over the `template_url` if both are supplied.
-* `keyn`, `valuen` User-defined parameters to pass to the Template
 
 List Stack Resources
 --------------------
