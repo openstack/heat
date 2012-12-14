@@ -13,10 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import clients
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import stack
-from novaclient.exceptions import NotFound
 
 from heat.openstack.common import log as logging
 
@@ -212,7 +212,7 @@ class LoadBalancer(stack.Stack):
         '''
         try:
             server = self.nova().servers.get(inst)
-        except NotFound as ex:
+        except clients.novaclient.exceptions.NotFound as ex:
             logger.warn('Instance (%s) not found: %s' % (inst, str(ex)))
         else:
             for n in server.networks:

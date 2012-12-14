@@ -18,10 +18,10 @@ import os
 import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from novaclient.exceptions import NotFound
 import pkgutil
 from urlparse import urlparse
 
+from heat.engine import clients
 from heat.engine import resource
 from heat.common import exception
 
@@ -129,7 +129,7 @@ class Instance(resource.Resource):
         if self.ipaddress is None:
             try:
                 server = self.nova().servers.get(self.resource_id)
-            except NotFound as ex:
+            except clients.novaclient.exceptions.NotFound as ex:
                 logger.warn('Instance IP address not found (%s)' % str(ex))
             else:
                 self._set_ipaddress(server.networks)
@@ -305,14 +305,14 @@ class Instance(resource.Resource):
             return
         try:
             server = self.nova().servers.get(self.resource_id)
-        except NotFound:
+        except clients.novaclient.exceptions.NotFound:
             pass
         else:
             server.delete()
             while server.status == 'ACTIVE':
                 try:
                     server.get()
-                except NotFound:
+                except clients.novaclient.exceptions.NotFound:
                     break
                 eventlet.sleep(0.2)
         self.resource_id = None

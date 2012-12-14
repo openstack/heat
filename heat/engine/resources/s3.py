@@ -20,11 +20,7 @@ from urlparse import urlparse
 from heat.common import exception
 from heat.engine import resource
 from heat.openstack.common import log as logging
-try:
-    from swiftclient.client import ClientException
-    swiftclient_present = True
-except ImportError:
-    swiftclient_present = False
+from heat.engine import clients
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +51,9 @@ class S3Bucket(resource.Resource):
         Validate any of the provided params
         '''
         #check if swiftclient is installed
-        if swiftclient_present == False:
+        if clients.swiftclient is None:
             return {'Error':
-                    'S3 services unavaialble because of missing swiftclient.'}
+                    'S3 services unavailable because of missing swiftclient.'}
 
     @staticmethod
     def _create_container_name(resource_name):
@@ -107,7 +103,7 @@ class S3Bucket(resource.Resource):
         if self.resource_id is not None:
             try:
                 self.swift().delete_container(self.resource_id)
-            except ClientException as ex:
+            except clients.swiftclient.ClientException as ex:
                 logger.warn("Delete container failed: %s" % str(ex))
 
     def FnGetRefId(self):

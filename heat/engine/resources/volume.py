@@ -16,9 +16,9 @@
 import eventlet
 from heat.openstack.common import log as logging
 
+from heat.engine import clients
 from heat.common import exception
 from heat.engine import resource
-from novaclient.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
 
@@ -117,10 +117,9 @@ class VolumeAttachment(resource.Resource):
                 except Exception:
                     pass
                 vol.get()
-        except NotFound as e:
+        except clients.novaclient.exceptions.NotFound as e:
             logger.warning('Deleting VolumeAttachment %s %s - not found' %
                     (server_id, volume_id))
-            return
 
 
 def resource_mapping():

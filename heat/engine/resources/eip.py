@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import clients
 from heat.common import exception
 from heat.engine import resource
-from novaclient.exceptions import NotFound
 
 from heat.openstack.common import log as logging
 
@@ -36,7 +36,7 @@ class ElasticIp(resource.Resource):
             if self.resource_id is not None:
                 try:
                     ips = self.nova().floating_ips.get(self.resource_id)
-                except NotFound as ex:
+                except clients.novaclient.exceptions.NotFound as ex:
                     logger.warn("Floating IPs not found: %s" % str(ex))
                 else:
                     self.ipaddress = ips.ip
@@ -97,7 +97,7 @@ class ElasticIpAssociation(resource.Resource):
             server = self.nova().servers.get(self.properties['InstanceId'])
             if server:
                 server.remove_floating_ip(self.properties['EIP'])
-        except NotFound as ex:
+        except clients.novaclient.exceptions.NotFound as ex:
             pass
 
 

@@ -13,8 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from novaclient.exceptions import BadRequest
-from novaclient.exceptions import NotFound
+from heat.engine import clients
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
@@ -58,7 +57,7 @@ class SecurityGroup(resource.Resource):
                                                i['FromPort'],
                                                i['ToPort'],
                                                i['CidrIp'])
-                except BadRequest as ex:
+                except clients.novaclient.exceptions.BadRequest as ex:
                     if ex.message.find('already exists') >= 0:
                         # no worries, the rule is already there
                         pass
@@ -73,13 +72,13 @@ class SecurityGroup(resource.Resource):
         if self.resource_id is not None:
             try:
                 sec = self.nova().security_groups.get(self.resource_id)
-            except NotFound:
+            except clients.novaclient.exceptions.NotFound:
                 pass
             else:
                 for rule in sec.rules:
                     try:
                         self.nova().security_group_rules.delete(rule['id'])
-                    except NotFound:
+                    except clients.novaclient.exceptions.NotFound:
                         pass
 
                 self.nova().security_groups.delete(sec)

@@ -13,28 +13,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-from novaclient.v1_1 import client as nc
-
-# swiftclient not available in all distributions - make s3 an optional
-# feature
-try:
-    from swiftclient import client as swiftclient
-    swiftclient_present = True
-except ImportError:
-    swiftclient_present = False
-# quantumclient not available in all distributions - make quantum an optional
-# feature
-try:
-    from quantumclient.v2_0 import client as quantumclient
-    quantumclient_present = True
-except ImportError:
-    quantumclient_present = False
-
-from heat.common import heat_keystoneclient as kc
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
+
+
+from heat.common import heat_keystoneclient as hkc
+from novaclient.v1_1 import client as novaclient
+try:
+    from swiftclient import client as swiftclient
+except ImportError:
+    swiftclient = None
+    logger.info('swiftclient not available')
+try:
+    from quantumclient.v2_0 import client as quantumclient
+except ImportError:
+    quantumclient = None
+    logger.info('quantumclient not available')
 
 
 class Clients(object):
@@ -53,7 +48,7 @@ class Clients(object):
         if self._keystone:
             return self._keystone
 
-        self._keystone = kc.KeystoneClient(self.context)
+        self._keystone = hkc.KeystoneClient(self.context)
         return self._keystone
 
     def nova(self, service_type='compute'):
@@ -85,20 +80,20 @@ class Clients(object):
             # Workaround for issues with python-keyring, need no_cache=True
             # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
             # TODO(shardy): May be able to remove when the bug above is fixed
-            client = nc.Client(no_cache=True, **args)
+            client = novaclient.Client(no_cache=True, **args)
             client.authenticate()
             self._nova[service_type] = client
         except TypeError:
             # for compatibility with essex, which doesn't have no_cache=True
             # TODO(shardy): remove when we no longer support essex
-            client = nc.Client(**args)
+            client = novaclient.Client(**args)
             client.authenticate()
             self._nova[service_type] = client
 
         return client
 
     def swift(self):
-        if swiftclient_present == False:
+        if swiftclient is None:
             return None
         if self._swift:
             return self._swift
@@ -137,7 +132,7 @@ class Clients(object):
         return self._swift
 
     def quantum(self):
-        if quantumclient_present == False:
+        if quantumclient is None:
             return None
         if self._quantum:
             logger.debug('using existing _quantum')
