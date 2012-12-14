@@ -793,6 +793,45 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
                           req, tenant_id=self.tenant, body=body)
         self.m.VerifyAll()
 
+    def test_list_resource_types(self):
+        req = self._get('/resource_types')
+
+        engine_response = ['AWS::EC2::Instance',
+                           'AWS::EC2::EIP',
+                           'AWS::EC2::EIPAssociation']
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_resource_types',
+                  'args': {},
+                  'version': self.api_version},
+                 None).AndReturn(engine_response)
+        self.m.ReplayAll()
+        response = self.controller.list_resource_types(req,
+                                                       tenant_id=self.tenant)
+        self.assertEqual(response, engine_response)
+        self.m.VerifyAll()
+
+    def test_list_resource_types_error(self):
+        req = self._get('/resource_types')
+
+        engine_response = ['AWS::EC2::Instance',
+                           'AWS::EC2::EIP',
+                           'AWS::EC2::EIPAssociation']
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'list_resource_types',
+                  'args': {},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("ValueError"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPInternalServerError,
+                          self.controller.list_resource_types,
+                          req, tenant_id=self.tenant)
+        self.m.VerifyAll()
+
 
 @attr(tag=['unit', 'api-openstack-v1', 'ResourceController'])
 @attr(speed='fast')

@@ -305,6 +305,19 @@ class StackController(object):
 
         return result
 
+    @util.tenant_local
+    def list_resource_types(self, req):
+        """
+        Returns a list of valid resource types that may be used in a template.
+        """
+
+        try:
+            types = self.engine.list_resource_types(req.context)
+        except rpc_common.RemoteError as ex:
+            raise exc.HTTPInternalServerError(explanation=str(ex))
+
+        return types
+
 
 def create_resource(options):
     """

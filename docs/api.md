@@ -158,6 +158,17 @@ Parameters:
 * `template_url` The URL of the template to validate
 * `template` A JSON template to validate - this takes precendence over the `template_url` if both are supplied.
 
+List Valid Resource Types
+-------------------------
+
+```
+GET /v1/{tenant_id}/resource_types
+```
+
+Parameters:
+
+* `tenant_id` The unique identifier of the tenant or account
+
 List Stack Resources
 --------------------
 

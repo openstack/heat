@@ -47,6 +47,10 @@ class API(wsgi.Router):
                                  "/validate",
                                  action="validate_template",
                                  conditions={'method': 'POST'})
+            stack_mapper.connect("resource_types",
+                                 "/resource_types",
+                                 action="list_resource_types",
+                                 conditions={'method': 'GET'})
 
             # Stack collection
             stack_mapper.connect("stack_index",
