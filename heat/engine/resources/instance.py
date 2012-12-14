@@ -214,7 +214,7 @@ class Instance(resource.Resource):
             security_groups = [self.physical_resource_name_find(sg) for sg in
                     self.properties.get('SecurityGroups')]
 
-        userdata = self.properties['UserData']
+        userdata = self.properties['UserData'] or ''
         userdata += '\ntouch /var/lib/cloud/instance/provision-finished\n'
         flavor = self.properties['InstanceType']
         key_name = self.properties['KeyName']
