@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book[
+        <!-- Some useful entities borrowed from HTML -->
+        <!ENTITY ndash  "&#x2013;">
+        <!ENTITY mdash  "&#x2014;">
+        <!ENTITY hellip "&#x2026;">
+        <!ENTITY plusmn "&#xB1;">
+
+]>
+<book xmlns="http://docbook.org/ns/docbook"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:m="http://www.w3.org/1998/Math/MathML"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:db="http://docbook.org/ns/docbook"
+    version="5.0"
+    status="final"
+    xml:id="Heat-admin-guide-trunk">
+    <?rax pdf.url="../bk-heat-admin-guide-trunk.pdf"?>
+    <title>Heat Administration Guide</title>
+    <info>
+        <author>
+            <personname>
+                <firstname/>
+                <surname/>
+            </personname>
+        </author>
+        <copyright>
+            <year>2012</year>
+            <holder>OpenStack</holder>
+        </copyright>
+        <releaseinfo>Grizzly (2013.1)</releaseinfo>
+        <productname>Heat</productname>
+        <pubdate>2012-12-14</pubdate>
+        <legalnotice role="apache2">
+            <annotation>
+                <remark>Copyright details are filled in by the template.</remark>
+            </annotation>
+        </legalnotice>
+        <abstract>
+            <para>This document is intended for administrators interested in running the Heat Service. </para>
+        </abstract>
+
+        <revhistory>
+                <!-- ... continue adding more revisions here as you change this document using the markup shown below... -->
+            <revision>
+                <date>2012-12-14</date>
+                <revdescription>
+                    <itemizedlist spacing="compact">
+                        <listitem>
+                            <para>First edition of this document.</para>
+                        </listitem>
+                    </itemizedlist>
+                </revdescription>
+            </revision>
+
+
+        </revhistory>
+    </info>
+    <xi:include href="ch_preface.xml"/>
+    <xi:include href="ch_overview.xml"/>
+    <xi:include href="ch_install.xml"/>
+    <xi:include href="ch_using.xml"/>
+    <xi:include href="ch_limitations.xml"/>
+    <xi:include href="app_core.xml"/>
+
+
+</book>

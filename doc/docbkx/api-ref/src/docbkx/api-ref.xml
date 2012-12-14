@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book xmlns="http://docbook.org/ns/docbook"
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:wadl="http://wadl.dev.java.net/2009/02"
+  version="5.0-extension RackBook-2.0" xml:id="api.openstack.org">
+  <info>
+    <title>Heat API</title>
+    <copyright>
+      <year>2012</year>
+    </copyright>
+    <legalnotice role="apache2">
+      <para/>
+    </legalnotice>
+  </info>
+  <chapter xml:id="object">
+    <title>Heat</title>
+    <para></para>
+    <wadl:resources
+      href="../wadls/heat-api/src/heat-api-1.0.wadl"
+      xmlns:wadl="http://wadl.dev.java.net/2009/02"/>
+  </chapter>
+</book>
+
