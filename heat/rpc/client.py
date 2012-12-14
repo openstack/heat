@@ -165,6 +165,15 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                                               stack_identity=stack_identity),
                   topic=_engine_topic(self.topic, ctxt, None))
 
+    def list_resource_types(self, ctxt):
+        """
+        Get a list of valid resource types.
+
+        :param ctxt: RPC context.
+        """
+        return self.call(ctxt, self.make_msg('list_resource_types'),
+                         topic=_engine_topic(self.topic, ctxt, None))
+
     def list_events(self, ctxt, stack_identity):
         """
         The list_events method lists all events associated with a given stack.

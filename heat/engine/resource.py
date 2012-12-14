@@ -31,7 +31,13 @@ logger = logging.getLogger(__name__)
 _resource_classes = {}
 
 
+def get_types():
+    '''Return an iterator over the list of valid resource types'''
+    return iter(_resource_classes)
+
+
 def get_class(resource_type):
+    '''Return the Resource class for a given resource type'''
     return _resource_classes.get(resource_type)
 
 

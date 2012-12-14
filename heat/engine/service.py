@@ -23,6 +23,7 @@ from heat.engine.event import Event
 from heat.common import exception
 from heat.common import identifier
 from heat.engine import parser
+from heat.engine import resource
 from heat.engine import resources
 from heat.engine import watchrule
 
@@ -335,6 +336,13 @@ class EngineService(service.Service):
         # use the service ThreadGroup for deletes
         self.tg.add_thread(stack.delete)
         return None
+
+    def list_resource_types(self, context):
+        """
+        Get a list of supported resource types.
+        arg1 -> RPC context.
+        """
+        return list(resource.get_types())
 
     @request_context
     def list_events(self, context, stack_identity):

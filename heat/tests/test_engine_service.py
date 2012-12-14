@@ -505,6 +505,11 @@ class stackServiceTest(unittest.TestCase):
         self.assertNotEqual(s['description'].find('WordPress'), -1)
         self.assertTrue('parameters' in s)
 
+    def test_list_resource_types(self):
+        resources = self.man.list_resource_types(self.ctx)
+        self.assertTrue(isinstance(resources, list))
+        self.assertTrue('AWS::EC2::Instance' in resources)
+
     def test_stack_resource_describe(self):
         r = self.man.describe_stack_resource(self.ctx, self.stack_identity,
                                              'WebServer')
