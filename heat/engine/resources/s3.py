@@ -123,6 +123,9 @@ class S3Bucket(resource.Resource):
 
 
 def resource_mapping():
+    if clients.swiftclient is None:
+        return {}
+
     return {
         'AWS::S3::Bucket': S3Bucket,
     }

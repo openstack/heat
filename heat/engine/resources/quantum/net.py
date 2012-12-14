@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine.resources.quantum import quantum
 
@@ -46,6 +47,9 @@ class Net(quantum.QuantumResource):
 
 
 def resource_mapping():
+    if clients.quantumclient is None:
+        return {}
+
     return {
         'OS::Quantum::Net': Net,
     }

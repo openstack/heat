@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.engine import clients
 from heat.engine.resources.quantum import quantum
 
 from heat.openstack.common import log as logging
@@ -94,6 +95,9 @@ class RouterGateway(quantum.QuantumResource):
 
 
 def resource_mapping():
+    if clients.quantumclient is None:
+        return {}
+
     return {
         'OS::Quantum::Router': Router,
         'OS::Quantum::RouterInterface': RouterInterface,
