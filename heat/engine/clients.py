@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 from heat.common import heat_keystoneclient as hkc
-from novaclient.v1_1 import client as novaclient
+from novaclient import client as novaclient
 try:
     from swiftclient import client as swiftclient
 except ImportError:
@@ -80,13 +80,13 @@ class Clients(object):
             # Workaround for issues with python-keyring, need no_cache=True
             # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
             # TODO(shardy): May be able to remove when the bug above is fixed
-            client = novaclient.Client(no_cache=True, **args)
+            client = novaclient.Client(1.1, no_cache=True, **args)
             client.authenticate()
             self._nova[service_type] = client
         except TypeError:
             # for compatibility with essex, which doesn't have no_cache=True
             # TODO(shardy): remove when we no longer support essex
-            client = novaclient.Client(**args)
+            client = novaclient.Client(1.1, **args)
             client.authenticate()
             self._nova[service_type] = client
 
