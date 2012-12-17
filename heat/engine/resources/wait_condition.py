@@ -143,7 +143,6 @@ class WaitCondition(resource.Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(WaitCondition, self).__init__(name, json_snippet, stack)
-        self.resource_id = None
 
         self.timeout = int(self.t['Properties']['Timeout'])
         self.count = int(self.t['Properties'].get('Count', '1'))
@@ -151,12 +150,10 @@ class WaitCondition(resource.Resource):
                               self.timeout / self.SLEEP_DIV),
                               self.MIN_SLEEP)
 
-    def _get_handle_resource_id(self):
-        if self.resource_id is None:
-            handle_url = self.properties['Handle']
-            handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
-            self.resource_id_set(handle_id.resource_name)
-        return self.resource_id
+    def _get_handle_resource_name(self):
+        handle_url = self.properties['Handle']
+        handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
+        return handle_id.resource_name
 
     def _get_status_reason(self, handle):
         return (handle.metadata.get('Status', WAITING),
@@ -171,7 +168,9 @@ class WaitCondition(resource.Resource):
             # keep polling our Metadata to see if the cfn-signal has written
             # it yet. The execution here is limited by timeout.
             with self._create_timeout() as tmo:
-                handle = self.stack[self._get_handle_resource_id()]
+                handle_res_name = self._get_handle_resource_name()
+                handle = self.stack[handle_res_name]
+                self.resource_id_set(handle_res_name)
 
                 (status, reason) = (WAITING, '')
 
@@ -197,7 +196,6 @@ class WaitCondition(resource.Resource):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
-        self._get_handle_resource_id()
         if self.resource_id is None:
             return
 
