@@ -306,11 +306,12 @@ EOF
     echo "note: This tool does not create a network.  Creating a network"
     echo "depends on your environment.  An example network create operation:"
     echo
-    echo "  sudo nova-manage network create --label=demonet --fixed_range_v4=192.168.250.0/24 --bridge_interface=demonetbr0"
+    echo "  sudo nova-manage network create --label=demonet --fixed_range_v4=10.0.0.0/24 --bridge=demonetbr0 --bridge_interface=eth0"
     echo
     echo -e "The network range here should *not* be one used on your existing physical\n network."
     echo "It should be a range dedicated for the network that OpenStack will configure."
     echo "If 10.0.0.0/24 clashes with your local network, pick another range."
+    echo "--bridge_interface argument should be a physical device to be bridged, eth0 in this example"
 }
 
 case $action in
