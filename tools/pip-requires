@@ -9,7 +9,7 @@
 # installed using pip, therefore you will need to install the
 # libxml2-dev(el) and libxslt-dev(el) packages.
 
-PyCrypto
+PyCrypto>=2.1.0
 boto>=2.4.0
 eventlet>=0.9.17
 extras
