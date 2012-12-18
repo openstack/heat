@@ -142,13 +142,15 @@ class Instance(resource.Resource):
             res = self.properties['AvailabilityZone']
         elif key == 'PublicIp':
             res = self._ipaddress()
+        elif key == 'PrivateIp':
+            res = self._ipaddress()
+        elif key == 'PublicDnsName':
+            res = self._ipaddress()
         elif key == 'PrivateDnsName':
             res = self._ipaddress()
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
-
-        # TODO(asalkeld) PrivateDnsName, PublicDnsName & PrivateIp
 
         logger.info('%s.GetAtt(%s) == %s' % (self.name, key, res))
         return unicode(res)
