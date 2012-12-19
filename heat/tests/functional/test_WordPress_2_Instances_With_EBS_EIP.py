@@ -26,8 +26,8 @@ class WordPress2EBSEIPFunctionalTest(unittest.TestCase):
         self.template = 'WordPress_2_Instances_With_EBS_EIP.template'
 
         stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
-            'DBUsername=dbuser',
-            'DBPassword=' + os.environ['OS_PASSWORD']])
+                                   'DBUsername=dbuser',
+                                   'DBPassword=' + os.environ['OS_PASSWORD']])
 
         self.stack = util.Stack(self, self.template,
                                 'F17', 'x86_64', 'cfntools',
@@ -56,7 +56,7 @@ class WordPress2EBSEIPFunctionalTest(unittest.TestCase):
         # Check wordpress installation
         wp_config_file = '/etc/wordpress/wp-config.php'
         self.assertTrue(self.webserver.file_present(wp_config_file),
-            'wp-config.php is not present')
+                        'wp-config.php is not present')
 
         # Check mysql is installed and running
         stdin, stdout, sterr = self.database.exec_command(
@@ -76,14 +76,17 @@ class WordPress2EBSEIPFunctionalTest(unittest.TestCase):
         self.assertTrue('/var/lib/mysql' in result)
 
         # Check the floating IPs
-        self.assertTrue(self.webserver.floating_ip_present(),
+        self.assertTrue(
+            self.webserver.floating_ip_present(),
             'WebServer instance does not have a floating IP assigned')
-        self.assertTrue(self.database.floating_ip_present(),
+        self.assertTrue(
+            self.database.floating_ip_present(),
             'WikiDatabase instance does not have a floating IP assigned')
 
         # Check wordpress is running and acessible at the correct URL
         stack_url = self.stack.get_stack_output("WebsiteURL")
         print "Got stack output WebsiteURL=%s, verifying" % stack_url
         ver = verify.VerifyStack()
-        self.assertTrue(ver.verify_wordpress(stack_url),
+        self.assertTrue(
+            ver.verify_wordpress(stack_url),
             'Wordpress is not accessible at: %s' % stack_url)

@@ -26,11 +26,11 @@ class WordPressRDSFunctionalTest(unittest.TestCase):
     def setUp(self):
         template = 'WordPress_With_RDS.template'
         stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
-            'DBUsername=dbuser',
-            'DBPassword=' + os.environ['OS_PASSWORD']])
+                                   'DBUsername=dbuser',
+                                   'DBPassword=' + os.environ['OS_PASSWORD']])
 
         self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
-            stack_paramstr)
+                                stack_paramstr)
         self.WebServer = util.Instance(self, 'WebServer')
 
     def tearDown(self):

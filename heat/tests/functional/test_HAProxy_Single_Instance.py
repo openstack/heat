@@ -29,8 +29,8 @@ class HAProxyFunctionalTest(unittest.TestCase):
         wp_template = 'WordPress_Single_Instance.template'
 
         wp_paramstr = ';'.join(['InstanceType=m1.xlarge',
-                         'DBUsername=dbuser',
-                         'DBPassword=' + os.environ['OS_PASSWORD']])
+                                'DBUsername=dbuser',
+                                'DBPassword=' + os.environ['OS_PASSWORD']])
 
         self.stack = util.Stack(self, wp_template, 'F17', 'x86_64', 'cfntools',
                                 wp_paramstr)

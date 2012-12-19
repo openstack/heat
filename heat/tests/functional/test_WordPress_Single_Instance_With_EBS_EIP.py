@@ -28,11 +28,11 @@ class WordPressEBSEIPFunctionalTest(unittest.TestCase):
         template = 'WordPress_Single_Instance_With_EBS_EIP.template'
 
         stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
-            'DBUsername=dbuser',
-            'DBPassword=' + os.environ['OS_PASSWORD']])
+                                   'DBUsername=dbuser',
+                                   'DBPassword=' + os.environ['OS_PASSWORD']])
 
         self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
-            stack_paramstr)
+                                stack_paramstr)
         self.WikiServer = util.Instance(self, 'WikiServer')
 
     def tearDown(self):
@@ -81,7 +81,7 @@ class WordPressEBSEIPFunctionalTest(unittest.TestCase):
 
         # Check EBS volume is present and mounted
         stdin, stdout, sterr = self.WikiServer.exec_command(
-                                'grep vdc /proc/mounts')
+            'grep vdc /proc/mounts')
         result = stdout.readlines().pop().rstrip()
         self.assertTrue(len(result))
         print "Checking EBS volume is attached : %s" % result

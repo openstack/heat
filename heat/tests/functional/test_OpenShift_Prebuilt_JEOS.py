@@ -31,7 +31,7 @@ class OpenShiftFunctionalTest(unittest.TestCase):
         stack_paramstr = ';'.join(['InstanceType=m1.xlarge'])
 
         self.stack = util.Stack(self, template, 'F16', 'x86_64',
-                'cfntools-openshift', stack_paramstr)
+                                'cfntools-openshift', stack_paramstr)
 
         self.Node = util.Instance(self, 'OpenShiftNodeServer')
         self.Broker = util.Instance(self, 'OpenShiftBrokerServer')

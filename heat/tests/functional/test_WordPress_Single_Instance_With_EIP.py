@@ -28,11 +28,11 @@ class WordPressEIPFunctionalTest(unittest.TestCase):
         template = 'WordPress_Single_Instance_With_EIP.template'
 
         stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
-            'DBUsername=dbuser',
-            'DBPassword=' + os.environ['OS_PASSWORD']])
+                                   'DBUsername=dbuser',
+                                   'DBPassword=' + os.environ['OS_PASSWORD']])
 
         self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
-            stack_paramstr)
+                                stack_paramstr)
         self.WebServer = util.Instance(self, 'WebServer')
 
     def tearDown(self):

@@ -27,16 +27,17 @@ class WordPressComposedInstancesFunctionalTest(unittest.TestCase):
         template = 'WordPress_Composed_Instances.template'
 
         stack_paramstr = ';'.join(['InstanceType=m1.xlarge',
-            'DBUsername=dbuser',
-            'DBPassword=' + os.environ['OS_PASSWORD']])
+                                   'DBUsername=dbuser',
+                                   'DBPassword=' + os.environ['OS_PASSWORD']])
 
         self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
-            stack_paramstr)
+                                stack_paramstr)
 
         self.WebServer = util.Instance(self, 'WebServer')
 
-        self.MySqlDatabaseServer = util.Instance(self,
-                'DatabaseTemplate.MySqlDatabaseServer')
+        self.MySqlDatabaseServer = util.Instance(
+            self,
+            'DatabaseTemplate.MySqlDatabaseServer')
 
     def tearDown(self):
         self.stack.cleanup()

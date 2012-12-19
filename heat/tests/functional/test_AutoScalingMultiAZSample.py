@@ -31,7 +31,7 @@ class AutoScalingMultiAZSampleFunctionalTest(unittest.TestCase):
                          'DBPassword=' + os.environ['OS_PASSWORD']])
 
         self.stack = util.Stack(self, template, 'F17', 'x86_64', 'cfntools',
-            stack_paramstr)
+                                stack_paramstr)
         self.WebServerGroup0 = util.Instance(self, 'WebServerGroup-0')
 
     def tearDown(self):
