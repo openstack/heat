@@ -1,5 +1,7 @@
 #!/bin/bash
 
+BASE_DIR=`dirname $0`
+
 function usage {
   echo "Usage: $0 [OPTION]..."
   echo "Run Heat's test suite(s)"
@@ -44,10 +46,26 @@ function run_tests {
 }
 
 function run_pep8 {
-  echo "Running pep8..."
-  PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat"
-  PEP8_INCLUDE="bin/heat-cfn bin/heat-boto bin/heat-api-cfn bin/heat-api bin/heat-engine heat tools setup.py heat/testing/runner.py"
-  ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
+    # Check the installed pep8 matches what is in the tox.ini,
+    # so the local test matches the jenkins gate tests
+    TOX_PEP_VERSION=$(grep "pep8==" $BASE_DIR/tox.ini | sed "s/.*pep8==//")
+    INST_PEP_VERSION=$(pep8 --version 2>/dev/null)
+    if [[ "$TOX_PEP_VERSION" != "$INST_PEP_VERSION" ]]
+    then
+        if [[ -z "$INST_PEP_VERSION" ]]
+        then
+            echo "ERROR pep8 is not installed, please install pep8 $TOX_PEP_VERSION" >&2
+        else
+            echo "ERROR installed version of pep8 $INST_PEP_VERSION"  >&2
+            echo "does not match the required version in tox.ini ($TOX_PEP_VERSION)" >&2
+            echo "please install the requied version of pep8" >&2
+        fi
+        exit 1
+    fi
+    echo "Running pep8..."
+    PEP8_OPTIONS="--exclude=$PEP8_EXCLUDE --repeat"
+    PEP8_INCLUDE="bin/heat-cfn bin/heat-boto bin/heat-api-cfn bin/heat-api bin/heat-engine heat tools setup.py heat/testing/runner.py"
+    ${wrapper} pep8 $PEP8_OPTIONS $PEP8_INCLUDE
 }
 
 # run unit tests with pep8 when no arguments are specified
