@@ -145,7 +145,7 @@ def setup_logging():
         root_logger.setLevel(logging.WARNING)
 
     # quiet down the qpid logging
-    root_logger.getChild('qpid.messaging').setLevel(logging.INFO)
+    root_logger.manager.getLogger('qpid.messaging').setLevel(logging.INFO)
 
     formatter = logging.Formatter(cfg.CONF.log_format,
                                   cfg.CONF.log_date_format)
