@@ -200,12 +200,6 @@ class LoadBalancer(stack.Stack):
                     'Implemented': False}
     }
 
-    def _params(self):
-        # total hack - probably need an admin key here.
-        params = {'KeyName': {'Ref': 'KeyName'}}
-        p = self.stack.resolve_static_data(params)
-        return p
-
     def _instance_to_ipaddress(self, inst):
         '''
         Return the server's IP address, fetching it from Nova
@@ -291,7 +285,10 @@ class LoadBalancer(stack.Stack):
             cfg = self._haproxy_config(templ, self.properties['Instances'])
             files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
-        self.create_with_template(templ)
+        # total hack - probably need an admin key here.
+        param = self.stack.resolve_static_data({'KeyName': {'Ref': 'KeyName'}})
+
+        self.create_with_template(templ, param)
 
     def validate(self):
         '''
@@ -343,7 +340,7 @@ class LoadBalancer(stack.Stack):
                                                      key=key)
 
         if key == 'DNSName':
-            return stack.Stack.FnGetAtt(self, 'Outputs.PublicIp')
+            return self.get_output('PublicIp')
         else:
             return ''
 
