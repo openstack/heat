@@ -141,7 +141,7 @@ class EngineRpcAPITestCase(unittest.TestCase):
 
     def test_metadata_update(self):
         self._test_engine_api('metadata_update', 'call',
-                              stack_id=6,
+                              stack_identity=self.identity,
                               resource_name='LogicalResourceId',
                               metadata={u'wordpress': []})
 

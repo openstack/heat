@@ -413,15 +413,14 @@ class EngineService(service.Service):
                 for resource in stack if resource.id is not None]
 
     @request_context
-    def metadata_update(self, context, stack_id, resource_name, metadata):
+    def metadata_update(self, context, stack_identity,
+                        resource_name, metadata):
         """
         Update the metadata for the given resource.
         """
-        s = db_api.stack_get(None, stack_id)
-        if s is None:
-            raise AttributeError("Stack %s not found" % stack_id)
+        s = self._get_stack(context, stack_identity)
 
-        stack = parser.Stack.load(None, stack=s)
+        stack = parser.Stack.load(context, stack=s)
         if resource_name not in stack:
             raise AttributeError("Resource not found %s" % resource_name)
 

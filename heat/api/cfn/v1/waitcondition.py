@@ -31,7 +31,7 @@ class WaitConditionController:
         identity = identifier.ResourceIdentifier.from_arn(arn)
         try:
             md = self.engine.metadata_update(con,
-                     stack_id=identity.stack_id,
+                     stack_id=dict(identity.stack()),
                      resource_name=identity.resource_name,
                      metadata=body)
         except rpc_common.RemoteError as ex:
