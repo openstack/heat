@@ -51,7 +51,7 @@ class Restarter(resource.Resource):
 
         if victim is None:
             logger.info('%s Alarm, can not find instance %s' %
-                    (self.name, self.properties['InstanceId']))
+                       (self.name, self.properties['InstanceId']))
             return
 
         logger.info('%s Alarm, restarting resource: %s' %
@@ -67,9 +67,9 @@ class Instance(resource.Resource):
                              'Required': True}}
 
     properties_schema = {'ImageId': {'Type': 'String',
-                                    'Required': True},
+                                     'Required': True},
                          'InstanceType': {'Type': 'String',
-                                    'Required': True},
+                                          'Required': True},
                          'KeyName': {'Type': 'String',
                                      'Required': True},
                          'AvailabilityZone': {'Type': 'String',
@@ -92,7 +92,7 @@ class Instance(resource.Resource):
                          'SourceDestCheck': {'Type': 'Boolean',
                                              'Implemented': False},
                          'SubnetId': {'Type': 'String',
-                                       'Implemented': False},
+                                      'Implemented': False},
                          'Tags': {'Type': 'List',
                                   'Schema': {'Type': 'Map',
                                              'Schema': tags_schema}},
@@ -210,11 +210,11 @@ class Instance(resource.Resource):
         return self.mime_string
 
     def handle_create(self):
-        if self.properties.get('SecurityGroups') == None:
+        if self.properties.get('SecurityGroups') is None:
             security_groups = None
         else:
-            security_groups = [self.physical_resource_name_find(sg) for sg in
-                    self.properties.get('SecurityGroups')]
+            security_groups = [self.physical_resource_name_find(sg)
+                               for sg in self.properties.get('SecurityGroups')]
 
         userdata = self.properties['UserData'] or ''
         userdata += '\ntouch /var/lib/cloud/instance/provision-finished\n'
@@ -286,7 +286,7 @@ class Instance(resource.Resource):
         if res:
             return res
 
-        #check validity of key
+        # check validity of key
         try:
             key_name = self.properties['KeyName']
         except ValueError:

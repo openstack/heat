@@ -196,7 +196,7 @@ class KeystoneStrategy(BaseStrategy):
             region_matches = lambda e: region is None or e['region'] == region
 
             endpoints = [ep for s in service_catalog if service_type_matches(s)
-                            for ep in s['endpoints'] if region_matches(ep)]
+                         for ep in s['endpoints'] if region_matches(ep)]
 
             if len(endpoints) > 1:
                 raise exception.RegionAmbiguity(region=region)
@@ -213,17 +213,14 @@ class KeystoneStrategy(BaseStrategy):
                 "tenantName": creds['tenant'],
                 "passwordCredentials": {
                     "username": creds['username'],
-                    "password": creds['password']
-                    }
-                }
-            }
+                    "password": creds['password']}}}
 
         headers = {}
         headers['Content-Type'] = 'application/json'
         req_body = json.dumps(creds)
 
         resp, resp_body = self._do_request(
-                token_url, 'POST', headers=headers, body=req_body)
+            token_url, 'POST', headers=headers, body=req_body)
 
         if resp.status == 200:
             resp_auth = json.loads(resp_body)['access']

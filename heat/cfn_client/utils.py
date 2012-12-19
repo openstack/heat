@@ -33,15 +33,14 @@ def catch_error(action):
                 return SUCCESS if ret is None else ret
             except exception.NotAuthorized:
                 LOG.error("Not authorized to make this request. Check " +
-                      "your credentials (OS_USERNAME, OS_PASSWORD, " +
-                      "OS_TENANT_NAME, OS_AUTH_URL and OS_AUTH_STRATEGY).")
+                          "your credentials (OS_USERNAME, OS_PASSWORD, " +
+                          "OS_TENANT_NAME, OS_AUTH_URL and OS_AUTH_STRATEGY).")
                 return FAILURE
             except exception.ClientConfigurationError:
                 raise
             except exception.KeystoneError, e:
                 LOG.error("Keystone did not finish the authentication and "
-                              "returned the following message:\n\n%s"
-                              % e.message)
+                          "returned the following message:\n\n%s" % e.message)
                 return FAILURE
             except Exception, e:
                 options = arguments[0]

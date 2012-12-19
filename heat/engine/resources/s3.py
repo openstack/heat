@@ -29,19 +29,18 @@ class S3Bucket(resource.Resource):
     website_schema = {'IndexDocument': {'Type': 'String'},
                       'ErrorDocument': {'Type': 'String'}}
     properties_schema = {'AccessControl': {
-                           'Type': 'String',
-                           'AllowedValues': ['Private',
-                                             'PublicRead',
-                                             'PublicReadWrite',
-                                             'AuthenticatedRead',
-                                             'BucketOwnerRead',
-                                             'BucketOwnerFullControl']},
-                        'DeletionPolicy': {
-                            'Type': 'String',
-                            'AllowedValues': ['Delete',
-                                              'Retain']},
-                        'WebsiteConfiguration': {'Type': 'Map',
-                                                 'Schema': website_schema}}
+                         'Type': 'String',
+                         'AllowedValues': ['Private',
+                                           'PublicRead',
+                                           'PublicReadWrite',
+                                           'AuthenticatedRead',
+                                           'BucketOwnerRead',
+                                           'BucketOwnerFullControl']},
+                         'DeletionPolicy': {
+                         'Type': 'String',
+                         'AllowedValues': ['Delete', 'Retain']},
+                         'WebsiteConfiguration': {'Type': 'Map',
+                                                  'Schema': website_schema}}
 
     def __init__(self, name, json_snippet, stack):
         super(S3Bucket, self).__init__(name, json_snippet, stack)
@@ -63,7 +62,7 @@ class S3Bucket(resource.Resource):
     def handle_create(self):
         """Create a bucket."""
         container = S3Bucket._create_container_name(
-                            self.physical_resource_name())
+            self.physical_resource_name())
         headers = {}
         logger.debug('S3Bucket create container %s with headers %s' %
                      (container, headers))
@@ -116,7 +115,7 @@ class S3Bucket(resource.Resource):
             return parsed[1].split(':')[0]
         elif key == 'WebsiteURL':
             return '%s://%s%s/%s' % (parsed[0], parsed[1], parsed[2],
-                                      self.resource_id)
+                                     self.resource_id)
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)

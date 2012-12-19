@@ -23,29 +23,28 @@ logger = logging.getLogger(__name__)
 class Subnet(quantum.QuantumResource):
 
     allocation_schema = {'start': {'Type': 'String',
-                                  'Required': True},
-                        'end': {'Type': 'String',
-                               'Required': True}}
+                                   'Required': True},
+                         'end': {'Type': 'String',
+                                 'Required': True}}
 
     properties_schema = {'network_id': {'Type': 'String',
-                                    'Required': True},
-                        'cidr': {'Type': 'String',
-                                'Required': True},
-                        'value_specs': {'Type': 'Map',
-                                       'Default': {}},
-                        'name': {'Type': 'String'},
-                        'admin_state_up': {'Default': True,
-                                          'Type': 'Boolean'},
-                        'ip_version': {'Type': 'Integer',
-                                      'AllowedValues': [4, 6],
-                                      'Default': 4},
-                        'gateway_ip': {'Type': 'String'},
-                        'allocation_pools': {'Type': 'List',
-                                             'Schema': {
-                                                 'Type': 'Map',
-                                                 'Schema': allocation_schema
-                                             }}
-    }
+                                        'Required': True},
+                         'cidr': {'Type': 'String',
+                                  'Required': True},
+                         'value_specs': {'Type': 'Map',
+                                         'Default': {}},
+                         'name': {'Type': 'String'},
+                         'admin_state_up': {'Default': True,
+                                            'Type': 'Boolean'},
+                         'ip_version': {'Type': 'Integer',
+                                        'AllowedValues': [4, 6],
+                                        'Default': 4},
+                         'gateway_ip': {'Type': 'String'},
+                         'allocation_pools': {'Type': 'List',
+                                              'Schema': {
+                                              'Type': 'Map',
+                                              'Schema': allocation_schema
+                                              }}}
 
     def __init__(self, name, json_snippet, stack):
         super(Subnet, self).__init__(name, json_snippet, stack)

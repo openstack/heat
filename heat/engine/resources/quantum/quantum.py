@@ -61,7 +61,7 @@ class QuantumResource(resource.Resource):
         values.
         '''
         props = dict((k, v) for k, v in properties.items()
-            if v is not None and k != 'value_specs')
+                     if v is not None and k != 'value_specs')
 
         if 'name' in properties.keys():
             props.setdefault('name', name)
@@ -82,8 +82,7 @@ class QuantumResource(resource.Resource):
         if key in attributes.keys():
             return attributes[key]
 
-        raise exception.InvalidTemplateAttribute(resource=name,
-                                                     key=key)
+        raise exception.InvalidTemplateAttribute(resource=name, key=key)
 
     def handle_update(self):
         return self.UPDATE_REPLACE

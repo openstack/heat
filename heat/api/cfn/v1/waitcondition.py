@@ -30,10 +30,11 @@ class WaitConditionController:
         con = req.context
         identity = identifier.ResourceIdentifier.from_arn(arn)
         try:
-            md = self.engine.metadata_update(con,
-                     stack_id=dict(identity.stack()),
-                     resource_name=identity.resource_name,
-                     metadata=body)
+            md = self.engine.metadata_update(
+                con,
+                stack_id=dict(identity.stack()),
+                resource_name=identity.resource_name,
+                metadata=body)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 

@@ -145,7 +145,7 @@ def format_watch(watch):
         WATCH_STATE_REASON: watch.rule.get(RULE_STATE_REASON),
         WATCH_STATE_REASON_DATA: watch.rule.get(RULE_STATE_REASON_DATA),
         WATCH_STATE_UPDATED_TIME: timeutils.isotime(
-                                  watch.rule.get(RULE_STATE_UPDATED_TIME)),
+            watch.rule.get(RULE_STATE_UPDATED_TIME)),
         WATCH_STATE_VALUE: watch.state,
         WATCH_STATISTIC: watch.rule.get(RULE_STATISTIC),
         WATCH_THRESHOLD: watch.rule.get(RULE_THRESHOLD),

@@ -51,7 +51,7 @@ def extract_param_pairs(params, prefix='', keyname='', valuename=''):
     """
     plist = extract_param_list(params, prefix)
     kvs = [(p[keyname], p[valuename]) for p in plist
-                                      if keyname in p and valuename in p]
+           if keyname in p and valuename in p]
 
     return dict(kvs)
 

@@ -28,7 +28,7 @@ class SecurityGroup(resource.Resource):
                                    'Implemented': False},
                          'SecurityGroupIngress': {'Type': 'List'},
                          'SecurityGroupEgress': {'Type': 'List',
-                                                  'Implemented': False}}
+                                                 'Implemented': False}}
 
     def __init__(self, name, json_snippet, stack):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)
@@ -44,8 +44,8 @@ class SecurityGroup(resource.Resource):
 
         if not sec:
             sec = self.nova().security_groups.create(
-                                          self.physical_resource_name(),
-                                          self.properties['GroupDescription'])
+                self.physical_resource_name(),
+                self.properties['GroupDescription'])
 
         self.resource_id_set(sec.id)
         if self.properties['SecurityGroupIngress']:

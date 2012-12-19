@@ -67,7 +67,7 @@ class Stack(resource.Resource):
         stack = self.nested()
         if op not in stack.outputs:
             raise exception.InvalidTemplateAttribute(
-                        resource=self.physical_resource_name(), key=key)
+                resource=self.physical_resource_name(), key=key)
 
         return stack.output(op)
 
@@ -102,7 +102,7 @@ class NestedStack(Stack):
     def FnGetAtt(self, key):
         if not key.startswith('Outputs.'):
             raise exception.InvalidTemplateAttribute(
-                        resource=self.physical_resource_name(), key=key)
+                resource=self.physical_resource_name(), key=key)
 
         prefix, dot, op = key.partition('.')
         return self.get_output(op)

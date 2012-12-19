@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 class VPC(resource.Resource):
     properties_schema = {'CidrBlock': {'Type': 'String'},
                          'InstanceTenancy': {'Type': 'String',
-                            'AllowedValues': ['default', 'dedicated'],
-                            'Default': 'default',
-                            'Implemented': False}
-    }
+                                             'AllowedValues': ['default',
+                                                               'dedicated'],
+                                             'Default': 'default',
+                                             'Implemented': False}}
 
     def __init__(self, name, json_snippet, stack):
         super(VPC, self).__init__(name, json_snippet, stack)

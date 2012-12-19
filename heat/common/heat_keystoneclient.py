@@ -73,7 +73,7 @@ class KeystoneClient(object):
         # deployed on an instance (hence are implicitly untrusted)
         roles = self.client.roles.list()
         stack_user_role = [r.id for r in roles
-                         if r.name == cfg.CONF.heat_stack_user_role]
+                           if r.name == cfg.CONF.heat_stack_user_role]
         if len(stack_user_role) == 1:
             role_id = stack_user_role[0]
             logger.debug("Adding user %s to role %s" % (user.id, role_id))

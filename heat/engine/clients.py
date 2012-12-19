@@ -116,7 +116,7 @@ class Clients(object):
             # Lookup endpoint for object-store service type
             service_type = 'object-store'
             endpoints = self.keystone().service_catalog.get_endpoints(
-                        service_type=service_type)
+                service_type=service_type)
             if len(endpoints[service_type]) == 1:
                 args['preauthurl'] = endpoints[service_type][0]['publicURL']
             else:
@@ -155,7 +155,7 @@ class Clients(object):
             args['token'] = con.auth_token
         else:
             logger.error("Quantum connection failed, "
-                "no password or auth_token!")
+                         "no password or auth_token!")
             return None
         logger.debug('quantum args %s', args)
 

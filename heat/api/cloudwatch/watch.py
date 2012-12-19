@@ -73,37 +73,39 @@ class WatchController(object):
             Reformat engine output into the AWS "MetricAlarm" format
             """
             keymap = {
-            engine_api.WATCH_ACTIONS_ENABLED: 'ActionsEnabled',
-            engine_api.WATCH_ALARM_ACTIONS: 'AlarmActions',
-            engine_api.WATCH_TOPIC: 'AlarmArn',
-            engine_api.WATCH_UPDATED_TIME:
+                engine_api.WATCH_ACTIONS_ENABLED: 'ActionsEnabled',
+                engine_api.WATCH_ALARM_ACTIONS: 'AlarmActions',
+                engine_api.WATCH_TOPIC: 'AlarmArn',
+                engine_api.WATCH_UPDATED_TIME:
                 'AlarmConfigurationUpdatedTimestamp',
-            engine_api.WATCH_DESCRIPTION: 'AlarmDescription',
-            engine_api.WATCH_NAME: 'AlarmName',
-            engine_api.WATCH_COMPARISON: 'ComparisonOperator',
-            engine_api.WATCH_DIMENSIONS: 'Dimensions',
-            engine_api.WATCH_PERIODS: 'EvaluationPeriods',
-            engine_api.WATCH_INSUFFICIENT_ACTIONS: 'InsufficientDataActions',
-            engine_api.WATCH_METRIC_NAME: 'MetricName',
-            engine_api.WATCH_NAMESPACE: 'Namespace',
-            engine_api.WATCH_OK_ACTIONS: 'OKActions',
-            engine_api.WATCH_PERIOD: 'Period',
-            engine_api.WATCH_STATE_REASON: 'StateReason',
-            engine_api.WATCH_STATE_REASON_DATA: 'StateReasonData',
-            engine_api.WATCH_STATE_UPDATED_TIME: 'StateUpdatedTimestamp',
-            engine_api.WATCH_STATE_VALUE: 'StateValue',
-            engine_api.WATCH_STATISTIC: 'Statistic',
-            engine_api.WATCH_THRESHOLD: 'Threshold',
-            engine_api.WATCH_UNIT: 'Unit'}
+                engine_api.WATCH_DESCRIPTION: 'AlarmDescription',
+                engine_api.WATCH_NAME: 'AlarmName',
+                engine_api.WATCH_COMPARISON: 'ComparisonOperator',
+                engine_api.WATCH_DIMENSIONS: 'Dimensions',
+                engine_api.WATCH_PERIODS: 'EvaluationPeriods',
+                engine_api.WATCH_INSUFFICIENT_ACTIONS:
+                'InsufficientDataActions',
+                engine_api.WATCH_METRIC_NAME: 'MetricName',
+                engine_api.WATCH_NAMESPACE: 'Namespace',
+                engine_api.WATCH_OK_ACTIONS: 'OKActions',
+                engine_api.WATCH_PERIOD: 'Period',
+                engine_api.WATCH_STATE_REASON: 'StateReason',
+                engine_api.WATCH_STATE_REASON_DATA: 'StateReasonData',
+                engine_api.WATCH_STATE_UPDATED_TIME: 'StateUpdatedTimestamp',
+                engine_api.WATCH_STATE_VALUE: 'StateValue',
+                engine_api.WATCH_STATISTIC: 'Statistic',
+                engine_api.WATCH_THRESHOLD: 'Threshold',
+                engine_api.WATCH_UNIT: 'Unit'}
 
             # AWS doesn't return StackId in the main MetricAlarm
             # structure, so we add StackId as a dimension to all responses
             a[engine_api.WATCH_DIMENSIONS].append({'StackId':
-                                           a[engine_api.WATCH_STACK_ID]})
+                                                  a[engine_api.WATCH_STACK_ID]
+                                                   })
 
             # Reformat dimensions list into AWS API format
             a[engine_api.WATCH_DIMENSIONS] = self._reformat_dimensions(
-                                             a[engine_api.WATCH_DIMENSIONS])
+                a[engine_api.WATCH_DIMENSIONS])
 
             return api_utils.reformat_dict_keys(keymap, a)
 
@@ -120,7 +122,7 @@ class WatchController(object):
             return exception.map_remote_error(ex)
 
         res = {'MetricAlarms': [format_metric_alarm(a)
-                                   for a in watch_list]}
+                                for a in watch_list]}
 
         result = api_utils.format_response("DescribeAlarms", res)
         return result
@@ -243,9 +245,9 @@ class WatchController(object):
         dimensions = []
         for p in metric_data:
             dimension = api_utils.extract_param_pairs(p,
-                                                   prefix='Dimensions',
-                                                   keyname='Name',
-                                                   valuename='Value')
+                                                      prefix='Dimensions',
+                                                      keyname='Name',
+                                                      valuename='Value')
             if 'AlarmName' in dimension:
                 watch_name = dimension['AlarmName']
             else:
@@ -283,8 +285,8 @@ class WatchController(object):
         """
         # Map from AWS state names to those used in the engine
         state_map = {'OK': engine_api.WATCH_STATE_OK,
-                      'ALARM': engine_api.WATCH_STATE_ALARM,
-                      'INSUFFICIENT_DATA': engine_api.WATCH_STATE_NODATA}
+                     'ALARM': engine_api.WATCH_STATE_ALARM,
+                     'INSUFFICIENT_DATA': engine_api.WATCH_STATE_NODATA}
 
         con = req.context
         parms = dict(req.params)

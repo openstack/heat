@@ -29,8 +29,8 @@ class Property(object):
         for key in self.schema:
             assert key in SCHEMA_KEYS, 'Unknown schema key "%s"' % key
 
-        assert self.type() in SCHEMA_TYPES, \
-               'Unknown property type "%s"' % self.type()
+        assert self.type() in SCHEMA_TYPES,\
+            'Unknown property type "%s"' % self.type()
 
     def required(self):
         return self.schema.get(REQUIRED, False)
@@ -103,7 +103,7 @@ class Property(object):
 
     def _validate_list(self, value):
         if (not isinstance(value, collections.Sequence) or
-            isinstance(value, basestring)):
+                isinstance(value, basestring)):
             raise TypeError('"%s" is not a list' % repr(value))
 
         for v in value:

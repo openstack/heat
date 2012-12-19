@@ -33,7 +33,7 @@ class User(resource.Resource):
                          'LoginProfile': {'Type': 'Map',
                                           'Schema': {
                                               'Password': {'Type': 'String'}
-                                           }},
+                                          }},
                          'Policies': {'Type': 'List'}}
 
     def __init__(self, name, json_snippet, stack):
@@ -42,11 +42,11 @@ class User(resource.Resource):
     def handle_create(self):
         passwd = ''
         if self.properties['LoginProfile'] and \
-            'Password' in self.properties['LoginProfile']:
-            passwd = self.properties['LoginProfile']['Password']
+                'Password' in self.properties['LoginProfile']:
+                passwd = self.properties['LoginProfile']['Password']
 
         uid = self.keystone().create_stack_user(self.physical_resource_name(),
-                                                 passwd)
+                                                passwd)
         self.resource_id_set(uid)
 
     def handle_update(self):
@@ -64,7 +64,7 @@ class User(resource.Resource):
     def FnGetAtt(self, key):
         #TODO Implement Arn attribute
         raise exception.InvalidTemplateAttribute(
-                resource=self.physical_resource_name(), key=key)
+            resource=self.physical_resource_name(), key=key)
 
 
 class AccessKey(resource.Resource):
@@ -159,7 +159,7 @@ class AccessKey(resource.Resource):
             log_res = "<SANITIZED>"
         else:
             raise exception.InvalidTemplateAttribute(
-                        resource=self.physical_resource_name(), key=key)
+                resource=self.physical_resource_name(), key=key)
 
         logger.info('%s.GetAtt(%s) == %s' % (self.physical_resource_name(),
                                              key, log_res))

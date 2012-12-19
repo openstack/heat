@@ -9,7 +9,7 @@ def upgrade(migrate_engine):
     watch_rule = Table('watch_rule', meta, autoload=True)
 
     Column('stack_id', String(length=36), ForeignKey("stack.id"),
-               nullable=False).create(watch_rule)
+           nullable=False).create(watch_rule)
 
     watch_rule.c.stack_name.drop()
 

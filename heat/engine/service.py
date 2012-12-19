@@ -168,7 +168,7 @@ class EngineService(service.Service):
             for s in stacks:
                 try:
                     stack = parser.Stack.load(context, stack=s,
-                        resolve_data=False)
+                                              resolve_data=False)
                 except exception.NotFound:
                     # The stack may have been deleted between listing
                     # and formatting
@@ -382,8 +382,8 @@ class EngineService(service.Service):
         if stack_identity is not None:
             s = self._get_stack(context, stack_identity)
         else:
-            rs = db_api.resource_get_by_physical_resource_id(context,
-                    physical_resource_id)
+            rs = db_api.resource_get_by_physical_resource_id(
+                context, physical_resource_id)
             if not rs:
                 msg = "The specified PhysicalResourceId doesn't exist"
                 raise AttributeError(msg)
@@ -400,8 +400,8 @@ class EngineService(service.Service):
             name_match = lambda r: True
 
         return [api.format_stack_resource(resource)
-                for resource in stack if resource.id is not None and
-                                         name_match(resource)]
+                for resource in stack
+                if resource.id is not None and name_match(resource)]
 
     @request_context
     def list_stack_resources(self, context, stack_identity):
@@ -443,7 +443,7 @@ class EngineService(service.Service):
         stack = db_api.stack_get(admin_context, sid, admin=True)
         if not stack:
             logger.error("Unable to retrieve stack %s for periodic task" %
-                        sid)
+                         sid)
             return
         user_creds = db_api.user_creds_get(stack.user_creds_id)
         stack_context = context.RequestContext.from_dict(user_creds)
@@ -502,7 +502,7 @@ class EngineService(service.Service):
         # DB API and schema does not yet allow us to easily query by
         # namespace/metric, but we will want this at some point
         # for now, the API can query all metric data and filter locally
-        if namespace != None or metric_name != None:
+        if namespace is not None or metric_name is not None:
             logger.error("Filtering by namespace/metric not yet supported")
             return
 

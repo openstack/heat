@@ -208,7 +208,7 @@ class AuthProtocol(object):
             'X-Role',
         )
         LOG.debug('Removing headers from request environment: %s' %
-                     ','.join(auth_headers))
+                  ','.join(auth_headers))
         self._remove_headers(env, auth_headers)
 
     def _get_user_token_from_header(self, env):
@@ -363,7 +363,7 @@ class AuthProtocol(object):
             self.admin_token = None
         else:
             LOG.error('Bad response code while validating token: %s' %
-                         response.status)
+                      response.status)
         if retry:
             LOG.info('Retrying validation')
             return self._validate_user_token(user_token, False)

@@ -85,7 +85,7 @@ class WaitConditionHandle(resource.Resource):
     def handle_create(self):
         # Create a keystone user so we can create a signed URL via FnGetRefId
         user_id = self.keystone().create_stack_user(
-                   self.physical_resource_name())
+            self.physical_resource_name())
         kp = self.keystone().get_ec2_keypair(user_id)
         if not kp:
             raise exception.Error("Error creating ec2 keypair for user %s" %
@@ -129,8 +129,8 @@ class WaitCondition(resource.Resource):
     properties_schema = {'Handle': {'Type': 'String',
                                     'Required': True},
                          'Timeout': {'Type': 'Number',
-                                    'Required': True,
-                                    'MinValue': '1'},
+                                     'Required': True,
+                                     'MinValue': '1'},
                          'Count': {'Type': 'Number',
                                    'MinValue': '1'}}
 

@@ -47,7 +47,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
         # API controller
         msg = _("Processing request: %(method)s %(path)s Accept: "
                 "%(accept)s") % ({'method': req.method,
-                'path': req.path, 'accept': req.accept})
+                                  'path': req.path, 'accept': req.accept})
         logger.debug(msg)
 
         # If the request is for /versions, just return the versions container
@@ -57,7 +57,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
         match = self._match_version_string(req.path_info_peek(), req)
         if match:
             if (req.environ['api.major_version'] == 1 and
-                req.environ['api.minor_version'] == 0):
+                    req.environ['api.minor_version'] == 0):
                 logger.debug(_("Matched versioned URI. Version: %d.%d"),
                              req.environ['api.major_version'],
                              req.environ['api.minor_version'])
@@ -78,7 +78,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
             match = self._match_version_string(accept_version, req)
             if match:
                 if (req.environ['api.major_version'] == 1 and
-                    req.environ['api.minor_version'] == 0):
+                        req.environ['api.minor_version'] == 0):
                     logger.debug(_("Matched versioned media type. "
                                  "Version: %d.%d"),
                                  req.environ['api.major_version'],

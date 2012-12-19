@@ -69,8 +69,8 @@ def resource_get(context, resource_id):
 
 def resource_get_by_name_and_stack(context, resource_name, stack_id):
     result = model_query(context, models.Resource).\
-                        filter_by(name=resource_name).\
-                        filter_by(stack_id=stack_id).first()
+        filter_by(name=resource_name).\
+        filter_by(stack_id=stack_id).first()
 
     return result
 
@@ -80,7 +80,7 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
               .filter_by(nova_instance=physical_resource_id)
               .first())
     if (result is not None and context is not None and
-        result.stack.tenant != context.tenant_id):
+            result.stack.tenant != context.tenant_id):
         return None
     return result
 
@@ -103,7 +103,7 @@ def resource_create(context, values):
 
 def resource_get_all_by_stack(context, stack_id):
     results = model_query(context, models.Resource).\
-                filter_by(stack_id=stack_id).all()
+        filter_by(stack_id=stack_id).all()
 
     if not results:
         raise NotFound("no resources for stack_id %s were found" % stack_id)
@@ -113,9 +113,9 @@ def resource_get_all_by_stack(context, stack_id):
 
 def stack_get_by_name(context, stack_name, owner_id=None):
     query = model_query(context, models.Stack).\
-                        filter_by(tenant=context.tenant_id).\
-                        filter_by(name=stack_name).\
-                        filter_by(owner_id=owner_id)
+        filter_by(tenant=context.tenant_id).\
+        filter_by(name=stack_name).\
+        filter_by(owner_id=owner_id)
 
     return query.first()
 
@@ -129,7 +129,7 @@ def stack_get(context, stack_id, admin=False):
         return result
 
     if (result is not None and context is not None and
-        result.tenant != context.tenant_id):
+            result.tenant != context.tenant_id):
         return None
 
     return result
@@ -137,14 +137,14 @@ def stack_get(context, stack_id, admin=False):
 
 def stack_get_all(context):
     results = model_query(context, models.Stack).\
-                         filter_by(owner_id=None).all()
+        filter_by(owner_id=None).all()
     return results
 
 
 def stack_get_all_by_tenant(context):
     results = model_query(context, models.Stack).\
-                         filter_by(owner_id=None).\
-                         filter_by(tenant=context.tenant_id).all()
+        filter_by(owner_id=None).\
+        filter_by(tenant=context.tenant_id).all()
     return results
 
 
@@ -160,7 +160,7 @@ def stack_update(context, stack_id, values):
 
     if not stack:
         raise NotFound('Attempt to update a stack with id: %s %s' %
-                        (stack_id, 'that does not exist'))
+                      (stack_id, 'that does not exist'))
 
     old_template_id = stack.raw_template_id
 
@@ -180,7 +180,7 @@ def stack_delete(context, stack_id):
     s = stack_get(context, stack_id)
     if not s:
         raise NotFound('Attempt to delete a stack with id: %s %s' %
-                        (stack_id, 'that does not exist'))
+                      (stack_id, 'that does not exist'))
 
     session = Session.object_session(s)
 
@@ -236,18 +236,18 @@ def event_get_all(context):
 
 def event_get_all_by_tenant(context):
     stacks = model_query(context, models.Stack).\
-                          filter_by(tenant=context.tenant_id).all()
+        filter_by(tenant=context.tenant_id).all()
     results = []
     for stack in stacks:
         results.extend(model_query(context, models.Event).
-                                   filter_by(stack_id=stack.id).all())
+                       filter_by(stack_id=stack.id).all())
 
     return results
 
 
 def event_get_all_by_stack(context, stack_id):
     results = model_query(context, models.Event).\
-                        filter_by(stack_id=stack_id).all()
+        filter_by(stack_id=stack_id).all()
 
     return results
 
@@ -261,13 +261,13 @@ def event_create(context, values):
 
 def watch_rule_get(context, watch_rule_id):
     result = model_query(context, models.WatchRule).\
-                        filter_by(id=watch_rule_id).first()
+        filter_by(id=watch_rule_id).first()
     return result
 
 
 def watch_rule_get_by_name(context, watch_rule_name):
     result = model_query(context, models.WatchRule).\
-                        filter_by(name=watch_rule_name).first()
+        filter_by(name=watch_rule_name).first()
     return result
 
 
@@ -278,7 +278,7 @@ def watch_rule_get_all(context):
 
 def watch_rule_get_all_by_stack(context, stack_id):
     results = model_query(context, models.WatchRule).\
-                          filter_by(stack_id=stack_id).all()
+        filter_by(stack_id=stack_id).all()
     return results
 
 
@@ -294,7 +294,7 @@ def watch_rule_update(context, watch_id, values):
 
     if not wr:
         raise NotFound('Attempt to update a watch with id: %s %s' %
-                        (watch_id, 'that does not exist'))
+                      (watch_id, 'that does not exist'))
 
     wr.update(values)
     wr.save(_session(context))
@@ -302,11 +302,11 @@ def watch_rule_update(context, watch_id, values):
 
 def watch_rule_delete(context, watch_name):
     wr = model_query(context, models.WatchRule).\
-                        filter_by(name=watch_name).first()
+        filter_by(name=watch_name).first()
 
     if not wr:
         raise NotFound('Attempt to delete a watch_rule with name: %s %s' %
-                        (watch_name, 'that does not exist'))
+                      (watch_name, 'that does not exist'))
 
     session = Session.object_session(wr)
 
@@ -331,11 +331,11 @@ def watch_data_get_all(context):
 
 def watch_data_delete(context, watch_name):
     ds = model_query(context, models.WatchRule).\
-                     filter_by(name=watch_name).all()
+        filter_by(name=watch_name).all()
 
     if not ds:
         raise NotFound('Attempt to delete watch_data with name: %s %s' %
-                        (watch_name, 'that does not exist'))
+                      (watch_name, 'that does not exist'))
 
     session = Session.object_session(ds)
     for d in ds:

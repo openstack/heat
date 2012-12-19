@@ -277,7 +277,7 @@ class Stack(object):
                 for res in reversed(self):
                     if not res.name in newstack.keys():
                         logger.debug("resource %s not found in updated stack"
-                                      % res.name + " definition, deleting")
+                                     % res.name + " definition, deleting")
                         result = res.destroy()
                         if result:
                             failures.append('Resource %s delete failed'
@@ -289,7 +289,7 @@ class Stack(object):
                 for res in newstack:
                     if not res.name in self.keys():
                         logger.debug("resource %s not found in current stack"
-                                      % res.name + " definition, adding")
+                                     % res.name + " definition, adding")
                         res.stack = self
                         self[res.name] = res
                         result = self[res.name].create()
@@ -313,8 +313,8 @@ class Stack(object):
                 # Currently all resource have a default handle_update method
                 # which returns "requires replacement" (res.UPDATE_REPLACE)
                 for res in newstack:
-                    if self.resolve_runtime_data(
-                        self[res.name].t) != self.resolve_runtime_data(res.t):
+                    if self.resolve_runtime_data(self[res.name].t) !=\
+                            self.resolve_runtime_data(res.t):
 
                         # Can fail if underlying resource class does not
                         # implement update logic or update requires replacement
@@ -337,7 +337,7 @@ class Stack(object):
                                                     % res.name)
                         else:
                             logger.warning("Cannot update resource %s," %
-                                            res.name + " reason %s" % retval)
+                                           res.name + " reason %s" % retval)
                             failures.append('Resource %s update failed'
                                             % res.name)
 

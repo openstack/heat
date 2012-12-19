@@ -102,8 +102,8 @@ def get_socket(conf, default_port):
     # support IPv6 in getaddrinfo(). We need to get around this in the
     # future or monitor upstream for a fix
     address_family = [addr[0] for addr in socket.getaddrinfo(bind_addr[0],
-            bind_addr[1], socket.AF_UNSPEC, socket.SOCK_STREAM)
-            if addr[0] in (socket.AF_INET, socket.AF_INET6)][0]
+                      bind_addr[1], socket.AF_UNSPEC, socket.SOCK_STREAM)
+                      if addr[0] in (socket.AF_INET, socket.AF_INET6)][0]
 
     conf.register_opts(socket_opts)
 
@@ -239,10 +239,11 @@ class Server(object):
         eventlet.patcher.monkey_patch(all=False, socket=True)
         self.pool = eventlet.GreenPool(size=self.threads)
         try:
-            eventlet_wsgi_server(self.sock, self.application,
-                    custom_pool=self.pool,
-                    url_length_limit=URL_LENGTH_LIMIT,
-                    log=WritableLogger(self.logger))
+            eventlet_wsgi_server(self.sock,
+                                 self.application,
+                                 custom_pool=self.pool,
+                                 url_length_limit=URL_LENGTH_LIMIT,
+                                 log=WritableLogger(self.logger))
         except socket.error, err:
             if err[0] != errno.EINVAL:
                 raise

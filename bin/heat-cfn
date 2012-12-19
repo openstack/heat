@@ -366,7 +366,7 @@ def stack_resources_list_details(options, arguments):
     usage = ('''Usage:
 %s resource-list-details stack_name [logical_resource_id]
 %s resource-list-details physical_resource_id [logical_resource_id]''' %
-        (scriptname, scriptname))
+             (scriptname, scriptname))
 
     try:
         name_or_pid = arguments.pop(0)
@@ -545,14 +545,14 @@ def parse_options(parser, cli_args):
 
     if options.debug:
         logging.basicConfig(format='%(levelname)s:%(message)s',
-            level=logging.DEBUG)
+                            level=logging.DEBUG)
         logging.debug("Debug level logging enabled")
     elif options.verbose:
         logging.basicConfig(format='%(levelname)s:%(message)s',
-            level=logging.INFO)
+                            level=logging.INFO)
     else:
         logging.basicConfig(format='%(levelname)s:%(message)s',
-            level=logging.WARNING)
+                            level=logging.WARNING)
 
     return (options, command, args)
 
@@ -574,20 +574,19 @@ def print_help(options, args):
 def lookup_command(parser, command_name):
     base_commands = {'help': print_help}
 
-    stack_commands = {
-                'create': stack_create,
-                'update': stack_update,
-                'delete': stack_delete,
-                'list': stack_list,
-                'events_list': stack_events_list,  # DEPRECATED
-                'event-list': stack_events_list,
-                'resource': stack_resource_show,
-                'resource-list': stack_resources_list,
-                'resource-list-details': stack_resources_list_details,
-                'validate': template_validate,
-                'gettemplate': get_template,
-                'estimate-template-cost': estimate_template_cost,
-                'describe': stack_describe}
+    stack_commands = {'create': stack_create,
+                      'update': stack_update,
+                      'delete': stack_delete,
+                      'list': stack_list,
+                      'events_list': stack_events_list,  # DEPRECATED
+                      'event-list': stack_events_list,
+                      'resource': stack_resource_show,
+                      'resource-list': stack_resources_list,
+                      'resource-list-details': stack_resources_list_details,
+                      'validate': template_validate,
+                      'gettemplate': get_template,
+                      'estimate-template-cost': estimate_template_cost,
+                      'describe': stack_describe}
 
     commands = {}
     for command_set in (base_commands, stack_commands):

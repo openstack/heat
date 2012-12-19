@@ -63,13 +63,13 @@ class WatchRule(object):
         '''
         Load the watchrule object, either by name or via an existing DB object
         '''
-        if watch == None:
+        if watch is None:
             try:
                 watch = db_api.watch_rule_get_by_name(context, watch_name)
             except Exception as ex:
                 logger.warn('WatchRule.load (%s) db error %s' %
                             (watch_name, str(ex)))
-        if watch == None:
+        if watch is None:
             raise AttributeError('Unknown watch name %s' % watch_name)
         else:
             return cls(context=context,
@@ -237,7 +237,7 @@ class WatchRule(object):
         else:
             s = db_api.stack_get(self.context, self.stack_id)
             if s and s.status in (parser.Stack.CREATE_COMPLETE,
-                                          parser.Stack.UPDATE_COMPLETE):
+                                  parser.Stack.UPDATE_COMPLETE):
                 stack = parser.Stack.load(self.context, stack=s)
                 for a in self.rule[self.ACTION_MAP[new_state]]:
                     greenpool.spawn_n(stack[a].alarm)
@@ -274,7 +274,7 @@ class WatchRule(object):
         if state != self.state:
             if self.rule_action(state):
                 logger.debug("Overriding state %s for watch %s with %s" %
-                         (self.state, self.name, state))
+                            (self.state, self.name, state))
             else:
                 logger.warning("Unable to override state %s for watch %s" %
-                         (self.state, self.name))
+                              (self.state, self.name))

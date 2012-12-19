@@ -75,7 +75,7 @@ class HeatIdentifier(collections.Mapping):
         # Sanity check the URL
         urlp = urlparse.urlparse(url)
         if (urlp.scheme not in ('http', 'https') or
-           not urlp.netloc or not urlp.path):
+                not urlp.netloc or not urlp.path):
             raise ValueError('"%s" is not a valid URL' % url)
 
         # Remove any query-string and extract the ARN

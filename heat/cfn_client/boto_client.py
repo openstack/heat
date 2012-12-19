@@ -40,25 +40,29 @@ class BotoClient(CloudFormationConnection):
 
     def create_stack(self, **kwargs):
         if 'TemplateUrl' in kwargs:
-            return super(BotoClient, self).create_stack(kwargs['StackName'],
-                                     template_url=kwargs['TemplateUrl'],
-                                     parameters=kwargs['Parameters'])
+            return super(BotoClient, self).create_stack(
+                kwargs['StackName'],
+                template_url=kwargs['TemplateUrl'],
+                parameters=kwargs['Parameters'])
         elif 'TemplateBody' in kwargs:
-            return super(BotoClient, self).create_stack(kwargs['StackName'],
-                                     template_body=kwargs['TemplateBody'],
-                                     parameters=kwargs['Parameters'])
+            return super(BotoClient, self).create_stack(
+                kwargs['StackName'],
+                template_body=kwargs['TemplateBody'],
+                parameters=kwargs['Parameters'])
         else:
             logger.error("Must specify TemplateUrl or TemplateBody!")
 
     def update_stack(self, **kwargs):
         if 'TemplateUrl' in kwargs:
-            return super(BotoClient, self).update_stack(kwargs['StackName'],
-                                     template_url=kwargs['TemplateUrl'],
-                                     parameters=kwargs['Parameters'])
+            return super(BotoClient, self).update_stack(
+                kwargs['StackName'],
+                template_url=kwargs['TemplateUrl'],
+                parameters=kwargs['Parameters'])
         elif 'TemplateBody' in kwargs:
-            return super(BotoClient, self).update_stack(kwargs['StackName'],
-                                     template_body=kwargs['TemplateBody'],
-                                     parameters=kwargs['Parameters'])
+            return super(BotoClient, self).update_stack(
+                kwargs['StackName'],
+                template_body=kwargs['TemplateBody'],
+                parameters=kwargs['Parameters'])
         else:
             logger.error("Must specify TemplateUrl or TemplateBody!")
 
@@ -67,11 +71,11 @@ class BotoClient(CloudFormationConnection):
 
     def list_stack_events(self, **kwargs):
         return super(BotoClient, self).describe_stack_events(
-                     kwargs['StackName'])
+            kwargs['StackName'])
 
     def describe_stack_resource(self, **kwargs):
         return super(BotoClient, self).describe_stack_resource(
-                     kwargs['StackName'], kwargs['LogicalResourceId'])
+            kwargs['StackName'], kwargs['LogicalResourceId'])
 
     def describe_stack_resources(self, **kwargs):
         # Check if this is a StackName, if not assume it's a physical res ID
@@ -83,29 +87,29 @@ class BotoClient(CloudFormationConnection):
         stack_names = [s.stack_name for s in list_stacks]
         if kwargs['NameOrPid'] in stack_names:
             logger.debug("Looking up resources for StackName:%s" %
-                          kwargs['NameOrPid'])
+                         kwargs['NameOrPid'])
             return super(BotoClient, self).describe_stack_resources(
-                         stack_name_or_id=kwargs['NameOrPid'],
-                         logical_resource_id=kwargs['LogicalResourceId'])
+                stack_name_or_id=kwargs['NameOrPid'],
+                logical_resource_id=kwargs['LogicalResourceId'])
         else:
             logger.debug("Looking up resources for PhysicalResourceId:%s" %
-                          kwargs['NameOrPid'])
+                         kwargs['NameOrPid'])
             return super(BotoClient, self).describe_stack_resources(
-                         stack_name_or_id=None,
-                         logical_resource_id=kwargs['LogicalResourceId'],
-                         physical_resource_id=kwargs['NameOrPid'])
+                stack_name_or_id=None,
+                logical_resource_id=kwargs['LogicalResourceId'],
+                physical_resource_id=kwargs['NameOrPid'])
 
     def list_stack_resources(self, **kwargs):
         return super(BotoClient, self).list_stack_resources(
-                     kwargs['StackName'])
+            kwargs['StackName'])
 
     def validate_template(self, **kwargs):
         if 'TemplateUrl' in kwargs:
             return super(BotoClient, self).validate_template(
-                         template_url=kwargs['TemplateUrl'])
+                template_url=kwargs['TemplateUrl'])
         elif 'TemplateBody' in kwargs:
             return super(BotoClient, self).validate_template(
-                         template_body=kwargs['TemplateBody'])
+                template_body=kwargs['TemplateBody'])
         else:
             logger.error("Must specify TemplateUrl or TemplateBody!")
 
@@ -115,14 +119,14 @@ class BotoClient(CloudFormationConnection):
     def estimate_template_cost(self, **kwargs):
         if 'TemplateUrl' in kwargs:
             return super(BotoClient, self).estimate_template_cost(
-                         kwargs['StackName'],
-                         template_url=kwargs['TemplateUrl'],
-                         parameters=kwargs['Parameters'])
+                kwargs['StackName'],
+                template_url=kwargs['TemplateUrl'],
+                parameters=kwargs['Parameters'])
         elif 'TemplateBody' in kwargs:
             return super(BotoClient, self).estimate_template_cost(
-                         kwargs['StackName'],
-                         template_body=kwargs['TemplateBody'],
-                         parameters=kwargs['Parameters'])
+                kwargs['StackName'],
+                template_body=kwargs['TemplateBody'],
+                parameters=kwargs['Parameters'])
         else:
             logger.error("Must specify TemplateUrl or TemplateBody!")
 
@@ -139,7 +143,7 @@ class BotoClient(CloudFormationConnection):
             ret.append("ResourceProperties : %s" % event.resource_properties)
             ret.append("ResourceStatus : %s" % event.resource_status)
             ret.append("ResourceStatusReason : %s" %
-                        event.resource_status_reason)
+                       event.resource_status_reason)
             ret.append("ResourceType : %s" % event.resource_type)
             ret.append("StackId : %s" % event.stack_id)
             ret.append("StackName : %s" % event.stack_name)
@@ -180,7 +184,7 @@ class BotoClient(CloudFormationConnection):
             ret.append("PhysicalResourceId : %s" % res.physical_resource_id)
             ret.append("ResourceStatus : %s" % res.resource_status)
             ret.append("ResourceStatusReason : %s" %
-                        res.resource_status_reason)
+                       res.resource_status_reason)
             ret.append("ResourceType : %s" % res.resource_type)
             ret.append("StackId : %s" % res.stack_id)
             ret.append("StackName : %s" % res.stack_name)
@@ -196,12 +200,12 @@ class BotoClient(CloudFormationConnection):
         ret = []
         for res in resources:
             ret.append("LastUpdatedTimestamp : %s" %
-                        res.last_updated_timestamp)
+                       res.last_updated_timestamp)
             ret.append("LogicalResourceId : %s" % res.logical_resource_id)
             ret.append("PhysicalResourceId : %s" % res.physical_resource_id)
             ret.append("ResourceStatus : %s" % res.resource_status)
             ret.append("ResourceStatusReason : %s" %
-                        res.resource_status_reason)
+                       res.resource_status_reason)
             ret.append("ResourceType : %s" % res.resource_type)
             ret.append("--")
         return '\n'.join(ret)
@@ -218,7 +222,7 @@ class BotoClient(CloudFormationConnection):
         For now, we format the dict response as a workaround
         '''
         resource_detail = res['DescribeStackResourceResponse'][
-                   'DescribeStackResourceResult']['StackResourceDetail']
+            'DescribeStackResourceResult']['StackResourceDetail']
         ret = []
         for key in resource_detail:
             ret.append("%s : %s" % (key, resource_detail[key]))
@@ -285,8 +289,10 @@ def get_client(host, port=None, username=None,
     # Also note is_secure is defaulted to False as HTTPS connections
     # don't seem to work atm, FIXME
     cloudformation = BotoClient(aws_access_key_id=aws_access_key,
-        aws_secret_access_key=aws_secret_key, is_secure=False,
-        port=port, path="/v1")
+                                aws_secret_access_key=aws_secret_key,
+                                is_secure=False,
+                                port=port,
+                                path="/v1")
     if cloudformation:
         logger.debug("Got CF connection object OK")
     else:

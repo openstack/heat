@@ -34,12 +34,12 @@ class BotoCWClient(CloudWatchConnection):
     # TODO : These should probably go in the CW API and be imported
     DEFAULT_NAMESPACE = "heat/unknown"
     METRIC_UNITS = ("Seconds", "Microseconds", "Milliseconds", "Bytes",
-                  "Kilobytes", "Megabytes", "Gigabytes", "Terabytes",
-                  "Bits", "Kilobits", "Megabits", "Gigabits", "Terabits",
-                  "Percent", "Count", "Bytes/Second", "Kilobytes/Second",
-                  "Megabytes/Second", "Gigabytes/Second", "Terabytes/Second",
-                  "Bits/Second", "Kilobits/Second", "Megabits/Second",
-                  "Gigabits/Second", "Terabits/Second", "Count/Second", None)
+                    "Kilobytes", "Megabytes", "Gigabytes", "Terabytes",
+                    "Bits", "Kilobits", "Megabits", "Gigabits", "Terabits",
+                    "Percent", "Count", "Bytes/Second", "Kilobytes/Second",
+                    "Megabytes/Second", "Gigabytes/Second", "Terabytes/Second",
+                    "Bits/Second", "Kilobits/Second", "Megabits/Second",
+                    "Gigabits/Second", "Terabits/Second", "Count/Second", None)
     METRIC_COMPARISONS = (">=", ">", "<", "<=")
     ALARM_STATES = ("OK", "ALARM", "INSUFFICIENT_DATA")
     METRIC_STATISTICS = ("Average", "Sum", "SampleCount", "Maximum", "Minimum")
@@ -56,7 +56,7 @@ class BotoCWClient(CloudWatchConnection):
         except KeyError:
             name = None
         return super(BotoCWClient, self).describe_alarms(
-                     alarm_names=[name])
+            alarm_names=[name])
 
     def list_metrics(self, **kwargs):
         # list_metrics returns non-null index in next_token if there
@@ -75,10 +75,10 @@ class BotoCWClient(CloudWatchConnection):
         token = None
         while True:
             results.append(super(BotoCWClient, self).list_metrics(
-                                 next_token=token,
-                                 dimensions=None,
-                                 metric_name=name,
-                                 namespace=None))
+                           next_token=token,
+                           dimensions=None,
+                           metric_name=name,
+                           namespace=None))
             if not token:
                 break
 
@@ -94,8 +94,8 @@ class BotoCWClient(CloudWatchConnection):
             metric_value = kwargs['MetricValue']
             metric_namespace = kwargs['Namespace']
         except KeyError:
-            logger.error("Must pass MetricName, MetricUnit, " +\
-                          "Namespace, MetricValue!")
+            logger.error("Must pass MetricName, MetricUnit, " +
+                         "Namespace, MetricValue!")
             return
 
         try:
@@ -116,20 +116,20 @@ class BotoCWClient(CloudWatchConnection):
             return
 
         return super(BotoCWClient, self).put_metric_data(
-                     namespace=metric_namespace,
-                     name=metric_name,
-                     value=metric_value,
-                     timestamp=None,  # This means use "now" in the engine
-                     unit=metric_unit,
-                     dimensions=metric_dims,
-                     statistics=None)
+            namespace=metric_namespace,
+            name=metric_name,
+            value=metric_value,
+            timestamp=None,  # This means use "now" in the engine
+            unit=metric_unit,
+            dimensions=metric_dims,
+            statistics=None)
 
     def set_alarm_state(self, **kwargs):
         return super(BotoCWClient, self).set_alarm_state(
-                     alarm_name=kwargs['AlarmName'],
-                     state_reason=kwargs['StateReason'],
-                     state_value=kwargs['StateValue'],
-                     state_reason_data=kwargs['StateReasonData'])
+            alarm_name=kwargs['AlarmName'],
+            state_reason=kwargs['StateReason'],
+            state_value=kwargs['StateValue'],
+            state_reason_data=kwargs['StateReasonData'])
 
     def format_metric_alarm(self, alarms):
         '''
@@ -144,19 +144,19 @@ class BotoCWClient(CloudWatchConnection):
             ret.append("AlarmActions : %s" % s.alarm_actions)
             ret.append("AlarmArn : %s" % s.alarm_arn)
             ret.append("AlarmConfigurationUpdatedTimestamp : %s" %
-                        s.last_updated)
+                       s.last_updated)
             ret.append("ComparisonOperator : %s" % s.comparison)
             ret.append("Dimensions : %s" % s.dimensions)
             ret.append("EvaluationPeriods : %s" % s.evaluation_periods)
             ret.append("InsufficientDataActions : %s" %
-                        s.insufficient_data_actions)
+                       s.insufficient_data_actions)
             ret.append("MetricName : %s" % s.metric)
             ret.append("Namespace : %s" % s.namespace)
             ret.append("OKActions : %s" % s.ok_actions)
             ret.append("Period : %s" % s.period)
             ret.append("StateReason : %s" % s.state_reason)
             ret.append("StateUpdatedTimestamp : %s" %
-                        s.last_updated)
+                       s.last_updated)
             ret.append("StateValue : %s" % s.state_value)
             ret.append("Statistic : %s" % s.statistic)
             ret.append("Threshold : %s" % s.threshold)
@@ -199,8 +199,10 @@ def get_client(port=None, aws_access_key=None, aws_secret_key=None):
     # Also note is_secure is defaulted to False as HTTPS connections
     # don't seem to work atm, FIXME
     cloudwatch = BotoCWClient(aws_access_key_id=aws_access_key,
-        aws_secret_access_key=aws_secret_key, is_secure=False,
-        port=port, path="/v1")
+                              aws_secret_access_key=aws_secret_key,
+                              is_secure=False,
+                              port=port,
+                              path="/v1")
     if cloudwatch:
         logger.debug("Got CW connection object OK")
     else:

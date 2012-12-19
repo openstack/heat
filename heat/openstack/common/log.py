@@ -258,7 +258,7 @@ class JSONFormatter(logging.Formatter):
 class PublishErrorsHandler(logging.Handler):
     def emit(self, record):
         if ('heat.openstack.common.notifier.log_notifier' in
-            CONF.notification_driver):
+                CONF.notification_driver):
             return
         notifier.api.notify(None, 'error.publisher',
                             'error_notification',
@@ -418,7 +418,7 @@ class LegacyFormatter(logging.Formatter):
             self._fmt = CONF.logging_default_format_string
 
         if (record.levelno == logging.DEBUG and
-            CONF.logging_debug_format_suffix):
+                CONF.logging_debug_format_suffix):
             self._fmt += " " + CONF.logging_debug_format_suffix
 
         # Cache this on the record, Logger will respect our formated copy

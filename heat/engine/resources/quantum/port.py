@@ -23,23 +23,22 @@ logger = logging.getLogger(__name__)
 class Port(quantum.QuantumResource):
 
     fixed_ip_schema = {'subnet_id': {'Type': 'String',
-                                  'Required': True},
-                        'ip_address': {'Type': 'String',
-                               'Required': True}}
+                                     'Required': True},
+                       'ip_address': {'Type': 'String',
+                                      'Required': True}}
 
     properties_schema = {'network_id': {'Type': 'String',
-                                    'Required': True},
-                        'name': {'Type': 'String'},
-                        'value_specs': {'Type': 'Map',
-                                       'Default': {}},
-                        'admin_state_up': {'Default': True,
-                                          'Type': 'Boolean'},
-                        'fixed_ips': {'Type': 'List',
-                                      'Schema': {'Type': 'Map',
-                                                 'Schema': fixed_ip_schema}},
-                        'mac_address': {'Type': 'String'},
-                        'device_id': {'Type': 'String'},
-    }
+                                        'Required': True},
+                         'name': {'Type': 'String'},
+                         'value_specs': {'Type': 'Map',
+                                         'Default': {}},
+                         'admin_state_up': {'Default': True,
+                                            'Type': 'Boolean'},
+                         'fixed_ips': {'Type': 'List',
+                                       'Schema': {'Type': 'Map',
+                                                  'Schema': fixed_ip_schema}},
+                         'mac_address': {'Type': 'String'},
+                         'device_id': {'Type': 'String'}}
 
     def __init__(self, name, json_snippet, stack):
         super(Port, self).__init__(name, json_snippet, stack)

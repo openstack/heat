@@ -34,80 +34,80 @@ DEFAULT_PORT = 8000
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
     cfg.StrOpt('flavor'),
-    cfg.StrOpt('config_file'),
-    ]
+    cfg.StrOpt('config_file')]
 
 
-bind_opts = [cfg.IntOpt('bind_port', default=8000),
-             cfg.StrOpt('bind_host', default='127.0.0.1')]
+bind_opts = [
+    cfg.IntOpt('bind_port', default=8000),
+    cfg.StrOpt('bind_host', default='127.0.0.1')]
 
 service_opts = [
-cfg.IntOpt('report_interval',
-           default=10,
-           help='seconds between nodes reporting state to datastore'),
-cfg.IntOpt('periodic_interval',
-           default=60,
-           help='seconds between running periodic tasks'),
-cfg.StrOpt('ec2_listen',
-           default="0.0.0.0",
-           help='IP address for EC2 API to listen'),
-cfg.IntOpt('ec2_listen_port',
-           default=8773,
-           help='port for ec2 api to listen'),
-cfg.StrOpt('osapi_compute_listen',
-           default="0.0.0.0",
-           help='IP address for OpenStack API to listen'),
-cfg.IntOpt('osapi_compute_listen_port',
-           default=8774,
-           help='list port for osapi compute'),
-cfg.StrOpt('osapi_volume_listen',
-           default="0.0.0.0",
-           help='IP address for OpenStack Volume API to listen'),
-cfg.IntOpt('osapi_volume_listen_port',
-           default=8776,
-           help='port for os volume api to listen'),
-cfg.StrOpt('heat_metadata_server_url',
-           default="",
-           help='URL of the Heat metadata server'),
-cfg.StrOpt('heat_waitcondition_server_url',
-           default="",
-           help='URL of the Heat waitcondition server'),
-cfg.StrOpt('heat_watch_server_url',
-           default="",
-           help='URL of the Heat cloudwatch server'),
-cfg.StrOpt('heat_stack_user_role',
-           default="heat_stack_user",
-           help='Keystone role for heat template-defined users'),
-]
+    cfg.IntOpt('report_interval',
+               default=10,
+               help='seconds between nodes reporting state to datastore'),
+    cfg.IntOpt('periodic_interval',
+               default=60,
+               help='seconds between running periodic tasks'),
+    cfg.StrOpt('ec2_listen',
+               default="0.0.0.0",
+               help='IP address for EC2 API to listen'),
+    cfg.IntOpt('ec2_listen_port',
+               default=8773,
+               help='port for ec2 api to listen'),
+    cfg.StrOpt('osapi_compute_listen',
+               default="0.0.0.0",
+               help='IP address for OpenStack API to listen'),
+    cfg.IntOpt('osapi_compute_listen_port',
+               default=8774,
+               help='list port for osapi compute'),
+    cfg.StrOpt('osapi_volume_listen',
+               default="0.0.0.0",
+               help='IP address for OpenStack Volume API to listen'),
+    cfg.IntOpt('osapi_volume_listen_port',
+               default=8776,
+               help='port for os volume api to listen'),
+    cfg.StrOpt('heat_metadata_server_url',
+               default="",
+               help='URL of the Heat metadata server'),
+    cfg.StrOpt('heat_waitcondition_server_url',
+               default="",
+               help='URL of the Heat waitcondition server'),
+    cfg.StrOpt('heat_watch_server_url',
+               default="",
+               help='URL of the Heat cloudwatch server'),
+    cfg.StrOpt('heat_stack_user_role',
+               default="heat_stack_user",
+               help='Keystone role for heat template-defined users')]
+
 db_opts = [
-cfg.StrOpt('sql_connection',
-           default='mysql://heat:heat@localhost/heat',
-           help='The SQLAlchemy connection string used to connect to the '
-                'database'),
-cfg.IntOpt('sql_idle_timeout',
-           default=3600,
-           help='timeout before idle sql connections are reaped'),
-]
+    cfg.StrOpt('sql_connection',
+               default='mysql://heat:heat@localhost/heat',
+               help='The SQLAlchemy connection string used to connect to the '
+               'database'),
+    cfg.IntOpt('sql_idle_timeout',
+               default=3600,
+               help='timeout before idle sql connections are reaped')]
+
 engine_opts = [
-cfg.StrOpt('instance_driver',
-           default='heat.engine.nova',
-           help='Driver to use for controlling instances'),
-cfg.ListOpt('plugin_dirs',
-            default=['/usr/lib64/heat', '/usr/lib/heat'],
-            help='List of directories to search for Plugins'),
-]
+    cfg.StrOpt('instance_driver',
+               default='heat.engine.nova',
+               help='Driver to use for controlling instances'),
+    cfg.ListOpt('plugin_dirs',
+                default=['/usr/lib64/heat', '/usr/lib/heat'],
+                help='List of directories to search for Plugins')]
+
 rpc_opts = [
-cfg.StrOpt('host',
-           default=socket.gethostname(),
-           help='Name of the engine node.  This can be an opaque identifier.'
-                'It is not necessarily a hostname, FQDN, or IP address.'),
-cfg.StrOpt('control_exchange',
-           default='heat',
-           help='AMQP exchange to connect to if using RabbitMQ or Qpid'),
-cfg.StrOpt('engine_topic',
-           default='engine',
-           help='the topic engine nodes listen on')
-]
+    cfg.StrOpt('host',
+               default=socket.gethostname(),
+               help='Name of the engine node. '
+                    'This can be an opaque identifier.'
+                    'It is not necessarily a hostname, FQDN, or IP address.'),
+    cfg.StrOpt('control_exchange',
+               default='heat',
+               help='AMQP exchange to connect to if using RabbitMQ or Qpid'),
+    cfg.StrOpt('engine_topic',
+               default='engine',
+               help='the topic engine nodes listen on')]
 
 
 def register_api_opts():

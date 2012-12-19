@@ -23,11 +23,10 @@ logger = logging.getLogger(__name__)
 
 class Router(quantum.QuantumResource):
     properties_schema = {'name': {'Type': 'String'},
-                        'value_specs': {'Type': 'Map',
-                                       'Default': {}},
-                        'admin_state_up': {'Type': 'Boolean',
-                                          'Default': True},
-    }
+                         'value_specs': {'Type': 'Map',
+                                         'Default': {}},
+                         'admin_state_up': {'Type': 'Boolean',
+                                            'Default': True}}
 
     def __init__(self, name, json_snippet, stack):
         super(Router, self).__init__(name, json_snippet, stack)
@@ -49,10 +48,9 @@ class Router(quantum.QuantumResource):
 
 class RouterInterface(quantum.QuantumResource):
     properties_schema = {'router_id': {'Type': 'String',
-                                      'Required': True},
-                        'subnet_id': {'Type': 'String',
-                                      'Required': True},
-    }
+                                       'Required': True},
+                         'subnet_id': {'Type': 'String',
+                                       'Required': True}}
 
     def __init__(self, name, json_snippet, stack):
         super(RouterInterface, self).__init__(name, json_snippet, stack)
@@ -61,22 +59,21 @@ class RouterInterface(quantum.QuantumResource):
         router_id = self.properties.get('router_id')
         subnet_id = self.properties.get('subnet_id')
         self.quantum().add_interface_router(router_id,
-            {'subnet_id': subnet_id})
+                                            {'subnet_id': subnet_id})
         self.resource_id_set('%s:%s' % (router_id, subnet_id))
 
     def handle_delete(self):
         client = self.quantum()
         (router_id, subnet_id) = self.resource_id.split(':')
         client.remove_interface_router(router_id,
-            {'subnet_id': subnet_id})
+                                       {'subnet_id': subnet_id})
 
 
 class RouterGateway(quantum.QuantumResource):
     properties_schema = {'router_id': {'Type': 'String',
-                                      'Required': True},
-                        'network_id': {'Type': 'String',
-                                      'Required': True},
-    }
+                                       'Required': True},
+                         'network_id': {'Type': 'String',
+                                        'Required': True}}
 
     def __init__(self, name, json_snippet, stack):
         super(RouterGateway, self).__init__(name, json_snippet, stack)
@@ -85,7 +82,7 @@ class RouterGateway(quantum.QuantumResource):
         router_id = self.properties.get('router_id')
         network_id = self.properties.get('network_id')
         self.quantum().add_gateway_router(router_id,
-            {'network_id': network_id})
+                                          {'network_id': network_id})
         self.resource_id_set('%s:%s' % (router_id, network_id))
 
     def handle_delete(self):

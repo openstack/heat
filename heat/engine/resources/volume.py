@@ -34,9 +34,10 @@ class Volume(resource.Resource):
         super(Volume, self).__init__(name, json_snippet, stack)
 
     def handle_create(self):
-        vol = self.nova('volume').volumes.create(self.properties['Size'],
-                            display_name=self.physical_resource_name(),
-                            display_description=self.physical_resource_name())
+        vol = self.nova('volume').volumes.create(
+            self.properties['Size'],
+            display_name=self.physical_resource_name(),
+            display_description=self.physical_resource_name())
 
         while vol.status == 'creating':
             eventlet.sleep(1)
@@ -119,7 +120,7 @@ class VolumeAttachment(resource.Resource):
                 vol.get()
         except clients.novaclient.exceptions.NotFound as e:
             logger.warning('Deleting VolumeAttachment %s %s - not found' %
-                    (server_id, volume_id))
+                          (server_id, volume_id))
 
 
 def resource_mapping():

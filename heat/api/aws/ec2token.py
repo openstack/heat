@@ -76,7 +76,7 @@ class EC2Token(wsgi.Middleware):
                                     'verb': req.method,
                                     'path': req.path,
                                     'params': auth_params,
-                                   }}
+                                    }}
         creds_json = None
         try:
             creds_json = json.dumps(creds)

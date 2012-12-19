@@ -33,9 +33,9 @@ def upgrade(migrate_engine):
         Column('auth_url', Text()),
         Column('aws_auth_url', Text()),
         Column('tenant_id', String(length=256, convert_unicode=False,
-                                assert_unicode=None,
-                                unicode_error=None,
-                                _warn_on_bytestring=False)),
+                                   assert_unicode=None,
+                                   unicode_error=None,
+                                   _warn_on_bytestring=False)),
         Column('aws_creds', Text())
     )
 

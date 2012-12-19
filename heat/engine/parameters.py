@@ -262,8 +262,8 @@ class Parameters(collections.Mapping):
         Map the supplied filter function onto each Parameter (with an
         optional filter function) and return the resulting dictionary.
         '''
-        return dict((n, func(p)) for n, p in self.params.iteritems()
-                                 if filter_func(p))
+        return dict((n, func(p))
+                    for n, p in self.params.iteritems() if filter_func(p))
 
     def user_parameters(self):
         '''

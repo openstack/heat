@@ -43,10 +43,10 @@ def parse(tmpl_str):
         except yaml.scanner.ScannerError as e:
             raise ValueError(e)
         else:
-            if tpl == None:
+            if tpl is None:
                 tpl = {}
             default_for_missing(tpl, u'HeatTemplateFormatVersion',
-                HEAT_VERSIONS)
+                                HEAT_VERSIONS)
     return tpl
 
 
@@ -73,7 +73,7 @@ def convert_json_to_yaml(json_str):
     global key_order
     # Replace AWS format version with Heat format version
     json_str = re.sub('"AWSTemplateFormatVersion"\s*:\s*"[^"]+"\s*,',
-        '', json_str)
+                      '', json_str)
 
     # insert a sortable order into the key to preserve file ordering
     key_order = 0

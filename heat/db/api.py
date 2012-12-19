@@ -34,8 +34,7 @@ SQL_IDLE_TIMEOUT = 3600
 db_opts = [
     cfg.StrOpt('db_backend',
                default='sqlalchemy',
-               help='The backend to use for db'),
-    ]
+               help='The backend to use for db')]
 
 IMPL = utils.LazyPluggable('db_backend',
                            sqlalchemy='heat.db.sqlalchemy.api')

@@ -74,9 +74,9 @@ class StackController(object):
         Parameters.member.1.ParameterValue
         """
         return api_utils.extract_param_pairs(params,
-                                            prefix='Parameters',
-                                            keyname='ParameterKey',
-                                            valuename='ParameterValue')
+                                             prefix='Parameters',
+                                             keyname='ParameterKey',
+                                             valuename='ParameterValue')
 
     def _get_identity(self, con, stack_name):
         """
@@ -128,7 +128,7 @@ class StackController(object):
             return exception.map_remote_error(ex)
 
         res = {'StackSummaries': [format_stack_summary(s)
-                                   for s in stack_list['stacks']]}
+                                  for s in stack_list['stacks']]}
 
         return api_utils.format_response('ListStacks', res)
 
@@ -145,8 +145,8 @@ class StackController(object):
             }
 
             def replacecolon(d):
-                return dict(map(lambda (k, v):
-                    (k.replace(':', '.'), v), d.items()))
+                return dict(map(lambda (k, v): (k.replace(':', '.'), v),
+                                d.items()))
 
             def transform(attrs):
                 """
@@ -193,9 +193,9 @@ class StackController(object):
             # Reformat Parameters dict-of-dict into AWS API format
             # This is a list-of-dict with nasty "ParameterKey" : key
             # "ParameterValue" : value format.
-            result['Parameters'] = [{'ParameterKey':k,
-                'ParameterValue':v}
-                for (k, v) in result['Parameters'].items()]
+            result['Parameters'] = [{'ParameterKey': k,
+                                    'ParameterValue': v}
+                                    for (k, v) in result['Parameters'].items()]
 
             return self._id_format(result)
 
@@ -237,9 +237,10 @@ class StackController(object):
         return None
 
     CREATE_OR_UPDATE_ACTION = (
-        CREATE_STACK, UPDATE_STACK
-        ) = (
-        "CreateStack", "UpdateStack")
+        CREATE_STACK, UPDATE_STACK,
+    ) = (
+        "CreateStack", "UpdateStack",
+    )
 
     def create(self, req):
         return self.create_or_update(req, self.CREATE_STACK)
@@ -349,7 +350,10 @@ class StackController(object):
         Get the estimated monthly cost of a template
         """
         return api_utils.format_response('EstimateTemplateCost',
-            {'Url': 'http://en.wikipedia.org/wiki/Gratis'})
+                                         {'Url':
+                                          'http://en.wikipedia.org/wiki/Gratis'
+                                          }
+                                         )
 
     def validate_template(self, req):
         """
@@ -421,8 +425,8 @@ class StackController(object):
             }
 
             result = api_utils.reformat_dict_keys(keymap, e)
-            result['ResourceProperties'] = json.dumps(
-                                           result['ResourceProperties'])
+            result['ResourceProperties'] = json.dumps(result[
+                                                      'ResourceProperties'])
 
             return self._id_format(result)
 
@@ -439,7 +443,7 @@ class StackController(object):
         result = [format_stack_event(e) for e in events]
 
         return api_utils.format_response('DescribeStackEvents',
-            {'StackEvents': result})
+                                         {'StackEvents': result})
 
     def describe_stack_resource(self, req):
         """
@@ -472,9 +476,10 @@ class StackController(object):
 
         try:
             identity = self._get_identity(con, req.params['StackName'])
-            resource_details = self.engine_rpcapi.describe_stack_resource(con,
-                        stack_identity=identity,
-                        resource_name=req.params.get('LogicalResourceId'))
+            resource_details = self.engine_rpcapi.describe_stack_resource(
+                con,
+                stack_identity=identity,
+                resource_name=req.params.get('LogicalResourceId'))
 
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
@@ -482,7 +487,7 @@ class StackController(object):
         result = format_resource_detail(resource_details)
 
         return api_utils.format_response('DescribeStackResource',
-            {'StackResourceDetail': result})
+                                         {'StackResourceDetail': result})
 
     def describe_stack_resources(self, req):
         """
@@ -530,7 +535,8 @@ class StackController(object):
 
         try:
             identity = self._get_identity(con, stack_name)
-            resources = self.engine_rpcapi.describe_stack_resources(con,
+            resources = self.engine_rpcapi.describe_stack_resources(
+                con,
                 stack_identity=identity,
                 physical_resource_id=physical_resource_id,
                 logical_resource_id=req.params.get('LogicalResourceId'))
@@ -541,7 +547,7 @@ class StackController(object):
         result = [format_stack_resource(r) for r in resources]
 
         return api_utils.format_response('DescribeStackResources',
-            {'StackResources': result})
+                                         {'StackResources': result})
 
     def list_stack_resources(self, req):
         """
@@ -567,15 +573,16 @@ class StackController(object):
 
         try:
             identity = self._get_identity(con, req.params['StackName'])
-            resources = self.engine_rpcapi.list_stack_resources(con,
-                    stack_identity=identity)
+            resources = self.engine_rpcapi.list_stack_resources(
+                con,
+                stack_identity=identity)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
         summaries = [format_resource_summary(r) for r in resources]
 
         return api_utils.format_response('ListStackResources',
-            {'StackResourceSummaries': summaries})
+                                         {'StackResourceSummaries': summaries})
 
 
 def create_resource(options):

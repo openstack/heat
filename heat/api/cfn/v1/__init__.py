@@ -67,7 +67,7 @@ class API(wsgi.Router):
 
         for action in self._actions:
             mapper.connect("/", controller=stacks_resource, action=action,
-                conditions=conditions(action))
+                           conditions=conditions(action))
 
         mapper.connect("/", controller=stacks_resource, action="index")
 

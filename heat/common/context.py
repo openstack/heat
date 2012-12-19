@@ -114,10 +114,8 @@ def get_admin_context(read_deleted="no"):
 
 class ContextMiddleware(wsgi.Middleware):
 
-    opts = [
-        cfg.BoolOpt('owner_is_tenant', default=True),
-        cfg.StrOpt('admin_role', default='admin'),
-        ]
+    opts = [cfg.BoolOpt('owner_is_tenant', default=True),
+            cfg.StrOpt('admin_role', default='admin')]
 
     def __init__(self, app, conf, **local_conf):
         cfg.CONF.register_opts(self.opts)

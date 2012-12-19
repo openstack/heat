@@ -178,7 +178,7 @@ class LoadBalancer(stack.Stack):
         'Timeout': {'Type': 'Number',
                     'Required': True},
         'UnhealthyThreshold': {'Type': 'Number',
-                              'Required': True},
+                               'Required': True},
     }
 
     properties_schema = {

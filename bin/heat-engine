@@ -57,7 +57,6 @@ if __name__ == '__main__':
     from heat.engine import service as engine
 
     db_api.configure()
-    srv = engine.EngineService(cfg.CONF.host,
-                                'engine')
+    srv = engine.EngineService(cfg.CONF.host, 'engine')
     launcher = service.launch(srv)
     launcher.wait()

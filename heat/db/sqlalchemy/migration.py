@@ -43,8 +43,8 @@ def patched_with_engine(f, *a, **kw):
 #                on that version or higher, this can be removed
 MIN_PKG_VERSION = dist_version.StrictVersion('0.7.3')
 if (not hasattr(migrate, '__version__') or
-    dist_version.StrictVersion(migrate.__version__) < MIN_PKG_VERSION):
-    migrate_util.with_engine = patched_with_engine
+        dist_version.StrictVersion(migrate.__version__) < MIN_PKG_VERSION):
+        migrate_util.with_engine = patched_with_engine
 
 
 # NOTE(jkoelker) Delay importing migrate until we are patched
@@ -90,7 +90,7 @@ def db_version():
         meta.reflect(bind=engine)
         try:
             for table in ('stack', 'resource', 'event',
-                            'parsed_template', 'raw_template'):
+                          'parsed_template', 'raw_template'):
                 assert table in meta.tables
             return db_version_control(1)
         except AssertionError:

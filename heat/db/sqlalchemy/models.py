@@ -144,20 +144,22 @@ class Stack(BASE, HeatBase):
 
     __tablename__ = 'stack'
 
-    id = Column(String, primary_key=True,
-        default=uuidutils.generate_uuid)
+    id = Column(String, primary_key=True, default=uuidutils.generate_uuid)
     name = Column(String)
-    raw_template_id = Column(Integer, ForeignKey('raw_template.id'),
-                            nullable=False)
-    raw_template = relationship(RawTemplate,
-        backref=backref('stack'))
+    raw_template_id = Column(
+        Integer,
+        ForeignKey('raw_template.id'),
+        nullable=False)
+    raw_template = relationship(RawTemplate, backref=backref('stack'))
     username = Column(String)
     tenant = Column(String)
     status = Column('status', String)
     status_reason = Column('status_reason', String)
     parameters = Column('parameters', Json)
-    user_creds_id = Column(Integer, ForeignKey('user_creds.id'),
-                           nullable=False)
+    user_creds_id = Column(
+        Integer,
+        ForeignKey('user_creds.id'),
+        nullable=False)
     owner_id = Column(Integer, nullable=True)
     timeout = Column(Integer)
 
@@ -180,8 +182,7 @@ class UserCreds(BASE, HeatBase):
     aws_auth_url = Column(String)
     tenant_id = Column(String)
     aws_creds = Column(String)
-    stack = relationship(Stack,
-        backref=backref('user_creds'))
+    stack = relationship(Stack, backref=backref('user_creds'))
 
 
 class Event(BASE, HeatBase):
@@ -190,10 +191,8 @@ class Event(BASE, HeatBase):
     __tablename__ = 'event'
 
     id = Column(Integer, primary_key=True)
-    stack_id = Column(String, ForeignKey('stack.id'),
-                        nullable=False)
-    stack = relationship(Stack,
-        backref=backref('events'))
+    stack_id = Column(String, ForeignKey('stack.id'), nullable=False)
+    stack = relationship(Stack, backref=backref('events'))
 
     name = Column(String)
     logical_resource_id = Column(String)
@@ -216,8 +215,7 @@ class Resource(BASE, HeatBase):
     # odd name as "metadata" is reserved
     rsrc_metadata = Column('rsrc_metadata', Json)
 
-    stack_id = Column(String, ForeignKey('stack.id'),
-                                 nullable=False)
+    stack_id = Column(String, ForeignKey('stack.id'), nullable=False)
     stack = relationship(Stack, backref=backref('resources'))
 
 
@@ -232,8 +230,7 @@ class WatchRule(BASE, HeatBase):
     state = Column('state', String)
     last_evaluated = Column(DateTime, default=timeutils.utcnow)
 
-    stack_id = Column(String, ForeignKey('stack.id'),
-                                 nullable=False)
+    stack_id = Column(String, ForeignKey('stack.id'), nullable=False)
     stack = relationship(Stack, backref=backref('watch_rule'))
 
 
@@ -245,6 +242,8 @@ class WatchData(BASE, HeatBase):
     id = Column(Integer, primary_key=True)
     data = Column('data', Json)
 
-    watch_rule_id = Column(Integer, ForeignKey('watch_rule.id'),
-                           nullable=False)
+    watch_rule_id = Column(
+        Integer,
+        ForeignKey('watch_rule.id'),
+        nullable=False)
     watch_rule = relationship(WatchRule, backref=backref('watch_data'))

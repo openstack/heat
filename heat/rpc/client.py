@@ -52,8 +52,8 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
 
     def __init__(self):
         super(EngineClient, self).__init__(
-                topic=FLAGS.engine_topic,
-                default_version=self.BASE_RPC_API_VERSION)
+            topic=FLAGS.engine_topic,
+            default_version=self.BASE_RPC_API_VERSION)
 
     def identify_stack(self, ctxt, stack_name):
         """
@@ -160,9 +160,10 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         :param params: Params passed from API.
         """
         rpc_method = self.cast if cast else self.call
-        return rpc_method(ctxt, self.make_msg('delete_stack',
-                                              stack_identity=stack_identity),
-                  topic=_engine_topic(self.topic, ctxt, None))
+        return rpc_method(ctxt,
+                          self.make_msg('delete_stack',
+                                        stack_identity=stack_identity),
+                          topic=_engine_topic(self.topic, ctxt, None))
 
     def list_resource_types(self, ctxt):
         """

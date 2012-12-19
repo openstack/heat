@@ -57,7 +57,7 @@ class HeatAPIException(webob.exc.HTTPError):
         else:
             message = self.explanation
         return {'ErrorResponse': {'Error': {'Type': self.err_type,
-            'Code': self.title, 'Message': message}}}
+                'Code': self.title, 'Message': message}}}
 
 
 # Common Error Subclasses:

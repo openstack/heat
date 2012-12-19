@@ -22,12 +22,11 @@ logger = logging.getLogger(__name__)
 
 class FloatingIP(quantum.QuantumResource):
     properties_schema = {'floating_network_id': {'Type': 'String',
-                                    'Required': True},
-                        'value_specs': {'Type': 'Map',
-                                       'Default': {}},
-                        'port_id': {'Type': 'String'},
-                        'fixed_ip_address': {'Type': 'String'},
-    }
+                                                 'Required': True},
+                         'value_specs': {'Type': 'Map',
+                                         'Default': {}},
+                         'port_id': {'Type': 'String'},
+                         'fixed_ip_address': {'Type': 'String'}}
 
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
@@ -47,11 +46,10 @@ class FloatingIP(quantum.QuantumResource):
 
 class FloatingIPAssociation(quantum.QuantumResource):
     properties_schema = {'floatingip_id': {'Type': 'String',
-                                    'Required': True},
-                        'port_id': {'Type': 'String',
-                                    'Required': True},
-                        'fixed_ip_address': {'Type': 'String'}
-    }
+                                           'Required': True},
+                         'port_id': {'Type': 'String',
+                                     'Required': True},
+                         'fixed_ip_address': {'Type': 'String'}}
 
     def __init__(self, name, json_snippet, stack):
         super(FloatingIPAssociation, self).__init__(name, json_snippet, stack)
@@ -69,7 +67,7 @@ class FloatingIPAssociation(quantum.QuantumResource):
         client = self.quantum()
         (floatingip_id, port_id) = self.resource_id.split(':')
         client.update_floatingip(floatingip_id,
-            {'floatingip': {'port_id': None}})
+                                 {'floatingip': {'port_id': None}})
 
 
 def resource_mapping():

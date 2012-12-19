@@ -45,7 +45,7 @@ def _register_class(resource_type, resource_class):
     logger.info(_('Registering resource type %s') % resource_type)
     if resource_type in _resource_classes:
         logger.warning(_('Replacing existing resource type %s') %
-                resource_type)
+                       resource_type)
 
     _resource_classes[resource_type] = resource_class
 
