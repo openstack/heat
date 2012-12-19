@@ -96,6 +96,9 @@ class NestedStack(Stack):
             if stack is not None:
                 stack.delete()
 
+    def FnGetRefId(self):
+        return self.nested().identifier().arn()
+
     def FnGetAtt(self, key):
         if not key.startswith('Outputs.'):
             raise exception.InvalidTemplateAttribute(
