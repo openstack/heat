@@ -142,14 +142,14 @@ class EngineService(service.Service):
     @request_context
     def show_stack(self, context, stack_identity):
         """
-        The show_stack method returns the attributes of one stack.
+        Return detailed information about one or all stacks.
         arg1 -> RPC context.
-        arg2 -> Name of the stack you want to see
+        arg2 -> Name of the stack you want to show, or None to show all
         """
-        if stack_identity is None:
-            raise AttributeError('No stack_identity provided')
-
-        stacks = [self._get_stack(context, stack_identity)]
+        if stack_identity is not None:
+            stacks = [self._get_stack(context, stack_identity)]
+        else:
+            stacks = db_api.stack_get_all_by_tenant(context) or []
 
         def format_stack_detail(s):
             stack = parser.Stack.load(context, stack=s)

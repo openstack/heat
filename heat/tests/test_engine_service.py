@@ -463,17 +463,25 @@ class stackServiceTest(unittest.TestCase):
 
             self.assertTrue('event_time' in ev)
 
-    def test_stack_describe_all(self):
+    def test_stack_list_all(self):
         sl = self.man.list_stacks(self.ctx)
 
         self.assertEqual(len(sl['stacks']), 1)
         for s in sl['stacks']:
+            self.assertTrue('creation_time' in s)
+            self.assertTrue('updated_time' in s)
+            self.assertTrue('stack_identity' in s)
             self.assertNotEqual(s['stack_identity'], None)
+            self.assertTrue('stack_name' in s)
+            self.assertEqual(s['stack_name'], self.stack_name)
+            self.assertTrue('stack_status' in s)
+            self.assertTrue('stack_status_reason' in s)
+            self.assertTrue('description' in s)
             self.assertNotEqual(s['description'].find('WordPress'), -1)
 
-    def test_stack_describe_all_empty(self):
+    def test_stack_list_all_empty(self):
         self.tearDown()
-        self.tenant = 'stack_describe_all_empty_tenant'
+        self.tenant = 'stack_list_all_empty_tenant'
         self.setUp()
 
         sl = self.man.list_stacks(self.ctx)
@@ -504,6 +512,33 @@ class stackServiceTest(unittest.TestCase):
         self.assertTrue('description' in s)
         self.assertNotEqual(s['description'].find('WordPress'), -1)
         self.assertTrue('parameters' in s)
+
+    def test_stack_describe_all(self):
+        sl = self.man.show_stack(self.ctx, None)
+
+        self.assertEqual(len(sl['stacks']), 1)
+
+        s = sl['stacks'][0]
+        self.assertTrue('creation_time' in s)
+        self.assertTrue('updated_time' in s)
+        self.assertTrue('stack_identity' in s)
+        self.assertNotEqual(s['stack_identity'], None)
+        self.assertTrue('stack_name' in s)
+        self.assertEqual(s['stack_name'], self.stack_name)
+        self.assertTrue('stack_status' in s)
+        self.assertTrue('stack_status_reason' in s)
+        self.assertTrue('description' in s)
+        self.assertNotEqual(s['description'].find('WordPress'), -1)
+        self.assertTrue('parameters' in s)
+
+    def test_stack_describe_all_empty(self):
+        self.tearDown()
+        self.tenant = 'stack_describe_all_empty_tenant'
+        self.setUp()
+
+        sl = self.man.show_stack(self.ctx, None)
+
+        self.assertEqual(len(sl['stacks']), 0)
 
     def test_list_resource_types(self):
         resources = self.man.list_resource_types(self.ctx)

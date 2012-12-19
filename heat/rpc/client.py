@@ -79,11 +79,10 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
 
     def show_stack(self, ctxt, stack_identity):
         """
-        The show_stack method returns the attributes of one stack.
-
+        Return detailed information about one or all stacks.
         :param ctxt: RPC context.
-        :param stack_identity: Name of the stack you want to see,
-                           or None to see all
+        :param stack_identity: Name of the stack you want to show, or None to
+                               show all
         """
         return self.call(ctxt, self.make_msg('show_stack',
                                              stack_identity=stack_identity),
