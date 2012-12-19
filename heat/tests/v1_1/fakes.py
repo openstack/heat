@@ -73,57 +73,37 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def get_limits(self, **kw):
         return (200, {"limits": {
-            "rate": [
-                {
-                    "uri": "*",
-                    "regex": ".*",
-                    "limit": [
-                        {
-                            "value": 10,
-                            "verb": "POST",
-                            "remaining": 2,
-                            "unit": "MINUTE",
-                            "next-available": "2011-12-15T22:42:45Z"
-                        },
-                        {
-                            "value": 10,
-                            "verb": "PUT",
-                            "remaining": 2,
-                            "unit": "MINUTE",
-                            "next-available": "2011-12-15T22:42:45Z"
-                        },
-                        {
-                            "value": 100,
-                            "verb": "DELETE",
-                            "remaining": 100,
-                            "unit": "MINUTE",
-                            "next-available": "2011-12-15T22:42:45Z"
-                        }
-                    ]
-                },
-                {
-                    "uri": "*/servers",
-                    "regex": "^/servers",
-                    "limit": [
-                        {
-                            "verb": "POST",
-                            "value": 25,
-                            "remaining": 24,
-                            "unit": "DAY",
-                            "next-available": "2011-12-15T22:42:45Z"
-                        }
-                    ]
-                }
-            ],
-            "absolute": {
-                "maxTotalRAMSize": 51200,
-                "maxServerMeta": 5,
-                "maxImageMeta": 5,
-                "maxPersonality": 5,
-                "maxPersonalitySize": 10240
-            },
-        },
-    })
+                      "rate": [{"uri": "*",
+                                "regex": ".*",
+                                "limit": [
+                                {"value": 10,
+                                 "verb": "POST",
+                                 "remaining": 2,
+                                 "unit": "MINUTE",
+                                 "next-available": "2011-12-15T22:42:45Z"},
+                                {"value": 10,
+                                 "verb": "PUT",
+                                 "remaining": 2,
+                                 "unit": "MINUTE",
+                                 "next-available": "2011-12-15T22:42:45Z"},
+                                {"value": 100,
+                                 "verb": "DELETE",
+                                 "remaining": 100,
+                                 "unit": "MINUTE",
+                                 "next-available": "2011-12-15T22:42:45Z"}]},
+                               {"uri": "*/servers",
+                                "regex": "^/servers",
+                                "limit": [{"verb": "POST",
+                                           "value": 25,
+                                           "remaining": 24,
+                                           "unit": "DAY",
+                                           "next-available":
+                                           "2011-12-15T22:42:45Z"}]}],
+                      "absolute": {"maxTotalRAMSize": 51200,
+                                   "maxServerMeta": 5,
+                                   "maxImageMeta": 5,
+                                   "maxPersonality": 5,
+                                   "maxPersonalitySize": 10240}}})
 
     #
     # Servers
@@ -137,109 +117,67 @@ class FakeHTTPClient(base_client.HTTPClient):
         ]})
 
     def get_servers_detail(self, **kw):
-        return (200, {"servers": [
-            {
-                "id": 1234,
-                "name": "sample-server",
-                "image": {
-                    "id": 2,
-                    "name": "sample image",
-                },
-                "flavor": {
-                    "id": 1,
-                    "name": "256 MB Server",
-                },
-                "hostId": "e4d909c290d0fb1ca068ffaddf22cbd0",
-                "status": "BUILD",
-                "progress": 60,
-                "addresses": {
-                    "public": [{
-                        "version": 4,
-                        "addr": "1.2.3.4",
-                    },
-                    {
-                        "version": 4,
-                        "addr": "5.6.7.8",
-                    }],
-                    "private": [{
-                        "version": 4,
-                        "addr": "10.11.12.13",
-                    }],
-                },
-                "metadata": {
-                    "Server Label": "Web Head 1",
-                    "Image Version": "2.1"
-                }
-            },
-            {
-                "id": 5678,
-                "name": "sample-server2",
-                "image": {
-                    "id": 2,
-                    "name": "sample image",
-                },
-                "flavor": {
-                    "id": 1,
-                    "name": "256 MB Server",
-                },
-                "hostId": "9e107d9d372bb6826bd81d3542a419d6",
-                "status": "ACTIVE",
-                "addresses": {
-                    "public": [{
-                        "version": 4,
-                        "addr": "4.5.6.7",
-                    },
-                    {
-                        "version": 4,
-                        "addr": "5.6.9.8",
-                    }],
-                    "private": [{
-                        "version": 4,
-                        "addr": "10.13.12.13",
-                    }],
-                },
-                "metadata": {
-                    "Server Label": "DB 1"
-                }
-            },
-            {
-                "id": 9999,
-                "name": "sample-server3",
-                "image": {
-                    "id": 3,
-                    "name": "sample image",
-                },
-                "flavor": {
-                    "id": 3,
-                    "name": "m1.large",
-                },
-                "hostId": "9e107d9d372bb6826bd81d3542a419d6",
-                "status": "ACTIVE",
-                "addresses": {
-                    "public": [{
-                        "version": 4,
-                        "addr": "4.5.6.7",
-                    },
-                    {
-                        "version": 4,
-                        "addr": "5.6.9.8",
-                    }],
-                    "private": [{
-                        "version": 4,
-                        "addr": "10.13.12.13",
-                    }],
-                },
-                "metadata": {
-                    "Server Label": "DB 1"
-                }
-            }
-        ]})
+        return (200, {"servers": [{"id": 1234,
+                                   "name": "sample-server",
+                                   "image": {"id": 2,
+                                             "name": "sample image"},
+                                   "flavor": {"id": 1,
+                                              "name": "256 MB Server"},
+                                   "hostId":
+                                   "e4d909c290d0fb1ca068ffaddf22cbd0",
+                                   "status": "BUILD",
+                                   "progress": 60,
+                                   "addresses": {"public": [{"version": 4,
+                                                             "addr":
+                                                             "1.2.3.4"},
+                                                            {"version": 4,
+                                                             "addr":
+                                                             "5.6.7.8"}],
+                                   "private": [{"version": 4,
+                                                "addr": "10.11.12.13"}]},
+                                   "metadata": {"Server Label": "Web Head 1",
+                                                "Image Version": "2.1"}},
+                                  {"id": 5678,
+                                   "name": "sample-server2",
+                                   "image": {"id": 2,
+                                             "name": "sample image"},
+                                   "flavor": {"id": 1,
+                                              "name": "256 MB Server"},
+                                   "hostId":
+                                   "9e107d9d372bb6826bd81d3542a419d6",
+                                   "status": "ACTIVE",
+                                   "addresses": {"public": [{"version": 4,
+                                                             "addr":
+                                                             "4.5.6.7"},
+                                                            {"version": 4,
+                                                             "addr":
+                                                             "5.6.9.8"}],
+                                   "private": [{"version": 4,
+                                                "addr": "10.13.12.13"}]},
+                                   "metadata": {"Server Label": "DB 1"}},
+                                  {"id": 9999,
+                                   "name": "sample-server3",
+                                   "image": {"id": 3,
+                                             "name": "sample image"},
+                                   "flavor": {"id": 3,
+                                              "name": "m1.large"},
+                                   "hostId":
+                                   "9e107d9d372bb6826bd81d3542a419d6",
+                                   "status": "ACTIVE",
+                                   "addresses": {
+                                   "public": [{"version": 4,
+                                               "addr": "4.5.6.7"},
+                                              {"version": 4,
+                                               "addr": "5.6.9.8"}],
+                                   "private": [{"version": 4,
+                                                "addr": "10.13.12.13"}]},
+                                   "metadata": {"Server Label": "DB 1"}}]})
 
     def post_servers(self, body, **kw):
         assert body.keys() == ['server']
         fakes.assert_has_keys(body['server'],
-                        required=['name', 'imageRef', 'flavorRef'],
-                        optional=['metadata', 'personality'])
+                              required=['name', 'imageRef', 'flavorRef'],
+                              optional=['metadata', 'personality'])
         if 'personality' in body['server']:
             for pfile in body['server']['personality']:
                 fakes.assert_has_keys(pfile, required=['path', 'contents'])
@@ -326,18 +264,12 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (200, 'Fake diagnostics')
 
     def get_servers_1234_actions(self, **kw):
-        return (200, {'actions': [
-            {
-                'action': 'rebuild',
-                'error': None,
-                'created_at': '2011-12-30 11:45:36'
-            },
-            {
-                'action': 'reboot',
-                'error': 'Failed!',
-                'created_at': '2011-12-30 11:40:29'
-            },
-        ]})
+        return (200, {'actions': [{'action': 'rebuild',
+                                   'error': None,
+                                   'created_at': '2011-12-30 11:45:36'},
+                                  {'action': 'reboot',
+                                   'error': 'Failed!',
+                                   'created_at': '2011-12-30 11:40:29'}]})
 
     #
     # Server Addresses
@@ -425,9 +357,7 @@ class FakeHTTPClient(base_client.HTTPClient):
     #
 
     def get_os_cloudpipe(self, **kw):
-        return (200, {'cloudpipes': [
-            {'project_id':1}
-        ]})
+        return (200, {'cloudpipes': [{'project_id': 1}]})
 
     def post_os_cloudpipe(self, **ks):
         return (202, {'instance_id': '9d5824aa-20e6-4b9f-b967-76a699fc51fd'})
@@ -484,22 +414,24 @@ class FakeHTTPClient(base_client.HTTPClient):
         ]})
 
     def get_os_floating_ips_1(self, **kw):
-        return (200, {'floating_ip':
-            {'id': 1, 'fixed_ip': '10.0.0.1', 'ip': '11.0.0.1'}
-        })
+        return (200, {'floating_ip': {'id': 1,
+                                      'fixed_ip': '10.0.0.1',
+                                      'ip': '11.0.0.1'}})
 
     def post_os_floating_ips(self, body, **kw):
         return (202, self.get_os_floating_ips_1()[1])
 
     def post_os_floating_ips(self, body):
         if body.get('pool'):
-            return (200, {'floating_ip':
-                {'id': 1, 'fixed_ip': '10.0.0.1', 'ip': '11.0.0.1',
-                                                            'pool': 'nova'}})
+            return (200, {'floating_ip': {'id': 1,
+                                          'fixed_ip': '10.0.0.1',
+                                          'ip': '11.0.0.1',
+                                          'pool': 'nova'}})
         else:
-            return (200, {'floating_ip':
-                {'id': 1, 'fixed_ip': '10.0.0.1', 'ip': '11.0.0.1',
-                                                            'pool': None}})
+            return (200, {'floating_ip': {'id': 1,
+                                          'fixed_ip': '10.0.0.1',
+                                          'ip': '11.0.0.1',
+                                          'pool': None}})
 
     def delete_os_floating_ips_1(self, **kw):
         return (204, None)
@@ -512,42 +444,39 @@ class FakeHTTPClient(base_client.HTTPClient):
     def get_os_floating_ip_dns_testdomain_entries(self, **kw):
         if kw.get('ip'):
             return (205, {'dns_entries':
-                          [{'dns_entry':
-                             {'ip': kw.get('ip'),
-                              'name': "host1",
-                              'type': "A",
-                              'domain': 'testdomain'}},
-                           {'dns_entry':
-                             {'ip': kw.get('ip'),
-                              'name': "host2",
-                              'type': "A",
-                              'domain': 'testdomain'}}]})
+                          [{'dns_entry': {'ip': kw.get('ip'),
+                                          'name': "host1",
+                                          'type': "A",
+                                          'domain': 'testdomain'}},
+                           {'dns_entry': {'ip': kw.get('ip'),
+                                          'name': "host2",
+                                          'type': "A",
+                                          'domain': 'testdomain'}}]})
         else:
             return (404, None)
 
     def get_os_floating_ip_dns_testdomain_entries_testname(self, **kw):
-        return (205, {'dns_entry':
-                        {'ip': "10.10.10.10",
-                         'name': 'testname',
-                         'type': "A",
-                         'domain': 'testdomain'}})
+        return (205, {'dns_entry': {'ip': "10.10.10.10",
+                                    'name': 'testname',
+                                    'type': "A",
+                                    'domain': 'testdomain'}})
 
     def put_os_floating_ip_dns_testdomain(self, body, **kw):
         if body['domain_entry']['scope'] == 'private':
             fakes.assert_has_keys(body['domain_entry'],
-                            required=['availability_zone', 'scope'])
+                                  required=['availability_zone', 'scope'])
         elif body['domain_entry']['scope'] == 'public':
             fakes.assert_has_keys(body['domain_entry'],
-                            required=['project', 'scope'])
+                                  required=['project', 'scope'])
 
         else:
             fakes.assert_has_keys(body['domain_entry'],
-                            required=['project', 'scope'])
+                                  required=['project', 'scope'])
         return (205, None)
 
     def put_os_floating_ip_dns_testdomain_entries_testname(self, body, **kw):
         fakes.assert_has_keys(body['dns_entry'],
-                        required=['ip', 'dns_type'])
+                              required=['ip', 'dns_type'])
         return (205, None)
 
     def delete_os_floating_ip_dns_testdomain(self, **kw):
@@ -560,57 +489,43 @@ class FakeHTTPClient(base_client.HTTPClient):
     # Images
     #
     def get_images(self, **kw):
-        return (200, {'images': [
-            {'id': 1, 'name': 'CentOS 5.2'},
-            {'id': 2, 'name': 'My Server Backup'},
-            {'id': 3, 'name': 'F17-x86_64-gold'},
-            {'id': 4, 'name': 'F17-x86_64-cfntools'}
-        ]})
+        return (200, {'images': [{'id': 1, 'name': 'CentOS 5.2'},
+                                 {'id': 2, 'name': 'My Server Backup'},
+                                 {'id': 3, 'name': 'F17-x86_64-gold'},
+                                 {'id': 4, 'name': 'F17-x86_64-cfntools'}]})
 
     def get_images_detail(self, **kw):
-        return (200, {'images': [
-            {
-                'id': 1,
-                'name': 'CentOS 5.2',
-                "updated": "2010-10-10T12:00:00Z",
-                "created": "2010-08-10T12:00:00Z",
-                "status": "ACTIVE",
-                "metadata": {
-                    "test_key": "test_value",
-                },
-                "links": {},
-            },
-            {
-                "id": 743,
-                "name": "My Server Backup",
-                "serverId": 1234,
-                "updated": "2010-10-10T12:00:00Z",
-                "created": "2010-08-10T12:00:00Z",
-                "status": "SAVING",
-                "progress": 80,
-                "links": {},
-            },
-            {
-                "id": 744,
-                "name": "F17-x86_64-gold",
-                "serverId": 9999,
-                "updated": "2010-10-10T12:00:00Z",
-                "created": "2010-08-10T12:00:00Z",
-                "status": "SAVING",
-                "progress": 80,
-                "links": {},
-            },
-            {
-                "id": 745,
-                "name": "F17-x86_64-cfntools",
-                "serverId": 9998,
-                "updated": "2010-10-10T12:00:00Z",
-                "created": "2010-08-10T12:00:00Z",
-                "status": "SAVING",
-                "progress": 80,
-                "links": {},
-            }
-        ]})
+        return (200, {'images': [{'id': 1,
+                                  'name': 'CentOS 5.2',
+                                  "updated": "2010-10-10T12:00:00Z",
+                                  "created": "2010-08-10T12:00:00Z",
+                                  "status": "ACTIVE",
+                                  "metadata": {"test_key": "test_value"},
+                                  "links": {}},
+                                 {"id": 743,
+                                  "name": "My Server Backup",
+                                  "serverId": 1234,
+                                  "updated": "2010-10-10T12:00:00Z",
+                                  "created": "2010-08-10T12:00:00Z",
+                                  "status": "SAVING",
+                                  "progress": 80,
+                                  "links": {}},
+                                 {"id": 744,
+                                  "name": "F17-x86_64-gold",
+                                  "serverId": 9999,
+                                  "updated": "2010-10-10T12:00:00Z",
+                                  "created": "2010-08-10T12:00:00Z",
+                                  "status": "SAVING",
+                                  "progress": 80,
+                                  "links": {}},
+                                 {"id": 745,
+                                  "name": "F17-x86_64-cfntools",
+                                  "serverId": 9998,
+                                  "updated": "2010-10-10T12:00:00Z",
+                                  "created": "2010-08-10T12:00:00Z",
+                                  "status": "SAVING",
+                                  "progress": 80,
+                                  "links": {}}]})
 
     def get_images_1(self, **kw):
         return (200, {'image': self.get_images_detail()[1]['images'][0]})
@@ -627,8 +542,7 @@ class FakeHTTPClient(base_client.HTTPClient):
         assert body.keys() == ['metadata']
         fakes.assert_has_keys(body['metadata'],
                               required=['test_key'])
-        return (200,
-            {'metadata': self.get_images_1()[1]['image']['metadata']})
+        return (200, {'metadata': self.get_images_1()[1]['image']['metadata']})
 
     def delete_images_1(self, **kw):
         return (204, None)
@@ -640,9 +554,8 @@ class FakeHTTPClient(base_client.HTTPClient):
     # Keypairs
     #
     def get_os_keypairs(self, *kw):
-        return (200, {"keypairs": [
-            {'fingerprint': 'FAKE_KEYPAIR', 'name': 'test'}
-        ]})
+        return (200, {"keypairs": [{'fingerprint': 'FAKE_KEYPAIR',
+                                    'name': 'test'}]})
 
     def delete_os_keypairs_test(self, **kw):
         return (202, None)
@@ -745,14 +658,16 @@ class FakeHTTPClient(base_client.HTTPClient):
     # Security Groups
     #
     def get_os_security_groups(self, **kw):
-        return (200, {"security_groups": [
-                {'id': 1, 'name': 'test', 'description': 'FAKE_SECURITY_GROUP'}
-        ]})
+        return (200, {"security_groups": [{'id': 1,
+                                           'name': 'test',
+                                           'description':
+                                           'FAKE_SECURITY_GROUP'}]})
 
     def get_os_security_groups_1(self, **kw):
-        return (200, {"security_group":
-                {'id': 1, 'name': 'test', 'description': 'FAKE_SECURITY_GROUP'}
-        })
+        return (200, {"security_group": {'id': 1,
+                                         'name': 'test',
+                                         'description':
+                                         'FAKE_SECURITY_GROUP'}})
 
     def delete_os_security_groups_1(self, **kw):
         return (202, None)
@@ -762,18 +677,20 @@ class FakeHTTPClient(base_client.HTTPClient):
         fakes.assert_has_keys(body['security_group'],
                               required=['name', 'description'])
         r = {'security_group':
-                self.get_os_security_groups()[1]['security_groups'][0]}
+             self.get_os_security_groups()[1]['security_groups'][0]}
         return (202, r)
 
     #
     # Security Group Rules
     #
     def get_os_security_group_rules(self, **kw):
-        return (200, {"security_group_rules": [
-                {'id': 1, 'parent_group_id': 1, 'group_id': 2,
-                 'ip_protocol': 'TCP', 'from_port': '22', 'to_port': 22,
-                 'cidr': '10.0.0.0/8'}
-        ]})
+        return (200, {"security_group_rules": [{'id': 1,
+                                               'parent_group_id': 1,
+                                               'group_id': 2,
+                                               'ip_protocol': 'TCP',
+                                               'from_port': '22',
+                                               'to_port': 22,
+                                               'cidr': '10.0.0.0/8'}]})
 
     def delete_os_security_group_rules_1(self, **kw):
         return (202, None)
@@ -781,11 +698,11 @@ class FakeHTTPClient(base_client.HTTPClient):
     def post_os_security_group_rules(self, body, **kw):
         assert body.keys() == ['security_group_rule']
         fakes.assert_has_keys(body['security_group_rule'],
-            required=['parent_group_id'],
-            optional=['group_id', 'ip_protocol', 'from_port',
-                      'to_port', 'cidr'])
+                              required=['parent_group_id'],
+                              optional=['group_id', 'ip_protocol', 'from_port',
+                                        'to_port', 'cidr'])
         r = {'security_group_rule':
-            self.get_os_security_group_rules()[1]['security_group_rules'][0]}
+             self.get_os_security_group_rules()[1]['security_group_rules'][0]}
         return (202, r)
 
     #
@@ -841,10 +758,10 @@ class FakeHTTPClient(base_client.HTTPClient):
     #
     def get_os_aggregates(self, *kw):
         return (200, {"aggregates": [
-            {'id':'1',
+            {'id': '1',
              'name': 'test',
              'availability_zone': 'nova1'},
-            {'id':'2',
+            {'id': '2',
              'name': 'test2',
              'availability_zone': 'nova1'},
         ]})

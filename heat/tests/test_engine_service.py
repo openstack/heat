@@ -218,9 +218,9 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
         stack_name = 'service_create/test_stack'
         stack = get_wordpress_stack('test_stack', self.ctx)
 
-        self.assertRaises(ValueError, self.man.create_stack,
-                                      self.ctx, stack_name,
-                                      stack.t, {}, {})
+        self.assertRaises(ValueError,
+                          self.man.create_stack,
+                          self.ctx, stack_name, stack.t, {}, {})
 
     def test_stack_create_invalid_resource_name(self):
         stack_name = 'service_create_test_stack_invalid_res'
@@ -229,9 +229,10 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
         tmpl['Resources']['Web/Server'] = tmpl['Resources']['WebServer']
         del tmpl['Resources']['WebServer']
 
-        self.assertRaises(ValueError, self.man.create_stack,
-                                      self.ctx, stack_name,
-                                      stack.t, {}, {})
+        self.assertRaises(ValueError,
+                          self.man.create_stack,
+                          self.ctx, stack_name,
+                          stack.t, {}, {})
 
     def test_stack_delete(self):
         stack_name = 'service_delete_test_stack'
@@ -414,9 +415,10 @@ class stackServiceTest(unittest.TestCase):
 
     def test_stack_by_name_tenants(self):
         self.assertEqual(self.stack.id,
-            db_api.stack_get_by_name(self.ctx, self.stack_name).id)
+                         db_api.stack_get_by_name(self.ctx,
+                                                  self.stack_name).id)
         ctx2 = create_context(self.m, self.username,
-            'stack_service_test_tenant2')
+                              'stack_service_test_tenant2')
         self.assertEqual(None, db_api.stack_get_by_name(ctx2, self.stack_name))
 
     def test_stack_event_list(self):
@@ -448,7 +450,7 @@ class stackServiceTest(unittest.TestCase):
 
             self.assertTrue('resource_status' in ev)
             self.assertTrue(ev['resource_status'] in ('IN_PROGRESS',
-                                                     'CREATE_COMPLETE'))
+                                                      'CREATE_COMPLETE'))
 
             self.assertTrue('resource_status_reason' in ev)
             self.assertEqual(ev['resource_status_reason'], 'state changed')
@@ -599,8 +601,8 @@ class stackServiceTest(unittest.TestCase):
 
     def test_stack_resources_describe_no_filter(self):
         resources = self.man.describe_stack_resources(self.ctx,
-                                                 self.stack_identity,
-                                                 None, None)
+                                                      self.stack_identity,
+                                                      None, None)
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
@@ -674,16 +676,15 @@ class stackServiceTest(unittest.TestCase):
         values = {'stack_id': self.stack.id,
                   'state': 'NORMAL',
                   'name': u'HttpFailureAlarm',
-                   'rule': {
-                        u'EvaluationPeriods': u'1',
-                        u'AlarmActions': [u'WebServerRestartPolicy'],
-                        u'AlarmDescription': u'Restart the WikiDatabase',
-                        u'Namespace': u'system/linux',
-                        u'Period': u'300',
-                        u'ComparisonOperator': u'GreaterThanThreshold',
-                        u'Statistic': u'SampleCount',
-                        u'Threshold': u'2',
-                        u'MetricName': u'ServiceFailure'}}
+                  'rule': {u'EvaluationPeriods': u'1',
+                           u'AlarmActions': [u'WebServerRestartPolicy'],
+                           u'AlarmDescription': u'Restart the WikiDatabase',
+                           u'Namespace': u'system/linux',
+                           u'Period': u'300',
+                           u'ComparisonOperator': u'GreaterThanThreshold',
+                           u'Statistic': u'SampleCount',
+                           u'Threshold': u'2',
+                           u'MetricName': u'ServiceFailure'}}
         db_ret = db_api.watch_rule_create(self.ctx, values)
         self.assertNotEqual(db_ret, None)
         values['name'] = "AnotherWatch"
@@ -716,16 +717,15 @@ class stackServiceTest(unittest.TestCase):
         values = {'stack_id': self.stack.id,
                   'state': 'NORMAL',
                   'name': u'HttpFailureAlarm',
-                   'rule': {
-                        u'EvaluationPeriods': u'1',
-                        u'AlarmActions': [u'WebServerRestartPolicy'],
-                        u'AlarmDescription': u'Restart the WikiDatabase',
-                        u'Namespace': u'system/linux',
-                        u'Period': u'300',
-                        u'ComparisonOperator': u'GreaterThanThreshold',
-                        u'Statistic': u'SampleCount',
-                        u'Threshold': u'2',
-                        u'MetricName': u'ServiceFailure'}}
+                  'rule': {u'EvaluationPeriods': u'1',
+                           u'AlarmActions': [u'WebServerRestartPolicy'],
+                           u'AlarmDescription': u'Restart the WikiDatabase',
+                           u'Namespace': u'system/linux',
+                           u'Period': u'300',
+                           u'ComparisonOperator': u'GreaterThanThreshold',
+                           u'Statistic': u'SampleCount',
+                           u'Threshold': u'2',
+                           u'MetricName': u'ServiceFailure'}}
         db_ret = db_api.watch_rule_create(self.ctx, values)
         self.assertNotEqual(db_ret, None)
 
@@ -733,10 +733,9 @@ class stackServiceTest(unittest.TestCase):
         watch = db_api.watch_rule_get_by_name(self.ctx, "HttpFailureAlarm")
         self.assertNotEqual(watch, None)
         values = {'watch_rule_id': watch.id,
-                  'data': {
-                        u'Namespace': u'system/linux',
-                        u'ServiceFailure': {
-                            u'Units': u'Counter', u'Value': 1}}}
+                  'data': {u'Namespace': u'system/linux',
+                           u'ServiceFailure': {
+                           u'Units': u'Counter', u'Value': 1}}}
         watch = db_api.watch_data_create(self.ctx, values)
 
         # Check there is one result returned
@@ -762,16 +761,15 @@ class stackServiceTest(unittest.TestCase):
         values = {'stack_id': self.stack.id,
                   'state': 'NORMAL',
                   'name': u'OverrideAlarm',
-                   'rule': {
-                        u'EvaluationPeriods': u'1',
-                        u'AlarmActions': [u'WebServerRestartPolicy'],
-                        u'AlarmDescription': u'Restart the WikiDatabase',
-                        u'Namespace': u'system/linux',
-                        u'Period': u'300',
-                        u'ComparisonOperator': u'GreaterThanThreshold',
-                        u'Statistic': u'SampleCount',
-                        u'Threshold': u'2',
-                        u'MetricName': u'ServiceFailure'}}
+                  'rule': {u'EvaluationPeriods': u'1',
+                           u'AlarmActions': [u'WebServerRestartPolicy'],
+                           u'AlarmDescription': u'Restart the WikiDatabase',
+                           u'Namespace': u'system/linux',
+                           u'Period': u'300',
+                           u'ComparisonOperator': u'GreaterThanThreshold',
+                           u'Statistic': u'SampleCount',
+                           u'Threshold': u'2',
+                           u'MetricName': u'ServiceFailure'}}
         db_ret = db_api.watch_rule_create(self.ctx, values)
         self.assertNotEqual(db_ret, None)
 
@@ -802,16 +800,15 @@ class stackServiceTest(unittest.TestCase):
         values = {'stack_id': self.stack.id,
                   'state': 'NORMAL',
                   'name': u'OverrideAlarm2',
-                   'rule': {
-                        u'EvaluationPeriods': u'1',
-                        u'AlarmActions': [u'WebServerRestartPolicy'],
-                        u'AlarmDescription': u'Restart the WikiDatabase',
-                        u'Namespace': u'system/linux',
-                        u'Period': u'300',
-                        u'ComparisonOperator': u'GreaterThanThreshold',
-                        u'Statistic': u'SampleCount',
-                        u'Threshold': u'2',
-                        u'MetricName': u'ServiceFailure'}}
+                  'rule': {u'EvaluationPeriods': u'1',
+                           u'AlarmActions': [u'WebServerRestartPolicy'],
+                           u'AlarmDescription': u'Restart the WikiDatabase',
+                           u'Namespace': u'system/linux',
+                           u'Period': u'300',
+                           u'ComparisonOperator': u'GreaterThanThreshold',
+                           u'Statistic': u'SampleCount',
+                           u'Threshold': u'2',
+                           u'MetricName': u'ServiceFailure'}}
         db_ret = db_api.watch_rule_create(self.ctx, values)
         self.assertNotEqual(db_ret, None)
 

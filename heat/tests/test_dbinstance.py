@@ -63,8 +63,8 @@ class DBInstanceTest(unittest.TestCase):
 
     def create_dbinstance(self, t, stack, resource_name):
         resource = dbi.DBInstance(resource_name,
-                                      t['Resources'][resource_name],
-                                      stack)
+                                  t['Resources'][resource_name],
+                                  stack)
         self.assertEqual(None, resource.validate())
         self.assertEqual(None, resource.create())
         self.assertEqual(dbi.DBInstance.CREATE_COMPLETE, resource.state)

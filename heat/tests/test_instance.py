@@ -64,13 +64,14 @@ class instancesTest(unittest.TestCase):
 
         # need to resolve the template functions
         server_userdata = instance._build_userdata(
-                                instance.t['Properties']['UserData'])
+            instance.t['Properties']['UserData'])
         self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(image=1, flavor=1, key_name='test',
-                name='%s.%s' % (stack_name, instance.name),
-                security_groups=None,
-                userdata=server_userdata, scheduler_hints=None,
-                meta=None).AndReturn(self.fc.servers.list()[1])
+        self.fc.servers.create(
+            image=1, flavor=1, key_name='test',
+            name='%s.%s' % (stack_name, instance.name),
+            security_groups=None,
+            userdata=server_userdata, scheduler_hints=None,
+            meta=None).AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
 
         self.assertEqual(instance.create(), None)
@@ -103,13 +104,14 @@ class instancesTest(unittest.TestCase):
 
         # need to resolve the template functions
         server_userdata = instance._build_userdata(
-                                instance.t['Properties']['UserData'])
+            instance.t['Properties']['UserData'])
         self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(image=1, flavor=1, key_name='test',
-                name='%s.%s' % (stack_name, instance.name),
-                security_groups=None,
-                userdata=server_userdata, scheduler_hints=None,
-                meta=None).AndReturn(self.fc.servers.list()[1])
+        self.fc.servers.create(
+            image=1, flavor=1, key_name='test',
+            name='%s.%s' % (stack_name, instance.name),
+            security_groups=None,
+            userdata=server_userdata, scheduler_hints=None,
+            meta=None).AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
 
         self.assertEqual(instance.create(), None)

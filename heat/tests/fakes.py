@@ -30,7 +30,7 @@ def assert_has_keys(dict, required=[], optional=[]):
         except AssertionError:
             extra_keys = set(keys).difference(set(required + optional))
             raise AssertionError("found unexpected keys: %s" %
-                    list(extra_keys))
+                                 list(extra_keys))
 
 
 class FakeClient(object):
@@ -43,10 +43,10 @@ class FakeClient(object):
         called = self.client.callstack[pos][0:2]
 
         assert self.client.callstack, \
-                       "Expected %s %s but no calls were made." % expected
+            "Expected %s %s but no calls were made." % expected
 
         assert expected == called, 'Expected %s %s; got %s %s' % \
-                                               (expected + called)
+            (expected + called)
 
         if body is not None:
             assert self.client.callstack[pos][2] == body
@@ -58,7 +58,7 @@ class FakeClient(object):
         expected = (method, url)
 
         assert self.client.callstack, \
-                       "Expected %s %s but no calls were made." % expected
+            "Expected %s %s but no calls were made." % expected
 
         found = False
         for entry in self.client.callstack:
@@ -67,7 +67,7 @@ class FakeClient(object):
                 break
 
         assert found, 'Expected %s %s; got %s' % \
-                              (expected, self.client.callstack)
+            (expected, self.client.callstack)
         if body is not None:
             try:
                 assert entry[2] == body

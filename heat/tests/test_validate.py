@@ -65,40 +65,40 @@ test_template_ref = '''
 
     "KeyName" : {
 ''' + \
-      '"Description" : "Name of an existing EC2' + \
-      'KeyPair to enable SSH access to the instances",' + \
-'''
-      "Type" : "String"
-    }
-  },
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        }
+      },
 
-  "Resources" : {
-    "WikiDatabase": {
-      "Type": "AWS::EC2::Instance",
-      "Properties": {
-        "ImageId": "image_name",
-        "InstanceType": "m1.large",
-        "KeyName": { "Ref" : "KeyName" }
-      }
-    },
-    "DataVolume" : {
-      "Type" : "AWS::EC2::Volume",
-      "Properties" : {
-        "Size" : "6",
-        "AvailabilityZone" : "nova"
-      }
-    },
-    "MountPoint" : {
-      "Type" : "AWS::EC2::VolumeAttachment",
-      "Properties" : {
-        "InstanceId" : { "Ref" : "%s" },
-        "VolumeId"  : { "Ref" : "DataVolume" },
-        "Device" : "/dev/vdb"
+      "Resources" : {
+        "WikiDatabase": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" }
+          }
+        },
+        "DataVolume" : {
+          "Type" : "AWS::EC2::Volume",
+          "Properties" : {
+            "Size" : "6",
+            "AvailabilityZone" : "nova"
+          }
+        },
+        "MountPoint" : {
+          "Type" : "AWS::EC2::VolumeAttachment",
+          "Properties" : {
+            "InstanceId" : { "Ref" : "%s" },
+            "VolumeId"  : { "Ref" : "DataVolume" },
+            "Device" : "/dev/vdb"
+          }
+        }
       }
     }
-  }
-}
-'''
+    '''
 test_template_findinmap_valid = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -106,41 +106,41 @@ test_template_findinmap_valid = '''
   "Parameters" : {
     "KeyName" : {
 ''' + \
-      '"Description" : "Name of an existing EC2 KeyPair to' + \
-      'enable SSH access to the instances",' + \
-'''
-      "Type" : "String"
-    }
-  },
+    '"Description" : "Name of an existing EC2 KeyPair to' + \
+    'enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        }
+      },
 
-  "Resources" : {
-    "WikiDatabase": {
-      "Type": "AWS::EC2::Instance",
-      "Properties": {
-        "ImageId": "image_name",
-        "InstanceType": "m1.large",
-        "KeyName": { "Ref" : "KeyName" }
-      }
-    },
-    "DataVolume" : {
-      "Type" : "AWS::EC2::Volume",
-      "Properties" : {
-        "Size" : "6",
-        "AvailabilityZone" : "nova"
-      }
-    },
+      "Resources" : {
+        "WikiDatabase": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" }
+          }
+        },
+        "DataVolume" : {
+          "Type" : "AWS::EC2::Volume",
+          "Properties" : {
+            "Size" : "6",
+            "AvailabilityZone" : "nova"
+          }
+        },
 
-    "MountPoint" : {
-      "Type" : "AWS::EC2::VolumeAttachment",
-      "Properties" : {
-        "InstanceId" : { "Ref" : "WikiDatabase" },
-        "VolumeId"  : { "Ref" : "DataVolume" },
-        "Device" : "/dev/vdb"
+        "MountPoint" : {
+          "Type" : "AWS::EC2::VolumeAttachment",
+          "Properties" : {
+            "InstanceId" : { "Ref" : "WikiDatabase" },
+            "VolumeId"  : { "Ref" : "DataVolume" },
+            "Device" : "/dev/vdb"
+          }
+        }
       }
     }
-  }
-}
-'''
+    '''
 test_template_findinmap_invalid = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -149,39 +149,39 @@ test_template_findinmap_invalid = '''
 
     "KeyName" : {
 ''' + \
-      '"Description" : "Name of an existing EC2 KeyPair to enable SSH ' + \
-      'access to the instances",' + \
-'''      "Type" : "String"
-    }
-  },
+    '"Description" : "Name of an existing EC2 KeyPair to enable SSH ' + \
+    'access to the instances",' + \
+    '''      "Type" : "String"
+        }
+      },
 
-  "Mappings" : {
-    "AWSInstanceType2Arch" : {
-      "t1.micro"    : { "Arch" : "64" },
-      "m1.small"    : { "Arch" : "64" },
-      "m1.medium"   : { "Arch" : "64" },
-      "m1.large"    : { "Arch" : "64" },
-      "m1.xlarge"   : { "Arch" : "64" },
-      "m2.xlarge"   : { "Arch" : "64" },
-      "m2.2xlarge"  : { "Arch" : "64" },
-      "m2.4xlarge"  : { "Arch" : "64" },
-      "c1.medium"   : { "Arch" : "64" },
-      "c1.xlarge"   : { "Arch" : "64" },
-      "cc1.4xlarge" : { "Arch" : "64HVM" },
-      "cc2.8xlarge" : { "Arch" : "64HVM" },
-      "cg1.4xlarge" : { "Arch" : "64HVM" }
-    }
-  },
-  "Resources" : {
-    "WikiDatabase": {
-      "Type": "AWS::EC2::Instance",
-      "Properties": {
-''' + \
-        '"ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : ' + \
-        '"LinuxDistribution" },' + \
-        '{ "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : ' + \
-        '"InstanceType" }, "Arch" ] } ] },' + \
-'''
+      "Mappings" : {
+        "AWSInstanceType2Arch" : {
+          "t1.micro"    : { "Arch" : "64" },
+          "m1.small"    : { "Arch" : "64" },
+          "m1.medium"   : { "Arch" : "64" },
+          "m1.large"    : { "Arch" : "64" },
+          "m1.xlarge"   : { "Arch" : "64" },
+          "m2.xlarge"   : { "Arch" : "64" },
+          "m2.2xlarge"  : { "Arch" : "64" },
+          "m2.4xlarge"  : { "Arch" : "64" },
+          "c1.medium"   : { "Arch" : "64" },
+          "c1.xlarge"   : { "Arch" : "64" },
+          "cc1.4xlarge" : { "Arch" : "64HVM" },
+          "cc2.8xlarge" : { "Arch" : "64HVM" },
+          "cg1.4xlarge" : { "Arch" : "64HVM" }
+        }
+      },
+      "Resources" : {
+        "WikiDatabase": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+    ''' + \
+    '"ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : ' + \
+    '"LinuxDistribution" },' + \
+    '{ "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : ' + \
+    '"InstanceType" }, "Arch" ] } ] },' + \
+    '''
         "InstanceType": "m1.large",
         "KeyName": { "Ref" : "KeyName"}
       }
@@ -250,8 +250,7 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.
-            validate_template(None, t))
+        res = dict(engine.validate_template(None, t))
         print 'res %s' % res
         self.assertEqual(res['Description'], 'test.')
 
@@ -263,8 +262,7 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.
-            validate_template(None, t))
+        res = dict(engine.validate_template(None, t))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
     def test_validate_findinmap_valid(self):
@@ -275,8 +273,7 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.
-            validate_template(None, t))
+        res = dict(engine.validate_template(None, t))
         self.assertEqual(res['Description'], 'test.')
 
     def test_validate_findinmap_invalid(self):
@@ -287,6 +284,5 @@ class validateTest(unittest.TestCase):
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
-        res = dict(engine.
-            validate_template(None, t))
+        res = dict(engine.validate_template(None, t))
         self.assertNotEqual(res['Description'], 'Successfully validated')

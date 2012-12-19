@@ -63,8 +63,8 @@ class EIPTest(unittest.TestCase):
 
     def create_eip(self, t, stack, resource_name):
         resource = eip.ElasticIp(resource_name,
-                                      t['Resources'][resource_name],
-                                      stack)
+                                 t['Resources'][resource_name],
+                                 stack)
         self.assertEqual(None, resource.validate())
         self.assertEqual(None, resource.create())
         self.assertEqual(eip.ElasticIp.CREATE_COMPLETE, resource.state)
@@ -72,8 +72,8 @@ class EIPTest(unittest.TestCase):
 
     def create_association(self, t, stack, resource_name):
         resource = eip.ElasticIpAssociation(resource_name,
-                                      t['Resources'][resource_name],
-                                      stack)
+                                            t['Resources'][resource_name],
+                                            stack)
         self.assertEqual(None, resource.validate())
         self.assertEqual(None, resource.create())
         self.assertEqual(eip.ElasticIpAssociation.CREATE_COMPLETE,
@@ -98,7 +98,7 @@ class EIPTest(unittest.TestCase):
         self.assertEqual('1', resource.FnGetAtt('AllocationId'))
 
         self.assertEqual(eip.ElasticIp.UPDATE_REPLACE,
-                          resource.handle_update())
+                         resource.handle_update())
 
         try:
             resource.FnGetAtt('Foo')

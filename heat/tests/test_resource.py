@@ -99,7 +99,7 @@ class ResourceTest(unittest.TestCase):
         tmpl2 = {'Type': 'Foo'}
         tmpl3 = {'Type': 'Bar'}
         stack2 = parser.Stack(None, 'test_stack', parser.Template({}),
-                                  stack_id=-1)
+                              stack_id=-1)
         res1 = resource.GenericResource('test_resource', tmpl1, self.stack)
         res2 = resource.GenericResource('test_resource', tmpl2, stack2)
         res3 = resource.GenericResource('test_resource2', tmpl3, stack2)
@@ -131,7 +131,7 @@ class MetadataTest(unittest.TestCase):
         self.stack = parser.Stack(ctx, 'test_stack', parser.Template({}))
         self.stack.store()
         self.res = resource.GenericResource('metadata_resource',
-                                             tmpl, self.stack)
+                                            tmpl, self.stack)
         self.res.create()
 
     def tearDown(self):

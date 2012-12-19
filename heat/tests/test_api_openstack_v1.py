@@ -81,12 +81,12 @@ class InstantiationDataTest(unittest.TestCase):
 blarg: wibble
 '''
         parsed = {u'HeatTemplateFormatVersion': u'2012-12-12',
-            u'Mappings': {},
-            u'Outputs': {},
-            u'Parameters': {},
-            u'Resources': {},
-            u'blarg': u'wibble',
-            u'foo': u'bar'}
+                  u'Mappings': {},
+                  u'Outputs': {},
+                  u'Parameters': {},
+                  u'Resources': {},
+                  u'blarg': u'wibble',
+                  u'foo': u'bar'}
 
         body = {'template': template}
         data = stacks.InstantiationData(body)
@@ -469,8 +469,8 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
                                             stack_name=identity.stack_name,
                                             path='resources')
         except webob.exc.HTTPFound as found:
-            self.assertEqual(found.location, self._url(identity) +
-                                             '/resources')
+            self.assertEqual(found.location,
+                             self._url(identity) + '/resources')
         else:
             self.fail('No redirect generated')
         self.m.VerifyAll()
@@ -867,7 +867,7 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
                 u'stack_identity': stack_identity,
                 u'resource_status': u'CREATE_COMPLETE',
                 u'physical_resource_id':
-                    u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                u'a3455d8c-9f88-404d-a85b-5315293e67de',
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
@@ -884,22 +884,17 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
                                        stack_id=stack_identity.stack_id)
 
         expected = {
-            'resources': [
-                {
-                    'links': [
-                        {'href': self._url(res_identity), 'rel': 'self'},
-                        {'href': self._url(stack_identity), 'rel': 'stack'},
-                    ],
-                    u'logical_resource_id': res_name,
-                    u'resource_status_reason': None,
-                    u'updated_time': u'2012-07-23T13:06:00Z',
-                    u'resource_status': u'CREATE_COMPLETE',
-                    u'physical_resource_id':
-                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                    u'resource_type': u'AWS::EC2::Instance',
-                }
-            ]
-        }
+            'resources': [{'links': [{'href': self._url(res_identity),
+                                      'rel': 'self'},
+                                     {'href': self._url(stack_identity),
+                                      'rel': 'stack'}],
+                           u'logical_resource_id': res_name,
+                           u'resource_status_reason': None,
+                           u'updated_time': u'2012-07-23T13:06:00Z',
+                           u'resource_status': u'CREATE_COMPLETE',
+                           u'physical_resource_id':
+                           u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                           u'resource_type': u'AWS::EC2::Instance'}]}
 
         self.assertEqual(result, expected)
         self.m.VerifyAll()
@@ -944,7 +939,7 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
             u'stack_identity': dict(stack_identity),
             u'resource_status': u'CREATE_COMPLETE',
             u'physical_resource_id':
-                u'a3455d8c-9f88-404d-a85b-5315293e67de',
+            u'a3455d8c-9f88-404d-a85b-5315293e67de',
             u'resource_type': u'AWS::EC2::Instance',
             u'metadata': {u'ensureRunning': u'true'}
         }
@@ -974,7 +969,7 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
                 u'updated_time': u'2012-07-23T13:06:00Z',
                 u'resource_status': u'CREATE_COMPLETE',
                 u'physical_resource_id':
-                    u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                u'a3455d8c-9f88-404d-a85b-5315293e67de',
                 u'resource_type': u'AWS::EC2::Instance',
             }
         }
@@ -1027,7 +1022,7 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
             u'stack_identity': dict(stack_identity),
             u'resource_status': u'CREATE_COMPLETE',
             u'physical_resource_id':
-                u'a3455d8c-9f88-404d-a85b-5315293e67de',
+            u'a3455d8c-9f88-404d-a85b-5315293e67de',
             u'resource_type': u'AWS::EC2::Instance',
             u'metadata': {u'ensureRunning': u'true'}
         }
@@ -1325,7 +1320,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
                 u'event_identity': dict(ev_identity),
                 u'resource_status': u'CREATE_COMPLETE',
                 u'physical_resource_id':
-                    u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                u'a3455d8c-9f88-404d-a85b-5315293e67de',
                 u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
@@ -1357,7 +1352,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
                 u'event_time': u'2012-07-23T13:06:00Z',
                 u'resource_status': u'CREATE_COMPLETE',
                 u'physical_resource_id':
-                    u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                u'a3455d8c-9f88-404d-a85b-5315293e67de',
                 u'resource_type': u'AWS::EC2::Instance',
                 u'resource_properties': {u'UserData': u'blah'},
             }
@@ -1374,7 +1369,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
         res_identity = identifier.ResourceIdentifier(resource_name=res_name,
                                                      **stack_identity)
         ev_identity = identifier.EventIdentifier(event_id='41',
-                                                  **res_identity)
+                                                 **res_identity)
 
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
@@ -1417,7 +1412,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
         res_identity = identifier.ResourceIdentifier(resource_name=res_name,
                                                      **stack_identity)
         ev_identity = identifier.EventIdentifier(event_id='41',
-                                                  **res_identity)
+                                                 **res_identity)
 
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)

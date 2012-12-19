@@ -86,9 +86,7 @@ class QuantumTest(unittest.TestCase):
         return stack
 
     def create_vpc(self, t, stack, resource_name):
-        resource = vpc.VPC('the_vpc',
-                                      t['Resources'][resource_name],
-                                      stack)
+        resource = vpc.VPC('the_vpc', t['Resources'][resource_name], stack)
         self.assertEqual(None, resource.create())
         self.assertEqual(vpc.VPC.CREATE_COMPLETE, resource.state)
         return resource

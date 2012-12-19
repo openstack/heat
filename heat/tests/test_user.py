@@ -68,8 +68,8 @@ class UserTest(unittest.TestCase):
 
     def create_user(self, t, stack, resource_name):
         resource = user.User(resource_name,
-                                      t['Resources'][resource_name],
-                                      stack)
+                             t['Resources'][resource_name],
+                             stack)
         self.assertEqual(None, resource.validate())
         self.assertEqual(None, resource.create())
         self.assertEqual(user.User.CREATE_COMPLETE, resource.state)
@@ -91,7 +91,7 @@ class UserTest(unittest.TestCase):
 
         self.assertEqual('CREATE_COMPLETE', resource.state)
         self.assertEqual(user.User.UPDATE_REPLACE,
-                  resource.handle_update())
+                         resource.handle_update())
 
         resource.resource_id = None
         self.assertEqual(None, resource.delete())
@@ -113,8 +113,8 @@ class UserTest(unittest.TestCase):
 
     def create_access_key(self, t, stack, resource_name):
         resource = user.AccessKey(resource_name,
-                                      t['Resources'][resource_name],
-                                      stack)
+                                  t['Resources'][resource_name],
+                                  stack)
         self.assertEqual(None, resource.validate())
         self.assertEqual(None, resource.create())
         self.assertEqual(user.AccessKey.CREATE_COMPLETE,
@@ -138,7 +138,7 @@ class UserTest(unittest.TestCase):
         resource = self.create_access_key(t, stack, 'HostKeys')
 
         self.assertEqual(user.AccessKey.UPDATE_REPLACE,
-                  resource.handle_update())
+                         resource.handle_update())
         self.assertEqual(self.fc.access,
                          resource.resource_id)
 

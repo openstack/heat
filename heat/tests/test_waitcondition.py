@@ -86,13 +86,13 @@ class WaitConditionTest(unittest.TestCase):
 
         wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
         wc.WaitCondition._get_status_reason(
-                         mox.IgnoreArg()).AndReturn(('WAITING', ''))
+            mox.IgnoreArg()).AndReturn(('WAITING', ''))
         eventlet.sleep(1).AndReturn(None)
         wc.WaitCondition._get_status_reason(
-                         mox.IgnoreArg()).AndReturn(('WAITING', ''))
+            mox.IgnoreArg()).AndReturn(('WAITING', ''))
         eventlet.sleep(1).AndReturn(None)
         wc.WaitCondition._get_status_reason(
-                         mox.IgnoreArg()).AndReturn(('SUCCESS', 'woot toot'))
+            mox.IgnoreArg()).AndReturn(('SUCCESS', 'woot toot'))
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
@@ -124,10 +124,10 @@ class WaitConditionTest(unittest.TestCase):
         tmo = eventlet.Timeout(6)
         wc.WaitCondition._create_timeout().AndReturn(tmo)
         wc.WaitCondition._get_status_reason(
-                         mox.IgnoreArg()).AndReturn(('WAITING', ''))
+            mox.IgnoreArg()).AndReturn(('WAITING', ''))
         eventlet.sleep(1).AndReturn(None)
         wc.WaitCondition._get_status_reason(
-                         mox.IgnoreArg()).AndReturn(('WAITING', ''))
+            mox.IgnoreArg()).AndReturn(('WAITING', ''))
         eventlet.sleep(1).AndRaise(tmo)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
@@ -147,7 +147,7 @@ class WaitConditionTest(unittest.TestCase):
         self.assertEqual(resource.state,
                          'CREATE_FAILED')
         self.assertEqual(wc.WaitCondition.UPDATE_REPLACE,
-                  resource.handle_update())
+                         resource.handle_update())
 
         stack.delete()
 
@@ -186,7 +186,7 @@ class WaitConditionHandleTest(unittest.TestCase):
         # Stub waitcondition status so all goes CREATE_COMPLETE
         self.m.StubOutWithMock(wc.WaitCondition, '_get_status_reason')
         wc.WaitCondition._get_status_reason(
-                         mox.IgnoreArg()).AndReturn(('SUCCESS', 'woot toot'))
+            mox.IgnoreArg()).AndReturn(('SUCCESS', 'woot toot'))
         self.m.StubOutWithMock(wc.WaitCondition, '_create_timeout')
         wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
 
@@ -210,23 +210,21 @@ class WaitConditionHandleTest(unittest.TestCase):
         resource = stack.resources['WaitHandle']
         self.assertEqual(resource.state, 'CREATE_COMPLETE')
 
-        expected_url = "".join(
-                       ['http://127.0.0.1:8000/v1/waitcondition/',
-                        'arn%3Aopenstack%3Aheat%3A%3Atest_tenant%3Astacks%2F',
-                        'test_stack2%2FSTACKABCD1234%2Fresources%2F',
-                        'WaitHandle?',
-                        'Timestamp=2012-11-29T13%3A49%3A37Z&',
-                        'SignatureMethod=HmacSHA256&',
-                        'AWSAccessKeyId=4567&',
-                        'SignatureVersion=2&',
-                        'Signature=',
-                        'ePyTwmC%2F1kSigeo%2Fha7kP8Avvb45G9Y7WOQWe4F%2BnXM%3D'
-                       ])
+        expected_url = "".join([
+            'http://127.0.0.1:8000/v1/waitcondition/',
+            'arn%3Aopenstack%3Aheat%3A%3Atest_tenant%3Astacks%2F',
+            'test_stack2%2FSTACKABCD1234%2Fresources%2F',
+            'WaitHandle?',
+            'Timestamp=2012-11-29T13%3A49%3A37Z&',
+            'SignatureMethod=HmacSHA256&',
+            'AWSAccessKeyId=4567&',
+            'SignatureVersion=2&',
+            'Signature=',
+            'ePyTwmC%2F1kSigeo%2Fha7kP8Avvb45G9Y7WOQWe4F%2BnXM%3D'])
 
         self.assertEqual(expected_url, resource.FnGetRefId())
 
-        self.assertEqual(resource.UPDATE_REPLACE,
-                  resource.handle_update())
+        self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update())
 
         stack.delete()
 

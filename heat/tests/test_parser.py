@@ -88,8 +88,8 @@ class ParserTest(unittest.TestCase):
         self.assertTrue(parsed is not raw)
 
     def test_join_recursive(self):
-        raw = {'Fn::Join': ['\n', [{'Fn::Join': [' ', ['foo', 'bar']]},
-                                  'baz']]}
+        raw = {'Fn::Join': ['\n', [{'Fn::Join':
+                                   [' ', ['foo', 'bar']]}, 'baz']]}
         self.assertEqual(join(raw), 'foo bar\nbaz')
 
 
@@ -206,19 +206,20 @@ class TemplateTest(unittest.TestCase):
 
     def test_join_reduce(self):
         join = {"Fn::Join": [" ", ["foo", "bar", "baz", {'Ref': 'baz'},
-            "bink", "bonk"]]}
-        self.assertEqual(parser.Template.reduce_joins(join),
-            {"Fn::Join": [" ", ["foo bar baz", {'Ref': 'baz'},
-            "bink bonk"]]})
+                "bink", "bonk"]]}
+        self.assertEqual(
+            parser.Template.reduce_joins(join),
+            {"Fn::Join": [" ", ["foo bar baz", {'Ref': 'baz'}, "bink bonk"]]})
 
         join = {"Fn::Join": [" ", ["foo", {'Ref': 'baz'},
-            "bink"]]}
-        self.assertEqual(parser.Template.reduce_joins(join),
-            {"Fn::Join": [" ", ["foo", {'Ref': 'baz'},
-            "bink"]]})
+                                   "bink"]]}
+        self.assertEqual(
+            parser.Template.reduce_joins(join),
+            {"Fn::Join": [" ", ["foo", {'Ref': 'baz'}, "bink"]]})
 
         join = {"Fn::Join": [" ", [{'Ref': 'baz'}]]}
-        self.assertEqual(parser.Template.reduce_joins(join),
+        self.assertEqual(
+            parser.Template.reduce_joins(join),
             {"Fn::Join": [" ", [{'Ref': 'baz'}]]})
 
     def test_join(self):

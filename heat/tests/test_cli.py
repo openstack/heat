@@ -33,7 +33,8 @@ class CliTest(unittest.TestCase):
             fullpath = basepath + '/bin/' + bin
 
             proc = subprocess.Popen(fullpath,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
             stdout, stderr = proc.communicate()
 
             if proc.returncode:

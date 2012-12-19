@@ -88,52 +88,44 @@ class QuantumTest(unittest.TestCase):
         return stack
 
     def create_net(self, t, stack, resource_name):
-        resource = net.Net('test_net',
-                                      t['Resources'][resource_name],
-                                      stack)
+        resource = net.Net('test_net', t['Resources'][resource_name], stack)
         self.assertEqual(None, resource.create())
         self.assertEqual(net.Net.CREATE_COMPLETE, resource.state)
         return resource
 
     def test_validate_properties(self):
         vs = {'router:external': True}
-        data = {
-            'admin_state_up': False,
-            'value_specs': vs
-        }
+        data = {'admin_state_up': False,
+                'value_specs': vs}
         p = properties.Properties(net.Net.properties_schema, data)
         self.assertEqual(None, qr.validate_properties(p))
 
         vs['shared'] = True
         self.assertEqual('shared not allowed in value_specs',
-            qr.validate_properties(p))
+                         qr.validate_properties(p))
         vs.pop('shared')
 
         vs['name'] = 'foo'
         self.assertEqual('name not allowed in value_specs',
-            qr.validate_properties(p))
+                         qr.validate_properties(p))
         vs.pop('name')
 
         vs['tenant_id'] = '1234'
         self.assertEqual('tenant_id not allowed in value_specs',
-            qr.validate_properties(p))
+                         qr.validate_properties(p))
         vs.pop('tenant_id')
 
         vs['foo'] = '1234'
         self.assertEqual(None, qr.validate_properties(p))
 
     def test_prepare_properties(self):
-        data = {
-            'admin_state_up': False,
-            'value_specs': {'router:external': True}
-        }
+        data = {'admin_state_up': False,
+                'value_specs': {'router:external': True}}
         p = properties.Properties(net.Net.properties_schema, data)
         props = qr.prepare_properties(p, 'resource_name')
-        self.assertEqual({
-            'name': 'resource_name',
-            'router:external': True,
-            'admin_state_up': False
-        }, props)
+        self.assertEqual({'name': 'resource_name',
+                          'router:external': True,
+                          'admin_state_up': False}, props)
 
     def test_net(self):
         fq = FakeQuantum()
@@ -157,7 +149,7 @@ class QuantumTest(unittest.TestCase):
             pass
 
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            resource.FnGetAtt('id'))
+                         resource.FnGetAtt('id'))
 
         self.assertEqual(net.Net.UPDATE_REPLACE, resource.handle_update())
 

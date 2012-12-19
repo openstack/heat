@@ -37,8 +37,8 @@ class JsonToYamlTest(unittest.TestCase):
 
         template_test_count = 0
         for (json_str,
-            yml_str,
-            file_name) in self.convert_all_json_to_yaml(path):
+             yml_str,
+             file_name) in self.convert_all_json_to_yaml(path):
 
             self.compare_json_vs_yaml(json_str, yml_str, file_name)
             template_test_count += 1
@@ -46,20 +46,20 @@ class JsonToYamlTest(unittest.TestCase):
                 break
 
         self.assertTrue(template_test_count >= self.expected_test_count,
-            'Expected at least %d templates to be tested' %
-            self.expected_test_count)
+                        'Expected at least %d templates to be tested' %
+                        self.expected_test_count)
 
     def compare_json_vs_yaml(self, json_str, yml_str, file_name):
         yml = template_format.parse(yml_str)
 
         self.assertEqual(u'2012-12-12', yml[u'HeatTemplateFormatVersion'],
-            file_name)
+                         file_name)
         self.assertFalse(u'AWSTemplateFormatVersion' in yml, file_name)
         del(yml[u'HeatTemplateFormatVersion'])
 
         jsn = template_format.parse(json_str)
         template_format.default_for_missing(jsn, 'AWSTemplateFormatVersion',
-            template_format.CFN_VERSIONS)
+                                            template_format.CFN_VERSIONS)
 
         if u'AWSTemplateFormatVersion' in jsn:
             del(jsn[u'AWSTemplateFormatVersion'])
@@ -124,7 +124,7 @@ class JsonYamlResolvedCompareTest(unittest.TestCase):
     def compare_stacks(self, json_file, yaml_file, parameters):
         t1 = self.load_template(json_file)
         template_format.default_for_missing(t1, 'AWSTemplateFormatVersion',
-            template_format.CFN_VERSIONS)
+                                            template_format.CFN_VERSIONS)
         del(t1[u'AWSTemplateFormatVersion'])
 
         t2 = self.load_template(yaml_file)
@@ -143,7 +143,7 @@ class JsonYamlResolvedCompareTest(unittest.TestCase):
         self.assertEqual(t1nr, t2nr)
 
         self.assertEquals(set(stack1.resources.keys()),
-            set(stack2.resources.keys()))
+                          set(stack2.resources.keys()))
         for key in stack1.resources:
             self.assertEqual(stack1.resources[key].t, stack2.resources[key].t)
 
@@ -152,5 +152,5 @@ class JsonYamlResolvedCompareTest(unittest.TestCase):
 
     def test_wordpress_resolved(self):
         self.compare_stacks('WordPress_Single_Instance.template',
-            'WordPress_Single_Instance.yaml',
-            {'KeyName': 'test'})
+                            'WordPress_Single_Instance.yaml',
+                            {'KeyName': 'test'})

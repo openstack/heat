@@ -91,9 +91,9 @@ class VolumeTest(unittest.TestCase):
 
         # create script
         vol.Volume.nova('volume').MultipleTimes().AndReturn(self.fc)
-        self.fc.volumes.create(u'1',
-                display_description='%s.DataVolume' % stack_name,
-                display_name='%s.DataVolume' % stack_name).AndReturn(fv)
+        self.fc.volumes.create(
+            u'1', display_description='%s.DataVolume' % stack_name,
+            display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # delete script
         self.fc.volumes.get('vol-123').AndReturn(fv)
@@ -125,9 +125,9 @@ class VolumeTest(unittest.TestCase):
 
         # create script
         vol.Volume.nova('volume').AndReturn(self.fc)
-        self.fc.volumes.create(u'1',
-                display_description='%s.DataVolume' % stack_name,
-                display_name='%s.DataVolume' % stack_name).AndReturn(fv)
+        self.fc.volumes.create(
+            u'1', display_description='%s.DataVolume' % stack_name,
+            display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         eventlet.sleep(1).AndReturn(None)
 
@@ -150,17 +150,18 @@ class VolumeTest(unittest.TestCase):
 
         # volume create
         vol.Volume.nova('volume').MultipleTimes().AndReturn(self.fc)
-        self.fc.volumes.create(u'1',
-                display_description='%s.DataVolume' % stack_name,
-                display_name='%s.DataVolume' % stack_name).AndReturn(fv)
+        self.fc.volumes.create(
+            u'1', display_description='%s.DataVolume' % stack_name,
+            display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
         vol.VolumeAttachment.nova().MultipleTimes().AndReturn(self.fc)
         vol.VolumeAttachment.nova('volume').MultipleTimes().AndReturn(self.fc)
         eventlet.sleep(1).MultipleTimes().AndReturn(None)
-        self.fc.volumes.create_server_volume(device=u'/dev/vdc',
-                        server_id=u'WikiDatabase',
-                        volume_id=u'vol-123').AndReturn(fva)
+        self.fc.volumes.create_server_volume(
+            device=u'/dev/vdc',
+            server_id=u'WikiDatabase',
+            volume_id=u'vol-123').AndReturn(fva)
 
         self.fc.volumes.get('vol-123').AndReturn(fva)
 
@@ -185,17 +186,18 @@ class VolumeTest(unittest.TestCase):
 
         # volume create
         vol.Volume.nova('volume').MultipleTimes().AndReturn(self.fc)
-        self.fc.volumes.create(u'1',
-                display_description='%s.DataVolume' % stack_name,
-                display_name='%s.DataVolume' % stack_name).AndReturn(fv)
+        self.fc.volumes.create(
+            u'1', display_description='%s.DataVolume' % stack_name,
+            display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
         vol.VolumeAttachment.nova().MultipleTimes().AndReturn(self.fc)
         vol.VolumeAttachment.nova('volume').MultipleTimes().AndReturn(self.fc)
         eventlet.sleep(1).MultipleTimes().AndReturn(None)
-        self.fc.volumes.create_server_volume(device=u'/dev/vdc',
-                        server_id=u'WikiDatabase',
-                        volume_id=u'vol-123').AndReturn(fva)
+        self.fc.volumes.create_server_volume(
+            device=u'/dev/vdc',
+            server_id=u'WikiDatabase',
+            volume_id=u'vol-123').AndReturn(fva)
 
         self.fc.volumes.get('vol-123').AndReturn(fva)
 

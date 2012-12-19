@@ -105,11 +105,11 @@ class WatchControllerTest(unittest.TestCase):
                         u'updated_time': u'2012-08-30T14:10:46Z'}]
 
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic, {'args':
-            {'watch_name': watch_name},
-            'method': 'show_watch',
-            'version': self.api_version},
-            None).AndReturn(engine_resp)
+        rpc.call(dummy_req.context, self.topic,
+                 {'args': {'watch_name': watch_name},
+                  'method': 'show_watch',
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
@@ -117,32 +117,32 @@ class WatchControllerTest(unittest.TestCase):
         response = self.controller.describe_alarms(dummy_req)
 
         expected = {'DescribeAlarmsResponse': {'DescribeAlarmsResult':
-                     {'MetricAlarms': [
+                    {'MetricAlarms': [
                         {'EvaluationPeriods': u'1',
-                        'StateReasonData': None,
-                        'AlarmArn': None,
-                        'StateUpdatedTimestamp': u'2012-08-30T14:13:21Z',
-                        'AlarmConfigurationUpdatedTimestamp':
-                            u'2012-08-30T14:10:46Z',
-                        'AlarmActions': [u'WebServerRestartPolicy'],
-                        'Threshold': u'2',
-                        'AlarmDescription': u'Restart the WikiDatabase',
-                        'Namespace': u'system/linux',
-                        'Period': u'300',
-                        'StateValue': u'NORMAL',
-                        'ComparisonOperator': u'GreaterThanThreshold',
-                        'AlarmName': u'HttpFailureAlarm',
-                        'Unit': None,
-                        'Statistic': u'SampleCount',
-                        'StateReason': None,
-                        'InsufficientDataActions': None,
-                        'OKActions': None,
-                        'MetricName': u'ServiceFailure',
-                        'ActionsEnabled': None,
-                        'Dimensions': [
-                          {'Name': 'StackId',
-                          'Value': u'21617058-781e-4262-97ab-5f9df371ee52'}
-                                      ]}]}}}
+                         'StateReasonData': None,
+                         'AlarmArn': None,
+                         'StateUpdatedTimestamp': u'2012-08-30T14:13:21Z',
+                         'AlarmConfigurationUpdatedTimestamp':
+                         u'2012-08-30T14:10:46Z',
+                         'AlarmActions': [u'WebServerRestartPolicy'],
+                         'Threshold': u'2',
+                         'AlarmDescription': u'Restart the WikiDatabase',
+                         'Namespace': u'system/linux',
+                         'Period': u'300',
+                         'StateValue': u'NORMAL',
+                         'ComparisonOperator': u'GreaterThanThreshold',
+                         'AlarmName': u'HttpFailureAlarm',
+                         'Unit': None,
+                         'Statistic': u'SampleCount',
+                         'StateReason': None,
+                         'InsufficientDataActions': None,
+                         'OKActions': None,
+                         'MetricName': u'ServiceFailure',
+                         'ActionsEnabled': None,
+                         'Dimensions':
+                         [{'Name': 'StackId',
+                           'Value': u'21617058-781e-4262-97ab-5f9df371ee52'}]
+                         }]}}}
 
         self.assert_(response == expected)
 
@@ -181,20 +181,19 @@ class WatchControllerTest(unittest.TestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         # We dummy three different metrics and namespaces to test
         # filtering by parameter
-        engine_resp = [
-                        {u'timestamp': u'2012-08-30T15:09:02Z',
+        engine_resp = [{u'timestamp': u'2012-08-30T15:09:02Z',
                         u'watch_name': u'HttpFailureAlarm',
                         u'namespace': u'system/linux',
                         u'metric_name': u'ServiceFailure',
                         u'data': {u'Units': u'Counter', u'Value': 1}},
 
-                        {u'timestamp': u'2012-08-30T15:10:03Z',
+                       {u'timestamp': u'2012-08-30T15:10:03Z',
                         u'watch_name': u'HttpFailureAlarm2',
                         u'namespace': u'system/linux2',
                         u'metric_name': u'ServiceFailure2',
                         u'data': {u'Units': u'Counter', u'Value': 1}},
 
-                        {u'timestamp': u'2012-08-30T15:16:03Z',
+                       {u'timestamp': u'2012-08-30T15:16:03Z',
                         u'watch_name': u'HttpFailureAlar3m',
                         u'namespace': u'system/linux3',
                         u'metric_name': u'ServiceFailure3',
@@ -204,43 +203,51 @@ class WatchControllerTest(unittest.TestCase):
         # Current engine implementation means we filter in the API
         # and pass None/None for namespace/watch_name which returns
         # all metric data which we post-process in the API
-        rpc.call(dummy_req.context, self.topic, {'args':
-                 {'namespace': None,
-                 'metric_name': None},
-                 'method': 'show_watch_metric', 'version': self.api_version},
+        rpc.call(dummy_req.context, self.topic,
+                 {'args': {'namespace': None, 'metric_name': None},
+                  'method': 'show_watch_metric',
+                  'version': self.api_version},
                  None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 
         # First pass no query paramters filtering, should get all three
         response = self.controller.list_metrics(dummy_req)
-        expected = {'ListMetricsResponse': {'ListMetricsResult': {'Metrics': [
-                        {'Namespace': u'system/linux',
-                        'Dimensions': [
-                        {'Name': 'AlarmName', 'Value': u'HttpFailureAlarm'},
-                        {'Name': 'Timestamp',
-                            'Value': u'2012-08-30T15:09:02Z'},
-                        {'Name': u'Units', 'Value': u'Counter'},
-                        {'Name': u'Value', 'Value': 1}],
-                        'MetricName': u'ServiceFailure'},
-
-                        {'Namespace': u'system/linux2',
-                        'Dimensions': [
-                        {'Name': 'AlarmName', 'Value': u'HttpFailureAlarm2'},
-                        {'Name': 'Timestamp',
-                            'Value': u'2012-08-30T15:10:03Z'},
-                        {'Name': u'Units', 'Value': u'Counter'},
-                        {'Name': u'Value', 'Value': 1}],
-                        'MetricName': u'ServiceFailure2'},
-
-                        {'Namespace': u'system/linux3',
-                        'Dimensions': [
-                        {'Name': 'AlarmName', 'Value': u'HttpFailureAlar3m'},
-                        {'Name': 'Timestamp',
-                            'Value': u'2012-08-30T15:16:03Z'},
-                        {'Name': u'Units', 'Value': u'Counter'},
-                        {'Name': u'Value', 'Value': 1}],
-                        'MetricName': u'ServiceFailure3'}]}}}
+        expected = {'ListMetricsResponse':
+                    {'ListMetricsResult':
+                     {'Metrics': [{'Namespace': u'system/linux',
+                                   'Dimensions':
+                                   [{'Name': 'AlarmName',
+                                     'Value': u'HttpFailureAlarm'},
+                                    {'Name': 'Timestamp',
+                                     'Value': u'2012-08-30T15:09:02Z'},
+                                    {'Name': u'Units',
+                                     'Value': u'Counter'},
+                                    {'Name': u'Value',
+                                     'Value': 1}],
+                                   'MetricName': u'ServiceFailure'},
+                                  {'Namespace': u'system/linux2',
+                                   'Dimensions':
+                                   [{'Name': 'AlarmName',
+                                     'Value': u'HttpFailureAlarm2'},
+                                    {'Name': 'Timestamp',
+                                     'Value': u'2012-08-30T15:10:03Z'},
+                                    {'Name': u'Units',
+                                     'Value': u'Counter'},
+                                    {'Name': u'Value',
+                                     'Value': 1}],
+                                   'MetricName': u'ServiceFailure2'},
+                                  {'Namespace': u'system/linux3',
+                                   'Dimensions':
+                                   [{'Name': 'AlarmName',
+                                     'Value': u'HttpFailureAlar3m'},
+                                    {'Name': 'Timestamp',
+                                     'Value': u'2012-08-30T15:16:03Z'},
+                                    {'Name': u'Units',
+                                     'Value': u'Counter'},
+                                    {'Name': u'Value',
+                                     'Value': 1}],
+                                   'MetricName': u'ServiceFailure3'}]}}}
         self.assert_(response == expected)
 
     def test_list_metrics_filter_name(self):
@@ -253,20 +260,19 @@ class WatchControllerTest(unittest.TestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         # We dummy three different metrics and namespaces to test
         # filtering by parameter
-        engine_resp = [
-                        {u'timestamp': u'2012-08-30T15:09:02Z',
+        engine_resp = [{u'timestamp': u'2012-08-30T15:09:02Z',
                         u'watch_name': u'HttpFailureAlarm',
                         u'namespace': u'system/linux',
                         u'metric_name': u'ServiceFailure',
                         u'data': {u'Units': u'Counter', u'Value': 1}},
 
-                        {u'timestamp': u'2012-08-30T15:10:03Z',
+                       {u'timestamp': u'2012-08-30T15:10:03Z',
                         u'watch_name': u'HttpFailureAlarm2',
                         u'namespace': u'system/linux2',
                         u'metric_name': u'ServiceFailure2',
                         u'data': {u'Units': u'Counter', u'Value': 1}},
 
-                        {u'timestamp': u'2012-08-30T15:16:03Z',
+                       {u'timestamp': u'2012-08-30T15:16:03Z',
                         u'watch_name': u'HttpFailureAlar3m',
                         u'namespace': u'system/linux3',
                         u'metric_name': u'ServiceFailure3',
@@ -286,16 +292,20 @@ class WatchControllerTest(unittest.TestCase):
 
         # First pass no query paramters filtering, should get all three
         response = self.controller.list_metrics(dummy_req)
-        expected = {'ListMetricsResponse': {'ListMetricsResult': {'Metrics': [
-                        {'Namespace': u'system/linux',
-                        'Dimensions': [
-                        {'Name': 'AlarmName', 'Value': u'HttpFailureAlarm'},
-                        {'Name': 'Timestamp',
-                            'Value': u'2012-08-30T15:09:02Z'},
-                        {'Name': u'Units', 'Value': u'Counter'},
-                        {'Name': u'Value', 'Value': 1}],
-                        'MetricName': u'ServiceFailure'},
-                        ]}}}
+        expected = {'ListMetricsResponse':
+                    {'ListMetricsResult':
+                     {'Metrics':
+                      [{'Namespace': u'system/linux',
+                        'Dimensions':
+                        [{'Name': 'AlarmName',
+                          'Value': u'HttpFailureAlarm'},
+                         {'Name': 'Timestamp',
+                          'Value': u'2012-08-30T15:09:02Z'},
+                         {'Name': u'Units',
+                          'Value': u'Counter'},
+                         {'Name': u'Value',
+                          'Value': 1}],
+                        'MetricName': u'ServiceFailure'}]}}}
         self.assert_(response == expected)
 
     def test_list_metrics_filter_namespace(self):
@@ -309,20 +319,19 @@ class WatchControllerTest(unittest.TestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         # We dummy three different metrics and namespaces to test
         # filtering by parameter
-        engine_resp = [
-                        {u'timestamp': u'2012-08-30T15:09:02Z',
+        engine_resp = [{u'timestamp': u'2012-08-30T15:09:02Z',
                         u'watch_name': u'HttpFailureAlarm',
                         u'namespace': u'atestnamespace/foo',
                         u'metric_name': u'ServiceFailure',
                         u'data': {u'Units': u'Counter', u'Value': 1}},
 
-                        {u'timestamp': u'2012-08-30T15:10:03Z',
+                       {u'timestamp': u'2012-08-30T15:10:03Z',
                         u'watch_name': u'HttpFailureAlarm2',
                         u'namespace': u'atestnamespace/foo',
                         u'metric_name': u'ServiceFailure2',
                         u'data': {u'Units': u'Counter', u'Value': 1}},
 
-                        {u'timestamp': u'2012-08-30T15:16:03Z',
+                       {u'timestamp': u'2012-08-30T15:16:03Z',
                         u'watch_name': u'HttpFailureAlar3m',
                         u'namespace': u'system/linux3',
                         u'metric_name': u'ServiceFailure3',
@@ -341,22 +350,31 @@ class WatchControllerTest(unittest.TestCase):
         self.m.ReplayAll()
 
         response = self.controller.list_metrics(dummy_req)
-        expected = {'ListMetricsResponse': {'ListMetricsResult': {'Metrics': [
-                    {'Namespace': u'atestnamespace/foo',
-                    'Dimensions': [
-                    {'Name': 'AlarmName', 'Value': u'HttpFailureAlarm'},
-                    {'Name': 'Timestamp', 'Value': u'2012-08-30T15:09:02Z'},
-                    {'Name': u'Units', 'Value': u'Counter'},
-                    {'Name': u'Value', 'Value': 1}],
-                    'MetricName': u'ServiceFailure'},
-
-                    {'Namespace': u'atestnamespace/foo',
-                    'Dimensions': [
-                    {'Name': 'AlarmName', 'Value': u'HttpFailureAlarm2'},
-                    {'Name': 'Timestamp', 'Value': u'2012-08-30T15:10:03Z'},
-                    {'Name': u'Units', 'Value': u'Counter'},
-                    {'Name': u'Value', 'Value': 1}],
-                    'MetricName': u'ServiceFailure2'}]}}}
+        expected = {'ListMetricsResponse':
+                    {'ListMetricsResult':
+                     {'Metrics':
+                      [{'Namespace': u'atestnamespace/foo',
+                        'Dimensions':
+                        [{'Name': 'AlarmName',
+                          'Value': u'HttpFailureAlarm'},
+                         {'Name': 'Timestamp',
+                          'Value': u'2012-08-30T15:09:02Z'},
+                         {'Name': u'Units',
+                          'Value': u'Counter'},
+                         {'Name': u'Value',
+                          'Value': 1}],
+                        'MetricName': u'ServiceFailure'},
+                       {'Namespace': u'atestnamespace/foo',
+                        'Dimensions':
+                        [{'Name': 'AlarmName',
+                          'Value': u'HttpFailureAlarm2'},
+                         {'Name': 'Timestamp',
+                          'Value': u'2012-08-30T15:10:03Z'},
+                         {'Name': u'Units',
+                          'Value': u'Counter'},
+                         {'Name': u'Value',
+                          'Value': 1}],
+                        'MetricName': u'ServiceFailure2'}]}}}
         self.assert_(response == expected)
 
     def test_put_metric_alarm(self):
@@ -373,9 +391,9 @@ class WatchControllerTest(unittest.TestCase):
                   u'MetricData.member.1.Value': u'1',
                   u'MetricData.member.1.MetricName': u'ServiceFailure',
                   u'MetricData.member.1.Dimensions.member.1.Name':
-                    u'AlarmName',
+                  u'AlarmName',
                   u'MetricData.member.1.Dimensions.member.1.Value':
-                    u'HttpFailureAlarm',
+                  u'HttpFailureAlarm',
                   u'Action': u'PutMetricData'}
 
         dummy_req = self._dummy_GET_request(params)
@@ -384,13 +402,15 @@ class WatchControllerTest(unittest.TestCase):
         engine_resp = {}
 
         self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic, {'args': {'stats_data':
-                 {'Namespace': u'system/linux',
-                 u'ServiceFailure':
-                    {'Value': u'1',
-                    'Unit': u'Count',
-                    'Dimensions': []}},
-                    'watch_name': u'HttpFailureAlarm'},
+        rpc.call(dummy_req.context, self.topic,
+                 {'args':
+                  {'stats_data':
+                  {'Namespace': u'system/linux',
+                  u'ServiceFailure':
+                  {'Value': u'1',
+                   'Unit': u'Count',
+                   'Dimensions': []}},
+                 'watch_name': u'HttpFailureAlarm'},
                  'method': 'create_watch_data',
                  'version': self.api_version},
                  None).AndReturn(engine_resp)
@@ -404,8 +424,8 @@ class WatchControllerTest(unittest.TestCase):
 
     def test_set_alarm_state(self):
         state_map = {'OK': engine_api.WATCH_STATE_OK,
-                      'ALARM': engine_api.WATCH_STATE_ALARM,
-                      'INSUFFICIENT_DATA': engine_api.WATCH_STATE_NODATA}
+                     'ALARM': engine_api.WATCH_STATE_ALARM,
+                     'INSUFFICIENT_DATA': engine_api.WATCH_STATE_NODATA}
 
         for state in state_map.keys():
             params = {u'StateValue': state,
@@ -422,12 +442,13 @@ class WatchControllerTest(unittest.TestCase):
             engine_resp = {}
 
             self.m.StubOutWithMock(rpc, 'call')
-            rpc.call(dummy_req.context, self.topic, {'args':
-                 {'state': state_map[state],
-                 'watch_name': u'HttpFailureAlarm'},
-                 'method': 'set_watch_state',
-                 'version': self.api_version},
-                 None).AndReturn(engine_resp)
+            rpc.call(dummy_req.context, self.topic,
+                     {'args':
+                      {'state': state_map[state],
+                       'watch_name': u'HttpFailureAlarm'},
+                      'method': 'set_watch_state',
+                      'version': self.api_version},
+                     None).AndReturn(engine_resp)
 
             self.m.ReplayAll()
 

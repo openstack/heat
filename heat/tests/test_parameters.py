@@ -291,7 +291,7 @@ class ParametersTest(unittest.TestCase):
 
     def test_schema_invariance(self):
         params1 = parameters.Parameters('test', params_schema,
-                                    {'Defaulted': 'wibble'})
+                                        {'Defaulted': 'wibble'})
         self.assertEqual(params1['Defaulted'], 'wibble')
 
         params2 = parameters.Parameters('test', params_schema)

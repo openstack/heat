@@ -46,16 +46,16 @@ class WatchRuleTest(unittest.TestCase):
         ctx = context.get_admin_context()
         tmpl = db_api.raw_template_create(ctx, {'foo': 'bar'})
         dummy_stack = {'id': '6754d843-bed2-40dc-a325-84882bb90a98',
-                        'name': 'dummystack',
-                        'raw_template_id': tmpl.id,
-                        'user_creds_id': 1,
-                        'username': 'dummyuser',
-                        'owner_id': None,
-                        'status': 'CREATE_COMPLETE',
-                        'status_reason': 'foo status',
-                        'parameters': {'foo': 'bar'},
-                        'timeout': 60,
-                        'tenant': 123456}
+                       'name': 'dummystack',
+                       'raw_template_id': tmpl.id,
+                       'user_creds_id': 1,
+                       'username': 'dummyuser',
+                       'owner_id': None,
+                       'status': 'CREATE_COMPLETE',
+                       'status_reason': 'foo status',
+                       'parameters': {'foo': 'bar'},
+                       'timeout': 60,
+                       'tenant': 123456}
         db_ret = db_api.stack_create(ctx, dummy_stack)
         cls.stack_id = db_ret.id
 
@@ -74,13 +74,12 @@ class WatchRuleTest(unittest.TestCase):
         self.m.UnsetStubs()
 
     def test_minimum(self):
-        rule = {
-        'EvaluationPeriods': '1',
-        'MetricName': 'test_metric',
-        'Period': '300',
-        'Statistic': 'Minimum',
-        'ComparisonOperator': 'LessThanOrEqualToThreshold',
-        'Threshold': '50'}
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'Period': '300',
+                'Statistic': 'Minimum',
+                'ComparisonOperator': 'LessThanOrEqualToThreshold',
+                'Threshold': '50'}
 
         now = timeutils.utcnow()
         last = now - datetime.timedelta(seconds=320)
@@ -110,13 +109,12 @@ class WatchRuleTest(unittest.TestCase):
         self.assertEqual(new_state, 'ALARM')
 
     def test_maximum(self):
-        rule = {
-        'EvaluationPeriods': '1',
-        'MetricName': 'test_metric',
-        'Period': '300',
-        'Statistic': 'Maximum',
-        'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
-        'Threshold': '30'}
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'Period': '300',
+                'Statistic': 'Maximum',
+                'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
+                'Threshold': '30'}
 
         now = timeutils.utcnow()
         last = now - datetime.timedelta(seconds=320)
@@ -149,13 +147,12 @@ class WatchRuleTest(unittest.TestCase):
 
     def test_samplecount(self):
 
-        rule = {
-        'EvaluationPeriods': '1',
-        'MetricName': 'test_metric',
-        'Period': '300',
-        'Statistic': 'SampleCount',
-        'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
-        'Threshold': '3'}
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'Period': '300',
+                'Statistic': 'SampleCount',
+                'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
+                'Threshold': '3'}
 
         now = timeutils.utcnow()
         last = now - datetime.timedelta(seconds=320)
@@ -202,13 +199,12 @@ class WatchRuleTest(unittest.TestCase):
         self.assertEqual(new_state, 'NORMAL')
 
     def test_sum(self):
-        rule = {
-        'EvaluationPeriods': '1',
-        'MetricName': 'test_metric',
-        'Period': '300',
-        'Statistic': 'Sum',
-        'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
-        'Threshold': '100'}
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'Period': '300',
+                'Statistic': 'Sum',
+                'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
+                'Threshold': '100'}
 
         now = timeutils.utcnow()
         last = now - datetime.timedelta(seconds=320)
@@ -241,13 +237,12 @@ class WatchRuleTest(unittest.TestCase):
         self.assertEqual(new_state, 'ALARM')
 
     def test_ave(self):
-        rule = {
-        'EvaluationPeriods': '1',
-        'MetricName': 'test_metric',
-        'Period': '300',
-        'Statistic': 'Average',
-        'ComparisonOperator': 'GreaterThanThreshold',
-        'Threshold': '100'}
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'Period': '300',
+                'Statistic': 'Average',
+                'ComparisonOperator': 'GreaterThanThreshold',
+                'Threshold': '100'}
 
         now = timeutils.utcnow()
         last = now - datetime.timedelta(seconds=320)
@@ -282,16 +277,15 @@ class WatchRuleTest(unittest.TestCase):
         values = {'stack_id': self.stack_id,
                   'state': 'NORMAL',
                   'name': u'HttpFailureAlarm',
-                   'rule': {
-                        u'EvaluationPeriods': u'1',
-                        u'AlarmActions': [u'WebServerRestartPolicy'],
-                        u'AlarmDescription': u'Restart the WikiDatabase',
-                        u'Namespace': u'system/linux',
-                        u'Period': u'300',
-                        u'ComparisonOperator': u'GreaterThanThreshold',
-                        u'Statistic': u'SampleCount',
-                        u'Threshold': u'2',
-                        u'MetricName': u'ServiceFailure'}}
+                  'rule': {u'EvaluationPeriods': u'1',
+                           u'AlarmActions': [u'WebServerRestartPolicy'],
+                           u'AlarmDescription': u'Restart the WikiDatabase',
+                           u'Namespace': u'system/linux',
+                           u'Period': u'300',
+                           u'ComparisonOperator': u'GreaterThanThreshold',
+                           u'Statistic': u'SampleCount',
+                           u'Threshold': u'2',
+                           u'MetricName': u'ServiceFailure'}}
         db_ret = db_api.watch_rule_create(self.ctx, values)
         self.assertNotEqual(db_ret, None)
         values['name'] = 'AnotherWatch'
