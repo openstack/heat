@@ -316,7 +316,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             raise exc.HTTPInternalServerError(explanation=str(ex))
 
-        return types
+        return {'resource_types': types}
 
 
 def create_resource(options):

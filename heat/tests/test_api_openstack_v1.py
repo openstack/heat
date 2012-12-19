@@ -809,7 +809,7 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
         self.m.ReplayAll()
         response = self.controller.list_resource_types(req,
                                                        tenant_id=self.tenant)
-        self.assertEqual(response, engine_response)
+        self.assertEqual(response, {'resource_types': engine_response})
         self.m.VerifyAll()
 
     def test_list_resource_types_error(self):
