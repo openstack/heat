@@ -3,35 +3,35 @@
 BASE_DIR=`dirname $0`
 
 function usage {
-  echo "Usage: $0 [OPTION]..."
-  echo "Run Heat's test suite(s)"
-  echo ""
-  echo "  -V, --virtual-env        Always use virtualenv.  Install automatically if not present"
-  echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment (default)"
-  echo "  -F, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
-  echo "  -f, --func               Run functional tests"
-  echo "  -u, --unit               Run unit tests (default when nothing specified)"
-  echo "  -p, --pep8               Run pep8 tests"
-  echo "  --all                    Run all tests"
-  echo "  -c, --coverage           Generate coverage report (selects --unit)"
-  echo "  -h, --help               Print this usage message"
-  exit
+    echo "Usage: $0 [OPTION]..."
+    echo "Run Heat's test suite(s)"
+    echo ""
+    echo "  -V, --virtual-env        Always use virtualenv.  Install automatically if not present"
+    echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment (default)"
+    echo "  -F, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
+    echo "  -f, --func               Run functional tests"
+    echo "  -u, --unit               Run unit tests (default when nothing specified)"
+    echo "  -p, --pep8               Run pep8 tests"
+    echo "  --all                    Run all tests"
+    echo "  -c, --coverage           Generate coverage report (selects --unit)"
+    echo "  -h, --help               Print this usage message"
+    exit
 }
 
 # must not assign -a as an option, needed for selecting custom attributes
 function process_option {
-  case "$1" in
-    -V|--virtual-env) always_venv=1; never_venv=0;;
-    -N|--no-virtual-env) always_venv=0; never_venv=1;;
-    -F|--force) force=1;;
-    -f|--func) test_func=1; noseargs="$noseargs -a tag=func";;
-    -u|--unit) test_unit=1; noseargs="$noseargs -a tag=unit";;
-    -p|--pep8) test_pep8=1;;
-    --all) test_func=1; test_unit=1; test_pep8=1; noseargs="$noseargs -a tag=func -a tag=unit";;
-    -c|--coverage) coverage=1; test_unit=1; noseargs="$noseargs -a tag=unit";;
-    -h|--help) usage;;
-    *) noseargs="$noseargs $1"
-  esac
+    case "$1" in
+        -V|--virtual-env) always_venv=1; never_venv=0;;
+        -N|--no-virtual-env) always_venv=0; never_venv=1;;
+        -F|--force) force=1;;
+        -f|--func) test_func=1; noseargs="$noseargs -a tag=func";;
+        -u|--unit) test_unit=1; noseargs="$noseargs -a tag=unit";;
+        -p|--pep8) test_pep8=1;;
+        --all) test_func=1; test_unit=1; test_pep8=1; noseargs="$noseargs -a tag=func -a tag=unit";;
+        -c|--coverage) coverage=1; test_unit=1; noseargs="$noseargs -a tag=unit";;
+        -h|--help) usage;;
+        *) noseargs="$noseargs $1"
+    esac
 }
 
 venv=.venv
@@ -39,10 +39,10 @@ with_venv=tools/with_venv.sh
 wrapper=""
 
 function run_tests {
-  echo 'Running tests'
-  NOSETESTS="python heat/testing/runner.py $noseopts $noseargs"
-  # Just run the test suites in current environment
-  ${wrapper} $NOSETESTS 2> run_tests.err.log
+    echo 'Running tests'
+    NOSETESTS="python heat/testing/runner.py $noseopts $noseargs"
+    # Just run the test suites in current environment
+    ${wrapper} $NOSETESTS 2> run_tests.err.log
 }
 
 function run_pep8 {
@@ -86,28 +86,28 @@ fi
 
 if [ "$never_venv" == 0 ]
 then
-  # Remove the virtual environment if --force used
-  if [ "$force" == 1 ]; then
-    echo "Cleaning virtualenv..."
-    rm -rf ${venv}
-  fi
-  if [ -e ${venv} ]; then
-    wrapper="${with_venv}"
-  else
-    if [ "$always_venv" == 1 ]; then
-      # Automatically install the virtualenv
-      python tools/install_venv.py
-      wrapper="${with_venv}"
-    else
-      echo -e "No virtual environment found...create one? (Y/n) \c"
-      read use_ve
-      if [ "x$use_ve" = "xY" -o "x$use_ve" = "x" -o "x$use_ve" = "xy" ]; then
-        # Install the virtualenv and run the test suite in it
-        python tools/install_venv.py
-        wrapper=${with_venv}
-      fi
+    # Remove the virtual environment if --force used
+    if [ "$force" == 1 ]; then
+        echo "Cleaning virtualenv..."
+        rm -rf ${venv}
     fi
-  fi
+    if [ -e ${venv} ]; then
+        wrapper="${with_venv}"
+    else
+        if [ "$always_venv" == 1 ]; then
+            # Automatically install the virtualenv
+            python tools/install_venv.py
+            wrapper="${with_venv}"
+        else
+            echo -e "No virtual environment found...create one? (Y/n) \c"
+            read use_ve
+            if [ "x$use_ve" = "xY" -o "x$use_ve" = "x" -o "x$use_ve" = "xy" ]; then
+                # Install the virtualenv and run the test suite in it
+                python tools/install_venv.py
+                wrapper=${with_venv}
+            fi
+        fi
+    fi
 fi
 
 # Delete old coverage data from previous runs
@@ -119,13 +119,13 @@ result=0
 
 # If functional or unit tests have been selected, run them
 if [ ! -z "$noseargs" ]; then
-  run_tests
-  result=$?
+    run_tests
+    result=$?
 fi
 
 # Run pep8 if it was selected
 if [ "$test_pep8" == 1 ]; then
-  run_pep8
+    run_pep8
 fi
 
 # Generate coverage report
