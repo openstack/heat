@@ -6,8 +6,8 @@ function usage {
     echo "Usage: $0 [OPTION]..."
     echo "Run Heat's test suite(s)"
     echo ""
-    echo "  -V, --virtual-env        Always use virtualenv.  Install automatically if not present"
-    echo "  -N, --no-virtual-env     Don't use virtualenv.  Run tests in local environment (default)"
+    echo "  -V, --virtual-env        Use virtualenv.  Install automatically if not present."
+    echo "                           (Default is to run tests in local environment)"
     echo "  -F, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
     echo "  -f, --func               Run functional tests"
     echo "  -u, --unit               Run unit tests (default when nothing specified)"
@@ -19,10 +19,10 @@ function usage {
 }
 
 # must not assign -a as an option, needed for selecting custom attributes
+no_venv=1
 function process_option {
     case "$1" in
-        -V|--virtual-env) always_venv=1; never_venv=0;;
-        -N|--no-virtual-env) always_venv=0; never_venv=1;;
+        -V|--virtual-env) no_venv=0;;
         -F|--force) force=1;;
         -f|--func) test_func=1; noseargs="$noseargs -a tag=func";;
         -u|--unit) test_unit=1; noseargs="$noseargs -a tag=unit";;
@@ -82,7 +82,7 @@ if [ "$coverage" == 1 ]; then
     noseopts="$noseopts --with-coverage --cover-package=heat"
 fi
 
-if [ "$never_venv" == 0 ]
+if [ "$no_venv" == 0 ]
 then
     # Remove the virtual environment if --force used
     if [ "$force" == 1 ]; then
@@ -92,19 +92,9 @@ then
     if [ -e ${venv} ]; then
         wrapper="${with_venv}"
     else
-        if [ "$always_venv" == 1 ]; then
-            # Automatically install the virtualenv
-            python tools/install_venv.py
-            wrapper="${with_venv}"
-        else
-            echo -e "No virtual environment found...create one? (Y/n) \c"
-            read use_ve
-            if [ "x$use_ve" = "xY" -o "x$use_ve" = "x" -o "x$use_ve" = "xy" ]; then
-                # Install the virtualenv and run the test suite in it
-                python tools/install_venv.py
-                wrapper=${with_venv}
-            fi
-        fi
+        # Automatically install the virtualenv
+        python tools/install_venv.py
+        wrapper="${with_venv}"
     fi
 fi
 
