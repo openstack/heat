@@ -50,10 +50,8 @@ function run_pep8 {
     # so the local test matches the jenkins gate tests
     TOX_PEP_VERSION=$(grep "pep8==" $BASE_DIR/tox.ini | sed "s/.*pep8==//")
     INST_PEP_VERSION=$(pep8 --version 2>/dev/null)
-    if [[ "$TOX_PEP_VERSION" != "$INST_PEP_VERSION" ]]
-    then
-        if [[ -z "$INST_PEP_VERSION" ]]
-        then
+    if [[ "$TOX_PEP_VERSION" != "$INST_PEP_VERSION" ]]; then
+        if [[ -z "$INST_PEP_VERSION" ]]; then
             echo "ERROR pep8 is not installed, please install pep8 $TOX_PEP_VERSION" >&2
         else
             echo "ERROR installed version of pep8 $INST_PEP_VERSION"  >&2
