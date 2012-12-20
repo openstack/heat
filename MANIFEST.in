@@ -13,5 +13,6 @@ include heat/cloudinit/loguserdata.sh
 include heat/cloudinit/part-handler.py
 include heat/db/sqlalchemy/migrate_repo/migrate.cfg
 graft etc
+graft doc
 graft docs
 graft tools
