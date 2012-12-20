@@ -394,25 +394,13 @@ class EngineService(service.Service):
         return dict(resource.identifier())
 
     @request_context
-    def describe_stack_resources(self, context, stack_identity,
-                                 physical_resource_id, logical_resource_id):
-        if stack_identity is not None:
-            s = self._get_stack(context, stack_identity)
-        else:
-            rs = db_api.resource_get_by_physical_resource_id(
-                context, physical_resource_id)
-            if not rs:
-                msg = "The specified PhysicalResourceId doesn't exist"
-                raise AttributeError(msg)
-            s = rs.stack
-
-        if not s:
-            raise AttributeError("The specified stack doesn't exist")
+    def describe_stack_resources(self, context, stack_identity, resource_name):
+        s = self._get_stack(context, stack_identity)
 
         stack = parser.Stack.load(context, stack=s)
 
-        if logical_resource_id is not None:
-            name_match = lambda r: r.name == logical_resource_id
+        if resource_name is not None:
+            name_match = lambda r: r.name == resource_name
         else:
             name_match = lambda r: True
 

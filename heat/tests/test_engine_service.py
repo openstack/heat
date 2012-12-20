@@ -579,7 +579,7 @@ class stackServiceTest(unittest.TestCase):
     def test_stack_resources_describe(self):
         resources = self.man.describe_stack_resources(self.ctx,
                                                       self.stack_identity,
-                                                      None, 'WebServer')
+                                                      'WebServer')
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
@@ -600,7 +600,7 @@ class stackServiceTest(unittest.TestCase):
     def test_stack_resources_describe_no_filter(self):
         resources = self.man.describe_stack_resources(self.ctx,
                                                       self.stack_identity,
-                                                      None, None)
+                                                      None)
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
@@ -608,36 +608,21 @@ class stackServiceTest(unittest.TestCase):
         self.assertEqual(r['logical_resource_id'], 'WebServer')
 
     def test_stack_resources_describe_bad_lookup(self):
-        self.assertRaises(AttributeError,
+        self.assertRaises(TypeError,
                           self.man.describe_stack_resources,
-                          self.ctx, None, None, 'WebServer')
+                          self.ctx, None, 'WebServer')
 
     def test_stack_resources_describe_nonexist_stack(self):
         nonexist = dict(self.stack_identity)
         nonexist['stack_name'] = 'foo'
         self.assertRaises(AttributeError,
                           self.man.describe_stack_resources,
-                          self.ctx, nonexist, None, 'WebServer')
-
-    def test_stack_resources_describe_physid(self):
-        resources = self.man.describe_stack_resources(self.ctx,
-                                                      self.stack_identity,
-                                                      None, None)
-        phys_id = resources[0]['physical_resource_id']
-
-        result = self.man.describe_stack_resources(self.ctx,
-                                                   None, phys_id, None)
-        self.assertEqual(result, resources)
-
-    def test_stack_resources_describe_nonexist_physid(self):
-        self.assertRaises(AttributeError,
-                          self.man.describe_stack_resources,
-                          self.ctx, None, 'foo', 'WebServer')
+                          self.ctx, nonexist, 'WebServer')
 
     def test_find_physical_resource(self):
         resources = self.man.describe_stack_resources(self.ctx,
                                                       self.stack_identity,
-                                                      None, None)
+                                                      None)
         phys_id = resources[0]['physical_resource_id']
 
         result = self.man.find_physical_resource(self.ctx, phys_id)

@@ -136,8 +136,7 @@ class EngineRpcAPITestCase(unittest.TestCase):
     def test_describe_stack_resources(self):
         self._test_engine_api('describe_stack_resources', 'call',
                               stack_identity=self.identity,
-                              physical_resource_id=u'404d-a85b-5315293e67de',
-                              logical_resource_id=u'WikiDatabase')
+                              resource_name=u'WikiDatabase')
 
     def test_list_stack_resources(self):
         self._test_engine_api('list_stack_resources', 'call',

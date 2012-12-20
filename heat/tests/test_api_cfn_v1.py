@@ -983,8 +983,7 @@ class StackControllerTest(unittest.TestCase):
                   'version': self.api_version}, None).AndReturn(identity)
         args = {
             'stack_identity': identity,
-            'physical_resource_id': None,
-            'logical_resource_id': dummy_req.params.get('LogicalResourceId'),
+            'resource_name': dummy_req.params.get('LogicalResourceId'),
         }
         rpc.call(dummy_req.context, self.topic,
                  {'method': 'describe_stack_resources',
@@ -1072,8 +1071,7 @@ class StackControllerTest(unittest.TestCase):
                   'version': self.api_version}, None).AndReturn(identity)
         args = {
             'stack_identity': identity,
-            'physical_resource_id': None,
-            'logical_resource_id': dummy_req.params.get('LogicalResourceId'),
+            'resource_name': dummy_req.params.get('LogicalResourceId'),
         }
         rpc.call(dummy_req.context, self.topic,
                  {'method': 'describe_stack_resources',

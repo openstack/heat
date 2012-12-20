@@ -540,8 +540,7 @@ class StackController(object):
             resources = self.engine_rpcapi.describe_stack_resources(
                 con,
                 stack_identity=identity,
-                physical_resource_id=None,
-                logical_resource_id=req.params.get('LogicalResourceId'))
+                resource_name=req.params.get('LogicalResourceId'))
 
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)

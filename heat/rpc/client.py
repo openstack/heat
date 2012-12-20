@@ -205,12 +205,10 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                              physical_resource_id=physical_resource_id),
                          topic=_engine_topic(self.topic, ctxt, None))
 
-    def describe_stack_resources(self, ctxt, stack_identity,
-                                 physical_resource_id, logical_resource_id):
+    def describe_stack_resources(self, ctxt, stack_identity, resource_name):
         return self.call(ctxt, self.make_msg('describe_stack_resources',
-                         stack_identity=stack_identity,
-                         physical_resource_id=physical_resource_id,
-                         logical_resource_id=logical_resource_id),
+                                             stack_identity=stack_identity,
+                                             resource_name=resource_name),
                          topic=_engine_topic(self.topic, ctxt, None))
 
     def list_stack_resources(self, ctxt, stack_identity):
