@@ -1033,6 +1033,68 @@ class StackControllerTest(unittest.TestCase):
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
 
+    def test_describe_stack_resources_physical(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
+        params = {'Action': 'DescribeStackResources',
+                  'LogicalResourceId': "WikiDatabase",
+                  'PhysicalResourceId': 'a3455d8c-9f88-404d-a85b-5315293e67de'}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        engine_resp = [{u'description': u'',
+                        u'resource_identity': {
+                            u'tenant': u't',
+                            u'stack_name': u'wordpress',
+                            u'stack_id': u'6',
+                            u'path': u'resources/WikiDatabase'
+                        },
+                        u'stack_name': u'wordpress',
+                        u'logical_resource_id': u'WikiDatabase',
+                        u'resource_status_reason': None,
+                        u'updated_time': u'2012-07-23T13:06:00Z',
+                        u'stack_identity': {u'tenant': u't',
+                                            u'stack_name': u'wordpress',
+                                            u'stack_id': u'6',
+                                            u'path': u''},
+                        u'resource_status': u'CREATE_COMPLETE',
+                        u'physical_resource_id':
+                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                        u'resource_type': u'AWS::EC2::Instance',
+                        u'metadata': {u'ensureRunning': u'true''true'}}]
+
+        self.m.StubOutWithMock(rpc, 'call')
+        args = {
+            'stack_identity': None,
+            'physical_resource_id': 'a3455d8c-9f88-404d-a85b-5315293e67de',
+            'logical_resource_id': dummy_req.params.get('LogicalResourceId'),
+        }
+        rpc.call(dummy_req.context, self.topic,
+                 {'method': 'describe_stack_resources',
+                  'args': args,
+                  'version': self.api_version}, None).AndReturn(engine_resp)
+
+        self.m.ReplayAll()
+
+        response = self.controller.describe_stack_resources(dummy_req)
+
+        expected = {'DescribeStackResourcesResponse':
+                    {'DescribeStackResourcesResult':
+                    {'StackResources':
+                     [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
+                       'ResourceStatus': u'CREATE_COMPLETE',
+                       'Description': u'',
+                       'ResourceType': u'AWS::EC2::Instance',
+                       'Timestamp': u'2012-07-23T13:06:00Z',
+                       'ResourceStatusReason': None,
+                       'StackName': u'wordpress',
+                       'PhysicalResourceId':
+                       u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                       'LogicalResourceId': u'WikiDatabase'}]}}}
+
+        self.assertEqual(response, expected)
+
     def test_describe_stack_resources_err_inval(self):
         # Format a dummy request containing both StackName and
         # PhysicalResourceId, which is invalid and should throw a

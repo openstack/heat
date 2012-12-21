@@ -531,7 +531,10 @@ class StackController(object):
             return exception.HeatInvalidParameterCombinationError(detail=msg)
 
         try:
-            identity = self._get_identity(con, stack_name)
+            if stack_name is not None:
+                identity = self._get_identity(con, stack_name)
+            else:
+                identity = None
             resources = self.engine_rpcapi.describe_stack_resources(
                 con,
                 stack_identity=identity,
