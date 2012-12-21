@@ -468,8 +468,8 @@ class stackServiceTest(unittest.TestCase):
     def test_stack_list_all(self):
         sl = self.man.list_stacks(self.ctx)
 
-        self.assertEqual(len(sl['stacks']), 1)
-        for s in sl['stacks']:
+        self.assertEqual(len(sl), 1)
+        for s in sl:
             self.assertTrue('creation_time' in s)
             self.assertTrue('updated_time' in s)
             self.assertTrue('stack_identity' in s)
@@ -488,7 +488,7 @@ class stackServiceTest(unittest.TestCase):
 
         sl = self.man.list_stacks(self.ctx)
 
-        self.assertEqual(len(sl['stacks']), 0)
+        self.assertEqual(len(sl), 0)
 
     def test_stack_describe_nonexistent(self):
         nonexist = dict(self.stack_identity)

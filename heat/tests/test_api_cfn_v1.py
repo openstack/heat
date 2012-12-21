@@ -77,8 +77,7 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'stacks': [
-                       {u'stack_identity': {u'tenant': u't',
+        engine_resp = [{u'stack_identity': {u'tenant': u't',
                                             u'stack_name': u'wordpress',
                                             u'stack_id': u'1',
                                             u'path': u''},
@@ -87,7 +86,7 @@ class StackControllerTest(unittest.TestCase):
                         u'stack_status_reason': u'Stack successfully created',
                         u'creation_time': u'2012-07-09T09:12:45Z',
                         u'stack_name': u'wordpress',
-                        u'stack_status': u'CREATE_COMPLETE'}]}
+                        u'stack_status': u'CREATE_COMPLETE'}]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
                  {'method': 'list_stacks',

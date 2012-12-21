@@ -151,7 +151,7 @@ class StackController(object):
         """
 
         try:
-            stack_list = self.engine.list_stacks(req.context)
+            stacks = self.engine.list_stacks(req.context)
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex, True)
 
@@ -163,8 +163,6 @@ class StackController(object):
                         engine_api.STACK_CREATION_TIME,
                         engine_api.STACK_DELETION_TIME,
                         engine_api.STACK_UPDATED_TIME)
-
-        stacks = stack_list['stacks']
 
         return {'stacks': [format_stack(req, s, summary_keys) for s in stacks]}
 

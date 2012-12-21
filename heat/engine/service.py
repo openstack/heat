@@ -177,7 +177,7 @@ class EngineService(service.Service):
                     yield api.format_stack(stack)
 
         stacks = db_api.stack_get_all_by_tenant(context) or []
-        return {'stacks': list(format_stack_details(stacks))}
+        return list(format_stack_details(stacks))
 
     @request_context
     def create_stack(self, context, stack_name, template, params, args):

@@ -240,26 +240,24 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
 
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
 
-        engine_resp = {
-            u'stacks': [
-                {
-                    u'stack_identity': dict(identity),
-                    u'updated_time': u'2012-07-09T09:13:11Z',
-                    u'template_description': u'blah',
-                    u'description': u'blah',
-                    u'stack_status_reason': u'Stack successfully created',
-                    u'creation_time': u'2012-07-09T09:12:45Z',
-                    u'stack_name': identity.stack_name,
-                    u'stack_status': u'CREATE_COMPLETE',
-                    u'parameters': {},
-                    u'outputs': [],
-                    u'notification_topics': [],
-                    u'capabilities': [],
-                    u'disable_rollback': True,
-                    u'timeout_mins': 60,
-                }
-            ]
-        }
+        engine_resp = [
+            {
+                u'stack_identity': dict(identity),
+                u'updated_time': u'2012-07-09T09:13:11Z',
+                u'template_description': u'blah',
+                u'description': u'blah',
+                u'stack_status_reason': u'Stack successfully created',
+                u'creation_time': u'2012-07-09T09:12:45Z',
+                u'stack_name': identity.stack_name,
+                u'stack_status': u'CREATE_COMPLETE',
+                u'parameters': {},
+                u'outputs': [],
+                u'notification_topics': [],
+                u'capabilities': [],
+                u'disable_rollback': True,
+                u'timeout_mins': 60,
+            }
+        ]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'list_stacks',
