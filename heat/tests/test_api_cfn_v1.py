@@ -1065,9 +1065,14 @@ class StackControllerTest(unittest.TestCase):
                         u'metadata': {u'ensureRunning': u'true''true'}}]
 
         self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'method': 'find_physical_resource',
+                  'args': {'physical_resource_id':
+                           'a3455d8c-9f88-404d-a85b-5315293e67de'},
+                  'version': self.api_version}, None).AndReturn(identity)
         args = {
-            'stack_identity': None,
-            'physical_resource_id': 'a3455d8c-9f88-404d-a85b-5315293e67de',
+            'stack_identity': identity,
+            'physical_resource_id': None,
             'logical_resource_id': dummy_req.params.get('LogicalResourceId'),
         }
         rpc.call(dummy_req.context, self.topic,

@@ -534,11 +534,13 @@ class StackController(object):
             if stack_name is not None:
                 identity = self._get_identity(con, stack_name)
             else:
-                identity = None
+                identity = self.engine_rpcapi.find_physical_resource(
+                    con,
+                    physical_resource_id=physical_resource_id)
             resources = self.engine_rpcapi.describe_stack_resources(
                 con,
                 stack_identity=identity,
-                physical_resource_id=physical_resource_id,
+                physical_resource_id=None,
                 logical_resource_id=req.params.get('LogicalResourceId'))
 
         except rpc_common.RemoteError as ex:
