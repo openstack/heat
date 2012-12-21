@@ -76,13 +76,15 @@ def resource_get_by_name_and_stack(context, resource_name, stack_id):
 
 
 def resource_get_by_physical_resource_id(context, physical_resource_id):
-    result = (model_query(context, models.Resource)
-              .filter_by(nova_instance=physical_resource_id)
-              .first())
-    if (result is not None and context is not None and
-            result.stack.tenant != context.tenant_id):
-        return None
-    return result
+    results = (model_query(context, models.Resource)
+               .filter_by(nova_instance=physical_resource_id)
+               .all())
+
+    for result in results:
+        if context is None or result.stack.tenant == context.tenant_id:
+            return result
+
+    return None
 
 
 def resource_get_all(context):

@@ -618,6 +618,16 @@ class stackServiceTest(unittest.TestCase):
                           self.man.describe_stack_resources,
                           self.ctx, nonexist, None, 'WebServer')
 
+    def test_stack_resources_describe_physid(self):
+        resources = self.man.describe_stack_resources(self.ctx,
+                                                      self.stack_identity,
+                                                      None, None)
+        phys_id = resources[0]['physical_resource_id']
+
+        result = self.man.describe_stack_resources(self.ctx,
+                                                   None, phys_id, None)
+        self.assertEqual(result, resources)
+
     def test_stack_resources_describe_nonexist_physid(self):
         self.assertRaises(AttributeError,
                           self.man.describe_stack_resources,
