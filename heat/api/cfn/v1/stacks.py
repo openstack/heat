@@ -433,11 +433,9 @@ class StackController(object):
         stack_name = req.params.get('StackName', None)
         try:
             identity = stack_name and self._get_identity(con, stack_name)
-            event_res = self.engine_rpcapi.list_events(con, identity)
+            events = self.engine_rpcapi.list_events(con, identity)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
-
-        events = 'Error' not in event_res and event_res['events'] or []
 
         result = [format_stack_event(e) for e in events]
 

@@ -785,24 +785,23 @@ class StackControllerTest(unittest.TestCase):
         dummy_req = self._dummy_GET_request(params)
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'events':
-                       [{u'stack_name': u'wordpress',
-                         u'event_time': u'2012-07-23T13:05:39Z',
-                         u'stack_identity': {u'tenant': u't',
-                                             u'stack_name': u'wordpress',
-                                             u'stack_id': u'6',
-                                             u'path': u''},
-                         u'logical_resource_id': u'WikiDatabase',
-                         u'resource_status_reason': u'state changed',
-                         u'event_identity':
-                         {u'tenant': u't',
-                          u'stack_name': u'wordpress',
-                          u'stack_id': u'6',
-                          u'path': u'/resources/WikiDatabase/events/42'},
-                         u'resource_status': u'IN_PROGRESS',
-                         u'physical_resource_id': None,
-                         u'resource_properties': {u'UserData': u'blah'},
-                         u'resource_type': u'AWS::EC2::Instance'}]}
+        engine_resp = [{u'stack_name': u'wordpress',
+                        u'event_time': u'2012-07-23T13:05:39Z',
+                        u'stack_identity': {u'tenant': u't',
+                                            u'stack_name': u'wordpress',
+                                            u'stack_id': u'6',
+                                            u'path': u''},
+                        u'logical_resource_id': u'WikiDatabase',
+                        u'resource_status_reason': u'state changed',
+                        u'event_identity':
+                        {u'tenant': u't',
+                         u'stack_name': u'wordpress',
+                         u'stack_id': u'6',
+                         u'path': u'/resources/WikiDatabase/events/42'},
+                        u'resource_status': u'IN_PROGRESS',
+                        u'physical_resource_id': None,
+                        u'resource_properties': {u'UserData': u'blah'},
+                        u'resource_type': u'AWS::EC2::Instance'}]
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,

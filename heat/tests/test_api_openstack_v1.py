@@ -1096,7 +1096,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events')
 
-        engine_resp = {u'events': [
+        engine_resp = [
             {
                 u'stack_name': u'wordpress',
                 u'event_time': u'2012-07-23T13:05:39Z',
@@ -1121,7 +1121,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
                 u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
-        ]}
+        ]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'list_events',
@@ -1168,7 +1168,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
 
         req = self._get(stack_identity._tenant_path() + '/events')
 
-        engine_resp = {u'events': [
+        engine_resp = [
             {
                 u'stack_name': u'wordpress',
                 u'event_time': u'2012-07-23T13:05:39Z',
@@ -1181,7 +1181,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
                 u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
-        ]}
+        ]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'list_events',
@@ -1249,7 +1249,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events')
 
-        engine_resp = {u'events': [
+        engine_resp = [
             {
                 u'stack_name': u'wordpress',
                 u'event_time': u'2012-07-23T13:05:39Z',
@@ -1262,7 +1262,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
                 u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
-        ]}
+        ]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'list_events',
@@ -1294,7 +1294,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
 
-        engine_resp = {u'events': [
+        engine_resp = [
             {
                 u'stack_name': u'wordpress',
                 u'event_time': u'2012-07-23T13:05:39Z',
@@ -1320,7 +1320,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
                 u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
-        ]}
+        ]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'list_events',
@@ -1370,7 +1370,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
 
-        engine_resp = {u'events': [
+        engine_resp = [
             {
                 u'stack_name': u'wordpress',
                 u'event_time': u'2012-07-23T13:05:39Z',
@@ -1383,7 +1383,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
                 u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
-        ]}
+        ]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'list_events',
@@ -1413,7 +1413,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
 
-        engine_resp = {u'events': [
+        engine_resp = [
             {
                 u'stack_name': u'wordpress',
                 u'event_time': u'2012-07-23T13:05:39Z',
@@ -1426,7 +1426,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
                 u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
-        ]}
+        ]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'list_events',

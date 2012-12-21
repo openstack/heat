@@ -422,10 +422,7 @@ class stackServiceTest(unittest.TestCase):
         self.assertEqual(None, db_api.stack_get_by_name(ctx2, self.stack_name))
 
     def test_stack_event_list(self):
-        el = self.man.list_events(self.ctx, self.stack_identity)
-
-        self.assertTrue('events' in el)
-        events = el['events']
+        events = self.man.list_events(self.ctx, self.stack_identity)
 
         self.assertEqual(len(events), 2)
         for ev in events:

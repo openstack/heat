@@ -358,9 +358,7 @@ class EngineService(service.Service):
         else:
             events = db_api.event_get_all_by_tenant(context)
 
-        output = [api.format_event(Event.load(context, e.id)) for e in events]
-
-        return {'events': output}
+        return [api.format_event(Event.load(context, e.id)) for e in events]
 
     @request_context
     def describe_stack_resource(self, context, stack_identity, resource_name):

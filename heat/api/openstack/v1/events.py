@@ -73,18 +73,14 @@ class EventController(object):
     def _event_list(self, req, identity,
                     filter_func=lambda e: True, detail=False):
         try:
-            result = self.engine.list_events(req.context,
+            events = self.engine.list_events(req.context,
                                              identity)
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
 
-        if 'events' not in result:
-            raise exc.HTTPInternalServerError()
-        ev_list = result['events']
-
         keys = None if detail else summary_keys
 
-        return [format_event(req, e, keys) for e in ev_list if filter_func(e)]
+        return [format_event(req, e, keys) for e in events if filter_func(e)]
 
     @util.identified_stack
     def index(self, req, identity, resource_name=None):
