@@ -508,25 +508,23 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
                     u'description': u'URL for Wordpress wiki',
                     u'output_value': u'http://10.0.0.8/wordpress'}]
 
-        engine_resp = {
-            u'stacks': [
-                {
-                    u'stack_identity': dict(identity),
-                    u'updated_time': u'2012-07-09T09:13:11Z',
-                    u'parameters': parameters,
-                    u'outputs': outputs,
-                    u'stack_status_reason': u'Stack successfully created',
-                    u'creation_time': u'2012-07-09T09:12:45Z',
-                    u'stack_name': identity.stack_name,
-                    u'notification_topics': [],
-                    u'stack_status': u'CREATE_COMPLETE',
-                    u'description': u'blah',
-                    u'disable_rollback': True,
-                    u'timeout_mins':60,
-                    u'capabilities': [],
-                }
-            ]
-        }
+        engine_resp = [
+            {
+                u'stack_identity': dict(identity),
+                u'updated_time': u'2012-07-09T09:13:11Z',
+                u'parameters': parameters,
+                u'outputs': outputs,
+                u'stack_status_reason': u'Stack successfully created',
+                u'creation_time': u'2012-07-09T09:12:45Z',
+                u'stack_name': identity.stack_name,
+                u'notification_topics': [],
+                u'stack_status': u'CREATE_COMPLETE',
+                u'description': u'blah',
+                u'disable_rollback': True,
+                u'timeout_mins':60,
+                u'capabilities': [],
+            }
+        ]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'method': 'show_stack',

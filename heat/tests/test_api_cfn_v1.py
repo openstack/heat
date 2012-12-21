@@ -159,32 +159,31 @@ class StackControllerTest(unittest.TestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         # Note the engine returns a load of keys we don't actually use
         # so this is a subset of the real response format
-        engine_resp = {u'stacks':
-                       [{u'stack_identity':
-                         {u'tenant': u't',
-                          u'stack_name': u'wordpress',
-                          u'stack_id': u'6',
-                          u'path': u''},
-                         u'updated_time': u'2012-07-09T09:13:11Z',
-                         u'parameters': {u'DBUsername': u'admin',
-                                         u'LinuxDistribution': u'F17',
-                                         u'InstanceType': u'm1.large',
-                                         u'DBRootPassword': u'admin',
-                                         u'DBPassword': u'admin',
-                                         u'DBName': u'wordpress'},
-                        u'outputs':
-                        [{u'output_key': u'WebsiteURL',
-                          u'description': u'URL for Wordpress wiki',
-                          u'output_value': u'http://10.0.0.8/wordpress'}],
-                        u'stack_status_reason': u'Stack successfully created',
-                        u'creation_time': u'2012-07-09T09:12:45Z',
-                        u'stack_name': u'wordpress',
-                        u'notification_topics': [],
-                        u'stack_status': u'CREATE_COMPLETE',
-                        u'description': u'blah',
-                        u'disable_rollback': True,
-                        u'timeout_mins':60,
-                        u'capabilities':[]}]}
+        engine_resp = [{u'stack_identity':
+                        {u'tenant': u't',
+                         u'stack_name': u'wordpress',
+                         u'stack_id': u'6',
+                         u'path': u''},
+                        u'updated_time': u'2012-07-09T09:13:11Z',
+                        u'parameters': {u'DBUsername': u'admin',
+                                        u'LinuxDistribution': u'F17',
+                                        u'InstanceType': u'm1.large',
+                                        u'DBRootPassword': u'admin',
+                                        u'DBPassword': u'admin',
+                                        u'DBName': u'wordpress'},
+                       u'outputs':
+                       [{u'output_key': u'WebsiteURL',
+                         u'description': u'URL for Wordpress wiki',
+                         u'output_value': u'http://10.0.0.8/wordpress'}],
+                       u'stack_status_reason': u'Stack successfully created',
+                       u'creation_time': u'2012-07-09T09:12:45Z',
+                       u'stack_name': u'wordpress',
+                       u'notification_topics': [],
+                       u'stack_status': u'CREATE_COMPLETE',
+                       u'description': u'blah',
+                       u'disable_rollback': True,
+                       u'timeout_mins':60,
+                       u'capabilities':[]}]
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
@@ -247,31 +246,30 @@ class StackControllerTest(unittest.TestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         # Note the engine returns a load of keys we don't actually use
         # so this is a subset of the real response format
-        engine_resp = {u'stacks':
-                       [{u'stack_identity': {u'tenant': u't',
-                                             u'stack_name': u'wordpress',
-                                             u'stack_id': u'6',
-                                             u'path': u''},
-                         u'updated_time': u'2012-07-09T09:13:11Z',
-                         u'parameters': {u'DBUsername': u'admin',
-                                         u'LinuxDistribution': u'F17',
-                                         u'InstanceType': u'm1.large',
-                                         u'DBRootPassword': u'admin',
-                                         u'DBPassword': u'admin',
-                                         u'DBName': u'wordpress'},
-                         u'outputs':
-                         [{u'output_key': u'WebsiteURL',
-                           u'description': u'URL for Wordpress wiki',
-                           u'output_value': u'http://10.0.0.8/wordpress'}],
-                         u'stack_status_reason': u'Stack successfully created',
-                         u'creation_time': u'2012-07-09T09:12:45Z',
-                         u'stack_name': u'wordpress',
-                         u'notification_topics': [],
-                         u'stack_status': u'CREATE_COMPLETE',
-                         u'description': u'blah',
-                         u'disable_rollback': True,
-                         u'timeout_mins':60,
-                         u'capabilities':[]}]}
+        engine_resp = [{u'stack_identity': {u'tenant': u't',
+                                            u'stack_name': u'wordpress',
+                                            u'stack_id': u'6',
+                                            u'path': u''},
+                        u'updated_time': u'2012-07-09T09:13:11Z',
+                        u'parameters': {u'DBUsername': u'admin',
+                                        u'LinuxDistribution': u'F17',
+                                        u'InstanceType': u'm1.large',
+                                        u'DBRootPassword': u'admin',
+                                        u'DBPassword': u'admin',
+                                        u'DBName': u'wordpress'},
+                        u'outputs':
+                        [{u'output_key': u'WebsiteURL',
+                          u'description': u'URL for Wordpress wiki',
+                          u'output_value': u'http://10.0.0.8/wordpress'}],
+                        u'stack_status_reason': u'Stack successfully created',
+                        u'creation_time': u'2012-07-09T09:12:45Z',
+                        u'stack_name': u'wordpress',
+                        u'notification_topics': [],
+                        u'stack_status': u'CREATE_COMPLETE',
+                        u'description': u'blah',
+                        u'disable_rollback': True,
+                        u'timeout_mins':60,
+                        u'capabilities':[]}]
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,

@@ -155,7 +155,7 @@ class EngineService(service.Service):
             stack = parser.Stack.load(context, stack=s)
             return api.format_stack(stack)
 
-        return {'stacks': [format_stack_detail(s) for s in stacks]}
+        return [format_stack_detail(s) for s in stacks]
 
     @request_context
     def list_stacks(self, context):

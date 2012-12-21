@@ -220,10 +220,10 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
 
-        if not stack_list['stacks']:
+        if not stack_list:
             raise exc.HTTPInternalServerError()
 
-        stack = stack_list['stacks'][0]
+        stack = stack_list[0]
 
         return {'stack': format_stack(req, stack)}
 

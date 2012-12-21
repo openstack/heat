@@ -214,7 +214,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 
-        res = {'Stacks': [format_stack(s) for s in stack_list['stacks']]}
+        res = {'Stacks': [format_stack(s) for s in stack_list]}
 
         return api_utils.format_response('DescribeStacks', res)
 
