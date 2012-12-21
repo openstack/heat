@@ -375,6 +375,25 @@ class EngineService(service.Service):
         return api.format_stack_resource(stack[resource_name])
 
     @request_context
+    def find_physical_resource(self, context, physical_resource_id):
+        """
+        Return an identifier for the resource with the specified physical
+        resource ID.
+        arg1 -> RPC context.
+        arg2 -> The physical resource ID to look up.
+        """
+        rs = db_api.resource_get_by_physical_resource_id(context,
+                                                         physical_resource_id)
+        if not rs:
+            msg = "The specified PhysicalResourceId doesn't exist"
+            raise AttributeError(msg)
+
+        stack = parser.Stack.load(context, stack=rs.stack)
+        resource = stack[rs.name]
+
+        return dict(resource.identifier())
+
+    @request_context
     def describe_stack_resources(self, context, stack_identity,
                                  physical_resource_id, logical_resource_id):
         if stack_identity is not None:

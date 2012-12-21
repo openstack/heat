@@ -192,6 +192,19 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                                              resource_name=resource_name),
                          topic=_engine_topic(self.topic, ctxt, None))
 
+    def find_physical_resource(self, ctxt, physical_resource_id):
+        """
+        Return an identifier for the resource with the specified physical
+        resource ID.
+        :param ctxt RPC context.
+        :param physcial_resource_id The physical resource ID to look up.
+        """
+        return self.call(ctxt,
+                         self.make_msg(
+                             'find_physical_resource',
+                             physical_resource_id=physical_resource_id),
+                         topic=_engine_topic(self.topic, ctxt, None))
+
     def describe_stack_resources(self, ctxt, stack_identity,
                                  physical_resource_id, logical_resource_id):
         return self.call(ctxt, self.make_msg('describe_stack_resources',

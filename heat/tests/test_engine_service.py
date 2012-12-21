@@ -23,6 +23,7 @@ from heat.common import context
 from heat.tests.v1_1 import fakes
 import heat.engine.api as engine_api
 import heat.db as db_api
+from heat.common import identifier
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import service
@@ -632,6 +633,23 @@ class stackServiceTest(unittest.TestCase):
         self.assertRaises(AttributeError,
                           self.man.describe_stack_resources,
                           self.ctx, None, 'foo', 'WebServer')
+
+    def test_find_physical_resource(self):
+        resources = self.man.describe_stack_resources(self.ctx,
+                                                      self.stack_identity,
+                                                      None, None)
+        phys_id = resources[0]['physical_resource_id']
+
+        result = self.man.find_physical_resource(self.ctx, phys_id)
+        self.assertTrue(isinstance(result, dict))
+        resource_identity = identifier.ResourceIdentifier(**result)
+        self.assertEqual(resource_identity.stack(), self.stack_identity)
+        self.assertEqual(resource_identity.resource_name, 'WebServer')
+
+    def test_find_physical_resource_nonexist(self):
+        self.assertRaises(AttributeError,
+                          self.man.find_physical_resource,
+                          self.ctx, 'foo')
 
     def test_stack_resources_list(self):
         resources = self.man.list_stack_resources(self.ctx,
