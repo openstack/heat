@@ -29,10 +29,8 @@ from lxml import etree
 
 from nose.exc import SkipTest
 
-try:
-    from glanceclient import client as glance_client
-except ImportError:
-    from glance import client as glance_client
+from glanceclient import client as glance_client
+from keystoneclient.v2_0 import client as keystone_client
 from novaclient.v1_1 import client as nova_client
 import heat
 from heat.common import template_format
@@ -331,17 +329,28 @@ class Stack(object):
                           tenant=os.environ['OS_TENANT_NAME'],
                           auth_url=os.environ['OS_AUTH_URL'],
                           strategy=os.environ['OS_AUTH_STRATEGY'])
+
         self.dbusername = 'testuser'
 
         self.testcase.assertEqual(os.environ['OS_AUTH_STRATEGY'],
                                   'keystone',
                                   'keystone authentication required')
 
-        self.glanceclient = glance_client.Client(host="0.0.0.0",
-                                                 port=9292,
-                                                 use_ssl=False,
-                                                 auth_tok=None,
-                                                 creds=self.creds)
+        kc_creds = dict(username=os.environ['OS_USERNAME'],
+                        password=os.environ['OS_PASSWORD'],
+                        tenant_name=os.environ['OS_TENANT_NAME'],
+                        auth_url=os.environ['OS_AUTH_URL'])
+        kc = keystone_client.Client(**kc_creds)
+        glance_url = kc.service_catalog.url_for(service_type='image',
+                                                endpoint_type='publicURL')
+
+        version_string = '/v1'
+        if glance_url.endswith(version_string):
+            glance_url = glance_url[:-len(version_string)]
+
+        auth_token = kc.auth_token
+        self.glanceclient = glance_client.Client(1, glance_url,
+                                                 token=auth_token)
 
         self.prepare_jeos(distribution, arch, jeos_type)
 
@@ -487,23 +496,22 @@ class Stack(object):
             self.poll_glance(self.glanceclient, imagename, True)
 
     def poll_glance(self, gclient, imagename, block):
-        imagelistname = None
+        image = None
         tries = 0
-        while imagelistname != imagename:
+        while image is None:
             tries += 1
             self.testcase.assertTrue(tries < 50, 'Timed out')
             if block:
                 time.sleep(15)
             print "Checking glance for image registration"
-            imageslist = gclient.get_images()
-            for x in imageslist:
-                imagelistname = x['name']
-                if imagelistname == imagename:
-                    print "Found image registration for %s" % imagename
-                    # technically not necessary, but glance registers image
-                    # before completely through with its operations
-                    time.sleep(10)
-                    return True
+            imageslist = gclient.images.list(filters={'name': imagename})
+            image = next(imageslist, None)
+            if image:
+                print "Found image registration for %s" % imagename
+                # technically not necessary, but glance registers image
+                # before completely through with its operations
+                time.sleep(10)
+                return True
             if not block:
                 break
         return False
