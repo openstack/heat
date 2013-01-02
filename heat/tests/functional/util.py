@@ -484,7 +484,7 @@ class Stack(object):
         imagename = p_os + '-' + arch + '-' + type
 
         # skip creating jeos if image already available
-        if not self.poll_glance(self.glanceclient, imagename, False):
+        if not self.poll_glance(imagename, False):
             self.testcase.assertEqual(os.geteuid(), 0,
                                       'No JEOS found - run as root to create')
 
@@ -495,7 +495,7 @@ class Stack(object):
             # asynchronous. So poll glance until image is registered.
             self.poll_glance(self.glanceclient, imagename, True)
 
-    def poll_glance(self, gclient, imagename, block):
+    def poll_glance(self, imagename, block):
         image = None
         tries = 0
         while image is None:
@@ -504,7 +504,8 @@ class Stack(object):
             if block:
                 time.sleep(15)
             print "Checking glance for image registration"
-            imageslist = gclient.images.list(filters={'name': imagename})
+            imageslist = self.glanceclient.images.list(
+                filters={'name': imagename})
             image = next(imageslist, None)
             if image:
                 print "Found image registration for %s" % imagename
