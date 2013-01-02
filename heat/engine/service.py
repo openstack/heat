@@ -19,6 +19,7 @@ import webob
 from heat.common import context
 from heat.db import api as db_api
 from heat.engine import api
+from heat.engine import clients
 from heat.engine.event import Event
 from heat.common import exception
 from heat.common import identifier
@@ -303,6 +304,14 @@ class EngineService(service.Service):
             'Parameters': params.values(),
         }
         return result
+
+    @request_context
+    def authenticated_to_backend(self, context):
+        """
+        Verify that the credentials in the RPC context are valid for the
+        current cloud backend.
+        """
+        return clients.Clients(context).authenticated()
 
     @request_context
     def get_template(self, context, stack_identity):
