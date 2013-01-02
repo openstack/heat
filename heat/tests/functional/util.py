@@ -322,7 +322,14 @@ class Stack(object):
         self.stack_paramstr = stack_paramstr
 
         self.stack_id_re = re.compile("^arn:openstack:heat::[0-9a-z]{32}:" +
-                                      "stacks/" + self.stackname + "/[0-9]*$")
+                                      "stacks/" + self.stackname +
+                                      # Stack ID UUID in standard form
+                                      # as returned by uuid.uuid4()
+                                      "/[0-9a-f]{8}-" +
+                                      "[0-9a-f]{4}-" +
+                                      "[0-9a-f]{4}-" +
+                                      "[0-9a-f]{4}-" +
+                                      "[0-9a-f]{12}$")
 
         self.creds = dict(username=os.environ['OS_USERNAME'],
                           password=os.environ['OS_PASSWORD'],
