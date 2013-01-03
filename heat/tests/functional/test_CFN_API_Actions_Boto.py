@@ -169,13 +169,13 @@ class CfnApiBotoFunctionalTest(unittest.TestCase):
                          self.stack_disable_rollback)
 
         # Create a dict to lookup the expected template parameters
-        template_parameters = {'DBUsername': 'dbuser',
+        # NoEcho parameters are masked with 6 asterisks
+        template_parameters = {'DBUsername': '******',
                                'LinuxDistribution': 'F17',
                                'InstanceType': 'm1.xlarge',
-                               'DBRootPassword': 'admin',
+                               'DBRootPassword': '******',
                                'KeyName': self.stack.keyname,
-                               'DBPassword':
-                               os.environ['OS_PASSWORD'],
+                               'DBPassword': '******',
                                'DBName': 'wordpress'}
 
         for key, value in template_parameters.iteritems():
