@@ -63,8 +63,10 @@ class CfnApiUpdateStackFunctionalTest(unittest.TestCase):
             cls.WikiDatabase.wait_for_provisioning()
             cls.logical_resource_status = "CREATE_COMPLETE"
             cls.stack_status = "CREATE_COMPLETE"
-        finally:
+        except Exception as ex:
+            print "setupAll failed : %s" % ex
             cls.stack.cleanup()
+            raise
 
     @classmethod
     def teardownAll(cls):
