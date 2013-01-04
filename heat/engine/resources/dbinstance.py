@@ -46,7 +46,8 @@ mysql_template = r'''
     },
 
     "DBSecurityGroups" : {
-      "Type": "List"
+      "Type": "CommaDelimitedList",
+      "Default": ""
     },
 
     "Port" : {
@@ -214,7 +215,13 @@ class DBInstance(stack.Stack):
         # Ignore the not implemented ones
         for key, value in self.properties_schema.items():
             if value.get('Implemented', True) and key != 'Engine':
-                params[key] = self.properties[key]
+                # There is a mismatch between the properties "List" format
+                # and the parameters "CommaDelimitedList" format, so we need
+                # to translate lists into the expected comma-delimited form
+                if isinstance(self.properties[key], list):
+                    params[key] = ','.join(self.properties[key])
+                else:
+                    params[key] = self.properties[key]
         p = self.stack.resolve_static_data(params)
         return p
 
