@@ -63,8 +63,7 @@ class WordPressRDSFunctionalTest(unittest.TestCase):
         # IP into the /usr/share one, which seems to work but could be a
         # template bug..
         stdin, stdout, sterr =\
-            self.WebServer.get_ssh_client().exec_command('grep DB_HOST '
-                                                         + wp_file)
+            self.WebServer.ssh.exec_command('grep DB_HOST ' + wp_file)
         result = stdout.readlines().pop().rstrip().split('\'')
         print "Checking wordpress DB_HOST, got %s" % result[3]
         self.assertTrue("localhost" != result[3])
