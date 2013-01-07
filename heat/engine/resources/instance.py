@@ -174,8 +174,8 @@ class Instance(resource.Resource):
                            (read_cloudinit_file('part-handler.py'),
                             'part-handler.py'),
                            (userdata, 'cfn-userdata', 'x-cfninitdata'),
-                           (read_cloudinit_file('loguserdata.sh'),
-                            'loguserdata.sh', 'x-shellscript')]
+                           (read_cloudinit_file('loguserdata.py'),
+                            'loguserdata.py', 'x-shellscript')]
 
             if 'Metadata' in self.t:
                 attachments.append((json.dumps(self.metadata),
@@ -217,7 +217,6 @@ class Instance(resource.Resource):
                                for sg in self.properties.get('SecurityGroups')]
 
         userdata = self.properties['UserData'] or ''
-        userdata += '\ntouch /var/lib/cloud/instance/provision-finished\n'
         flavor = self.properties['InstanceType']
         key_name = self.properties['KeyName']
 
