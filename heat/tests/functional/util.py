@@ -296,11 +296,6 @@ class Instance(object):
                 with open(filepaths[file]) as f:
                     self.testcase.assertEqual(data, f.read())
 
-    def get_ssh_client(self):
-        if self.ssh.get_transport() is not None:
-            return self.ssh
-        return None
-
     def get_sftp_client(self):
         if self.sftp is not None:
             return self.sftp
