@@ -76,6 +76,7 @@ class Instance(object):
                                              service_type='compute')
 
         self.ssh = paramiko.SSHClient()
+        self.sftp = None
 
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -295,11 +296,6 @@ class Instance(object):
             if file in filepaths.keys():
                 with open(filepaths[file]) as f:
                     self.testcase.assertEqual(data, f.read())
-
-    def get_sftp_client(self):
-        if self.sftp is not None:
-            return self.sftp
-        return None
 
     def close_ssh_client(self):
         self.ssh.close()
