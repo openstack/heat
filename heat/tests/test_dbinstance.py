@@ -83,7 +83,7 @@ class DBInstanceTest(unittest.TestCase):
             'AllocatedStorage': u'5',
             'DBInstanceClass': u'db.m1.small',
             'DBName': u'wordpress',
-            'DBSecurityGroups': [],
+            'DBSecurityGroups': '',
             'KeyName': 'test',
             'MasterUserPassword': u'admin',
             'MasterUsername': u'admin',
