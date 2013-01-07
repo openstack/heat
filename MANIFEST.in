@@ -5,13 +5,20 @@ include LICENSE
 include README.rst
 include MANIFEST.in pylintrc
 include openstack-common.conf
-include babel.cfg
+include babel.cfg install.sh run_tests.sh tox.ini uninstall.sh
 graft templates
 include heat/versioninfo
 include heat/cloudinit/config
 include heat/cloudinit/loguserdata.sh
 include heat/cloudinit/part-handler.py
 include heat/db/sqlalchemy/migrate_repo/migrate.cfg
+include heat/db/sqlalchemy/migrate_repo/README
+include heat/openstack/common/README
+include heat/testing/README.rst
+include heat/tests/examples/tags.txt
+include heat/tests/testing-overview.txt
+include heat/tests/v1_1/testfile.txt
+graft contrib
 graft etc
 graft doc
 graft docs
