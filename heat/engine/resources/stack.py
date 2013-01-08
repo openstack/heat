@@ -65,6 +65,8 @@ class Stack(resource.Resource):
 
     def get_output(self, op):
         stack = self.nested()
+        if not stack:
+            return None
         if op not in stack.outputs:
             raise exception.InvalidTemplateAttribute(
                 resource=self.physical_resource_name(), key=key)
@@ -105,7 +107,7 @@ class NestedStack(Stack):
                 resource=self.physical_resource_name(), key=key)
 
         prefix, dot, op = key.partition('.')
-        return self.get_output(op)
+        return unicode(self.get_output(op))
 
 
 def resource_mapping():
