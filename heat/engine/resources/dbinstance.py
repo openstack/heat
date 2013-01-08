@@ -72,16 +72,6 @@ mysql_template = r'''
 
 
   "Resources": {
-    "DatabaseInstanceCfnUser" : {
-      "Type" : "AWS::IAM::User"
-    },
-    "DatabaseInstanceKeys" : {
-      "Type" : "AWS::IAM::AccessKey",
-      "Properties" : {
-        "UserName" : {"Ref": "DatabaseInstanceCfnUser"}
-      }
-    },
-
     "DatabaseInstance": {
       "Type": "AWS::EC2::Instance",
       "Metadata": {
@@ -119,9 +109,6 @@ mysql_template = r'''
 
           "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" },
           " -r DatabaseInstance",
-          " --access-key ", { "Ref" : "DatabaseInstanceKeys" },
-          " --secret-key ",
-          {"Fn::GetAtt": ["DatabaseInstanceKeys", "SecretAccessKey"]},
           " --region ", { "Ref" : "AWS::Region" },
           " || error_exit 'Failed to run cfn-init'\n",
           "# Setup MySQL root password and create a user\n",
