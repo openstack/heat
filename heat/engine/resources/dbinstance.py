@@ -163,7 +163,7 @@ mysql_template = r'''
 '''
 
 
-class DBInstance(stack.Stack):
+class DBInstance(stack.NestedStack):
 
     properties_schema = {
         'DBSnapshotIdentifier': {'Type': 'String',
