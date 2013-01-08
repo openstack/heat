@@ -153,7 +153,7 @@ lb_template = '''
 # file at the moment this is because we will probably need to implement a
 # LoadBalancer based on keepalived as well (for for ssl support).
 #
-class LoadBalancer(stack.Stack):
+class LoadBalancer(stack.NestedStack):
 
     listeners_schema = {
         'InstancePort': {'Type': 'Number',
