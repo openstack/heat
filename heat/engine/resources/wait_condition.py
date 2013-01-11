@@ -113,11 +113,29 @@ class WaitConditionHandle(resource.Resource):
         else:
             return unicode(self.name)
 
+    def _metadata_format_ok(self, metadata):
+        """
+        Check the format of the provided metadata is as expected.
+        metadata must use the following format:
+        {
+            "Status" : "Status (should be SUCCESS or FAILURE)"
+            "UniqueId" : "Some ID, must be unique for Count>1",
+            "Data" : "Arbitrary Data",
+            "Reason" : "Reason String"
+        }
+        """
+        expected_keys = ['Data', 'Reason', 'Status', 'UniqueId']
+        return sorted(metadata.keys()) == expected_keys
+
     def metadata_update(self, metadata):
         '''
-        Update the resource metadata
+        Validate and update the resource metadata
         '''
-        self.metadata = metadata
+        if self._metadata_format_ok(metadata):
+            self.metadata = metadata
+        else:
+            logger.error("Metadata failed validation for %s" % self.name)
+            raise ValueError("Metadata format invalid")
 
 
 WAIT_STATUSES = (

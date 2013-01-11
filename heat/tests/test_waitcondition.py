@@ -239,9 +239,37 @@ class WaitConditionHandleTest(unittest.TestCase):
         resource = stack.resources['WaitHandle']
         self.assertEqual(resource.state, 'CREATE_COMPLETE')
 
-        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
+        test_metadata = {'Data': 'foo', 'Reason': 'bar',
+                         'Status': 'SUCCESS', 'UniqueId': '123'}
         resource.metadata_update(test_metadata)
         self.assertEqual(resource.metadata, test_metadata)
+
+        stack.delete()
+
+        self.m.VerifyAll()
+
+    def test_metadata_update_invalid(self):
+        stack = self.create_stack()
+        self.m.ReplayAll()
+        stack.create()
+
+        resource = stack.resources['WaitHandle']
+        self.assertEqual(resource.state, 'CREATE_COMPLETE')
+
+        # metadata_update should raise a ValueError if the metadata
+        # is missing any of the expected keys
+        err1_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
+        self.assertRaises(ValueError, resource.metadata_update, err1_metadata)
+
+        err1_metadata = {'Data': 'foo', 'Reason': 'bar', 'UniqueId': '1234'}
+        self.assertRaises(ValueError, resource.metadata_update, err1_metadata)
+
+        err1_metadata = {'Data': 'foo', 'Reason': 'bar', 'UniqueId': '1234'}
+        self.assertRaises(ValueError, resource.metadata_update, err1_metadata)
+
+        err1_metadata = {'data': 'foo', 'reason': 'bar',
+                         'status': 'SUCCESS', 'uniqueid': '1234'}
+        self.assertRaises(ValueError, resource.metadata_update, err1_metadata)
 
         stack.delete()
 
