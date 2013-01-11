@@ -113,6 +113,12 @@ class WaitConditionHandle(resource.Resource):
         else:
             return unicode(self.name)
 
+    def metadata_update(self, metadata):
+        '''
+        Update the resource metadata
+        '''
+        self.metadata = metadata
+
 
 WAIT_STATUSES = (
     WAITING,

@@ -660,10 +660,13 @@ class stackServiceTest(unittest.TestCase):
 
     def test_metadata(self):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
+        pre_update_meta = self.stack['WebServer'].metadata
         result = self.man.metadata_update(self.ctx,
                                           dict(self.stack_identity),
                                           'WebServer', test_metadata)
-        self.assertEqual(result, test_metadata)
+        # metadata_update is a no-op for all resources except
+        # WaitConditionHandle so we don't expect this to have changed
+        self.assertEqual(result, pre_update_meta)
 
     def test_metadata_err_stack(self):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}

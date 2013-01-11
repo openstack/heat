@@ -439,7 +439,7 @@ class EngineService(service.Service):
             raise AttributeError("Resource not found %s" % resource_name)
 
         resource = stack[resource_name]
-        resource.metadata = metadata
+        resource.metadata_update(metadata)
 
         return resource.metadata
 

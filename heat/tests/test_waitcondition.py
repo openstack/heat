@@ -178,10 +178,6 @@ class WaitConditionHandleTest(unittest.TestCase):
         uuid.uuid4().AndReturn('STACKABCD1234')
         self.m.ReplayAll()
         stack.store()
-        return stack
-
-    def test_handle(self):
-        stack = self.create_stack()
 
         # Stub waitcondition status so all goes CREATE_COMPLETE
         self.m.StubOutWithMock(wc.WaitCondition, '_get_status_reason')
@@ -198,6 +194,11 @@ class WaitConditionHandleTest(unittest.TestCase):
                                            stack.id, '', 'WaitHandle')
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
         wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+
+        return stack
+
+    def test_handle(self):
+        stack = self.create_stack()
 
         # Stub time to a fixed value so we can get an expected signature
         t = time.gmtime(1354196977)
@@ -225,6 +226,22 @@ class WaitConditionHandleTest(unittest.TestCase):
         self.assertEqual(expected_url, resource.FnGetRefId())
 
         self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update())
+
+        stack.delete()
+
+        self.m.VerifyAll()
+
+    def test_metadata_update(self):
+        stack = self.create_stack()
+        self.m.ReplayAll()
+        stack.create()
+
+        resource = stack.resources['WaitHandle']
+        self.assertEqual(resource.state, 'CREATE_COMPLETE')
+
+        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
+        resource.metadata_update(test_metadata)
+        self.assertEqual(resource.metadata, test_metadata)
 
         stack.delete()
 

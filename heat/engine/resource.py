@@ -429,6 +429,13 @@ class Resource(object):
         raise NotImplementedError("Update not implemented for Resource %s"
                                   % type(self))
 
+    def metadata_update(self, metadata):
+        '''
+        No-op for resources which don't explicitly override this method
+        '''
+        logger.warning("Resource %s does not implement metadata update" %
+                       self.name)
+
 
 class GenericResource(Resource):
     properties_schema = {}
