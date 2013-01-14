@@ -118,32 +118,60 @@ class WaitConditionHandle(resource.Resource):
         Check the format of the provided metadata is as expected.
         metadata must use the following format:
         {
-            "Status" : "Status (should be SUCCESS or FAILURE)"
-            "UniqueId" : "Some ID, must be unique for Count>1",
+            "Status" : "Status (must be SUCCESS or FAILURE)"
+            "UniqueId" : "Some ID, should be unique for Count>1",
             "Data" : "Arbitrary Data",
             "Reason" : "Reason String"
         }
         """
         expected_keys = ['Data', 'Reason', 'Status', 'UniqueId']
-        return sorted(metadata.keys()) == expected_keys
+        if sorted(metadata.keys()) == expected_keys:
+            return metadata['Status'] in (SUCCESS, FAILURE)
 
     def metadata_update(self, metadata):
         '''
         Validate and update the resource metadata
         '''
         if self._metadata_format_ok(metadata):
-            self.metadata = metadata
+            rsrc_metadata = self.metadata
+            if metadata['UniqueId'] in rsrc_metadata:
+                logger.warning("Overwriting Metadata item for UniqueId %s!" %
+                               metadata['UniqueId'])
+            new_metadata = {}
+            for k in ('Data', 'Reason', 'Status'):
+                new_metadata[k] = metadata[k]
+            # Note we can't update self.metadata directly, as it
+            # is a Metadata descriptor object which only supports get/set
+            rsrc_metadata.update({metadata['UniqueId']: new_metadata})
+            self.metadata = rsrc_metadata
         else:
             logger.error("Metadata failed validation for %s" % self.name)
             raise ValueError("Metadata format invalid")
 
+    def get_status(self):
+        '''
+        Return a list of the Status values for the handle signals
+        '''
+        return [self.metadata[s]['Status']
+                for s in self.metadata]
+
+    def get_status_reason(self, status):
+        '''
+        Return the reason associated with a particular status
+        If there is more than one handle signal matching the specified status
+        then return a semicolon delimited string containing all reasons
+        '''
+        return ';'.join([self.metadata[s]['Reason']
+                        for s in self.metadata
+                        if self.metadata[s]['Status'] == status])
+
 
 WAIT_STATUSES = (
-    WAITING,
+    FAILURE,
     TIMEDOUT,
     SUCCESS,
 ) = (
-    'WAITING',
+    'FAILURE',
     'TIMEDOUT',
     'SUCCESS',
 )
@@ -179,15 +207,13 @@ class WaitCondition(resource.Resource):
         handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
         return handle_id.resource_name
 
-    def _get_status_reason(self, handle):
-        return (handle.metadata.get('Status', WAITING),
-                handle.metadata.get('Reason', 'Reason not provided'))
-
     def _create_timeout(self):
         return eventlet.Timeout(self.timeout)
 
     def handle_create(self):
         tmo = None
+        status = FAILURE
+        reason = "Unknown reason"
         try:
             # keep polling our Metadata to see if the cfn-signal has written
             # it yet. The execution here is limited by timeout.
@@ -196,15 +222,24 @@ class WaitCondition(resource.Resource):
                 handle = self.stack[handle_res_name]
                 self.resource_id_set(handle_res_name)
 
-                (status, reason) = (WAITING, '')
+                # Poll for WaitConditionHandle signals indicating
+                # SUCCESS/FAILURE.  We need self.count SUCCESS signals
+                # before we can declare the WaitCondition CREATE_COMPLETE
+                handle_status = handle.get_status()
+                while (FAILURE not in handle_status
+                       and len(handle_status) < self.count):
+                    logger.debug('Polling for WaitCondition completion,' +
+                                 ' sleeping for %s seconds, timeout %s' %
+                                 (self.sleep_time, self.timeout))
+                    eventlet.sleep(self.sleep_time)
+                    handle_status = handle.get_status()
 
-                while status == WAITING:
-                    (status, reason) = self._get_status_reason(handle)
-                    if status == WAITING:
-                        logger.debug('Polling for WaitCondition completion,' +
-                                     ' sleeping for %s seconds, timeout %s' %
-                                     (self.sleep_time, self.timeout))
-                        eventlet.sleep(self.sleep_time)
+                if FAILURE in handle_status:
+                    reason = handle.get_status_reason(FAILURE)
+                elif (len(handle_status) == self.count and
+                      handle_status == [SUCCESS] * self.count):
+                    logger.debug("WaitCondition %s SUCCESS" % self.name)
+                    status = SUCCESS
 
         except eventlet.Timeout as t:
             if t is not tmo:
