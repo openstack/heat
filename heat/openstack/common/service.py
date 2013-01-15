@@ -27,17 +27,17 @@ import sys
 import time
 
 import eventlet
-import extras
 import logging as std_logging
 
 from heat.openstack.common import cfg
 from heat.openstack.common import eventlet_backdoor
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import threadgroup
 
 
-rpc = extras.try_import('heat.openstack.common.rpc')
+rpc = importutils.try_import('heat.openstack.common.rpc')
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
@@ -243,7 +243,10 @@ class ProcessLauncher(object):
 
     def _wait_child(self):
         try:
-            pid, status = os.wait()
+            # Don't block if no child processes have exited
+            pid, status = os.waitpid(0, os.WNOHANG)
+            if not pid:
+                return None
         except OSError as exc:
             if exc.errno not in (errno.EINTR, errno.ECHILD):
                 raise
@@ -275,6 +278,10 @@ class ProcessLauncher(object):
         while self.running:
             wrap = self._wait_child()
             if not wrap:
+                # Yield to other threads if no children have exited
+                # Sleep for a short time to avoid excessive CPU usage
+                # (see bug #1095346)
+                eventlet.greenthread.sleep(.01)
                 continue
 
             while self.running and len(wrap.children) < wrap.workers:

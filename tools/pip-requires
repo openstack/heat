@@ -12,7 +12,6 @@
 PyCrypto>=2.1.0
 boto>=2.4.0
 eventlet>=0.9.17
-extras
 greenlet>=0.3.1
 httplib2
 iso8601>=0.1.4
