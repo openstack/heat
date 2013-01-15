@@ -24,7 +24,6 @@ from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
-from heat.engine.resources import stack
 from heat.engine.resources import dbinstance as dbi
 
 
@@ -33,7 +32,7 @@ from heat.engine.resources import dbinstance as dbi
 class DBInstanceTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
-        self.m.StubOutWithMock(stack.Stack, 'create_with_template')
+        self.m.StubOutWithMock(dbi.DBInstance, 'create_with_template')
         self.m.StubOutWithMock(dbi.DBInstance, 'nested')
 
     def tearDown(self):
@@ -90,8 +89,8 @@ class DBInstanceTest(unittest.TestCase):
             'Port': '3306'
         }
 
-        stack.Stack.create_with_template(mox.IgnoreArg(),
-                                         params).AndReturn(None)
+        dbi.DBInstance.create_with_template(mox.IgnoreArg(),
+                                            params).AndReturn(None)
 
         fn = FakeNested()
 

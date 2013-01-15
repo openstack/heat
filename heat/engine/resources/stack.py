@@ -14,9 +14,9 @@
 #    under the License.
 
 from heat.common import exception
-from heat.common import template_format
-from heat.engine import resource
 from heat.engine import parser
+from heat.engine import stack_resource
+from heat.common import template_format
 from heat.common import urlfetch
 
 from heat.openstack.common import log as logging
@@ -29,61 +29,11 @@ logger = logging.getLogger(__name__)
  PROP_PARAMETERS) = ('TemplateURL', 'TimeoutInMinutes', 'Parameters')
 
 
-class Stack(resource.Resource):
-    def __init__(self, name, json_snippet, stack):
-        super(Stack, self).__init__(name, json_snippet, stack)
-        self._nested = None
+class NestedStack(stack_resource.StackResource):
+    '''
+    A Resource representing a child stack to allow composition of templates.
+    '''
 
-    def nested(self):
-        if self._nested is None and self.resource_id is not None:
-            self._nested = parser.Stack.load(self.context,
-                                             self.resource_id)
-
-            if self._nested is None:
-                raise exception.NotFound('Nested stack not found in DB')
-
-        return self._nested
-
-    def create_with_template(self, child_template, user_params):
-        '''
-        Handle the creation of the nested stack from a given JSON template.
-        '''
-        template = parser.Template(child_template)
-        params = parser.Parameters(self.physical_resource_name(), template,
-                                   user_params)
-
-        self._nested = parser.Stack(self.context,
-                                    self.physical_resource_name(),
-                                    template,
-                                    params)
-
-        nested_id = self._nested.store(self.stack)
-        self.resource_id_set(nested_id)
-        self._nested.create()
-        if self._nested.state != self._nested.CREATE_COMPLETE:
-            raise exception.Error(self._nested.state_description)
-
-    def delete_nested(self):
-        try:
-            stack = self.nested()
-        except exception.NotFound:
-            logger.info("Stack not found to delete")
-        else:
-            if stack is not None:
-                stack.delete()
-
-    def get_output(self, op):
-        stack = self.nested()
-        if not stack:
-            return None
-        if op not in stack.outputs:
-            raise exception.InvalidTemplateAttribute(
-                resource=self.physical_resource_name(), key=key)
-
-        return stack.output(op)
-
-
-class NestedStack(Stack):
     properties_schema = {PROP_TEMPLATE_URL: {'Type': 'String',
                                              'Required': True},
                          PROP_TIMEOUT_MINS: {'Type': 'Number'},
