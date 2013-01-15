@@ -17,6 +17,7 @@ import eventlet
 import time
 import urllib
 import urlparse
+import json
 
 from heat.common import exception
 from heat.common import identifier
@@ -262,21 +263,19 @@ class WaitCondition(resource.Resource):
         handle.metadata = {}
 
     def FnGetAtt(self, key):
-        res = None
+        res = {}
+        handle_res_name = self._get_handle_resource_name()
+        handle = self.stack[handle_res_name]
         if key == 'Data':
-            try:
-                meta = self.metadata
-                if meta and 'Data' in meta:
-                    res = meta['Data']
-            except Exception as ex:
-                pass
-
+            meta = handle.metadata
+            # Note, can't use a dict generator on python 2.6, hence:
+            res = dict([(k, meta[k]['Data']) for k in meta])
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
 
         logger.debug('%s.GetAtt(%s) == %s' % (self.name, key, res))
-        return unicode(res)
+        return unicode(json.dumps(res))
 
 
 def resource_mapping():

@@ -220,6 +220,35 @@ class WaitConditionTest(unittest.TestCase):
         self.assertEqual(wc.WaitCondition.UPDATE_REPLACE,
                          resource.handle_update())
 
+    def test_FnGetAtt(self):
+        self.stack = self.create_stack()
+        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
+        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        resource = self.stack.resources['WaitForTheHandle']
+        self.assertEqual(resource.state, 'CREATE_COMPLETE')
+
+        wc_att = resource.FnGetAtt('Data')
+        self.assertEqual(wc_att, unicode({}))
+
+        handle = self.stack.resources['WaitHandle']
+        self.assertEqual(handle.state, 'CREATE_COMPLETE')
+
+        test_metadata = {'Data': 'foo', 'Reason': 'bar',
+                         'Status': 'SUCCESS', 'UniqueId': '123'}
+        handle.metadata_update(test_metadata)
+        wc_att = resource.FnGetAtt('Data')
+        self.assertEqual(wc_att, '{"123": "foo"}')
+
+        test_metadata = {'Data': 'dog', 'Reason': 'cat',
+                         'Status': 'SUCCESS', 'UniqueId': '456'}
+        handle.metadata_update(test_metadata)
+        wc_att = resource.FnGetAtt('Data')
+        self.assertEqual(wc_att, u'{"123": "foo", "456": "dog"}')
+
 
 @attr(tag=['unit', 'resource', 'WaitConditionHandle'])
 @attr(speed='fast')
