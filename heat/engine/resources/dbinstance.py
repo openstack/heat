@@ -14,7 +14,7 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine.resources import stack
+from heat.engine import stack_resource
 from heat.common import template_format
 from heat.openstack.common import log as logging
 
@@ -150,7 +150,7 @@ mysql_template = r'''
 '''
 
 
-class DBInstance(stack.NestedStack):
+class DBInstance(stack_resource.StackResource):
 
     properties_schema = {
         'DBSnapshotIdentifier': {'Type': 'String',
@@ -215,6 +215,12 @@ class DBInstance(stack.NestedStack):
     def handle_create(self):
         templ = template_format.parse(mysql_template)
         self.create_with_template(templ, self._params())
+
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
+    def handle_delete(self):
+        self.delete_nested()
 
     def FnGetAtt(self, key):
         '''

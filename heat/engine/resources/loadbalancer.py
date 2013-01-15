@@ -16,7 +16,7 @@
 from heat.engine import clients
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources import stack
+from heat.engine import stack_resource
 
 from heat.openstack.common import log as logging
 
@@ -153,7 +153,7 @@ lb_template = '''
 # file at the moment this is because we will probably need to implement a
 # LoadBalancer based on keepalived as well (for for ssl support).
 #
-class LoadBalancer(stack.NestedStack):
+class LoadBalancer(stack_resource.StackResource):
 
     listeners_schema = {
         'InstancePort': {'Type': 'Number',
@@ -290,6 +290,12 @@ class LoadBalancer(stack.NestedStack):
 
         self.create_with_template(templ, param)
 
+    def handle_update(self):
+        return self.UPDATE_REPLACE
+
+    def handle_delete(self):
+        self.delete_nested()
+
     def validate(self):
         '''
         Validate any of the provided params
@@ -321,9 +327,6 @@ class LoadBalancer(stack.NestedStack):
 
     def FnGetRefId(self):
         return unicode(self.name)
-
-    def handle_update(self):
-        return self.UPDATE_REPLACE
 
     def FnGetAtt(self, key):
         '''
