@@ -270,6 +270,7 @@ class Instance(resource.Resource):
             self.resource_id_set(server.id)
             self._set_ipaddress(server.networks)
         else:
+            self.resource_id_set(server.id)
             raise exception.Error('%s instance[%s] status[%s]' %
                                   ('nova reported unexpected',
                                    self.name, server.status))
