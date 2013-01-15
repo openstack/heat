@@ -63,6 +63,15 @@ class Stack(resource.Resource):
         if self._nested.state != self._nested.CREATE_COMPLETE:
             raise exception.Error(self._nested.state_description)
 
+    def delete_nested(self):
+        try:
+            stack = self.nested()
+        except exception.NotFound:
+            logger.info("Stack not found to delete")
+        else:
+            if stack is not None:
+                stack.delete()
+
     def get_output(self, op):
         stack = self.nested()
         if not stack:
@@ -90,13 +99,7 @@ class NestedStack(Stack):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
-        try:
-            stack = self.nested()
-        except exception.NotFound:
-            logger.info("Stack not found to delete")
-        else:
-            if stack is not None:
-                stack.delete()
+        self.delete_nested()
 
     def FnGetRefId(self):
         return self.nested().identifier().arn()
