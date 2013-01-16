@@ -80,17 +80,16 @@ def make_link(req, identity, relationship='self'):
     return {'href': make_url(req, identity), 'rel': relationship}
 
 
-def remote_error(ex, force_exists=False):
+def remote_error(ex):
     """
     Map rpc_common.RemoteError exceptions returned by the engine
     to webob exceptions which can be used to return
     properly formatted error responses.
     """
 
-    client_error = exc.HTTPBadRequest if force_exists else exc.HTTPNotFound
     error_map = {
-        'AttributeError': client_error,
-        'ValueError': client_error,
+        'AttributeError': exc.HTTPBadRequest,
+        'ValueError': exc.HTTPBadRequest,
         'StackNotFound': exc.HTTPNotFound,
         'ResourceNotFound': exc.HTTPNotFound,
         'ResourceNotAvailable': exc.HTTPNotFound,

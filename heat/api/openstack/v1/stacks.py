@@ -153,7 +153,7 @@ class StackController(object):
         try:
             stacks = self.engine.list_stacks(req.context)
         except rpc_common.RemoteError as ex:
-            return util.remote_error(ex, True)
+            return util.remote_error(ex)
 
         summary_keys = (engine_api.STACK_ID,
                         engine_api.STACK_NAME,
@@ -181,7 +181,7 @@ class StackController(object):
                                               data.user_params(),
                                               data.args())
         except rpc_common.RemoteError as ex:
-            return util.remote_error(ex, True)
+            return util.remote_error(ex)
 
         if 'Description' in result:
             raise exc.HTTPBadRequest(explanation=result['Description'])
@@ -296,7 +296,7 @@ class StackController(object):
             result = self.engine.validate_template(req.context,
                                                    data.template())
         except rpc_common.RemoteError as ex:
-            return util.remote_error(ex, True)
+            return util.remote_error(ex)
 
         if 'Error' in result:
             raise exc.HTTPBadRequest(explanation=result['Error'])
