@@ -999,7 +999,7 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
                           resource_name=res_name)
         self.m.VerifyAll()
 
-    def test_show(self):
+    def test_metadata_show(self):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
