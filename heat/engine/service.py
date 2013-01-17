@@ -197,7 +197,7 @@ class EngineService(service.Service):
         logger.info('template is %s' % template)
 
         if db_api.stack_get_by_name(context, stack_name):
-            raise AttributeError('Stack already exists with that name')
+            raise exception.StackExists(stack_name=stack_name)
 
         tmpl = parser.Template(template)
 

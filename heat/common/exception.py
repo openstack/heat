@@ -211,3 +211,7 @@ class InvalidTenant(OpenstackException):
 
 class StackNotFound(OpenstackException):
     message = _("The Stack (%(stack_name)s) could not be found.")
+
+
+class StackExists(OpenstackException):
+    message = _("The Stack (%(stack_name)s) already exists.")

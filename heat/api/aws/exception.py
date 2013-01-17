@@ -248,6 +248,7 @@ def map_remote_error(ex):
             'ValueError',
             'InvalidTenant',
             'StackNotFound',
+            'StackExists',
         )
 
         if ex.exc_type in inval_param_errors:

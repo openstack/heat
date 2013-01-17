@@ -412,7 +412,7 @@ class stackServiceTest(unittest.TestCase):
                           self.ctx, 'wibble')
 
     def test_stack_create_existing(self):
-        self.assertRaises(AttributeError, self.man.create_stack,
+        self.assertRaises(exception.StackExists, self.man.create_stack,
                           self.ctx, self.stack_name, self.stack.t, {}, {})
 
     def test_stack_by_name_tenants(self):

@@ -379,6 +379,34 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
                           req, tenant_id=self.tenant, body=body)
         self.m.VerifyAll()
 
+    def test_create_err_existing(self):
+        stack_name = "wordpress"
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        json_template = json.dumps(template)
+        body = {'template': template,
+                'stack_name': stack_name,
+                'parameters': parameters,
+                'timeout_mins': 30}
+
+        req = self._post('/stacks', json.dumps(body))
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'create_stack',
+                  'args': {'stack_name': stack_name,
+                           'template': template,
+                           'params': parameters,
+                           'args': {'timeout_mins': 30}},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("StackExists"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPConflict,
+                          self.controller.create,
+                          req, tenant_id=self.tenant, body=body)
+        self.m.VerifyAll()
+
     def test_create_err_engine(self):
         stack_name = "wordpress"
         template = {u'Foo': u'bar'}
