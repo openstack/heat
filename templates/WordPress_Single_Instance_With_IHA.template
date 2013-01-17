@@ -143,10 +143,23 @@
                 "owner"   : "root",
                 "group"   : "root"
               },
+              "/etc/cfn/cfn-hup.conf" : {
+                "content" : { "Fn::Join" : ["", [
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackName" }, "\n",
+                  "credential-file=/etc/cfn/cfn-credentials\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n",
+                  "interval=", { "Ref" : "HupPollInterval" }, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
               "/tmp/cfn-hup-crontab.txt" : {
                 "content" : { "Fn::Join" : ["", [
                 "MAIL=\"\"\n",
                 "\n",
+                "* * * * * /opt/aws/bin/cfn-hup -f\n",
                 "* * * * * /opt/aws/bin/cfn-push-stats ",
                 " --watch ", { "Ref" : "HeartbeatFailureAlarm" },
                 " --heartbeat\n"
