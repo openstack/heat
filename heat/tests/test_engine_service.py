@@ -20,6 +20,7 @@ import mox
 from nose.plugins.attrib import attr
 
 from heat.common import context
+from heat.common import exception
 from heat.tests.v1_1 import fakes
 import heat.engine.api as engine_api
 import heat.db as db_api

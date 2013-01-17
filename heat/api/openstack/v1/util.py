@@ -86,10 +86,13 @@ def remote_error(ex, force_exists=False):
     to webob exceptions which can be used to return
     properly formatted error responses.
     """
-    if ex.exc_type in ('AttributeError', 'ValueError'):
-        if force_exists:
-            raise exc.HTTPBadRequest(explanation=str(ex))
-        else:
-            raise exc.HTTPNotFound(explanation=str(ex))
 
-    raise exc.HTTPInternalServerError(explanation=str(ex))
+    client_error = exc.HTTPBadRequest if force_exists else exc.HTTPNotFound
+    error_map = {
+        'AttributeError': client_error,
+        'ValueError': client_error,
+    }
+
+    Exc = error_map.get(ex.exc_type, exc.HTTPInternalServerError)
+
+    raise Exc(explanation=str(ex))
