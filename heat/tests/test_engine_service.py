@@ -720,8 +720,7 @@ class stackServiceTest(unittest.TestCase):
         result = self.man.show_watch(self.ctx, watch_name="HttpFailureAlarm")
         self.assertEqual(1, len(result))
 
-        # watch_name="nonexistent" should raise an AttributeError
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.WatchRuleNotFound,
                           self.man.show_watch,
                           self.ctx, watch_name="nonexistent")
 
@@ -834,7 +833,7 @@ class stackServiceTest(unittest.TestCase):
         self.assertNotEqual(db_ret, None)
 
         for state in ["HGJHGJHG", "1234", "!\*(&%"]:
-            self.assertRaises(AttributeError,
+            self.assertRaises(ValueError,
                               self.man.set_watch_state,
                               self.ctx, watch_name="OverrideAlarm2",
                               state=state)
@@ -843,8 +842,7 @@ class stackServiceTest(unittest.TestCase):
         db_api.watch_rule_delete(self.ctx, "OverrideAlarm2")
 
     def test_set_watch_state_noexist(self):
-        # watch_name="nonexistent" should raise an AttributeError
         state = watchrule.WatchRule.ALARM   # State valid
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.WatchRuleNotFound,
                           self.man.set_watch_state,
                           self.ctx, watch_name="nonexistent", state=state)

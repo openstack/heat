@@ -228,3 +228,7 @@ class ResourceNotAvailable(OpenstackException):
 
 class PhysicalResourceNotFound(OpenstackException):
     message = _("The Resource (%(resource_id)s) could not be found.")
+
+
+class WatchRuleNotFound(OpenstackException):
+    message = _("The Watch Rule (%(watch_name)s) could not be found.")

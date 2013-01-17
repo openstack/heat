@@ -15,6 +15,7 @@
 
 
 import datetime
+from heat.common import exception
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.engine import timestamp
@@ -70,7 +71,7 @@ class WatchRule(object):
                 logger.warn('WatchRule.load (%s) db error %s' %
                             (watch_name, str(ex)))
         if watch is None:
-            raise AttributeError('Unknown watch name %s' % watch_name)
+            raise exception.WatchRuleNotFound(watch_name=watch_name)
         else:
             return cls(context=context,
                        watch_name=watch.name,
@@ -251,8 +252,8 @@ class WatchRule(object):
         if not self.rule['MetricName'] in data:
             logger.warn('new data has incorrect metric:%s' %
                         (self.rule['MetricName']))
-            raise AttributeError('MetricName %s missing' %
-                                 self.rule['MetricName'])
+            raise ValueError('MetricName %s missing' %
+                             self.rule['MetricName'])
 
         watch_data = {
             'data': data,
@@ -269,7 +270,7 @@ class WatchRule(object):
         '''
 
         if state not in self.WATCH_STATES:
-            raise AttributeError('Unknown watch state %s' % state)
+            raise ValueError('Unknown watch state %s' % state)
 
         if state != self.state:
             if self.rule_action(state):

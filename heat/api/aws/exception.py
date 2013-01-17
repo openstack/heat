@@ -251,6 +251,7 @@ def map_remote_error(ex):
             'ResourceNotFound',
             'ResourceNotAvailable',
             'PhysicalResourceNotFound',
+            'WatchRuleNotFound',
             'StackExists',
         )
 
