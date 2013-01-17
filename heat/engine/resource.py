@@ -116,7 +116,6 @@ class Resource(object):
         if '/' in name:
             raise ValueError(_('Resource name may not contain "/"'))
 
-        self.references = []
         self.stack = stack
         self.context = stack.context
         self.name = name
@@ -138,10 +137,6 @@ class Resource(object):
             self.state = None
             self.state_description = ''
             self.id = None
-        self._nova = {}
-        self._keystone = None
-        self._swift = None
-        self._quantum = None
 
     def __eq__(self, other):
         '''Allow == comparison of two resources'''
