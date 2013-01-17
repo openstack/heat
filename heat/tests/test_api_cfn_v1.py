@@ -1208,6 +1208,32 @@ class StackControllerTest(unittest.TestCase):
 
         self.assertEqual(response, expected)
 
+    def test_describe_stack_resources_physical_not_found(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
+        params = {'Action': 'DescribeStackResources',
+                  'LogicalResourceId': "WikiDatabase",
+                  'PhysicalResourceId': 'aaaaaaaa-9f88-404d-cccc-ffffffffffff'}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'method': 'find_physical_resource',
+                  'args': {'physical_resource_id':
+                           'aaaaaaaa-9f88-404d-cccc-ffffffffffff'},
+                  'version': self.api_version},
+                 None).AndRaise(
+                     rpc_common.RemoteError("PhysicalResourceNotFound"))
+
+        self.m.ReplayAll()
+
+        response = self.controller.describe_stack_resources(dummy_req)
+
+        self.assertEqual(type(response),
+                         exception.HeatInvalidParameterValueError)
+
     def test_describe_stack_resources_err_inval(self):
         # Format a dummy request containing both StackName and
         # PhysicalResourceId, which is invalid and should throw a

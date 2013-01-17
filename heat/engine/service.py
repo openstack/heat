@@ -396,8 +396,8 @@ class EngineService(service.Service):
         rs = db_api.resource_get_by_physical_resource_id(context,
                                                          physical_resource_id)
         if not rs:
-            msg = "The specified PhysicalResourceId doesn't exist"
-            raise AttributeError(msg)
+            raise exception.PhysicalResourceNotFound(
+                resource_id=physical_resource_id)
 
         stack = parser.Stack.load(context, stack=rs.stack)
         resource = stack[rs.name]

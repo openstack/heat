@@ -94,6 +94,7 @@ def remote_error(ex, force_exists=False):
         'StackNotFound': exc.HTTPNotFound,
         'ResourceNotFound': exc.HTTPNotFound,
         'ResourceNotAvailable': exc.HTTPNotFound,
+        'PhysicalResourceNotFound': exc.HTTPNotFound,
         'InvalidTenant': exc.HTTPForbidden,
         'StackExists': exc.HTTPConflict,
     }

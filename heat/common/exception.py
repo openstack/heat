@@ -224,3 +224,7 @@ class ResourceNotFound(OpenstackException):
 
 class ResourceNotAvailable(OpenstackException):
     message = _("The Resource (%(resource_name)s) is not available.")
+
+
+class PhysicalResourceNotFound(OpenstackException):
+    message = _("The Resource (%(resource_id)s) could not be found.")

@@ -640,7 +640,7 @@ class stackServiceTest(unittest.TestCase):
         self.assertEqual(resource_identity.resource_name, 'WebServer')
 
     def test_find_physical_resource_nonexist(self):
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.PhysicalResourceNotFound,
                           self.man.find_physical_resource,
                           self.ctx, 'foo')
 

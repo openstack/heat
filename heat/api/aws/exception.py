@@ -250,6 +250,7 @@ def map_remote_error(ex):
             'StackNotFound',
             'ResourceNotFound',
             'ResourceNotAvailable',
+            'PhysicalResourceNotFound',
             'StackExists',
         )
 
