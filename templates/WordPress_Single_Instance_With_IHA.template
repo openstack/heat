@@ -114,6 +114,7 @@
     },
     "HeartbeatFailureAlarm": {
      "Type": "AWS::CloudWatch::Alarm",
+     "DependsOn" : "WaitCondition",
      "Properties": {
         "AlarmDescription": "Restart the WikiDatabase if we miss a heartbeat",
         "MetricName": "Heartbeat",
