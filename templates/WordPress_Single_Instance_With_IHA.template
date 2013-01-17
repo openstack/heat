@@ -97,6 +97,15 @@
   },
 
   "Resources" : {
+    "CfnUser" : {
+      "Type" : "AWS::IAM::User"
+    },
+    "WebServerKeys" : {
+      "Type" : "AWS::IAM::AccessKey",
+      "Properties" : {
+        "UserName" : {"Ref": "CfnUser"}
+      }
+    },
     "WebServerRestartPolicy" : {
       "Type" : "HEAT::HA::Restarter",
       "Properties" : {
@@ -123,6 +132,16 @@
         "AWS::CloudFormation::Init" : {
           "config" : {
             "files" : {
+              "/etc/cfn/cfn-credentials" : {
+                "content" : { "Fn::Join" : ["", [
+                  "AWSAccessKeyId=", { "Ref" : "WebServerKeys" }, "\n",
+                  "AWSSecretKey=", {"Fn::GetAtt": ["WebServerKeys",
+                                    "SecretAccessKey"]}, "\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
               "/tmp/cfn-hup-crontab.txt" : {
                 "content" : { "Fn::Join" : ["", [
                 "MAIL=\"\"\n",
