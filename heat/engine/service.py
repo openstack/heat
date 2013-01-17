@@ -376,7 +376,8 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(context, stack=s)
         if resource_name not in stack:
-            raise AttributeError('Unknown resource name')
+            raise exception.ResourceNotFound(resource_name=resource_name,
+                                             stack_name=stack.name)
 
         resource = stack[resource_name]
         if resource.id is None:
@@ -437,7 +438,8 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(context, stack=s)
         if resource_name not in stack:
-            raise AttributeError("Resource not found %s" % resource_name)
+            raise exception.ResourceNotFound(resource_name=resource_name,
+                                             stack_name=stack.name)
 
         resource = stack[resource_name]
         resource.metadata_update(metadata)

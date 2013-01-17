@@ -1024,6 +1024,37 @@ class StackControllerTest(unittest.TestCase):
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
 
+    def test_describe_stack_resource_nonexistent(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
+        params = {'Action': 'DescribeStackResource',
+                  'StackName': stack_name,
+                  'LogicalResourceId': "wibble"}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'method': 'identify_stack',
+                  'args': {'stack_name': stack_name},
+                  'version': self.api_version}, None).AndReturn(identity)
+        args = {
+            'stack_identity': identity,
+            'resource_name': dummy_req.params.get('LogicalResourceId'),
+        }
+        rpc.call(dummy_req.context, self.topic,
+                 {'method': 'describe_stack_resource',
+                  'args': args,
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("ResourceNotFound"))
+
+        self.m.ReplayAll()
+
+        result = self.controller.describe_stack_resource(dummy_req)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
+
     def test_describe_stack_resources(self):
         # Format a dummy request
         stack_name = "wordpress"

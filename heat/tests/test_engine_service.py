@@ -580,7 +580,7 @@ class stackServiceTest(unittest.TestCase):
                           self.ctx, nonexist, 'WebServer')
 
     def test_stack_resource_describe_nonexist_resource(self):
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.ResourceNotFound,
                           self.man.describe_stack_resource,
                           self.ctx, self.stack_identity, 'foo')
 
@@ -687,7 +687,7 @@ class stackServiceTest(unittest.TestCase):
 
     def test_metadata_err_resource(self):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.ResourceNotFound,
                           self.man.metadata_update,
                           self.ctx, dict(self.stack_identity),
                           'NooServer', test_metadata)
