@@ -261,8 +261,6 @@ class WatchRule(object):
         }
         wd = db_api.watch_data_create(None, watch_data)
         logger.debug('new watch:%s data:%s' % (self.name, str(wd.data)))
-        if self.rule['Statistic'] == 'SampleCount':
-            self.run_rule()
 
     def set_watch_state(self, state):
         '''
