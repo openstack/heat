@@ -147,7 +147,8 @@
                 "MAIL=\"\"\n",
                 "\n",
                 "* * * * * /opt/aws/bin/cfn-push-stats ",
-                " --watch HeartbeatFailureAlarm --heartbeat\n"
+                " --watch ", { "Ref" : "HeartbeatFailureAlarm" },
+                " --heartbeat\n"
                 ]]},
                 "mode"    : "000600",
                 "owner"   : "root",
