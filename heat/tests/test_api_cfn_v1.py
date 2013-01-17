@@ -374,7 +374,7 @@ class StackControllerTest(unittest.TestCase):
                  {'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
 
         self.m.ReplayAll()
 
@@ -586,7 +586,7 @@ class StackControllerTest(unittest.TestCase):
                  {'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
 
         self.m.ReplayAll()
 
@@ -668,7 +668,7 @@ class StackControllerTest(unittest.TestCase):
                  {'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
 
         self.m.ReplayAll()
 
@@ -791,7 +791,7 @@ class StackControllerTest(unittest.TestCase):
                  {'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
 
         self.m.ReplayAll()
 
@@ -893,7 +893,7 @@ class StackControllerTest(unittest.TestCase):
                  {'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
 
         self.m.ReplayAll()
 
@@ -966,6 +966,29 @@ class StackControllerTest(unittest.TestCase):
                     'LogicalResourceId': u'WikiDatabase'}}}}
 
         self.assertEqual(response, expected)
+
+    def test_describe_stack_resource_nonexistent_stack(self):
+        # Format a dummy request
+        stack_name = "wibble"
+        identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
+        params = {'Action': 'DescribeStackResource',
+                  'StackName': stack_name,
+                  'LogicalResourceId': "WikiDatabase"}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'method': 'identify_stack',
+                  'args': {'stack_name': stack_name},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+
+        self.m.ReplayAll()
+
+        result = self.controller.describe_stack_resource(dummy_req)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
     def test_describe_stack_resources(self):
         # Format a dummy request
@@ -1046,7 +1069,7 @@ class StackControllerTest(unittest.TestCase):
                  {'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
 
         self.m.ReplayAll()
 
@@ -1199,7 +1222,7 @@ class StackControllerTest(unittest.TestCase):
                  {'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
 
         self.m.ReplayAll()
 

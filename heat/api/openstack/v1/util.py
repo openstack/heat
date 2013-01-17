@@ -91,6 +91,7 @@ def remote_error(ex, force_exists=False):
     error_map = {
         'AttributeError': client_error,
         'ValueError': client_error,
+        'StackNotFound': exc.HTTPNotFound,
         'InvalidTenant': exc.HTTPForbidden,
     }
 

@@ -122,7 +122,7 @@ class EngineService(service.Service):
             stack = parser.Stack.load(context, stack=s)
             return dict(stack.identifier())
         else:
-            raise AttributeError('Unknown stack name')
+            raise exception.StackNotFound(stack_name=stack_name)
 
     def _get_stack(self, context, stack_identity):
         identity = identifier.HeatIdentifier(**stack_identity)
@@ -134,10 +134,10 @@ class EngineService(service.Service):
         s = db_api.stack_get(context, identity.stack_id)
 
         if s is None:
-            raise AttributeError('Stack not found')
+            raise exception.StackNotFound(stack_name=identity.stack_name)
 
         if identity.path or s.name != identity.stack_name:
-            raise AttributeError('Invalid stack ID')
+            raise exception.StackNotFound(stack_name=identity.stack_name)
 
         return s
 

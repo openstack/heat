@@ -260,7 +260,7 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.StackNotFound,
                           self.man.delete_stack,
                           self.ctx, stack.identifier())
         self.m.VerifyAll()
@@ -347,7 +347,7 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.StackNotFound,
                           self.man.update_stack,
                           self.ctx, stack.identifier(), template, params, {})
         self.m.VerifyAll()
@@ -408,7 +408,7 @@ class stackServiceTest(unittest.TestCase):
         self.assertEqual(identity, self.stack_identity)
 
     def test_stack_identify_nonexist(self):
-        self.assertRaises(AttributeError, self.man.identify_stack,
+        self.assertRaises(exception.StackNotFound, self.man.identify_stack,
                           self.ctx, 'wibble')
 
     def test_stack_create_existing(self):
@@ -492,7 +492,7 @@ class stackServiceTest(unittest.TestCase):
     def test_stack_describe_nonexistent(self):
         nonexist = dict(self.stack_identity)
         nonexist['stack_name'] = 'wibble'
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.StackNotFound,
                           self.man.show_stack,
                           self.ctx, nonexist)
 
@@ -575,7 +575,7 @@ class stackServiceTest(unittest.TestCase):
     def test_stack_resource_describe_nonexist_stack(self):
         nonexist = dict(self.stack_identity)
         nonexist['stack_name'] = 'foo'
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.StackNotFound,
                           self.man.describe_stack_resource,
                           self.ctx, nonexist, 'WebServer')
 
@@ -623,7 +623,7 @@ class stackServiceTest(unittest.TestCase):
     def test_stack_resources_describe_nonexist_stack(self):
         nonexist = dict(self.stack_identity)
         nonexist['stack_name'] = 'foo'
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.StackNotFound,
                           self.man.describe_stack_resources,
                           self.ctx, nonexist, 'WebServer')
 
@@ -662,7 +662,7 @@ class stackServiceTest(unittest.TestCase):
     def test_stack_resources_list_nonexist_stack(self):
         nonexist = dict(self.stack_identity)
         nonexist['stack_name'] = 'foo'
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.StackNotFound,
                           self.man.list_stack_resources,
                           self.ctx, nonexist)
 
@@ -680,7 +680,7 @@ class stackServiceTest(unittest.TestCase):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
         nonexist = dict(self.stack_identity)
         nonexist['stack_name'] = 'foo'
-        self.assertRaises(AttributeError,
+        self.assertRaises(exception.StackNotFound,
                           self.man.metadata_update,
                           self.ctx, nonexist,
                           'WebServer', test_metadata)

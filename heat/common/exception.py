@@ -207,3 +207,7 @@ class ImageNotFound(OpenstackException):
 class InvalidTenant(OpenstackException):
     message = _("Searching Tenant %(target)s "
                 "from Tenant %(actual)s forbidden.")
+
+
+class StackNotFound(OpenstackException):
+    message = _("The Stack (%(stack_name)s) could not be found.")
