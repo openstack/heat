@@ -496,6 +496,13 @@ class stackServiceTest(unittest.TestCase):
                           self.man.show_stack,
                           self.ctx, nonexist)
 
+    def test_stack_describe_bad_tenant(self):
+        nonexist = dict(self.stack_identity)
+        nonexist['tenant'] = 'wibble'
+        self.assertRaises(exception.InvalidTenant,
+                          self.man.show_stack,
+                          self.ctx, nonexist)
+
     def test_stack_describe(self):
         sl = self.man.show_stack(self.ctx, self.stack_identity)
 

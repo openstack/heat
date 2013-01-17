@@ -128,7 +128,8 @@ class EngineService(service.Service):
         identity = identifier.HeatIdentifier(**stack_identity)
 
         if identity.tenant != context.tenant_id:
-            raise AttributeError('Invalid tenant')
+            raise exception.InvalidTenant(target=identity.tenant,
+                                          actual=context.tenant_id)
 
         s = db_api.stack_get(context, identity.stack_id)
 

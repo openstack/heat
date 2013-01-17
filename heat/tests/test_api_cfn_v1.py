@@ -315,6 +315,28 @@ class StackControllerTest(unittest.TestCase):
 
         self.assertEqual(response, expected)
 
+    def test_describe_arn_invalidtenant(self):
+        # Format a dummy GET request to pass into the WSGI handler
+        stack_name = u"wordpress"
+        stack_identifier = identifier.HeatIdentifier('wibble', stack_name, '6')
+        identity = dict(stack_identifier)
+        params = {'Action': 'DescribeStacks',
+                  'StackName': stack_identifier.arn()}
+        dummy_req = self._dummy_GET_request(params)
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'method': 'show_stack',
+                  'args': {'stack_identity': identity},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("InvalidTenant"))
+
+        self.m.ReplayAll()
+
+        result = self.controller.describe(dummy_req)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
+
     def test_describe_aterr(self):
         stack_name = "wordpress"
         identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))

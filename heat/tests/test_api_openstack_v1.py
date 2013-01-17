@@ -578,6 +578,26 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
                           stack_id=identity.stack_id)
         self.m.VerifyAll()
 
+    def test_show_invalidtenant(self):
+        identity = identifier.HeatIdentifier('wibble', 'wordpress', '6')
+
+        req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'show_stack',
+                  'args': {'stack_identity': dict(identity)},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("InvalidTenant"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPForbidden,
+                          self.controller.show,
+                          req, tenant_id=identity.tenant,
+                          stack_name=identity.stack_name,
+                          stack_id=identity.stack_id)
+        self.m.VerifyAll()
+
     def test_get_template(self):
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)

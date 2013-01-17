@@ -246,6 +246,7 @@ def map_remote_error(ex):
         inval_param_errors = (
             'AttributeError',
             'ValueError',
+            'InvalidTenant',
         )
 
         if ex.exc_type in inval_param_errors:

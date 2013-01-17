@@ -202,3 +202,8 @@ class UserKeyPairMissing(OpenstackException):
 
 class ImageNotFound(OpenstackException):
     message = _("The Image (%(image_name)s) could not be found.")
+
+
+class InvalidTenant(OpenstackException):
+    message = _("Searching Tenant %(target)s "
+                "from Tenant %(actual)s forbidden.")
