@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
+
 
 class Timestamp(object):
     '''
@@ -42,6 +44,6 @@ class Timestamp(object):
     def __set__(self, obj, timestamp):
         '''Update the timestamp for the given object.'''
         if obj.id is None:
-            raise AttributeError("%s has not yet been created" % str(obj))
+            raise exception.ResourceNotAvailable(resource_name=obj.name)
         o = self.db_fetch(obj.context, obj.id)
         o.update_and_save({self.attribute: timestamp})

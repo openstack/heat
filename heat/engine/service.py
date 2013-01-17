@@ -381,7 +381,7 @@ class EngineService(service.Service):
 
         resource = stack[resource_name]
         if resource.id is None:
-            raise AttributeError('Resource not created')
+            raise exception.ResourceNotAvailable(resource_name=resource_name)
 
         return api.format_stack_resource(stack[resource_name])
 

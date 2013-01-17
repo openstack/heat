@@ -220,3 +220,7 @@ class StackExists(OpenstackException):
 class ResourceNotFound(OpenstackException):
     message = _("The Resource (%(resource_name)s) could not be found "
                 "in Stack %(stack_name)s.")
+
+
+class ResourceNotAvailable(OpenstackException):
+    message = _("The Resource (%(resource_name)s) is not available.")

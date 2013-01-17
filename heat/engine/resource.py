@@ -70,7 +70,7 @@ class Metadata(object):
     def __set__(self, resource, metadata):
         '''Update the metadata for the owning resource.'''
         if resource.id is None:
-            raise AttributeError("Resource has not yet been created")
+            raise exception.ResourceNotAvailable(resource_name=resource.name)
         rs = db_api.resource_get(resource.stack.context, resource.id)
         rs.update_and_save({'rsrc_metadata': metadata})
 

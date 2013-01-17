@@ -1073,6 +1073,32 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
                           resource_name=res_name)
         self.m.VerifyAll()
 
+    def test_show_uncreated_resource(self):
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '1')
+        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
+                                                     **stack_identity)
+
+        req = self._get(res_identity._tenant_path())
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'method': 'describe_stack_resource',
+                  'args': {'stack_identity': stack_identity,
+                           'resource_name': res_name},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("ResourceNotAvailable"))
+        self.m.ReplayAll()
+
+        self.assertRaises(webob.exc.HTTPNotFound,
+                          self.controller.show,
+                          req, tenant_id=self.tenant,
+                          stack_name=stack_identity.stack_name,
+                          stack_id=stack_identity.stack_id,
+                          resource_name=res_name)
+        self.m.VerifyAll()
+
     def test_metadata_show(self):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
