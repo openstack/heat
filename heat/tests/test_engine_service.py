@@ -206,9 +206,6 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
         error = 'fubar'
         stack.validate().AndReturn(error)
 
-        #self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        #threadgroup.ThreadGroup(stack_name).AndReturn(DummyThreadGroup())
-
         self.m.ReplayAll()
 
         result = self.man.create_stack(self.ctx, stack_name,
@@ -243,8 +240,6 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
 
         s = db_api.stack_get(self.ctx, sid)
         self.m.StubOutWithMock(parser.Stack, 'load')
-        #self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        #threadgroup.ThreadGroup(stack_name).AndReturn(DummyThreadGroup())
 
         parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
 
