@@ -25,9 +25,6 @@ from heat.openstack.common import timeutils
 from heat.engine import watchrule
 
 
-logger = logging.getLogger('test_watch')
-
-
 class WatchData:
     def __init__(self, data, created_at):
         self.created_at = created_at
@@ -94,7 +91,6 @@ class WatchRuleTest(unittest.TestCase):
                                       stack_id=self.stack_id,
                                       last_evaluated=last)
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'NORMAL')
 
         data.append(WatchData(25, now - datetime.timedelta(seconds=250)))
@@ -105,7 +101,6 @@ class WatchRuleTest(unittest.TestCase):
                                       stack_id=self.stack_id,
                                       last_evaluated=last)
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'ALARM')
 
     def test_maximum(self):
@@ -130,7 +125,6 @@ class WatchRuleTest(unittest.TestCase):
                                       last_evaluated=last)
         watcher.now = now
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'NORMAL')
 
         data.append(WatchData(35, now - datetime.timedelta(seconds=150)))
@@ -142,7 +136,6 @@ class WatchRuleTest(unittest.TestCase):
                                       last_evaluated=last)
         watcher.now = now
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'ALARM')
 
     def test_samplecount(self):
@@ -168,7 +161,6 @@ class WatchRuleTest(unittest.TestCase):
                                       last_evaluated=last)
         watcher.now = now
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'NORMAL')
 
         # only 3 samples -> ALARM
@@ -181,7 +173,6 @@ class WatchRuleTest(unittest.TestCase):
                                       last_evaluated=last)
         watcher.now = now
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'ALARM')
 
         # only 3 samples (one old) -> NORMAL
@@ -195,7 +186,6 @@ class WatchRuleTest(unittest.TestCase):
                                       last_evaluated=last)
         watcher.now = now
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'NORMAL')
 
     def test_sum(self):
@@ -220,7 +210,6 @@ class WatchRuleTest(unittest.TestCase):
                                       last_evaluated=last)
         watcher.now = now
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'NORMAL')
 
         # sum > 100 -> ALARM
@@ -233,7 +222,6 @@ class WatchRuleTest(unittest.TestCase):
                                       last_evaluated=last)
         watcher.now = now
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'ALARM')
 
     def test_ave(self):
@@ -257,7 +245,6 @@ class WatchRuleTest(unittest.TestCase):
                                       last_evaluated=last)
         watcher.now = now
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'NORMAL')
 
         data.append(WatchData(195, now - datetime.timedelta(seconds=250)))
@@ -269,7 +256,6 @@ class WatchRuleTest(unittest.TestCase):
                                       last_evaluated=last)
         watcher.now = now
         new_state = watcher.get_alarm_state()
-        logger.info(new_state)
         self.assertEqual(new_state, 'ALARM')
 
     def test_load(self):
