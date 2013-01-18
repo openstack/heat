@@ -49,19 +49,20 @@ from heat.openstack.common import notifier
 
 log_opts = [
     cfg.StrOpt('logging_context_format_string',
-               default='%(asctime)s %(levelname)s %(name)s [%(request_id)s '
-                       '%(user)s %(tenant)s] %(instance)s'
+               default='%(asctime)s.%(msecs)03d %(levelname)s %(name)s '
+                       '[%(request_id)s %(user)s %(tenant)s] %(instance)s'
                        '%(message)s',
                help='format string to use for log messages with context'),
     cfg.StrOpt('logging_default_format_string',
-               default='%(asctime)s %(process)d %(levelname)s %(name)s [-]'
-                       ' %(instance)s%(message)s',
+               default='%(asctime)s.%(msecs)03d %(process)d %(levelname)s '
+                       '%(name)s [-] %(instance)s%(message)s',
                help='format string to use for log messages without context'),
     cfg.StrOpt('logging_debug_format_suffix',
                default='%(funcName)s %(pathname)s:%(lineno)d',
                help='data to append to log format when level is DEBUG'),
     cfg.StrOpt('logging_exception_prefix',
-               default='%(asctime)s %(process)d TRACE %(name)s %(instance)s',
+               default='%(asctime)s.%(msecs)03d %(process)d TRACE %(name)s '
+               '%(instance)s',
                help='prefix each line of exception output with this format'),
     cfg.ListOpt('default_log_levels',
                 default=[
@@ -289,6 +290,12 @@ def setup(product_name):
         _setup_logging_from_conf(product_name)
 
 
+def set_defaults(logging_context_format_string):
+    cfg.set_defaults(log_opts,
+                     logging_context_format_string=
+                     logging_context_format_string)
+
+
 def _find_facility_from_conf():
     facility_names = logging.handlers.SysLogHandler.facility_names
     facility = getattr(logging.handlers.SysLogHandler,
@@ -354,10 +361,12 @@ def _setup_logging_from_conf(product_name):
                                                    datefmt=datefmt))
         handler.setFormatter(LegacyFormatter(datefmt=datefmt))
 
-    if CONF.verbose or CONF.debug:
+    if CONF.debug:
         log_root.setLevel(logging.DEBUG)
-    else:
+    elif CONF.verbose:
         log_root.setLevel(logging.INFO)
+    else:
+        log_root.setLevel(logging.WARNING)
 
     level = logging.NOTSET
     for pair in CONF.default_log_levels:

@@ -236,10 +236,11 @@ in order to support a common usage pattern in OpenStack::
 Positional command line arguments are supported via a 'positional' Opt
 constructor argument::
 
-    >>> CONF.register_cli_opt(MultiStrOpt('bar', positional=True))
+    >>> conf = ConfigOpts()
+    >>> conf.register_cli_opt(MultiStrOpt('bar', positional=True))
     True
-    >>> CONF(['a', 'b'])
-    >>> CONF.bar
+    >>> conf(['a', 'b'])
+    >>> conf.bar
     ['a', 'b']
 
 It is also possible to use argparse "sub-parsers" to parse additional
@@ -249,10 +250,11 @@ command line arguments using the SubCommandOpt class:
     ...     list_action = subparsers.add_parser('list')
     ...     list_action.add_argument('id')
     ...
-    >>> CONF.register_cli_opt(SubCommandOpt('action', handler=add_parsers))
+    >>> conf = ConfigOpts()
+    >>> conf.register_cli_opt(SubCommandOpt('action', handler=add_parsers))
     True
-    >>> CONF(['list', '10'])
-    >>> CONF.action.name, CONF.action.id
+    >>> conf(args=['list', '10'])
+    >>> conf.action.name, conf.action.id
     ('list', '10')
 
 """
@@ -478,6 +480,13 @@ def _is_opt_registered(opts, opt):
         return True
     else:
         return False
+
+
+def set_defaults(opts, **kwargs):
+    for opt in opts:
+        if opt.dest in kwargs:
+            opt.default = kwargs[opt.dest]
+            break
 
 
 class Opt(object):
@@ -771,7 +780,7 @@ class ListOpt(Opt):
 
     def _get_from_config_parser(self, cparser, section):
         """Retrieve the opt value as a list from ConfigParser."""
-        return [v.split(',') for v in
+        return [[a.strip() for a in v.split(',')] for v in
                 self._cparser_get_with_deprecated(cparser, section)]
 
     def _get_argparse_kwargs(self, group, **kwargs):
@@ -1728,11 +1737,13 @@ class CommonConfigOpts(ConfigOpts):
         BoolOpt('debug',
                 short='d',
                 default=False,
-                help='Print debugging output'),
+                help='Print debugging output (set logging level to '
+                     'DEBUG instead of default WARNING level).'),
         BoolOpt('verbose',
                 short='v',
                 default=False,
-                help='Print more verbose output'),
+                help='Print more verbose output (set logging level to '
+                     'INFO instead of default WARNING level).'),
     ]
 
     logging_cli_opts = [
@@ -1756,11 +1767,13 @@ class CommonConfigOpts(ConfigOpts):
                     'Default: %(default)s'),
         StrOpt('log-file',
                metavar='PATH',
+               deprecated_name='logfile',
                help='(Optional) Name of log file to output to. '
                     'If not set, logging will go to stdout.'),
         StrOpt('log-dir',
+               deprecated_name='logdir',
                help='(Optional) The directory to keep log files in '
-                    '(will be prepended to --logfile)'),
+                    '(will be prepended to --log-file)'),
         BoolOpt('use-syslog',
                 default=False,
                 help='Use syslog for logging.'),

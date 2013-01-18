@@ -172,8 +172,7 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
         stack.validate().AndReturn(None)
 
         self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
-        name_match = mox.StrContains(stack.name)
-        threadgroup.ThreadGroup(name_match).AndReturn(DummyThreadGroup())
+        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
 
         self.m.ReplayAll()
 

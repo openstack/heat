@@ -28,6 +28,7 @@ from eventlet.green import socket
 
 from heat.common import wsgi
 from heat.openstack.common import cfg
+from heat.openstack.common import rpc
 
 DEFAULT_PORT = 8000
 
@@ -102,9 +103,6 @@ rpc_opts = [
                help='Name of the engine node. '
                     'This can be an opaque identifier.'
                     'It is not necessarily a hostname, FQDN, or IP address.'),
-    cfg.StrOpt('control_exchange',
-               default='heat',
-               help='AMQP exchange to connect to if using RabbitMQ or Qpid'),
     cfg.StrOpt('engine_topic',
                default='engine',
                help='the topic engine nodes listen on')]
@@ -113,6 +111,7 @@ rpc_opts = [
 def register_api_opts():
     cfg.CONF.register_opts(bind_opts)
     cfg.CONF.register_opts(rpc_opts)
+    rpc.set_defaults(control_exchange='heat')
 
 
 def register_engine_opts():
@@ -120,6 +119,7 @@ def register_engine_opts():
     cfg.CONF.register_opts(db_opts)
     cfg.CONF.register_opts(service_opts)
     cfg.CONF.register_opts(rpc_opts)
+    rpc.set_defaults(control_exchange='heat')
 
 
 def setup_logging():

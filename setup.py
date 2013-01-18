@@ -16,13 +16,14 @@
 import setuptools
 
 from heat.openstack.common import setup
-from heat.version import version_info as version
 
 requires = setup.parse_requirements()
+project = 'heat'
+
 
 setuptools.setup(
-    name='heat',
-    version=version.canonical_version_string(always=True),
+    name=project,
+    version=setup.get_version(project),
     description='The heat project provides services for provisioning '
                 'virtual machines',
     license='Apache License (2.0)',

@@ -63,20 +63,18 @@ class EngineService(service.Service):
         # stg == "Stack Thread Groups"
         self.stg = {}
 
-    def _start_in_thread(self, stack_id, stack_name, func, *args, **kwargs):
+    def _start_in_thread(self, stack_id, func, *args, **kwargs):
         if stack_id not in self.stg:
-            thr_name = '%s-%s' % (stack_name, stack_id)
-            self.stg[stack_id] = threadgroup.ThreadGroup(thr_name)
+            self.stg[stack_id] = threadgroup.ThreadGroup()
         self.stg[stack_id].add_thread(func, *args, **kwargs)
 
-    def _timer_in_thread(self, stack_id, stack_name, func, *args, **kwargs):
+    def _timer_in_thread(self, stack_id, func, *args, **kwargs):
         """
         Define a periodic task, to be run in a separate thread, in the stack
         threadgroups.  Periodicity is cfg.CONF.periodic_interval
         """
         if stack_id not in self.stg:
-            thr_name = '%s-%s' % (stack_name, stack_id)
-            self.stg[stack_id] = threadgroup.ThreadGroup(thr_name)
+            self.stg[stack_id] = threadgroup.ThreadGroup()
         self.stg[stack_id].add_timer(cfg.CONF.periodic_interval,
                                      func, *args, **kwargs)
 
@@ -102,9 +100,7 @@ class EngineService(service.Service):
         admin_context = context.get_admin_context()
         stacks = db_api.stack_get_all(admin_context)
         for s in stacks:
-            self._timer_in_thread(s.id, s.name,
-                                  self._periodic_watcher_task,
-                                  sid=s.id)
+            self._timer_in_thread(s.id, self._periodic_watcher_task, sid=s.id)
 
     @request_context
     def identify_stack(self, context, stack_name):
@@ -214,11 +210,10 @@ class EngineService(service.Service):
 
         stack_id = stack.store()
 
-        self._start_in_thread(stack_id, stack_name, stack.create)
+        self._start_in_thread(stack_id, stack.create)
 
         # Schedule a periodic watcher task for this stack
-        self._timer_in_thread(stack_id, stack_name,
-                              self._periodic_watcher_task,
+        self._timer_in_thread(stack_id, self._periodic_watcher_task,
                               sid=stack_id)
 
         return dict(stack.identifier())
@@ -257,9 +252,7 @@ class EngineService(service.Service):
         if response:
             return {'Description': response}
 
-        self._start_in_thread(db_stack.id, db_stack.name,
-                              current_stack.update,
-                              updated_stack)
+        self._start_in_thread(db_stack.id, current_stack.update, updated_stack)
 
         return dict(current_stack.identifier())
 
