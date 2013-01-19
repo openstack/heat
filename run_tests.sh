@@ -56,7 +56,7 @@ function run_pep8 {
         else
             echo "ERROR installed version of pep8 $INST_PEP_VERSION"  >&2
             echo "does not match the required version in tox.ini ($TOX_PEP_VERSION)" >&2
-            echo "please install the requied version of pep8" >&2
+            echo "please install the required version of pep8" >&2
         fi
         exit 1
     fi
