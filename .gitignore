@@ -11,4 +11,4 @@ heat-test.db
 AUTHORS
 ChangeLog
 templates/cloudformation-examples
-
+.tox

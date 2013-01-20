@@ -10,3 +10,4 @@ paramiko
 pep8==1.1
 python-glanceclient
 sphinx>=1.1.2
+Babel

@@ -1,0 +1,893 @@
+# Translations template for heat.
+# Copyright (C) 2013 ORGANIZATION
+# This file is distributed under the same license as the heat project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2013.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: heat grizzly.2.36.g55c9032\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2013-01-19 20:37-0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: heat/api/cfn/v1/stacks.py:233
+#, python-format
+msgid "Failed to fetch template: %s"
+msgstr ""
+
+#: heat/api/cfn/v1/stacks.py:272
+#, python-format
+msgid "Unexpected action %s"
+msgstr ""
+
+#: heat/api/cfn/v1/stacks.py:290 heat/api/cfn/v1/stacks.py:367
+msgid "Invalid Template URL"
+msgstr ""
+
+#: heat/api/cfn/v1/stacks.py:294 heat/api/cfn/v1/stacks.py:370
+msgid "TemplateBody or TemplateUrl were not given."
+msgstr ""
+
+#: heat/api/cfn/v1/stacks.py:300 heat/api/cfn/v1/stacks.py:376
+msgid "The Template must be a JSON document."
+msgstr ""
+
+#: heat/api/cfn/v1/stacks.py:340
+msgid "stack not not found"
+msgstr ""
+
+#: heat/api/middleware/version_negotiation.py:48
+#, python-format
+msgid "Processing request: %(method)s %(path)s Accept: %(accept)s"
+msgstr ""
+
+#: heat/api/middleware/version_negotiation.py:61
+#, python-format
+msgid "Matched versioned URI. Version: %d.%d"
+msgstr ""
+
+#: heat/api/middleware/version_negotiation.py:68
+#, python-format
+msgid "Unknown version in versioned URI: %d.%d. Returning version choices."
+msgstr ""
+
+#: heat/api/middleware/version_negotiation.py:82
+#, python-format
+msgid "Matched versioned media type. Version: %d.%d"
+msgstr ""
+
+#: heat/api/middleware/version_negotiation.py:88
+#, python-format
+msgid "Unknown version in accept header: %d.%d...returning version choices."
+msgstr ""
+
+#: heat/api/middleware/version_negotiation.py:95
+#, python-format
+msgid "Unknown accept header: %s...returning version choices."
+msgstr ""
+
+#: heat/api/openstack/v1/events.py:98
+#, python-format
+msgid "No events found for resource %s"
+msgstr ""
+
+#: heat/api/openstack/v1/events.py:116
+#, python-format
+msgid "No event %s found"
+msgstr ""
+
+#: heat/api/openstack/v1/stacks.py:75
+msgid "No stack name specified"
+msgstr ""
+
+#: heat/api/openstack/v1/stacks.py:93
+#, python-format
+msgid "Could not retrieve template: %s"
+msgstr ""
+
+#: heat/api/openstack/v1/stacks.py:96
+msgid "No template specified"
+msgstr ""
+
+#: heat/api/openstack/v1/util.py:72
+msgid "Invalid Stack address"
+msgstr ""
+
+#: heat/common/auth.py:179
+#, python-format
+msgid "Unexpected response: %s"
+msgstr ""
+
+#: heat/common/auth.py:269
+#, python-format
+msgid "Unknown auth strategy '%s'"
+msgstr ""
+
+#: heat/common/client.py:288
+msgid ""
+"You have selected to use SSL in connecting, and you have supplied a cert,"
+" however you have failed to supply either a key_file parameter or set the"
+" HEAT_CLIENT_KEY_FILE environ variable"
+msgstr ""
+
+#: heat/common/client.py:296
+msgid ""
+"You have selected to use SSL in connecting, and you have supplied a key, "
+"however you have failed to supply either a cert_file parameter or set the"
+" HEAT_CLIENT_CERT_FILE environ variable"
+msgstr ""
+
+#: heat/common/client.py:305
+#, python-format
+msgid "The key file you specified %s does not exist"
+msgstr ""
+
+#: heat/common/client.py:312
+#, python-format
+msgid "The cert file you specified %s does not exist"
+msgstr ""
+
+#: heat/common/client.py:319
+#, python-format
+msgid "The CA file you specified %s does not exist"
+msgstr ""
+
+#: heat/common/config.py:158
+msgid "Invalid syslog facility"
+msgstr ""
+
+#: heat/common/exception.py:90
+#, python-format
+msgid "Missing required credential: %(required)s"
+msgstr ""
+
+#: heat/common/exception.py:94
+#, python-format
+msgid ""
+"Incorrect auth strategy, expected \"%(expected)s\" but received "
+"\"%(received)s\""
+msgstr ""
+
+#: heat/common/exception.py:99
+#, python-format
+msgid "Connect error/bad request to Auth service at URL %(url)s."
+msgstr ""
+
+#: heat/common/exception.py:103
+#, python-format
+msgid "Auth service at URL %(url)s not found."
+msgstr ""
+
+#: heat/common/exception.py:107
+msgid "Authorization failed."
+msgstr ""
+
+#: heat/common/exception.py:111
+msgid "You are not authenticated."
+msgstr ""
+
+#: heat/common/exception.py:115 heat/common/exception.py:120
+msgid "You are not authorized to complete this action."
+msgstr ""
+
+#: heat/common/exception.py:124
+#, python-format
+msgid "Data supplied was not valid: %(reason)s"
+msgstr ""
+
+#: heat/common/exception.py:128
+#, python-format
+msgid "Redirecting to %(uri)s for authorization."
+msgstr ""
+
+#: heat/common/exception.py:132
+msgid "There was an error configuring the client."
+msgstr ""
+
+#: heat/common/exception.py:136
+#, python-format
+msgid ""
+"The request returned a 302 Multiple Choices. This generally means that "
+"you have not included a version indicator in a request URI.\n"
+"\n"
+"The body of response returned:\n"
+"%(body)s"
+msgstr ""
+
+#: heat/common/exception.py:142
+#, python-format
+msgid ""
+"The request returned a 413 Request Entity Too Large. This generally means"
+" that rate limiting or a quota threshold was breached.\n"
+"\n"
+"The response body:\n"
+"%(body)s"
+msgstr ""
+
+#: heat/common/exception.py:153
+msgid ""
+"The request returned a 503 ServiceUnavilable. This generally occurs on "
+"service overload or other transient outage."
+msgstr ""
+
+#: heat/common/exception.py:164
+msgid "The URI was too long."
+msgstr ""
+
+#: heat/common/exception.py:168
+#, python-format
+msgid ""
+"The request returned 500 Internal Server Error\n"
+"\n"
+"The response body:\n"
+"%(body)s"
+msgstr ""
+
+#: heat/common/exception.py:173
+#, python-format
+msgid "Maximum redirects (%(redirects)s) was exceeded."
+msgstr ""
+
+#: heat/common/exception.py:177
+msgid "Received invalid HTTP redirect."
+msgstr ""
+
+#: heat/common/exception.py:181
+msgid "Response from Keystone does not contain a Heat endpoint."
+msgstr ""
+
+#: heat/common/exception.py:185
+#, python-format
+msgid ""
+"Multiple 'image' service matches for region %(region)s. This generally "
+"means that a region is required and you have not supplied one."
+msgstr ""
+
+#: heat/common/exception.py:191
+#, python-format
+msgid "The Parameter (%(key)s) was not provided."
+msgstr ""
+
+#: heat/common/exception.py:195
+#, python-format
+msgid "The Referenced Attribute (%(resource)s %(key)s) is incorrect."
+msgstr ""
+
+#: heat/common/exception.py:200
+#, python-format
+msgid "The Key (%(key_name)s) could not be found."
+msgstr ""
+
+#: heat/common/exception.py:204
+#, python-format
+msgid "The Image (%(image_name)s) could not be found."
+msgstr ""
+
+#: heat/common/exception.py:208
+#, python-format
+msgid "Searching Tenant %(target)s from Tenant %(actual)s forbidden."
+msgstr ""
+
+#: heat/common/exception.py:213
+#, python-format
+msgid "The Stack (%(stack_name)s) could not be found."
+msgstr ""
+
+#: heat/common/exception.py:217
+#, python-format
+msgid "The Stack (%(stack_name)s) already exists."
+msgstr ""
+
+#: heat/common/exception.py:221
+#, python-format
+msgid ""
+"The Resource (%(resource_name)s) could not be found in Stack "
+"%(stack_name)s."
+msgstr ""
+
+#: heat/common/exception.py:226
+#, python-format
+msgid "The Resource (%(resource_name)s) is not available."
+msgstr ""
+
+#: heat/common/exception.py:230
+#, python-format
+msgid "The Resource (%(resource_id)s) could not be found."
+msgstr ""
+
+#: heat/common/exception.py:234
+#, python-format
+msgid "The Watch Rule (%(watch_name)s) could not be found."
+msgstr ""
+
+#: heat/common/plugin_loader.py:93
+#, python-format
+msgid "Failed to import module %s"
+msgstr ""
+
+#: heat/common/urlfetch.py:35
+#, python-format
+msgid "Fetching data from %s"
+msgstr ""
+
+#: heat/common/utils.py:101 heat/openstack/common/loopingcall.py:80
+msgid "in looping call"
+msgstr ""
+
+#: heat/common/wsgi.py:114
+msgid ""
+"When running server in SSL mode, you must specify both a cert_file and "
+"key_file option value in your configuration file"
+msgstr ""
+
+#: heat/common/wsgi.py:132
+#, python-format
+msgid "Could not bind to %s:%s after trying for 30 seconds"
+msgstr ""
+
+#: heat/common/wsgi.py:163
+msgid "SIGTERM received"
+msgstr ""
+
+#: heat/common/wsgi.py:172
+msgid "SIGHUP received"
+msgstr ""
+
+#: heat/common/wsgi.py:188 heat/openstack/common/service.py:240
+#, python-format
+msgid "Starting %d workers"
+msgstr ""
+
+#: heat/common/wsgi.py:199
+#, python-format
+msgid "Removing dead child %s"
+msgstr ""
+
+#: heat/common/wsgi.py:207
+msgid "Caught keyboard interrupt. Exiting."
+msgstr ""
+
+#: heat/common/wsgi.py:211
+msgid "Exited"
+msgstr ""
+
+#: heat/common/wsgi.py:229
+#, python-format
+msgid "Child %d exiting normally"
+msgstr ""
+
+#: heat/common/wsgi.py:232
+#, python-format
+msgid "Started child %s"
+msgstr ""
+
+#: heat/common/wsgi.py:254
+msgid "Starting single process server"
+msgstr ""
+
+#: heat/db/sqlalchemy/migration.py:60
+msgid "python-migrate is not installed. Exiting."
+msgstr ""
+
+#: heat/db/sqlalchemy/migration.py:70
+msgid "version should be an integer"
+msgstr ""
+
+#: heat/engine/dependencies.py:23
+#, python-format
+msgid "Circular Dependency Found: %(cycle)s"
+msgstr ""
+
+#: heat/engine/parser.py:63
+msgid "Stack name may not contain \"/\""
+msgstr ""
+
+#: heat/engine/resource.py:46
+#, python-format
+msgid "Registering resource type %s"
+msgstr ""
+
+#: heat/engine/resource.py:48
+#, python-format
+msgid "Replacing existing resource type %s"
+msgstr ""
+
+#: heat/engine/resource.py:117
+msgid "Resource name may not contain \"/\""
+msgstr ""
+
+#: heat/engine/service.py:271
+msgid "No Template provided."
+msgstr ""
+
+#: heat/engine/resources/__init__.py:29
+#, python-format
+msgid "Failed to load resources from %s"
+msgstr ""
+
+#: heat/openstack/common/exception.py:102
+msgid "Uncaught exception"
+msgstr ""
+
+#: heat/openstack/common/excutils.py:48
+#, python-format
+msgid "Original exception being dropped: %s"
+msgstr ""
+
+#: heat/openstack/common/log.py:178
+#, python-format
+msgid "Deprecated: %s"
+msgstr ""
+
+#: heat/openstack/common/log.py:316
+#, python-format
+msgid "syslog facility must be one of: %s"
+msgstr ""
+
+#: heat/openstack/common/log.py:476
+#, python-format
+msgid "Fatal call to deprecated config: %(msg)s"
+msgstr ""
+
+#: heat/openstack/common/loopingcall.py:73
+#, python-format
+msgid "task run outlasted interval by %s sec"
+msgstr ""
+
+#: heat/openstack/common/service.py:112 heat/openstack/common/service.py:275
+msgid "Full set of CONF:"
+msgstr ""
+
+#: heat/openstack/common/service.py:121 heat/openstack/common/service.py:218
+#, python-format
+msgid "Caught %s, exiting"
+msgstr ""
+
+#: heat/openstack/common/service.py:164
+msgid "Parent process has died unexpectedly, exiting"
+msgstr ""
+
+#: heat/openstack/common/service.py:200
+msgid "Forking too fast, sleeping"
+msgstr ""
+
+#: heat/openstack/common/service.py:223
+msgid "Unhandled exception"
+msgstr ""
+
+#: heat/openstack/common/service.py:230
+#, python-format
+msgid "Started child %d"
+msgstr ""
+
+#: heat/openstack/common/service.py:257
+#, python-format
+msgid "Child %(pid)d killed by signal %(sig)d"
+msgstr ""
+
+#: heat/openstack/common/service.py:261
+#, python-format
+msgid "Child %(pid)s exited with status %(code)d"
+msgstr ""
+
+#: heat/openstack/common/service.py:265
+#, python-format
+msgid "pid %d not in child list"
+msgstr ""
+
+#: heat/openstack/common/service.py:293
+#, python-format
+msgid "Caught %s, stopping children"
+msgstr ""
+
+#: heat/openstack/common/service.py:304
+#, python-format
+msgid "Waiting on %d children to exit"
+msgstr ""
+
+#: heat/openstack/common/notifier/api.py:125
+#, python-format
+msgid "%s not in valid priorities"
+msgstr ""
+
+#: heat/openstack/common/notifier/api.py:141
+#, python-format
+msgid ""
+"Problem '%(e)s' attempting to send to notification system. "
+"Payload=%(payload)s"
+msgstr ""
+
+#: heat/openstack/common/notifier/api.py:171
+#, python-format
+msgid "Failed to load notifier %s. These notifications will not be sent."
+msgstr ""
+
+#: heat/openstack/common/notifier/list_notifier.py:111
+#, python-format
+msgid "Problem '%(e)s' attempting to send to notification driver %(driver)s."
+msgstr ""
+
+#: heat/openstack/common/notifier/rabbit_notifier.py:27
+msgid "The rabbit_notifier is now deprecated. Please use rpc_notifier instead."
+msgstr ""
+
+#: heat/openstack/common/notifier/rpc_notifier.py:45
+#, python-format
+msgid "Could not send notification to %(topic)s. Payload=%(message)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:57
+msgid "Pool creating new connection"
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:209
+#, python-format
+msgid "unpacked context: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:253
+#, python-format
+msgid "received %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:259
+#, python-format
+msgid "no method for message: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:260
+#, python-format
+msgid "No method for message: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:286
+#: heat/openstack/common/rpc/impl_zmq.py:277
+#, python-format
+msgid "Expected exception during message handling (%s)"
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:292
+#: heat/openstack/common/rpc/impl_zmq.py:283
+msgid "Exception during message handling"
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:362
+#, python-format
+msgid "Making synchronous call on %s ..."
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:365
+#, python-format
+msgid "MSG_ID is %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:387
+#, python-format
+msgid "Making asynchronous cast on %s..."
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:395
+msgid "Making asynchronous fanout cast..."
+msgstr ""
+
+#: heat/openstack/common/rpc/amqp.py:420
+#, python-format
+msgid "Sending %(event_type)s on %(topic)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/common.py:77
+msgid "An unknown RPC related exception occurred."
+msgstr ""
+
+#: heat/openstack/common/rpc/common.py:89
+msgid "Exception in string format operation"
+msgstr ""
+
+#: heat/openstack/common/rpc/common.py:107
+#, python-format
+msgid ""
+"Remote error: %(exc_type)s %(value)s\n"
+"%(traceback)s."
+msgstr ""
+
+#: heat/openstack/common/rpc/common.py:124
+msgid "Timeout while waiting on RPC response."
+msgstr ""
+
+#: heat/openstack/common/rpc/common.py:128
+msgid "Invalid reuse of an RPC connection."
+msgstr ""
+
+#: heat/openstack/common/rpc/common.py:132
+#, python-format
+msgid "Specified RPC version, %(version)s, not supported by this endpoint."
+msgstr ""
+
+#: heat/openstack/common/rpc/common.py:137
+#, python-format
+msgid ""
+"Specified RPC envelope version, %(version)s, not supported by this "
+"endpoint."
+msgstr ""
+
+#: heat/openstack/common/rpc/common.py:239
+#, python-format
+msgid "Failed to sanitize %(item)s. Key error %(err)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/common.py:261
+#, python-format
+msgid "Returning exception %s to caller"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_kombu.py:169
+#: heat/openstack/common/rpc/impl_qpid.py:132
+msgid "Failed to process message... skipping it."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_kombu.py:471
+#, python-format
+msgid "Reconnecting to AMQP server on %(hostname)s:%(port)d"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_kombu.py:493
+#, python-format
+msgid "Connected to AMQP server on %(hostname)s:%(port)d"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_kombu.py:530
+#, python-format
+msgid ""
+"Unable to connect to AMQP server on %(hostname)s:%(port)d after "
+"%(max_retries)d tries: %(err_str)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_kombu.py:546
+#, python-format
+msgid ""
+"AMQP server on %(hostname)s:%(port)d is unreachable: %(err_str)s. Trying "
+"again in %(sleep_time)d seconds."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_kombu.py:600
+#: heat/openstack/common/rpc/impl_qpid.py:402
+#, python-format
+msgid "Failed to declare consumer for topic '%(topic)s': %(err_str)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_kombu.py:618
+#: heat/openstack/common/rpc/impl_qpid.py:417
+#, python-format
+msgid "Timed out waiting for RPC response: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_kombu.py:622
+#: heat/openstack/common/rpc/impl_qpid.py:421
+#, python-format
+msgid "Failed to consume message from queue: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_kombu.py:661
+#: heat/openstack/common/rpc/impl_qpid.py:456
+#, python-format
+msgid "Failed to publish message to topic '%(topic)s': %(err_str)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_qpid.py:350
+#, python-format
+msgid "Unable to connect to AMQP server: %(e)s. Sleeping %(delay)s seconds"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_qpid.py:356
+#, python-format
+msgid "Connected to AMQP server on %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_qpid.py:369
+msgid "Re-established AMQP queues"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_qpid.py:429
+msgid "Error processing message.  Skipping it."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:95
+msgid "JSON serialization failed."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:103
+#, python-format
+msgid "Deserializing: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:139
+#, python-format
+msgid "Connecting to %(addr)s with %(type)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:140
+#, python-format
+msgid "-> Subscribed to %(subscribe)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:141
+#, python-format
+msgid "-> bind: %(bind)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:149
+msgid "Could not open socket."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:161
+#, python-format
+msgid "Subscribing to %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:203
+msgid "You cannot recv on this socket."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:208
+msgid "You cannot send on this socket."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:265
+#, python-format
+msgid "Running func with context: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:297
+msgid "Sending reply"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:365
+msgid "Registering reactor"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:377
+msgid "In reactor registered"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:392
+msgid "Out reactor registered"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:396
+msgid "Consuming socket"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:437
+#, python-format
+msgid "CONSUMER GOT %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:447
+#, python-format
+msgid "->response->%s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:454
+#, python-format
+msgid "Creating proxy for topic: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:478
+#, python-format
+msgid "ROUTER RELAY-OUT SUCCEEDED %(data)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:487
+msgid "Topic socket file creation failed."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:492
+#, python-format
+msgid "ROUTER RELAY-OUT QUEUED %(data)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:495
+#, python-format
+msgid "Local per-topic backlog buffer full for topic %(topic)s. Dropping message."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:513
+#, python-format
+msgid "Could not create IPC directory %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:523
+msgid "Could not create ZeroMQ receiver daemon. Socket may already be in use."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:543
+#, python-format
+msgid "CONSUMER RECEIVED DATA: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:545
+#, python-format
+msgid "ROUTER RELAY-OUT %(data)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:571
+#, python-format
+msgid "Create Consumer for topic (%(topic)s)"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:587
+#, python-format
+msgid "Consumer is a zmq.%s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:632
+msgid "Creating payload"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:645
+msgid "Creating queue socket for reply waiter"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:656
+msgid "Sending cast"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:660
+msgid "Cast sent; Waiting reply"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:663
+#, python-format
+msgid "Received message: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:664
+msgid "Unpacking response"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:692
+#, python-format
+msgid "%(msg)s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:695
+#, python-format
+msgid "Sending message(s) to: %s"
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:699
+msgid "No matchmaker results. Not casting."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:790
+msgid ""
+"Matchmaker could not be loaded.\n"
+"rpc_zmq_matchmaker is not a class."
+msgstr ""
+
+#: heat/openstack/common/rpc/impl_zmq.py:792
+msgid "Error loading Matchmaker."
+msgstr ""
+
+#: heat/openstack/common/rpc/matchmaker.py:45
+msgid "Match not found by MatchMaker."
+msgstr ""
+
+#: heat/openstack/common/rpc/matchmaker.py:177
+#: heat/openstack/common/rpc/matchmaker.py:195
+#, python-format
+msgid "No key defining hosts for topic '%s', see ringfile"
+msgstr ""
+
+#: heat/openstack/common/rpc/service.py:47
+#, python-format
+msgid "Creating Consumer connection for Service %s"
+msgstr ""
+
