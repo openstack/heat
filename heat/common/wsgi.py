@@ -436,7 +436,10 @@ class JSONRequestDeserializer(object):
         return False
 
     def from_json(self, datastring):
-        return json.loads(datastring)
+        try:
+            return json.loads(datastring)
+        except ValueError as ex:
+            raise webob.exc.HTTPBadRequest(str(ex))
 
     def default(self, request):
         if self.has_body(request):
