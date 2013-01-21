@@ -64,15 +64,15 @@ class InstantiationData(object):
         try:
             return template_format.parse(data)
         except ValueError:
-            err_reason = "%s not in valid format" % data_type
-            raise exc.HTTPBadRequest(explanation=err_reason)
+            err_reason = _("%s not in valid format") % data_type
+            raise exc.HTTPBadRequest(err_reason)
 
     def stack_name(self):
         """
         Return the stack name.
         """
         if self.PARAM_STACK_NAME not in self.data:
-            raise exc.HTTPBadRequest(explanation=_("No stack name specified"))
+            raise exc.HTTPBadRequest(_("No stack name specified"))
         return self.data[self.PARAM_STACK_NAME]
 
     def template(self):
@@ -91,9 +91,9 @@ class InstantiationData(object):
                 template_data = urlfetch.get(url)
             except IOError as ex:
                 err_reason = _('Could not retrieve template: %s') % str(ex)
-                raise exc.HTTPBadRequest(explanation=err_reason)
+                raise exc.HTTPBadRequest(err_reason)
         else:
-            raise exc.HTTPBadRequest(explanation=_("No template specified"))
+            raise exc.HTTPBadRequest(_("No template specified"))
 
         return self.format_parse(template_data, 'Template')
 
@@ -184,7 +184,7 @@ class StackController(object):
             return util.remote_error(ex)
 
         if 'Description' in result:
-            raise exc.HTTPBadRequest(explanation=result['Description'])
+            raise exc.HTTPBadRequest(result['Description'])
 
         raise exc.HTTPCreated(location=util.make_url(req, result))
 
@@ -260,7 +260,7 @@ class StackController(object):
             return util.remote_error(ex)
 
         if 'Description' in res:
-            raise exc.HTTPBadRequest(explanation=res['Description'])
+            raise exc.HTTPBadRequest(res['Description'])
 
         raise exc.HTTPAccepted()
 
@@ -279,7 +279,7 @@ class StackController(object):
             return util.remote_error(ex)
 
         if res is not None:
-            raise exc.HTTPBadRequest(explanation=res['Error'])
+            raise exc.HTTPBadRequest(res['Error'])
 
         raise exc.HTTPNoContent()
 
@@ -299,7 +299,7 @@ class StackController(object):
             return util.remote_error(ex)
 
         if 'Error' in result:
-            raise exc.HTTPBadRequest(explanation=result['Error'])
+            raise exc.HTTPBadRequest(result['Error'])
 
         return result
 
@@ -312,7 +312,7 @@ class StackController(object):
         try:
             types = self.engine.list_resource_types(req.context)
         except rpc_common.RemoteError as ex:
-            raise exc.HTTPInternalServerError(explanation=str(ex))
+            raise exc.HTTPInternalServerError(str(ex))
 
         return {'resource_types': types}
 
