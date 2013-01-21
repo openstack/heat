@@ -220,8 +220,8 @@ class WatchRule(object):
         new_state = self.get_alarm_state()
 
         if new_state != self.state:
-            if self.rule_action(new_state):
-                self.state = new_state
+            action = self.rule_action(new_state)
+            self.state = new_state
 
         self.last_evaluated = self.now
         self.store()
