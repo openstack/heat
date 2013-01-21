@@ -70,7 +70,7 @@ def make_url(req, identity):
         stack_identity = identifier.HeatIdentifier(**identity)
     except ValueError:
         err_reason = _('Invalid Stack address')
-        raise exc.HTTPInternalServerError(explanation=err_reason)
+        raise exc.HTTPInternalServerError(err_reason)
 
     return req.relative_url(stack_identity.url_path(), True)
 
@@ -100,4 +100,4 @@ def remote_error(ex):
 
     Exc = error_map.get(ex.exc_type, exc.HTTPInternalServerError)
 
-    raise Exc(explanation=str(ex))
+    raise Exc(str(ex))
