@@ -315,3 +315,43 @@ class WatchRuleTest(unittest.TestCase):
 
         # Cleanup
         db_api.watch_rule_delete(self.ctx, 'storetest')
+
+    def test_evaluate(self):
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'Period': '300',
+                'Statistic': 'Maximum',
+                'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
+                'Threshold': '30'}
+
+        now = timeutils.utcnow()
+        self.m.StubOutWithMock(timeutils, 'utcnow')
+        timeutils.utcnow().MultipleTimes().AndReturn(now)
+        self.m.ReplayAll()
+
+        # Data breaches threshold, but it's not time to evaluate
+        last = now - datetime.timedelta(seconds=299)
+        data = WatchData(35, now - datetime.timedelta(seconds=150))
+        watcher = watchrule.WatchRule(context=self.ctx,
+                                      watch_name="testwatch",
+                                      rule=rule,
+                                      watch_data=[data],
+                                      stack_id=self.stack_id,
+                                      last_evaluated=last)
+
+        watcher.evaluate()
+        self.assertEqual(watcher.state, 'NORMAL')
+
+        # now - last == Period, so should set ALARM
+        last = now - datetime.timedelta(seconds=300)
+        data = WatchData(35, now - datetime.timedelta(seconds=150))
+        watcher = watchrule.WatchRule(context=self.ctx,
+                                      watch_name="testwatch",
+                                      rule=rule,
+                                      watch_data=[data],
+                                      stack_id=self.stack_id,
+                                      last_evaluated=last)
+
+        watcher.evaluate()
+        self.assertEqual(watcher.state, 'ALARM')
+        self.assertEqual(watcher.last_evaluated, now)
