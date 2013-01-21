@@ -467,7 +467,9 @@ class EngineService(service.Service):
             return
         for wr in wrs:
             rule = watchrule.WatchRule.load(stack_context, watch=wr)
-            rule.evaluate()
+            actions = rule.evaluate()
+            for action in actions:
+                self._start_in_thread(sid, action)
 
     @request_context
     def create_watch_data(self, context, watch_name, stats_data):
@@ -534,7 +536,9 @@ class EngineService(service.Service):
         arg3 -> State (must be one defined in WatchRule class
         '''
         wr = watchrule.WatchRule.load(context, watch_name)
-        wr.set_watch_state(state)
+        actions = wr.set_watch_state(state)
+        for action in actions:
+            self._start_in_thread(wr.stack_id, action)
 
         # Return the watch with the state overriden to indicate success
         # We do not update the timestamps as we are not modifying the DB

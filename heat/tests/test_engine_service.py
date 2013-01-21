@@ -79,11 +79,15 @@ def setup_mocks(mocks, stack):
 
 
 class DummyThreadGroup(object):
+    def __init__(self):
+        self.threads = []
+
     def add_timer(self, interval, callback, initial_delay=None,
                   *args, **kwargs):
         pass
 
     def add_thread(self, callback, *args, **kwargs):
+        self.threads.append(callback)
         pass
 
     def stop(self):
@@ -790,21 +794,38 @@ class stackServiceTest(unittest.TestCase):
         class DummyAction:
             alarm = "dummyfoo"
 
+        dummy_action = DummyAction()
         self.m.StubOutWithMock(parser.Stack, '__getitem__')
         parser.Stack.__getitem__(
-            'WebServerRestartPolicy').AndReturn(DummyAction())
+            'WebServerRestartPolicy').AndReturn(dummy_action)
 
-        self.m.StubOutWithMock(watchrule.greenpool, 'spawn_n')
-        watchrule.greenpool.spawn_n("dummyfoo").AndReturn(None)
+        # Replace the real stack threadgroup with a dummy one, so we can
+        # check the function returned on ALARM is correctly scheduled
+        self.man.stg[self.stack.id] = DummyThreadGroup()
+
         self.m.ReplayAll()
 
-        for state in watchrule.WatchRule.WATCH_STATES:
+        state = watchrule.WatchRule.NODATA
+        result = self.man.set_watch_state(self.ctx,
+                                          watch_name="OverrideAlarm",
+                                          state=state)
+        self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
+        self.assertEqual(self.man.stg[self.stack.id].threads, [])
 
-            result = self.man.set_watch_state(self.ctx,
-                                              watch_name="OverrideAlarm",
-                                              state=state)
-            self.assertNotEqual(result, None)
-            self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
+        state = watchrule.WatchRule.NORMAL
+        result = self.man.set_watch_state(self.ctx,
+                                          watch_name="OverrideAlarm",
+                                          state=state)
+        self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
+        self.assertEqual(self.man.stg[self.stack.id].threads, [])
+
+        state = watchrule.WatchRule.ALARM
+        result = self.man.set_watch_state(self.ctx,
+                                          watch_name="OverrideAlarm",
+                                          state=state)
+        self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
+        self.assertEqual(self.man.stg[self.stack.id].threads,
+                         [DummyAction.alarm])
 
         # Cleanup, delete the dummy rule
         db_api.watch_rule_delete(self.ctx, "OverrideAlarm")
