@@ -227,7 +227,7 @@ class WatchRule(object):
         return actions
 
     def rule_actions(self, new_state):
-        logger.warn('WATCH: stack:%s, watch_name:%s %s',
+        logger.info('WATCH: stack:%s, watch_name:%s %s',
                     self.stack_id, self.name, new_state)
         actions = []
         if not self.ACTION_MAP[new_state] in self.rule:
