@@ -323,5 +323,5 @@ class Instance(resource.Resource):
 def resource_mapping():
     return {
         'AWS::EC2::Instance': Instance,
-        'HEAT::HA::Restarter': Restarter,
+        'OS::Heat::HARestarter': Restarter,
     }
