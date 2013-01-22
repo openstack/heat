@@ -44,7 +44,7 @@ class WatchRule(object):
     updated_at = timestamp.Timestamp(db_api.watch_rule_get, 'updated_at')
 
     def __init__(self, context, watch_name, rule, stack_id=None,
-                 state=NORMAL, wid=None, watch_data=[],
+                 state=NODATA, wid=None, watch_data=[],
                  last_evaluated=timeutils.utcnow()):
         self.context = context
         self.now = timeutils.utcnow()

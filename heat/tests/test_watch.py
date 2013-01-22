@@ -328,7 +328,7 @@ class WatchRuleTest(unittest.TestCase):
         dbwr = db_api.watch_rule_get_by_name(self.ctx, 'storetest')
         self.assertNotEqual(dbwr, None)
         self.assertEqual(dbwr.name, 'storetest')
-        self.assertEqual(dbwr.state, watchrule.WatchRule.NORMAL)
+        self.assertEqual(dbwr.state, watchrule.WatchRule.NODATA)
         self.assertEqual(dbwr.rule, rule)
 
         # Cleanup
@@ -347,9 +347,23 @@ class WatchRuleTest(unittest.TestCase):
         timeutils.utcnow().MultipleTimes().AndReturn(now)
         self.m.ReplayAll()
 
-        # Data breaches threshold, but it's not time to evaluate
+        # It's not time to evaluate, so should stay NODATA
         last = now - datetime.timedelta(seconds=299)
-        data = WatchData(35, now - datetime.timedelta(seconds=150))
+        data = WatchData(25, now - datetime.timedelta(seconds=150))
+        watcher = watchrule.WatchRule(context=self.ctx,
+                                      watch_name="testwatch",
+                                      rule=rule,
+                                      watch_data=[data],
+                                      stack_id=self.stack_id,
+                                      last_evaluated=last)
+
+        actions = watcher.evaluate()
+        self.assertEqual(watcher.state, 'NODATA')
+        self.assertEqual(actions, [])
+
+        # now - last == Period, so should set NORMAL
+        last = now - datetime.timedelta(seconds=300)
+        data = WatchData(25, now - datetime.timedelta(seconds=150))
         watcher = watchrule.WatchRule(context=self.ctx,
                                       watch_name="testwatch",
                                       rule=rule,
@@ -359,9 +373,10 @@ class WatchRuleTest(unittest.TestCase):
 
         actions = watcher.evaluate()
         self.assertEqual(watcher.state, 'NORMAL')
+        self.assertEqual(watcher.last_evaluated, now)
         self.assertEqual(actions, [])
 
-        # now - last == Period, so should set ALARM
+        # Now data breaches Threshold, so should set ALARM
         last = now - datetime.timedelta(seconds=300)
         data = WatchData(35, now - datetime.timedelta(seconds=150))
         watcher = watchrule.WatchRule(context=self.ctx,
@@ -374,7 +389,6 @@ class WatchRuleTest(unittest.TestCase):
         actions = watcher.evaluate()
         self.assertEqual(watcher.state, 'ALARM')
         self.assertEqual(watcher.last_evaluated, now)
-        # No AlarmActions defined in the rule, so expect []
         self.assertEqual(actions, [])
 
     def test_rule_actions_alarm_normal(self):
@@ -476,18 +490,17 @@ class WatchRuleTest(unittest.TestCase):
         now = timeutils.utcnow()
         self._action_set_stubs(now)
 
-        # Set data so rule evaluates to ALARM state
+        # On creation the rule evaluates to NODATA state
         last = now - datetime.timedelta(seconds=300)
-        data = WatchData(35, now - datetime.timedelta(seconds=150))
         watcher = watchrule.WatchRule(context=self.ctx,
                                       watch_name="testwatch",
                                       rule=rule,
-                                      watch_data=[data],
+                                      watch_data=[],
                                       stack_id=self.stack_id,
                                       last_evaluated=last)
 
         actions = watcher.evaluate()
-        self.assertEqual(watcher.state, 'ALARM')
+        self.assertEqual(watcher.state, 'NODATA')
         self.assertEqual(actions, [])
 
         # Move time forward and add data below threshold so we transition from
