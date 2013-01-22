@@ -570,3 +570,57 @@ class WatchRuleTest(unittest.TestCase):
 
         # Cleanup
         db_api.watch_rule_delete(self.ctx, 'create_data_test')
+
+    def test_set_watch_state(self):
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'AlarmActions': ['DummyAction'],
+                'Period': '300',
+                'Statistic': 'Maximum',
+                'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
+                'Threshold': '30'}
+
+        now = timeutils.utcnow()
+        self._action_set_stubs(now)
+
+        # Set data so rule evaluates to ALARM state
+        last = now - datetime.timedelta(seconds=200)
+        watcher = watchrule.WatchRule(context=self.ctx,
+                                      watch_name="testwatch",
+                                      rule=rule,
+                                      watch_data=[],
+                                      stack_id=self.stack_id,
+                                      last_evaluated=last)
+
+        actions = watcher.set_watch_state(watchrule.WatchRule.NODATA)
+        self.assertEqual(actions, [])
+
+        actions = watcher.set_watch_state(watchrule.WatchRule.NORMAL)
+        self.assertEqual(actions, [])
+
+        actions = watcher.set_watch_state(watchrule.WatchRule.ALARM)
+        self.assertEqual(actions, ['DummyAction'])
+
+    def test_set_watch_state_invalid(self):
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'AlarmActions': ['DummyAction'],
+                'Period': '300',
+                'Statistic': 'Maximum',
+                'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
+                'Threshold': '30'}
+
+        now = timeutils.utcnow()
+        self._action_set_stubs(now)
+
+        last = now - datetime.timedelta(seconds=200)
+        watcher = watchrule.WatchRule(context=self.ctx,
+                                      watch_name="testwatch",
+                                      rule=rule,
+                                      watch_data=[],
+                                      stack_id=self.stack_id,
+                                      last_evaluated=last)
+
+        self.assertRaises(ValueError, watcher.set_watch_state, None)
+
+        self.assertRaises(ValueError, watcher.set_watch_state, "BADSTATE")
