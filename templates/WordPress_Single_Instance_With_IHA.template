@@ -107,7 +107,7 @@
       }
     },
     "WebServerRestartPolicy" : {
-      "Type" : "HEAT::HA::Restarter",
+      "Type" : "OS::Heat::HARestarter",
       "Properties" : {
         "InstanceId" : { "Ref" : "WikiDatabase" }
       }
