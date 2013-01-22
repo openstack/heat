@@ -538,3 +538,35 @@ class WatchRuleTest(unittest.TestCase):
         actions = watcher.evaluate()
         self.assertEqual(watcher.state, 'NODATA')
         self.assertEqual(actions, ['DummyAction'])
+
+    def test_create_watch_data(self):
+        rule = {u'EvaluationPeriods': u'1',
+                u'AlarmDescription': u'test alarm',
+                u'Period': u'300',
+                u'ComparisonOperator': u'GreaterThanThreshold',
+                u'Statistic': u'SampleCount',
+                u'Threshold': u'2',
+                u'MetricName': u'CreateDataMetric'}
+        wr = watchrule.WatchRule(context=self.ctx,
+                                 watch_name='create_data_test',
+                                 stack_id=self.stack_id, rule=rule)
+
+        wr.store()
+
+        data = {u'CreateDataMetric': {"Unit": "Counter",
+                                      "Value": "1",
+                                      "Dimensions": []}}
+        wr.create_watch_data(data)
+
+        dbwr = db_api.watch_rule_get_by_name(self.ctx, 'create_data_test')
+        self.assertEqual(dbwr.watch_data[0].data, data)
+
+        # Note, would be good to write another datapoint and check it
+        # but sqlite seems to not interpret the backreference correctly
+        # so dbwr.watch_data is always a list containing only the latest
+        # datapoint.  In non-test use on mysql this is not the case, we
+        # correctly get a list of all datapoints where watch_rule_id ==
+        # watch_rule.id, so leave it as a single-datapoint test for now.
+
+        # Cleanup
+        db_api.watch_rule_delete(self.ctx, 'create_data_test')
