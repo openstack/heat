@@ -42,9 +42,7 @@ class KeystoneClient(object):
             kwargs['tenant_name'] = context.tenant
             kwargs['tenant_id'] = context.tenant_id
         elif context.auth_token is not None:
-            kwargs['username'] = context.service_user
-            kwargs['password'] = context.service_password
-            kwargs['tenant_name'] = context.service_tenant
+            kwargs['tenant_name'] = context.tenant
             kwargs['token'] = context.auth_token
         else:
             logger.error("Keystone connection failed, no password or " +
