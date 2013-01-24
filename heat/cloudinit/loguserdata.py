@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 
-import cloudinit
 import sys
 import os
 import stat
 import subprocess
 import datetime
+import pkg_resources
 
-path = None
+path = '/var/lib/cloud/data'
 
-try:
-    path = cloudinit.get_cpath('data')
-except AttributeError:
+ci_version = pkg_resources.get_distribution('cloud-init').version.split('.')
+if ci_version[0] <= 0 and ci_version[1] < 6:
     # pre 0.6.0 - user data executed via cloudinit, not this helper
     with open('/var/log/heat-provision.log', 'w') as log:
         log.write('Unable to log provisioning, need a newer version of'
