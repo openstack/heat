@@ -1,0 +1,35 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Template to test OS::Swift::Container resources",
+
+  "Resources" : {
+    "SwiftContainerWebsite" : {
+      "Type" : "OS::Swift::Container",
+      "Properties" : {
+        "X-Container-Read" : ".r:*",
+        "X-Container-Meta" : {
+          "Web-Index" : "index.html",
+          "Web-Error" : "error.html"
+         },
+         "DeletionPolicy" : "Delete"
+      }
+    },
+    "SwiftContainer" : {
+      "Type" : "OS::Swift::Container",
+      "Properties" : {
+      }
+    }
+  },
+
+  "Outputs" : {
+    "WebsiteURL" : {
+      "Value" : { "Fn::GetAtt" : [ "SwiftContainer", "WebsiteURL" ] },
+      "Description" : "URL for website hosted on S3"
+    },
+    "DomainName" : {
+      "Value" : { "Fn::GetAtt" : [ "SwiftContainer", "DomainName" ] },
+      "Description" : "Domain of Swift host"
+    }
+  }
+}
