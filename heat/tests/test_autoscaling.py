@@ -35,7 +35,6 @@ from heat.openstack.common import timeutils
 class AutoScalingTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
-        self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'reload')
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -87,7 +86,7 @@ class AutoScalingTest(unittest.TestCase):
         self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'reload')
         loadbalancer.LoadBalancer.reload(expected_list).AndReturn(None)
 
-    def _stub_meta_expected(self, now, data):
+    def _stub_meta_expected(self, now, data, nmeta=1):
         # Stop time at now
         self.m.StubOutWithMock(timeutils, 'utcnow')
         timeutils.utcnow().MultipleTimes().AndReturn(now)
@@ -96,13 +95,18 @@ class AutoScalingTest(unittest.TestCase):
         # expected based on the timestamp and data
         self.m.StubOutWithMock(Metadata, '__set__')
         expected = {timeutils.strtime(now): data}
-        Metadata.__set__(mox.IgnoreArg(), expected).AndReturn(None)
+        # Note for ScalingPolicy, we expect to get a metadata
+        # update for the policy and autoscaling group, so pass nmeta=2
+        for x in range(nmeta):
+            Metadata.__set__(mox.IgnoreArg(), expected).AndReturn(None)
 
     def test_scaling_group_update(self):
         t = self.load_template()
         stack = self.parse_stack(t)
 
         self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
 
@@ -123,6 +127,8 @@ class AutoScalingTest(unittest.TestCase):
         properties['DesiredCapacity'] = '3'
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
                               'WebServerGroup-2'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 3')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
@@ -130,6 +136,7 @@ class AutoScalingTest(unittest.TestCase):
 
         # reduce to 1
         self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_meta_expected(now, 'ChangeInCapacity : -2')
         self.m.ReplayAll()
         resource.adjust(-2)
         self.assertEqual('WebServerGroup-0', resource.resource_id)
@@ -137,6 +144,7 @@ class AutoScalingTest(unittest.TestCase):
         # raise to 3
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
                               'WebServerGroup-2'])
+        self._stub_meta_expected(now, 'ChangeInCapacity : 2')
         self.m.ReplayAll()
         resource.adjust(2)
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
@@ -144,6 +152,7 @@ class AutoScalingTest(unittest.TestCase):
 
         # set to 2
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
         self.m.ReplayAll()
         resource.adjust(2, 'ExactCapacity')
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
@@ -158,6 +167,8 @@ class AutoScalingTest(unittest.TestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = resource
@@ -189,6 +200,8 @@ class AutoScalingTest(unittest.TestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = resource
@@ -197,6 +210,7 @@ class AutoScalingTest(unittest.TestCase):
 
         # reduce by 50%
         self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
         self.m.ReplayAll()
         resource.adjust(-50, 'PercentChangeInCapacity')
         self.assertEqual('WebServerGroup-0',
@@ -205,6 +219,157 @@ class AutoScalingTest(unittest.TestCase):
         # raise by 200%
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
                               'WebServerGroup-2'])
+        self._stub_meta_expected(now, 'PercentChangeInCapacity : 200')
+        self.m.ReplayAll()
+        resource.adjust(200, 'PercentChangeInCapacity')
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
+                         resource.resource_id)
+
+        resource.delete()
+
+    def test_scaling_group_cooldown_toosoon(self):
+        t = self.load_template()
+        stack = self.parse_stack(t)
+
+        # Create initial group, 2 instances, Cooldown 60s
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['DesiredCapacity'] = '2'
+        properties['Cooldown'] = '60'
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
+        self.m.ReplayAll()
+        resource = self.create_scaling_group(t, stack, 'WebServerGroup')
+        stack.resources['WebServerGroup'] = resource
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1',
+                         resource.resource_id)
+
+        # reduce by 50%
+        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
+        self.m.ReplayAll()
+        resource.adjust(-50, 'PercentChangeInCapacity')
+        self.assertEqual('WebServerGroup-0',
+                         resource.resource_id)
+
+        # Now move time on 10 seconds - Cooldown in template is 60
+        # so this should not update the policy metadata, and the
+        # scaling group instances should be unchanged
+        # Note we have to stub Metadata.__get__ since up_policy isn't
+        # stored in the DB (because the stack hasn't really been created)
+        previous_meta = {timeutils.strtime(now):
+                         'PercentChangeInCapacity : -50'}
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        now = now + datetime.timedelta(seconds=10)
+        self.m.StubOutWithMock(timeutils, 'utcnow')
+        timeutils.utcnow().AndReturn(now)
+
+        self.m.StubOutWithMock(Metadata, '__get__')
+        Metadata.__get__(mox.IgnoreArg(), resource, mox.IgnoreArg()
+                         ).AndReturn(previous_meta)
+
+        self.m.ReplayAll()
+
+        # raise by 200%, too soon for Cooldown so there should be no change
+        resource.adjust(200, 'PercentChangeInCapacity')
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
+
+        resource.delete()
+
+    def test_scaling_group_cooldown_ok(self):
+        t = self.load_template()
+        stack = self.parse_stack(t)
+
+        # Create initial group, 2 instances, Cooldown 60s
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['DesiredCapacity'] = '2'
+        properties['Cooldown'] = '60'
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
+        self.m.ReplayAll()
+        resource = self.create_scaling_group(t, stack, 'WebServerGroup')
+        stack.resources['WebServerGroup'] = resource
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1',
+                         resource.resource_id)
+
+        # reduce by 50%
+        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
+        self.m.ReplayAll()
+        resource.adjust(-50, 'PercentChangeInCapacity')
+        self.assertEqual('WebServerGroup-0',
+                         resource.resource_id)
+
+        # Now move time on 61 seconds - Cooldown in template is 60
+        # so this should update the policy metadata, and the
+        # scaling group instances updated
+        previous_meta = {timeutils.strtime(now):
+                         'PercentChangeInCapacity : -50'}
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        now = now + datetime.timedelta(seconds=61)
+
+        self.m.StubOutWithMock(Metadata, '__get__')
+        Metadata.__get__(mox.IgnoreArg(), resource, mox.IgnoreArg()
+                         ).AndReturn(previous_meta)
+
+        # raise by 200%, should work
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
+                              'WebServerGroup-2'], unset=False)
+        self._stub_meta_expected(now, 'PercentChangeInCapacity : 200')
+        self.m.ReplayAll()
+        resource.adjust(200, 'PercentChangeInCapacity')
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
+                         resource.resource_id)
+
+        resource.delete()
+
+    def test_scaling_group_cooldown_zero(self):
+        t = self.load_template()
+        stack = self.parse_stack(t)
+
+        # Create initial group, 2 instances, Cooldown 0
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['DesiredCapacity'] = '2'
+        properties['Cooldown'] = '0'
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
+        self.m.ReplayAll()
+        resource = self.create_scaling_group(t, stack, 'WebServerGroup')
+        stack.resources['WebServerGroup'] = resource
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1',
+                         resource.resource_id)
+
+        # reduce by 50%
+        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
+        self.m.ReplayAll()
+        resource.adjust(-50, 'PercentChangeInCapacity')
+        self.assertEqual('WebServerGroup-0',
+                         resource.resource_id)
+
+        # Don't move time, since cooldown is zero, it should work
+        previous_meta = {timeutils.strtime(now):
+                         'PercentChangeInCapacity : -50'}
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        self.m.StubOutWithMock(Metadata, '__get__')
+        Metadata.__get__(mox.IgnoreArg(), resource, mox.IgnoreArg()
+                         ).AndReturn(previous_meta)
+
+        # raise by 200%, should work
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
+                              'WebServerGroup-2'], unset=False)
+        self._stub_meta_expected(now, 'PercentChangeInCapacity : 200')
         self.m.ReplayAll()
         resource.adjust(200, 'PercentChangeInCapacity')
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
@@ -219,6 +384,8 @@ class AutoScalingTest(unittest.TestCase):
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = resource
@@ -226,8 +393,7 @@ class AutoScalingTest(unittest.TestCase):
 
         # Scale up one
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
-        now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ChangeInCapacity : 1')
+        self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
@@ -246,6 +412,8 @@ class AutoScalingTest(unittest.TestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = resource
@@ -254,8 +422,7 @@ class AutoScalingTest(unittest.TestCase):
 
         # Scale down one
         self._stub_lb_reload(['WebServerGroup-0'])
-        now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ChangeInCapacity : -1')
+        self._stub_meta_expected(now, 'ChangeInCapacity : -1', 2)
         self.m.ReplayAll()
         down_policy = self.create_scaling_policy(t, stack,
                                                  'WebServerScaleDownPolicy')
@@ -271,6 +438,8 @@ class AutoScalingTest(unittest.TestCase):
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = resource
@@ -278,8 +447,7 @@ class AutoScalingTest(unittest.TestCase):
 
         # Scale up one
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
-        now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ChangeInCapacity : 1')
+        self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
@@ -299,7 +467,7 @@ class AutoScalingTest(unittest.TestCase):
 
         now = now + datetime.timedelta(seconds=10)
         self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().MultipleTimes().AndReturn(now)
+        timeutils.utcnow().AndReturn(now)
 
         self.m.StubOutWithMock(Metadata, '__get__')
         Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
@@ -319,6 +487,8 @@ class AutoScalingTest(unittest.TestCase):
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = resource
@@ -326,8 +496,7 @@ class AutoScalingTest(unittest.TestCase):
 
         # Scale up one
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
-        now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ChangeInCapacity : 1')
+        self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
@@ -344,11 +513,13 @@ class AutoScalingTest(unittest.TestCase):
         self.m.StubOutWithMock(Metadata, '__get__')
         Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
+        Metadata.__get__(mox.IgnoreArg(), resource, mox.IgnoreArg()
+                         ).AndReturn(previous_meta)
 
         now = now + datetime.timedelta(seconds=61)
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
                               'WebServerGroup-2'], unset=False)
-        self._stub_meta_expected(now, 'ChangeInCapacity : 1')
+        self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
 
         self.m.ReplayAll()
         up_policy.alarm()
@@ -364,6 +535,8 @@ class AutoScalingTest(unittest.TestCase):
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = resource
@@ -373,8 +546,7 @@ class AutoScalingTest(unittest.TestCase):
         properties = t['Resources']['WebServerScaleUpPolicy']['Properties']
         properties['Cooldown'] = '0'
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
-        now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ChangeInCapacity : 1')
+        self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
@@ -390,10 +562,12 @@ class AutoScalingTest(unittest.TestCase):
         self.m.StubOutWithMock(Metadata, '__get__')
         Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
+        Metadata.__get__(mox.IgnoreArg(), resource, mox.IgnoreArg()
+                         ).AndReturn(previous_meta)
 
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
                               'WebServerGroup-2'], unset=False)
-        self._stub_meta_expected(now, 'ChangeInCapacity : 1')
+        self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
 
         self.m.ReplayAll()
         up_policy.alarm()
@@ -409,6 +583,8 @@ class AutoScalingTest(unittest.TestCase):
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
         self.m.ReplayAll()
         resource = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = resource
@@ -420,7 +596,7 @@ class AutoScalingTest(unittest.TestCase):
         del(properties['Cooldown'])
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
         now = timeutils.utcnow()
-        self._stub_meta_expected(now, 'ChangeInCapacity : 1')
+        self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
@@ -436,10 +612,12 @@ class AutoScalingTest(unittest.TestCase):
         self.m.StubOutWithMock(Metadata, '__get__')
         Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
+        Metadata.__get__(mox.IgnoreArg(), resource, mox.IgnoreArg()
+                         ).AndReturn(previous_meta)
 
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
                               'WebServerGroup-2'], unset=False)
-        self._stub_meta_expected(now, 'ChangeInCapacity : 1')
+        self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
 
         self.m.ReplayAll()
         up_policy.alarm()

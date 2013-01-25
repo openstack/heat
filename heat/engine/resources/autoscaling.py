@@ -22,6 +22,36 @@ from heat.openstack.common import timeutils
 logger = logging.getLogger(__name__)
 
 
+class CooldownMixin(object):
+    '''
+    Utility class to encapsulate Cooldown related logic which is shared
+    between AutoScalingGroup and ScalingPolicy
+    '''
+    def _cooldown_inprogress(self):
+        inprogress = False
+        try:
+            # Negative values don't make sense, so they are clamped to zero
+            cooldown = max(0, int(self.properties['Cooldown']))
+        except TypeError:
+            # If not specified, it will be None, same as cooldown == 0
+            cooldown = 0
+
+        metadata = self.metadata
+        if metadata and cooldown != 0:
+            last_adjust = metadata.keys()[0]
+            if not timeutils.is_older_than(last_adjust, cooldown):
+                inprogress = True
+        return inprogress
+
+    def _cooldown_timestamp(self, reason):
+        # Save resource metadata with a timestamp and reason
+        # If we wanted to implement the AutoScaling API like AWS does,
+        # we could maintain event history here, but since we only need
+        # the latest event for cooldown, just store that for now
+        metadata = {timeutils.strtime(): reason}
+        self.metadata = metadata
+
+
 class InstanceGroup(resource.Resource):
     tags_schema = {'Key': {'Type': 'String',
                            'Required': True},
@@ -125,7 +155,7 @@ class InstanceGroup(resource.Resource):
         return unicode(self.name)
 
 
-class AutoScalingGroup(InstanceGroup):
+class AutoScalingGroup(InstanceGroup, CooldownMixin):
     tags_schema = {'Key': {'Type': 'String',
                            'Required': True},
                    'Value': {'Type': 'String',
@@ -162,12 +192,17 @@ class AutoScalingGroup(InstanceGroup):
         else:
             num_to_create = int(self.properties['MinSize'])
 
-        self.resize(num_to_create)
+        self.adjust(num_to_create, adjustment_type='ExactCapacity')
 
     def handle_update(self):
         return self.UPDATE_REPLACE
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
+        if self._cooldown_inprogress():
+            logger.info("%s NOT performing scaling adjustment, cooldown %s" %
+                        (self.name, self.properties['Cooldown']))
+            return
+
         inst_list = []
         if self.resource_id is not None:
             inst_list = sorted(self.resource_id.split(','))
@@ -188,7 +223,13 @@ class AutoScalingGroup(InstanceGroup):
             logger.warn('can not be less than %s' % self.properties['MinSize'])
             return
 
+        if new_capacity == capacity:
+            logger.debug('no change in capacity %d' % capacity)
+            return
+
         self.resize(new_capacity)
+
+        self._cooldown_timestamp("%s : %s" % (adjustment_type, adjustment))
 
     def FnGetRefId(self):
         return unicode(self.name)
@@ -222,7 +263,7 @@ class LaunchConfiguration(resource.Resource):
         super(LaunchConfiguration, self).__init__(name, json_snippet, stack)
 
 
-class ScalingPolicy(resource.Resource):
+class ScalingPolicy(resource.Resource, CooldownMixin):
     properties_schema = {
         'AutoScalingGroupName': {'Type': 'String',
                                  'Required': True},
@@ -240,20 +281,10 @@ class ScalingPolicy(resource.Resource):
         super(ScalingPolicy, self).__init__(name, json_snippet, stack)
 
     def alarm(self):
-        try:
-            # Negative values don't make sense, so they are clamped to zero
-            cooldown = max(0, int(self.properties['Cooldown']))
-        except TypeError:
-            # If not specified, it will be None, same as cooldown == 0
-            cooldown = 0
-
-        metadata = self.metadata
-        if metadata and cooldown != 0:
-            last_adjust = metadata.keys()[0]
-            if not timeutils.is_older_than(last_adjust, cooldown):
-                logger.info("%s NOT performing scaling action, cooldown %s" %
-                            (self.name, cooldown))
-                return
+        if self._cooldown_inprogress():
+            logger.info("%s NOT performing scaling action, cooldown %s" %
+                        (self.name, self.properties['Cooldown']))
+            return
 
         group = self.stack.resources[self.properties['AutoScalingGroupName']]
 
@@ -263,14 +294,9 @@ class ScalingPolicy(resource.Resource):
         group.adjust(int(self.properties['ScalingAdjustment']),
                      self.properties['AdjustmentType'])
 
-        # Save resource metadata with a timestamp and reason
-        # If we wanted to implement the AutoScaling API like AWS does,
-        # we could maintain event history here, but since we only need
-        # the latest event for cooldown, just store that for now
-        metadata = {timeutils.strtime(): "%s : %s" % (
-                    self.properties['AdjustmentType'],
-                    self.properties['ScalingAdjustment'])}
-        self.metadata = metadata
+        self._cooldown_timestamp("%s : %s" %
+                                 (self.properties['AdjustmentType'],
+                                  self.properties['ScalingAdjustment']))
 
 
 def resource_mapping():
