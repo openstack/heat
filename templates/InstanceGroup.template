@@ -31,11 +31,10 @@
 
   "Resources" : {
     "JobServerGroup" : {
-      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Type" : "OS::Heat::InstanceGroup",
       "Properties" : {
         "LaunchConfigurationName" : { "Ref" : "JobServerConfig" },
-        "MinSize" : {"Ref": "NumInstances"},
-        "MaxSize" : {"Ref": "NumInstances"},
+        "Size" : {"Ref": "NumInstances"},
         "AvailabilityZones" : { "Fn::GetAZs" : "" }
       }
     },

@@ -21,7 +21,110 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 
-class AutoScalingGroup(resource.Resource):
+class InstanceGroup(resource.Resource):
+    tags_schema = {'Key': {'Type': 'String',
+                           'Required': True},
+                   'Value': {'Type': 'String',
+                             'Required': True}}
+    properties_schema = {
+        'AvailabilityZones': {'Required': True,
+                              'Type': 'List'},
+        'LaunchConfigurationName': {'Required': True,
+                                    'Type': 'String'},
+        'Size': {'Required': True,
+                 'Type': 'Number'},
+        'LoadBalancerNames': {'Type': 'List'},
+        'Tags': {'Type': 'List',
+                 'Schema': {'Type': 'Map',
+                            'Schema': tags_schema}}
+    }
+
+    def __init__(self, name, json_snippet, stack):
+        super(InstanceGroup, self).__init__(name, json_snippet, stack)
+        # resource_id is a list of resources
+
+    def handle_create(self):
+        self.resize(int(self.properties['Size']))
+
+    def handle_update(self):
+        # TODO(asalkeld) if the only thing that has changed is the size then
+        # call resize. Maybe have an attribute of the properties that can mark
+        # it "update-able" so each resource doesn't have to figure this out.
+        return self.UPDATE_REPLACE
+
+    def _make_instance(self, name):
+
+        Instance = resource.get_class('AWS::EC2::Instance')
+
+        class GroupedInstance(Instance):
+            '''
+            Subclass instance.Instance to supress event transitions, since the
+            scaling-group instances are not "real" resources, ie defined in the
+            template, which causes problems for event handling since we can't
+            look up the resources via parser.Stack
+            '''
+            def state_set(self, new_state, reason="state changed"):
+                self._store_or_update(new_state, reason)
+
+        conf = self.properties['LaunchConfigurationName']
+        instance_definition = self.stack.t['Resources'][conf]
+        return GroupedInstance(name, instance_definition, self.stack)
+
+    def handle_delete(self):
+        if self.resource_id is not None:
+            inst_list = self.resource_id.split(',')
+            logger.debug('handle_delete %s' % str(inst_list))
+            for victim in inst_list:
+                logger.debug('handle_delete %s' % victim)
+                inst = self._make_instance(victim)
+                inst.destroy()
+
+    def resize(self, new_capacity):
+        inst_list = []
+        if self.resource_id is not None:
+            inst_list = sorted(self.resource_id.split(','))
+
+        capacity = len(inst_list)
+        if new_capacity == capacity:
+            logger.debug('no change in capacity %d' % capacity)
+            return
+        logger.debug('adjusting capacity from %d to %d' % (capacity,
+                                                           new_capacity))
+
+        if new_capacity > capacity:
+            # grow
+            for x in range(capacity, new_capacity):
+                name = '%s-%d' % (self.name, x)
+                inst = self._make_instance(name)
+                inst_list.append(name)
+                self.resource_id_set(','.join(inst_list))
+                inst.create()
+        else:
+            # shrink (kill largest numbered first)
+            del_list = inst_list[new_capacity:]
+            for victim in reversed(del_list):
+                inst = self._make_instance(victim)
+                inst.destroy()
+                inst_list.remove(victim)
+                self.resource_id_set(','.join(inst_list))
+
+        # notify the LoadBalancer to reload it's config to include
+        # the changes in instances we have just made.
+        if self.properties['LoadBalancerNames']:
+            # convert the list of instance names into a list of instance id's
+            id_list = []
+            for inst_name in inst_list:
+                inst = self._make_instance(inst_name)
+                id_list.append(inst.FnGetRefId())
+
+            for lb in self.properties['LoadBalancerNames']:
+                self.stack[lb].reload(id_list)
+
+    def FnGetRefId(self):
+        return unicode(self.name)
+
+
+class AutoScalingGroup(InstanceGroup):
     tags_schema = {'Key': {'Type': 'String',
                            'Required': True},
                    'Value': {'Type': 'String',
@@ -58,38 +161,10 @@ class AutoScalingGroup(resource.Resource):
         else:
             num_to_create = int(self.properties['MinSize'])
 
-        self.adjust(num_to_create,
-                    adjustment_type='ExactCapacity')
+        self.resize(num_to_create)
 
     def handle_update(self):
         return self.UPDATE_REPLACE
-
-    def _make_instance(self, name):
-
-        Instance = resource.get_class('AWS::EC2::Instance')
-
-        class AutoScalingGroupInstance(Instance):
-            '''
-            Subclass instance.Instance to supress event transitions, since the
-            scaling-group instances are not "real" resources, ie defined in the
-            template, which causes problems for event handling since we can't
-            look up the resources via parser.Stack
-            '''
-            def state_set(self, new_state, reason="state changed"):
-                self._store_or_update(new_state, reason)
-
-        conf = self.properties['LaunchConfigurationName']
-        instance_definition = self.stack.t['Resources'][conf]
-        return AutoScalingGroupInstance(name, instance_definition, self.stack)
-
-    def handle_delete(self):
-        if self.resource_id is not None:
-            inst_list = self.resource_id.split(',')
-            logger.debug('handle_delete %s' % str(inst_list))
-            for victim in inst_list:
-                logger.debug('handle_delete %s' % victim)
-                inst = self._make_instance(victim)
-                inst.destroy()
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
         inst_list = []
@@ -112,40 +187,7 @@ class AutoScalingGroup(resource.Resource):
             logger.warn('can not be less than %s' % self.properties['MinSize'])
             return
 
-        if new_capacity == capacity:
-            logger.debug('no change in capacity %d' % capacity)
-            return
-        logger.debug('adjusting capacity from %d to %d' % (capacity,
-                                                           new_capacity))
-
-        if new_capacity > capacity:
-            # grow
-            for x in range(capacity, new_capacity):
-                name = '%s-%d' % (self.name, x)
-                inst = self._make_instance(name)
-                inst_list.append(name)
-                self.resource_id_set(','.join(inst_list))
-                inst.create()
-        else:
-            # shrink (kill largest numbered first)
-            del_list = inst_list[new_capacity:]
-            for victim in reversed(del_list):
-                inst = self._make_instance(victim)
-                inst.destroy()
-                inst_list.remove(victim)
-                self.resource_id_set(','.join(inst_list))
-
-        # notify the LoadBalancer to reload it's config to include
-        # the changes in instances we have just made.
-        if self.properties['LoadBalancerNames']:
-            # convert the list of instance names into a list of instance id's
-            id_list = []
-            for inst_name in inst_list:
-                inst = self._make_instance(inst_name)
-                id_list.append(inst.FnGetRefId())
-
-            for lb in self.properties['LoadBalancerNames']:
-                self.stack[lb].reload(id_list)
+        self.resize(new_capacity)
 
     def FnGetRefId(self):
         return unicode(self.name)
@@ -211,4 +253,5 @@ def resource_mapping():
         'AWS::AutoScaling::LaunchConfiguration': LaunchConfiguration,
         'AWS::AutoScaling::AutoScalingGroup': AutoScalingGroup,
         'AWS::AutoScaling::ScalingPolicy': ScalingPolicy,
+        'OS::Heat::InstanceGroup': InstanceGroup,
     }
