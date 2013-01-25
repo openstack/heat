@@ -255,7 +255,7 @@ class Resource(object):
             self.t = self.stack.resolve_static_data(json_snippet)
             err = self.properties.validate()
             if err:
-                return err
+                raise ValueError(err)
             if callable(getattr(self, 'handle_update', None)):
                 result = self.handle_update()
         except Exception as ex:
