@@ -17,6 +17,7 @@ from heat.engine import resource
 from heat.engine.resources import instance
 
 from heat.openstack.common import log as logging
+from heat.openstack.common import timeutils
 
 logger = logging.getLogger(__name__)
 
@@ -239,6 +240,21 @@ class ScalingPolicy(resource.Resource):
         super(ScalingPolicy, self).__init__(name, json_snippet, stack)
 
     def alarm(self):
+        try:
+            # Negative values don't make sense, so they are clamped to zero
+            cooldown = max(0, int(self.properties['Cooldown']))
+        except TypeError:
+            # If not specified, it will be None, same as cooldown == 0
+            cooldown = 0
+
+        metadata = self.metadata
+        if metadata and cooldown != 0:
+            last_adjust = metadata.keys()[0]
+            if not timeutils.is_older_than(last_adjust, cooldown):
+                logger.info("%s NOT performing scaling action, cooldown %s" %
+                            (self.name, cooldown))
+                return
+
         group = self.stack.resources[self.properties['AutoScalingGroupName']]
 
         logger.info('%s Alarm, adjusting Group %s by %s' %
@@ -246,6 +262,15 @@ class ScalingPolicy(resource.Resource):
                      self.properties['ScalingAdjustment']))
         group.adjust(int(self.properties['ScalingAdjustment']),
                      self.properties['AdjustmentType'])
+
+        # Save resource metadata with a timestamp and reason
+        # If we wanted to implement the AutoScaling API like AWS does,
+        # we could maintain event history here, but since we only need
+        # the latest event for cooldown, just store that for now
+        metadata = {timeutils.strtime(): "%s : %s" % (
+                    self.properties['AdjustmentType'],
+                    self.properties['ScalingAdjustment'])}
+        self.metadata = metadata
 
 
 def resource_mapping():
