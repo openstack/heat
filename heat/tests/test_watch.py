@@ -76,15 +76,16 @@ class WatchRuleTest(unittest.TestCase):
     def tearDown(self):
         self.m.UnsetStubs()
 
-    def _action_set_stubs(self, now):
+    def _action_set_stubs(self, now, action_expected=True):
         # Setup stubs for the action tests
         self.m.StubOutWithMock(timeutils, 'utcnow')
         timeutils.utcnow().MultipleTimes().AndReturn(now)
 
-        dummy_action = DummyAction()
-        self.m.StubOutWithMock(parser.Stack, '__getitem__')
-        parser.Stack.__getitem__(mox.IgnoreArg()
-                                 ).MultipleTimes().AndReturn(dummy_action)
+        if action_expected:
+            dummy_action = DummyAction()
+            self.m.StubOutWithMock(parser.Stack, '__getitem__')
+            parser.Stack.__getitem__(mox.IgnoreArg()
+                                     ).MultipleTimes().AndReturn(dummy_action)
 
         self.m.ReplayAll()
 
@@ -401,7 +402,7 @@ class WatchRuleTest(unittest.TestCase):
                 'Threshold': '30'}
 
         now = timeutils.utcnow()
-        self._action_set_stubs(now)
+        self._action_set_stubs(now, action_expected=False)
 
         # Set data so rule evaluates to NORMAL state
         last = now - datetime.timedelta(seconds=300)
@@ -416,6 +417,7 @@ class WatchRuleTest(unittest.TestCase):
         actions = watcher.evaluate()
         self.assertEqual(watcher.state, 'NORMAL')
         self.assertEqual(actions, [])
+        self.m.VerifyAll()
 
     def test_rule_actions_alarm_alarm(self):
         rule = {'EvaluationPeriods': '1',
@@ -451,6 +453,7 @@ class WatchRuleTest(unittest.TestCase):
         actions = watcher.evaluate()
         self.assertEqual(watcher.state, 'ALARM')
         self.assertEqual(actions, [])
+        self.m.VerifyAll()
 
     def test_rule_actions_alarm_two_actions(self):
         rule = {'EvaluationPeriods': '1',
@@ -477,6 +480,7 @@ class WatchRuleTest(unittest.TestCase):
         actions = watcher.evaluate()
         self.assertEqual(watcher.state, 'ALARM')
         self.assertEqual(actions, ['DummyAction', 'DummyAction'])
+        self.m.VerifyAll()
 
     def test_rule_actions_ok_alarm(self):
         rule = {'EvaluationPeriods': '1',
@@ -488,7 +492,7 @@ class WatchRuleTest(unittest.TestCase):
                 'Threshold': '30'}
 
         now = timeutils.utcnow()
-        self._action_set_stubs(now)
+        self._action_set_stubs(now, action_expected=False)
 
         # On creation the rule evaluates to NODATA state
         last = now - datetime.timedelta(seconds=300)
@@ -506,6 +510,7 @@ class WatchRuleTest(unittest.TestCase):
         # Move time forward and add data below threshold so we transition from
         # ALARM -> NORMAL, so evaluate() should output a 'DummyAction'
         now = now + datetime.timedelta(seconds=300)
+        self.m.VerifyAll()
         self.m.UnsetStubs()
         self._action_set_stubs(now)
 
@@ -515,6 +520,7 @@ class WatchRuleTest(unittest.TestCase):
         actions = watcher.evaluate()
         self.assertEqual(watcher.state, 'NORMAL')
         self.assertEqual(actions, ['DummyAction'])
+        self.m.VerifyAll()
 
     def test_rule_actions_nodata(self):
         rule = {'EvaluationPeriods': '1',
@@ -526,7 +532,7 @@ class WatchRuleTest(unittest.TestCase):
                 'Threshold': '30'}
 
         now = timeutils.utcnow()
-        self._action_set_stubs(now)
+        self._action_set_stubs(now, action_expected=False)
 
         # Set data so rule evaluates to ALARM state
         last = now - datetime.timedelta(seconds=300)
@@ -545,12 +551,14 @@ class WatchRuleTest(unittest.TestCase):
         # Move time forward and don't add data so we transition from
         # ALARM -> NODATA, so evaluate() should output a 'DummyAction'
         now = now + datetime.timedelta(seconds=300)
+        self.m.VerifyAll()
         self.m.UnsetStubs()
         self._action_set_stubs(now)
 
         actions = watcher.evaluate()
         self.assertEqual(watcher.state, 'NODATA')
         self.assertEqual(actions, ['DummyAction'])
+        self.m.VerifyAll()
 
     def test_create_watch_data(self):
         rule = {u'EvaluationPeriods': u'1',
@@ -613,6 +621,7 @@ class WatchRuleTest(unittest.TestCase):
 
         actions = watcher.set_watch_state(watchrule.WatchRule.ALARM)
         self.assertEqual(actions, ['DummyAction'])
+        self.m.VerifyAll()
 
     def test_set_watch_state_invalid(self):
         rule = {'EvaluationPeriods': '1',
@@ -624,7 +633,6 @@ class WatchRuleTest(unittest.TestCase):
                 'Threshold': '30'}
 
         now = timeutils.utcnow()
-        self._action_set_stubs(now)
 
         last = now - datetime.timedelta(seconds=200)
         watcher = watchrule.WatchRule(context=self.ctx,
