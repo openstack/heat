@@ -49,5 +49,6 @@ setuptools.setup(
              'bin/heat-engine',
              'bin/heat-watch',
              'bin/heat-db-setup',
+             'bin/cinder-keystone-setup',
              'bin/heat-keystone-setup'],
     py_modules=[])
