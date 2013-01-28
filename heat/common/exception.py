@@ -232,3 +232,7 @@ class PhysicalResourceNotFound(OpenstackException):
 
 class WatchRuleNotFound(OpenstackException):
     message = _("The Watch Rule (%(watch_name)s) could not be found.")
+
+
+class NestedResourceFailure(OpenstackException):
+    message = _("%(message)s")

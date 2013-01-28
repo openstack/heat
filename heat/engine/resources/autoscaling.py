@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine import resource
+from heat.common import exception
 from heat.engine.resources import instance
+from heat.engine import resource
 
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
@@ -75,7 +76,7 @@ class InstanceGroup(resource.Resource):
         # resource_id is a list of resources
 
     def handle_create(self):
-        self.resize(int(self.properties['Size']))
+        self.resize(int(self.properties['Size']), raise_on_error=True)
 
     def handle_update(self):
         # TODO(asalkeld) if the only thing that has changed is the size then
@@ -108,9 +109,13 @@ class InstanceGroup(resource.Resource):
             for victim in inst_list:
                 logger.debug('handle_delete %s' % victim)
                 inst = self._make_instance(victim)
-                inst.destroy()
+                error_str = inst.destroy()
+                if error_str is not None:
+                    # try suck out the grouped resouces failure reason
+                    # and re-raise
+                    raise exception.NestedResourceFailure(message=error_str)
 
-    def resize(self, new_capacity):
+    def resize(self, new_capacity, raise_on_error=False):
         inst_list = []
         if self.resource_id is not None:
             inst_list = sorted(self.resource_id.split(','))
@@ -129,7 +134,12 @@ class InstanceGroup(resource.Resource):
                 inst = self._make_instance(name)
                 inst_list.append(name)
                 self.resource_id_set(','.join(inst_list))
-                inst.create()
+                logger.info('creating inst')
+                error_str = inst.create()
+                if raise_on_error and error_str is not None:
+                    # try suck out the grouped resouces failure reason
+                    # and re-raise
+                    raise exception.NestedResourceFailure(message=error_str)
         else:
             # shrink (kill largest numbered first)
             del_list = inst_list[new_capacity:]
@@ -192,12 +202,14 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         else:
             num_to_create = int(self.properties['MinSize'])
 
-        self.adjust(num_to_create, adjustment_type='ExactCapacity')
+        self.adjust(num_to_create, adjustment_type='ExactCapacity',
+                    raise_on_error=True)
 
     def handle_update(self):
         return self.UPDATE_REPLACE
 
-    def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
+    def adjust(self, adjustment, adjustment_type='ChangeInCapacity',
+               raise_on_error=False):
         if self._cooldown_inprogress():
             logger.info("%s NOT performing scaling adjustment, cooldown %s" %
                         (self.name, self.properties['Cooldown']))
@@ -227,7 +239,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             logger.debug('no change in capacity %d' % capacity)
             return
 
-        self.resize(new_capacity)
+        self.resize(new_capacity, raise_on_error=raise_on_error)
 
         self._cooldown_timestamp("%s : %s" % (adjustment_type, adjustment))
 

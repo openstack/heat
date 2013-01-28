@@ -20,9 +20,11 @@ import mox
 
 from nose.plugins.attrib import attr
 
+from heat.tests.v1_1 import fakes
 from heat.common import context
 from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
+from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine import parser
 
@@ -31,6 +33,7 @@ from heat.engine import parser
 @attr(speed='fast')
 class InstanceGroupTest(unittest.TestCase):
     def setUp(self):
+        self.fc = fakes.FakeClient()
         self.m = mox.Mox()
         self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'reload')
 
@@ -58,6 +61,11 @@ class InstanceGroupTest(unittest.TestCase):
 
         return stack
 
+    def _stub_create(self, num):
+        self.m.StubOutWithMock(instance.Instance, 'create')
+        for x in range(num):
+            instance.Instance.create().AndReturn(None)
+
     def create_instance_group(self, t, stack, resource_name):
         resource = asc.InstanceGroup(resource_name,
                                      t['Resources'][resource_name],
@@ -73,6 +81,8 @@ class InstanceGroupTest(unittest.TestCase):
         stack = self.parse_stack(t)
 
         # start with min then delete
+        self._stub_create(1)
+        self.m.ReplayAll()
         resource = self.create_instance_group(t, stack, 'JobServerGroup')
 
         self.assertEqual('JobServerGroup', resource.FnGetRefId())
@@ -81,3 +91,22 @@ class InstanceGroupTest(unittest.TestCase):
                          resource.handle_update())
 
         resource.delete()
+
+    def test_missing_image(self):
+
+        t = self.load_template()
+        stack = self.parse_stack(t)
+
+        resource = asc.InstanceGroup('JobServerGroup',
+                                     t['Resources']['JobServerGroup'],
+                                     stack)
+
+        self.m.StubOutWithMock(instance.Instance, 'create')
+        instance.Instance.create().AndReturn('ImageNotFound: bla')
+
+        self.m.ReplayAll()
+
+        self.assertEqual(resource.create(), 'ImageNotFound: bla')
+        self.assertEqual(asc.InstanceGroup.CREATE_FAILED, resource.state)
+
+        self.m.VerifyAll()
