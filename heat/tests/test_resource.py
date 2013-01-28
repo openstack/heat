@@ -115,6 +115,44 @@ class ResourceTest(unittest.TestCase):
 
         self.assertNotEqual(res1, res2)
 
+    def test_update_template_diff_empty(self):
+        tmpl = {'Type': 'Foo'}
+        update_snippet = {}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        self.assertRaises(NotImplementedError, res.update_template_diff,
+                          update_snippet)
+
+    def test_update_template_diff_changed_notallowed(self):
+        tmpl = {'Type': 'Foo'}
+        update_snippet = {'Type': 'Bar'}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        self.assertRaises(NotImplementedError, res.update_template_diff,
+                          update_snippet)
+
+    def test_update_template_diff_changed_modified(self):
+        tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
+        update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 456}}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ['Metadata']
+        diff = res.update_template_diff(json_snippet=update_snippet)
+        self.assertEqual(diff, {'Metadata': {'foo': 456}})
+
+    def test_update_template_diff_changed_add(self):
+        tmpl = {'Type': 'Foo'}
+        update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 123}}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ['Metadata']
+        diff = res.update_template_diff(json_snippet=update_snippet)
+        self.assertEqual(diff, {'Metadata': {'foo': 123}})
+
+    def test_update_template_diff_changed_remove(self):
+        tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
+        update_snippet = {'Type': 'Foo'}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ['Metadata']
+        diff = res.update_template_diff(json_snippet=update_snippet)
+        self.assertEqual(diff, {'Metadata': None})
+
 
 @attr(tag=['unit', 'resource'])
 @attr(speed='fast')
