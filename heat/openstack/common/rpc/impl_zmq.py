@@ -449,7 +449,7 @@ class ZmqProxy(ZmqBaseReactor):
         else:
             sock_type = zmq.PUSH
 
-        if not topic in self.topic_proxy:
+        if topic not in self.topic_proxy:
             def publisher(waiter):
                 LOG.info(_("Creating proxy for topic: %s"), topic)
 

@@ -217,7 +217,7 @@ log files::
         ...
      ]
 
-This module also contains a global instance of the CommonConfigOpts class
+This module also contains a global instance of the ConfigOpts class
 in order to support a common usage pattern in OpenStack::
 
     from heat.openstack.common import cfg
@@ -863,7 +863,7 @@ class SubCommandOpt(Opt):
                                            description=self.description,
                                            help=self.help)
 
-        if not self.handler is None:
+        if self.handler is not None:
             self.handler(subparsers)
 
 
@@ -1547,8 +1547,8 @@ class ConfigOpts(collections.Mapping):
         group = group_or_name if isinstance(group_or_name, OptGroup) else None
         group_name = group.name if group else group_or_name
 
-        if not group_name in self._groups:
-            if not group is None or not autocreate:
+        if group_name not in self._groups:
+            if group is not None or not autocreate:
                 raise NoSuchGroupError(group_name)
 
             self.register_group(OptGroup(name=group_name))
@@ -1568,7 +1568,7 @@ class ConfigOpts(collections.Mapping):
             group = self._get_group(group)
             opts = group._opts
 
-        if not opt_name in opts:
+        if opt_name not in opts:
             raise NoSuchOptError(opt_name, group)
 
         return opts[opt_name]
@@ -1606,7 +1606,7 @@ class ConfigOpts(collections.Mapping):
             opt = info['opt']
 
             if opt.required:
-                if ('default' in info or 'override' in info):
+                if 'default' in info or 'override' in info:
                     continue
 
                 if self._get(opt.dest, group) is None:
@@ -1728,64 +1728,4 @@ class ConfigOpts(collections.Mapping):
             return value
 
 
-class CommonConfigOpts(ConfigOpts):
-
-    DEFAULT_LOG_FORMAT = "%(asctime)s %(levelname)8s [%(name)s] %(message)s"
-    DEFAULT_LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-
-    common_cli_opts = [
-        BoolOpt('debug',
-                short='d',
-                default=False,
-                help='Print debugging output (set logging level to '
-                     'DEBUG instead of default WARNING level).'),
-        BoolOpt('verbose',
-                short='v',
-                default=False,
-                help='Print more verbose output (set logging level to '
-                     'INFO instead of default WARNING level).'),
-    ]
-
-    logging_cli_opts = [
-        StrOpt('log-config',
-               metavar='PATH',
-               help='If this option is specified, the logging configuration '
-                    'file specified is used and overrides any other logging '
-                    'options specified. Please see the Python logging module '
-                    'documentation for details on logging configuration '
-                    'files.'),
-        StrOpt('log-format',
-               default=DEFAULT_LOG_FORMAT,
-               metavar='FORMAT',
-               help='A logging.Formatter log message format string which may '
-                    'use any of the available logging.LogRecord attributes. '
-                    'Default: %(default)s'),
-        StrOpt('log-date-format',
-               default=DEFAULT_LOG_DATE_FORMAT,
-               metavar='DATE_FORMAT',
-               help='Format string for %%(asctime)s in log records. '
-                    'Default: %(default)s'),
-        StrOpt('log-file',
-               metavar='PATH',
-               deprecated_name='logfile',
-               help='(Optional) Name of log file to output to. '
-                    'If not set, logging will go to stdout.'),
-        StrOpt('log-dir',
-               deprecated_name='logdir',
-               help='(Optional) The directory to keep log files in '
-                    '(will be prepended to --log-file)'),
-        BoolOpt('use-syslog',
-                default=False,
-                help='Use syslog for logging.'),
-        StrOpt('syslog-log-facility',
-               default='LOG_USER',
-               help='syslog facility to receive log lines')
-    ]
-
-    def __init__(self):
-        super(CommonConfigOpts, self).__init__()
-        self.register_cli_opts(self.common_cli_opts)
-        self.register_cli_opts(self.logging_cli_opts)
-
-
-CONF = CommonConfigOpts()
+CONF = ConfigOpts()

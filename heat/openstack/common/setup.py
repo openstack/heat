@@ -108,13 +108,17 @@ def parse_dependency_links(requirements_files=['requirements.txt',
     return dependency_links
 
 
-def _run_shell_command(cmd):
+def _run_shell_command(cmd, throw_on_error=False):
     if os.name == 'nt':
         output = subprocess.Popen(["cmd.exe", "/C", cmd],
-                                  stdout=subprocess.PIPE)
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
     else:
         output = subprocess.Popen(["/bin/sh", "-c", cmd],
-                                  stdout=subprocess.PIPE)
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+    if output.returncode and throw_on_error:
+        raise Exception("%s returned %d" % cmd, output.returncode)
     out = output.communicate()
     if len(out) == 0:
         return None
@@ -254,14 +258,39 @@ def get_cmdclass():
     return cmdclass
 
 
-def get_version_from_git():
+def _get_revno():
+    """Return the number of commits since the most recent tag.
+
+    We use git-describe to find this out, but if there are no
+    tags then we fall back to counting commits since the beginning
+    of time.
+    """
+    describe = _run_shell_command("git describe --always")
+    if "-" in describe:
+        return describe.rsplit("-", 2)[-2]
+
+    # no tags found
+    revlist = _run_shell_command("git rev-list --abbrev-commit HEAD")
+    return len(revlist.splitlines())
+
+
+def get_version_from_git(pre_version):
     """Return a version which is equal to the tag that's on the current
     revision if there is one, or tag plus number of additional revisions
     if the current revision has no tag."""
 
     if os.path.isdir('.git'):
-        return _run_shell_command(
-            "git describe --always").replace('-', '.')
+        if pre_version:
+            try:
+                return _run_shell_command(
+                    "git describe --exact-match",
+                    throw_on_error=True).replace('-', '.')
+            except Exception:
+                sha = _run_shell_command("git log -n1 --pretty=format:%h")
+                return "%s.a%s.g%s" % (pre_version, _get_revno(), sha)
+        else:
+            return _run_shell_command(
+                "git describe --always").replace('-', '.')
     return None
 
 
@@ -281,7 +310,7 @@ def get_version_from_pkg_info(package_name):
     return pkg_info.get('Version', None)
 
 
-def get_version(package_name):
+def get_version(package_name, pre_version=None):
     """Get the version of the project. First, try getting it from PKG-INFO, if
     it exists. If it does, that means we're in a distribution tarball or that
     install has happened. Otherwise, if there is no PKG-INFO file, pull the
@@ -293,10 +322,13 @@ def get_version(package_name):
     to make a source tarball from a fork of our repo with additional tags in it
     that they understand and desire the results of doing that.
     """
+    version = os.environ.get("OSLO_PACKAGE_VERSION", None)
+    if version:
+        return version
     version = get_version_from_pkg_info(package_name)
     if version:
         return version
-    version = get_version_from_git()
+    version = get_version_from_git(pre_version)
     if version:
         return version
     raise Exception("Versioning for this project requires either an sdist"
