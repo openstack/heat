@@ -268,6 +268,9 @@ class Resource(object):
     def quantum(self):
         return self.stack.clients.quantum()
 
+    def cinder(self):
+        return self.stack.clients.cinder()
+
     def create(self):
         '''
         Create the resource. Subclasses should provide a handle_create() method

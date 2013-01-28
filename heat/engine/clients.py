@@ -32,6 +32,11 @@ try:
 except ImportError:
     quantumclient = None
     logger.info('quantumclient not available')
+try:
+    from cinderclient.v1 import client as cinderclient
+except ImportError:
+    cinderclient = None
+    logger.info('cinderclient not available')
 
 
 cloud_opts = [
@@ -53,6 +58,7 @@ class OpenStackClients(object):
         self._keystone = None
         self._swift = None
         self._quantum = None
+        self._cinder = None
 
     def keystone(self):
         if self._keystone:
@@ -172,6 +178,38 @@ class OpenStackClients(object):
         self._quantum = quantumclient.Client(**args)
 
         return self._quantum
+
+    def cinder(self):
+        if cinderclient is None:
+            return self.nova('volume')
+        if self._cinder:
+            return self._cinder
+
+        con = self.context
+        args = {
+            'project_id': con.tenant,
+            'auth_url': con.auth_url,
+            'service_type': 'volume',
+        }
+
+        if con.password is not None:
+            args['username'] = con.username
+            args['api_key'] = con.password
+        elif con.auth_token is not None:
+            args['username'] = con.service_user
+            args['api_key'] = con.service_password
+            args['project_id'] = con.service_tenant
+            args['proxy_token'] = con.auth_token
+            args['proxy_token_id'] = con.tenant_id
+        else:
+            logger.error("Cinder connection failed, "
+                         "no password or auth_token!")
+            return None
+        logger.debug('cinder args %s', args)
+
+        self._cinder = cinderclient.Client(**args)
+
+        return self._cinder
 
 
 if cfg.CONF.cloud_backend:

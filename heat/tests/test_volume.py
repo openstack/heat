@@ -34,7 +34,8 @@ class VolumeTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(vol.Volume, 'nova')
+        self.m.StubOutWithMock(vol.Volume, 'cinder')
+        self.m.StubOutWithMock(vol.VolumeAttachment, 'cinder')
         self.m.StubOutWithMock(vol.VolumeAttachment, 'nova')
         self.m.StubOutWithMock(self.fc.volumes, 'create')
         self.m.StubOutWithMock(self.fc.volumes, 'get')
@@ -90,7 +91,7 @@ class VolumeTest(unittest.TestCase):
         stack_name = 'test_volume_stack'
 
         # create script
-        vol.Volume.nova('volume').MultipleTimes().AndReturn(self.fc)
+        vol.Volume.cinder().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create(
             u'1', display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
@@ -124,7 +125,7 @@ class VolumeTest(unittest.TestCase):
         stack_name = 'test_volume_create_error_stack'
 
         # create script
-        vol.Volume.nova('volume').AndReturn(self.fc)
+        vol.Volume.cinder().AndReturn(self.fc)
         self.fc.volumes.create(
             u'1', display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
@@ -149,14 +150,15 @@ class VolumeTest(unittest.TestCase):
         stack_name = 'test_volume_attach_error_stack'
 
         # volume create
-        vol.Volume.nova('volume').MultipleTimes().AndReturn(self.fc)
+        vol.Volume.cinder().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create(
             u'1', display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
         vol.VolumeAttachment.nova().MultipleTimes().AndReturn(self.fc)
-        vol.VolumeAttachment.nova('volume').MultipleTimes().AndReturn(self.fc)
+        vol.VolumeAttachment.cinder().MultipleTimes().AndReturn(self.fc)
+
         eventlet.sleep(1).MultipleTimes().AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',
@@ -185,14 +187,14 @@ class VolumeTest(unittest.TestCase):
         stack_name = 'test_volume_attach_stack'
 
         # volume create
-        vol.Volume.nova('volume').MultipleTimes().AndReturn(self.fc)
+        vol.Volume.cinder().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create(
             u'1', display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
         vol.VolumeAttachment.nova().MultipleTimes().AndReturn(self.fc)
-        vol.VolumeAttachment.nova('volume').MultipleTimes().AndReturn(self.fc)
+        vol.VolumeAttachment.cinder().MultipleTimes().AndReturn(self.fc)
         eventlet.sleep(1).MultipleTimes().AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',
