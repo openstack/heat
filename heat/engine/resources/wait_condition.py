@@ -99,7 +99,7 @@ class WaitConditionHandle(resource.Resource):
             return
         self.keystone().delete_stack_user(self.resource_id)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def FnGetRefId(self):
@@ -252,7 +252,7 @@ class WaitCondition(resource.Resource):
         if status != SUCCESS:
             raise exception.Error(reason)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):

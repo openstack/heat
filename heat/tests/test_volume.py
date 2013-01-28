@@ -110,7 +110,7 @@ class VolumeTest(unittest.TestCase):
         resource = self.create_volume(t, stack, 'DataVolume')
         self.assertEqual(fv.status, 'available')
 
-        self.assertEqual(resource.handle_update(), vol.Volume.UPDATE_REPLACE)
+        self.assertEqual(resource.handle_update({}), vol.Volume.UPDATE_REPLACE)
 
         fv.status = 'in-use'
         self.assertEqual(resource.delete(), 'Volume in use')
@@ -216,7 +216,7 @@ class VolumeTest(unittest.TestCase):
         self.assertEqual(fv.status, 'available')
         resource = self.create_attachment(t, stack, 'MountPoint')
 
-        self.assertEqual(resource.handle_update(), vol.Volume.UPDATE_REPLACE)
+        self.assertEqual(resource.handle_update({}), vol.Volume.UPDATE_REPLACE)
 
         self.assertEqual(resource.delete(), None)
 

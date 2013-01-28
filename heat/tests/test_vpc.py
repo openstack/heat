@@ -105,7 +105,7 @@ class QuantumTest(unittest.TestCase):
         ref_id = resource.FnGetRefId()
         self.assertEqual('aaaa:bbbb', ref_id)
 
-        self.assertEqual(vpc.VPC.UPDATE_REPLACE, resource.handle_update())
+        self.assertEqual(vpc.VPC.UPDATE_REPLACE, resource.handle_update({}))
 
         self.assertEqual(None, resource.delete())
         self.m.VerifyAll()

@@ -88,7 +88,7 @@ class InstanceGroupTest(unittest.TestCase):
         self.assertEqual('JobServerGroup', resource.FnGetRefId())
         self.assertEqual('JobServerGroup-0', resource.resource_id)
         self.assertEqual(asc.InstanceGroup.UPDATE_REPLACE,
-                         resource.handle_update())
+                         resource.handle_update({}))
 
         resource.delete()
 

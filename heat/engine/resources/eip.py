@@ -49,7 +49,7 @@ class ElasticIp(resource.Resource):
         self.ipaddress = ips.ip
         self.resource_id_set(ips.id)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):

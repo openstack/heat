@@ -151,7 +151,7 @@ class QuantumTest(unittest.TestCase):
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          resource.FnGetAtt('id'))
 
-        self.assertEqual(net.Net.UPDATE_REPLACE, resource.handle_update())
+        self.assertEqual(net.Net.UPDATE_REPLACE, resource.handle_update({}))
 
         resource.delete()
         self.m.VerifyAll()

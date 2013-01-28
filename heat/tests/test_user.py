@@ -91,7 +91,7 @@ class UserTest(unittest.TestCase):
 
         self.assertEqual('CREATE_COMPLETE', resource.state)
         self.assertEqual(user.User.UPDATE_REPLACE,
-                         resource.handle_update())
+                         resource.handle_update({}))
 
         resource.resource_id = None
         self.assertEqual(None, resource.delete())
@@ -138,7 +138,7 @@ class UserTest(unittest.TestCase):
         resource = self.create_access_key(t, stack, 'HostKeys')
 
         self.assertEqual(user.AccessKey.UPDATE_REPLACE,
-                         resource.handle_update())
+                         resource.handle_update({}))
         self.assertEqual(self.fc.access,
                          resource.resource_id)
 
