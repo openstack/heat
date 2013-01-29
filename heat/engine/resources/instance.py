@@ -255,22 +255,29 @@ class Instance(resource.Resource):
             scheduler_hints = None
 
         server_userdata = self._build_userdata(userdata)
-        server = self.nova().servers.create(name=self.physical_resource_name(),
-                                            image=image_id,
-                                            flavor=flavor_id,
-                                            key_name=key_name,
-                                            security_groups=security_groups,
-                                            userdata=server_userdata,
-                                            meta=tags,
-                                            scheduler_hints=scheduler_hints)
+        server = None
+        try:
+            server = self.nova().servers.create(
+                name=self.physical_resource_name(),
+                image=image_id,
+                flavor=flavor_id,
+                key_name=key_name,
+                security_groups=security_groups,
+                userdata=server_userdata,
+                meta=tags,
+                scheduler_hints=scheduler_hints)
+        finally:
+            # Avoid a race condition where the thread could be cancelled
+            # before the ID is stored
+            if server is not None:
+                self.resource_id_set(server.id)
+
         while server.status == 'BUILD':
             server.get()
             eventlet.sleep(1)
         if server.status == 'ACTIVE':
-            self.resource_id_set(server.id)
             self._set_ipaddress(server.networks)
         else:
-            self.resource_id_set(server.id)
             raise exception.Error('%s instance[%s] status[%s]' %
                                   ('nova reported unexpected',
                                    self.name, server.status))
