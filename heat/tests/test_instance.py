@@ -14,6 +14,7 @@
 
 
 import os
+import copy
 
 import unittest
 import mox
@@ -140,3 +141,45 @@ class instancesTest(unittest.TestCase):
         self.assertEqual(private_ip, '4.5.6.7')
         private_ip = instance.FnGetAtt('PrivateDnsName')
         self.assertEqual(private_ip, '4.5.6.7')
+
+    def test_instance_update_metadata(self):
+        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
+        t = template_format.parse(f.read())
+        f.close()
+
+        stack_name = 'instance_update_test_stack'
+        template = parser.Template(t)
+        params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
+        stack = parser.Stack(None, stack_name, template, params,
+                             stack_id=uuidutils.generate_uuid())
+
+        t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
+        t['Resources']['WebServer']['Properties']['InstanceType'] = \
+            '256 MB Server'
+        instance = instances.Instance('create_instance_name',
+                                      t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(instance, 'nova')
+        instance.nova().MultipleTimes().AndReturn(self.fc)
+
+        instance.t = instance.stack.resolve_runtime_data(instance.t)
+
+        # need to resolve the template functions
+        server_userdata = instance._build_userdata(
+            instance.t['Properties']['UserData'])
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=1, flavor=1, key_name='test',
+            name='%s.%s' % (stack_name, instance.name),
+            security_groups=None,
+            userdata=server_userdata, scheduler_hints=None,
+            meta=None).AndReturn(self.fc.servers.list()[1])
+        self.m.ReplayAll()
+
+        self.assertEqual(instance.create(), None)
+
+        update_template = copy.deepcopy(instance.t)
+        update_template['Metadata'] = {'test': 123}
+        self.assertEqual(instance.update(update_template),
+                         instance.UPDATE_COMPLETE)
+        self.assertEqual(instance.metadata, {'test': 123})

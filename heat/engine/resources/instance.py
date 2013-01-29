@@ -108,6 +108,10 @@ class Instance(resource.Resource):
                          'Volumes': {'Type': 'List',
                                      'Implemented': False}}
 
+    # template keys supported for handle_update, note trailing comma
+    # is required for a single item to get a tuple not a string
+    update_allowed_keys = ('Metadata',)
+
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = None
@@ -283,7 +287,20 @@ class Instance(resource.Resource):
                                    self.name, server.status))
 
     def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
+        status = self.UPDATE_REPLACE
+        try:
+            tmpl_diff = self.update_template_diff(json_snippet)
+        except NotImplementedError:
+            return self.UPDATE_REPLACE
+
+        for k in tmpl_diff:
+            if k == 'Metadata':
+                self.metadata = json_snippet.get('Metadata', {})
+                status = self.UPDATE_COMPLETE
+            else:
+                return self.UPDATE_REPLACE
+
+        return status
 
     def validate(self):
         '''
