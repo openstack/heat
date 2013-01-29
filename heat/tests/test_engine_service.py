@@ -76,6 +76,7 @@ def setup_mocks(mocks, stack):
                       name='%s.WebServer' % stack.name, security_groups=None,
                       userdata=server_userdata, scheduler_hints=None,
                       meta=None).AndReturn(fc.servers.list()[-1])
+    return fc
 
 
 class DummyThreadGroup(object):
@@ -121,7 +122,7 @@ class stackCreateTest(unittest.TestCase):
     def test_wordpress_single_instance_stack_delete(self):
         ctx = create_context(self.m, tenant='test_delete_tenant')
         stack = get_wordpress_stack('test_stack', ctx)
-        setup_mocks(self.m, stack)
+        fc = setup_mocks(self.m, stack)
         self.m.ReplayAll()
         stack_id = stack.store()
         stack.create()
@@ -131,6 +132,11 @@ class stackCreateTest(unittest.TestCase):
 
         self.assertNotEqual(stack.resources['WebServer'], None)
         self.assertTrue(stack.resources['WebServer'].resource_id > 0)
+
+        self.m.StubOutWithMock(fc.client, 'get_servers_9999')
+        get = fc.client.get_servers_9999
+        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
+        mox.Replay(get)
 
         stack.delete()
 
@@ -379,7 +385,10 @@ class stackServiceTest(unittest.TestCase):
         cls = cls
         m = mox.Mox()
         create_context(m, cls.username, cls.tenant, ctx=cls.stack.context)
-        setup_mocks(m, cls.stack)
+        fc = setup_mocks(m, cls.stack)
+        m.StubOutWithMock(fc.client, 'get_servers_9999')
+        get = fc.client.get_servers_9999
+        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
         m.ReplayAll()
 
         cls.stack.delete()
