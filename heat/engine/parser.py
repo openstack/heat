@@ -313,12 +313,16 @@ class Stack(object):
                 # Currently all resource have a default handle_update method
                 # which returns "requires replacement" (res.UPDATE_REPLACE)
                 for res in newstack:
-                    if self.resolve_runtime_data(self[res.name].t) !=\
-                            self.resolve_runtime_data(res.t):
+                    # Compare resolved pre/post update resource snippets,
+                    # note the new resource snippet is resolved in the context
+                    # of the existing stack (which is the stack being updated)
+                    old_snippet = self.resolve_runtime_data(self[res.name].t)
+                    new_snippet = self.resolve_runtime_data(res.t)
+                    if old_snippet != new_snippet:
 
                         # Can fail if underlying resource class does not
                         # implement update logic or update requires replacement
-                        retval = self[res.name].update(res.parsed_template())
+                        retval = self[res.name].update(new_snippet)
                         if retval == self[res.name].UPDATE_REPLACE:
                             logger.info("Resource %s for stack %s" %
                                         (res.name, self.name) +
