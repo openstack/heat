@@ -75,7 +75,7 @@ fi
 # flavors we're about to create, and no others
 FLAVORS="t1\.micro|m1\.tiny|m1\.small|m1\.medium|m1\.large|m1\.xlarge|m2\.xlarge|m2\.2xlarge|m2\.4xlarge|c1\.medium|c1\.xlarge|cc1\.4xlarge"
 
-for f in $(nova flavor-list | grep -E "^\| [0-9]+\s+ \| ($FLAVORS)\s" | awk '{print $2}')
+for f in $(nova flavor-list | grep -E "^\|\s+[0-9]+\s+\|\s+($FLAVORS)\s" | awk '{print $2}')
 do
     retry_cmd "nova flavor-delete $f"
 done
