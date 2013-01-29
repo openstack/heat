@@ -72,8 +72,9 @@ class WaitConditionHandle(resource.Resource):
                    'params': {'SignatureMethod': 'HmacSHA256',
                               'SignatureVersion': '2',
                               'AWSAccessKeyId': credentials.access,
-                              'Timestamp': time.strftime("%Y-%m-%dT%H:%M:%SZ",
-                                                         time.gmtime())}}
+                              'Timestamp':
+                              self.created_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+                              }}
         # Sign the request
         signer = Ec2Signer(credentials.secret)
         request['params']['Signature'] = signer.generate(request)

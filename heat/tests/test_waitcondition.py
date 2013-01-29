@@ -16,6 +16,7 @@
 import mox
 import uuid
 import time
+import datetime
 
 import eventlet
 import unittest
@@ -299,13 +300,10 @@ class WaitConditionHandleTest(unittest.TestCase):
         return stack
 
     def test_handle(self):
-        # Stub time to a fixed value so we can get an expected signature
-        t = time.gmtime(1354196977)
-        self.m.StubOutWithMock(time, 'gmtime')
-        time.gmtime().MultipleTimes().AndReturn(t)
-        self.m.ReplayAll()
+        created_time = datetime.datetime(2012, 11, 29, 13, 49, 37)
 
         resource = self.stack.resources['WaitHandle']
+        resource.created_time = created_time
         self.assertEqual(resource.state, 'CREATE_COMPLETE')
 
         expected_url = "".join([
