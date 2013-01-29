@@ -323,7 +323,10 @@ class Stack(object):
                         # Can fail if underlying resource class does not
                         # implement update logic or update requires replacement
                         retval = self[res.name].update(new_snippet)
-                        if retval == self[res.name].UPDATE_REPLACE:
+                        if retval == self[res.name].UPDATE_COMPLETE:
+                            logger.info("Resource %s for stack %s updated" %
+                                        (res.name, self.name))
+                        elif retval == self[res.name].UPDATE_REPLACE:
                             logger.info("Resource %s for stack %s" %
                                         (res.name, self.name) +
                                         " update requires replacement")
