@@ -219,7 +219,7 @@ class Instance(object):
         tries = 0
         while True:
             try:
-                self.sftp.stat('/var/lib/cloud/instance/provision-finished')
+                self.sftp.stat('/var/lib/heat/provision-finished')
             except paramiko.SSHException as e:
                 print e
             except IOError as e:
@@ -268,9 +268,6 @@ class Instance(object):
         t_data = t_data['UserData']['Fn::Base64']['Fn::Join'].pop()
         joined_t_data = ''.join(t_data)
         t_data_list = joined_t_data.split('\n')
-        # must match user data injection
-        t_data_list.insert(len(t_data_list) - 1,
-                           u'touch /var/lib/cloud/instance/provision-finished')
 
         self.testcase.assertEqual(t_data_list, remote_file_list_u)
 
