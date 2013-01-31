@@ -48,7 +48,6 @@ if __name__ == '__main__':
     try:
         cfg.CONF(project='heat', prog='heat-api-cloudwatch')
         config.setup_logging()
-        config.register_api_opts()
 
         app = config.load_paste_app()
 
