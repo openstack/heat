@@ -252,8 +252,11 @@ class Resource(object):
         result = self.UPDATE_NOT_IMPLEMENTED
         try:
             self.state_set(self.UPDATE_IN_PROGRESS)
-            self.t = self.stack.resolve_static_data(json_snippet)
-            err = self.properties.validate()
+            properties = Properties(self.properties_schema,
+                                    json_snippet.get('Properties', {}),
+                                    self.stack.resolve_runtime_data,
+                                    self.name)
+            err = properties.validate()
             if err:
                 raise ValueError(err)
             if callable(getattr(self, 'handle_update', None)):
@@ -266,6 +269,7 @@ class Resource(object):
             # If resource was updated (with or without interruption),
             # then we set the resource to UPDATE_COMPLETE
             if not result == self.UPDATE_REPLACE:
+                self.t = self.stack.resolve_static_data(json_snippet)
                 self.state_set(self.UPDATE_COMPLETE)
             return result
 
