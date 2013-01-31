@@ -120,6 +120,11 @@ class instancesTest(unittest.TestCase):
         # this makes sure the auto increment worked on instance creation
         self.assertTrue(instance.id > 0)
 
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndRaise(instances.clients.novaclient.exceptions.NotFound(404))
+        mox.Replay(get)
+
         instance.delete()
         self.assertTrue(instance.resource_id is None)
         self.assertEqual(instance.state, instance.DELETE_COMPLETE)
