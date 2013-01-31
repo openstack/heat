@@ -70,6 +70,7 @@ class StackControllerTest(unittest.TestCase):
         expected = {'StackName': 'Foo',
                     'StackId': 'arn:openstack:heat::t:stacks/Foo/123'}
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_list(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -108,6 +109,7 @@ class StackControllerTest(unittest.TestCase):
                       u'StackName': u'wordpress',
                       u'StackStatus': u'CREATE_COMPLETE'}]}}}
         self.assertEqual(result, expected)
+        self.m.VerifyAll()
 
     def test_list_rmt_aterr(self):
         params = {'Action': 'ListStacks'}
@@ -128,6 +130,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.list(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_list_rmt_interr(self):
         params = {'Action': 'ListStacks'}
@@ -147,6 +150,7 @@ class StackControllerTest(unittest.TestCase):
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
         self.assertEqual(type(result), exception.HeatInternalFailureError)
+        self.m.VerifyAll()
 
     def test_describe(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -232,6 +236,7 @@ class StackControllerTest(unittest.TestCase):
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_describe_arn(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -314,6 +319,7 @@ class StackControllerTest(unittest.TestCase):
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_describe_arn_invalidtenant(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -336,6 +342,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.describe(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_describe_aterr(self):
         stack_name = "wordpress"
@@ -361,6 +368,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.describe(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_describe_bad_name(self):
         stack_name = "wibble"
@@ -381,6 +389,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.describe(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_get_template_int_body(self):
         ''' Test the internal _get_template function '''
@@ -434,6 +443,7 @@ class StackControllerTest(unittest.TestCase):
         }
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_create_err_no_template(self):
         # Format a dummy request with a missing template field
@@ -489,6 +499,7 @@ class StackControllerTest(unittest.TestCase):
 
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_create_err_exists(self):
         # Format a dummy request
@@ -523,6 +534,7 @@ class StackControllerTest(unittest.TestCase):
 
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_create_err_engine(self):
         # Format a dummy request
@@ -557,6 +569,7 @@ class StackControllerTest(unittest.TestCase):
         expected = {'CreateStackResponse': {'CreateStackResult': engine_err}}
 
         self.assertEqual(result, expected)
+        self.m.VerifyAll()
 
     def test_update(self):
         # Format a dummy request
@@ -602,6 +615,7 @@ class StackControllerTest(unittest.TestCase):
         }
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_update_bad_name(self):
         stack_name = "wibble"
@@ -627,6 +641,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.update(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_create_or_update_err(self):
         result = self.controller.create_or_update(req={}, action="dsdgfdf")
@@ -662,6 +677,7 @@ class StackControllerTest(unittest.TestCase):
                      {'TemplateBody': template}}}
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_get_template_err_rpcerr(self):
         stack_name = "wordpress"
@@ -689,6 +705,7 @@ class StackControllerTest(unittest.TestCase):
 
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_get_template_bad_name(self):
         stack_name = "wibble"
@@ -709,6 +726,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.get_template(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_get_template_err_none(self):
         stack_name = "wordpress"
@@ -737,6 +755,7 @@ class StackControllerTest(unittest.TestCase):
 
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_validate_err_no_template(self):
         # Format a dummy request with a missing template field
@@ -784,6 +803,7 @@ class StackControllerTest(unittest.TestCase):
         expected = {'DeleteStackResponse': {'DeleteStackResult': ''}}
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_delete_err_rpcerr(self):
         stack_name = "wordpress"
@@ -812,6 +832,7 @@ class StackControllerTest(unittest.TestCase):
 
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_delete_bad_name(self):
         stack_name = "wibble"
@@ -832,6 +853,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.delete(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_events_list(self):
         # Format a dummy request
@@ -889,6 +911,7 @@ class StackControllerTest(unittest.TestCase):
                         'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_events_list_err_rpcerr(self):
         stack_name = "wordpress"
@@ -914,6 +937,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.events_list(dummy_req)
 
         self.assertEqual(type(result), exception.HeatInternalFailureError)
+        self.m.VerifyAll()
 
     def test_events_list_bad_name(self):
         stack_name = "wibble"
@@ -934,6 +958,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.events_list(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_describe_stack_resource(self):
         # Format a dummy request
@@ -1000,6 +1025,7 @@ class StackControllerTest(unittest.TestCase):
                     'LogicalResourceId': u'WikiDatabase'}}}}
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_describe_stack_resource_nonexistent_stack(self):
         # Format a dummy request
@@ -1023,6 +1049,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.describe_stack_resource(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_describe_stack_resource_nonexistent(self):
         # Format a dummy request
@@ -1054,6 +1081,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.describe_stack_resource(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_describe_stack_resources(self):
         # Format a dummy request
@@ -1119,6 +1147,7 @@ class StackControllerTest(unittest.TestCase):
                        'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_describe_stack_resources_bad_name(self):
         stack_name = "wibble"
@@ -1141,6 +1170,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.describe_stack_resources(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_describe_stack_resources_physical(self):
         # Format a dummy request
@@ -1207,6 +1237,7 @@ class StackControllerTest(unittest.TestCase):
                        'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_describe_stack_resources_physical_not_found(self):
         # Format a dummy request
@@ -1233,6 +1264,7 @@ class StackControllerTest(unittest.TestCase):
 
         self.assertEqual(type(response),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def test_describe_stack_resources_err_inval(self):
         # Format a dummy request containing both StackName and
@@ -1246,6 +1278,7 @@ class StackControllerTest(unittest.TestCase):
         ret = self.controller.describe_stack_resources(dummy_req)
         self.assertEqual(type(ret),
                          exception.HeatInvalidParameterCombinationError)
+        self.m.VerifyAll()
 
     def test_list_stack_resources(self):
         # Format a dummy request
@@ -1299,6 +1332,7 @@ class StackControllerTest(unittest.TestCase):
                        'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
 
     def test_list_stack_resources_bad_name(self):
         stack_name = "wibble"
@@ -1320,6 +1354,7 @@ class StackControllerTest(unittest.TestCase):
         result = self.controller.list_stack_resources(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
+        self.m.VerifyAll()
 
     def setUp(self):
         self.maxDiff = None
@@ -1339,5 +1374,4 @@ class StackControllerTest(unittest.TestCase):
 
     def tearDown(self):
         self.m.UnsetStubs()
-        self.m.VerifyAll()
         print "teardown complete"
