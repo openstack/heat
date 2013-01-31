@@ -260,7 +260,7 @@ class Resource(object):
             if err:
                 raise ValueError(err)
             if callable(getattr(self, 'handle_update', None)):
-                result = self.handle_update()
+                result = self.handle_update(json_snippet)
         except Exception as ex:
             logger.exception('update %s : %s' % (str(self), str(ex)))
             self.state_set(self.UPDATE_FAILED, str(ex))
@@ -424,7 +424,7 @@ class Resource(object):
         '''
         return base64.b64encode(data)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet=None):
         raise NotImplementedError("Update not implemented for Resource %s"
                                   % type(self))
 
@@ -442,5 +442,5 @@ class GenericResource(Resource):
     def handle_create(self):
         logger.warning('Creating generic resource (Type "%s")' % self.type())
 
-    def handle_update(self):
+    def handle_update(self, json_snippet=None):
         logger.warning('Updating generic resource (Type "%s")' % self.type())

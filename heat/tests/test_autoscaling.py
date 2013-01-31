@@ -121,7 +121,7 @@ class AutoScalingTest(unittest.TestCase):
         self.assertEqual('WebServerGroup', resource.FnGetRefId())
         self.assertEqual('WebServerGroup-0', resource.resource_id)
         self.assertEqual(asc.AutoScalingGroup.UPDATE_REPLACE,
-                         resource.handle_update())
+                         resource.handle_update({}))
 
         resource.delete()
         self.m.VerifyAll()

@@ -290,7 +290,7 @@ class LoadBalancer(stack_resource.StackResource):
 
         self.create_with_template(templ, param)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):

@@ -49,7 +49,7 @@ class User(resource.Resource):
                                                 passwd)
         self.resource_id_set(uid)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
@@ -111,7 +111,7 @@ class AccessKey(resource.Resource):
             self.resource_id_set(kp.access)
             self._secret = kp.secret
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):

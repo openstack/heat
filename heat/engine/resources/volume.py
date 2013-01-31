@@ -47,7 +47,7 @@ class Volume(resource.Resource):
         else:
             raise exception.Error(vol.status)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
@@ -91,7 +91,7 @@ class VolumeAttachment(resource.Resource):
         else:
             raise exception.Error(vol.status)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):

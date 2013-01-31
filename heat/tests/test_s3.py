@@ -117,7 +117,8 @@ class s3Test(unittest.TestCase):
         except s3.exception.InvalidTemplateAttribute:
             pass
 
-        self.assertEqual(s3.S3Bucket.UPDATE_REPLACE, resource.handle_update())
+        self.assertEqual(s3.S3Bucket.UPDATE_REPLACE,
+                         resource.handle_update({}))
 
         resource.delete()
         self.m.VerifyAll()

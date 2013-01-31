@@ -81,7 +81,7 @@ class CloudWatchAlarm(resource.Resource):
                                  stack_id=self.stack.id)
         wr.store()
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):

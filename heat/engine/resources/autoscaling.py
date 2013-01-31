@@ -78,7 +78,7 @@ class InstanceGroup(resource.Resource):
     def handle_create(self):
         self.resize(int(self.properties['Size']), raise_on_error=True)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         # TODO(asalkeld) if the only thing that has changed is the size then
         # call resize. Maybe have an attribute of the properties that can mark
         # it "update-able" so each resource doesn't have to figure this out.
@@ -205,7 +205,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         self.adjust(num_to_create, adjustment_type='ExactCapacity',
                     raise_on_error=True)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity',

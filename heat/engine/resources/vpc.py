@@ -45,7 +45,7 @@ class VPC(resource.Resource):
         client.delete_router(router_id)
         client.delete_network(network_id)
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
 

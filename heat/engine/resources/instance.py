@@ -282,7 +282,7 @@ class Instance(resource.Resource):
                                   ('nova reported unexpected',
                                    self.name, server.status))
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def validate(self):

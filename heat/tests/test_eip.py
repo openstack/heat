@@ -98,7 +98,7 @@ class EIPTest(unittest.TestCase):
         self.assertEqual('1', resource.FnGetAtt('AllocationId'))
 
         self.assertEqual(eip.ElasticIp.UPDATE_REPLACE,
-                         resource.handle_update())
+                         resource.handle_update({}))
 
         try:
             resource.FnGetAtt('Foo')

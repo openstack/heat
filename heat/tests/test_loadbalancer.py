@@ -148,7 +148,7 @@ class LoadBalancerTest(unittest.TestCase):
             pass
 
         self.assertEqual(lb.LoadBalancer.UPDATE_REPLACE,
-                         resource.handle_update())
+                         resource.handle_update({}))
 
         self.m.VerifyAll()
 

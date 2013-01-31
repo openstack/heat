@@ -65,7 +65,7 @@ class SecurityGroup(resource.Resource):
                         # unexpected error
                         raise
 
-    def handle_update(self):
+    def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):

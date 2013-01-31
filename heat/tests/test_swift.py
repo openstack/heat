@@ -152,7 +152,7 @@ class swiftTest(unittest.TestCase):
             pass
 
         self.assertEqual(swift.SwiftContainer.UPDATE_REPLACE,
-                         resource.handle_update())
+                         resource.handle_update({}))
 
         resource.delete()
         self.m.VerifyAll()

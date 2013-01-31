@@ -218,7 +218,7 @@ class WaitConditionTest(unittest.TestCase):
         self.assertEqual(resource.state,
                          'CREATE_FAILED')
         self.assertEqual(wc.WaitCondition.UPDATE_REPLACE,
-                         resource.handle_update())
+                         resource.handle_update({}))
 
     def test_FnGetAtt(self):
         self.stack = self.create_stack()
@@ -322,7 +322,7 @@ class WaitConditionHandleTest(unittest.TestCase):
 
         self.assertEqual(expected_url, resource.FnGetRefId())
 
-        self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update())
+        self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
 
     def test_metadata_update(self):
         resource = self.stack.resources['WaitHandle']
