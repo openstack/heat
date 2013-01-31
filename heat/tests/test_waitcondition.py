@@ -22,6 +22,7 @@ import eventlet
 import unittest
 from nose.plugins.attrib import attr
 from heat.tests import fakes
+from heat.tests.utils import stack_delete_after
 
 import heat.db as db_api
 from heat.common import template_format
@@ -90,10 +91,10 @@ class WaitConditionTest(unittest.TestCase):
         self.fc = fakes.FakeKeystoneClient()
 
     def tearDown(self):
-        self.stack.delete()
-        self.m.VerifyAll()
         self.m.UnsetStubs()
 
+    # Note tests creating a stack should be decorated with @stack_delete_after
+    # to ensure the stack is properly cleaned up
     def create_stack(self, stack_name='test_stack',
                      template=test_template_waitcondition, params={}):
         temp = template_format.parse(template)
@@ -114,6 +115,7 @@ class WaitConditionTest(unittest.TestCase):
 
         return stack
 
+    @stack_delete_after
     def test_post_success_to_handle(self):
         self.stack = self.create_stack()
         wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
@@ -134,7 +136,9 @@ class WaitConditionTest(unittest.TestCase):
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   self.stack.id)
         self.assertEqual(r.name, 'WaitHandle')
+        self.m.VerifyAll()
 
+    @stack_delete_after
     def test_post_failure_to_handle(self):
         self.stack = self.create_stack()
         wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
@@ -155,7 +159,9 @@ class WaitConditionTest(unittest.TestCase):
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   self.stack.id)
         self.assertEqual(r.name, 'WaitHandle')
+        self.m.VerifyAll()
 
+    @stack_delete_after
     def test_post_success_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
         wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
@@ -179,7 +185,9 @@ class WaitConditionTest(unittest.TestCase):
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   self.stack.id)
         self.assertEqual(r.name, 'WaitHandle')
+        self.m.VerifyAll()
 
+    @stack_delete_after
     def test_post_failure_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
         wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
@@ -200,7 +208,9 @@ class WaitConditionTest(unittest.TestCase):
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   self.stack.id)
         self.assertEqual(r.name, 'WaitHandle')
+        self.m.VerifyAll()
 
+    @stack_delete_after
     def test_timeout(self):
         self.stack = self.create_stack()
         tmo = eventlet.Timeout(6)
@@ -220,7 +230,9 @@ class WaitConditionTest(unittest.TestCase):
                          'CREATE_FAILED')
         self.assertEqual(wc.WaitCondition.UPDATE_REPLACE,
                          resource.handle_update({}))
+        self.m.VerifyAll()
 
+    @stack_delete_after
     def test_FnGetAtt(self):
         self.stack = self.create_stack()
         wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
@@ -249,6 +261,7 @@ class WaitConditionTest(unittest.TestCase):
         handle.metadata_update(test_metadata)
         wc_att = resource.FnGetAtt('Data')
         self.assertEqual(wc_att, u'{"123": "foo", "456": "dog"}')
+        self.m.VerifyAll()
 
 
 @attr(tag=['unit', 'resource', 'WaitConditionHandle'])
@@ -263,16 +276,15 @@ class WaitConditionHandleTest(unittest.TestCase):
         self.stack = self.create_stack()
 
     def tearDown(self):
-        self.stack.delete()
-        self.m.VerifyAll()
         self.m.UnsetStubs()
 
     def create_stack(self, stack_name='test_stack2', params={}):
         temp = template_format.parse(test_template_waitcondition)
         template = parser.Template(temp)
         parameters = parser.Parameters(stack_name, template, params)
-        stack = parser.Stack(context.get_admin_context(), stack_name,
-                             template, parameters)
+        ctx = context.get_admin_context()
+        ctx.tenant_id = 'test_tenant'
+        stack = parser.Stack(ctx, stack_name, template, parameters)
         # Stub out the UUID for this test, so we can get an expected signature
         self.m.StubOutWithMock(uuid, 'uuid4')
         uuid.uuid4().AndReturn('STACKABCD1234')
@@ -299,6 +311,7 @@ class WaitConditionHandleTest(unittest.TestCase):
 
         return stack
 
+    @stack_delete_after
     def test_handle(self):
         created_time = datetime.datetime(2012, 11, 29, 13, 49, 37)
 
@@ -321,7 +334,9 @@ class WaitConditionHandleTest(unittest.TestCase):
         self.assertEqual(expected_url, resource.FnGetRefId())
 
         self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
+        self.m.VerifyAll()
 
+    @stack_delete_after
     def test_metadata_update(self):
         resource = self.stack.resources['WaitHandle']
         self.assertEqual(resource.state, 'CREATE_COMPLETE')
@@ -333,7 +348,9 @@ class WaitConditionHandleTest(unittest.TestCase):
                                     u'Reason': u'bar',
                                     u'Status': u'SUCCESS'}}
         self.assertEqual(resource.metadata, handle_metadata)
+        self.m.VerifyAll()
 
+    @stack_delete_after
     def test_metadata_update_invalid(self):
         resource = self.stack.resources['WaitHandle']
         self.assertEqual(resource.state, 'CREATE_COMPLETE')
@@ -366,24 +383,16 @@ class WaitConditionHandleTest(unittest.TestCase):
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'FAIL', 'UniqueId': '123'}
         self.assertRaises(ValueError, resource.metadata_update, err_metadata)
+        self.m.VerifyAll()
 
+    @stack_delete_after
     def test_get_status(self):
         resource = self.stack.resources['WaitHandle']
         self.assertEqual(resource.state, 'CREATE_COMPLETE')
 
-        # UnsetStubs before teardown, don't want get_status stubbed anymore..
+        # UnsetStubs, don't want get_status stubbed anymore..
+        self.m.VerifyAll()
         self.m.UnsetStubs()
-
-        # ..and re-Stub the stuff we still need stubbed
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
-        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
-
-        id = identifier.ResourceIdentifier('test_tenant', self.stack.name,
-                                           self.stack.id, '', 'WaitHandle')
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
-        wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
-
-        self.m.ReplayAll()
 
         self.assertEqual(resource.get_status(), [])
 
@@ -397,6 +406,12 @@ class WaitConditionHandleTest(unittest.TestCase):
         resource.metadata_update(test_metadata)
         self.assertEqual(resource.get_status(), ['SUCCESS', 'SUCCESS'])
 
+        # re-stub keystone() with fake client or stack delete fails
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
+        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+    @stack_delete_after
     def test_get_status_reason(self):
         resource = self.stack.resources['WaitHandle']
         self.assertEqual(resource.state, 'CREATE_COMPLETE')
@@ -415,3 +430,4 @@ class WaitConditionHandleTest(unittest.TestCase):
                          'Status': 'FAILURE', 'UniqueId': '789'}
         resource.metadata_update(test_metadata)
         self.assertEqual(resource.get_status_reason('FAILURE'), 'hoo')
+        self.m.VerifyAll()
