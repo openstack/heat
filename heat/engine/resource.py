@@ -101,6 +101,10 @@ class Resource(object):
 
     metadata = Metadata()
 
+    # Resource implementation set this to the subset of template keys
+    # which are supported for handle_update, used by update_template_diff
+    update_allowed_keys = ()
+
     def __new__(cls, name, json, stack):
         '''Create a new Resource of the appropriate class for its type.'''
 
@@ -173,6 +177,32 @@ class Resource(object):
         else:
             template = self.t.get(section, default)
         return self.stack.resolve_runtime_data(template)
+
+    def update_template_diff(self, json_snippet=None):
+        '''
+        Returns the difference between json_template and self.t
+        If something has been removed in json_snippet which exists
+        in self.t we set it to None.  If any keys have changed which
+        are not in update_allowed_keys, raises NotImplementedError
+        '''
+        update_allowed_set = set(self.update_allowed_keys)
+
+        # Create a set containing the keys in both current and update template
+        current_snippet = self.parsed_template()
+        template_keys = set(current_snippet.keys())
+        template_keys.update(set(json_snippet.keys()))
+
+        # Create a set of keys which differ (or are missing/added)
+        changed_keys_set = set([k for k in template_keys
+                               if current_snippet.get(k, None) !=
+                               json_snippet.get(k, None)])
+
+        if not changed_keys_set.issubset(update_allowed_set):
+            badkeys = changed_keys_set - update_allowed_set
+            raise NotImplementedError("Cannot update keys %s for %s" %
+                                      (badkeys, self.name))
+
+        return dict((k, json_snippet.get(k, None)) for k in changed_keys_set)
 
     def __str__(self):
         return '%s "%s"' % (self.__class__.__name__, self.name)
