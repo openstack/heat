@@ -318,7 +318,7 @@ class Instance(resource.Resource):
             pass
         else:
             server.delete()
-            while server.status == 'ACTIVE':
+            while True:
                 try:
                     server.get()
                 except clients.novaclient.exceptions.NotFound:
