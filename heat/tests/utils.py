@@ -62,3 +62,18 @@ class skip_unless(object):
         _skipper.__name__ = func.__name__
         _skipper.__doc__ = func.__doc__
         return _skipper
+
+
+def stack_delete_after(test_fn):
+    """
+    Decorator which calls test class self.stack.delete()
+    to ensure tests clean up their stacks regardless of test success/failure
+    """
+    def wrapped_test(test_cls):
+        print "Running test", test_fn.__name__
+        try:
+            test_fn(test_cls)
+        finally:
+            test_cls.stack.delete()
+        print "Exited", test_fn.__name__
+    return wrapped_test
