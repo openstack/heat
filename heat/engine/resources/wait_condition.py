@@ -204,6 +204,26 @@ class WaitCondition(resource.Resource):
                               self.timeout / self.SLEEP_DIV),
                               self.MIN_SLEEP)
 
+    def _validate_handle_url(self):
+        handle_url = self.properties['Handle']
+        handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
+        if handle_id.tenant != self.stack.context.tenant_id:
+            raise ValueError("WaitCondition invalid Handle tenant %s" %
+                             handle_id.tenant)
+        if handle_id.stack_name != self.stack.name:
+            raise ValueError("WaitCondition invalid Handle stack %s" %
+                             handle_id.stack_name)
+        if handle_id.stack_id != self.stack.id:
+            raise ValueError("WaitCondition invalid Handle stack %s" %
+                             handle_id.stack_id)
+        if handle_id.resource_name not in self.stack:
+            raise ValueError("WaitCondition invalid Handle %s" %
+                             handle_id.resource_name)
+        if not isinstance(self.stack[handle_id.resource_name],
+                          WaitConditionHandle):
+            raise ValueError("WaitCondition invalid Handle %s" %
+                             handle_id.resource_name)
+
     def _get_handle_resource_name(self):
         handle_url = self.properties['Handle']
         handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
@@ -213,6 +233,7 @@ class WaitCondition(resource.Resource):
         return eventlet.Timeout(self.timeout)
 
     def handle_create(self):
+        self._validate_handle_url()
         tmo = None
         status = FAILURE
         reason = "Unknown reason"

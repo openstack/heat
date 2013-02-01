@@ -17,6 +17,7 @@ import mox
 import uuid
 import time
 import datetime
+import json
 
 import eventlet
 import unittest
@@ -96,22 +97,26 @@ class WaitConditionTest(unittest.TestCase):
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
     def create_stack(self, stack_name='test_stack',
-                     template=test_template_waitcondition, params={}):
+                     template=test_template_waitcondition, params={},
+                     stub=True):
         temp = template_format.parse(template)
         template = parser.Template(temp)
         parameters = parser.Parameters(stack_name, template, params)
-        stack = parser.Stack(context.get_admin_context(), stack_name,
-                             template, parameters)
+        ctx = context.get_admin_context()
+        ctx.tenant_id = 'test_tenant'
+        stack = parser.Stack(ctx, stack_name, template, parameters)
 
-        stack.store()
+        self.stack_id = stack.store()
 
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
-        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
+        if stub:
+            self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
+            wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(
+                self.fc)
 
-        id = identifier.ResourceIdentifier('test_tenant', stack.name,
-                                           stack.id, '', 'WaitHandle')
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
-        wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+            id = identifier.ResourceIdentifier('test_tenant', stack.name,
+                                               stack.id, '', 'WaitHandle')
+            self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
+            wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
 
         return stack
 
@@ -261,6 +266,113 @@ class WaitConditionTest(unittest.TestCase):
         handle.metadata_update(test_metadata)
         wc_att = resource.FnGetAtt('Data')
         self.assertEqual(wc_att, u'{"123": "foo", "456": "dog"}')
+        self.m.VerifyAll()
+
+    @stack_delete_after
+    def test_validate_handle_url_bad_stackid(self):
+        # Stub out the stack ID so we have a known value
+        stack_id = 'STACKABCD1234'
+        self.m.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn(stack_id)
+        self.m.ReplayAll()
+
+        t = json.loads(test_template_waitcondition)
+        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+                     "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
+                     "%3Astacks%2Ftest_stack%2F" +
+                     "bad1" +
+                     "%2Fresources%2FWaitHandle")
+        t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
+        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+        self.m.ReplayAll()
+
+        resource = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, resource.handle_create)
+
+        self.m.VerifyAll()
+
+    @stack_delete_after
+    def test_validate_handle_url_bad_stackname(self):
+        # Stub out the stack ID so we have a known value
+        stack_id = 'STACKABCD1234'
+        self.m.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn(stack_id)
+        self.m.ReplayAll()
+
+        t = json.loads(test_template_waitcondition)
+        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+                     "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
+                     "%3Astacks%2FBAD_stack%2F" +
+                     stack_id + "%2Fresources%2FWaitHandle")
+        t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
+        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+
+        resource = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, resource.handle_create)
+
+        self.m.VerifyAll()
+
+    @stack_delete_after
+    def test_validate_handle_url_bad_tenant(self):
+        # Stub out the stack ID so we have a known value
+        stack_id = 'STACKABCD1234'
+        self.m.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn(stack_id)
+        self.m.ReplayAll()
+
+        t = json.loads(test_template_waitcondition)
+        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+                     "arn%3Aopenstack%3Aheat%3A%3ABAD_tenant" +
+                     "%3Astacks%2Ftest_stack%2F" +
+                     stack_id + "%2Fresources%2FWaitHandle")
+        t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
+        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+
+        resource = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, resource.handle_create)
+
+        self.m.VerifyAll()
+
+    @stack_delete_after
+    def test_validate_handle_url_bad_resource(self):
+        # Stub out the stack ID so we have a known value
+        stack_id = 'STACKABCD1234'
+        self.m.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn(stack_id)
+        self.m.ReplayAll()
+
+        t = json.loads(test_template_waitcondition)
+        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+                     "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
+                     "%3Astacks%2Ftest_stack%2F" +
+                     stack_id + "%2Fresources%2FBADHandle")
+        t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
+        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+
+        resource = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, resource.handle_create)
+
+        self.m.VerifyAll()
+
+    @stack_delete_after
+    def test_validate_handle_url_bad_resource_type(self):
+        # Stub out the stack ID so we have a known value
+        stack_id = 'STACKABCD1234'
+        self.m.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn(stack_id)
+        self.m.ReplayAll()
+
+        t = json.loads(test_template_waitcondition)
+        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+                     "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
+                     "%3Astacks%2Ftest_stack%2F" +
+                     stack_id + "%2Fresources%2FWaitForTheHandle")
+        t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
+        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+
+        resource = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, resource.handle_create)
+
         self.m.VerifyAll()
 
 
