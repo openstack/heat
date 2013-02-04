@@ -133,7 +133,7 @@ class ResourceTest(unittest.TestCase):
         tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 456}}
         res = resource.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ['Metadata']
+        res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(json_snippet=update_snippet)
         self.assertEqual(diff, {'Metadata': {'foo': 456}})
 
@@ -141,7 +141,7 @@ class ResourceTest(unittest.TestCase):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         res = resource.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ['Metadata']
+        res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(json_snippet=update_snippet)
         self.assertEqual(diff, {'Metadata': {'foo': 123}})
 
@@ -149,7 +149,7 @@ class ResourceTest(unittest.TestCase):
         tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         update_snippet = {'Type': 'Foo'}
         res = resource.GenericResource('test_resource', tmpl, self.stack)
-        res.update_allowed_keys = ['Metadata']
+        res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(json_snippet=update_snippet)
         self.assertEqual(diff, {'Metadata': None})
 
