@@ -247,8 +247,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                 if capacity < int(self.properties['MinSize']):
                     new_capacity = int(self.properties['MinSize'])
             if 'MaxSize' in prop_diff:
-                if capacity > int(self.properties['MinSize']):
-                    new_capacity = int(self.properties['MinSize'])
+                if capacity > int(self.properties['MaxSize']):
+                    new_capacity = int(self.properties['MaxSize'])
             if 'DesiredCapacity' in prop_diff:
                     if self.properties['DesiredCapacity']:
                         new_capacity = int(self.properties['DesiredCapacity'])
