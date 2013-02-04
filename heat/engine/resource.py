@@ -194,15 +194,15 @@ class Resource(object):
 
         # Create a set of keys which differ (or are missing/added)
         changed_keys_set = set([k for k in template_keys
-                               if current_snippet.get(k, None) !=
-                               json_snippet.get(k, None)])
+                               if current_snippet.get(k) !=
+                               json_snippet.get(k)])
 
         if not changed_keys_set.issubset(update_allowed_set):
             badkeys = changed_keys_set - update_allowed_set
             raise NotImplementedError("Cannot update keys %s for %s" %
                                       (badkeys, self.name))
 
-        return dict((k, json_snippet.get(k, None)) for k in changed_keys_set)
+        return dict((k, json_snippet.get(k)) for k in changed_keys_set)
 
     def __str__(self):
         return '%s "%s"' % (self.__class__.__name__, self.name)
