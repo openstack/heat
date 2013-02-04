@@ -19,6 +19,7 @@ from heat.engine import resource
 
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
+from heat.engine.properties import Properties
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +192,12 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                                             'Schema': tags_schema}}
     }
 
+    # template keys and properties supported for handle_update,
+    # note trailing comma is required for a single item to get a tuple
+    update_allowed_keys = ('Properties',)
+    update_allowed_properties = ('MaxSize', 'MinSize',
+                                 'Cooldown', 'DesiredCapacity',)
+
     def __init__(self, name, json_snippet, stack):
         super(AutoScalingGroup, self).__init__(name, json_snippet, stack)
         # resource_id is a list of resources
@@ -206,7 +213,51 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                     raise_on_error=True)
 
     def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
+        try:
+            tmpl_diff = self.update_template_diff(json_snippet)
+        except NotImplementedError:
+            logger.error("Could not update %s, invalid key" % self.name)
+            return self.UPDATE_REPLACE
+
+        try:
+            prop_diff = self.update_template_diff_properties(json_snippet)
+        except NotImplementedError:
+            logger.error("Could not update %s, invalid Property" % self.name)
+            return self.UPDATE_REPLACE
+
+        # If Properties has changed, update self.properties, so we
+        # get the new values during any subsequent adjustment
+        if prop_diff:
+            self.properties = Properties(self.properties_schema,
+                                         json_snippet.get('Properties', {}),
+                                         self.stack.resolve_runtime_data,
+                                         self.name)
+
+            # Get the current capacity, we may need to adjust if
+            # MinSize or MaxSize has changed
+            inst_list = []
+            if self.resource_id is not None:
+                inst_list = sorted(self.resource_id.split(','))
+
+            capacity = len(inst_list)
+
+            # Figure out if an adjustment is required
+            new_capacity = None
+            if 'MinSize' in prop_diff:
+                if capacity < int(self.properties['MinSize']):
+                    new_capacity = int(self.properties['MinSize'])
+            if 'MaxSize' in prop_diff:
+                if capacity > int(self.properties['MinSize']):
+                    new_capacity = int(self.properties['MinSize'])
+            if 'DesiredCapacity' in prop_diff:
+                    if self.properties['DesiredCapacity']:
+                        new_capacity = int(self.properties['DesiredCapacity'])
+
+            if new_capacity is not None:
+                self.adjust(new_capacity, adjustment_type='ExactCapacity',
+                            raise_on_error=True)
+
+        return self.UPDATE_COMPLETE
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity',
                raise_on_error=False):

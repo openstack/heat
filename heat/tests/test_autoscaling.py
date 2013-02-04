@@ -15,6 +15,7 @@
 
 import os
 import datetime
+import copy
 
 import unittest
 import mox
@@ -122,6 +123,144 @@ class AutoScalingTest(unittest.TestCase):
         self.assertEqual('WebServerGroup-0', resource.resource_id)
         self.assertEqual(asc.AutoScalingGroup.UPDATE_REPLACE,
                          resource.handle_update({}))
+
+        resource.delete()
+        self.m.VerifyAll()
+
+    def test_scaling_group_update_ok_maxsize(self):
+        t = self.load_template()
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '1'
+        properties['MaxSize'] = '3'
+        stack = self.parse_stack(t)
+
+        self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        resource = self.create_scaling_group(t, stack, 'WebServerGroup')
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
+
+        # Reduce the max size to 2, should complete without adjusting
+        update_snippet = copy.deepcopy(resource.parsed_template())
+        update_snippet['Properties']['MaxSize'] = '2'
+        self.assertEqual(asc.AutoScalingGroup.UPDATE_COMPLETE,
+                         resource.handle_update(update_snippet))
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
+
+        resource.delete()
+        self.m.VerifyAll()
+
+    def test_scaling_group_update_ok_minsize(self):
+        t = self.load_template()
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '1'
+        properties['MaxSize'] = '3'
+        stack = self.parse_stack(t)
+
+        self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        resource = self.create_scaling_group(t, stack, 'WebServerGroup')
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
+
+        # Increase min size to 2, should trigger an ExactCapacity adjust
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
+        self._stub_create(1)
+        self.m.ReplayAll()
+
+        update_snippet = copy.deepcopy(resource.parsed_template())
+        update_snippet['Properties']['MinSize'] = '2'
+        self.assertEqual(asc.AutoScalingGroup.UPDATE_COMPLETE,
+                         resource.handle_update(update_snippet))
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1',
+                         resource.resource_id)
+
+        resource.delete()
+        self.m.VerifyAll()
+
+    def test_scaling_group_update_ok_desired(self):
+        t = self.load_template()
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '1'
+        properties['MaxSize'] = '3'
+        stack = self.parse_stack(t)
+
+        self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        resource = self.create_scaling_group(t, stack, 'WebServerGroup')
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
+
+        # Increase min size to 2 via DesiredCapacity, should adjust
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
+        self._stub_create(1)
+        self.m.ReplayAll()
+
+        update_snippet = copy.deepcopy(resource.parsed_template())
+        update_snippet['Properties']['DesiredCapacity'] = '2'
+        self.assertEqual(asc.AutoScalingGroup.UPDATE_COMPLETE,
+                         resource.handle_update(update_snippet))
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1',
+                         resource.resource_id)
+
+        resource.delete()
+        self.m.VerifyAll()
+
+    def test_scaling_group_update_ok_desired_remove(self):
+        t = self.load_template()
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['DesiredCapacity'] = '2'
+        stack = self.parse_stack(t)
+
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 2')
+        self._stub_create(2)
+        self.m.ReplayAll()
+        resource = self.create_scaling_group(t, stack, 'WebServerGroup')
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1',
+                         resource.resource_id)
+
+        # Remove DesiredCapacity from the updated template, which should
+        # have no effect, it's an optional parameter
+        update_snippet = copy.deepcopy(resource.parsed_template())
+        del(update_snippet['Properties']['DesiredCapacity'])
+        self.assertEqual(asc.AutoScalingGroup.UPDATE_COMPLETE,
+                         resource.handle_update(update_snippet))
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1',
+                         resource.resource_id)
+
+        resource.delete()
+        self.m.VerifyAll()
+
+    def test_scaling_group_update_ok_cooldown(self):
+        t = self.load_template()
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['Cooldown'] = '60'
+        stack = self.parse_stack(t)
+
+        self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        resource = self.create_scaling_group(t, stack, 'WebServerGroup')
+
+        self.assertEqual('WebServerGroup', resource.FnGetRefId())
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
+        update_snippet = copy.deepcopy(resource.parsed_template())
+        old_cd = update_snippet['Properties']['Cooldown']
+        update_snippet['Properties']['Cooldown'] = '61'
+        self.assertEqual(asc.AutoScalingGroup.UPDATE_COMPLETE,
+                         resource.handle_update(update_snippet))
 
         resource.delete()
         self.m.VerifyAll()
