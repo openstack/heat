@@ -105,6 +105,10 @@ class Resource(object):
     # which are supported for handle_update, used by update_template_diff
     update_allowed_keys = ()
 
+    # Resource implementation set this to the subset of resource properties
+    # supported for handle_update, used by update_template_diff_properties
+    update_allowed_properties = ()
+
     def __new__(cls, name, json, stack):
         '''Create a new Resource of the appropriate class for its type.'''
 
@@ -203,6 +207,34 @@ class Resource(object):
                                       (badkeys, self.name))
 
         return dict((k, json_snippet.get(k)) for k in changed_keys_set)
+
+    def update_template_diff_properties(self, json_snippet=None):
+        '''
+        Returns the changed Properties between json_template and self.t
+        If a property has been removed in json_snippet which exists
+        in self.t we set it to None.  If any properties have changed which
+        are not in update_allowed_properties, raises NotImplementedError
+        '''
+        update_allowed_set = set(self.update_allowed_properties)
+
+        # Create a set containing the keys in both current and update template
+        current_properties = self.parsed_template().get('Properties', {})
+        template_properties = set(current_properties.keys())
+        updated_properties = json_snippet.get('Properties', {})
+        template_properties.update(set(updated_properties.keys()))
+
+        # Create a set of keys which differ (or are missing/added)
+        changed_properties_set = set(k for k in template_properties
+                                     if current_properties.get(k) !=
+                                     updated_properties.get(k))
+
+        if not changed_properties_set.issubset(update_allowed_set):
+            badkeys = changed_properties_set - update_allowed_set
+            raise NotImplementedError("Cannot update properties %s for %s" %
+                                      (badkeys, self.name))
+
+        return dict((k, updated_properties.get(k))
+                    for k in changed_properties_set)
 
     def __str__(self):
         return '%s "%s"' % (self.__class__.__name__, self.name)

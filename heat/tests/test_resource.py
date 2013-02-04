@@ -153,6 +153,46 @@ class ResourceTest(unittest.TestCase):
         diff = res.update_template_diff(json_snippet=update_snippet)
         self.assertEqual(diff, {'Metadata': None})
 
+    def test_update_template_diff_properties_none(self):
+        tmpl = {'Type': 'Foo'}
+        update_snippet = {'Type': 'Foo'}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        diff = res.update_template_diff_properties(json_snippet=update_snippet)
+        self.assertEqual(diff, {})
+
+    def test_update_template_diff_properties_added(self):
+        tmpl = {'Type': 'Foo'}
+        update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 123}}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Bar',)
+        diff = res.update_template_diff_properties(json_snippet=update_snippet)
+        self.assertEqual(diff, {'Bar': 123})
+
+    def test_update_template_diff_properties_removed(self):
+        tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
+        update_snippet = {'Type': 'Foo', 'Properties': {}}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Bar',)
+        diff = res.update_template_diff_properties(json_snippet=update_snippet)
+        self.assertEqual(diff, {'Bar': None})
+
+    def test_update_template_diff_properties_changed(self):
+        tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
+        update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 456}}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Bar',)
+        diff = res.update_template_diff_properties(json_snippet=update_snippet)
+        self.assertEqual(diff, {'Bar': 456})
+
+    def test_update_template_diff_properties_notallowed(self):
+        tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
+        update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 456}}
+        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_properties = ('Cat',)
+        self.assertRaises(NotImplementedError,
+                          res.update_template_diff_properties,
+                          update_snippet)
+
 
 @attr(tag=['unit', 'resource'])
 @attr(speed='fast')
