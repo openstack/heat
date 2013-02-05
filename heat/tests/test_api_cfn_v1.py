@@ -18,8 +18,6 @@ import json
 import unittest
 from nose.plugins.attrib import attr
 
-import json
-
 from heat.common import context
 from heat.common import identifier
 from heat.openstack.common import cfg
