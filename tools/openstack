@@ -21,21 +21,41 @@
 
 BASE_DIR=`dirname $0`
 
+if [[ $1 = '--with-cinder' ]]; then
+    with_cinder=1
+else
+    with_cinder=0
+fi
+
+if [[ `lsb_release -sr` -gt 17 || $with_cinder ]]; then
+    VOLUME_SERVICE="openstack-cinder"
+    VOLUME_PATH="/var/lib/cinder/cinder-volumes.img"
+    VOLUME_NAME="cinder-volumes"
+else
+    VOLUME_SERVICE="openstack-nova"
+    VOLUME_PATH="/var/lib/nova/nova-volumes.img"
+    VOLUME_NAME="nova-volumes"
+fi
+
 action=$1
 if [ -z "$action" ]
 then
     echo "openstack [start|stop|install|erase|status]"
     echo
-    echo "This tool is designed to control OpenStack on a Fedora 16/17 system"
+    echo "This tool is designed to control OpenStack on a Fedora 16+ system"
     echo
     echo "start - Starts OpenStack"
     echo "stop - Stops OpenStack"
     echo "restart - Restart OpenStack"
     echo "install - Installs a fresh OpenStack system with Keystone from RPM repostories"
     echo "erase - permanently destroys an existing installation of OpenStack"
+    echo "status - show service status for all required OpenStack services"
 fi
 
-OS_SERVICES=(qpidd mysqld openstack-keystone tgtd openstack-glance-api openstack-glance-registry openstack-nova-api openstack-nova-objectstore openstack-nova-compute openstack-nova-network openstack-nova-volume openstack-nova-scheduler openstack-nova-cert)
+OS_SERVICES=(qpidd mysqld openstack-keystone tgtd openstack-glance-api openstack-glance-registry openstack-nova-api openstack-nova-objectstore openstack-nova-compute openstack-nova-network openstack-nova-scheduler openstack-nova-cert $VOLUME_SERVICE-volume)
+if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
+    OS_SERVICES+=($VOLUME_SERVICE-api $VOLUME_SERVICE-scheduler)
+fi
 
 function os_status() {
     for service in ${OS_SERVICES[@]}
@@ -79,7 +99,6 @@ function os_check_status() {
     done
 }
 
-
 function os_start() {
     action=start
     sudo systemctl $action qpidd.service mysqld.service
@@ -90,15 +109,23 @@ function os_start() {
     do
         sudo systemctl $action openstack-glance-$svc.service
     done
-    if ! sudo vgs | grep -q nova-volumes
-    then
-        sudo vgcreate nova-volumes $(sudo losetup --show -f /var/lib/nova/nova-volumes.img)
+
+    if ! sudo vgs | grep -q $VOLUME_NAME; then
+        sudo vgcreate $VOLUME_NAME $(sudo losetup --show -f $VOLUME_PATH)
     fi
 
-    for svc in api cert objectstore compute volume scheduler
+    for svc in api cert objectstore compute scheduler
     do
         sudo systemctl $action openstack-nova-$svc.service
     done
+
+    sudo systemctl $action $VOLUME_SERVICE-volume.service
+    if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
+        for svc in api scheduler
+        do
+            sudo systemctl $action $VOLUME_SERVICE-$svc.service
+        done
+    fi
 
     # This must be started after openstack-nova-cert due to an SELinux
     # policy problem. See https://bugzilla.redhat.com/show_bug.cgi?id=857747
@@ -109,10 +136,19 @@ function os_start() {
 function os_stop() {
     action=stop
     sudo systemctl $action openstack-keystone.service tgtd.service
-    for svc in api objectstore compute network volume scheduler cert
+    for svc in api objectstore compute network scheduler cert
     do
         sudo systemctl $action openstack-nova-$svc.service
     done
+
+    sudo systemctl $action $VOLUME_SERVICE-volume.service
+    if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
+        for svc in api scheduler
+        do
+            sudo systemctl $action $VOLUME_SERVICE-$svc.service
+        done
+    fi
+
     for svc in api registry
     do
         sudo systemctl $action openstack-glance-$svc.service
@@ -151,21 +187,23 @@ function os_erase() {
     sudo openstack-db --service nova --drop $*
     sudo openstack-db --service glance --drop $*
     sudo openstack-db --service keystone --drop $*
+    if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
+        sudo openstack-db --service cinder --drop $*
+    fi
+
     sudo yum -q -y erase openstack-utils
 
-    sudo vgchange -an nova-volumes
+    sudo vgchange -an $VOLUME_NAME
     sudo losetup -d /dev/loop0
-    sudo rm -f /var/lib/nova/nova-volumes.img
-    sudo rm -rf /etc/{glance,nova,swift,keystone,openstack-dashboard} /var/lib/{glance,nova,swift,keystone} /var/log/{glance,nova,swift,keystone} /var/run/{glance,nova,swift,keystone}
+    sudo rm -f $VOLUME_PATH
+    sudo rm -rf /etc/{glance,nova,swift,keystone,openstack-dashboard,cinder} /var/lib/{glance,nova,swift,keystone,cinder} /var/log/{glance,nova,swift,keystone,cinder} /var/run/{glance,nova,swift,keystone,cinder}
     rm -f $HOME/.openstack/.keystonerc
 }
 
-
-
 function os_install() {
     sudo yum -q -y groupinstall Virtualization
-    sudo yum -q -y install openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server mysql-server qpid-cpp-server-daemon
-    sudo dd if=/dev/zero of=/var/lib/nova/nova-volumes.img bs=1M seek=20k count=0
+    sudo yum -q -y install openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server mysql-server qpid-cpp-server-daemon $VOLUME_SERVICE
+    sudo dd if=/dev/zero of=$VOLUME_PATH bs=1M seek=20k count=0
     sudo systemctl start mysqld.service
     sudo systemctl enable libvirtd.service
     sudo systemctl start libvirtd.service
@@ -174,6 +212,9 @@ function os_install() {
     sudo openstack-db --service nova --init $*
     sudo openstack-db --service glance --init $*
     sudo openstack-db --service keystone --init $*
+    if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
+        sudo openstack-db --service cinder --init $*
+    fi
 
     # Create a keystone RC file
     mkdir -p $HOME/.openstack
@@ -208,11 +249,24 @@ EOF
     sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
     sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
 
+    if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
+        sudo openstack-config --set /etc/cinder/api-paste.ini filter:authtoken admin_tenant_name service
+        sudo openstack-config --set /etc/cinder/api-paste.ini filter:authtoken admin_user cinder
+        sudo openstack-config --set /etc/cinder/api-paste.ini filter:authtoken admin_password servicepass
+        sudo openstack-config --set /etc/cinder/cinder.conf DEFAULT auth_strategy keystone
+        # must disable implicit osapi_volume
+        sudo openstack-config --set /etc/nova/nova.conf DEFAULT enabled_apis ec2,osapi_compute,metadata
+        sudo openstack-config --set /etc/nova/nova.conf DEFAULT volume_api_class nova.volume.cinder.API
+    fi
+
     os_stop
     sleep 1
-    sudo rm -rf /var/log/{glance,nova,swift,keystone}/*
+    sudo rm -rf /var/log/{glance,nova,swift,keystone,cinder}/*
     os_start
     sleep 1
+    if [[ $VOLUME_SERVICE -eq "openstack-cinder" ]]; then
+        ${BASE_DIR}/../bin/cinder-keystone-setup
+    fi
     echo "Installation Complete."
 
     echo "Checking all expected services are running"

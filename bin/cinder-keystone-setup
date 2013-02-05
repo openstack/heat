@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set +e
+
+SERVICE_PASSWORD='servicepass'
+CINDER_USERNAME='cinder'
+
+source `dirname $0`/heat-keystone-setup
+
+ADMIN_ROLE=$(get_data 2 admin 1 keystone role-list)
+SERVICE_TENANT=$(get_data 2 service 1 keystone tenant-list)
+
+CINDER_USERID=$(get_user $CINDER_USERNAME)
+add_role $CINDER_USERID $SERVICE_TENANT $ADMIN_ROLE $CINDER_USERNAME
+
+CINDER_SERVICE=$(get_service cinder volume "Cinder Volume Service")
+add_endpoint $CINDER_SERVICE 'http://localhost:8776/v1/$(tenant_id)s'
