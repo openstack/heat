@@ -1,0 +1,14 @@
+{
+    "cloudformation:ListStacks": "!",
+    "cloudformation:CreateStack": "!",
+    "cloudformation:DescribeStacks": "!",
+    "cloudformation:DeleteStack": "!",
+    "cloudformation:UpdateStack": "!",
+    "cloudformation:DescribeStackEvents": "!",
+    "cloudformation:ValidateTemplate": "!",
+    "cloudformation:GetTemplate": "!",
+    "cloudformation:EstimateTemplateCost": "!",
+    "cloudformation:DescribeStackResource": "!",
+    "cloudformation:DescribeStackResources": "!",
+    "cloudformation:ListStackResources": "!"
+}
