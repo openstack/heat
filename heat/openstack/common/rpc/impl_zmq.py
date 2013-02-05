@@ -17,7 +17,6 @@
 import os
 import pprint
 import socket
-import string
 import sys
 import types
 import uuid
@@ -321,21 +320,22 @@ class ConsumerBase(object):
             return [result]
 
     def process(self, style, target, proxy, ctx, data):
+        data.setdefault('version', None)
+        data.setdefault('args', {})
+
         # Method starting with - are
         # processed internally. (non-valid method name)
-        method = data['method']
+        method = data.get('method')
+        if not method:
+            LOG.error(_("RPC message did not include method."))
+            return
 
         # Internal method
         # uses internal context for safety.
-        if data['method'][0] == '-':
-            # For reply / process_reply
-            method = method[1:]
-            if method == 'reply':
-                self.private_ctx.reply(ctx, proxy, **data['args'])
+        if method == '-reply':
+            self.private_ctx.reply(ctx, proxy, **data['args'])
             return
 
-        data.setdefault('version', None)
-        data.setdefault('args', {})
         proxy.dispatch(ctx, data['version'],
                        data['method'], **data['args'])
 
@@ -780,18 +780,5 @@ def _get_ctxt():
 def _get_matchmaker():
     global matchmaker
     if not matchmaker:
-        # rpc_zmq_matchmaker should be set to a 'module.Class'
-        mm_path = CONF.rpc_zmq_matchmaker.split('.')
-        mm_module = '.'.join(mm_path[:-1])
-        mm_class = mm_path[-1]
-
-        # Only initialize a class.
-        if mm_path[-1][0] not in string.ascii_uppercase:
-            LOG.error(_("Matchmaker could not be loaded.\n"
-                      "rpc_zmq_matchmaker is not a class."))
-            raise RPCException(_("Error loading Matchmaker."))
-
-        mm_impl = importutils.import_module(mm_module)
-        mm_constructor = getattr(mm_impl, mm_class)
-        matchmaker = mm_constructor()
+        matchmaker = importutils.import_object(CONF.rpc_zmq_matchmaker)
     return matchmaker

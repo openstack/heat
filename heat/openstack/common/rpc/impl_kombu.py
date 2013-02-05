@@ -302,9 +302,15 @@ class Publisher(object):
                                                  channel=channel,
                                                  routing_key=self.routing_key)
 
-    def send(self, msg):
+    def send(self, msg, timeout=None):
         """Send a message"""
-        self.producer.publish(msg)
+        if timeout:
+            #
+            # AMQP TTL is in milliseconds when set in the header.
+            #
+            self.producer.publish(msg, headers={'ttl': (timeout * 1000)})
+        else:
+            self.producer.publish(msg)
 
 
 class DirectPublisher(Publisher):
@@ -653,7 +659,7 @@ class Connection(object):
         for proxy_cb in self.proxy_callbacks:
             proxy_cb.wait()
 
-    def publisher_send(self, cls, topic, msg, **kwargs):
+    def publisher_send(self, cls, topic, msg, timeout=None, **kwargs):
         """Send to a publisher based on the publisher class"""
 
         def _error_callback(exc):
@@ -663,7 +669,7 @@ class Connection(object):
 
         def _publish():
             publisher = cls(self.conf, self.channel, topic, **kwargs)
-            publisher.send(msg)
+            publisher.send(msg, timeout)
 
         self.ensure(_error_callback, _publish)
 
@@ -691,9 +697,9 @@ class Connection(object):
         """Send a 'direct' message"""
         self.publisher_send(DirectPublisher, msg_id, msg)
 
-    def topic_send(self, topic, msg):
+    def topic_send(self, topic, msg, timeout=None):
         """Send a 'topic' message"""
-        self.publisher_send(TopicPublisher, topic, msg)
+        self.publisher_send(TopicPublisher, topic, msg, timeout)
 
     def fanout_send(self, topic, msg):
         """Send a 'fanout' message"""
@@ -701,7 +707,7 @@ class Connection(object):
 
     def notify_send(self, topic, msg, **kwargs):
         """Send a notify message on a topic"""
-        self.publisher_send(NotifyPublisher, topic, msg, **kwargs)
+        self.publisher_send(NotifyPublisher, topic, msg, None, **kwargs)
 
     def consume(self, limit=None):
         """Consume from all queues/consumers"""
