@@ -15,6 +15,7 @@
 
 import mox
 import json
+import os
 import unittest
 from nose.plugins.attrib import attr
 
@@ -22,6 +23,7 @@ import json
 
 from heat.common import context
 from heat.common import identifier
+from heat.common import policy
 from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
@@ -70,6 +72,42 @@ class StackControllerTest(unittest.TestCase):
         expected = {'StackName': 'Foo',
                     'StackId': 'arn:openstack:heat::t:stacks/Foo/123'}
         self.assertEqual(response, expected)
+        self.m.VerifyAll()
+
+    def test_enforce_default(self):
+        self.m.ReplayAll()
+        params = {'Action': 'ListStacks'}
+        dummy_req = self._dummy_GET_request(params)
+        self.controller.policy.policy_path = None
+        response = self.controller._enforce(dummy_req, 'ListStacks')
+        self.assertEqual(response, None)
+        self.m.VerifyAll()
+
+    def test_enforce_denied(self):
+        self.m.ReplayAll()
+        params = {'Action': 'ListStacks'}
+        dummy_req = self._dummy_GET_request(params)
+        dummy_req.context.roles = ['heat_stack_user']
+        self.controller.policy.policy_path = (self.policy_path +
+                                              'deny_stack_user.json')
+        self.assertRaises(exception.HeatAccessDeniedError,
+                          self.controller._enforce, dummy_req, 'ListStacks')
+        self.m.VerifyAll()
+
+    def test_enforce_ise(self):
+        params = {'Action': 'ListStacks'}
+        dummy_req = self._dummy_GET_request(params)
+        dummy_req.context.roles = ['heat_stack_user']
+
+        self.m.StubOutWithMock(policy.Enforcer, 'enforce')
+        policy.Enforcer.enforce(dummy_req.context, 'ListStacks', {}
+                                ).AndRaise(AttributeError)
+        self.m.ReplayAll()
+
+        self.controller.policy.policy_path = (self.policy_path +
+                                              'deny_stack_user.json')
+        self.assertRaises(exception.HeatInternalFailureError,
+                          self.controller._enforce, dummy_req, 'ListStacks')
         self.m.VerifyAll()
 
     def test_list(self):
@@ -1360,6 +1398,14 @@ class StackControllerTest(unittest.TestCase):
         self.maxDiff = None
         self.m = mox.Mox()
 
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.policy_path = self.path + "/policy/"
+        opts = [
+            cfg.StrOpt('config_dir', default=self.policy_path),
+            cfg.StrOpt('config_file', default='foo'),
+            cfg.StrOpt('project', default='heat'),
+        ]
+        cfg.CONF.register_opts(opts)
         cfg.CONF.set_default('engine_topic', 'engine')
         cfg.CONF.set_default('host', 'host')
         self.topic = '%s.%s' % (cfg.CONF.engine_topic, cfg.CONF.host)

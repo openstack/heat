@@ -23,11 +23,13 @@ import socket
 from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
 from heat.common import wsgi
+from heat.common import exception as heat_exception
 from heat.rpc import client as rpc_client
 from heat.common import template_format
 from heat.rpc import api as engine_api
 from heat.common import identifier
 from heat.common import urlfetch
+from heat.common import policy
 
 import heat.openstack.common.rpc.common as rpc_common
 
@@ -47,6 +49,22 @@ class StackController(object):
     def __init__(self, options):
         self.options = options
         self.engine_rpcapi = rpc_client.EngineClient()
+        self.policy = policy.Enforcer(scope='cloudformation')
+
+    def _enforce(self, req, action):
+        """Authorize an action against the policy.json"""
+        try:
+            self.policy.enforce(req.context, action, {})
+        except heat_exception.Forbidden:
+            raise exception.HeatAccessDeniedError("Action %s not allowed " %
+                                                  action + "for user")
+        except Exception as ex:
+            # We expect policy.enforce to either pass or raise Forbidden
+            # however, if anything else happens, we want to raise
+            # HeatInternalFailureError, failure to do this results in
+            # the user getting a big stacktrace spew as an API response
+            raise exception.HeatInternalFailureError("Error authorizing " +
+                                                     "action %s" % action)
 
     @staticmethod
     def _id_format(resp):
@@ -95,6 +113,7 @@ class StackController(object):
         Implements ListStacks API action
         Lists summary information for all stacks
         """
+        self._enforce(req, 'ListStacks')
 
         def format_stack_summary(s):
             """
@@ -136,6 +155,8 @@ class StackController(object):
         Implements DescribeStacks API action
         Gets detailed information for a stack (or all stacks)
         """
+        self._enforce(req, 'DescribeStacks')
+
         def format_stack_outputs(o):
             keymap = {
                 engine_api.OUTPUT_DESCRIPTION: 'Description',
@@ -328,6 +349,7 @@ class StackController(object):
         Implements the GetTemplate API action
         Get the template body for an existing stack
         """
+        self._enforce(req, 'GetTemplate')
 
         con = req.context
         try:
@@ -348,6 +370,8 @@ class StackController(object):
         Implements the EstimateTemplateCost API action
         Get the estimated monthly cost of a template
         """
+        self._enforce(req, 'EstimateTemplateCost')
+
         return api_utils.format_response('EstimateTemplateCost',
                                          {'Url':
                                           'http://en.wikipedia.org/wiki/Gratis'
@@ -359,6 +383,7 @@ class StackController(object):
         Implements the ValidateTemplate API action
         Validates the specified template
         """
+        self._enforce(req, 'ValidateTemplate')
 
         con = req.context
         try:
@@ -388,6 +413,8 @@ class StackController(object):
         Implements the DeleteStack API action
         Deletes the specified stack
         """
+        self._enforce(req, 'DeleteStack')
+
         con = req.context
         try:
             identity = self._get_identity(con, req.params['StackName'])
@@ -406,6 +433,8 @@ class StackController(object):
         Implements the DescribeStackEvents API action
         Returns events related to a specified stack (or all stacks)
         """
+        self._enforce(req, 'DescribeStackEvents')
+
         def format_stack_event(e):
             """
             Reformat engine output into the AWS "StackEvent" format
@@ -447,6 +476,7 @@ class StackController(object):
         Implements the DescribeStackResource API action
         Return the details of the given resource belonging to the given stack.
         """
+        self._enforce(req, 'DescribeStackResource')
 
         def format_resource_detail(r):
             """
@@ -502,6 +532,7 @@ class StackController(object):
         `LogicalResourceId`: filter the resources list by the logical resource
         id.
         """
+        self._enforce(req, 'DescribeStackResources')
 
         def format_stack_resource(r):
             """
@@ -555,6 +586,8 @@ class StackController(object):
         Implements the ListStackResources API action
         Return summary of the resources belonging to the specified stack.
         """
+        self._enforce(req, 'ListStackResources')
+
         def format_resource_summary(r):
             """
             Reformat engine output into the AWS "StackResourceSummary" format
