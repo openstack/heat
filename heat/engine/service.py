@@ -15,6 +15,7 @@
 
 import functools
 import webob
+import json
 
 from heat.common import context
 from heat.db import api as db_api
@@ -363,11 +364,51 @@ class EngineService(service.Service):
 
         return [api.format_event(Event.load(context, e.id)) for e in events]
 
+    def _authorize_stack_user(self, context, stack, resource_name):
+        '''
+        Filter access to describe_stack_resource for stack in-instance users
+        - The user must map to a User resource defined in the requested stack
+        - The user resource must validate OK against any Policy specified
+        '''
+        # We're expecting EC2 credentials because all in-instance credentials
+        # are deployed as ec2 keypairs
+        try:
+            ec2_creds = json.loads(context.aws_creds).get('ec2Credentials')
+        except TypeError, AttributeError:
+            ec2_creds = None
+
+        if ec2_creds:
+            access_key = ec2_creds.get('access')
+            # Then we look up the AccessKey resource and check the stack
+            try:
+                akey_rsrc = self.find_physical_resource(context, access_key)
+            except exception.PhysicalResourceNotFound:
+                logger.warning("access_key % not found!" % access_key)
+                return False
+
+            akey_rsrc_id = identifier.ResourceIdentifier(**akey_rsrc)
+            if stack.identifier() == akey_rsrc_id.stack():
+                # The stack matches, so check if access is allowed to this
+                # resource via the AccessKey resource access_allowed()
+                ak_akey_rsrc = stack[akey_rsrc_id.resource_name]
+                return ak_akey_rsrc.access_allowed(resource_name)
+            else:
+                logger.warning("Cannot access resource from wrong stack!")
+        else:
+            logger.warning("Cannot access resource, invalid credentials!")
+
+        return False
+
     @request_context
     def describe_stack_resource(self, context, stack_identity, resource_name):
         s = self._get_stack(context, stack_identity)
-
         stack = parser.Stack.load(context, stack=s)
+
+        if cfg.CONF.heat_stack_user_role in context.roles:
+            if not self._authorize_stack_user(context, stack, resource_name):
+                logger.warning("Access denied to resource %s" % resource_name)
+                raise exception.Forbidden()
+
         if resource_name not in stack:
             raise exception.ResourceNotFound(resource_name=resource_name,
                                              stack_name=stack.name)

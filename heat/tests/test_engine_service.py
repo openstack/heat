@@ -31,6 +31,7 @@ from heat.engine import service
 from heat.engine.resources import instance as instances
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
+from heat.openstack.common import cfg
 
 
 tests_dir = os.path.dirname(os.path.realpath(__file__))
@@ -368,6 +369,8 @@ class stackServiceTest(unittest.TestCase):
         ctx = create_context(m, cls.username, cls.tenant)
         cls.stack_name = 'service_test_stack'
 
+        cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
+
         stack = get_wordpress_stack(cls.stack_name, ctx)
 
         setup_mocks(m, stack)
@@ -590,6 +593,21 @@ class stackServiceTest(unittest.TestCase):
         self.assertRaises(exception.ResourceNotFound,
                           self.man.describe_stack_resource,
                           self.ctx, self.stack_identity, 'foo')
+
+    def test_stack_resource_describe_stack_user_deny(self):
+        self.ctx.roles = [cfg.CONF.heat_stack_user_role]
+        self.m.StubOutWithMock(service.EngineService, '_authorize_stack_user')
+        service.EngineService._authorize_stack_user(self.ctx, mox.IgnoreArg(),
+                                                    'foo').AndReturn(False)
+        self.m.ReplayAll()
+        self.assertRaises(exception.Forbidden,
+                          self.man.describe_stack_resource,
+                          self.ctx, self.stack_identity, 'foo')
+
+    def test_stack_authorize_stack_user_nocreds(self):
+        self.assertFalse(self.man._authorize_stack_user(self.ctx,
+                                                        self.stack_identity,
+                                                        'foo'))
 
     def test_stack_resources_describe(self):
         resources = self.man.describe_stack_resources(self.ctx,

@@ -21,9 +21,9 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 #
-# We are ignoring Policies and Groups as keystone does not support them.
-#
-# For now support users and accesskeys.
+# We are ignoring Groups as keystone does not support them.
+# For now support users and accesskeys,
+# We also now support a limited heat-native Policy implementation
 #
 
 
@@ -39,11 +39,45 @@ class User(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(User, self).__init__(name, json_snippet, stack)
 
+    def _validate_policies(self, policies):
+        for policy in policies:
+            # When we support AWS IAM style policies, we will have to accept
+            # either a ref to an AWS::IAM::Policy defined in the stack, or
+            # and embedded dict describing the policy directly, but for now
+            # we only expect this list to contain strings, which must map
+            # to an OS::Heat::AccessPolicy in this stack
+            # If a non-string (e.g embedded IAM dict policy) is passed, we
+            # ignore the policy (don't reject it because we previously ignored
+            # and we don't want to break templates which previously worked
+            if not isinstance(policy, basestring):
+                logger.warning("Ignoring policy %s, " % policy
+                               + "must be string resource name")
+                continue
+
+            try:
+                policy_rsrc = self.stack.resources[policy]
+            except KeyError:
+                logger.error("Policy %s does not exist in stack %s" %
+                             (policy, self.stack.name))
+                return False
+
+            if not callable(getattr(policy_rsrc, 'access_allowed', None)):
+                logger.error("Policy %s is not an AccessPolicy resource" %
+                             policy)
+                return False
+
+        return True
+
     def handle_create(self):
         passwd = ''
         if self.properties['LoginProfile'] and \
                 'Password' in self.properties['LoginProfile']:
                 passwd = self.properties['LoginProfile']['Password']
+
+        if self.properties['Policies']:
+            if not self._validate_policies(self.properties['Policies']):
+                raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                         key='Policies')
 
         uid = self.keystone().create_stack_user(self.physical_resource_name(),
                                                 passwd)
@@ -66,6 +100,18 @@ class User(resource.Resource):
         raise exception.InvalidTemplateAttribute(
             resource=self.physical_resource_name(), key=key)
 
+    def access_allowed(self, resource_name):
+        policies = self.properties['Policies']
+        for policy in policies:
+            if not isinstance(policy, basestring):
+                logger.warning("Ignoring policy %s, " % policy
+                               + "must be string resource name")
+                continue
+            policy_rsrc = self.stack.resources[policy]
+            if not policy_rsrc.access_allowed(resource_name):
+                return False
+        return True
+
 
 class AccessKey(resource.Resource):
     properties_schema = {'Serial': {'Type': 'Integer',
@@ -80,7 +126,7 @@ class AccessKey(resource.Resource):
         super(AccessKey, self).__init__(name, json_snippet, stack)
         self._secret = None
 
-    def _get_userid(self):
+    def _get_user(self):
         """
         Helper function to derive the keystone userid, which is stored in the
         resource_id of the User associated with this key.  We want to avoid
@@ -95,11 +141,12 @@ class AccessKey(resource.Resource):
         for r in self.stack.resources:
             refid = self.stack.resources[r].FnGetRefId()
             if refid == self.properties['UserName']:
-                return self.stack.resources[r].resource_id
+                return self.stack.resources[r]
 
     def handle_create(self):
-        user_id = self._get_userid()
-        if user_id is None:
+        try:
+            user_id = self._get_user().resource_id
+        except AttributeError:
             raise exception.NotFound('could not find user %s' %
                                      self.properties['UserName'])
 
@@ -117,7 +164,7 @@ class AccessKey(resource.Resource):
     def handle_delete(self):
         self.resource_id_set(None)
         self._secret = None
-        user_id = self._get_userid()
+        user_id = self._get_user().resource_id
         if user_id and self.resource_id:
             self.keystone().delete_ec2_keypair(user_id, self.resource_id)
 
@@ -125,7 +172,7 @@ class AccessKey(resource.Resource):
         '''
         Return the user's access key, fetching it from keystone if necessary
         '''
-        user_id = self._get_userid()
+        user_id = self._get_user().resource_id
         if self._secret is None:
             if not self.resource_id:
                 logger.warn('could not get secret for %s Error:%s' %
@@ -165,9 +212,37 @@ class AccessKey(resource.Resource):
                                              key, log_res))
         return unicode(res)
 
+    def access_allowed(self, resource_name):
+        return self._get_user().access_allowed(resource_name)
+
+
+class AccessPolicy(resource.Resource):
+    properties_schema = {'AllowedResources': {'Type': 'List',
+                                              'Required': True}}
+
+    def __init__(self, name, json_snippet, stack):
+        super(AccessPolicy, self).__init__(name, json_snippet, stack)
+
+    def handle_create(self):
+        resources = self.properties['AllowedResources']
+        # All of the provided resource names must exist in this stack
+        for resource in resources:
+            if resource not in self.stack:
+                logger.error("AccessPolicy resource %s not in stack" %
+                             resource)
+                raise exception.ResourceNotFound(resource_name=resource,
+                                                 stack_name=self.stack.name)
+
+    def handle_update(self, json_snippet):
+        return self.UPDATE_REPLACE
+
+    def access_allowed(self, resource_name):
+        return resource_name in self.properties['AllowedResources']
+
 
 def resource_mapping():
     return {
         'AWS::IAM::User': User,
         'AWS::IAM::AccessKey': AccessKey,
+        'OS::Heat::AccessPolicy': AccessPolicy,
     }

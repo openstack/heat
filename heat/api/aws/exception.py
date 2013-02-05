@@ -254,9 +254,12 @@ def map_remote_error(ex):
             'WatchRuleNotFound',
             'StackExists',
         )
+        denied_errors = ('Forbidden', 'NotAuthorized')
 
         if ex.exc_type in inval_param_errors:
             return HeatInvalidParameterValueError(detail=ex.value)
+        elif ex.exc_type in denied_errors:
+            return HeatAccessDeniedError(detail=ex.value)
         else:
             # Map everything else to internal server error for now
             return HeatInternalFailureError(detail=ex.value)
