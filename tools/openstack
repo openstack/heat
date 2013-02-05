@@ -27,7 +27,7 @@ else
     with_cinder=0
 fi
 
-if [[ `lsb_release -sr` -gt 17 || $with_cinder ]]; then
+if [[ `lsb_release -sr` -gt 17 || $with_cinder -eq 1 ]]; then
     VOLUME_SERVICE="openstack-cinder"
     VOLUME_PATH="/var/lib/cinder/cinder-volumes.img"
     VOLUME_NAME="cinder-volumes"
@@ -264,7 +264,7 @@ EOF
     sudo rm -rf /var/log/{glance,nova,swift,keystone,cinder}/*
     os_start
     sleep 1
-    if [[ $VOLUME_SERVICE -eq "openstack-cinder" ]]; then
+    if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
         ${BASE_DIR}/../bin/cinder-keystone-setup
     fi
     echo "Installation Complete."
