@@ -36,6 +36,11 @@ class TestPolicyEnforcer(unittest.TestCase):
                    "EstimateTemplateCost", "DescribeStackResource",
                    "DescribeStackResources")
 
+    cw_actions = ("DeleteAlarms", "DescribeAlarmHistory", "DescribeAlarms",
+                  "DescribeAlarmsForMetric", "DisableAlarmActions",
+                  "EnableAlarmActions", "GetMetricStatistics", "ListMetrics",
+                  "PutMetricAlarm", "PutMetricData", "SetAlarmState")
+
     def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
         self.m = mox.Mox()
@@ -102,6 +107,38 @@ class TestPolicyEnforcer(unittest.TestCase):
 
         ctx = context.RequestContext(roles=['not_a_stack_user'])
         for action in self.cfn_actions:
+            # Everything should be allowed
+            enforcer.enforce(ctx, action, {})
+        self.m.VerifyAll()
+
+    def test_policy_cw_deny_stack_user(self):
+        pf = self.path + 'deny_stack_user.json'
+        self.m.StubOutWithMock(policy.Enforcer, '_find_policy_file')
+        policy.Enforcer._find_policy_file().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
+        enforcer = policy.Enforcer(scope='cloudwatch')
+
+        ctx = context.RequestContext(roles=['heat_stack_user'])
+        for action in self.cw_actions:
+            # Everything apart from PutMetricData should be Forbidden
+            if action == "PutMetricData":
+                enforcer.enforce(ctx, action, {})
+            else:
+                self.assertRaises(exception.Forbidden, enforcer.enforce, ctx,
+                                  action, {})
+        self.m.VerifyAll()
+
+    def test_policy_cw_allow_non_stack_user(self):
+        pf = self.path + 'deny_stack_user.json'
+        self.m.StubOutWithMock(policy.Enforcer, '_find_policy_file')
+        policy.Enforcer._find_policy_file().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
+        enforcer = policy.Enforcer(scope='cloudwatch')
+
+        ctx = context.RequestContext(roles=['not_a_stack_user'])
+        for action in self.cw_actions:
             # Everything should be allowed
             enforcer.enforce(ctx, action, {})
         self.m.VerifyAll()
