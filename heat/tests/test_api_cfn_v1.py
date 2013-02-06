@@ -30,7 +30,7 @@ import heat.api.cfn.v1.stacks as stacks
 
 @attr(tag=['unit', 'api-cfn-v1-stacks', 'StackController'])
 @attr(speed='fast')
-class StackControllerTest(unittest.TestCase):
+class CfnStackControllerTest(unittest.TestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
