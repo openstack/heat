@@ -34,7 +34,7 @@ class Volume(resource.Resource):
         super(Volume, self).__init__(name, json_snippet, stack)
 
     def handle_create(self):
-        vol = self.nova('volume').volumes.create(
+        vol = self.cinder().volumes.create(
             self.properties['Size'],
             display_name=self.physical_resource_name(),
             display_description=self.physical_resource_name())
@@ -52,12 +52,13 @@ class Volume(resource.Resource):
 
     def handle_delete(self):
         if self.resource_id is not None:
-            vol = self.nova('volume').volumes.get(self.resource_id)
+            vol = self.cinder().volumes.get(self.resource_id)
+
             if vol.status == 'in-use':
                 logger.warn('cant delete volume when in-use')
                 raise exception.Error("Volume in use")
 
-            self.nova('volume').volumes.delete(self.resource_id)
+            self.cinder().volumes.delete(self.resource_id)
 
 
 class VolumeAttachment(resource.Resource):
@@ -77,12 +78,13 @@ class VolumeAttachment(resource.Resource):
         volume_id = self.properties['VolumeId']
         logger.warn('Attaching InstanceId %s VolumeId %s Device %s' %
                     (server_id, volume_id, self.properties['Device']))
-        volapi = self.nova().volumes
-        va = volapi.create_server_volume(server_id=server_id,
-                                         volume_id=volume_id,
-                                         device=self.properties['Device'])
+        va = self.nova().volumes.create_server_volume(
+            server_id=server_id,
+            volume_id=volume_id,
+            device=self.properties['Device'])
 
-        vol = self.nova('volume').volumes.get(va.id)
+        vol = self.cinder().volumes.get(va.id)
+
         while vol.status == 'available' or vol.status == 'attaching':
             eventlet.sleep(1)
             vol.get()
@@ -100,12 +102,11 @@ class VolumeAttachment(resource.Resource):
         logger.info('VolumeAttachment un-attaching %s %s' %
                     (server_id, volume_id))
 
-        volapi = self.nova().volumes
         try:
-            volapi.delete_server_volume(server_id,
-                                        volume_id)
+            vol = self.cinder().volumes.get(volume_id)
 
-            vol = self.nova('volume').volumes.get(volume_id)
+            self.nova().volumes.delete_server_volume(server_id,
+                                                     volume_id)
 
             logger.info('un-attaching %s, status %s' % (volume_id, vol.status))
             while vol.status == 'in-use':
@@ -113,11 +114,13 @@ class VolumeAttachment(resource.Resource):
                             (volume_id, vol.status))
                 eventlet.sleep(1)
                 try:
-                    volapi.delete_server_volume(server_id,
-                                                volume_id)
+                    self.nova().volumes.delete_server_volume(
+                        server_id,
+                        volume_id)
                 except Exception:
                     pass
                 vol.get()
+            logger.info('volume status of %s now %s' % (volume_id, vol.status))
         except clients.novaclient.exceptions.NotFound as e:
             logger.warning('Deleting VolumeAttachment %s %s - not found' %
                           (server_id, volume_id))
