@@ -39,7 +39,7 @@ def parse(tmpl_str):
         tpl = json.loads(tmpl_str)
     else:
         try:
-            tpl = yaml.load(tmpl_str)
+            tpl = yaml.safe_load(tmpl_str)
         except yaml.scanner.ScannerError as e:
             raise ValueError(e)
         else:
@@ -90,7 +90,7 @@ def convert_json_to_yaml(json_str):
     json_str = key_re.sub(order_key, json_str)
 
     # parse the string as json to a python structure
-    tpl = yaml.load(json_str)
+    tpl = yaml.safe_load(json_str)
 
     # dump python structure to yaml
     yml = "HeatTemplateFormatVersion: '2012-12-12'\n" + yaml.safe_dump(tpl)
