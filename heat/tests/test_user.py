@@ -29,7 +29,7 @@ from heat.tests import fakes
 from heat.openstack.common import cfg
 
 
-@attr(tag=['unit', 'resource', 'Unit'])
+@attr(tag=['unit', 'resource', 'User'])
 @attr(speed='fast')
 class UserTest(unittest.TestCase):
     def setUp(self):
@@ -110,6 +110,44 @@ class UserTest(unittest.TestCase):
         self.assertEqual(None, resource.delete())
         self.assertEqual('DELETE_COMPLETE', resource.state)
         self.m.VerifyAll()
+
+
+@attr(tag=['unit', 'resource', 'AccessKey'])
+@attr(speed='fast')
+class AccessKeyTest(unittest.TestCase):
+    def setUp(self):
+        self.m = mox.Mox()
+        self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
+        cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
+
+    def tearDown(self):
+        self.m.UnsetStubs()
+        print "AccessKey teardown complete"
+
+    def load_template(self):
+        self.path = os.path.dirname(os.path.realpath(__file__)).\
+            replace('heat/tests', 'templates')
+        f = open("%s/Rails_Single_Instance.template" % self.path)
+        t = template_format.parse(f.read())
+        f.close()
+        return t
+
+    def parse_stack(self, t):
+        ctx = context.RequestContext.from_dict({
+            'tenant_id': 'test_tenant',
+            'username': 'test_username',
+            'password': 'password',
+            'auth_url': 'http://localhost:5000/v2.0'})
+        template = parser.Template(t)
+        params = parser.Parameters('test_stack',
+                                   template,
+                                   {'KeyName': 'test',
+                                    'DBRootPassword': 'test',
+                                    'DBUsername': 'test',
+                                    'DBPassword': 'test'})
+        stack = parser.Stack(ctx, 'test_stack', template, params)
+
+        return stack
 
     def create_access_key(self, t, stack, resource_name):
         resource = user.AccessKey(resource_name,
