@@ -56,19 +56,7 @@
   },
   "Resources" : {
     "CFNInitUser" : {
-      "Type" : "AWS::IAM::User",
-      "Properties" : {
-        "Policies": [{
-          "PolicyName": "AccessForCFNInit",
-          "PolicyDocument" : {
-            "Statement": [{
-              "Effect"   : "Allow",
-              "Action"   : "cloudformation:DescribeStackResource",
-              "Resource" : "*"
-            }]
-          }
-        }]
-      }
+      "Type" : "AWS::IAM::User"
     },
 
     "CFNKeys" : {

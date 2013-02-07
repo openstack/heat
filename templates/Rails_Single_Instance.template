@@ -94,18 +94,7 @@
   "Resources" : {
 
     "CfnUser" : {
-      "Type" : "AWS::IAM::User",
-      "Properties" : {
-        "Path": "/",
-        "Policies": [{
-          "PolicyName": "root",
-          "PolicyDocument": { "Statement":[{
-            "Effect":"Allow",
-            "Action":"cloudformation:DescribeStackResource",
-            "Resource":"*"
-          }]}
-        }]
-      }
+      "Type" : "AWS::IAM::User"
     },
 
     "HostKeys" : {
