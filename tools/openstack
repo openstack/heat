@@ -27,7 +27,8 @@ else
     with_cinder=0
 fi
 
-if [[ `lsb_release -sr` -gt 17 || $with_cinder -eq 1 ]]; then
+FEDORA_VERSION=$(cat /etc/fedora-release | awk '{print $3}')
+if [[ $FEDORA_VERSION -gt 17 || $with_cinder -eq 1 ]]; then
     VOLUME_SERVICE="openstack-cinder"
     VOLUME_PATH="/var/lib/cinder/cinder-volumes.img"
     VOLUME_NAME="cinder-volumes"
