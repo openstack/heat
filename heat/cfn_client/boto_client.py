@@ -286,11 +286,9 @@ def get_client(host, port=None, username=None,
 
     # Note we pass None/None for the keys by default
     # This means boto reads /etc/boto.cfg, or ~/.boto
-    # Also note is_secure is defaulted to False as HTTPS connections
-    # don't seem to work atm, FIXME
+    # set is_secure=0 in the config to disable https
     cloudformation = BotoClient(aws_access_key_id=aws_access_key,
                                 aws_secret_access_key=aws_secret_key,
-                                is_secure=False,
                                 port=port,
                                 path="/v1")
     if cloudformation:
