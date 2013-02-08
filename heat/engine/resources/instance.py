@@ -195,8 +195,10 @@ class Instance(resource.Resource):
             # where the cfn and cw API's are to be accessed
             cfn_url = urlparse(cfg.CONF.heat_metadata_server_url)
             cw_url = urlparse(cfg.CONF.heat_watch_server_url)
+            is_secure = cfg.CONF.instance_connection_is_secure
             boto_cfg = "\n".join(["[Boto]",
                                   "debug = 0",
+                                  "is_secure = %s" % is_secure,
                                   "cfn_region_name = heat",
                                   "cfn_region_endpoint = %s" %
                                   cfn_url.hostname,
