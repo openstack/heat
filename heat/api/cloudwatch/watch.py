@@ -19,6 +19,8 @@ endpoint for heat AWS-compatible CloudWatch API
 from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
 from heat.common import wsgi
+from heat.common import policy
+from heat.common import exception as heat_exception
 from heat.rpc import client as rpc_client
 from heat.rpc import api as engine_api
 
@@ -38,6 +40,22 @@ class WatchController(object):
     def __init__(self, options):
         self.options = options
         self.engine_rpcapi = rpc_client.EngineClient()
+        self.policy = policy.Enforcer(scope='cloudwatch')
+
+    def _enforce(self, req, action):
+        """Authorize an action against the policy.json"""
+        try:
+            self.policy.enforce(req.context, action, {})
+        except heat_exception.Forbidden:
+            raise exception.HeatAccessDeniedError("Action %s not allowed " %
+                                                  action + "for user")
+        except Exception as ex:
+            # We expect policy.enforce to either pass or raise Forbidden
+            # however, if anything else happens, we want to raise
+            # HeatInternalFailureError, failure to do this results in
+            # the user getting a big stacktrace spew as an API response
+            raise exception.HeatInternalFailureError("Error authorizing " +
+                                                     "action %s" % action)
 
     @staticmethod
     def _reformat_dimensions(dims):
@@ -55,18 +73,21 @@ class WatchController(object):
         """
         Implements DeleteAlarms API action
         """
+        self._enforce(req, 'DeleteAlarms')
         return exception.HeatAPINotImplementedError()
 
     def describe_alarm_history(self, req):
         """
         Implements DescribeAlarmHistory API action
         """
+        self._enforce(req, 'DescribeAlarmHistory')
         return exception.HeatAPINotImplementedError()
 
     def describe_alarms(self, req):
         """
         Implements DescribeAlarms API action
         """
+        self._enforce(req, 'DescribeAlarms')
 
         def format_metric_alarm(a):
             """
@@ -131,24 +152,28 @@ class WatchController(object):
         """
         Implements DescribeAlarmsForMetric API action
         """
+        self._enforce(req, 'DescribeAlarmsForMetric')
         return exception.HeatAPINotImplementedError()
 
     def disable_alarm_actions(self, req):
         """
         Implements DisableAlarmActions API action
         """
+        self._enforce(req, 'DisableAlarmActions')
         return exception.HeatAPINotImplementedError()
 
     def enable_alarm_actions(self, req):
         """
         Implements EnableAlarmActions API action
         """
+        self._enforce(req, 'EnableAlarmActions')
         return exception.HeatAPINotImplementedError()
 
     def get_metric_statistics(self, req):
         """
         Implements GetMetricStatistics API action
         """
+        self._enforce(req, 'GetMetricStatistics')
         return exception.HeatAPINotImplementedError()
 
     def list_metrics(self, req):
@@ -157,6 +182,8 @@ class WatchController(object):
         Lists metric datapoints associated with a particular alarm,
         or all alarms if none specified
         """
+        self._enforce(req, 'ListMetrics')
+
         def format_metric_data(d, fil={}):
             """
             Reformat engine output into the AWS "Metric" format
@@ -219,12 +246,14 @@ class WatchController(object):
         """
         Implements PutMetricAlarm API action
         """
+        self._enforce(req, 'PutMetricAlarm')
         return exception.HeatAPINotImplementedError()
 
     def put_metric_data(self, req):
         """
         Implements PutMetricData API action
         """
+        self._enforce(req, 'PutMetricData')
 
         con = req.context
         parms = dict(req.params)
@@ -283,6 +312,8 @@ class WatchController(object):
         """
         Implements SetAlarmState API action
         """
+        self._enforce(req, 'SetAlarmState')
+
         # Map from AWS state names to those used in the engine
         state_map = {'OK': engine_api.WATCH_STATE_OK,
                      'ALARM': engine_api.WATCH_STATE_ALARM,

@@ -12,12 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+import os
 import mox
 import unittest
 from nose.plugins.attrib import attr
 
 from heat.common import context
+from heat.common import policy
 from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 from heat.common.wsgi import Request
@@ -58,6 +59,42 @@ class WatchControllerTest(unittest.TestCase):
                      'Value': u'21617058-781e-4262-97ab-5f9df371ee52'},
                     {'Name': 'Foo', 'Value': 'bar'}]
         self.assert_(response == expected)
+
+    def test_enforce_default(self):
+        self.m.ReplayAll()
+        params = {'Action': 'ListMetrics'}
+        dummy_req = self._dummy_GET_request(params)
+        self.controller.policy.policy_path = None
+        response = self.controller._enforce(dummy_req, 'ListMetrics')
+        self.assertEqual(response, None)
+        self.m.VerifyAll()
+
+    def test_enforce_denied(self):
+        self.m.ReplayAll()
+        params = {'Action': 'ListMetrics'}
+        dummy_req = self._dummy_GET_request(params)
+        dummy_req.context.roles = ['heat_stack_user']
+        self.controller.policy.policy_path = (self.policy_path +
+                                              'deny_stack_user.json')
+        self.assertRaises(exception.HeatAccessDeniedError,
+                          self.controller._enforce, dummy_req, 'ListMetrics')
+        self.m.VerifyAll()
+
+    def test_enforce_ise(self):
+        params = {'Action': 'ListMetrics'}
+        dummy_req = self._dummy_GET_request(params)
+        dummy_req.context.roles = ['heat_stack_user']
+
+        self.m.StubOutWithMock(policy.Enforcer, 'enforce')
+        policy.Enforcer.enforce(dummy_req.context, 'ListMetrics', {}
+                                ).AndRaise(AttributeError)
+        self.m.ReplayAll()
+
+        self.controller.policy.policy_path = (self.policy_path +
+                                              'deny_stack_user.json')
+        self.assertRaises(exception.HeatInternalFailureError,
+                          self.controller._enforce, dummy_req, 'ListMetrics')
+        self.m.VerifyAll()
 
     def test_delete(self):
         # Not yet implemented, should raise HeatAPINotImplementedError
@@ -474,6 +511,14 @@ class WatchControllerTest(unittest.TestCase):
         self.maxDiff = None
         self.m = mox.Mox()
 
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.policy_path = self.path + "/policy/"
+        opts = [
+            cfg.StrOpt('config_dir', default=self.policy_path),
+            cfg.StrOpt('config_file', default='foo'),
+            cfg.StrOpt('project', default='heat'),
+        ]
+        cfg.CONF.register_opts(opts)
         cfg.CONF.set_default('engine_topic', 'engine')
         cfg.CONF.set_default('host', 'host')
         self.topic = '%s.%s' % (cfg.CONF.engine_topic, cfg.CONF.host)
@@ -484,6 +529,7 @@ class WatchControllerTest(unittest.TestCase):
             bind_port = 8003
         cfgopts = DummyConfig()
         self.controller = watches.WatchController(options=cfgopts)
+        self.controller.policy.policy_path = None
         print "setup complete"
 
     def tearDown(self):
