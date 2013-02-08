@@ -253,6 +253,7 @@ def map_remote_error(ex):
             'PhysicalResourceNotFound',
             'WatchRuleNotFound',
             'StackExists',
+            'StackValidationFailed',
         )
         denied_errors = ('Forbidden', 'NotAuthorized')
 

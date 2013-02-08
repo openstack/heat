@@ -589,7 +589,6 @@ class CfnStackControllerTest(unittest.TestCase):
 
         # Stub out the RPC call to the engine with a pre-canned response
         self.m.StubOutWithMock(rpc, 'call')
-        engine_err = {'Description': 'Something went wrong'}
 
         rpc.call(dummy_req.context, self.topic,
                  {'method': 'create_stack',
@@ -597,15 +596,17 @@ class CfnStackControllerTest(unittest.TestCase):
                   'template': template,
                   'params': engine_parms,
                   'args': engine_args},
-                  'version': self.api_version}, None).AndReturn(engine_err)
+                  'version': self.api_version}, None).AndRaise(
+                      rpc_common.RemoteError(
+                          'StackValidationFailed',
+                          'Something went wrong'))
 
         self.m.ReplayAll()
 
         result = self.controller.create(dummy_req)
 
-        expected = {'CreateStackResponse': {'CreateStackResult': engine_err}}
-
-        self.assertEqual(result, expected)
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
         self.m.VerifyAll()
 
     def test_update(self):

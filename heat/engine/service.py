@@ -216,9 +216,7 @@ class EngineService(service.Service):
         stack = parser.Stack(context, stack_name, tmpl, template_params,
                              **common_params)
 
-        response = stack.validate()
-        if response:
-            return {'Description': response}
+        stack.validate()
 
         stack_id = stack.store()
 
@@ -256,9 +254,7 @@ class EngineService(service.Service):
         updated_stack = parser.Stack(context, stack_name, tmpl,
                                      template_params, **common_params)
 
-        response = updated_stack.validate()
-        if response:
-            return {'Description': response}
+        updated_stack.validate()
 
         self._start_in_thread(db_stack.id, current_stack.update, updated_stack)
 

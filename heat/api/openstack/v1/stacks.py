@@ -183,9 +183,6 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
 
-        if 'Description' in result:
-            raise exc.HTTPBadRequest(result['Description'])
-
         raise exc.HTTPCreated(location=util.make_url(req, result))
 
     @util.tenant_local
@@ -258,9 +255,6 @@ class StackController(object):
                                            data.args())
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
-
-        if 'Description' in res:
-            raise exc.HTTPBadRequest(res['Description'])
 
         raise exc.HTTPAccepted()
 

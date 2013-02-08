@@ -28,6 +28,7 @@ from heat.engine.clients import Clients
 from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
+from heat.common.exception import StackValidationFailed
 
 logger = logging.getLogger(__name__)
 
@@ -224,11 +225,9 @@ class Stack(object):
             try:
                 result = res.validate()
             except Exception as ex:
-                logger.exception('validate')
-                result = str(ex)
-
+                raise StackValidationFailed(message=str(ex))
             if result:
-                return 'Malformed Query Response %s' % result
+                raise StackValidationFailed(message=result)
 
     def state_set(self, new_status, reason):
         '''Update the stack state in the database'''

@@ -419,7 +419,6 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
         req = self._post('/stacks', json.dumps(body))
 
         self.m.StubOutWithMock(rpc, 'call')
-        engine_err = {'Description': 'Something went wrong'}
         rpc.call(req.context, self.topic,
                  {'method': 'create_stack',
                   'args': {'stack_name': stack_name,
@@ -427,7 +426,9 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
                            'params': parameters,
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndReturn(engine_err)
+                 None).AndRaise(rpc_common.RemoteError(
+                     'StackValidationFailed',
+                     'Something went wrong'))
         self.m.ReplayAll()
 
         self.assertRaises(webob.exc.HTTPBadRequest,
