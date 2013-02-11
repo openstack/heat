@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+import copy
 import os
 
 import unittest
@@ -91,6 +91,7 @@ class InstanceGroupTest(unittest.TestCase):
                          resource.handle_update({}))
 
         resource.delete()
+        self.m.VerifyAll()
 
     def test_missing_image(self):
 
@@ -109,4 +110,34 @@ class InstanceGroupTest(unittest.TestCase):
         self.assertEqual(resource.create(), 'ImageNotFound: bla')
         self.assertEqual(asc.InstanceGroup.CREATE_FAILED, resource.state)
 
+        self.m.VerifyAll()
+
+    def test_upate_size(self):
+        t = self.load_template()
+        properties = t['Resources']['JobServerGroup']['Properties']
+        properties['Size'] = '2'
+        stack = self.parse_stack(t)
+
+        self._stub_create(2)
+        self.m.ReplayAll()
+        resource = self.create_instance_group(t, stack, 'JobServerGroup')
+        self.assertEqual('JobServerGroup-0,JobServerGroup-1',
+                         resource.resource_id)
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        # Increase min size to 5
+        self._stub_create(3)
+        self.m.ReplayAll()
+
+        update_snippet = copy.deepcopy(resource.parsed_template())
+        update_snippet['Properties']['Size'] = '5'
+        self.assertEqual(asc.AutoScalingGroup.UPDATE_COMPLETE,
+                         resource.handle_update(update_snippet))
+        assert_str = ','.join(['JobServerGroup-%s' % x for x in range(5)])
+        self.assertEqual(assert_str,
+                         resource.resource_id)
+
+        resource.delete()
         self.m.VerifyAll()

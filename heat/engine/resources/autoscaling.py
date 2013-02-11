@@ -71,6 +71,8 @@ class InstanceGroup(resource.Resource):
                  'Schema': {'Type': 'Map',
                             'Schema': tags_schema}}
     }
+    update_allowed_keys = ('Properties',)
+    update_allowed_properties = ('Size',)
 
     def __init__(self, name, json_snippet, stack):
         super(InstanceGroup, self).__init__(name, json_snippet, stack)
@@ -80,10 +82,38 @@ class InstanceGroup(resource.Resource):
         self.resize(int(self.properties['Size']), raise_on_error=True)
 
     def handle_update(self, json_snippet):
-        # TODO(asalkeld) if the only thing that has changed is the size then
-        # call resize. Maybe have an attribute of the properties that can mark
-        # it "update-able" so each resource doesn't have to figure this out.
-        return self.UPDATE_REPLACE
+        try:
+            tmpl_diff = self.update_template_diff(json_snippet)
+        except NotImplementedError:
+            logger.error("Could not update %s, invalid key" % self.name)
+            return self.UPDATE_REPLACE
+
+        try:
+            prop_diff = self.update_template_diff_properties(json_snippet)
+        except NotImplementedError:
+            logger.error("Could not update %s, invalid Property" % self.name)
+            return self.UPDATE_REPLACE
+
+        # If Properties has changed, update self.properties, so we
+        # get the new values during any subsequent adjustment
+        if prop_diff:
+            self.properties = Properties(self.properties_schema,
+                                         json_snippet.get('Properties', {}),
+                                         self.stack.resolve_runtime_data,
+                                         self.name)
+
+            # Get the current capacity, we may need to adjust if
+            # Size has changed
+            if 'Size' in prop_diff:
+                inst_list = []
+                if self.resource_id is not None:
+                    inst_list = sorted(self.resource_id.split(','))
+
+                if len(inst_list) != int(self.properties['Size']):
+                    self.resize(int(self.properties['Size']),
+                                raise_on_error=True)
+
+        return self.UPDATE_COMPLETE
 
     def _make_instance(self, name):
 
