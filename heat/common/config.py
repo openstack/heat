@@ -76,6 +76,9 @@ service_opts = [
     cfg.StrOpt('heat_watch_server_url',
                default="",
                help='URL of the Heat cloudwatch server'),
+    cfg.StrOpt('instance_connection_is_secure',
+               default="0",
+               help='Instance connection to cfn/cw API via https'),
     cfg.StrOpt('heat_stack_user_role',
                default="heat_stack_user",
                help='Keystone role for heat template-defined users')]
