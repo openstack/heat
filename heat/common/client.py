@@ -32,12 +32,6 @@ except ImportError:
     import socket
     import ssl
 
-try:
-    import sendfile
-    SENDFILE_SUPPORTED = True
-except ImportError:
-    SENDFILE_SUPPORTED = False
-
 from heat.common import auth
 from heat.common import exception, utils
 
@@ -105,48 +99,6 @@ class ImageBodyIterator(object):
                 yield chunk
             else:
                 break
-
-
-class SendFileIterator:
-    """
-    Emulate iterator pattern over sendfile, in order to allow
-    send progress be followed by wrapping the iteration.
-    """
-    def __init__(self, connection, body):
-        self.connection = connection
-        self.body = body
-        self.offset = 0
-        self.sending = True
-
-    def __iter__(self):
-        class OfLength:
-            def __init__(self, len):
-                self.len = len
-
-            def __len__(self):
-                return self.len
-
-        while self.sending:
-            try:
-                sent = sendfile.sendfile(self.connection.sock.fileno(),
-                                         self.body.fileno(),
-                                         self.offset,
-                                         CHUNKSIZE)
-            except OSError as e:
-                # suprisingly, sendfile may fail transiently instead of
-                # blocking, in which case we select on the socket in order
-                # to wait on its return to a writeable state before resuming
-                # the send loop
-                if e.errno in (errno.EAGAIN, errno.EBUSY):
-                    wlist = [self.connection.sock.fileno()]
-                    rfds, wfds, efds = select.select([], wlist, [])
-                    if wfds:
-                        continue
-                raise
-
-            self.sending = (sent != 0)
-            self.offset += sent
-            yield OfLength(sent)
 
 
 class HTTPSClientAuthConnection(httplib.HTTPSConnection):
@@ -511,12 +463,7 @@ class BaseClient(object):
 
                 iter = self.image_iterator(c, headers, body)
 
-                if self._sendable(body):
-                    # send actual file without copying into userspace
-                    _sendbody(c, iter)
-                else:
-                    # otherwise iterate and chunk
-                    _chunkbody(c, iter)
+                _chunkbody(c, iter)
             else:
                 raise TypeError('Unsupported image type: %s' % body.__class__)
 
@@ -557,29 +504,11 @@ class BaseClient(object):
         except (socket.error, IOError), e:
             raise exception.ClientConnectionError(e)
 
-    def _seekable(self, body):
-        # pipes are not seekable, avoids sendfile() failure on e.g.
-        #   cat /path/to/image | heat add ...
-        # or where add command is launched via popen
-        try:
-            os.lseek(body.fileno(), 0, os.SEEK_SET)
-            return True
-        except OSError as e:
-            return (e.errno != errno.ESPIPE)
-
-    def _sendable(self, body):
-        return (SENDFILE_SUPPORTED and
-                hasattr(body, 'fileno') and
-                self._seekable(body) and
-                not self.use_ssl)
-
     def _iterable(self, body):
         return isinstance(body, collections.Iterable)
 
     def image_iterator(self, connection, headers, body):
-        if self._sendable(body):
-            return SendFileIterator(connection, body)
-        elif self._iterable(body):
+        if self._iterable(body):
             return utils.chunkreadable(body)
         else:
             return ImageBodyIterator(body)
