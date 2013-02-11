@@ -1,20 +1,49 @@
-.. Heat documentation master file, created by
-   sphinx-quickstart on Thu Dec 13 11:23:35 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+..
+      Licensed under the Apache License, Version 2.0 (the "License"); you may
+      not use this file except in compliance with the License. You may obtain
+      a copy of the License at
 
+          http://www.apache.org/licenses/LICENSE-2.0
+
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+      WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+      License for the specific language governing permissions and limitations
+      under the License.
+
+==================================================
 Welcome to the Heat developer documentation!
-================================
+==================================================
+Heat is a service to :term:`orchestrate` multiple composite cloud
+applications using the AWS CloudFormation template format, through
+both an OpenStack-native ReST API and a CloudFormation-compatible Query API.
 
-This documentation offers information on how Heat works and how to contribute to the project.
+What is the purpose of the project and vision for it?
+=====================================================
 
-Contents:
+* Heat provides a template based orchestration for describing a cloud application
+  by executing appropriate OpenStack API calls to generate running cloud applications.
+* The software integrates other core components of OpenStack into a one-file
+  template system. The templates allow creation of most OpenStack resource types
+  (such as instances, floating ips, volumes, security groups, users, etc), as well
+  as some more advanced functionality such as instance high availability, instance
+  autoscaling, and nested stacks. By providing very tight integration with other
+  OpenStack core projects, all OpenStack core projects could receive a larger user base.
+* Allow deployers to integrate with Heat directly or by adding custom plugins.
+
+This documentation offers information on how heat works and how to
+contribute to the project.
+
+Table of contents
+=================
 
 .. toctree::
    :maxdepth: 2
 
-   GettingStarted.rst
    man/index
+   glossary
+
+.. update index
 
 Indices and tables
 ==================
@@ -23,3 +52,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+To Do
+=====
+
+.. todolist::
