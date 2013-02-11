@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from quantumclient.common.exceptions import QuantumClientException
+
 from heat.openstack.common import log as logging
 from heat.engine import resource
 
@@ -42,8 +44,17 @@ class VPC(resource.Resource):
     def handle_delete(self):
         client = self.quantum()
         (network_id, router_id) = self.resource_id.split(':')
-        client.delete_router(router_id)
-        client.delete_network(network_id)
+        try:
+            client.delete_router(router_id)
+        except QuantumClientException as ex:
+            if ex.status_code != 404:
+                raise ex
+
+        try:
+            client.delete_network(network_id)
+        except QuantumClientException as ex:
+            if ex.status_code != 404:
+                raise ex
 
     def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE

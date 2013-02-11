@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from quantumclient.common.exceptions import QuantumClientException
+
 from heat.engine import clients
 from heat.engine.resources.quantum import quantum
 
@@ -38,7 +40,11 @@ class Router(quantum.QuantumResource):
 
     def handle_delete(self):
         client = self.quantum()
-        client.delete_router(self.resource_id)
+        try:
+            client.delete_router(self.resource_id)
+        except QuantumClientException as ex:
+            if ex.status_code != 404:
+                raise ex
 
     def FnGetAtt(self, key):
         attributes = self.quantum().show_router(
@@ -58,15 +64,21 @@ class RouterInterface(quantum.QuantumResource):
     def handle_create(self):
         router_id = self.properties.get('router_id')
         subnet_id = self.properties.get('subnet_id')
-        self.quantum().add_interface_router(router_id,
-                                            {'subnet_id': subnet_id})
+        self.quantum().add_interface_router(
+            router_id,
+            {'subnet_id': subnet_id})
         self.resource_id_set('%s:%s' % (router_id, subnet_id))
 
     def handle_delete(self):
         client = self.quantum()
         (router_id, subnet_id) = self.resource_id.split(':')
-        client.remove_interface_router(router_id,
-                                       {'subnet_id': subnet_id})
+        try:
+            client.remove_interface_router(
+                router_id,
+                {'subnet_id': subnet_id})
+        except QuantumClientException as ex:
+            if ex.status_code != 404:
+                raise ex
 
 
 class RouterGateway(quantum.QuantumResource):
@@ -81,14 +93,19 @@ class RouterGateway(quantum.QuantumResource):
     def handle_create(self):
         router_id = self.properties.get('router_id')
         network_id = self.properties.get('network_id')
-        self.quantum().add_gateway_router(router_id,
-                                          {'network_id': network_id})
+        self.quantum().add_gateway_router(
+            router_id,
+            {'network_id': network_id})
         self.resource_id_set('%s:%s' % (router_id, network_id))
 
     def handle_delete(self):
         client = self.quantum()
         (router_id, network_id) = self.resource_id.split(':')
-        client.remove_gateway_router(router_id)
+        try:
+            client.remove_gateway_router(router_id)
+        except QuantumClientException as ex:
+            if ex.status_code != 404:
+                raise ex
 
 
 def resource_mapping():
