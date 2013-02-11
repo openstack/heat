@@ -88,7 +88,7 @@ class LoadBalancerTest(unittest.TestCase):
         instance.Instance.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
             flavor=2, image=745, key_name='test',
-            meta=None, name=u'test_stack.LoadBalancer.LB_instance',
+            meta=None, nics=None, name=u'test_stack.LoadBalancer.LB_instance',
             scheduler_hints=None, userdata=mox.IgnoreArg(),
             security_groups=None).AndReturn(self.fc.servers.list()[1])
         #stack.Stack.create_with_template(mox.IgnoreArg()).AndReturn(None)

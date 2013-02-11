@@ -89,6 +89,7 @@ class Instance(resource.Resource):
                          'SecurityGroups': {'Type': 'List'},
                          'SecurityGroupIds': {'Type': 'List',
                                               'Implemented': False},
+                         'NetworkInterfaces': {'Type': 'List'},
                          'SourceDestCheck': {'Type': 'Boolean',
                                              'Implemented': False},
                          'SubnetId': {'Type': 'String',
@@ -258,6 +259,13 @@ class Instance(resource.Resource):
         else:
             scheduler_hints = None
 
+        nics = []
+        if self.properties['NetworkInterfaces']:
+            for nic in self.properties['NetworkInterfaces']:
+                nics.append({'port-id': nic})
+        else:
+            nics = None
+
         server_userdata = self._build_userdata(userdata)
         server = None
         try:
@@ -269,7 +277,8 @@ class Instance(resource.Resource):
                 security_groups=security_groups,
                 userdata=server_userdata,
                 meta=tags,
-                scheduler_hints=scheduler_hints)
+                scheduler_hints=scheduler_hints,
+                nics=nics)
         finally:
             # Avoid a race condition where the thread could be cancelled
             # before the ID is stored
