@@ -132,6 +132,7 @@
           "EXIT\n",
           "EOF\n",
           "cat /tmp/mysql-wordpress-config | mysql -u root --password='", { "Ref" : "DBRootPassword" }, "' < /tmp/mysql-wordpress-config\n",
+          "sed -i \"/Deny from All/d\" /etc/httpd/conf.d/wordpress.conf\n",
           "sed --in-place --e s/database_name_here/", { "Ref" : "DBName" }, "/ --e s/username_here/", { "Ref" : "DBUsername" }, "/ --e s/password_here/", { "Ref" : "DBPassword" }, "/ /usr/share/wordpress/wp-config.php\n",
           "cp /usr/share/wordpress/wp-config.php /usr/share/wordpress/wp-config.orig\n"
         ]]}}

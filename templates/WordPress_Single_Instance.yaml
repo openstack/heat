@@ -4,9 +4,8 @@ Description: 'AWS CloudFormation Sample Template WordPress_Single_Instance:
   template installs a single-instance WordPress deployment using a local MySQL database
   to store the data.'
 Parameters:
-  KeyName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
-    Type: String
+  KeyName: {Description: Name of an existing EC2 KeyPair
+      to enable SSH access to the instances, Type: String}
   InstanceType:
     Description: WebServer EC2 instance type
     Type: String
@@ -87,43 +86,66 @@ Resources:
         Fn::Base64:
           Fn::Join:
           - ''
-          - - |-
-                #!/bin/bash -v
-                /opt/aws/bin/cfn-init
-                # Setup MySQL root password and create a user
-                mysqladmin -u root password '
+          - - '#!/bin/bash -v
+
+              '
+            - '/opt/aws/bin/cfn-init
+
+              '
+            - '# Setup MySQL root password and create a user
+
+              '
+            - mysqladmin -u root password '
             - {Ref: DBRootPassword}
-            - |-
-                '
-                cat << EOF | mysql -u root --password='
+            - '''
+
+              '
+            - cat << EOF | mysql -u root --password='
             - {Ref: DBRootPassword}
-            - |-
-                '
-                CREATE DATABASE 
+            - '''
+
+              '
+            - 'CREATE DATABASE '
             - {Ref: DBName}
-            - |-
-                ;
-                GRANT ALL PRIVILEGES ON 
+            - ';
+
+              '
+            - 'GRANT ALL PRIVILEGES ON '
             - {Ref: DBName}
             - .* TO "
             - {Ref: DBUsername}
-            - |-
-                "@"localhost"
-                IDENTIFIED BY "
+            - '"@"localhost"
+
+              '
+            - IDENTIFIED BY "
             - {Ref: DBPassword}
-            - |-
-                ";
-                FLUSH PRIVILEGES;
-                EXIT
-                EOF
-                sed --in-place --e s/database_name_here/
+            - '";
+
+              '
+            - 'FLUSH PRIVILEGES;
+
+              '
+            - 'EXIT
+
+              '
+            - 'EOF
+
+              '
+            - 'sed -i "/Deny from All/d" /etc/httpd/conf.d/wordpress.conf
+
+              '
+            - sed --in-place --e s/database_name_here/
             - {Ref: DBName}
             - / --e s/username_here/
             - {Ref: DBUsername}
             - / --e s/password_here/
             - {Ref: DBPassword}
-            - |
-                / /usr/share/wordpress/wp-config.php
+            - '/ /usr/share/wordpress/wp-config.php
+
+              '
+            - 'systemctl restart httpd.service
+
+              '
 Outputs:
   WebsiteURL:
     Value:
@@ -133,3 +155,4 @@ Outputs:
         - Fn::GetAtt: [WikiDatabase, PublicIp]
         - /wordpress
     Description: URL for Wordpress wiki
+
