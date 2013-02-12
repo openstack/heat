@@ -72,7 +72,7 @@ class instancesTest(unittest.TestCase):
             name='%s.%s' % (stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
-            meta=None).AndReturn(self.fc.servers.list()[1])
+            meta=None, nics=None).AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
 
         self.assertEqual(instance.create(), None)
@@ -112,7 +112,7 @@ class instancesTest(unittest.TestCase):
             name='%s.%s' % (stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
-            meta=None).AndReturn(self.fc.servers.list()[1])
+            meta=None, nics=None).AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
 
         self.assertEqual(instance.create(), None)
@@ -173,7 +173,7 @@ class instancesTest(unittest.TestCase):
             name='%s.%s' % (stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
-            meta=None).AndReturn(self.fc.servers.list()[1])
+            meta=None, nics=None).AndReturn(self.fc.servers.list()[1])
         self.m.ReplayAll()
 
         self.assertEqual(instance.create(), None)
