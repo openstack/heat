@@ -25,6 +25,7 @@ from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import volume as vol
+from heat.engine import clients
 from heat.tests.v1_1 import fakes
 
 
@@ -34,9 +35,8 @@ class VolumeTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(vol.Volume, 'cinder')
-        self.m.StubOutWithMock(vol.VolumeAttachment, 'cinder')
-        self.m.StubOutWithMock(vol.VolumeAttachment, 'nova')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'cinder')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         self.m.StubOutWithMock(self.fc.volumes, 'create')
         self.m.StubOutWithMock(self.fc.volumes, 'get')
         self.m.StubOutWithMock(self.fc.volumes, 'delete')
@@ -91,7 +91,7 @@ class VolumeTest(unittest.TestCase):
         stack_name = 'test_volume_stack'
 
         # create script
-        vol.Volume.cinder().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create(
             u'1', display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
@@ -125,7 +125,7 @@ class VolumeTest(unittest.TestCase):
         stack_name = 'test_volume_create_error_stack'
 
         # create script
-        vol.Volume.cinder().AndReturn(self.fc)
+        clients.OpenStackClients.cinder().AndReturn(self.fc)
         self.fc.volumes.create(
             u'1', display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
@@ -150,14 +150,14 @@ class VolumeTest(unittest.TestCase):
         stack_name = 'test_volume_attach_error_stack'
 
         # volume create
-        vol.Volume.cinder().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create(
             u'1', display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
-        vol.VolumeAttachment.nova().MultipleTimes().AndReturn(self.fc)
-        vol.VolumeAttachment.cinder().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+#        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(self.fc)
 
         eventlet.sleep(1).MultipleTimes().AndReturn(None)
         self.fc.volumes.create_server_volume(
@@ -187,14 +187,14 @@ class VolumeTest(unittest.TestCase):
         stack_name = 'test_volume_attach_stack'
 
         # volume create
-        vol.Volume.cinder().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create(
             u'1', display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
-        vol.VolumeAttachment.nova().MultipleTimes().AndReturn(self.fc)
-        vol.VolumeAttachment.cinder().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        #clients.OpenStackClients.cinder().MultipleTimes().AndReturn(self.fc)
         eventlet.sleep(1).MultipleTimes().AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',

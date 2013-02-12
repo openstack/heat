@@ -105,8 +105,7 @@ class Instance(resource.Resource):
                                      'AllowedValues': ['dedicated', 'default'],
                                      'Implemented': False},
                          'UserData': {'Type': 'String'},
-                         'Volumes': {'Type': 'List',
-                                     'Implemented': False}}
+                         'Volumes': {'Type': 'List'}}
 
     # template keys supported for handle_update, note trailing comma
     # is required for a single item to get a tuple not a string
@@ -288,6 +287,26 @@ class Instance(resource.Resource):
                                   ('nova reported unexpected',
                                    self.name, server.status))
 
+        if self.properties['Volumes']:
+            self.attach_volumes()
+
+    def attach_volumes(self):
+        server_id = self.resource_id
+        for vol in self.properties['Volumes']:
+            if 'DeviceId' in vol:
+                dev = vol['DeviceId']
+            else:
+                dev = vol['Device']
+            self.stack.clients.attach_volume_to_instance(server_id,
+                                                         vol['VolumeId'],
+                                                         dev)
+
+    def detach_volumes(self):
+        server_id = self.resource_id
+        for vol in self.properties['Volumes']:
+            self.stack.clients.detach_volume_from_instance(server_id,
+                                                           vol['VolumeId'])
+
     def handle_update(self, json_snippet):
         status = self.UPDATE_REPLACE
         try:
@@ -331,6 +350,10 @@ class Instance(resource.Resource):
         '''
         if self.resource_id is None:
             return
+
+        if self.properties['Volumes']:
+            self.detach_volumes()
+
         try:
             server = self.nova().servers.get(self.resource_id)
         except clients.novaclient.exceptions.NotFound:
