@@ -2,40 +2,64 @@
 
 import sys
 import os
-import stat
 import subprocess
 import datetime
 import pkg_resources
+from distutils.version import LooseVersion
 import errno
 
 path = '/var/lib/cloud/data'
 
-ci_version = pkg_resources.get_distribution('cloud-init').version.split('.')
-if ci_version[0] <= 0 and ci_version[1] < 6:
-    # pre 0.6.0 - user data executed via cloudinit, not this helper
-    with open('/var/log/heat-provision.log', 'w') as log:
+
+def chk_ci_version():
+    v = LooseVersion(pkg_resources.get_distribution('cloud-init').version)
+    return v >= LooseVersion('0.6.0')
+
+
+def create_log(path):
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT, 0600)
+    return os.fdopen(fd, 'w')
+
+
+def call(args, log):
+    log.write('%s\n' % ' '.join(args))
+    log.flush()
+    p = subprocess.Popen(args, stdout=log, stderr=log)
+    p.wait()
+    return p.returncode
+
+
+def main(log):
+
+    if not chk_ci_version():
+        # pre 0.6.0 - user data executed via cloudinit, not this helper
         log.write('Unable to log provisioning, need a newer version of'
                   ' cloud-init\n')
-        sys.exit(0)
+        return -1
 
-os.chmod(os.path.join(path, 'cfn-userdata'),
-         stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    userdata_path = os.path.join(path, 'cfn-userdata')
+    os.chmod(userdata_path, 0700)
 
-with open('/var/log/heat-provision.log', 'w') as log:
     log.write('Provision began: %s\n' % datetime.datetime.now())
     log.flush()
-    p = subprocess.Popen(os.path.join(path, 'cfn-userdata'),
-                         stdout=log, stderr=log)
-    p.wait()
+    returncode = call([userdata_path], log)
     log.write('Provision done: %s\n' % datetime.datetime.now())
-    if p.returncode:
-        sys.exit(p.returncode)
+    if returncode:
+        return returncode
 
-try:
-    os.makedirs('/var/lib/heat')
-except OSError as e:
-    if e.errno != errno.EEXIST:
-        raise
+    try:
+        os.makedirs('/var/lib/heat', 0700)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
-with open('/var/lib/heat/provision-finished', 'w') as log:
-    log.write('%s\n' % datetime.datetime.now())
+
+if __name__ == '__main__':
+    with create_log('/var/log/heat-provision.log') as log:
+        returncode = main(log)
+        if returncode:
+            log.write('Provision failed')
+            sys.exit(returncode)
+
+    with create_log('/var/lib/heat/provision-finished') as log:
+        log.write('%s\n' % datetime.datetime.now())
