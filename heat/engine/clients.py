@@ -12,6 +12,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import eventlet
 
 from heat.openstack.common import cfg
 from heat.openstack.common import importutils
@@ -20,6 +21,7 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 
+from heat.common import exception
 from heat.common import heat_keystoneclient as hkc
 from novaclient import client as novaclient
 try:
@@ -34,6 +36,7 @@ except ImportError:
     logger.info('quantumclient not available')
 try:
     from cinderclient.v1 import client as cinderclient
+    from cinderclient import exceptions as cinder_exceptions
 except ImportError:
     cinderclient = None
     logger.info('cinderclient not available')
@@ -210,6 +213,58 @@ class OpenStackClients(object):
         self._cinder = cinderclient.Client(**args)
 
         return self._cinder
+
+    def attach_volume_to_instance(self, server_id, volume_id, device_id):
+        logger.warn('Attaching InstanceId %s VolumeId %s Device %s' %
+                    (server_id, volume_id, device_id))
+
+        va = self.nova().volumes.create_server_volume(
+            server_id=server_id,
+            volume_id=volume_id,
+            device=device_id)
+
+        vol = self.cinder().volumes.get(va.id)
+        while vol.status == 'available' or vol.status == 'attaching':
+            eventlet.sleep(1)
+            vol.get()
+        if vol.status == 'in-use':
+            return va.id
+        else:
+            raise exception.Error(vol.status)
+
+    def detach_volume_from_instance(self, server_id, volume_id):
+        logger.info('VolumeAttachment un-attaching %s %s' %
+                    (server_id, volume_id))
+
+        try:
+            vol = self.cinder().volumes.get(volume_id)
+        except cinder_exceptions.NotFound:
+            logger.warning('Volume %s - not found' %
+                          (volume_id))
+            return
+        try:
+            self.nova().volumes.delete_server_volume(server_id,
+                                                     volume_id)
+        except novaclient.exceptions.NotFound:
+            logger.warning('Deleting VolumeAttachment %s %s - not found' %
+                          (server_id, volume_id))
+        try:
+            logger.info('un-attaching %s, status %s' % (volume_id, vol.status))
+            while vol.status == 'in-use':
+                logger.info('trying to un-attach %s, but still %s' %
+                            (volume_id, vol.status))
+                eventlet.sleep(1)
+                try:
+                    self.nova().volumes.delete_server_volume(
+                        server_id,
+                        volume_id)
+                except Exception:
+                    pass
+                vol.get()
+            logger.info('volume status of %s now %s' % (volume_id, vol.status))
+        except cinder_exceptions.NotFound:
+            logger.warning('Volume %s - not found' %
+                          (volume_id))
 
 
 if cfg.CONF.cloud_backend:
