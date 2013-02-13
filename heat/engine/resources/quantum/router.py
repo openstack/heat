@@ -34,7 +34,9 @@ class Router(quantum.QuantumResource):
         super(Router, self).__init__(name, json_snippet, stack)
 
     def handle_create(self):
-        props = self.prepare_properties(self.properties, self.name)
+        props = self.prepare_properties(
+            self.properties,
+            self.physical_resource_name())
         router = self.quantum().create_router({'router': props})['router']
         self.resource_id_set(router['id'])
 

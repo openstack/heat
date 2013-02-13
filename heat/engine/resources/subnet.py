@@ -52,7 +52,7 @@ class Subnet(resource.Resource):
         props = {
             'network_id': network_id,
             'cidr': self.properties.get('CidrBlock'),
-            'name': self.name,
+            'name': self.physical_resource_name(),
             'ip_version': 4
         }
         subnet = client.create_subnet({'subnet': props})['subnet']

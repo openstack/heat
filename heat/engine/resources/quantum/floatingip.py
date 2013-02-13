@@ -31,7 +31,9 @@ class FloatingIP(quantum.QuantumResource):
                          'fixed_ip_address': {'Type': 'String'}}
 
     def handle_create(self):
-        props = self.prepare_properties(self.properties, self.name)
+        props = self.prepare_properties(
+            self.properties,
+            self.physical_resource_name())
         fip = self.quantum().create_floatingip({
             'floatingip': props})['floatingip']
         self.resource_id_set(fip['id'])

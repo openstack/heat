@@ -33,7 +33,9 @@ class Net(quantum.QuantumResource):
         super(Net, self).__init__(name, json_snippet, stack)
 
     def handle_create(self):
-        props = self.prepare_properties(self.properties, self.name)
+        props = self.prepare_properties(
+            self.properties,
+            self.physical_resource_name())
         net = self.quantum().create_network({'network': props})['network']
         self.resource_id_set(net['id'])
 

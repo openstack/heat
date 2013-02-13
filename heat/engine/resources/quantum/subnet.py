@@ -52,7 +52,9 @@ class Subnet(quantum.QuantumResource):
         super(Subnet, self).__init__(name, json_snippet, stack)
 
     def handle_create(self):
-        props = self.prepare_properties(self.properties, self.name)
+        props = self.prepare_properties(
+            self.properties,
+            self.physical_resource_name())
         subnet = self.quantum().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])
 

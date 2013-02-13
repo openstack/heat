@@ -111,7 +111,9 @@ class VPCTestBase(unittest.TestCase):
 
     def mock_create_network(self):
         quantumclient.Client.create_network(
-            {'network': {'name': 'the_vpc'}}).AndReturn({'network': {
+            {
+                'network': {'name': 'test_stack.the_vpc'}
+            }).AndReturn({'network': {
                 'status': 'ACTIVE',
                 'subnets': [],
                 'name': 'name',
@@ -121,7 +123,7 @@ class VPCTestBase(unittest.TestCase):
                 'id': 'aaaa'
             }})
         quantumclient.Client.create_router(
-            {'router': {'name': 'the_vpc'}}).AndReturn({'router': {
+            {'router': {'name': 'test_stack.the_vpc'}}).AndReturn({'router': {
                 'status': 'ACTIVE',
                 'name': 'name',
                 'admin_state_up': True,
@@ -135,10 +137,10 @@ class VPCTestBase(unittest.TestCase):
                 'network_id': u'aaaa',
                 'cidr': u'10.0.0.0/24',
                 'ip_version': 4,
-                'name': u'the_subnet'}}).AndReturn({
+                'name': u'test_stack.the_subnet'}}).AndReturn({
                     'subnet': {
                         'status': 'ACTIVE',
-                        'name': 'the_subnet',
+                        'name': 'test_stack.the_subnet',
                         'admin_state_up': True,
                         'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                         'id': 'cccc'}})
@@ -149,7 +151,7 @@ class VPCTestBase(unittest.TestCase):
     def mock_create_network_interface(self):
         quantumclient.Client.show_subnet('cccc').AndReturn({
             'subnet': {
-                'name': 'the_subnet',
+                'name': 'test_stack.the_subnet',
                 'network_id': 'aaaa',
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'allocation_pools': [{
@@ -164,7 +166,7 @@ class VPCTestBase(unittest.TestCase):
             'port': {
                 'status': 'ACTIVE',
                 'device_owner': '',
-                'name': '',
+                'name': 'test_stack.the_nic',
                 'admin_state_up': True,
                 'network_id': 'aaaa',
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
@@ -187,7 +189,7 @@ class VPCTestBase(unittest.TestCase):
                     ],
                     'id': 'dddd',
                     'mac_address': 'fa:16:3e:25:32:5d',
-                    'name': '',
+                    'name': 'test_stack.the_nic',
                     'network_id': 'aaaa',
                     'status': 'ACTIVE',
                     'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'

@@ -46,7 +46,7 @@ class VPC(resource.Resource):
 
     def handle_create(self):
         client = self.quantum()
-        props = {'name': self.name}
+        props = {'name': self.physical_resource_name()}
         # Creates a network with an implicit router
         net = client.create_network({'network': props})['network']
         router = client.create_router({'router': props})['router']
