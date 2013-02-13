@@ -12,7 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-PARAM_KEYS = (PARAM_TIMEOUT, ) = ('timeout_mins', )
+PARAM_KEYS = (
+    PARAM_TIMEOUT, PARAM_DISABLE_ROLLBACK
+) = (
+    'timeout_mins', 'disable_rollback'
+)
 
 STACK_KEYS = (
     STACK_NAME, STACK_ID,

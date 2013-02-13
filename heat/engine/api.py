@@ -35,6 +35,14 @@ def extract_args(params):
     else:
         if timeout_mins > 0:
             kwargs[PARAM_TIMEOUT] = timeout_mins
+
+    if PARAM_DISABLE_ROLLBACK in params:
+        disable_rollback = params.get(PARAM_DISABLE_ROLLBACK)
+        if disable_rollback in (True, False):
+            kwargs[PARAM_DISABLE_ROLLBACK] = disable_rollback
+        else:
+            raise ValueError("Unexpected value for parameter %s : %s" %
+                             (PARAM_DISABLE_ROLLBACK, disable_rollback))
     return kwargs
 
 
