@@ -279,8 +279,9 @@ class StackController(object):
             the engine API.  FIXME: we currently only support a subset of
             the AWS defined parameters (both here and in the engine)
             """
-            # TODO : Capabilities, DisableRollback, NotificationARNs
-            keymap = {'TimeoutInMinutes': engine_api.PARAM_TIMEOUT, }
+            # TODO : Capabilities, NotificationARNs
+            keymap = {'TimeoutInMinutes': engine_api.PARAM_TIMEOUT,
+                      'DisableRollback': engine_api.PARAM_DISABLE_ROLLBACK}
 
             result = {}
             for k in keymap:

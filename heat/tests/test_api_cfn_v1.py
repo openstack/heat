@@ -220,7 +220,7 @@ class CfnStackControllerTest(unittest.TestCase):
                        u'notification_topics': [],
                        u'stack_status': u'CREATE_COMPLETE',
                        u'description': u'blah',
-                       u'disable_rollback': True,
+                       u'disable_rollback': 'true',
                        u'timeout_mins':60,
                        u'capabilities':[]}]
 
@@ -268,7 +268,7 @@ class CfnStackControllerTest(unittest.TestCase):
                         'StackName': u'wordpress',
                         'NotificationARNs': [],
                         'StackStatus': u'CREATE_COMPLETE',
-                        'DisableRollback': True,
+                        'DisableRollback': 'true',
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
 
         self.assertEqual(response, expected)
@@ -307,7 +307,7 @@ class CfnStackControllerTest(unittest.TestCase):
                         u'notification_topics': [],
                         u'stack_status': u'CREATE_COMPLETE',
                         u'description': u'blah',
-                        u'disable_rollback': True,
+                        u'disable_rollback': 'true',
                         u'timeout_mins':60,
                         u'capabilities':[]}]
 
@@ -351,7 +351,7 @@ class CfnStackControllerTest(unittest.TestCase):
                         'StackName': u'wordpress',
                         'NotificationARNs': [],
                         'StackStatus': u'CREATE_COMPLETE',
-                        'DisableRollback': True,
+                        'DisableRollback': 'true',
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
 
         self.assertEqual(response, expected)
@@ -445,10 +445,11 @@ class CfnStackControllerTest(unittest.TestCase):
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
                   'TimeoutInMinutes': 30,
+                  'DisableRollback': 'true',
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
         engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30'}
+        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'true'}
         dummy_req = self._dummy_GET_request(params)
 
         # Stub out the RPC call to the engine with a pre-canned response
