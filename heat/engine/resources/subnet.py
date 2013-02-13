@@ -48,7 +48,10 @@ class Subnet(resource.Resource):
     def handle_create(self):
         client = self.quantum()
         # TODO sbaker Verify that this CidrBlock is within the vpc CidrBlock
-        (network_id, router_id) = self.properties.get('VpcId').split(':')
+        vpc = self.stack[self.properties.get('VpcId')]
+        network_id = vpc.metadata['network_id']
+        router_id = vpc.metadata['router_id']
+
         props = {
             'network_id': network_id,
             'cidr': self.properties.get('CidrBlock'),
@@ -57,24 +60,35 @@ class Subnet(resource.Resource):
         }
         subnet = client.create_subnet({'subnet': props})['subnet']
 
+        #TODO sbaker check for a non-default router for this network
+        # and use that instead if it exists
         client.add_interface_router(
             router_id,
             {'subnet_id': subnet['id']})
-        self.resource_id_set(subnet['id'])
+        md = {
+            'network_id': network_id,
+            'router_id': router_id,
+            'subnet_id': subnet['id']
+        }
+        self.metadata = md
 
     def handle_delete(self):
         client = self.quantum()
-        (network_id, router_id) = self.properties.get('VpcId').split(':')
+        router_id = self.metadata['router_id']
+        subnet_id = self.metadata['subnet_id']
+
+        #TODO sbaker check for a non-default router for this network
+        # and remove that instead if it exists
         try:
             client.remove_interface_router(
                 router_id,
-                {'subnet_id': self.resource_id})
+                {'subnet_id': subnet_id})
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
         try:
-            client.delete_subnet(self.resource_id)
+            client.delete_subnet(subnet_id)
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex

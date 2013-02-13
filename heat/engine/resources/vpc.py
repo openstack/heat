@@ -50,12 +50,17 @@ class VPC(resource.Resource):
         # Creates a network with an implicit router
         net = client.create_network({'network': props})['network']
         router = client.create_router({'router': props})['router']
-        id = '%s:%s' % (net['id'], router['id'])
-        self.resource_id_set(id)
+        md = {
+            'network_id': net['id'],
+            'router_id': router['id'],
+            'all_router_ids': [router['id']]
+        }
+        self.metadata = md
 
     def handle_delete(self):
         client = self.quantum()
-        (network_id, router_id) = self.resource_id.split(':')
+        network_id = self.metadata['network_id']
+        router_id = self.metadata['router_id']
         try:
             client.delete_router(router_id)
         except QuantumClientException as ex:
