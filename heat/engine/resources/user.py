@@ -40,7 +40,7 @@ class User(resource.Resource):
         super(User, self).__init__(name, json_snippet, stack)
 
     def _validate_policies(self, policies):
-        for policy in policies:
+        for policy in (policies or []):
             # When we support AWS IAM style policies, we will have to accept
             # either a ref to an AWS::IAM::Policy defined in the stack, or
             # and embedded dict describing the policy directly, but for now
@@ -101,7 +101,7 @@ class User(resource.Resource):
             resource=self.physical_resource_name(), key=key)
 
     def access_allowed(self, resource_name):
-        policies = self.properties['Policies']
+        policies = (self.properties['Policies'] or [])
         for policy in policies:
             if not isinstance(policy, basestring):
                 logger.warning("Ignoring policy %s, " % policy
