@@ -52,9 +52,10 @@ class Subnet(resource.Resource):
         props = {
             'network_id': network_id,
             'cidr': self.properties.get('CidrBlock'),
-            'name': self.name
+            'name': self.name,
+            'ip_version': 4
         }
-        subnet = self.quantum().create_subnet({'subnet': props})['subnet']
+        subnet = client.create_subnet({'subnet': props})['subnet']
 
         client.add_interface_router(
             router_id,

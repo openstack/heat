@@ -134,6 +134,7 @@ class VPCTestBase(unittest.TestCase):
             {'subnet': {
                 'network_id': u'aaaa',
                 'cidr': u'10.0.0.0/24',
+                'ip_version': 4,
                 'name': u'the_subnet'}}).AndReturn({
                     'subnet': {
                         'status': 'ACTIVE',
