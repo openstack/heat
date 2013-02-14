@@ -24,6 +24,7 @@ from heat.engine import parser
 from heat.engine import parameters
 from heat.engine import template
 from heat.engine.resource import Resource
+from heat.tests.utils import stack_delete_after
 
 
 def join(raw):
@@ -326,29 +327,34 @@ class StackTest(unittest.TestCase):
         self.assertRaises(exception.NotFound, parser.Stack.load,
                           None, -1)
 
+    # Note tests creating a stack should be decorated with @stack_delete_after
+    # to ensure the self.stack is properly cleaned up
+    @stack_delete_after
     def test_identifier(self):
-        stack = parser.Stack(self.ctx, 'identifier_test',
-                             parser.Template({}))
-        stack.store()
-        identifier = stack.identifier()
+        self.stack = parser.Stack(self.ctx, 'identifier_test',
+                                  parser.Template({}))
+        self.stack.store()
+        identifier = self.stack.identifier()
         self.assertEqual(identifier.tenant, self.ctx.tenant)
         self.assertEqual(identifier.stack_name, 'identifier_test')
         self.assertTrue(identifier.stack_id)
         self.assertFalse(identifier.path)
 
+    @stack_delete_after
     def test_created_time(self):
-        stack = parser.Stack(self.ctx, 'creation_time_test',
-                             parser.Template({}))
-        self.assertEqual(stack.created_time, None)
-        stack.store()
-        self.assertNotEqual(stack.created_time, None)
+        self.stack = parser.Stack(self.ctx, 'creation_time_test',
+                                  parser.Template({}))
+        self.assertEqual(self.stack.created_time, None)
+        self.stack.store()
+        self.assertNotEqual(self.stack.created_time, None)
 
+    @stack_delete_after
     def test_updated_time(self):
-        stack = parser.Stack(self.ctx, 'update_time_test',
-                             parser.Template({}))
-        self.assertEqual(stack.updated_time, None)
-        stack.store()
-        stored_time = stack.updated_time
-        stack.state_set(stack.CREATE_IN_PROGRESS, 'testing')
-        self.assertNotEqual(stack.updated_time, None)
-        self.assertNotEqual(stack.updated_time, stored_time)
+        self.stack = parser.Stack(self.ctx, 'update_time_test',
+                                  parser.Template({}))
+        self.assertEqual(self.stack.updated_time, None)
+        self.stack.store()
+        stored_time = self.stack.updated_time
+        self.stack.state_set(self.stack.CREATE_IN_PROGRESS, 'testing')
+        self.assertNotEqual(self.stack.updated_time, None)
+        self.assertNotEqual(self.stack.updated_time, stored_time)
