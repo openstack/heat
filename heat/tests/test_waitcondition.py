@@ -104,7 +104,8 @@ class WaitConditionTest(unittest.TestCase):
         parameters = parser.Parameters(stack_name, template, params)
         ctx = context.get_admin_context()
         ctx.tenant_id = 'test_tenant'
-        stack = parser.Stack(ctx, stack_name, template, parameters)
+        stack = parser.Stack(ctx, stack_name, template, parameters,
+                             disable_rollback=True)
 
         self.stack_id = stack.store()
 
@@ -396,7 +397,8 @@ class WaitConditionHandleTest(unittest.TestCase):
         parameters = parser.Parameters(stack_name, template, params)
         ctx = context.get_admin_context()
         ctx.tenant_id = 'test_tenant'
-        stack = parser.Stack(ctx, stack_name, template, parameters)
+        stack = parser.Stack(ctx, stack_name, template, parameters,
+                             disable_rollback=True)
         # Stub out the UUID for this test, so we can get an expected signature
         self.m.StubOutWithMock(uuid, 'uuid4')
         uuid.uuid4().AndReturn('STACKABCD1234')

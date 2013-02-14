@@ -162,6 +162,7 @@ class Stack(BASE, HeatBase):
         nullable=False)
     owner_id = Column(Integer, nullable=True)
     timeout = Column(Integer)
+    disable_rollback = Column(Boolean)
 
 
 class UserCreds(BASE, HeatBase):

@@ -25,6 +25,7 @@ from heat.engine import parameters
 from heat.engine import template
 from heat.engine.resource import Resource
 from heat.tests.utils import stack_delete_after
+import heat.db as db_api
 
 
 def join(raw):
@@ -358,3 +359,48 @@ class StackTest(unittest.TestCase):
         self.stack.state_set(self.stack.CREATE_IN_PROGRESS, 'testing')
         self.assertNotEqual(self.stack.updated_time, None)
         self.assertNotEqual(self.stack.updated_time, stored_time)
+
+    @stack_delete_after
+    def test_delete(self):
+        self.stack = parser.Stack(self.ctx, 'delete_test',
+                                  parser.Template({}))
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertNotEqual(db_s, None)
+
+        self.stack.delete()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertEqual(db_s, None)
+        self.assertEqual(self.stack.state, self.stack.DELETE_COMPLETE)
+
+    @stack_delete_after
+    def test_delete_rollback(self):
+        self.stack = parser.Stack(self.ctx, 'delete_rollback_test',
+                                  parser.Template({}))
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertNotEqual(db_s, None)
+
+        self.stack.delete(action=self.stack.ROLLBACK)
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertEqual(db_s, None)
+        self.assertEqual(self.stack.state, self.stack.ROLLBACK_COMPLETE)
+
+    @stack_delete_after
+    def test_delete_badaction(self):
+        self.stack = parser.Stack(self.ctx, 'delete_badaction_test',
+                                  parser.Template({}))
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertNotEqual(db_s, None)
+
+        self.stack.delete(action="wibble")
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertNotEqual(db_s, None)
+        self.assertEqual(self.stack.state, self.stack.DELETE_FAILED)

@@ -35,6 +35,10 @@ logger = logging.getLogger(__name__)
 
 
 class Stack(object):
+
+    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK
+               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK')
+
     CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
     CREATE_FAILED = 'CREATE_FAILED'
     CREATE_COMPLETE = 'CREATE_COMPLETE'
@@ -47,12 +51,16 @@ class Stack(object):
     UPDATE_COMPLETE = 'UPDATE_COMPLETE'
     UPDATE_FAILED = 'UPDATE_FAILED'
 
+    ROLLBACK_IN_PROGRESS = 'ROLLBACK_IN_PROGRESS'
+    ROLLBACK_COMPLETE = 'ROLLBACK_COMPLETE'
+    ROLLBACK_FAILED = 'ROLLBACK_FAILED'
+
     created_time = timestamp.Timestamp(db_api.stack_get, 'created_at')
     updated_time = timestamp.Timestamp(db_api.stack_get, 'updated_at')
 
     def __init__(self, context, stack_name, tmpl, parameters=None,
                  stack_id=None, state=None, state_description='',
-                 timeout_mins=60, resolve_data=True):
+                 timeout_mins=60, resolve_data=True, disable_rollback=False):
         '''
         Initialise from a context, name, Template object and (optionally)
         Parameters object. The database ID may also be initialised, if the
@@ -70,6 +78,7 @@ class Stack(object):
         self.state = state
         self.state_description = state_description
         self.timeout_mins = timeout_mins
+        self.disable_rollback = disable_rollback
 
         if parameters is None:
             parameters = Parameters(self.name, self.t)
@@ -109,7 +118,7 @@ class Stack(object):
         params = Parameters(stack.name, template, stack.parameters)
         stack = cls(context, stack.name, template, params,
                     stack.id, stack.status, stack.status_reason, stack.timeout,
-                    resolve_data)
+                    resolve_data, stack.disable_rollback)
 
         return stack
 
@@ -131,6 +140,7 @@ class Stack(object):
             'status': self.state,
             'status_reason': self.state_description,
             'timeout': self.timeout_mins,
+            'disable_rollback': self.disable_rollback,
         }
         if self.id:
             db_api.stack_update(self.context, self.id, s)
@@ -250,6 +260,9 @@ class Stack(object):
                     raise
 
         self.state_set(stack_status, reason)
+
+        if stack_status == self.CREATE_FAILED and not self.disable_rollback:
+            self.delete(action=self.ROLLBACK)
 
     def update(self, newstack):
         '''
@@ -375,11 +388,22 @@ class Stack(object):
 
         self.state_set(stack_status, reason)
 
-    def delete(self):
+    def delete(self, action=DELETE):
         '''
         Delete all of the resources, and then the stack itself.
+        The action parameter is used to differentiate between a user
+        initiated delete and an automatic stack rollback after a failed
+        create, which amount to the same thing, but the states are recorded
+        differently.
         '''
-        self.state_set(self.DELETE_IN_PROGRESS, 'Stack deletion started')
+        if action == self.DELETE:
+            self.state_set(self.DELETE_IN_PROGRESS, 'Stack deletion started')
+        elif action == self.ROLLBACK:
+            self.state_set(self.ROLLBACK_IN_PROGRESS, 'Stack rollback started')
+        else:
+            logger.error("Unexpected action %s passed to delete!" % action)
+            self.state_set(self.DELETE_FAILED, "Invalid action %s" % action)
+            return
 
         failures = []
         for res in reversed(self):
@@ -390,10 +414,17 @@ class Stack(object):
                 failures.append(str(res))
 
         if failures:
-            self.state_set(self.DELETE_FAILED,
-                           'Failed to delete ' + ', '.join(failures))
+            if action == self.DELETE:
+                self.state_set(self.DELETE_FAILED,
+                               'Failed to delete ' + ', '.join(failures))
+            elif action == self.ROLLBACK:
+                self.state_set(self.ROLLBACK_FAILED,
+                               'Failed to rollback ' + ', '.join(failures))
         else:
-            self.state_set(self.DELETE_COMPLETE, 'Deleted successfully')
+            if action == self.DELETE:
+                self.state_set(self.DELETE_COMPLETE, 'Deleted successfully')
+            elif action == self.ROLLBACK:
+                self.state_set(self.ROLLBACK_COMPLETE, 'Rollback completed')
             db_api.stack_delete(self.context, self.id)
 
     def output(self, key):

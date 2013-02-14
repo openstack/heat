@@ -69,7 +69,7 @@ class LoadBalancerTest(unittest.TestCase):
         template = parser.Template(t)
         params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
         stack = parser.Stack(create_context(self.m), 'test_stack', template,
-                             params, stack_id=None)
+                             params, stack_id=None, disable_rollback=True)
         stack.store()
 
         return stack

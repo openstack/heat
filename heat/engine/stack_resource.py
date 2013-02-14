@@ -53,10 +53,13 @@ class StackResource(resource.Resource):
         params = parser.Parameters(self.physical_resource_name(), template,
                                    user_params)
 
+        # Note we disable rollback for nested stacks, since they
+        # should be rolled back by the parent stack on failure
         self._nested = parser.Stack(self.context,
                                     self.physical_resource_name(),
                                     template,
-                                    params)
+                                    params,
+                                    disable_rollback=True)
 
         nested_id = self._nested.store(self.stack)
         self.resource_id_set(nested_id)
