@@ -241,10 +241,13 @@ class Instance(resource.Resource):
             logger.info("Image %s was not found in glance" % image_name)
             raise exception.ImageNotFound(image_name=image_name)
 
+        flavor_id = None
         flavor_list = self.nova().flavors.list()
         for o in flavor_list:
             if o.name == flavor:
                 flavor_id = o.id
+        if flavor_id is None:
+            raise exception.FlavorMissing(flavor_id=flavor)
 
         tags = {}
         if self.properties['Tags']:
