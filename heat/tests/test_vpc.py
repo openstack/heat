@@ -164,18 +164,12 @@ class VPCTestBase(unittest.TestCase):
         })
         quantumclient.Client.create_port({
             'port': {
-                'status': 'ACTIVE',
-                'device_owner': '',
-                'name': 'test_stack.the_nic',
-                'admin_state_up': True,
-                'network_id': 'aaaa',
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'mac_address': 'fa:16:3e:25:32:5d',
-                'fixed_ips': [{
-                    'subnet_id': 'cccc',
-                    'ip_address': '10.0.0.100'}],
-                'id': 'dddd',
-                'device_id': ''
+                'network_id': 'aaaa', 'fixed_ips': [{
+                    'subnet_id': u'cccc',
+                    'ip_address': u'10.0.0.100'
+                }],
+                'name': u'test_stack.the_nic',
+                'admin_state_up': True
             }}).AndReturn({
                 'port': {
                     'admin_state_up': True,
@@ -283,9 +277,9 @@ class NetworkInterfaceTest(VPCTestBase):
         self.mock_create_network()
         self.mock_create_subnet()
         self.mock_create_network_interface()
-        #self.mock_delete_network_interface()
-        #self.mock_delete_subnet()
-        #self.mock_delete_network()
+        self.mock_delete_network_interface()
+        self.mock_delete_subnet()
+        self.mock_delete_network()
 
         self.m.ReplayAll()
 
@@ -293,8 +287,11 @@ class NetworkInterfaceTest(VPCTestBase):
         resource = stack['the_nic']
 
         resource.validate()
-#
-#        ref_id = resource.FnGetRefId()
-#        self.assertEqual('dddd', ref_id)
 
+        ref_id = resource.FnGetRefId()
+        self.assertEqual('dddd', ref_id)
+
+        self.assertEqual(vpc.VPC.UPDATE_REPLACE, resource.handle_update({}))
+
+        stack.delete()
         self.m.VerifyAll()

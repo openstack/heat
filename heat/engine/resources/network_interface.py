@@ -79,11 +79,6 @@ class NetworkInterface(resource.Resource):
     def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
-    def FnGetAtt(self, key):
-        if key == 'AvailabilityZone':
-            return self.properties.get(key, '')
-        raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
-
 
 def resource_mapping():
     return {
