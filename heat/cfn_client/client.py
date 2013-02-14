@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 SUPPORTED_PARAMS = ('StackName', 'TemplateBody', 'TemplateUrl',
                     'NotificationARNs', 'Parameters', 'Version',
                     'SignatureVersion', 'Timestamp', 'AWSAccessKeyId',
-                    'Signature', 'TimeoutInMinutes',
+                    'Signature', 'TimeoutInMinutes', 'DisableRollback',
                     'LogicalResourceId', 'PhysicalResourceId', 'NextToken',
                     )
 

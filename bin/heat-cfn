@@ -201,6 +201,9 @@ def stack_create(options, arguments):
 
     parameters['TimeoutInMinutes'] = options.timeout
 
+    if options.disable_rollback:
+        parameters['DisableRollback'] = 'True'
+
     templ_param = get_template_param(options)
     if templ_param:
         parameters.update(templ_param)
@@ -494,6 +497,10 @@ def create_options(parser):
 
     parser.add_option('-P', '--parameters', metavar="parameters", default=None,
                       help="Parameter values used to create the stack.")
+
+    parser.add_option('-D', '--disable-rollback', dest="disable_rollback",
+                      default=False, action="store_true",
+                      help="Disable rollback on failure")
 
 
 def credentials_from_env():
