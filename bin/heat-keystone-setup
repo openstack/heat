@@ -36,7 +36,7 @@ get_data() {
 
     echo $("$@" | \
            awk -F'|' \
-               "! /^+/ && \$${match_column} ~ \"^ *${regex} *\$\" \
+               "! /^\+/ && \$${match_column} ~ \"^ *${regex} *\$\" \
                 { print \$${output_column} }")
 }
 
