@@ -72,8 +72,7 @@ class Instance(resource.Resource):
                                           'Required': True},
                          'KeyName': {'Type': 'String',
                                      'Required': True},
-                         'AvailabilityZone': {'Type': 'String',
-                                              'Default': 'nova'},
+                         'AvailabilityZone': {'Type': 'String'},
                          'DisableApiTermination': {'Type': 'String',
                                                    'Implemented': False},
                          'KernelId': {'Type': 'String',
@@ -225,6 +224,7 @@ class Instance(resource.Resource):
         userdata = self.properties['UserData'] or ''
         flavor = self.properties['InstanceType']
         key_name = self.properties['KeyName']
+        availability_zone = self.properties['AvailabilityZone']
 
         keypairs = [k.name for k in self.nova().keypairs.list()]
         if key_name not in keypairs:
@@ -279,7 +279,8 @@ class Instance(resource.Resource):
                 userdata=server_userdata,
                 meta=tags,
                 scheduler_hints=scheduler_hints,
-                nics=nics)
+                nics=nics,
+                availability_zone=availability_zone)
         finally:
             # Avoid a race condition where the thread could be cancelled
             # before the ID is stored
