@@ -193,6 +193,16 @@ class EngineService(service.Service):
         """
         logger.info('template is %s' % template)
 
+        def _stack_create(stack):
+            # Create the stack, and create the periodic task if successful
+            stack.create()
+            if stack.state == stack.CREATE_COMPLETE:
+                # Schedule a periodic watcher task for this stack
+                self._timer_in_thread(stack.id, self._periodic_watcher_task,
+                                      sid=stack.id)
+            else:
+                logger.warning("Stack create failed, state %s" % stack.state)
+
         if db_api.stack_get_by_name(context, stack_name):
             raise exception.StackExists(stack_name=stack_name)
 
@@ -211,11 +221,7 @@ class EngineService(service.Service):
 
         stack_id = stack.store()
 
-        self._start_in_thread(stack_id, stack.create)
-
-        # Schedule a periodic watcher task for this stack
-        self._timer_in_thread(stack_id, self._periodic_watcher_task,
-                              sid=stack_id)
+        self._start_in_thread(stack_id, _stack_create, stack)
 
         return dict(stack.identifier())
 
