@@ -344,6 +344,35 @@ Further information on using the heat cloudwatch features is available in the Us
 
 .. _Using-Cloudwatch: http://wiki.openstack.org/Heat/Using-CloudWatch
 
+Using the OpenStack Heat API
+============================
+
+CloudFormation (heat-api-cfn) and a native OpenStack Heat API (heat-api) are provided.  To use the recommended Heat API, a python client library is necessary.  To use this library, clone the python-heatclient repository_ from GitHub at ``git://github.com/openstack/python-heatclient.git`.
+
+Install python-heatclient from source
+-------------------------------------
+
+In the python-heatclient directory, run the install script::
+
+    sudo ./setup.py install
+
+Note that python-heatclient may be installed on a different server than heat itself.
+Note that pip can be used to install python-heatclient, but the instructions vary for each distribution.  Read your distribution documentation if you wish to install with pip.
+
+Start the OpenStack specific Heat API
+-------------------------------------
+
+When using heat-pythonclient, the OpenStack API service provided by heat must be started::
+
+    sudo bash -c 'heat-api &'
+
+List stacks
+-----------
+
+::
+
+    heat stack-list
+
 Troubleshooting
 ===============
 
