@@ -68,6 +68,7 @@ class Subnet(resource.Resource):
         md = {
             'network_id': network_id,
             'router_id': router_id,
+            'default_router_id': router_id,
             'subnet_id': subnet['id']
         }
         self.metadata = md
