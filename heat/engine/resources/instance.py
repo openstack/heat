@@ -70,8 +70,7 @@ class Instance(resource.Resource):
                                      'Required': True},
                          'InstanceType': {'Type': 'String',
                                           'Required': True},
-                         'KeyName': {'Type': 'String',
-                                     'Required': True},
+                         'KeyName': {'Type': 'String'},
                          'AvailabilityZone': {'Type': 'String'},
                          'DisableApiTermination': {'Type': 'String',
                                                    'Implemented': False},
@@ -227,7 +226,7 @@ class Instance(resource.Resource):
         availability_zone = self.properties['AvailabilityZone']
 
         keypairs = [k.name for k in self.nova().keypairs.list()]
-        if key_name not in keypairs:
+        if key_name not in keypairs and key_name is not None:
             raise exception.UserKeyPairMissing(key_name=key_name)
 
         image_name = self.properties['ImageId']
@@ -344,6 +343,8 @@ class Instance(resource.Resource):
         # check validity of key
         try:
             key_name = self.properties['KeyName']
+            if key_name is None:
+                return
         except ValueError:
             return
         else:
