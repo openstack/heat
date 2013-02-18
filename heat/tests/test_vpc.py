@@ -22,10 +22,7 @@ from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
-from heat.engine.resources import network_interface
-from heat.engine.resources import subnet
-from heat.engine.resources import vpc
-from heat.engine.resources import internet_gateway
+import heat.engine.resources
 
 from quantumclient.common.exceptions import QuantumClientException
 from quantumclient.v2_0 import client as quantumclient
@@ -197,6 +194,7 @@ Resources:
         self.assertResourceState(resource, 'the_subnet', {
             'network_id': 'aaaa',
             'router_id': 'bbbb',
+            'default_router_id': 'bbbb',
             'subnet_id': 'cccc'})
 
         self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
@@ -359,6 +357,105 @@ Resources:
         attachment = stack['the_attachment']
         self.assertResourceState(attachment, 'the_attachment')
         self.assertEqual(gateway.UPDATE_REPLACE, attachment.handle_update({}))
+
+        stack.delete()
+        self.m.VerifyAll()
+
+
+@attr(tag=['unit', 'resource'])
+@attr(speed='fast')
+class RouteTableTest(VPCTestBase):
+
+    test_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: '10.0.0.0/16'
+  the_subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      VpcId: {Ref: the_vpc}
+      AvailabilityZone: moon
+  the_route_table:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: {Ref: the_vpc}
+  the_association:
+    Type: AWS::EC2::SubnetRouteTableAssocation
+    Properties:
+      RouteTableId: {Ref: the_route_table}
+      SubnetId: {Ref: the_subnet}
+'''
+
+    def mock_create_route_table(self):
+        quantumclient.Client.create_router(
+            {'router': {'name': u'test_stack.the_route_table'}}).AndReturn({
+                'router': {
+                    'status': 'ACTIVE',
+                    'name': 'name',
+                    'admin_state_up': True,
+                    'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                    'id': 'ffff'
+                }
+            })
+
+    def mock_create_association(self):
+        quantumclient.Client.remove_interface_router(
+            'bbbb',
+            {'subnet_id': u'cccc'}).AndReturn(None)
+        quantumclient.Client.add_interface_router(
+            u'ffff',
+            {'subnet_id': 'cccc'}).AndReturn(None)
+
+    def mock_delete_association(self):
+        quantumclient.Client.remove_interface_router(
+            'ffff',
+            {'subnet_id': u'cccc'}).AndReturn(None)
+        quantumclient.Client.add_interface_router(
+            u'bbbb',
+            {'subnet_id': 'cccc'}).AndReturn(None)
+
+    def mock_delete_route_table(self):
+        quantumclient.Client.delete_router('ffff').AndReturn(None)
+
+    def test_route_table(self):
+        self.mock_create_network()
+        self.mock_create_subnet()
+        self.mock_create_route_table()
+        self.mock_create_association()
+        self.mock_delete_association()
+        self.mock_delete_route_table()
+        self.mock_delete_subnet()
+        self.mock_delete_network()
+
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template)
+
+        vpc = stack['the_vpc']
+        self.assertEqual(['bbbb', 'ffff'], vpc.metadata['all_router_ids'])
+
+        route_table = stack['the_route_table']
+        self.assertResourceState(route_table, 'the_route_table', {
+            'router_id': 'ffff'})
+        self.assertEqual(
+            route_table.UPDATE_REPLACE,
+            route_table.handle_update({}))
+
+        association = stack['the_association']
+        self.assertResourceState(association, 'the_association', {})
+        self.assertEqual(
+            association.UPDATE_REPLACE,
+            association.handle_update({}))
+
+        association.delete()
+        route_table.delete()
+
+        vpc = stack['the_vpc']
+        self.assertEqual(['bbbb'], vpc.metadata['all_router_ids'])
 
         stack.delete()
         self.m.VerifyAll()
