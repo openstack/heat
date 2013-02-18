@@ -13,8 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
 
-from heat.openstack.common import cfg
 from heat.openstack.common import context as req_context
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging

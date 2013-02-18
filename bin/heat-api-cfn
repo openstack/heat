@@ -36,10 +36,11 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 gettext.install('heat', unicode=1)
 
+from oslo.config import cfg
+
 from heat.common import config
 from heat.common import wsgi
 
-from heat.openstack.common import cfg
 from heat.openstack.common import log as logging
 
 LOG = logging.getLogger('heat.api.cfn')

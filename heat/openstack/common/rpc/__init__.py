@@ -25,7 +25,8 @@ For some wrappers that add message versioning to rpc, see:
     rpc.proxy
 """
 
-from heat.openstack.common import cfg
+from oslo.config import cfg
+
 from heat.openstack.common import importutils
 
 

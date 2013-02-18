@@ -13,19 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
 import time
 import urllib
 import urlparse
 import json
+
+import eventlet
+from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import identifier
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
-
-from heat.openstack.common import cfg
 
 # FIXME : we should remove the common.ec2signer fallback implementation
 # when the versions of keystoneclient we support all have the Ec2Signer

@@ -13,19 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
-import os
-import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import json
+import os
 import pkgutil
 from urlparse import urlparse
+
+import eventlet
+from oslo.config import cfg
 
 from heat.engine import clients
 from heat.engine import resource
 from heat.common import exception
-
-from heat.openstack.common import cfg
 
 from heat.openstack.common import log as logging
 

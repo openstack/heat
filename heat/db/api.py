@@ -25,9 +25,10 @@ Usage:
 The underlying driver is loaded . SQLAlchemy is currently the only
 supported backend.
 '''
-from heat.db import utils
-from heat.openstack.common import cfg
 
+from oslo.config import cfg
+
+from heat.db import utils
 
 SQL_CONNECTION = 'sqlite://'
 SQL_IDLE_TIMEOUT = 3600

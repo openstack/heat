@@ -19,14 +19,14 @@ Unit Tests for heat.rpc.client
 """
 
 
-import stubout
 from nose.plugins.attrib import attr
+from oslo.config import cfg
+import stubout
 import unittest
 
 from heat.common import context
 from heat.common import identifier
 from heat.rpc import client as rpc_client
-from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 
 

@@ -14,8 +14,10 @@
 #    under the License.
 
 import functools
-import webob
 import json
+
+from oslo.config import cfg
+import webob
 
 from heat.common import context
 from heat.db import api as db_api
@@ -29,7 +31,6 @@ from heat.engine import resource
 from heat.engine import resources
 from heat.engine import watchrule
 
-from heat.openstack.common import cfg
 from heat.openstack.common import log as logging
 from heat.openstack.common import threadgroup
 from heat.openstack.common.gettextutils import _

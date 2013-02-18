@@ -28,8 +28,8 @@ import kombu
 import kombu.connection
 import kombu.entity
 import kombu.messaging
+from oslo.config import cfg
 
-from heat.openstack.common import cfg
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import network_utils
 from heat.openstack.common.rpc import amqp as rpc_amqp

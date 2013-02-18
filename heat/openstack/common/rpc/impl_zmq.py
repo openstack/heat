@@ -23,8 +23,8 @@ import uuid
 
 import eventlet
 import greenlet
+from oslo.config import cfg
 
-from heat.openstack.common import cfg
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils

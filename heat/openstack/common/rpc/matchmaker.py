@@ -22,7 +22,8 @@ import contextlib
 import itertools
 import json
 
-from heat.openstack.common import cfg
+from oslo.config import cfg
+
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 

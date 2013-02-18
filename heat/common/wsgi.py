@@ -28,12 +28,13 @@ import os
 import signal
 import sys
 import time
-from lxml import etree
 
 import eventlet
 import eventlet.greenio
 from eventlet.green import socket, ssl
 import eventlet.wsgi
+from lxml import etree
+from oslo.config import cfg
 from paste import deploy
 import routes
 import routes.middleware
@@ -41,7 +42,6 @@ import webob.dec
 import webob.exc
 
 from heat.common import exception
-from heat.openstack.common import cfg
 from heat.openstack.common import importutils
 
 
