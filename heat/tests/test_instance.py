@@ -72,7 +72,8 @@ class instancesTest(unittest.TestCase):
             name='%s.%s' % (stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
-            meta=None, nics=None).AndReturn(self.fc.servers.list()[1])
+            meta=None, nics=None, availability_zone=None).AndReturn(
+                self.fc.servers.list()[1])
         self.m.ReplayAll()
 
         self.assertEqual(instance.create(), None)
@@ -112,7 +113,8 @@ class instancesTest(unittest.TestCase):
             name='%s.%s' % (stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
-            meta=None, nics=None).AndReturn(self.fc.servers.list()[1])
+            meta=None, nics=None, availability_zone=None).AndReturn(
+                self.fc.servers.list()[1])
         self.m.ReplayAll()
 
         self.assertEqual(instance.create(), None)
@@ -131,8 +133,6 @@ class instancesTest(unittest.TestCase):
         self.assertEqual(instance.state, instance.DELETE_COMPLETE)
         self.m.VerifyAll()
 
-        AZ = instance.FnGetAtt('AvailabilityZone')
-        self.assertEqual(AZ, 'nova')
         private_ip = instance.FnGetAtt('PublicIp')
         self.assertEqual(private_ip, '4.5.6.7')
         private_ip = instance.FnGetAtt('PrivateIp')
@@ -173,7 +173,8 @@ class instancesTest(unittest.TestCase):
             name='%s.%s' % (stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
-            meta=None, nics=None).AndReturn(self.fc.servers.list()[1])
+            meta=None, nics=None, availability_zone=None).AndReturn(
+                self.fc.servers.list()[1])
         self.m.ReplayAll()
 
         self.assertEqual(instance.create(), None)
