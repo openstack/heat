@@ -51,8 +51,24 @@ class EngineApiTest(unittest.TestCase):
         self.assertTrue('disable_rollback' in args)
         self.assertTrue(args.get('disable_rollback'))
 
+        args = api.extract_args({'disable_rollback': 'True'})
+        self.assertTrue('disable_rollback' in args)
+        self.assertTrue(args.get('disable_rollback'))
+
+        args = api.extract_args({'disable_rollback': 'true'})
+        self.assertTrue('disable_rollback' in args)
+        self.assertTrue(args.get('disable_rollback'))
+
     def test_disable_rollback_extract_false(self):
         args = api.extract_args({'disable_rollback': False})
+        self.assertTrue('disable_rollback' in args)
+        self.assertFalse(args.get('disable_rollback'))
+
+        args = api.extract_args({'disable_rollback': 'False'})
+        self.assertTrue('disable_rollback' in args)
+        self.assertFalse(args.get('disable_rollback'))
+
+        args = api.extract_args({'disable_rollback': 'false'})
         self.assertTrue('disable_rollback' in args)
         self.assertFalse(args.get('disable_rollback'))
 

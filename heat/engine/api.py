@@ -38,8 +38,10 @@ def extract_args(params):
 
     if PARAM_DISABLE_ROLLBACK in params:
         disable_rollback = params.get(PARAM_DISABLE_ROLLBACK)
-        if disable_rollback in (True, False):
-            kwargs[PARAM_DISABLE_ROLLBACK] = disable_rollback
+        if str(disable_rollback).lower() == 'true':
+            kwargs[PARAM_DISABLE_ROLLBACK] = True
+        elif str(disable_rollback).lower() == 'false':
+            kwargs[PARAM_DISABLE_ROLLBACK] = False
         else:
             raise ValueError("Unexpected value for parameter %s : %s" %
                              (PARAM_DISABLE_ROLLBACK, disable_rollback))
