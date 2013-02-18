@@ -45,3 +45,17 @@ class EngineApiTest(unittest.TestCase):
     def test_timeout_extract_not_present(self):
         args = api.extract_args({})
         self.assertTrue('timeout_mins' not in args)
+
+    def test_disable_rollback_extract_true(self):
+        args = api.extract_args({'disable_rollback': True})
+        self.assertTrue('disable_rollback' in args)
+        self.assertTrue(args.get('disable_rollback'))
+
+    def test_disable_rollback_extract_false(self):
+        args = api.extract_args({'disable_rollback': False})
+        self.assertTrue('disable_rollback' in args)
+        self.assertFalse(args.get('disable_rollback'))
+
+    def test_disable_rollback_extract_bad(self):
+        self.assertRaises(ValueError, api.extract_args,
+                          {'disable_rollback': 'bad'})
