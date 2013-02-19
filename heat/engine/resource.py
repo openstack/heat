@@ -297,7 +297,7 @@ class Resource(object):
             else:
                 logger.exception('create %s', str(self))
                 self.state_set(self.CREATE_FAILED, str(ex))
-                return str(ex)
+                return str(ex) or "Error : %s" % type(ex)
         else:
             self.state_set(self.CREATE_COMPLETE)
 
@@ -329,7 +329,7 @@ class Resource(object):
         except Exception as ex:
             logger.exception('update %s : %s' % (str(self), str(ex)))
             self.state_set(self.UPDATE_FAILED, str(ex))
-            return str(ex)
+            return str(ex) or "Error : %s" % type(ex)
         else:
             # If resource was updated (with or without interruption),
             # then we set the resource to UPDATE_COMPLETE
@@ -372,7 +372,7 @@ class Resource(object):
         except Exception as ex:
             logger.exception('Delete %s', str(self))
             self.state_set(self.DELETE_FAILED, str(ex))
-            return str(ex)
+            return str(ex) or "Error : %s" % type(ex)
 
         self.state_set(self.DELETE_COMPLETE)
 
@@ -395,7 +395,7 @@ class Resource(object):
             pass
         except Exception as ex:
             logger.exception('Delete %s from DB' % str(self))
-            return str(ex)
+            return str(ex) or "Error : %s" % type(ex)
 
         self.id = None
 
