@@ -18,6 +18,8 @@ include heat/testing/README.rst
 include heat/tests/examples/tags.txt
 include heat/tests/testing-overview.txt
 include heat/tests/v1_1/testfile.txt
+include heat/tests/policy/deny_stack_user.json
+include heat/tests/policy/notallowed.json
 graft contrib
 graft etc
 graft doc
