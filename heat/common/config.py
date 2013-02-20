@@ -79,6 +79,9 @@ service_opts = [
     cfg.StrOpt('instance_connection_is_secure',
                default="0",
                help='Instance connection to cfn/cw API via https'),
+    cfg.StrOpt('instance_connection_https_validate_certificates',
+               default="1",
+               help='Instance connection to cfn/cw API validate certs if ssl'),
     cfg.StrOpt('heat_stack_user_role',
                default="heat_stack_user",
                help='Keystone role for heat template-defined users')]

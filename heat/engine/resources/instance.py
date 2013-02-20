@@ -195,9 +195,11 @@ class Instance(resource.Resource):
             cfn_url = urlparse(cfg.CONF.heat_metadata_server_url)
             cw_url = urlparse(cfg.CONF.heat_watch_server_url)
             is_secure = cfg.CONF.instance_connection_is_secure
+            vcerts = cfg.CONF.instance_connection_https_validate_certificates
             boto_cfg = "\n".join(["[Boto]",
                                   "debug = 0",
                                   "is_secure = %s" % is_secure,
+                                  "https_validate_certificates = %s" % vcerts,
                                   "cfn_region_name = heat",
                                   "cfn_region_endpoint = %s" %
                                   cfn_url.hostname,
