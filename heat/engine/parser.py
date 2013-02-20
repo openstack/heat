@@ -298,6 +298,8 @@ class Stack(object):
                                 resource_name=res.name)
                         else:
                             del self.resources[res.name]
+                            self.dependencies = self._get_dependencies(
+                                self.resources.itervalues())
 
                 # Then create any which are defined in newstack but not self
                 for res in newstack:
@@ -306,6 +308,8 @@ class Stack(object):
                                      % res.name + " definition, adding")
                         res.stack = self
                         self[res.name] = res
+                        self.dependencies = self._get_dependencies(
+                            self.resources.itervalues())
                         result = self[res.name].create()
                         if result:
                             logger.error("Failed to add %s : %s" %
@@ -356,6 +360,8 @@ class Stack(object):
                             else:
                                 res.stack = self
                                 self[res.name] = res
+                                self.dependencies = self._get_dependencies(
+                                    self.resources.itervalues())
                                 result = self[res.name].create()
                                 if result:
                                     logger.error("Failed to create %s : %s" %
@@ -372,8 +378,6 @@ class Stack(object):
                 self.parameters = newstack.parameters
                 template_outputs = self.t[template.OUTPUTS]
                 self.outputs = self.resolve_static_data(template_outputs)
-                self.dependencies = self._get_dependencies(
-                    self.resources.itervalues())
                 self.store()
 
                 stack_status = self.UPDATE_COMPLETE
