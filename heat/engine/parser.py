@@ -264,7 +264,7 @@ class Stack(object):
         if stack_status == self.CREATE_FAILED and not self.disable_rollback:
             self.delete(action=self.ROLLBACK)
 
-    def update(self, newstack):
+    def update(self, newstack, action=UPDATE):
         '''
         Compare the current stack with newstack,
         and where necessary create/update/delete the resources until
@@ -276,11 +276,29 @@ class Stack(object):
         Update will fail if it exceeds the specified timeout. The default is
         60 minutes, set in the constructor
         '''
-        if self.state not in (self.CREATE_COMPLETE, self.UPDATE_COMPLETE):
-            self.state_set(self.UPDATE_FAILED, 'State invalid for update')
+        if action not in (self.UPDATE, self.ROLLBACK):
+            logger.error("Unexpected action %s passed to update!" % action)
+            self.state_set(self.UPDATE_FAILED, "Invalid action %s" % action)
             return
-        else:
+
+        if self.state not in (self.CREATE_COMPLETE, self.UPDATE_COMPLETE,
+                              self.ROLLBACK_COMPLETE):
+            if (action == self.ROLLBACK and
+                    self.state == self.UPDATE_IN_PROGRESS):
+                logger.debug("Starting update rollback for %s" % self.name)
+            else:
+                if action == self.UPDATE:
+                    self.state_set(self.UPDATE_FAILED,
+                                   'State invalid for update')
+                else:
+                    self.state_set(self.ROLLBACK_FAILED,
+                                   'State invalid for rollback')
+                return
+
+        if action == self.UPDATE:
             self.state_set(self.UPDATE_IN_PROGRESS, 'Stack update started')
+        else:
+            self.state_set(self.ROLLBACK_IN_PROGRESS, 'Stack rollback started')
 
         # Now make the resources match the new stack definition
         with eventlet.Timeout(self.timeout_mins * 60) as tmo:
@@ -369,7 +387,8 @@ class Stack(object):
                                     raise exception.ResourceUpdateFailed(
                                         resource_name=res.name)
                         else:
-                            logger.error("Failed to update %s" % res.name)
+                            logger.error("Failed to %s %s" %
+                                         (action, res.name))
                             raise exception.ResourceUpdateFailed(
                                 resource_name=res.name)
 
@@ -380,8 +399,12 @@ class Stack(object):
                 self.outputs = self.resolve_static_data(template_outputs)
                 self.store()
 
-                stack_status = self.UPDATE_COMPLETE
-                reason = 'Stack successfully updated'
+                if action == self.UPDATE:
+                    stack_status = self.UPDATE_COMPLETE
+                    reason = 'Stack successfully updated'
+                else:
+                    stack_status = self.ROLLBACK_COMPLETE
+                    reason = 'Stack rollback completed'
 
             except eventlet.Timeout as t:
                 if t is tmo:
@@ -391,10 +414,26 @@ class Stack(object):
                     # not my timeout
                     raise
             except exception.ResourceUpdateFailed as e:
-                stack_status = self.UPDATE_FAILED
                 reason = str(e) or "Error : %s" % type(e)
 
-        self.state_set(stack_status, reason)
+                if action == self.UPDATE:
+                    stack_status = self.UPDATE_FAILED
+                    # If rollback is enabled, we do another update, with the
+                    # existing template, so we roll back to the original state
+                    # Note - ensure nothing after the "flip the template..."
+                    # section above can raise ResourceUpdateFailed or this
+                    # will not work ;)
+                    if self.disable_rollback:
+                        stack_status = self.UPDATE_FAILED
+                    else:
+                        oldstack = Stack(self.context, self.name, self.t,
+                                         self.parameters)
+                        self.update(oldstack, action=self.ROLLBACK)
+                        return
+                else:
+                    stack_status = self.ROLLBACK_FAILED
+
+            self.state_set(stack_status, reason)
 
     def delete(self, action=DELETE):
         '''
