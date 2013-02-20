@@ -283,7 +283,6 @@ class Stack(object):
             self.state_set(self.UPDATE_IN_PROGRESS, 'Stack update started')
 
         # Now make the resources match the new stack definition
-        failures = []
         with eventlet.Timeout(self.timeout_mins * 60) as tmo:
             try:
                 # First delete any resources which are not in newstack
@@ -293,8 +292,10 @@ class Stack(object):
                                      % res.name + " definition, deleting")
                         result = res.destroy()
                         if result:
-                            failures.append('Resource %s delete failed'
-                                            % res.name)
+                            logger.error("Failed to remove %s : %s" %
+                                         (res.name, result))
+                            raise exception.ResourceUpdateFailed(
+                                resource_name=res.name)
                         else:
                             del self.resources[res.name]
 
@@ -307,8 +308,10 @@ class Stack(object):
                         self[res.name] = res
                         result = self[res.name].create()
                         if result:
-                            failures.append('Resource %s create failed'
-                                            % res.name)
+                            logger.error("Failed to add %s : %s" %
+                                         (res.name, result))
+                            raise exception.ResourceUpdateFailed(
+                                resource_name=res.name)
 
                 # Now (the hard part :) update existing resources
                 # The Resource base class allows equality-test of resources,
@@ -331,8 +334,8 @@ class Stack(object):
                     # of the existing stack (which is the stack being updated)
                     old_snippet = self.resolve_runtime_data(self[res.name].t)
                     new_snippet = self.resolve_runtime_data(res.t)
-                    if old_snippet != new_snippet:
 
+                    if old_snippet != new_snippet:
                         # Can fail if underlying resource class does not
                         # implement update logic or update requires replacement
                         retval = self[res.name].update(new_snippet)
@@ -346,37 +349,35 @@ class Stack(object):
                             # Resource requires replacement for update
                             result = self[res.name].destroy()
                             if result:
-                                failures.append('Resource %s delete failed'
-                                                % res.name)
+                                logger.error("Failed to delete %s : %s" %
+                                             (res.name, result))
+                                raise exception.ResourceUpdateFailed(
+                                    resource_name=res.name)
                             else:
                                 res.stack = self
                                 self[res.name] = res
                                 result = self[res.name].create()
                                 if result:
-                                    failures.append('Resource %s create failed'
-                                                    % res.name)
+                                    logger.error("Failed to create %s : %s" %
+                                                 (res.name, result))
+                                    raise exception.ResourceUpdateFailed(
+                                        resource_name=res.name)
                         else:
-                            logger.warning("Cannot update resource %s," %
-                                           res.name + " reason %s" % retval)
-                            failures.append('Resource %s update failed'
-                                            % res.name)
+                            logger.error("Failed to update %s" % res.name)
+                            raise exception.ResourceUpdateFailed(
+                                resource_name=res.name)
 
-                # Set stack status values
-                if not failures:
-                    # flip the template & parameters to the newstack values
-                    self.t = newstack.t
-                    self.parameters = newstack.parameters
-                    template_outputs = self.t[template.OUTPUTS]
-                    self.outputs = self.resolve_static_data(template_outputs)
-                    self.dependencies = self._get_dependencies(
-                        self.resources.itervalues())
-                    self.store()
+                # flip the template & parameters to the newstack values
+                self.t = newstack.t
+                self.parameters = newstack.parameters
+                template_outputs = self.t[template.OUTPUTS]
+                self.outputs = self.resolve_static_data(template_outputs)
+                self.dependencies = self._get_dependencies(
+                    self.resources.itervalues())
+                self.store()
 
-                    stack_status = self.UPDATE_COMPLETE
-                    reason = 'Stack successfully updated'
-                else:
-                    stack_status = self.UPDATE_FAILED
-                    reason = ",".join(failures)
+                stack_status = self.UPDATE_COMPLETE
+                reason = 'Stack successfully updated'
 
             except eventlet.Timeout as t:
                 if t is tmo:
@@ -385,6 +386,9 @@ class Stack(object):
                 else:
                     # not my timeout
                     raise
+            except exception.ResourceUpdateFailed as e:
+                stack_status = self.UPDATE_FAILED
+                reason = str(e) or "Error : %s" % type(e)
 
         self.state_set(stack_status, reason)
 
