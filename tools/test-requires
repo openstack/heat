@@ -7,7 +7,7 @@ nose
 nosexcover
 openstack.nose_plugin>=0.7
 paramiko
-pep8==1.1
+pep8==1.3.4
 python-glanceclient
 sphinx>=1.1.2
 Babel
