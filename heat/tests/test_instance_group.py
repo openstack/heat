@@ -82,10 +82,14 @@ class InstanceGroupTest(unittest.TestCase):
 
         # start with min then delete
         self._stub_create(1)
+        self.m.StubOutWithMock(instance.Instance, 'FnGetAtt')
+        instance.Instance.FnGetAtt('PublicIp').AndReturn('1.2.3.4')
+
         self.m.ReplayAll()
         resource = self.create_instance_group(t, stack, 'JobServerGroup')
 
         self.assertEqual('JobServerGroup', resource.FnGetRefId())
+        self.assertEqual('1.2.3.4', resource.FnGetAtt('InstanceList'))
         self.assertEqual('JobServerGroup-0', resource.resource_id)
         self.assertEqual(asc.InstanceGroup.UPDATE_REPLACE,
                          resource.handle_update({}))
@@ -112,7 +116,7 @@ class InstanceGroupTest(unittest.TestCase):
 
         self.m.VerifyAll()
 
-    def test_upate_size(self):
+    def test_update_size(self):
         t = self.load_template()
         properties = t['Resources']['JobServerGroup']['Properties']
         properties['Size'] = '2'
@@ -129,6 +133,13 @@ class InstanceGroupTest(unittest.TestCase):
 
         # Increase min size to 5
         self._stub_create(3)
+        self.m.StubOutWithMock(instance.Instance, 'FnGetAtt')
+        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.2')
+        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.3')
+        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.4')
+        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.5')
+        instance.Instance.FnGetAtt('PublicIp').AndReturn('10.0.0.6')
+
         self.m.ReplayAll()
 
         update_snippet = copy.deepcopy(resource.parsed_template())
@@ -138,6 +149,8 @@ class InstanceGroupTest(unittest.TestCase):
         assert_str = ','.join(['JobServerGroup-%s' % x for x in range(5)])
         self.assertEqual(assert_str,
                          resource.resource_id)
+        self.assertEqual('10.0.0.2,10.0.0.3,10.0.0.4,10.0.0.5,10.0.0.6',
+                         resource.FnGetAtt('InstanceList'))
 
         resource.delete()
         self.m.VerifyAll()
