@@ -195,6 +195,21 @@ class InstanceGroup(resource.Resource):
     def FnGetRefId(self):
         return unicode(self.name)
 
+    def FnGetAtt(self, key):
+        '''
+        heat extension: "InstanceList" returns comma delimited list of server
+        ip addresses.
+        '''
+        if key == 'InstanceList':
+            if self.resource_id is None:
+                return ''
+            name_list = sorted(self.resource_id.split(','))
+            inst_list = []
+            for name in name_list:
+                inst = self._make_instance(name)
+                inst_list.append(inst.FnGetAtt('PublicIp'))
+            return unicode(','.join(inst_list))
+
 
 class AutoScalingGroup(InstanceGroup, CooldownMixin):
     tags_schema = {'Key': {'Type': 'String',
