@@ -21,8 +21,9 @@
 import json
 import os.path
 
+from oslo.config import cfg
+
 from heat.common import exception
-from heat.openstack.common import cfg
 import heat.openstack.common.log as logging
 from heat.openstack.common import policy
 

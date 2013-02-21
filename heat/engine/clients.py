@@ -12,9 +12,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import eventlet
 
-from heat.openstack.common import cfg
+import eventlet
+from oslo.config import cfg
+
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
 

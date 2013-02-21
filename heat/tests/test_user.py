@@ -14,11 +14,11 @@
 
 
 import os
-
-import mox
 import unittest
 
+import mox
 from nose.plugins.attrib import attr
+from oslo.config import cfg
 
 from heat.common import context
 from heat.common import exception
@@ -26,7 +26,6 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import user
 from heat.tests import fakes
-from heat.openstack.common import cfg
 
 
 @attr(tag=['unit', 'resource', 'User'])

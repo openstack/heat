@@ -13,13 +13,14 @@
 #    under the License.
 
 import os
-import mox
 import unittest
+
+import mox
 from nose.plugins.attrib import attr
+from oslo.config import cfg
 
 from heat.common import context
 from heat.common import policy
-from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 from heat.common.wsgi import Request
 from heat.api.aws import exception

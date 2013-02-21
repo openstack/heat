@@ -14,10 +14,11 @@
 
 
 import os
-
 import unittest
+
 import mox
 from nose.plugins.attrib import attr
+from oslo.config import cfg
 
 from heat.common import context
 from heat.common import exception
@@ -31,7 +32,6 @@ from heat.engine import service
 from heat.engine.resources import instance as instances
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
-from heat.openstack.common import cfg
 
 
 tests_dir = os.path.dirname(os.path.realpath(__file__))

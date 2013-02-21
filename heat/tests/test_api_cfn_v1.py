@@ -12,17 +12,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import mox
 import json
 import os
 import unittest
+
+import mox
 from nose.plugins.attrib import attr
+from oslo.config import cfg
 
 from heat.common import context
 from heat.common import identifier
 from heat.common import policy
-from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request

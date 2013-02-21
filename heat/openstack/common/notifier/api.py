@@ -15,7 +15,8 @@
 
 import uuid
 
-from heat.openstack.common import cfg
+from oslo.config import cfg
+
 from heat.openstack.common import context
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils

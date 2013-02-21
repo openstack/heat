@@ -13,10 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
+
 from heat.openstack.common import local
 from heat.common import exception
 from heat.common import wsgi
-from heat.openstack.common import cfg
 from heat.openstack.common import importutils
 from heat.openstack.common import uuidutils
 from heat.db import api as db_api

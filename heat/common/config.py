@@ -25,9 +25,9 @@ import os
 import sys
 
 from eventlet.green import socket
+from oslo.config import cfg
 
 from heat.common import wsgi
-from heat.openstack.common import cfg
 from heat.openstack.common import rpc
 
 DEFAULT_PORT = 8000

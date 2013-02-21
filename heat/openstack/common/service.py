@@ -20,6 +20,7 @@
 """Generic Node base class for all workers that run on hosts."""
 
 import errno
+import logging as std_logging
 import os
 import random
 import signal
@@ -27,9 +28,8 @@ import sys
 import time
 
 import eventlet
-import logging as std_logging
+from oslo.config import cfg
 
-from heat.openstack.common import cfg
 from heat.openstack.common import eventlet_backdoor
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils

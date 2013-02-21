@@ -20,8 +20,10 @@ import datetime
 import json
 
 import eventlet
-import unittest
 from nose.plugins.attrib import attr
+from oslo.config import cfg
+import unittest
+
 from heat.tests import fakes
 from heat.tests.utils import stack_delete_after
 
@@ -31,7 +33,6 @@ from heat.common import identifier
 from heat.engine import parser
 from heat.engine.resources import wait_condition as wc
 from heat.common import context
-from heat.openstack.common import cfg
 
 test_template_waitcondition = '''
 {

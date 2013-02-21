@@ -18,6 +18,7 @@ import setuptools
 from heat.openstack.common import setup
 
 requires = setup.parse_requirements()
+depend_links = setup.parse_dependency_links()
 project = 'heat'
 
 
@@ -34,6 +35,7 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=['bin']),
     include_package_data=True,
     install_requires=requires,
+    dependency_links=depend_links,
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: Apache Software License',

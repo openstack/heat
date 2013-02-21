@@ -15,7 +15,8 @@
 
 '''messaging based notification driver, with message envelopes'''
 
-from heat.openstack.common import cfg
+from oslo.config import cfg
+
 from heat.openstack.common import context as req_context
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging

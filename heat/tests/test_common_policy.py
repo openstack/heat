@@ -13,18 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mox
 import json
-import unittest
-from nose.plugins.attrib import attr
-
 import os.path
+
+import mox
+from nose.plugins.attrib import attr
+from oslo.config import cfg
+import unittest
 
 import heat.api
 from heat.common import context
 from heat.common import policy
 from heat.common import exception
-from heat.openstack.common import cfg
 
 
 @attr(tag=['unit', 'common-policy', 'Enforcer'])

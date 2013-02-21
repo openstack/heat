@@ -18,7 +18,8 @@
 Client side of the heat engine RPC API.
 """
 
-from heat.openstack.common import cfg
+from oslo.config import cfg
+
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.proxy
 
