@@ -13,10 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from quantumclient.common.exceptions import QuantumClientException
-
+from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine import resource
+
+if clients.quantumclient is not None:
+    from quantumclient.common.exceptions import QuantumClientException
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +145,9 @@ class SubnetRouteTableAssocation(resource.Resource):
 
 
 def resource_mapping():
+    if clients.quantumclient is None:
+        return {}
+
     return {
         'AWS::EC2::RouteTable': RouteTable,
         'AWS::EC2::SubnetRouteTableAssocation': SubnetRouteTableAssocation,

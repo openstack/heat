@@ -13,8 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from quantumclient.common.exceptions import QuantumClientException
-
+from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine import resource
 
@@ -58,6 +57,8 @@ class VPC(resource.Resource):
         self.metadata = md
 
     def handle_delete(self):
+        from quantumclient.common.exceptions import QuantumClientException
+
         client = self.quantum()
         network_id = self.metadata['network_id']
         router_id = self.metadata['router_id']
@@ -78,6 +79,9 @@ class VPC(resource.Resource):
 
 
 def resource_mapping():
+    if clients.quantumclient is None:
+        return {}
+
     return {
         'AWS::EC2::VPC': VPC,
     }

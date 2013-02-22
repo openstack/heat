@@ -13,8 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from quantumclient.common.exceptions import QuantumClientException
-
+from heat.engine import clients
 from heat.common import exception
 from heat.openstack.common import log as logging
 from heat.engine import resource
@@ -74,6 +73,8 @@ class Subnet(resource.Resource):
         self.metadata = md
 
     def handle_delete(self):
+        from quantumclient.common.exceptions import QuantumClientException
+
         client = self.quantum()
         router_id = self.metadata['router_id']
         subnet_id = self.metadata['subnet_id']
@@ -104,6 +105,9 @@ class Subnet(resource.Resource):
 
 
 def resource_mapping():
+    if clients.quantumclient is None:
+        return {}
+
     return {
         'AWS::EC2::Subnet': Subnet,
     }
