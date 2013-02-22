@@ -138,10 +138,13 @@ class AccessKey(resource.Resource):
         # into the UserName parameter.  Would be cleaner to just make the User
         # resource return resource_id for FnGetRefId but the AWS definition of
         # user does say it returns a user name not ID
-        for r in self.stack.resources:
-            refid = self.stack.resources[r].FnGetRefId()
-            if refid == self.properties['UserName']:
-                return self.stack.resources[r]
+        for r in self.stack:
+            # this is to reduce the number of checks without having to
+            # look for the class name.
+            if callable(getattr(r, 'access_allowed', None)):
+                refid = r.FnGetRefId()
+                if refid == self.properties['UserName']:
+                    return r
 
     def handle_create(self):
         try:
