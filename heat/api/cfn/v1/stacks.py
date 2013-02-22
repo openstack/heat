@@ -319,7 +319,7 @@ class StackController(object):
         try:
             stack = template_format.parse(templ)
         except ValueError:
-            msg = _("The Template must be a JSON document.")
+            msg = _("The Template must be a JSON or YAML document.")
             return exception.HeatInvalidParameterValueError(detail=msg)
 
         args = {'template': stack,
@@ -397,9 +397,9 @@ class StackController(object):
             return exception.HeatMissingParameterError(detail=msg)
 
         try:
-            template = json.loads(templ)
+            template = template_format.parse(templ)
         except ValueError:
-            msg = _("The Template must be a JSON document.")
+            msg = _("The Template must be a JSON or YAML document.")
             return exception.HeatInvalidParameterValueError(detail=msg)
 
         logger.info('validate_template')
