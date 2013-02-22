@@ -45,6 +45,15 @@ lb_template = '''
         "ComparisonOperator": "GreaterThanThreshold"
       }
     },
+    "CfnLBUser" : {
+      "Type" : "AWS::IAM::User"
+    },
+    "CfnLBAccessKey" : {
+      "Type" : "AWS::IAM::AccessKey",
+      "Properties" : {
+        "UserName" : {"Ref": "CfnLBUser"}
+      }
+    },
     "LB_instance": {
       "Type": "AWS::EC2::Instance",
       "Metadata": {
@@ -65,6 +74,16 @@ lb_template = '''
               }
             },
             "files": {
+              "/etc/cfn/cfn-credentials" : {
+                "content" : { "Fn::Join" : ["", [
+                  "AWSAccessKeyId=", { "Ref" : "CfnLBAccessKey" }, "\\n",
+                  "AWSSecretKey=", {"Fn::GetAtt": ["CfnLBAccessKey",
+                                    "SecretAccessKey"]}, "\\n"
+                ]]},
+                "mode"    : "000400",
+                "owner"   : "root",
+                "group"   : "root"
+              },
               "/etc/cfn/cfn-hup.conf" : {
                 "content" : { "Fn::Join" : ["", [
                   "[main]\\n",
@@ -130,7 +149,6 @@ lb_template = '''
           { "Ref": "AWS::StackName" },
           "    -r LB_instance ",
           "    --region ", { "Ref": "AWS::Region" }, "\\n",
-          "touch /etc/cfn/cfn-credentials\\n",
           "# install cfn-hup crontab\\n",
           "crontab /tmp/cfn-hup-crontab.txt\\n"
         ]]}}

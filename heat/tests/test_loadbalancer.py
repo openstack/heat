@@ -26,10 +26,12 @@ from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import instance
+from heat.engine.resources import user
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resource import Metadata
 from heat.engine.resources import stack
 from heat.tests.v1_1 import fakes
+from heat.tests import fakes as test_fakes
 
 
 def create_context(mocks, user='lb_test_user',
@@ -52,6 +54,8 @@ class LoadBalancerTest(unittest.TestCase):
         self.m.StubOutWithMock(instance.Instance, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.m.StubOutWithMock(Metadata, '__set__')
+        self.fkc = test_fakes.FakeKeystoneClient(
+            username='test_stack.CfnLBUser')
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -84,6 +88,11 @@ class LoadBalancerTest(unittest.TestCase):
         return resource
 
     def test_loadbalancer(self):
+        self.m.StubOutWithMock(user.User, 'keystone')
+        user.User.keystone().MultipleTimes().AndReturn(self.fkc)
+        self.m.StubOutWithMock(user.AccessKey, 'keystone')
+        user.AccessKey.keystone().MultipleTimes().AndReturn(self.fkc)
+
         lb.LoadBalancer.nova().AndReturn(self.fc)
         instance.Instance.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
