@@ -42,7 +42,7 @@ class s3Test(unittest.TestCase):
         self.m.StubOutWithMock(swiftclient.Connection, 'delete_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
 
-        self.container_pattern = 'heat-test_stack.test_resource-[0-9a-f]+'
+        self.container_pattern = 'test_stack-test_resource-[0-9a-z]+'
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -76,10 +76,14 @@ class s3Test(unittest.TestCase):
 
     @skip_if(swiftclient is None, 'unable to import swiftclient')
     def test_create_container_name(self):
-        self.m.UnsetStubs()
+        self.m.ReplayAll()
+        t = self.load_template()
+        stack = self.parse_stack(t)
+        resource = s3.S3Bucket('test_resource',
+                               t['Resources']['S3Bucket'],
+                               stack)
         self.assertTrue(re.match(self.container_pattern,
-                        s3.S3Bucket._create_container_name(
-                        'test_stack.test_resource')))
+                                 resource._create_container_name()))
 
     @skip_if(swiftclient is None, 'unable to import swiftclient')
     def test_attributes(self):
