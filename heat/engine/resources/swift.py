@@ -13,12 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import binascii
-import os
 from urlparse import urlparse
 
 from heat.common import exception
 from heat.engine import resource
+from heat.common import short_id
 from heat.openstack.common import log as logging
 from heat.engine import clients
 
@@ -47,10 +46,10 @@ class SwiftContainer(resource.Resource):
             return {'Error':
                     'SwiftContainer unavailable due to missing swiftclient.'}
 
-    @staticmethod
-    def _create_container_name(resource_name, name=None):
-        return name or 'heat-%s-%s' % (resource_name,
-                                       binascii.hexlify(os.urandom(10)))
+    def _create_container_name(self, name=None):
+        return name or '%s-%s-%s' % (self.stack.name,
+                                     self.name,
+                                     short_id.generate_id())
 
     @staticmethod
     def _build_meta_headers(meta_props):
@@ -65,8 +64,7 @@ class SwiftContainer(resource.Resource):
 
     def handle_create(self):
         """Create a container."""
-        container = SwiftContainer._create_container_name(
-            self.physical_resource_name(), self.properties['name'])
+        container = self._create_container_name(self.properties.get('name'))
         headers = SwiftContainer._build_meta_headers(
             self.properties['X-Container-Meta'])
         if 'X-Container-Read' in self.properties.keys():

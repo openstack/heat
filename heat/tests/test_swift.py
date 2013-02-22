@@ -43,7 +43,7 @@ class swiftTest(unittest.TestCase):
         self.m.StubOutWithMock(swiftclient.Connection, 'head_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
 
-        self.container_pattern = 'heat-test_stack.test_resource-[0-9a-f]+'
+        self.container_pattern = 'test_stack-test_resource-[0-9a-z]+'
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -78,15 +78,19 @@ class swiftTest(unittest.TestCase):
 
     @skip_if(swiftclient is None, 'unable to import swiftclient')
     def test_create_container_name(self):
-        self.m.UnsetStubs()
+        self.m.ReplayAll()
+        t = self.load_template()
+        stack = self.parse_stack(t)
+        resource = swift.SwiftContainer(
+            'test_resource',
+            t['Resources']['SwiftContainer'],
+            stack)
+
         self.assertTrue(re.match(self.container_pattern,
-                        swift.SwiftContainer._create_container_name(
-                        'test_stack.test_resource')))
+                                 resource._create_container_name()))
         self.assertEqual(
             'the_name',
-            swift.SwiftContainer._create_container_name(
-                'test_stack.test_resource',
-                'the_name'))
+            resource._create_container_name('the_name'))
 
     @skip_if(swiftclient is None, 'unable to import swiftclient')
     def test_build_meta_headers(self):
