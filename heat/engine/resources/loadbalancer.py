@@ -22,7 +22,7 @@ from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 
-lb_template = '''
+lb_template = r'''
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Built in HAProxy server",
@@ -76,9 +76,9 @@ lb_template = '''
             "files": {
               "/etc/cfn/cfn-credentials" : {
                 "content" : { "Fn::Join" : ["", [
-                  "AWSAccessKeyId=", { "Ref" : "CfnLBAccessKey" }, "\\n",
+                  "AWSAccessKeyId=", { "Ref" : "CfnLBAccessKey" }, "\n",
                   "AWSSecretKey=", {"Fn::GetAtt": ["CfnLBAccessKey",
-                                    "SecretAccessKey"]}, "\\n"
+                                    "SecretAccessKey"]}, "\n"
                 ]]},
                 "mode"    : "000400",
                 "owner"   : "root",
@@ -86,11 +86,11 @@ lb_template = '''
               },
               "/etc/cfn/cfn-hup.conf" : {
                 "content" : { "Fn::Join" : ["", [
-                  "[main]\\n",
-                  "stack=", { "Ref" : "AWS::StackName" }, "\\n",
-                  "credential-file=/etc/cfn/cfn-credentials\\n",
-                  "region=", { "Ref" : "AWS::Region" }, "\\n",
-                  "interval=60\\n"
+                  "[main]\n",
+                  "stack=", { "Ref" : "AWS::StackName" }, "\n",
+                  "credential-file=/etc/cfn/cfn-credentials\n",
+                  "region=", { "Ref" : "AWS::Region" }, "\n",
+                  "interval=60\n"
                 ]]},
                 "mode"    : "000400",
                 "owner"   : "root",
@@ -98,20 +98,20 @@ lb_template = '''
               },
               "/etc/cfn/hooks.conf" : {
                 "content": { "Fn::Join" : ["", [
-                  "[cfn-init]\\n",
-                  "triggers=post.update\\n",
-                  "path=Resources.LB_instance.Metadata\\n",
+                  "[cfn-init]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LB_instance.Metadata\n",
                   "action=/opt/aws/bin/cfn-init -s ",
                   { "Ref": "AWS::StackName" },
                   "    -r LB_instance ",
-                  "    --region ", { "Ref": "AWS::Region" }, "\\n",
-                  "runas=root\\n",
-                  "\\n",
-                  "[reload]\\n",
-                  "triggers=post.update\\n",
-                  "path=Resources.LB_instance.Metadata\\n",
-                  "action=systemctl reload haproxy.service\\n",
-                  "runas=root\\n"
+                  "    --region ", { "Ref": "AWS::Region" }, "\n",
+                  "runas=root\n",
+                  "\n",
+                  "[reload]\n",
+                  "triggers=post.update\n",
+                  "path=Resources.LB_instance.Metadata\n",
+                  "action=systemctl reload haproxy.service\n",
+                  "runas=root\n"
                 ]]},
                 "mode"    : "000400",
                 "owner"   : "root",
@@ -125,11 +125,11 @@ lb_template = '''
               },
               "/tmp/cfn-hup-crontab.txt" : {
                 "content" : { "Fn::Join" : ["", [
-                "MAIL=\\"\\"\\n",
-                "\\n",
-                "* * * * * /opt/aws/bin/cfn-hup -f\\n",
+                "MAIL=\"\"\n",
+                "\n",
+                "* * * * * /opt/aws/bin/cfn-hup -f\n",
                 "* * * * * /opt/aws/bin/cfn-push-stats ",
-                " --watch latency_watcher --haproxy\\n"
+                " --watch latency_watcher --haproxy\n"
                 ]]},
                 "mode"    : "000600",
                 "owner"   : "root",
@@ -144,13 +144,13 @@ lb_template = '''
         "InstanceType": "m1.small",
         "KeyName": { "Ref": "KeyName" },
         "UserData": { "Fn::Base64": { "Fn::Join": ["", [
-          "#!/bin/bash -v\\n",
+          "#!/bin/bash -v\n",
           "/opt/aws/bin/cfn-init -s ",
           { "Ref": "AWS::StackName" },
           "    -r LB_instance ",
-          "    --region ", { "Ref": "AWS::Region" }, "\\n",
-          "# install cfn-hup crontab\\n",
-          "crontab /tmp/cfn-hup-crontab.txt\\n"
+          "    --region ", { "Ref": "AWS::Region" }, "\n",
+          "# install cfn-hup crontab\n",
+          "crontab /tmp/cfn-hup-crontab.txt\n"
         ]]}}
       }
     }
