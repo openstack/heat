@@ -123,7 +123,9 @@ class EC2Token(wsgi.Middleware):
                 raise exception.HeatAccessDeniedError()
 
         # Authenticated!
-        req.headers['X-Auth-EC2-Creds'] = creds_json
+        ec2_creds = {'ec2Credentials': {'access': access,
+                                        'signature': signature}}
+        req.headers['X-Auth-EC2-Creds'] = json.dumps(ec2_creds)
         req.headers['X-Auth-Token'] = token_id
         req.headers['X-Auth-URL'] = self.conf['auth_uri']
         req.headers['X-Auth-EC2_URL'] = self.conf['keystone_ec2_uri']
