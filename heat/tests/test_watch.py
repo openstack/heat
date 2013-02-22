@@ -17,7 +17,6 @@ import datetime
 import mox
 from nose.plugins.attrib import attr
 import unittest
-import logging
 from heat.common import context
 import heat.db as db_api
 

@@ -20,7 +20,6 @@ from nose.plugins.attrib import attr
 
 from heat.engine import clients
 from heat.common import context
-from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 import heat.engine.resources

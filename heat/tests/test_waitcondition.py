@@ -15,7 +15,6 @@
 
 import mox
 import uuid
-import time
 import datetime
 import json
 

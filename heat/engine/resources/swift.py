@@ -14,7 +14,6 @@
 #    under the License.
 
 import binascii
-import itertools
 import os
 from urlparse import urlparse
 

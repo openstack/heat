@@ -14,7 +14,6 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine import parser
 from heat.engine import stack_resource
 from heat.common import template_format
 from heat.common import urlfetch

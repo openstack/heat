@@ -18,7 +18,6 @@
 #   577548-https-httplib-client-connection-with-certificate-v/
 
 import collections
-import errno
 import functools
 import httplib
 import os
@@ -26,9 +25,9 @@ import urllib
 import urlparse
 
 try:
-    from eventlet.green import socket, socket, ssl
+    from eventlet.green import socket
+    from eventlet.green import ssl
 except ImportError:
-    import select
     import socket
     import ssl
 

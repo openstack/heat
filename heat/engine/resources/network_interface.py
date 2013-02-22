@@ -15,7 +15,6 @@
 
 from quantumclient.common.exceptions import QuantumClientException
 
-from heat.common import exception
 from heat.openstack.common import log as logging
 from heat.engine import resource
 
