@@ -24,8 +24,12 @@ from heat.common import template_format
 from heat.engine import parser
 import heat.engine.resources
 
-from quantumclient.common.exceptions import QuantumClientException
-from quantumclient.v2_0 import client as quantumclient
+try:
+    from quantumclient.common.exceptions import QuantumClientException
+    from quantumclient.v2_0 import client as quantumclient
+except ImportError:
+    from nose.exc import SkipTest
+    raise SkipTest()
 
 
 class VPCTestBase(unittest.TestCase):

@@ -13,8 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from quantumclient.common.exceptions import QuantumClientException
-
+from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine import resource
 
@@ -71,6 +70,8 @@ class NetworkInterface(resource.Resource):
         self.metadata = md
 
     def handle_delete(self):
+        from quantumclient.common.exceptions import QuantumClientException
+
         client = self.quantum()
         try:
             client.delete_port(self.metadata['port_id'])
@@ -83,6 +84,9 @@ class NetworkInterface(resource.Resource):
 
 
 def resource_mapping():
+    if clients.quantumclient is None:
+        return {}
+
     return {
         'AWS::EC2::NetworkInterface': NetworkInterface,
     }

@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from quantumclient.common.exceptions import QuantumClientException
-
 from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine.resources.quantum import quantum
+
+if clients.quantumclient is not None:
+    from quantumclient.common.exceptions import QuantumClientException
 
 logger = logging.getLogger(__name__)
 
