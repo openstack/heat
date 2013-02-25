@@ -16,6 +16,7 @@
 import unittest
 from nose.plugins.attrib import attr
 import mox
+import uuid
 
 from heat.common import context
 from heat.common import exception
@@ -299,6 +300,7 @@ class StackTest(unittest.TestCase):
         self.ctx = context.get_admin_context()
         self.m.StubOutWithMock(self.ctx, 'username')
         self.ctx.username = self.username
+        self.ctx.tenant_id = 'test_tenant'
 
         self.m.ReplayAll()
 
@@ -336,10 +338,41 @@ class StackTest(unittest.TestCase):
                                   parser.Template({}))
         self.stack.store()
         identifier = self.stack.identifier()
-        self.assertEqual(identifier.tenant, self.ctx.tenant)
+        self.assertEqual(identifier.tenant, self.ctx.tenant_id)
         self.assertEqual(identifier.stack_name, 'identifier_test')
         self.assertTrue(identifier.stack_id)
         self.assertFalse(identifier.path)
+
+    @stack_delete_after
+    def test_set_param_id(self):
+        dummy_stackid = 'STACKABCD1234'
+        self.m.StubOutWithMock(uuid, 'uuid4')
+        uuid.uuid4().AndReturn(dummy_stackid)
+        self.m.ReplayAll()
+        self.stack = parser.Stack(self.ctx, 'param_arn_test',
+                                  parser.Template({}))
+        exp_prefix = 'arn:openstack:heat::test_tenant:stacks/param_arn_test/'
+        self.assertEqual(self.stack.parameters['AWS::StackId'],
+                         exp_prefix + 'None')
+        self.stack.store()
+        identifier = self.stack.identifier()
+        self.assertEqual(self.stack.parameters['AWS::StackId'],
+                         exp_prefix + dummy_stackid)
+        self.assertEqual(self.stack.parameters['AWS::StackId'],
+                         identifier.arn())
+        self.m.VerifyAll()
+
+    @stack_delete_after
+    def test_load_param_id(self):
+        self.stack = parser.Stack(self.ctx, 'param_load_arn_test',
+                                  parser.Template({}))
+        self.stack.store()
+        identifier = self.stack.identifier()
+        self.assertEqual(self.stack.parameters['AWS::StackId'],
+                         identifier.arn())
+
+        newstack = parser.Stack.load(self.ctx, stack_id=self.stack.id)
+        self.assertEqual(newstack.parameters['AWS::StackId'], identifier.arn())
 
     @stack_delete_after
     def test_created_time(self):

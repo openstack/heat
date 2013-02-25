@@ -84,6 +84,8 @@ class Stack(object):
             parameters = Parameters(self.name, self.t)
         self.parameters = parameters
 
+        self._set_param_stackid()
+
         if resolve_data:
             self.outputs = self.resolve_static_data(self.t[template.OUTPUTS])
         else:
@@ -95,6 +97,20 @@ class Stack(object):
                               for (name, data) in template_resources.items())
 
         self.dependencies = self._get_dependencies(self.resources.itervalues())
+
+    def _set_param_stackid(self):
+        '''
+        Update self.parameters with the current ARN which is then provided
+        via the Parameters class as the AWS::StackId pseudo parameter
+        '''
+        # This can fail if constructor called without a valid context,
+        # as it is in many tests
+        try:
+            stack_arn = self.identifier().arn()
+        except (AttributeError, ValueError, TypeError):
+            logger.warning("Unable to set parameters StackId identifier")
+        else:
+            self.parameters.set_stack_id(stack_arn)
 
     @staticmethod
     def _get_dependencies(resources):
@@ -147,6 +163,8 @@ class Stack(object):
         else:
             new_s = db_api.stack_create(self.context, s)
             self.id = new_s.id
+
+        self._set_param_stackid()
 
         return self.id
 
