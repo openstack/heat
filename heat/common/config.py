@@ -150,8 +150,10 @@ def setup_logging():
     else:
         root_logger.setLevel(logging.WARNING)
 
-    # quiet down the qpid logging
-    root_logger.manager.getLogger('qpid.messaging').setLevel(logging.INFO)
+    # quiet down the qpid logging, without this qpid dumps raw hex stuff
+    # into our logs, which is generally too low-level to be useful to us
+    if cfg.CONF.rpc_backend.split('.')[-1] == 'impl_qpid':
+        root_logger.manager.getLogger('qpid.messaging').setLevel(logging.INFO)
 
     formatter = logging.Formatter(cfg.CONF.log_format,
                                   cfg.CONF.log_date_format)
