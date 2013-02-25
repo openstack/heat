@@ -28,7 +28,6 @@ from heat.common import exception
 from heat.common import identifier
 from heat.engine import parser
 from heat.engine import resource
-from heat.engine import resources
 from heat.engine import watchrule
 
 from heat.openstack.common import log as logging
@@ -513,11 +512,16 @@ class EngineService(service.Service):
             logger.warn('periodic_task db error (%s) %s' %
                         ('watch rule removed?', str(ex)))
             return
+
+        def run_alarm_action(actions):
+            for action in actions:
+                action()
+
         for wr in wrs:
             rule = watchrule.WatchRule.load(stack_context, watch=wr)
             actions = rule.evaluate()
-            for action in actions:
-                self._start_in_thread(sid, action)
+            if actions:
+                self._start_in_thread(sid, run_alarm_action, actions)
 
     @request_context
     def create_watch_data(self, context, watch_name, stats_data):
