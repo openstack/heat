@@ -200,6 +200,10 @@ class UserKeyPairMissing(OpenstackException):
     message = _("The Key (%(key_name)s) could not be found.")
 
 
+class FlavorMissing(OpenstackException):
+    message = _("The Flavor ID (%(flavor_id)s) could not be found.")
+
+
 class ImageNotFound(OpenstackException):
     message = _("The Image (%(image_name)s) could not be found.")
 
