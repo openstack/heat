@@ -258,13 +258,13 @@ class WaitConditionTest(unittest.TestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        handle.metadata_update(test_metadata)
+        handle.metadata_update(new_metadata=test_metadata)
         wc_att = resource.FnGetAtt('Data')
         self.assertEqual(wc_att, '{"123": "foo"}')
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        handle.metadata_update(test_metadata)
+        handle.metadata_update(new_metadata=test_metadata)
         wc_att = resource.FnGetAtt('Data')
         self.assertEqual(wc_att, u'{"123": "foo", "456": "dog"}')
         self.m.VerifyAll()
@@ -457,7 +457,7 @@ class WaitConditionHandleTest(unittest.TestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        resource.metadata_update(test_metadata)
+        resource.metadata_update(new_metadata=test_metadata)
         handle_metadata = {u'123': {u'Data': u'foo',
                                     u'Reason': u'bar',
                                     u'Status': u'SUCCESS'}}
@@ -472,31 +472,39 @@ class WaitConditionHandleTest(unittest.TestCase):
         # metadata_update should raise a ValueError if the metadata
         # is missing any of the expected keys
         err_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update, err_metadata)
+        self.assertRaises(ValueError, resource.metadata_update,
+                          new_metadata=err_metadata)
 
         err_metadata = {'Data': 'foo', 'Reason': 'bar', 'UniqueId': '1234'}
-        self.assertRaises(ValueError, resource.metadata_update, err_metadata)
+        self.assertRaises(ValueError, resource.metadata_update,
+                          new_metadata=err_metadata)
 
         err_metadata = {'Data': 'foo', 'Reason': 'bar', 'UniqueId': '1234'}
-        self.assertRaises(ValueError, resource.metadata_update, err_metadata)
+        self.assertRaises(ValueError, resource.metadata_update,
+                          new_metadata=err_metadata)
 
         err_metadata = {'data': 'foo', 'reason': 'bar',
                         'status': 'SUCCESS', 'uniqueid': '1234'}
-        self.assertRaises(ValueError, resource.metadata_update, err_metadata)
+        self.assertRaises(ValueError, resource.metadata_update,
+                          new_metadata=err_metadata)
 
         # Also any Status other than SUCCESS or FAILURE should be rejected
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'UCCESS', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update, err_metadata)
+        self.assertRaises(ValueError, resource.metadata_update,
+                          new_metadata=err_metadata)
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'wibble', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update, err_metadata)
+        self.assertRaises(ValueError, resource.metadata_update,
+                          new_metadata=err_metadata)
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'success', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update, err_metadata)
+        self.assertRaises(ValueError, resource.metadata_update,
+                          new_metadata=err_metadata)
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'FAIL', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update, err_metadata)
+        self.assertRaises(ValueError, resource.metadata_update,
+                          new_metadata=err_metadata)
         self.m.VerifyAll()
 
     @stack_delete_after
@@ -512,12 +520,12 @@ class WaitConditionHandleTest(unittest.TestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        resource.metadata_update(test_metadata)
+        resource.metadata_update(new_metadata=test_metadata)
         self.assertEqual(resource.get_status(), ['SUCCESS'])
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        resource.metadata_update(test_metadata)
+        resource.metadata_update(new_metadata=test_metadata)
         self.assertEqual(resource.get_status(), ['SUCCESS', 'SUCCESS'])
 
         # re-stub keystone() with fake client or stack delete fails
@@ -532,16 +540,16 @@ class WaitConditionHandleTest(unittest.TestCase):
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        resource.metadata_update(test_metadata)
+        resource.metadata_update(new_metadata=test_metadata)
         self.assertEqual(resource.get_status_reason('SUCCESS'), 'bar')
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        resource.metadata_update(test_metadata)
+        resource.metadata_update(new_metadata=test_metadata)
         self.assertEqual(resource.get_status_reason('SUCCESS'), 'bar;cat')
 
         test_metadata = {'Data': 'boo', 'Reason': 'hoo',
                          'Status': 'FAILURE', 'UniqueId': '789'}
-        resource.metadata_update(test_metadata)
+        resource.metadata_update(new_metadata=test_metadata)
         self.assertEqual(resource.get_status_reason('FAILURE'), 'hoo')
         self.m.VerifyAll()

@@ -103,7 +103,7 @@ class LoadBalancerTest(unittest.TestCase):
                 self.fc.servers.list()[1])
         #stack.Stack.create_with_template(mox.IgnoreArg()).AndReturn(None)
         Metadata.__set__(mox.IgnoreArg(),
-                         mox.IgnoreArg()).AndReturn(None)
+                         mox.IgnoreArg()).MultipleTimes().AndReturn(None)
 
         lb.LoadBalancer.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
