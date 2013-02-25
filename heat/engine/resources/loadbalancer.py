@@ -145,13 +145,38 @@ lb_template = r'''
         "KeyName": { "Ref": "KeyName" },
         "UserData": { "Fn::Base64": { "Fn::Join": ["", [
           "#!/bin/bash -v\n",
+          "# Helper function\n",
+          "function error_exit\n",
+          "{\n",
+          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '",
+          { "Ref" : "WaitHandle" }, "'\n",
+          "  exit 1\n",
+          "}\n",
+
           "/opt/aws/bin/cfn-init -s ",
           { "Ref": "AWS::StackName" },
           "    -r LB_instance ",
           "    --region ", { "Ref": "AWS::Region" }, "\n",
           "# install cfn-hup crontab\n",
-          "crontab /tmp/cfn-hup-crontab.txt\n"
+          "crontab /tmp/cfn-hup-crontab.txt\n",
+
+          "# LB setup completed, signal success\n",
+          "/opt/aws/bin/cfn-signal -e 0 -r \"LB server setup complete\" '",
+          { "Ref" : "WaitHandle" }, "'\n"
+
         ]]}}
+      }
+    },
+    "WaitHandle" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
+
+    "WaitCondition" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "DependsOn" : "LB_instance",
+      "Properties" : {
+        "Handle" : {"Ref" : "WaitHandle"},
+        "Timeout" : "600"
       }
     }
   },

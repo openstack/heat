@@ -21,13 +21,16 @@ import mox
 
 from nose.plugins.attrib import attr
 
+from oslo.config import cfg
 from heat.common import exception
 from heat.common import context
 from heat.common import template_format
+from heat.common import identifier
 from heat.engine import parser
 from heat.engine.resources import instance
 from heat.engine.resources import user
 from heat.engine.resources import loadbalancer as lb
+from heat.engine.resources import wait_condition as wc
 from heat.engine.resource import Metadata
 from heat.engine.resources import stack
 from heat.tests.v1_1 import fakes
@@ -35,7 +38,7 @@ from heat.tests import fakes as test_fakes
 
 
 def create_context(mocks, user='lb_test_user',
-                   tenant='test_admin', ctx=None):
+                   tenant='test_tenant', ctx=None):
     ctx = ctx or context.get_admin_context()
     mocks.StubOutWithMock(ctx, 'username')
     mocks.StubOutWithMock(ctx, 'tenant_id')
@@ -56,6 +59,9 @@ class LoadBalancerTest(unittest.TestCase):
         self.m.StubOutWithMock(Metadata, '__set__')
         self.fkc = test_fakes.FakeKeystoneClient(
             username='test_stack.CfnLBUser')
+
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://127.0.0.1:8000/v1/waitcondition')
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -93,6 +99,9 @@ class LoadBalancerTest(unittest.TestCase):
         self.m.StubOutWithMock(user.AccessKey, 'keystone')
         user.AccessKey.keystone().MultipleTimes().AndReturn(self.fkc)
 
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
+        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fkc)
+
         lb.LoadBalancer.nova().AndReturn(self.fc)
         instance.Instance.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
@@ -101,15 +110,18 @@ class LoadBalancerTest(unittest.TestCase):
             scheduler_hints=None, userdata=mox.IgnoreArg(),
             security_groups=None, availability_zone=None).AndReturn(
                 self.fc.servers.list()[1])
-        #stack.Stack.create_with_template(mox.IgnoreArg()).AndReturn(None)
         Metadata.__set__(mox.IgnoreArg(),
                          mox.IgnoreArg()).MultipleTimes().AndReturn(None)
 
         lb.LoadBalancer.nova().MultipleTimes().AndReturn(self.fc)
+
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
+        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
         self.m.ReplayAll()
 
         t = self.load_template()
         s = self.parse_stack(t)
+
         resource = self.create_loadbalancer(t, s, 'LoadBalancer')
 
         hc = {
