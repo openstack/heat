@@ -32,7 +32,11 @@ PARAMETER_TYPES = (
 ) = (
     'String', 'Number', 'CommaDelimitedList'
 )
-(PARAM_STACK_NAME, PARAM_REGION) = ('AWS::StackName', 'AWS::Region')
+PSEUDO_PARAMETERS = (
+    PARAM_STACK_ID, PARAM_STACK_NAME, PARAM_REGION
+) = (
+    'AWS::StackId', 'AWS::StackName', 'AWS::Region'
+)
 
 
 class Parameter(object):
@@ -214,13 +218,16 @@ class Parameters(collections.Mapping):
     The parameters of a stack, with type checking, defaults &c. specified by
     the stack's template.
     '''
-
-    def __init__(self, stack_name, tmpl, user_params={}):
+    def __init__(self, stack_name, tmpl, user_params={}, stack_id=None):
         '''
         Create the parameter container for a stack from the stack name and
         template, optionally setting the user-supplied parameter values.
         '''
         def parameters():
+            yield Parameter(PARAM_STACK_ID,
+                            {TYPE: STRING,
+                             DESCRIPTION: 'Stack ID',
+                             DEFAULT: str(stack_id)})
             if stack_name is not None:
                 yield Parameter(PARAM_STACK_NAME,
                                 {TYPE: STRING,
@@ -271,3 +278,9 @@ class Parameters(collections.Mapping):
         '''
         return self.map(lambda p: p.user_value,
                         lambda p: p.user_value is not None)
+
+    def set_stack_id(self, stack_id):
+        '''
+        Set the AWS::StackId pseudo parameter value
+        '''
+        self.params[PARAM_STACK_ID].schema[DEFAULT] = stack_id
