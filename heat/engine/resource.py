@@ -127,6 +127,7 @@ class Resource(object):
         self.stack = stack
         self.context = stack.context
         self.name = name
+        self.json_snippet = json_snippet
         self.t = stack.resolve_static_data(json_snippet)
         self.properties = Properties(self.properties_schema,
                                      self.t.get('Properties', {}),
@@ -282,6 +283,15 @@ class Resource(object):
 
         logger.info('creating %s' % str(self))
 
+        # Re-resolve the template, since if the resource Ref's
+        # the AWS::StackId pseudo parameter, it will change after
+        # the parser.Stack is stored (which is after the resources
+        # are __init__'d, but before they are create()'d)
+        self.t = self.stack.resolve_static_data(self.json_snippet)
+        self.properties = Properties(self.properties_schema,
+                                     self.t.get('Properties', {}),
+                                     self.stack.resolve_runtime_data,
+                                     self.name)
         try:
             err = self.properties.validate()
             if err:
