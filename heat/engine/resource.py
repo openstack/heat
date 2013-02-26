@@ -192,21 +192,22 @@ class Resource(object):
         update_allowed_set = set(self.update_allowed_keys)
 
         # Create a set containing the keys in both current and update template
-        current_snippet = self.parsed_template()
-        template_keys = set(current_snippet.keys())
-        template_keys.update(set(json_snippet.keys()))
+        current_template = self.parsed_template()
+        template_keys = set(current_template.keys())
+        new_template = self.stack.resolve_runtime_data(json_snippet)
+        template_keys.update(set(new_template.keys()))
 
         # Create a set of keys which differ (or are missing/added)
         changed_keys_set = set([k for k in template_keys
-                               if current_snippet.get(k) !=
-                               json_snippet.get(k)])
+                               if current_template.get(k) !=
+                               new_template.get(k)])
 
         if not changed_keys_set.issubset(update_allowed_set):
             badkeys = changed_keys_set - update_allowed_set
             raise NotImplementedError("Cannot update keys %s for %s" %
                                       (badkeys, self.name))
 
-        return dict((k, json_snippet.get(k)) for k in changed_keys_set)
+        return dict((k, new_template.get(k)) for k in changed_keys_set)
 
     def update_template_diff_properties(self, json_snippet=None):
         '''
