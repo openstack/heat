@@ -280,12 +280,12 @@ class EngineService(service.Service):
             return webob.exc.HTTPBadRequest(explanation=msg)
 
         tmpl = parser.Template(template)
-        resources = template.get('Resources', [])
+        tmpl_resources = template.get('Resources', [])
 
-        if not resources:
+        if not tmpl_resources:
             return {'Error': 'At least one Resources member must be defined.'}
 
-        for res in resources.values():
+        for res in tmpl_resources.values():
             if not res.get('Type'):
                 return {'Error':
                         'Every Resources object must contain a Type member.'}
