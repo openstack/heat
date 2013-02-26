@@ -28,6 +28,7 @@ from heat.common import exception
 from heat.common import identifier
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import resources
 from heat.engine import watchrule
 
 from heat.openstack.common import log as logging
