@@ -482,7 +482,7 @@ class EngineService(service.Service):
                                              stack_name=stack.name)
 
         resource = stack[resource_name]
-        resource.metadata_update(metadata)
+        resource.metadata_update(new_metadata=metadata)
 
         return resource.metadata
 
@@ -516,6 +516,10 @@ class EngineService(service.Service):
         def run_alarm_action(actions):
             for action in actions:
                 action()
+
+            stk = parser.Stack.load(admin_context, stack=stack)
+            for res in stk:
+                res.metadata_update()
 
         for wr in wrs:
             rule = watchrule.WatchRule.load(stack_context, watch=wr)

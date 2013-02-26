@@ -338,6 +338,13 @@ class Instance(resource.Resource):
 
         return status
 
+    def metadata_update(self, new_metadata=None):
+        '''
+        Refresh the metadata if new_metadata is None
+        '''
+        if new_metadata is None:
+            self.metadata = self.parsed_template('Metadata')
+
     def validate(self):
         '''
         Validate any of the provided params

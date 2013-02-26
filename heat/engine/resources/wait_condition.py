@@ -130,21 +130,24 @@ class WaitConditionHandle(resource.Resource):
         if sorted(metadata.keys()) == expected_keys:
             return metadata['Status'] in (SUCCESS, FAILURE)
 
-    def metadata_update(self, metadata):
+    def metadata_update(self, new_metadata=None):
         '''
         Validate and update the resource metadata
         '''
-        if self._metadata_format_ok(metadata):
+        if new_metadata is None:
+            return
+
+        if self._metadata_format_ok(new_metadata):
             rsrc_metadata = self.metadata
-            if metadata['UniqueId'] in rsrc_metadata:
+            if new_metadata['UniqueId'] in rsrc_metadata:
                 logger.warning("Overwriting Metadata item for UniqueId %s!" %
-                               metadata['UniqueId'])
-            new_metadata = {}
+                               new_metadata['UniqueId'])
+            safe_metadata = {}
             for k in ('Data', 'Reason', 'Status'):
-                new_metadata[k] = metadata[k]
+                safe_metadata[k] = new_metadata[k]
             # Note we can't update self.metadata directly, as it
             # is a Metadata descriptor object which only supports get/set
-            rsrc_metadata.update({metadata['UniqueId']: new_metadata})
+            rsrc_metadata.update({new_metadata['UniqueId']: safe_metadata})
             self.metadata = rsrc_metadata
         else:
             logger.error("Metadata failed validation for %s" % self.name)
