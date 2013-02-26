@@ -87,7 +87,7 @@ lb_template = r'''
               "/etc/cfn/cfn-hup.conf" : {
                 "content" : { "Fn::Join" : ["", [
                   "[main]\n",
-                  "stack=", { "Ref" : "AWS::StackName" }, "\n",
+                  "stack=", { "Ref" : "AWS::StackId" }, "\n",
                   "credential-file=/etc/cfn/cfn-credentials\n",
                   "region=", { "Ref" : "AWS::Region" }, "\n",
                   "interval=60\n"
@@ -102,7 +102,7 @@ lb_template = r'''
                   "triggers=post.update\n",
                   "path=Resources.LB_instance.Metadata\n",
                   "action=/opt/aws/bin/cfn-init -s ",
-                  { "Ref": "AWS::StackName" },
+                  { "Ref": "AWS::StackId" },
                   "    -r LB_instance ",
                   "    --region ", { "Ref": "AWS::Region" }, "\n",
                   "runas=root\n",
@@ -154,7 +154,7 @@ lb_template = r'''
           "}\n",
 
           "/opt/aws/bin/cfn-init -s ",
-          { "Ref": "AWS::StackName" },
+          { "Ref": "AWS::StackId" },
           "    -r LB_instance ",
           "    --region ", { "Ref": "AWS::Region" }, "\n",
           "# install cfn-hup crontab\n",
