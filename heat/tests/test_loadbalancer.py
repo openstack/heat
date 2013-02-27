@@ -25,14 +25,12 @@ from oslo.config import cfg
 from heat.common import exception
 from heat.common import context
 from heat.common import template_format
-from heat.common import identifier
 from heat.engine import parser
 from heat.engine.resources import instance
 from heat.engine.resources import user
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
 from heat.engine.resource import Metadata
-from heat.engine.resources import stack
 from heat.tests.v1_1 import fakes
 from heat.tests import fakes as test_fakes
 

@@ -14,7 +14,6 @@
 
 import os
 import util
-import verify
 from nose.plugins.attrib import attr
 import unittest
 

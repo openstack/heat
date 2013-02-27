@@ -21,10 +21,6 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 from boto.ec2.cloudwatch import CloudWatchConnection
-from boto.ec2.cloudwatch.metric import Metric
-from boto.ec2.cloudwatch.alarm import MetricAlarm, MetricAlarms
-from boto.ec2.cloudwatch.alarm import AlarmHistoryItem
-from boto.ec2.cloudwatch.datapoint import Datapoint
 
 
 class BotoCWClient(CloudWatchConnection):

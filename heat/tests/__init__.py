@@ -29,9 +29,8 @@ def reset_db():
 
 def setup():
     import mox  # Fail fast if you don't have mox. Workaround for bug 810424
-
-    from heat import db
     from heat.db import migration
+    from heat import db
 
     reset_db()
     migration.db_sync()

@@ -12,11 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 from nose.plugins.attrib import attr
 import os
 import unittest
-import yaml
 
 from heat.common import context
 from heat.common import template_format

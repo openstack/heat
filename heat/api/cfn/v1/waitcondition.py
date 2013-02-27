@@ -14,7 +14,6 @@
 #    under the License.
 
 from heat.common import wsgi
-from heat.common import context
 from heat.rpc import client as rpc_client
 from heat.common import identifier
 from heat.api.aws import exception

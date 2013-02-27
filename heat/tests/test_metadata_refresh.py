@@ -14,23 +14,15 @@
 
 
 import mox
-import uuid
-import time
-import datetime
-import json
 
 import eventlet
 import unittest
 from nose.plugins.attrib import attr
 
-from oslo.config import cfg
-
 from heat.tests import fakes
 from heat.tests.utils import stack_delete_after
 
-import heat.db as db_api
 from heat.common import template_format
-from heat.common import identifier
 from heat.engine import parser
 from heat.engine.resources import instance
 from heat.common import context

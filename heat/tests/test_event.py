@@ -22,7 +22,6 @@ import heat.db as db_api
 from heat.engine import parser
 from heat.engine import template
 from heat.engine import event
-from heat.engine import resource
 
 
 tmpl = {
