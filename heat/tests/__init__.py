@@ -28,9 +28,9 @@ def reset_db():
 
 
 def setup():
-    import mox  # Fail fast if you don't have mox. Workaround for bug 810424
+    import mox  # pyflakes_bypass   Workaround for bug 810424
     from heat.db import migration
-    from heat import db
+    from heat import db  # pyflakes_bypass review 23102
 
     reset_db()
     migration.db_sync()
