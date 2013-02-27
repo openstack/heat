@@ -46,7 +46,8 @@ from heat.common import config
 from heat.common import exception
 from heat.cfn_client import utils
 
-DEFAULT_PORT=8003
+DEFAULT_PORT = 8003
+
 
 @utils.catch_error('alarm-describe')
 def alarm_describe(options, arguments):
@@ -54,7 +55,7 @@ def alarm_describe(options, arguments):
     Describe detail for specified alarm, or all alarms
     if no AlarmName is specified
     '''
-    parameters={}
+    parameters = {}
     try:
         parameters['AlarmName'] = arguments.pop(0)
     except IndexError:
@@ -64,16 +65,17 @@ def alarm_describe(options, arguments):
     result = c.describe_alarm(**parameters)
     print c.format_metric_alarm(result)
 
+
 @utils.catch_error('alarm-set-state')
 def alarm_set_state(options, arguments):
     '''
     Temporarily set state for specified alarm
     '''
     usage = ('''Usage:
-%s alarm-set-state AlarmName StateValue [StateReason]''' %
-        (scriptname))
+             %s alarm-set-state AlarmName StateValue [StateReason]''' %
+             (scriptname))
 
-    parameters={}
+    parameters = {}
     try:
         parameters['AlarmName'] = arguments.pop(0)
         parameters['StateValue'] = arguments.pop(0)
@@ -81,7 +83,7 @@ def alarm_set_state(options, arguments):
         logging.error("Must specify AlarmName and StateValue")
         print usage
         print "StateValue must be one of %s, %s or %s" % (
-                      heat_client.BotoCWClient.ALARM_STATES)
+            heat_client.BotoCWClient.ALARM_STATES)
         return utils.FAILURE
     try:
         parameters['StateReason'] = arguments.pop(0)
@@ -101,7 +103,7 @@ def metric_list(options, arguments):
     '''
     List all metric data for a given metric (or all metrics if none specified)
     '''
-    parameters={}
+    parameters = {}
     try:
         parameters['MetricName'] = arguments.pop(0)
     except IndexError:
@@ -127,7 +129,7 @@ e.g
     # specific AlarmName, due to the current engine/db cloudwatch
     # implementation, we should probably revisit this so we can support
     # more generic metric data collection
-    parameters={}
+    parameters = {}
     try:
         parameters['AlarmName'] = arguments.pop(0)
         parameters['Namespace'] = arguments.pop(0)
@@ -188,14 +190,14 @@ def parse_options(parser, cli_args):
 
     if options.debug:
         logging.basicConfig(format='%(levelname)s:%(message)s',
-            level=logging.DEBUG)
+                            level=logging.DEBUG)
         logging.debug("Debug level logging enabled")
     elif options.verbose:
         logging.basicConfig(format='%(levelname)s:%(message)s',
-            level=logging.INFO)
+                            level=logging.INFO)
     else:
         logging.basicConfig(format='%(levelname)s:%(message)s',
-            level=logging.WARNING)
+                            level=logging.WARNING)
 
     return (options, command, args)
 

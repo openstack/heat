@@ -14,4 +14,4 @@ EXCLUDE+=',*egg,build,*tools*'
 ${PEP8} ${EXCLUDE} .
 
 # Check binaries without py extension
-${PEP8} bin/heat-api bin/heat-api-cfn bin/heat-api-cloudwatch bin/heat-cfn bin/heat-engine
+${PEP8} bin/heat-api bin/heat-api-cfn bin/heat-api-cloudwatch bin/heat-cfn bin/heat-engine bin/heat-watch
