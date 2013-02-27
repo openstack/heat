@@ -54,8 +54,6 @@ class API(wsgi.Router):
     def __init__(self, conf, **local_conf):
         self.conf = conf
         mapper = routes.Mapper()
-
-        mapper = routes.Mapper()
         controller_resource = watch.create_resource(conf)
 
         def conditions(action):
