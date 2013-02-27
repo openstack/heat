@@ -8,7 +8,7 @@ import pkg_resources
 from distutils.version import LooseVersion
 import errno
 
-path = '/var/lib/cloud/data'
+path = '/var/lib/heat-cfntools'
 
 
 def chk_ci_version():
@@ -47,12 +47,6 @@ def main(log):
     if returncode:
         return returncode
 
-    try:
-        os.makedirs('/var/lib/heat', 0700)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
 
 if __name__ == '__main__':
     with create_log('/var/log/heat-provision.log') as log:
@@ -61,5 +55,6 @@ if __name__ == '__main__':
             log.write('Provision failed')
             sys.exit(returncode)
 
-    with create_log('/var/lib/heat/provision-finished') as log:
+    userdata_path = os.path.join(path, 'provision-finished')
+    with create_log(userdata_path) as log:
         log.write('%s\n' % datetime.datetime.now())

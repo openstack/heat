@@ -140,7 +140,7 @@ class Instance(object):
         tries = 0
         while True:
             try:
-                self.sftp.stat('/var/lib/cloud/instance/boot-finished')
+                self.sftp.stat('/var/lib/heat-cfntools/boot-finished')
             except IOError, e:
                 tries += 1
                 if e.errno == errno.ENOENT:
@@ -219,7 +219,7 @@ class Instance(object):
         tries = 0
         while True:
             try:
-                self.sftp.stat('/var/lib/heat/provision-finished')
+                self.sftp.stat('/var/lib/heat-cfntools/provision-finished')
             except paramiko.SSHException as e:
                 print e
             except IOError as e:
@@ -258,7 +258,7 @@ class Instance(object):
 
         stack = parser.Stack(None, 'test', template, params)
         parsed_t = stack.resolve_static_data(t)
-        remote_file = self.sftp.open('/var/lib/cloud/data/cfn-userdata')
+        remote_file = self.sftp.open('/var/lib/heat-cfntools/cfn-userdata')
         remote_file_list = remote_file.read().split('\n')
         remote_file_list_u = map(unicode, remote_file_list)
         remote_file.close()
