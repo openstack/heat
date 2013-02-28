@@ -278,7 +278,16 @@ class ParametersTest(unittest.TestCase):
         params = parameters.Parameters('test_stack', {"Parameters": {}})
 
         self.assertEqual(params['AWS::StackName'], 'test_stack')
+        self.assertEqual(params['AWS::StackId'], 'None')
         self.assertTrue('AWS::Region' in params)
+
+    def test_pseudo_param_stackid(self):
+        params = parameters.Parameters('test_stack', {'Parameters': {}},
+                                       stack_id='123::foo')
+
+        self.assertEqual(params['AWS::StackId'], '123::foo')
+        params.set_stack_id('456::bar')
+        self.assertEqual(params['AWS::StackId'], '456::bar')
 
     def test_user_param(self):
         user_params = {'User': 'wibble'}
@@ -316,6 +325,7 @@ class ParametersTest(unittest.TestCase):
         expected = {'Foo': False,
                     'Bar': True,
                     'AWS::Region': True,
+                    'AWS::StackId': True,
                     'AWS::StackName': True}
 
         self.assertEqual(params.map(lambda p: p.has_default()), expected)
