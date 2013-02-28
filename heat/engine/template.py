@@ -161,7 +161,13 @@ class Template(collections.Mapping):
         def handle_join(args):
             if not isinstance(args, (list, tuple)):
                 raise TypeError('Arguments to "Fn::Join" must be a list')
-            delim, items = args
+            try:
+                delim, items = args
+            except ValueError as ex:
+                example = '"Fn::Join" : [ " ", [ "str1", "str2"]]'
+                raise ValueError('Incorrect arguments to "Fn::Join" %s: %s' %
+                                ('should be', example))
+
             if not isinstance(items, (list, tuple)):
                 raise TypeError('Arguments to "Fn::Join" not fully resolved')
             reduced = []
@@ -189,7 +195,14 @@ class Template(collections.Mapping):
         def handle_join(args):
             if not isinstance(args, (list, tuple)):
                 raise TypeError('Arguments to "Fn::Join" must be a list')
-            delim, strings = args
+
+            try:
+                delim, strings = args
+            except ValueError as ex:
+                example = '"Fn::Join" : [ " ", [ "str1", "str2"]]'
+                raise ValueError('Incorrect arguments to "Fn::Join" %s: %s' %
+                                ('should be', example))
+
             if not isinstance(strings, (list, tuple)):
                 raise TypeError('Arguments to "Fn::Join" not fully resolved')
             return delim.join(strings)
