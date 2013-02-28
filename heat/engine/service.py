@@ -485,6 +485,14 @@ class EngineService(service.Service):
         resource = stack[resource_name]
         resource.metadata_update(new_metadata=metadata)
 
+        # Refresh the metadata for all other resources, since we expect
+        # resource_name to be a WaitCondition resource, and other
+        # resources may refer to WaitCondition Fn::GetAtt Data, which
+        # is updated here.
+        for res in stack:
+            if res.name != resource_name:
+                res.metadata_update()
+
         return resource.metadata
 
     def _periodic_watcher_task(self, sid):

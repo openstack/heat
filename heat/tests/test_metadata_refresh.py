@@ -19,13 +19,18 @@ import eventlet
 import unittest
 from nose.plugins.attrib import attr
 
+from oslo.config import cfg
 from heat.tests import fakes
 from heat.tests.utils import stack_delete_after
 
+from heat.common import identifier
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import service
 from heat.engine.resources import instance
 from heat.common import context
+from heat.engine.resources import wait_condition as wc
+
 
 test_template_metadata = '''
 {
@@ -73,6 +78,40 @@ test_template_metadata = '''
 }
 '''
 
+test_template_waitcondition = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Just a WaitCondition.",
+  "Parameters" : {
+    "KeyName" : {"Type" : "String", "Default": "mine" },
+  },
+  "Resources" : {
+    "S1": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "test" : {"Fn::GetAtt": ["WC", "Data"]}
+      },
+      "Properties": {
+        "ImageId"      : "a",
+        "InstanceType" : "m1.large",
+        "KeyName"      : { "Ref" : "KeyName" },
+        "UserData"     : "#!/bin/bash -v\n"
+      }
+    },
+    "WH" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "WC" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "Properties" : {
+        "Handle" : {"Ref" : "WH"},
+        "Timeout" : "5"
+      }
+    }
+  }
+}
+'''
+
 
 @attr(tag=['unit', 'resource', 'Metadata'])
 @attr(speed='slow')
@@ -85,7 +124,6 @@ class MetadataRefreshTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.m.StubOutWithMock(eventlet, 'sleep')
-
         self.fc = fakes.FakeKeystoneClient()
 
     def tearDown(self):
@@ -136,5 +174,90 @@ class MetadataRefreshTest(unittest.TestCase):
         files = s1.metadata['AWS::CloudFormation::Init']['config']['files']
         cont = files['/tmp/random_file']['content']
         self.assertEqual(cont, 's2-ip=10.0.0.5')
+
+        self.m.VerifyAll()
+
+
+@attr(tag=['unit', 'resource', 'Metadata'])
+@attr(speed='slow')
+class WaitCondMetadataUpdateTest(unittest.TestCase):
+    def setUp(self):
+        self.m = mox.Mox()
+        self.ctx = context.get_admin_context()
+        self.ctx.tenant_id = 'test_tenant'
+        self.fc = fakes.FakeKeystoneClient()
+        self.man = service.EngineService('a-host', 'a-topic')
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://127.0.0.1:8000/v1/waitcondition')
+
+    def tearDown(self):
+        self.m.UnsetStubs()
+
+    # Note tests creating a stack should be decorated with @stack_delete_after
+    # to ensure the stack is properly cleaned up
+    def create_stack(self, stack_name='test_stack',
+                     template=test_template_metadata):
+        temp = template_format.parse(template)
+        template = parser.Template(temp)
+        parameters = parser.Parameters(stack_name, template, {})
+        stack = parser.Stack(self.ctx, stack_name, template, parameters,
+                             disable_rollback=True)
+
+        self.stack_id = stack.store()
+
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
+        instance.Instance.handle_create().MultipleTimes().AndReturn(None)
+
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
+        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
+
+        id = identifier.ResourceIdentifier('test_tenant', stack.name,
+                                           stack.id, '', 'WH')
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
+        wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
+
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
+        self.m.StubOutWithMock(wc.WaitCondition, '_create_timeout')
+        self.m.StubOutWithMock(eventlet, 'sleep')
+
+        return stack
+
+    @stack_delete_after
+    def test_wait_meta(self):
+        '''
+        1 create stack
+        2 assert empty instance metadata
+        3 service.metadata_update()
+        4 assert valid waitcond metadata
+        5 assert valid instance metadata
+        '''
+
+        self.stack = self.create_stack(template=test_template_waitcondition)
+
+        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
+        wc.WaitConditionHandle.get_status().AndReturn([])
+        eventlet.sleep(1).AndReturn(None)
+        wc.WaitConditionHandle.get_status().AndReturn([])
+        eventlet.sleep(1).AndReturn(None)
+        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        s1 = self.stack.resources['S1']
+        s1._store()
+        watch = self.stack.resources['WC']
+
+        self.assertEqual(watch.FnGetAtt('Data'), '{}')
+        self.assertEqual(s1.metadata['test'], '{}')
+
+        test_metadata = {'Data': 'foo', 'Reason': 'bar',
+                         'Status': 'SUCCESS', 'UniqueId': '123'}
+        self.man.metadata_update(self.ctx,
+                                 dict(self.stack.identifier()),
+                                 'WH', test_metadata)
+
+        self.assertEqual(watch.FnGetAtt('Data'), '{"123": "foo"}')
+        self.assertEqual(s1.metadata['test'], '{"123": "foo"}')
 
         self.m.VerifyAll()
