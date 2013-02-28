@@ -185,11 +185,11 @@ function os_erase() {
     sudo systemctl start mysqld.service
     sleep 1
 
-    sudo openstack-db --service nova --drop $*
-    sudo openstack-db --service glance --drop $*
-    sudo openstack-db --service keystone --drop $*
+    sudo openstack-db --yes --service nova --drop $*
+    sudo openstack-db --yes --service glance --drop $*
+    sudo openstack-db --yes --service keystone --drop $*
     if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
-        sudo openstack-db --service cinder --drop $*
+        sudo openstack-db --yes --service cinder --drop $*
     fi
 
     sudo yum -q -y erase openstack-utils
@@ -203,18 +203,20 @@ function os_erase() {
 
 function os_install() {
     sudo yum -q -y groupinstall Virtualization
-    sudo yum -q -y install openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server mysql-server qpid-cpp-server-daemon $VOLUME_SERVICE
+    sudo yum -q -y install openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server qpid-cpp-server-daemon $VOLUME_SERVICE
     sudo dd if=/dev/zero of=$VOLUME_PATH bs=1M seek=20k count=0
+    # Note if mysql-server is not installed, this will fail
+    # and openstack-db --yes will install/start it
     sudo systemctl start mysqld.service
     sudo systemctl enable libvirtd.service
     sudo systemctl start libvirtd.service
     sleep 1
     # Configure the databases
-    sudo openstack-db --service nova --init $*
-    sudo openstack-db --service glance --init $*
-    sudo openstack-db --service keystone --init $*
+    sudo openstack-db --yes --service nova --init $*
+    sudo openstack-db --yes --service glance --init $*
+    sudo openstack-db --yes --service keystone --init $*
     if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
-        sudo openstack-db --service cinder --init $*
+        sudo openstack-db --yes --service cinder --init $*
     fi
 
     # Create a keystone RC file
