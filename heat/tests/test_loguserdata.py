@@ -48,7 +48,6 @@ class LoguserdataTest(unittest.TestCase):
         self.m.StubOutWithMock(pkg_resources, 'get_distribution')
         self.m.StubOutWithMock(subprocess, 'Popen')
         self.m.StubOutWithMock(os, 'chmod')
-        self.m.StubOutWithMock(os, 'makedirs')
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -108,13 +107,12 @@ class LoguserdataTest(unittest.TestCase):
         log = StringIO.StringIO()
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
-        os.chmod('/var/lib/cloud/data/cfn-userdata', 0700).AndReturn(None)
+
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
         subprocess.Popen(
-            ['/var/lib/cloud/data/cfn-userdata'],
+            ['/var/lib/heat-cfntools/cfn-userdata'],
             stderr=log,
             stdout=log).AndReturn(FakePOpen(0))
-
-        os.makedirs('/var/lib/heat', 0700).AndReturn(None)
 
         self.m.ReplayAll()
         loguserdata.main(log)
@@ -132,26 +130,14 @@ class LoguserdataTest(unittest.TestCase):
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
 
-        os.chmod('/var/lib/cloud/data/cfn-userdata', 0700).AndReturn(None)
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
         subprocess.Popen(
-            ['/var/lib/cloud/data/cfn-userdata'],
+            ['/var/lib/heat-cfntools/cfn-userdata'],
             stderr=log,
             stdout=log).AndReturn(FakePOpen(-2))
-
-        #fail on create directories
-        pkg_resources.get_distribution('cloud-init').AndReturn(
-            FakeCiVersion('0.7.0'))
-
-        os.chmod('/var/lib/cloud/data/cfn-userdata', 0700).AndReturn(None)
-        subprocess.Popen(
-            ['/var/lib/cloud/data/cfn-userdata'],
-            stderr=log,
-            stdout=log).AndReturn(FakePOpen(0))
-        os.makedirs('/var/lib/heat', 0700).AndRaise(OSError())
 
         self.m.ReplayAll()
         self.assertEqual(-1, loguserdata.main(log))
         self.assertEqual(-2, loguserdata.main(log))
-        self.assertRaises(OSError, loguserdata.main, log)
 
         self.m.VerifyAll()
