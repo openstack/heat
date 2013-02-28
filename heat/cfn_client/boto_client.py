@@ -39,16 +39,23 @@ class BotoClient(CloudFormationConnection):
         return super(BotoClient, self).describe_stacks(stack_name)
 
     def create_stack(self, **kwargs):
+        disable_rollback = False
+        if 'DisableRollback' in kwargs:
+            if str(kwargs['DisableRollback']).lower() == 'true':
+                disable_rollback = True
+
         if 'TemplateUrl' in kwargs:
             return super(BotoClient, self).create_stack(
                 kwargs['StackName'],
                 template_url=kwargs['TemplateUrl'],
-                parameters=kwargs['Parameters'])
+                parameters=kwargs['Parameters'],
+                disable_rollback=disable_rollback)
         elif 'TemplateBody' in kwargs:
             return super(BotoClient, self).create_stack(
                 kwargs['StackName'],
                 template_body=kwargs['TemplateBody'],
-                parameters=kwargs['Parameters'])
+                parameters=kwargs['Parameters'],
+                disable_rollback=disable_rollback)
         else:
             logger.error("Must specify TemplateUrl or TemplateBody!")
 
