@@ -559,6 +559,43 @@ def add_nova():
             exec("pep8.%s = %s" % (name, name))
 
 
+def once_git_check_commit_title():
+    """Check git commit messages.
+
+    nova HACKING recommends not referencing a bug or blueprint in first line,
+    it should provide an accurate description of the change
+    N801
+    N802 Title limited to 72 chars
+    """
+    #Get title of most recent commit
+
+    subp = subprocess.Popen(['git', 'log', '--no-merges', '--pretty=%s', '-1'],
+            stdout=subprocess.PIPE)
+    title = subp.communicate()[0]
+    if subp.returncode:
+        raise Exception("git log failed with code %s" % subp.returncode)
+
+    #From https://github.com/openstack/openstack-ci-puppet
+    #       /blob/master/modules/gerrit/manifests/init.pp#L74
+    #Changeid|bug|blueprint
+    git_keywords = (r'(I[0-9a-f]{8,40})|'
+                    '([Bb]ug|[Ll][Pp])[\s\#:]*(\d+)|'
+                    '([Bb]lue[Pp]rint|[Bb][Pp])[\s\#:]*([A-Za-z0-9\\-]+)')
+    GIT_REGEX = re.compile(git_keywords)
+
+    error = False
+    #NOTE(jogo) if match regex but over 3 words, acceptable title
+    if GIT_REGEX.search(title) is not None and len(title.split()) <= 3:
+        print ("N801: git commit title ('%s') should provide an accurate "
+               "description of the change, not just a reference to a bug "
+               "or blueprint" % title.strip())
+        error = True
+    if len(title.decode('utf-8')) > 72:
+        print ("N802: git commit title ('%s') should be under 72 chars"
+                % title.strip())
+        error = True
+    return error
+
 imports_on_separate_lines_N301_compliant = r"""
     Imports should usually be on separate lines.
 
@@ -576,6 +613,7 @@ if __name__ == "__main__":
     #include nova path
     sys.path.append(os.getcwd())
     #Run once tests (not per line)
+    once_error = once_git_check_commit_title()
     #NOVA error codes start with an N
     pep8.SELFTEST_REGEX = re.compile(r'(Okay|[EWN]\d{3}):\s(.*)')
     pep8.ERRORCODE_REGEX = re.compile(r'[EWN]\d{3}')
@@ -590,6 +628,7 @@ if __name__ == "__main__":
 
     try:
         pep8._main()
+        sys.exit(once_error)
     finally:
         if len(_missingImport) > 0:
             print >> sys.stderr, ("%i imports missing in this test environment"
