@@ -79,7 +79,7 @@ def format_stack(stack):
         STACK_STATUS: stack.state,
         STACK_STATUS_DATA: stack.state_description,
         STACK_CAPABILITIES: [],   # TODO Not implemented yet
-        STACK_DISABLE_ROLLBACK: True,   # TODO Not implemented yet
+        STACK_DISABLE_ROLLBACK: stack.disable_rollback,
         STACK_TIMEOUT: stack.timeout_mins,
     }
 
