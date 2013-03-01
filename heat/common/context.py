@@ -186,7 +186,10 @@ class ContextMiddleware(wsgi.Middleware):
             tenant = headers.get('X-Tenant-Name')
             tenant_id = headers.get('X-Tenant-Id')
             auth_url = headers.get('X-Auth-Url')
-            roles = headers.get('X-Roles').split(',')
+            roles = headers.get('X-Roles')
+            if roles is not None:
+                roles = roles.split(',')
+
         except Exception:
             raise exception.NotAuthenticated()
 
