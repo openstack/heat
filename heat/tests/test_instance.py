@@ -80,6 +80,12 @@ class instancesTest(unittest.TestCase):
 
         # this makes sure the auto increment worked on instance creation
         self.assertTrue(instance.id > 0)
+
+        self.assertEqual(instance.FnGetAtt('PublicIp'), '4.5.6.7')
+        self.assertEqual(instance.FnGetAtt('PrivateIp'), '4.5.6.7')
+        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), '4.5.6.7')
+        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), '4.5.6.7')
+
         self.m.VerifyAll()
 
     def test_instance_create_delete(self):
@@ -132,15 +138,6 @@ class instancesTest(unittest.TestCase):
         self.assertTrue(instance.resource_id is None)
         self.assertEqual(instance.state, instance.DELETE_COMPLETE)
         self.m.VerifyAll()
-
-        private_ip = instance.FnGetAtt('PublicIp')
-        self.assertEqual(private_ip, '4.5.6.7')
-        private_ip = instance.FnGetAtt('PrivateIp')
-        self.assertEqual(private_ip, '4.5.6.7')
-        private_ip = instance.FnGetAtt('PrivateDnsName')
-        self.assertEqual(private_ip, '4.5.6.7')
-        private_ip = instance.FnGetAtt('PrivateDnsName')
-        self.assertEqual(private_ip, '4.5.6.7')
 
     def test_instance_update_metadata(self):
         f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
