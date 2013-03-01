@@ -15,6 +15,7 @@
 
 import base64
 from datetime import datetime
+import eventlet
 from eventlet.support import greenlets as greenlet
 
 from heat.engine import event
@@ -299,6 +300,8 @@ class Resource(object):
             self.state_set(self.CREATE_IN_PROGRESS)
             if callable(getattr(self, 'handle_create', None)):
                 self.handle_create()
+            while not self.check_active():
+                eventlet.sleep(1)
         except Exception as ex:
             # If we get a GreenletExit exception, the create thread has
             # been killed so we should raise allowing this thread to exit
@@ -311,6 +314,15 @@ class Resource(object):
                 return str(ex) or "Error : %s" % type(ex)
         else:
             self.state_set(self.CREATE_COMPLETE)
+
+    def check_active(self):
+        '''
+        Check if the resource is active (ready to move to the CREATE_COMPLETE
+        state). By default this happens as soon as the handle_create() method
+        has completed successfully, but subclasses may customise this by
+        overriding this function.
+        '''
+        return True
 
     def update(self, json_snippet=None):
         '''
