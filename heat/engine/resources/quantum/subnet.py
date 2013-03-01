@@ -34,8 +34,6 @@ class Subnet(quantum.QuantumResource):
                          'value_specs': {'Type': 'Map',
                                          'Default': {}},
                          'name': {'Type': 'String'},
-                         'admin_state_up': {'Default': True,
-                                            'Type': 'Boolean'},
                          'ip_version': {'Type': 'Integer',
                                         'AllowedValues': [4, 6],
                                         'Default': 4},
