@@ -95,7 +95,10 @@ test_template_waitcondition = '''
         "ImageId"      : "a",
         "InstanceType" : "m1.large",
         "KeyName"      : { "Ref" : "KeyName" },
-        "UserData"     : "#!/bin/bash -v\n"
+        "UserData"     : { "Fn::Join" : [ "", [ "#!/bin/bash -v\n",
+                                                "echo ",
+                                                { "Ref" : "WH" },
+                                                "\n" ] ] }
       }
     },
     "WH" : {
@@ -103,6 +106,7 @@ test_template_waitcondition = '''
     },
     "WC" : {
       "Type" : "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "S1",
       "Properties" : {
         "Handle" : {"Ref" : "WH"},
         "Timeout" : "5"
@@ -216,8 +220,6 @@ class WaitCondMetadataUpdateTest(unittest.TestCase):
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
         wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
 
-        self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
-        self.m.StubOutWithMock(wc.WaitCondition, '_create_timeout')
         self.m.StubOutWithMock(eventlet, 'sleep')
 
         return stack
@@ -234,30 +236,36 @@ class WaitCondMetadataUpdateTest(unittest.TestCase):
 
         self.stack = self.create_stack(template=test_template_waitcondition)
 
-        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
-        wc.WaitConditionHandle.get_status().AndReturn([])
-        eventlet.sleep(1).AndReturn(None)
-        wc.WaitConditionHandle.get_status().AndReturn([])
-        eventlet.sleep(1).AndReturn(None)
-        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        watch = self.stack['WC']
+        inst = self.stack['S1']
+
+        def check_empty(sleep_time):
+            self.assertEqual(watch.FnGetAtt('Data'), '{}')
+            self.assertEqual(inst.metadata['test'], '{}')
+
+        def update_metadata(id, data, reason):
+            self.man.metadata_update(self.ctx,
+                                     dict(self.stack.identifier()),
+                                     'WH',
+                                     {'Data': data, 'Reason': reason,
+                                      'Status': 'SUCCESS', 'UniqueId': id})
+
+        def post_success(sleep_time):
+            update_metadata('123', 'foo', 'bar')
+
+        eventlet.sleep(mox.IsA(int)).WithSideEffects(check_empty)
+        eventlet.sleep(mox.IsA(int)).WithSideEffects(post_success)
 
         self.m.ReplayAll()
         self.stack.create()
 
-        s1 = self.stack.resources['S1']
-        s1._store()
-        watch = self.stack.resources['WC']
-
-        self.assertEqual(watch.FnGetAtt('Data'), '{}')
-        self.assertEqual(s1.metadata['test'], '{}')
-
-        test_metadata = {'Data': 'foo', 'Reason': 'bar',
-                         'Status': 'SUCCESS', 'UniqueId': '123'}
-        self.man.metadata_update(self.ctx,
-                                 dict(self.stack.identifier()),
-                                 'WH', test_metadata)
-
         self.assertEqual(watch.FnGetAtt('Data'), '{"123": "foo"}')
-        self.assertEqual(s1.metadata['test'], '{"123": "foo"}')
+        self.assertEqual(inst.metadata['test'], '{"123": "foo"}')
+
+        update_metadata('456', 'blarg', 'wibble')
+        self.assertEqual(watch.FnGetAtt('Data'),
+                         '{"123": "foo", "456": "blarg"}')
+        self.assertEqual(inst.metadata['test'],
+                         '{"123": "foo", "456": "blarg"}')
 
         self.m.VerifyAll()
