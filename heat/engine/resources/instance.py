@@ -238,6 +238,7 @@ class Instance(resource.Resource):
         for o in image_list:
             if o.name == image_name:
                 image_id = o.id
+                break
 
         if image_id is None:
             logger.info("Image %s was not found in glance" % image_name)
@@ -248,6 +249,7 @@ class Instance(resource.Resource):
         for o in flavor_list:
             if o.name == flavor:
                 flavor_id = o.id
+                break
         if flavor_id is None:
             raise exception.FlavorMissing(flavor_id=flavor)
 
