@@ -6,7 +6,6 @@ import subprocess
 import datetime
 import pkg_resources
 from distutils.version import LooseVersion
-import errno
 
 path = '/var/lib/heat-cfntools'
 
