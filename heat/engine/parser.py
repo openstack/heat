@@ -214,6 +214,19 @@ class Stack(object):
         '''Return a human-readable string representation of the stack'''
         return 'Stack "%s"' % self.name
 
+    def resource_by_refid(self, refid):
+        '''
+        Return the resource in this stack with the specified
+        refid, or None if not found
+        '''
+        for r in self.resources.values():
+            if r.state in (
+                    r.CREATE_IN_PROGRESS,
+                    r.CREATE_COMPLETE,
+                    r.UPDATE_IN_PROGRESS,
+                    r.UPDATE_COMPLETE) and r.FnGetRefId() == refid:
+                return r
+
     def validate(self):
         '''
         http://docs.amazonwebservices.com/AWSCloudFormation/latest/\
