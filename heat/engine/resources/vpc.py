@@ -50,17 +50,17 @@ class VPC(resource.Resource):
         net = client.create_network({'network': props})['network']
         router = client.create_router({'router': props})['router']
         md = {
-            'network_id': net['id'],
             'router_id': router['id'],
             'all_router_ids': [router['id']]
         }
         self.metadata = md
+        self.resource_id_set(net['id'])
 
     def handle_delete(self):
         from quantumclient.common.exceptions import QuantumClientException
 
         client = self.quantum()
-        network_id = self.metadata['network_id']
+        network_id = self.resource_id
         router_id = self.metadata['router_id']
         try:
             client.delete_router(router_id)

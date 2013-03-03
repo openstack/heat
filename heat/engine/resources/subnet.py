@@ -47,8 +47,8 @@ class Subnet(resource.Resource):
     def handle_create(self):
         client = self.quantum()
         # TODO sbaker Verify that this CidrBlock is within the vpc CidrBlock
-        vpc = self.stack[self.properties.get('VpcId')]
-        network_id = vpc.metadata['network_id']
+        network_id = self.properties.get('VpcId')
+        vpc = self.stack.resource_by_refid(network_id)
         router_id = vpc.metadata['router_id']
 
         props = {
@@ -65,19 +65,18 @@ class Subnet(resource.Resource):
             router_id,
             {'subnet_id': subnet['id']})
         md = {
-            'network_id': network_id,
             'router_id': router_id,
-            'default_router_id': router_id,
-            'subnet_id': subnet['id']
+            'default_router_id': router_id
         }
         self.metadata = md
+        self.resource_id_set(subnet['id'])
 
     def handle_delete(self):
         from quantumclient.common.exceptions import QuantumClientException
 
         client = self.quantum()
         router_id = self.metadata['router_id']
-        subnet_id = self.metadata['subnet_id']
+        subnet_id = self.resource_id
 
         #TODO sbaker check for a non-default router for this network
         # and remove that instead if it exists
