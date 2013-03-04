@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import eventlet
+
 from heat.common import exception
 from heat.engine import resource
 
@@ -75,10 +77,20 @@ class InstanceGroup(resource.Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(InstanceGroup, self).__init__(name, json_snippet, stack)
-        # resource_id is a list of resources
+        self._activating = []
 
     def handle_create(self):
         self.resize(int(self.properties['Size']), raise_on_error=True)
+
+    def check_active(self):
+        active = all(i.check_active(override=False) for i in self._activating)
+        if active:
+            self._activating = []
+        return active
+
+    def _wait_for_activation(self):
+        while not self.check_active():
+            eventlet.sleep(1)
 
     def handle_update(self, json_snippet):
         try:
@@ -111,6 +123,7 @@ class InstanceGroup(resource.Resource):
                 if len(inst_list) != int(self.properties['Size']):
                     self.resize(int(self.properties['Size']),
                                 raise_on_error=True)
+                    self._wait_for_activation()
 
         return self.UPDATE_COMPLETE
 
@@ -127,6 +140,15 @@ class InstanceGroup(resource.Resource):
             '''
             def state_set(self, new_state, reason="state changed"):
                 self._store_or_update(new_state, reason)
+
+            def check_active(self, override=True):
+                '''
+                By default, report that the instance is active so that we
+                won't wait for it in create().
+                '''
+                if override:
+                    return True
+                return super(GroupedInstance, self).check_active()
 
         conf = self.properties['LaunchConfigurationName']
         instance_definition = self.stack.t['Resources'][conf]
@@ -163,6 +185,7 @@ class InstanceGroup(resource.Resource):
                 name = '%s-%d' % (self.name, x)
                 inst = self._make_instance(name)
                 inst_list.append(name)
+                self._activating.append(inst)
                 self.resource_id_set(','.join(inst_list))
                 logger.info('creating inst')
                 error_str = inst.create()
@@ -298,11 +321,13 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
 
             if new_capacity is not None:
                 self._adjust(new_capacity)
+                self._wait_for_activation()
 
         return self.UPDATE_COMPLETE
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
         self._adjust(adjustment, adjustment_type, False)
+        self._wait_for_activation()
 
     def _adjust(self, adjustment, adjustment_type='ExactCapacity',
                 raise_on_error=True):
