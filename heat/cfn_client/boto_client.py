@@ -39,10 +39,9 @@ class BotoClient(CloudFormationConnection):
         return super(BotoClient, self).describe_stacks(stack_name)
 
     def create_stack(self, **kwargs):
-        disable_rollback = False
-        if 'DisableRollback' in kwargs:
-            if str(kwargs['DisableRollback']).lower() == 'true':
-                disable_rollback = True
+        disable_rollback = True
+        if str(kwargs.get('DisableRollback', '')).lower() == 'false':
+            disable_rollback = False
 
         if 'TemplateUrl' in kwargs:
             return super(BotoClient, self).create_stack(
