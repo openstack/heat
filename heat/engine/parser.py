@@ -60,7 +60,7 @@ class Stack(object):
 
     def __init__(self, context, stack_name, tmpl, parameters=None,
                  stack_id=None, state=None, state_description='',
-                 timeout_mins=60, resolve_data=True, disable_rollback=False):
+                 timeout_mins=60, resolve_data=True, disable_rollback=True):
         '''
         Initialise from a context, name, Template object and (optionally)
         Parameters object. The database ID may also be initialised, if the

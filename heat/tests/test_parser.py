@@ -411,7 +411,7 @@ class StackTest(unittest.TestCase):
     @stack_delete_after
     def test_delete_rollback(self):
         self.stack = parser.Stack(self.ctx, 'delete_rollback_test',
-                                  parser.Template({}))
+                                  parser.Template({}), disable_rollback=False)
         stack_id = self.stack.store()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
@@ -657,7 +657,8 @@ class StackTest(unittest.TestCase):
                                             'Properties': {'Foo': 'abc'}}}}
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
-                                  template.Template(tmpl))
+                                  template.Template(tmpl),
+                                  disable_rollback=False)
         self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
@@ -700,7 +701,8 @@ class StackTest(unittest.TestCase):
                                             'Properties': {'Foo': 'abc'}}}}
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
-                                  template.Template(tmpl))
+                                  template.Template(tmpl),
+                                  disable_rollback=False)
         self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
@@ -737,7 +739,8 @@ class StackTest(unittest.TestCase):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
-                                  template.Template(tmpl))
+                                  template.Template(tmpl),
+                                  disable_rollback=False)
         self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
@@ -767,7 +770,8 @@ class StackTest(unittest.TestCase):
                 'BResource': {'Type': 'GenericResourceType'}}}
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
-                                  template.Template(tmpl))
+                                  template.Template(tmpl),
+                                  disable_rollback=False)
         self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
