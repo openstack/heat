@@ -114,6 +114,7 @@ class Instance(resource.Resource):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = None
         self.mime_string = None
+        self._server_status = None
 
     def _set_ipaddress(self, networks):
         '''
@@ -293,18 +294,24 @@ class Instance(resource.Resource):
             if server is not None:
                 self.resource_id_set(server.id)
 
-        while server.status == 'BUILD':
-            server.get()
-            eventlet.sleep(1)
+        self._server_status = server.status
+
+    def check_active(self):
+        if self._server_status == 'ACTIVE':
+            return True
+
+        server = self.nova().servers.get(self.resource_id)
+        self._server_status = server.status
+        if server.status == 'BUILD':
+            return False
         if server.status == 'ACTIVE':
             self._set_ipaddress(server.networks)
+            self.attach_volumes()
+            return True
         else:
             raise exception.Error('%s instance[%s] status[%s]' %
                                   ('nova reported unexpected',
                                    self.name, server.status))
-
-        if self.properties['Volumes']:
-            self.attach_volumes()
 
     def attach_volumes(self):
         server_id = self.resource_id
