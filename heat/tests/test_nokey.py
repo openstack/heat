@@ -14,7 +14,6 @@
 
 
 import os
-import copy
 
 import unittest
 import mox
