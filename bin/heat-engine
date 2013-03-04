@@ -27,7 +27,6 @@ eventlet.monkey_patch()
 import os
 import sys
 
-
 # If ../heat/__init__.py exists, add ../ to Python search path, so that
 # it will override what happens to be installed in /usr/(local/)lib/python...
 POSSIBLE_TOPDIR = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
@@ -47,13 +46,18 @@ from heat.common import config
 from heat.db import api as db_api
 
 
-logger = logging.getLogger('heat.engine')
+LOG = logging.getLogger('heat.engine')
 
 if __name__ == '__main__':
 
     cfg.CONF(project='heat', prog='heat-engine')
-
-    config.setup_logging()
+    cfg.CONF.default_log_levels = ['amqplib=WARN',
+                                   'sqlalchemy=WARN',
+                                   'qpid.messaging=INFO',
+                                   'keystone=INFO',
+                                   'eventlet.wsgi.server=WARN',
+                                   ]
+    logging.setup('heat')
 
     from heat.engine import service as engine
 
