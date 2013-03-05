@@ -253,8 +253,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         else:
             num_to_create = int(self.properties['MinSize'])
 
-        self.adjust(num_to_create, adjustment_type='ExactCapacity',
-                    raise_on_error=True)
+        self._adjust(num_to_create)
 
     def handle_update(self, json_snippet):
         try:
@@ -298,13 +297,16 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                         new_capacity = int(self.properties['DesiredCapacity'])
 
             if new_capacity is not None:
-                self.adjust(new_capacity, adjustment_type='ExactCapacity',
-                            raise_on_error=True)
+                self._adjust(new_capacity)
 
         return self.UPDATE_COMPLETE
 
-    def adjust(self, adjustment, adjustment_type='ChangeInCapacity',
-               raise_on_error=False):
+    def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
+        self._adjust(adjustment, adjustment_type, False)
+
+    def _adjust(self, adjustment, adjustment_type='ExactCapacity',
+                raise_on_error=True):
+
         if self._cooldown_inprogress():
             logger.info("%s NOT performing scaling adjustment, cooldown %s" %
                         (self.name, self.properties['Cooldown']))
