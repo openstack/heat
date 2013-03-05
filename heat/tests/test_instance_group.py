@@ -15,6 +15,7 @@
 import copy
 import os
 
+import eventlet
 import unittest
 import mox
 
@@ -62,9 +63,15 @@ class InstanceGroupTest(unittest.TestCase):
         return stack
 
     def _stub_create(self, num):
+        self.m.StubOutWithMock(eventlet, 'sleep')
+
         self.m.StubOutWithMock(instance.Instance, 'create')
+        self.m.StubOutWithMock(instance.Instance, 'check_active')
         for x in range(num):
             instance.Instance.create().AndReturn(None)
+        instance.Instance.check_active().AndReturn(False)
+        eventlet.sleep(mox.IsA(int)).AndReturn(None)
+        instance.Instance.check_active().MultipleTimes().AndReturn(True)
 
     def create_instance_group(self, t, stack, resource_name):
         resource = asc.InstanceGroup(resource_name,
