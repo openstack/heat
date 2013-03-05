@@ -222,6 +222,93 @@ class ResourceTest(unittest.TestCase):
                           res.update_template_diff_properties,
                           update_snippet)
 
+    def test_resource(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String'}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        self.assertEqual(None, res.create())
+        self.assertEqual(res.CREATE_COMPLETE, res.state)
+
+    def test_create_fail_missing_req_prop(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String', 'Required': True}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {}}
+        rname = 'test_resource'
+        res = generic_rsrc.GenericResource(rname, tmpl, self.stack)
+
+        estr = 'Property error : test_resource: Property Foo not assigned'
+        self.assertEqual(estr, res.create())
+        self.assertEqual(res.CREATE_FAILED, res.state)
+
+    def test_create_fail_prop_typo(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String', 'Required': True}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Food': 'abc'}}
+        rname = 'test_resource'
+        res = generic_rsrc.GenericResource(rname, tmpl, self.stack)
+
+        estr = 'Property error : test_resource: Property Foo not assigned'
+        self.assertEqual(estr, res.create())
+        self.assertEqual(res.CREATE_FAILED, res.state)
+
+    def test_update_ok(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String'}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        self.assertEqual(None, res.create())
+        self.assertEqual(res.CREATE_COMPLETE, res.state)
+
+        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(utmpl).AndReturn(
+            resource.Resource.UPDATE_COMPLETE)
+        self.m.ReplayAll()
+
+        self.assertEqual(res.UPDATE_COMPLETE, res.update(utmpl))
+        self.assertEqual(res.UPDATE_COMPLETE, res.state)
+        self.m.VerifyAll()
+
+    def test_update_fail_missing_req_prop(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String', 'Required': True}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        self.assertEqual(None, res.create())
+        self.assertEqual(res.CREATE_COMPLETE, res.state)
+
+        utmpl = {'Type': 'GenericResourceType', 'Properties': {}}
+
+        estr = 'Property error : test_resource: Property Foo not assigned'
+        self.assertEqual(estr, res.update(utmpl))
+        self.assertEqual(res.UPDATE_FAILED, res.state)
+
+    def test_update_fail_prop_typo(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String'}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        self.assertEqual(None, res.create())
+        self.assertEqual(res.CREATE_COMPLETE, res.state)
+
+        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Food': 'xyz'}}
+
+        self.assertEqual('Unknown Property Food', res.update(utmpl))
+        self.assertEqual(res.UPDATE_FAILED, res.state)
+
 
 @attr(tag=['unit', 'resource'])
 @attr(speed='fast')
