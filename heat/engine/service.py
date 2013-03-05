@@ -105,7 +105,7 @@ class EngineService(service.Service):
             self._timer_in_thread(s.id, self._periodic_watcher_task, sid=s.id)
 
     @request_context
-    def identify_stack(self, context, stack_name):
+    def identify_stack(self, cnxt, stack_name):
         """
         The identify_stack method returns the full stack identifier for a
         single, live stack given the stack name.
@@ -113,23 +113,23 @@ class EngineService(service.Service):
         arg2 -> Name or UUID of the stack to look up.
         """
         if uuidutils.is_uuid_like(stack_name):
-            s = db_api.stack_get(context, stack_name)
+            s = db_api.stack_get(cnxt, stack_name)
         else:
-            s = db_api.stack_get_by_name(context, stack_name)
+            s = db_api.stack_get_by_name(cnxt, stack_name)
         if s:
-            stack = parser.Stack.load(context, stack=s)
+            stack = parser.Stack.load(cnxt, stack=s)
             return dict(stack.identifier())
         else:
             raise exception.StackNotFound(stack_name=stack_name)
 
-    def _get_stack(self, context, stack_identity):
+    def _get_stack(self, cnxt, stack_identity):
         identity = identifier.HeatIdentifier(**stack_identity)
 
-        if identity.tenant != context.tenant_id:
+        if identity.tenant != cnxt.tenant_id:
             raise exception.InvalidTenant(target=identity.tenant,
-                                          actual=context.tenant_id)
+                                          actual=cnxt.tenant_id)
 
-        s = db_api.stack_get(context, identity.stack_id)
+        s = db_api.stack_get(cnxt, identity.stack_id)
 
         if s is None:
             raise exception.StackNotFound(stack_name=identity.stack_name)
@@ -140,34 +140,34 @@ class EngineService(service.Service):
         return s
 
     @request_context
-    def show_stack(self, context, stack_identity):
+    def show_stack(self, cnxt, stack_identity):
         """
         Return detailed information about one or all stacks.
-        arg1 -> RPC context.
+        arg1 -> RPC cnxt.
         arg2 -> Name of the stack you want to show, or None to show all
         """
         if stack_identity is not None:
-            stacks = [self._get_stack(context, stack_identity)]
+            stacks = [self._get_stack(cnxt, stack_identity)]
         else:
-            stacks = db_api.stack_get_all_by_tenant(context) or []
+            stacks = db_api.stack_get_all_by_tenant(cnxt) or []
 
         def format_stack_detail(s):
-            stack = parser.Stack.load(context, stack=s)
+            stack = parser.Stack.load(cnxt, stack=s)
             return api.format_stack(stack)
 
         return [format_stack_detail(s) for s in stacks]
 
     @request_context
-    def list_stacks(self, context):
+    def list_stacks(self, cnxt):
         """
         The list_stacks method returns attributes of all stacks.
-        arg1 -> RPC context.
+        arg1 -> RPC cnxt.
         """
 
         def format_stack_details(stacks):
             for s in stacks:
                 try:
-                    stack = parser.Stack.load(context, stack=s,
+                    stack = parser.Stack.load(cnxt, stack=s,
                                               resolve_data=False)
                 except exception.NotFound:
                     # The stack may have been deleted between listing
@@ -176,11 +176,11 @@ class EngineService(service.Service):
                 else:
                     yield api.format_stack(stack)
 
-        stacks = db_api.stack_get_all_by_tenant(context) or []
+        stacks = db_api.stack_get_all_by_tenant(cnxt) or []
         return list(format_stack_details(stacks))
 
     @request_context
-    def create_stack(self, context, stack_name, template, params, args):
+    def create_stack(self, cnxt, stack_name, template, params, args):
         """
         The create_stack method creates a new stack using the template
         provided.
@@ -204,7 +204,7 @@ class EngineService(service.Service):
             else:
                 logger.warning("Stack create failed, state %s" % stack.state)
 
-        if db_api.stack_get_by_name(context, stack_name):
+        if db_api.stack_get_by_name(cnxt, stack_name):
             raise exception.StackExists(stack_name=stack_name)
 
         tmpl = parser.Template(template)
@@ -213,7 +213,7 @@ class EngineService(service.Service):
         template_params = parser.Parameters(stack_name, tmpl, params)
         common_params = api.extract_args(args)
 
-        stack = parser.Stack(context, stack_name, tmpl, template_params,
+        stack = parser.Stack(cnxt, stack_name, tmpl, template_params,
                              **common_params)
 
         stack.validate()
@@ -225,7 +225,7 @@ class EngineService(service.Service):
         return dict(stack.identifier())
 
     @request_context
-    def update_stack(self, context, stack_identity, template, params, args):
+    def update_stack(self, cnxt, stack_identity, template, params, args):
         """
         The update_stack method updates an existing stack based on the
         provided template and parameters.
@@ -240,9 +240,9 @@ class EngineService(service.Service):
         logger.info('template is %s' % template)
 
         # Get the database representation of the existing stack
-        db_stack = self._get_stack(context, stack_identity)
+        db_stack = self._get_stack(cnxt, stack_identity)
 
-        current_stack = parser.Stack.load(context, stack=db_stack)
+        current_stack = parser.Stack.load(cnxt, stack=db_stack)
 
         # Now parse the template and any parameters for the updated
         # stack definition.
@@ -251,7 +251,7 @@ class EngineService(service.Service):
         template_params = parser.Parameters(stack_name, tmpl, params)
         common_params = api.extract_args(args)
 
-        updated_stack = parser.Stack(context, stack_name, tmpl,
+        updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      template_params, **common_params)
 
         updated_stack.validate()
@@ -261,7 +261,7 @@ class EngineService(service.Service):
         return dict(current_stack.identifier())
 
     @request_context
-    def validate_template(self, context, template):
+    def validate_template(self, cnxt, template):
         """
         The validate_template method uses the stack parser to check
         the validity of a template.
@@ -304,37 +304,37 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def authenticated_to_backend(self, context):
+    def authenticated_to_backend(self, cnxt):
         """
         Verify that the credentials in the RPC context are valid for the
         current cloud backend.
         """
-        return clients.Clients(context).authenticated()
+        return clients.Clients(cnxt).authenticated()
 
     @request_context
-    def get_template(self, context, stack_identity):
+    def get_template(self, cnxt, stack_identity):
         """
         Get the template.
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to see.
         """
-        s = self._get_stack(context, stack_identity)
+        s = self._get_stack(cnxt, stack_identity)
         if s:
             return s.raw_template.template
         return None
 
     @request_context
-    def delete_stack(self, context, stack_identity):
+    def delete_stack(self, cnxt, stack_identity):
         """
         The delete_stack method deletes a given stack.
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to delete.
         """
-        st = self._get_stack(context, stack_identity)
+        st = self._get_stack(cnxt, stack_identity)
 
         logger.info('deleting stack %s' % st.name)
 
-        stack = parser.Stack.load(context, stack=st)
+        stack = parser.Stack.load(cnxt, stack=st)
 
         # Kill any pending threads by calling ThreadGroup.stop()
         if st.id in self.stg:
@@ -344,7 +344,7 @@ class EngineService(service.Service):
         self.tg.add_thread(stack.delete)
         return None
 
-    def list_resource_types(self, context):
+    def list_resource_types(self, cnxt):
         """
         Get a list of supported resource types.
         arg1 -> RPC context.
@@ -352,22 +352,22 @@ class EngineService(service.Service):
         return list(resource.get_types())
 
     @request_context
-    def list_events(self, context, stack_identity):
+    def list_events(self, cnxt, stack_identity):
         """
         The list_events method lists all events associated with a given stack.
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to get events for.
         """
         if stack_identity is not None:
-            st = self._get_stack(context, stack_identity)
+            st = self._get_stack(cnxt, stack_identity)
 
-            events = db_api.event_get_all_by_stack(context, st.id)
+            events = db_api.event_get_all_by_stack(cnxt, st.id)
         else:
-            events = db_api.event_get_all_by_tenant(context)
+            events = db_api.event_get_all_by_tenant(cnxt)
 
-        return [api.format_event(Event.load(context, e.id)) for e in events]
+        return [api.format_event(Event.load(cnxt, e.id)) for e in events]
 
-    def _authorize_stack_user(self, context, stack, resource_name):
+    def _authorize_stack_user(self, cnxt, stack, resource_name):
         '''
         Filter access to describe_stack_resource for stack in-instance users
         - The user must map to a User resource defined in the requested stack
@@ -376,7 +376,7 @@ class EngineService(service.Service):
         # We're expecting EC2 credentials because all in-instance credentials
         # are deployed as ec2 keypairs
         try:
-            ec2_creds = json.loads(context.aws_creds).get('ec2Credentials')
+            ec2_creds = json.loads(cnxt.aws_creds).get('ec2Credentials')
         except TypeError, AttributeError:
             ec2_creds = None
 
@@ -384,7 +384,7 @@ class EngineService(service.Service):
             access_key = ec2_creds.get('access')
             # Then we look up the AccessKey resource and check the stack
             try:
-                akey_rsrc = self.find_physical_resource(context, access_key)
+                akey_rsrc = self.find_physical_resource(cnxt, access_key)
             except exception.PhysicalResourceNotFound:
                 logger.warning("access_key % not found!" % access_key)
                 return False
@@ -403,12 +403,12 @@ class EngineService(service.Service):
         return False
 
     @request_context
-    def describe_stack_resource(self, context, stack_identity, resource_name):
-        s = self._get_stack(context, stack_identity)
-        stack = parser.Stack.load(context, stack=s)
+    def describe_stack_resource(self, cnxt, stack_identity, resource_name):
+        s = self._get_stack(cnxt, stack_identity)
+        stack = parser.Stack.load(cnxt, stack=s)
 
-        if cfg.CONF.heat_stack_user_role in context.roles:
-            if not self._authorize_stack_user(context, stack, resource_name):
+        if cfg.CONF.heat_stack_user_role in cnxt.roles:
+            if not self._authorize_stack_user(cnxt, stack, resource_name):
                 logger.warning("Access denied to resource %s" % resource_name)
                 raise exception.Forbidden()
 
@@ -423,29 +423,29 @@ class EngineService(service.Service):
         return api.format_stack_resource(stack[resource_name])
 
     @request_context
-    def find_physical_resource(self, context, physical_resource_id):
+    def find_physical_resource(self, cnxt, physical_resource_id):
         """
         Return an identifier for the resource with the specified physical
         resource ID.
         arg1 -> RPC context.
         arg2 -> The physical resource ID to look up.
         """
-        rs = db_api.resource_get_by_physical_resource_id(context,
+        rs = db_api.resource_get_by_physical_resource_id(cnxt,
                                                          physical_resource_id)
         if not rs:
             raise exception.PhysicalResourceNotFound(
                 resource_id=physical_resource_id)
 
-        stack = parser.Stack.load(context, stack=rs.stack)
+        stack = parser.Stack.load(cnxt, stack=rs.stack)
         resource = stack[rs.name]
 
         return dict(resource.identifier())
 
     @request_context
-    def describe_stack_resources(self, context, stack_identity, resource_name):
-        s = self._get_stack(context, stack_identity)
+    def describe_stack_resources(self, cnxt, stack_identity, resource_name):
+        s = self._get_stack(cnxt, stack_identity)
 
-        stack = parser.Stack.load(context, stack=s)
+        stack = parser.Stack.load(cnxt, stack=s)
 
         if resource_name is not None:
             name_match = lambda r: r.name == resource_name
@@ -457,23 +457,23 @@ class EngineService(service.Service):
                 if resource.id is not None and name_match(resource)]
 
     @request_context
-    def list_stack_resources(self, context, stack_identity):
-        s = self._get_stack(context, stack_identity)
+    def list_stack_resources(self, cnxt, stack_identity):
+        s = self._get_stack(cnxt, stack_identity)
 
-        stack = parser.Stack.load(context, stack=s)
+        stack = parser.Stack.load(cnxt, stack=s)
 
         return [api.format_stack_resource(resource, detail=False)
                 for resource in stack if resource.id is not None]
 
     @request_context
-    def metadata_update(self, context, stack_identity,
+    def metadata_update(self, cnxt, stack_identity,
                         resource_name, metadata):
         """
         Update the metadata for the given resource.
         """
-        s = self._get_stack(context, stack_identity)
+        s = self._get_stack(cnxt, stack_identity)
 
-        stack = parser.Stack.load(context, stack=s)
+        stack = parser.Stack.load(cnxt, stack=s)
         if resource_name not in stack:
             raise exception.ResourceNotFound(resource_name=resource_name,
                                              stack_name=stack.name)
@@ -533,18 +533,18 @@ class EngineService(service.Service):
                 self._start_in_thread(sid, run_alarm_action, actions)
 
     @request_context
-    def create_watch_data(self, context, watch_name, stats_data):
+    def create_watch_data(self, cnxt, watch_name, stats_data):
         '''
         This could be used by CloudWatch and WaitConditions
         and treat HA service events like any other CloudWatch.
         '''
-        rule = watchrule.WatchRule.load(context, watch_name)
+        rule = watchrule.WatchRule.load(cnxt, watch_name)
         rule.create_watch_data(stats_data)
         logger.debug('new watch:%s data:%s' % (watch_name, str(stats_data)))
         return stats_data
 
     @request_context
-    def show_watch(self, context, watch_name):
+    def show_watch(self, cnxt, watch_name):
         '''
         The show_watch method returns the attributes of one watch/alarm
         arg1 -> RPC context.
@@ -554,17 +554,17 @@ class EngineService(service.Service):
             wrn = [watch_name]
         else:
             try:
-                wrn = [w.name for w in db_api.watch_rule_get_all(context)]
+                wrn = [w.name for w in db_api.watch_rule_get_all(cnxt)]
             except Exception as ex:
                 logger.warn('show_watch (all) db error %s' % str(ex))
                 return
 
-        wrs = [watchrule.WatchRule.load(context, w) for w in wrn]
+        wrs = [watchrule.WatchRule.load(cnxt, w) for w in wrn]
         result = [api.format_watch(w) for w in wrs]
         return result
 
     @request_context
-    def show_watch_metric(self, context, namespace=None, metric_name=None):
+    def show_watch_metric(self, cnxt, namespace=None, metric_name=None):
         '''
         The show_watch method returns the datapoints for a metric
         arg1 -> RPC context.
@@ -580,7 +580,7 @@ class EngineService(service.Service):
             return
 
         try:
-            wds = db_api.watch_data_get_all(context)
+            wds = db_api.watch_data_get_all(cnxt)
         except Exception as ex:
             logger.warn('show_metric (all) db error %s' % str(ex))
             return
@@ -589,14 +589,14 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def set_watch_state(self, context, watch_name, state):
+    def set_watch_state(self, cnxt, watch_name, state):
         '''
         Temporarily set the state of a given watch
         arg1 -> RPC context.
         arg2 -> Name of the watch
         arg3 -> State (must be one defined in WatchRule class
         '''
-        wr = watchrule.WatchRule.load(context, watch_name)
+        wr = watchrule.WatchRule.load(cnxt, watch_name)
         actions = wr.set_watch_state(state)
         for action in actions:
             self._start_in_thread(wr.stack_id, action)
