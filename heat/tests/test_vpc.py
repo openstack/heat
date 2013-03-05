@@ -303,8 +303,8 @@ Resources:
     Type: AWS::EC2::InternetGateway
   the_vpc:
     Type: AWS::EC2::VPC
+    DependsOn : the_gateway
     Properties:
-      DependsOn : the_gateway
       CidrBlock: '10.0.0.0/16'
   the_subnet:
     Type: AWS::EC2::Subnet
@@ -314,9 +314,9 @@ Resources:
       AvailabilityZone: moon
   the_attachment:
     Type: AWS::EC2::VPCGatewayAttachment
+    DependsOn : the_subnet
     Properties:
       VpcId: {Ref: the_vpc}
-      DependsOn : the_subnet
       InternetGatewayId: {Ref: the_gateway}
 '''
 
