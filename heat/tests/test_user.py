@@ -279,6 +279,7 @@ class AccessKeyTest(unittest.TestCase):
             'test_stack.CfnUser'
         stack = self.parse_stack(t)
         stack.resources['CfnUser'].resource_id = self.fc.user_id
+        stack.resources['CfnUser'].state = 'CREATE_COMPLETE'
 
         resource = self.create_access_key(t, stack, 'HostKeys')
 
