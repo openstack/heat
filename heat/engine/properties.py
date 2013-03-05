@@ -16,6 +16,8 @@
 import collections
 import re
 
+from heat.common import exception
+
 
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
@@ -175,17 +177,18 @@ class Properties(collections.Mapping):
             try:
                 self[key]
             except ValueError as e:
-                return str(e)
+                msg = "Property error : %s" % str(e)
+                raise exception.StackValidationFailed(message=msg)
 
             # are there unimplemented Properties
             if not prop.implemented() and key in self.data:
-                return (self.error_prefix +
-                        '%s Property not implemented yet' % key)
+                msg = "Property %s not implemented yet" % key
+                raise exception.StackValidationFailed(message=msg)
 
         for key in self.data:
             if key not in self.props:
-                return (self.error_prefix +
-                        'Unknown Property "%s"' % key)
+                msg = "Unknown Property %s" % key
+                raise exception.StackValidationFailed(message=msg)
 
     def __getitem__(self, key):
         if key not in self:

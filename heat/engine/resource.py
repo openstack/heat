@@ -294,9 +294,7 @@ class Resource(object):
                                      self.stack.resolve_runtime_data,
                                      self.name)
         try:
-            err = self.properties.validate()
-            if err:
-                return err
+            self.properties.validate()
             self.state_set(self.CREATE_IN_PROGRESS)
             if callable(getattr(self, 'handle_create', None)):
                 self.handle_create()
@@ -344,9 +342,7 @@ class Resource(object):
                                     json_snippet.get('Properties', {}),
                                     self.stack.resolve_runtime_data,
                                     self.name)
-            err = properties.validate()
-            if err:
-                raise ValueError(err)
+            properties.validate()
             if callable(getattr(self, 'handle_update', None)):
                 result = self.handle_update(json_snippet)
         except Exception as ex:
