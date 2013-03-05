@@ -314,6 +314,8 @@ class Instance(resource.Resource):
                                    self.name, server.status))
 
     def attach_volumes(self):
+        if not self.properties['Volumes']:
+            return
         server_id = self.resource_id
         for vol in self.properties['Volumes']:
             if 'DeviceId' in vol:
