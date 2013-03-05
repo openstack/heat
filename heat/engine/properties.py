@@ -167,6 +167,11 @@ class Properties(collections.Mapping):
                 return (self.error_prefix +
                         '%s Property not implemented yet' % key)
 
+        for key in self.data:
+            if key not in self.props:
+                return (self.error_prefix +
+                        'Unknown Property "%s"' % key)
+
     def __getitem__(self, key):
         if key not in self:
             raise KeyError(self.error_prefix + 'Invalid Property %s' % key)

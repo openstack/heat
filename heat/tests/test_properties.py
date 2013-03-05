@@ -337,3 +337,8 @@ class PropertiesValidationTest(unittest.TestCase):
         schema = {'foo': {'Type': 'String'}}
         props = properties.Properties(schema, {'foo': 42})
         self.assertEqual(props.validate(), 'foo Value must be a string')
+
+    def test_unknown_typo(self):
+        schema = {'foo': {'Type': 'String'}}
+        props = properties.Properties(schema, {'food': 42})
+        self.assertNotEqual(props.validate(), None)
