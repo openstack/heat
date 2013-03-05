@@ -305,6 +305,7 @@ class StackTest(unittest.TestCase):
         self.ctx.username = self.username
         self.ctx.tenant_id = 'test_tenant'
 
+        generic_rsrc.GenericResource.properties_schema = {}
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
 

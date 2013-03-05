@@ -39,7 +39,10 @@ class Event(object):
         self.new_state = new_state
         self.reason = reason
         self.physical_resource_id = physical_resource_id
-        self.resource_properties = dict(resource_properties)
+        try:
+            self.resource_properties = dict(resource_properties)
+        except ValueError as ex:
+            self.resource_properties = {'Error': str(ex)}
         self.timestamp = timestamp
         self.id = id
 
