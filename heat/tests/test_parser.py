@@ -25,7 +25,10 @@ from heat.engine import resource
 from heat.engine import parser
 from heat.engine import parameters
 from heat.engine import template
+
 from heat.tests.utils import stack_delete_after
+from heat.tests import generic_resource as generic_rsrc
+
 import heat.db as db_api
 
 
@@ -302,6 +305,9 @@ class StackTest(unittest.TestCase):
         self.ctx.username = self.username
         self.ctx.tenant_id = 'test_tenant'
 
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
+
         self.m.ReplayAll()
 
     def tearDown(self):
@@ -510,7 +516,7 @@ class StackTest(unittest.TestCase):
     def test_update_modify_ok_replace(self):
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
-        resource.GenericResource.properties_schema = dummy_schema
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
 
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -527,8 +533,8 @@ class StackTest(unittest.TestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
         # patch in a dummy handle_update
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_update')
-        resource.GenericResource.handle_update(
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(
             tmpl2['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
         self.m.ReplayAll()
@@ -542,7 +548,7 @@ class StackTest(unittest.TestCase):
     def test_update_modify_update_failed(self):
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
-        resource.GenericResource.properties_schema = dummy_schema
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
 
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -561,8 +567,8 @@ class StackTest(unittest.TestCase):
                                      template.Template(tmpl2))
 
         # patch in a dummy handle_update
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_update')
-        resource.GenericResource.handle_update(
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(
             tmpl2['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_FAILED)
         self.m.ReplayAll()
@@ -575,7 +581,7 @@ class StackTest(unittest.TestCase):
     def test_update_modify_replace_failed_delete(self):
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
-        resource.GenericResource.properties_schema = dummy_schema
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
 
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -594,8 +600,8 @@ class StackTest(unittest.TestCase):
                                      template.Template(tmpl2))
 
         # patch in a dummy handle_update
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_update')
-        resource.GenericResource.handle_update(
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(
             tmpl2['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
 
@@ -614,7 +620,7 @@ class StackTest(unittest.TestCase):
     def test_update_modify_replace_failed_create(self):
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
-        resource.GenericResource.properties_schema = dummy_schema
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
 
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -633,14 +639,14 @@ class StackTest(unittest.TestCase):
                                      template.Template(tmpl2))
 
         # patch in a dummy handle_update
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_update')
-        resource.GenericResource.handle_update(
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(
             tmpl2['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
 
         # patch in a dummy handle_create making the replace fail creating
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_create')
-        resource.GenericResource.handle_create().AndRaise(Exception)
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
+        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -651,7 +657,7 @@ class StackTest(unittest.TestCase):
     def test_update_rollback(self):
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
-        resource.GenericResource.properties_schema = dummy_schema
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
 
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -671,19 +677,19 @@ class StackTest(unittest.TestCase):
 
         # There will be two calls to handle_update, one for the new template
         # then another (with the initial template) for rollback
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_update')
-        resource.GenericResource.handle_update(
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(
             tmpl2['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
-        resource.GenericResource.handle_update(
+        generic_rsrc.GenericResource.handle_update(
             tmpl['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement resource, but succeed the second call (rollback)
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_create')
-        resource.GenericResource.handle_create().AndRaise(Exception)
-        resource.GenericResource.handle_create().AndReturn(None)
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
+        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
+        generic_rsrc.GenericResource.handle_create().AndReturn(None)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -695,7 +701,7 @@ class StackTest(unittest.TestCase):
     def test_update_rollback_fail(self):
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
-        resource.GenericResource.properties_schema = dummy_schema
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
 
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
@@ -715,19 +721,19 @@ class StackTest(unittest.TestCase):
 
         # There will be two calls to handle_update, one for the new template
         # then another (with the initial template) for rollback
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_update')
-        resource.GenericResource.handle_update(
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(
             tmpl2['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
-        resource.GenericResource.handle_update(
+        generic_rsrc.GenericResource.handle_update(
             tmpl['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement resource, and again on the second call (rollback)
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_create')
-        resource.GenericResource.handle_create().AndRaise(Exception)
-        resource.GenericResource.handle_create().AndRaise(Exception)
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
+        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
+        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -754,8 +760,8 @@ class StackTest(unittest.TestCase):
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement resource, and succeed on the second call (rollback)
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_create')
-        resource.GenericResource.handle_create().AndRaise(Exception)
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
+        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -802,7 +808,7 @@ class StackTest(unittest.TestCase):
         '''
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
-        resource.GenericResource.properties_schema = dummy_schema
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
         tmpl = {'Resources': {
                 'AResource': {'Type': 'GenericResourceType',
                               'Properties': {'Foo': 'abc'}},
@@ -825,21 +831,21 @@ class StackTest(unittest.TestCase):
         self.assertEqual(self.stack['BResource'].properties['Foo'],
                          'AResource')
 
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_update')
-        resource.GenericResource.handle_update(
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(
             tmpl2['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
 
         br2_snip = {'Type': 'GenericResourceType',
                     'Properties': {'Foo': 'inst-007'}}
-        resource.GenericResource.handle_update(
+        generic_rsrc.GenericResource.handle_update(
             br2_snip).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
 
-        self.m.StubOutWithMock(resource.GenericResource, 'FnGetRefId')
-        resource.GenericResource.FnGetRefId().AndReturn(
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'FnGetRefId')
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'AResource')
-        resource.GenericResource.FnGetRefId().MultipleTimes().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().MultipleTimes().AndReturn(
             'inst-007')
         self.m.ReplayAll()
 
@@ -860,7 +866,7 @@ class StackTest(unittest.TestCase):
         '''
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
-        resource.GenericResource.properties_schema = dummy_schema
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
         tmpl = {'Resources': {
                 'AResource': {'Type': 'GenericResourceType',
                               'Properties': {'Foo': 'abc'}},
@@ -884,27 +890,27 @@ class StackTest(unittest.TestCase):
         self.assertEqual(self.stack['BResource'].properties['Foo'],
                          'AResource')
 
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_update')
-        self.m.StubOutWithMock(resource.GenericResource, 'FnGetRefId')
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_create')
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'FnGetRefId')
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
 
         # mocks for first (failed update)
-        resource.GenericResource.handle_update(
+        generic_rsrc.GenericResource.handle_update(
             tmpl2['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'AResource')
 
         # mock to make the replace fail when creating the replacement resource
-        resource.GenericResource.handle_create().AndRaise(Exception)
+        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
 
         # mocks for second rollback update
-        resource.GenericResource.handle_update(
+        generic_rsrc.GenericResource.handle_update(
             tmpl['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
 
-        resource.GenericResource.handle_create().AndReturn(None)
-        resource.GenericResource.FnGetRefId().MultipleTimes().AndReturn(
+        generic_rsrc.GenericResource.handle_create().AndReturn(None)
+        generic_rsrc.GenericResource.FnGetRefId().MultipleTimes().AndReturn(
             'AResource')
 
         self.m.ReplayAll()
@@ -927,7 +933,7 @@ class StackTest(unittest.TestCase):
         '''
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
-        resource.GenericResource.properties_schema = dummy_schema
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
         tmpl = {'Resources': {
                 'AResource': {'Type': 'GenericResourceType',
                               'Properties': {'Foo': 'abc'}},
@@ -951,67 +957,67 @@ class StackTest(unittest.TestCase):
         self.assertEqual(self.stack['BResource'].properties['Foo'],
                          'AResource')
 
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_update')
-        self.m.StubOutWithMock(resource.GenericResource, 'FnGetRefId')
-        self.m.StubOutWithMock(resource.GenericResource, 'handle_create')
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'FnGetRefId')
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
 
         # mocks for first and second (failed update)
-        resource.GenericResource.handle_update(
+        generic_rsrc.GenericResource.handle_update(
             tmpl2['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
         br2_snip = {'Type': 'GenericResourceType',
                     'Properties': {'Foo': 'inst-007'}}
-        resource.GenericResource.handle_update(
+        generic_rsrc.GenericResource.handle_update(
             br2_snip).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
 
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'AResource')
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
         # self.state_set(self.UPDATE_IN_PROGRESS)
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
         # self.state_set(self.DELETE_IN_PROGRESS)
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
         # self.state_set(self.DELETE_COMPLETE)
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
         # self.properties.validate()
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
         # self.state_set(self.CREATE_IN_PROGRESS)
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
 
         # mock to make the replace fail when creating the second
         # replacement resource
-        resource.GenericResource.handle_create().AndReturn(None)
-        resource.GenericResource.handle_create().AndRaise(Exception)
+        generic_rsrc.GenericResource.handle_create().AndReturn(None)
+        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
 
         # mocks for second rollback update
-        resource.GenericResource.handle_update(
+        generic_rsrc.GenericResource.handle_update(
             tmpl['Resources']['AResource']).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
         br2_snip = {'Type': 'GenericResourceType',
                     'Properties': {'Foo': 'AResource'}}
-        resource.GenericResource.handle_update(
+        generic_rsrc.GenericResource.handle_update(
             br2_snip).AndReturn(
                 resource.Resource.UPDATE_REPLACE)
 
         # self.state_set(self.DELETE_IN_PROGRESS)
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
         # self.state_set(self.DELETE_IN_PROGRESS)
-        resource.GenericResource.FnGetRefId().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
 
-        resource.GenericResource.handle_create().AndReturn(None)
-        resource.GenericResource.handle_create().AndReturn(None)
+        generic_rsrc.GenericResource.handle_create().AndReturn(None)
+        generic_rsrc.GenericResource.handle_create().AndReturn(None)
 
         # reverting to AResource
-        resource.GenericResource.FnGetRefId().MultipleTimes().AndReturn(
+        generic_rsrc.GenericResource.FnGetRefId().MultipleTimes().AndReturn(
             'AResource')
 
         self.m.ReplayAll()

@@ -20,8 +20,11 @@ import unittest
 from heat.common import context
 import heat.db as db_api
 from heat.engine import parser
+from heat.engine import resource
 from heat.engine import template
 from heat.engine import event
+
+from heat.tests import generic_resource as generic_rsrc
 
 
 tmpl = {
@@ -47,6 +50,9 @@ class EventTest(unittest.TestCase):
         self.ctx.username = self.username
 
         self.m.ReplayAll()
+
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
 
         self.stack = parser.Stack(self.ctx, 'event_load_test_stack',
                                   template.Template(tmpl))

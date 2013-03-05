@@ -18,51 +18,78 @@ from nose.plugins.attrib import attr
 import mox
 
 from heat.common import context
+from heat.common import exception
 from heat.engine import parser
 from heat.engine import resource
 from heat.openstack.common import uuidutils
+
+from heat.tests import generic_resource as generic_rsrc
 
 
 @attr(tag=['unit', 'resource'])
 @attr(speed='fast')
 class ResourceTest(unittest.TestCase):
     def setUp(self):
+        self.m = mox.Mox()
         self.stack = parser.Stack(None, 'test_stack', parser.Template({}),
                                   stack_id=uuidutils.generate_uuid())
 
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
+
+    def tearDown(self):
+        self.m.UnsetStubs()
+
+    def test_get_class_ok(self):
+        cls = resource.get_class('GenericResourceType')
+        self.assertEqual(cls, generic_rsrc.GenericResource)
+
+    def test_get_class_noexist(self):
+        self.assertRaises(exception.StackValidationFailed, resource.get_class,
+                          'NoExistResourceType')
+
+    def test_resource_new_ok(self):
+        snippet = {'Type': 'GenericResourceType'}
+        res = resource.Resource('aresource', snippet, self.stack)
+
+    def test_resource_new_err(self):
+        snippet = {'Type': 'NoExistResourceType'}
+        self.assertRaises(exception.StackValidationFailed,
+                          resource.Resource, 'aresource', snippet, self.stack)
+
     def test_state_defaults(self):
         tmpl = {'Type': 'Foo'}
-        res = resource.GenericResource('test_res_def', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_res_def', tmpl, self.stack)
         self.assertEqual(res.state, None)
         self.assertEqual(res.state_description, '')
 
     def test_state(self):
         tmpl = {'Type': 'Foo'}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.state_set('bar')
         self.assertEqual(res.state, 'bar')
 
     def test_state_description(self):
         tmpl = {'Type': 'Foo'}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.state_set('blarg', 'wibble')
         self.assertEqual(res.state_description, 'wibble')
 
     def test_type(self):
         tmpl = {'Type': 'Foo'}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual(res.type(), 'Foo')
 
     def test_created_time(self):
         tmpl = {'Type': 'Foo'}
-        res = resource.GenericResource('test_res_new', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_res_new', tmpl, self.stack)
         self.assertEqual(res.created_time, None)
         res._store()
         self.assertNotEqual(res.created_time, None)
 
     def test_updated_time(self):
         tmpl = {'Type': 'Foo'}
-        res = resource.GenericResource('test_res_upd', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_res_upd', tmpl, self.stack)
         res._store()
         stored_time = res.updated_time
         res.state_set(res.CREATE_IN_PROGRESS, 'testing')
@@ -74,7 +101,7 @@ class ResourceTest(unittest.TestCase):
             'Type': 'Foo',
             'foo': {'Fn::Join': [' ', ['bar', 'baz', 'quux']]}
         }
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
 
         parsed_tmpl = res.parsed_template()
         self.assertEqual(parsed_tmpl['Type'], 'Foo')
@@ -85,13 +112,13 @@ class ResourceTest(unittest.TestCase):
 
     def test_parsed_template_default(self):
         tmpl = {'Type': 'Foo'}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual(res.parsed_template('foo'), {})
         self.assertEqual(res.parsed_template('foo', 'bar'), 'bar')
 
     def test_metadata_default(self):
         tmpl = {'Type': 'Foo'}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual(res.metadata, {})
 
     def test_equals_different_stacks(self):
@@ -100,9 +127,9 @@ class ResourceTest(unittest.TestCase):
         tmpl3 = {'Type': 'Bar'}
         stack2 = parser.Stack(None, 'test_stack', parser.Template({}),
                               stack_id=-1)
-        res1 = resource.GenericResource('test_resource', tmpl1, self.stack)
-        res2 = resource.GenericResource('test_resource', tmpl2, stack2)
-        res3 = resource.GenericResource('test_resource2', tmpl3, stack2)
+        res1 = generic_rsrc.GenericResource('test_resource', tmpl1, self.stack)
+        res2 = generic_rsrc.GenericResource('test_resource', tmpl2, stack2)
+        res3 = generic_rsrc.GenericResource('test_resource2', tmpl3, stack2)
 
         self.assertEqual(res1, res2)
         self.assertNotEqual(res1, res3)
@@ -110,29 +137,31 @@ class ResourceTest(unittest.TestCase):
     def test_equals_names(self):
         tmpl1 = {'Type': 'Foo'}
         tmpl2 = {'Type': 'Foo'}
-        res1 = resource.GenericResource('test_resource1', tmpl1, self.stack)
-        res2 = resource.GenericResource('test_resource2', tmpl2, self.stack)
+        res1 = generic_rsrc.GenericResource('test_resource1',
+                                            tmpl1, self.stack)
+        res2 = generic_rsrc.GenericResource('test_resource2', tmpl2,
+                                            self.stack)
 
         self.assertNotEqual(res1, res2)
 
     def test_update_template_diff_empty(self):
         tmpl = {'Type': 'Foo'}
         update_snippet = {}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertRaises(NotImplementedError, res.update_template_diff,
                           update_snippet)
 
     def test_update_template_diff_changed_notallowed(self):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Bar'}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertRaises(NotImplementedError, res.update_template_diff,
                           update_snippet)
 
     def test_update_template_diff_changed_modified(self):
         tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 456}}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(json_snippet=update_snippet)
         self.assertEqual(diff, {'Metadata': {'foo': 456}})
@@ -140,7 +169,7 @@ class ResourceTest(unittest.TestCase):
     def test_update_template_diff_changed_add(self):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 123}}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(json_snippet=update_snippet)
         self.assertEqual(diff, {'Metadata': {'foo': 123}})
@@ -148,7 +177,7 @@ class ResourceTest(unittest.TestCase):
     def test_update_template_diff_changed_remove(self):
         tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         update_snippet = {'Type': 'Foo'}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(json_snippet=update_snippet)
         self.assertEqual(diff, {'Metadata': None})
@@ -156,14 +185,14 @@ class ResourceTest(unittest.TestCase):
     def test_update_template_diff_properties_none(self):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Foo'}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         diff = res.update_template_diff_properties(json_snippet=update_snippet)
         self.assertEqual(diff, {})
 
     def test_update_template_diff_properties_added(self):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 123}}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Bar',)
         diff = res.update_template_diff_properties(json_snippet=update_snippet)
         self.assertEqual(diff, {'Bar': 123})
@@ -171,7 +200,7 @@ class ResourceTest(unittest.TestCase):
     def test_update_template_diff_properties_removed(self):
         tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
         update_snippet = {'Type': 'Foo', 'Properties': {}}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Bar',)
         diff = res.update_template_diff_properties(json_snippet=update_snippet)
         self.assertEqual(diff, {'Bar': None})
@@ -179,7 +208,7 @@ class ResourceTest(unittest.TestCase):
     def test_update_template_diff_properties_changed(self):
         tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
         update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 456}}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Bar',)
         diff = res.update_template_diff_properties(json_snippet=update_snippet)
         self.assertEqual(diff, {'Bar': 456})
@@ -187,7 +216,7 @@ class ResourceTest(unittest.TestCase):
     def test_update_template_diff_properties_notallowed(self):
         tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
         update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 456}}
-        res = resource.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Cat',)
         self.assertRaises(NotImplementedError,
                           res.update_template_diff_properties,
@@ -208,8 +237,8 @@ class MetadataTest(unittest.TestCase):
         ctx.username = 'metadata_test_user'
         self.stack = parser.Stack(ctx, 'test_stack', parser.Template({}))
         self.stack.store()
-        self.res = resource.GenericResource('metadata_resource',
-                                            tmpl, self.stack)
+        self.res = generic_rsrc.GenericResource('metadata_resource',
+                                                tmpl, self.stack)
         self.res.create()
 
     def tearDown(self):

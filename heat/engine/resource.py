@@ -40,7 +40,12 @@ def get_types():
 
 def get_class(resource_type):
     '''Return the Resource class for a given resource type'''
-    return _resource_classes.get(resource_type)
+    cls = _resource_classes.get(resource_type)
+    if cls is None:
+        msg = "Unknown resource Type : %s" % resource_type
+        raise exception.StackValidationFailed(message=msg)
+    else:
+        return cls
 
 
 def _register_class(resource_type, resource_class):
@@ -118,7 +123,7 @@ class Resource(object):
             return super(Resource, cls).__new__(cls)
 
         # Select the correct subclass to instantiate
-        ResourceClass = get_class(json['Type']) or GenericResource
+        ResourceClass = get_class(json['Type'])
         return ResourceClass(name, json, stack)
 
     def __init__(self, name, json_snippet, stack):
@@ -534,13 +539,3 @@ class Resource(object):
         if new_metadata:
             logger.warning("Resource %s does not implement metadata update" %
                            self.name)
-
-
-class GenericResource(Resource):
-    properties_schema = {}
-
-    def handle_create(self):
-        logger.warning('Creating generic resource (Type "%s")' % self.type())
-
-    def handle_update(self, json_snippet=None):
-        logger.warning('Updating generic resource (Type "%s")' % self.type())
