@@ -29,6 +29,7 @@ from heat.common import identifier
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import service
+from heat.engine.properties import Properties
 from heat.engine.resources import instance as instances
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
@@ -215,14 +216,16 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
                      stack.t, stack.parameters).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
-        error = 'fubar'
-        stack.validate().AndReturn(error)
+        stack.validate().AndRaise(exception.StackValidationFailed(
+            message='fubar'))
 
         self.m.ReplayAll()
 
-        result = self.man.create_stack(self.ctx, stack_name,
-                                       template, params, {})
-        self.assertEqual(result, {'Description': error})
+        self.assertRaises(
+            exception.StackValidationFailed,
+            self.man.create_stack,
+            self.ctx, stack_name,
+            template, params, {})
         self.m.VerifyAll()
 
     def test_stack_create_invalid_stack_name(self):
@@ -244,6 +247,34 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
                           self.man.create_stack,
                           self.ctx, stack_name,
                           stack.t, {}, {})
+
+    def test_stack_validate(self):
+        stack_name = 'service_create_test_validate'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        setup_mocks(self.m, stack)
+
+        template = dict(stack.t)
+        template['Parameters']['KeyName']['Default'] = 'test'
+        resource = stack['WebServer']
+
+        self.m.ReplayAll()
+
+        resource.properties = Properties(
+            resource.properties_schema,
+            {
+                'ImageId': 'foo',
+                'KeyName': 'test',
+                'InstanceType': 'm1.large'
+            })
+        stack.validate()
+
+        resource.properties = Properties(
+            resource.properties_schema,
+            {
+                'KeyName': 'test',
+                'InstanceType': 'm1.large'
+            })
+        self.assertRaises(exception.StackValidationFailed, stack.validate)
 
     def test_stack_delete(self):
         stack_name = 'service_delete_test_stack'
@@ -336,14 +367,16 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
                      stack.t, stack.parameters).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
-        error = 'fubar'
-        stack.validate().AndReturn(error)
+        stack.validate().AndRaise(exception.StackValidationFailed(
+            message='fubar'))
 
         self.m.ReplayAll()
 
-        result = self.man.update_stack(self.ctx, old_stack.identifier(),
-                                       template, params, {})
-        self.assertEqual(result, {'Description': error})
+        self.assertRaises(
+            exception.StackValidationFailed,
+            self.man.update_stack,
+            self.ctx, old_stack.identifier(),
+            template, params, {})
         self.m.VerifyAll()
 
     def test_stack_update_nonexist(self):

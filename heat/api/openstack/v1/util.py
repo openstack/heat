@@ -96,6 +96,7 @@ def remote_error(ex):
         'PhysicalResourceNotFound': exc.HTTPNotFound,
         'InvalidTenant': exc.HTTPForbidden,
         'StackExists': exc.HTTPConflict,
+        'StackValidationFailed': exc.HTTPBadRequest,
     }
 
     Exc = error_map.get(ex.exc_type, exc.HTTPInternalServerError)

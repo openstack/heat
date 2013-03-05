@@ -221,6 +221,10 @@ class StackExists(OpenstackException):
     message = _("The Stack (%(stack_name)s) already exists.")
 
 
+class StackValidationFailed(OpenstackException):
+    message = _("%(message)s")
+
+
 class ResourceNotFound(OpenstackException):
     message = _("The Resource (%(resource_name)s) could not be found "
                 "in Stack %(stack_name)s.")

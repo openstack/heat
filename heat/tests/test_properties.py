@@ -316,7 +316,7 @@ class PropertiesValidationTest(unittest.TestCase):
     def test_missing_required(self):
         schema = {'foo': {'Type': 'String', 'Required': True}}
         props = properties.Properties(schema, {})
-        self.assertNotEqual(props.validate(), None)
+        self.assertEqual(props.validate(), 'Property foo not assigned')
 
     def test_missing_unimplemented(self):
         schema = {'foo': {'Type': 'String', 'Implemented': False}}
@@ -326,7 +326,7 @@ class PropertiesValidationTest(unittest.TestCase):
     def test_present_unimplemented(self):
         schema = {'foo': {'Type': 'String', 'Implemented': False}}
         props = properties.Properties(schema, {'foo': 'bar'})
-        self.assertNotEqual(props.validate(), None)
+        self.assertEqual(props.validate(), 'foo Property not implemented yet')
 
     def test_missing(self):
         schema = {'foo': {'Type': 'String'}}
@@ -336,4 +336,4 @@ class PropertiesValidationTest(unittest.TestCase):
     def test_bad_data(self):
         schema = {'foo': {'Type': 'String'}}
         props = properties.Properties(schema, {'foo': 42})
-        self.assertNotEqual(props.validate(), None)
+        self.assertEqual(props.validate(), 'foo Value must be a string')
