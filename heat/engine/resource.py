@@ -300,16 +300,12 @@ class Resource(object):
                 self.handle_create()
             while not self.check_active():
                 eventlet.sleep(1)
+        except greenlet.GreenletExit:
+            raise
         except Exception as ex:
-            # If we get a GreenletExit exception, the create thread has
-            # been killed so we should raise allowing this thread to exit
-            if type(ex) is greenlet.GreenletExit:
-                logger.warning('GreenletExit during create, exiting')
-                raise
-            else:
-                logger.exception('create %s', str(self))
-                self.state_set(self.CREATE_FAILED, str(ex))
-                return str(ex) or "Error : %s" % type(ex)
+            logger.exception('create %s', str(self))
+            self.state_set(self.CREATE_FAILED, str(ex))
+            return str(ex) or "Error : %s" % type(ex)
         else:
             self.state_set(self.CREATE_COMPLETE)
 
