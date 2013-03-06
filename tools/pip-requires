@@ -30,4 +30,4 @@ python-swiftclient
 python-quantumclient>=2.1.2
 python-cinderclient
 PyYAML>=3.1.0
-http://tarballs.openstack.org/oslo-config/oslo-config-2013.1b4.tar.gz#egg=oslo-config
+http://tarballs.openstack.org/oslo-config/oslo.config-1.1.0b1.tar.gz#egg=oslo.config
