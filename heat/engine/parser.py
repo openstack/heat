@@ -317,6 +317,10 @@ class Stack(object):
         else:
             self.state_set(self.ROLLBACK_IN_PROGRESS, 'Stack rollback started')
 
+        # cache all the resources runtime data.
+        for r in self:
+            r.cache_template()
+
         # Now make the resources match the new stack definition
         with eventlet.Timeout(self.timeout_mins * 60) as tmo:
             try:
@@ -371,7 +375,7 @@ class Stack(object):
                     # Compare resolved pre/post update resource snippets,
                     # note the new resource snippet is resolved in the context
                     # of the existing stack (which is the stack being updated)
-                    old_snippet = self.resolve_runtime_data(self[res.name].t)
+                    old_snippet = self[res.name].parsed_template(cached=True)
                     new_snippet = self.resolve_runtime_data(res.t)
 
                     if old_snippet != new_snippet:
