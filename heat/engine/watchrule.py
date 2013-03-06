@@ -247,10 +247,14 @@ class WatchRule(object):
 
     def create_watch_data(self, data):
         if not self.rule['MetricName'] in data:
-            logger.warn('new data has incorrect metric:%s' %
-                        (self.rule['MetricName']))
-            raise ValueError('MetricName %s missing' %
-                             self.rule['MetricName'])
+            # Our simplified cloudwatch implementation only expects a single
+            # Metric associated with each alarm, but some cfn-push-stats
+            # options, e.g --haproxy try to push multiple metrics when we
+            # actually only care about one (the one we're alarming on)
+            # so just ignore any data which doesn't contain MetricName
+            logger.debug('Ignoring metric data (only accept %s) : %s' %
+                        (self.rule['MetricName'], data))
+            return
 
         watch_data = {
             'data': data,
