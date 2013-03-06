@@ -129,7 +129,7 @@ lb_template = r'''
                 "\n",
                 "* * * * * /opt/aws/bin/cfn-hup -f\n",
                 "* * * * * /opt/aws/bin/cfn-push-stats ",
-                " --watch latency_watcher --haproxy\n"
+                " --watch ", { "Ref" : "latency_watcher" }, " --haproxy\n"
                 ]]},
                 "mode"    : "000600",
                 "owner"   : "root",
