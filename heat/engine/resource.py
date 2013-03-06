@@ -130,6 +130,7 @@ class Resource(object):
         self.name = name
         self.json_snippet = json_snippet
         self.t = stack.resolve_static_data(json_snippet)
+        self.cached_t = None
         self.properties = Properties(self.properties_schema,
                                      self.t.get('Properties', {}),
                                      self.stack.resolve_runtime_data,
@@ -172,17 +173,28 @@ class Resource(object):
         return identifier.ResourceIdentifier(resource_name=self.name,
                                              **self.stack.identifier())
 
-    def parsed_template(self, section=None, default={}):
+    def parsed_template(self, section=None, default={}, cached=False):
         '''
         Return the parsed template data for the resource. May be limited to
         only one section of the data, in which case a default value may also
         be supplied.
         '''
-        if section is None:
-            template = self.t
+        if cached and self.cached_t:
+            t = self.cached_t
         else:
-            template = self.t.get(section, default)
+            t = self.t
+        if section is None:
+            template = t
+        else:
+            template = t.get(section, default)
         return self.stack.resolve_runtime_data(template)
+
+    def cache_template(self):
+        '''
+        make a cache of the resource's parsed template
+        this can then be used via parsed_template(cached=True)
+        '''
+        self.cached_t = self.stack.resolve_runtime_data(self.t)
 
     def update_template_diff(self, json_snippet=None):
         '''
@@ -194,7 +206,8 @@ class Resource(object):
         update_allowed_set = set(self.update_allowed_keys)
 
         # Create a set containing the keys in both current and update template
-        current_template = self.parsed_template()
+        current_template = self.parsed_template(cached=True)
+
         template_keys = set(current_template.keys())
         new_template = self.stack.resolve_runtime_data(json_snippet)
         template_keys.update(set(new_template.keys()))
@@ -221,7 +234,9 @@ class Resource(object):
         update_allowed_set = set(self.update_allowed_properties)
 
         # Create a set containing the keys in both current and update template
-        current_properties = self.parsed_template().get('Properties', {})
+        tmpl = self.parsed_template(cached=True)
+        current_properties = tmpl.get('Properties', {})
+
         template_properties = set(current_properties.keys())
         updated_properties = json_snippet.get('Properties', {})
         template_properties.update(set(updated_properties.keys()))
