@@ -459,6 +459,22 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
             self.fail('No redirect generated')
         self.m.VerifyAll()
 
+    def test_lookup_arn(self):
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
+
+        req = self._get('/stacks%s' % identity.arn_url_path())
+
+        self.m.ReplayAll()
+
+        try:
+            result = self.controller.lookup(req, tenant_id=identity.tenant,
+                                            stack_name=identity.arn())
+        except webob.exc.HTTPFound as found:
+            self.assertEqual(found.location, self._url(identity))
+        else:
+            self.fail('No redirect generated')
+        self.m.VerifyAll()
+
     def test_lookup_nonexistant(self):
         stack_name = 'wibble'
 
