@@ -481,11 +481,19 @@ class EngineService(service.Service):
         resource = stack[resource_name]
         resource.metadata_update(new_metadata=metadata)
 
+        # This is not "nice" converting to the stored context here,
+        # but this happens because the keystone user associated with the
+        # WaitCondition doesn't have permission to read the secret key of
+        # the user associated with the cfn-credentials file
+        user_creds = db_api.user_creds_get(s.user_creds_id)
+        stack_context = context.RequestContext.from_dict(user_creds)
+        refresh_stack = parser.Stack.load(stack_context, stack=s)
+
         # Refresh the metadata for all other resources, since we expect
         # resource_name to be a WaitCondition resource, and other
         # resources may refer to WaitCondition Fn::GetAtt Data, which
         # is updated here.
-        for res in stack:
+        for res in refresh_stack:
             if res.name != resource_name:
                 res.metadata_update()
 
