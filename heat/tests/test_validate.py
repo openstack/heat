@@ -19,6 +19,7 @@ import mox
 from nose.plugins.attrib import attr
 
 from heat.tests.v1_1 import fakes
+from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import instance as instances
 from heat.engine import service
@@ -240,7 +241,8 @@ class validateTest(unittest.TestCase):
 
         self.m.ReplayAll()
         volumeattach = stack.resources['MountPoint']
-        self.assertTrue(volumeattach.validate())
+        self.assertRaises(exception.StackValidationFailed,
+                          volumeattach.validate)
 
     def test_validate_ref_valid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabase')
