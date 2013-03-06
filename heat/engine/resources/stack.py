@@ -43,15 +43,13 @@ class NestedStack(stack_resource.StackResource):
         template = template_format.parse(template_data)
 
         self.create_with_template(template, self.properties[PROP_PARAMETERS])
+        self.resource_id_set(self.nested().identifier().arn())
 
     def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
         self.delete_nested()
-
-    def FnGetRefId(self):
-        return self.nested().identifier().arn()
 
     def FnGetAtt(self, key):
         if not key.startswith('Outputs.'):

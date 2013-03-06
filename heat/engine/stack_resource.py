@@ -87,7 +87,7 @@ class StackResource(resource.Resource):
         exception.
         '''
         stack = self.nested()
-        if not stack:
+        if stack is None:
             return None
         if op not in stack.outputs:
             raise exception.InvalidTemplateAttribute(
