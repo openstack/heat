@@ -27,7 +27,7 @@ from heat.common import exception
 import heat.openstack.common.log as logging
 from heat.openstack.common import policy
 
-LOG = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 policy_opts = [
     cfg.StrOpt('policy_file', default='policy.json'),
@@ -69,8 +69,8 @@ class Enforcer(object):
             rule_type = "default "
 
         text_rules = dict((k, str(v)) for k, v in rules.items())
-        LOG.debug(_('Loaded %(rule_type)spolicy rules: %(text_rules)s') %
-                  locals())
+        logger.debug(_('Loaded %(rule_type)spolicy rules: %(text_rules)s') %
+                     locals())
 
         self.set_rules(rules)
 
@@ -81,7 +81,7 @@ class Enforcer(object):
         if policy_file:
             return policy_file
         else:
-            LOG.warn(_('Unable to find policy file'))
+            logger.warn(_('Unable to find policy file'))
             return None
 
     def _read_policy_file(self):
@@ -91,7 +91,7 @@ class Enforcer(object):
         """
         mtime = os.path.getmtime(self.policy_path)
         if not self.policy_file_contents or mtime != self.policy_file_mtime:
-            LOG.debug(_("Loading policy from %s") % self.policy_path)
+            logger.debug(_("Loading policy from %s") % self.policy_path)
             with open(self.policy_path) as fap:
                 raw_contents = fap.read()
                 rules_dict = json.loads(raw_contents)
