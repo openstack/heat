@@ -216,6 +216,23 @@ class Instance(resource.Resource):
 
         return self.mime_string
 
+    @staticmethod
+    def _build_nics(network_interfaces):
+        if not network_interfaces:
+            return None
+
+        nics = []
+        for nic in network_interfaces:
+            if isinstance(nic, basestring):
+                nics.append({
+                    'NetworkInterfaceId': nic,
+                    'DeviceIndex': len(nics)})
+            else:
+                nics.append(nic)
+        sorted_nics = sorted(nics, key=lambda nic: int(nic['DeviceIndex']))
+
+        return [{'port-id': nic['NetworkInterfaceId']} for nic in sorted_nics]
+
     def handle_create(self):
         if self.properties.get('SecurityGroups') is None:
             security_groups = None
@@ -267,12 +284,7 @@ class Instance(resource.Resource):
         else:
             scheduler_hints = None
 
-        nics = []
-        if self.properties['NetworkInterfaces']:
-            for nic in self.properties['NetworkInterfaces']:
-                nics.append({'port-id': nic})
-        else:
-            nics = None
+        nics = self._build_nics(self.properties['NetworkInterfaces'])
 
         server_userdata = self._build_userdata(userdata)
         server = None
