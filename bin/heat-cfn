@@ -411,6 +411,8 @@ def get_client(options):
     Returns a new client object to a heat server
     specified by the --host and --port options
     supplied to the CLI
+    Note options.host is ignored for heat-boto, host must be
+    set in your boto config via the cfn_region_endpoint option
     """
     return heat_client.get_client(host=options.host,
                                   port=options.port,
@@ -438,7 +440,7 @@ def create_options(parser):
     parser.add_option('-y', '--yes', default=False, action="store_true",
                       help="Don't prompt for user input; assume the answer to "
                            "every question is 'yes'.")
-    parser.add_option('-H', '--host', metavar="ADDRESS", default="0.0.0.0",
+    parser.add_option('-H', '--host', metavar="ADDRESS", default=None,
                       help="Address of heat API host. "
                            "Default: %default")
     parser.add_option('-p', '--port', dest="port", metavar="PORT",
@@ -526,6 +528,14 @@ def parse_options(parser, cli_args):
     for option, env_val in env_opts.items():
         if not getattr(options, option):
             setattr(options, option, env_val)
+
+    if scriptname == 'heat-boto':
+        if options.host is not None:
+            logging.error("Use boto.cfg or ~/.boto cfn_region_endpoint")
+            raise ValueError("--host option not supported by heat-boto")
+        if options.url is not None:
+            logging.error("Use boto.cfg or ~/.boto cfn_region_endpoint")
+            raise ValueError("--url option not supported by heat-boto")
 
     if options.url is not None:
         u = urlparse(options.url)
@@ -648,7 +658,11 @@ Commands:
     oparser = optparse.OptionParser(version=version_string,
                                     usage=usage.strip())
     create_options(oparser)
-    (opts, cmd, args) = parse_options(oparser, sys.argv[1:])
+    try:
+        (opts, cmd, args) = parse_options(oparser, sys.argv[1:])
+    except ValueError as ex:
+        logging.error("Error parsing options : %s" % str(ex))
+        sys.exit(1)
 
     try:
         start_time = time.time()
