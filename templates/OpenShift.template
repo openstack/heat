@@ -1,218 +1,291 @@
 {
-  "AWSTemplateFormatVersion" : "2010-09-09",
-
-  "Description" : "OpenShift Broker/Node Template.",
-
-  "Parameters" : {
-
-    "KeyName" : {
-      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
-      "Type" : "String",
-      "MinLength": "1",
-      "MaxLength": "64",
-      "AllowedPattern" : "[-_ a-zA-Z0-9]*",
-      "ConstraintDescription" : "can contain only alphanumeric characters, spaces, dashes and underscores."
-    },
-
-    "InstanceType" : {
-      "Description" : "Instance type",
-      "Type" : "String",
-      "Default" : "m1.small",
-      "AllowedValues" : [ "t1.micro","m1.small","m1.medium","m1.large","m1.xlarge","m2.xlarge","m2.2xlarge","m2.4xlarge","c1.medium","c1.xlarge","cc1.4xlarge","cc2.8xlarge","cg1.4xlarge"],
-      "ConstraintDescription" : "must be a valid EC2 instance type."
-    },
-    "LinuxDistribution": {
-      "Default": "F18",
-      "Description" : "Distribution of choice",
-      "Type": "String",
-      "AllowedValues" : [ "F18", "F17", "U10", "RHEL-6.1", "RHEL-6.2", "RHEL-6.3" ]
-    }
-  },
-
-  "Mappings" : {
-    "AWSInstanceType2Arch" : {
-      "t1.micro"    : { "Arch" : "64" },
-      "m1.small"    : { "Arch" : "64" },
-      "m1.medium"   : { "Arch" : "64" },
-      "m1.large"    : { "Arch" : "64" },
-      "m1.xlarge"   : { "Arch" : "64" },
-      "m2.xlarge"   : { "Arch" : "64" },
-      "m2.2xlarge"  : { "Arch" : "64" },
-      "m2.4xlarge"  : { "Arch" : "64" },
-      "c1.medium"   : { "Arch" : "64" },
-      "c1.xlarge"   : { "Arch" : "64" },
-      "cc1.4xlarge" : { "Arch" : "64HVM" },
-      "cc2.8xlarge" : { "Arch" : "64HVM" },
-      "cg1.4xlarge" : { "Arch" : "64HVM" }
-    },
-    "DistroArch2AMI": {
-      "F18"      : { "32" : "F18-i386-cfntools", "64" : "F18-x86_64-cfntools" },
-      "F17"      : { "32" : "F17-i386-cfntools", "64" : "F17-x86_64-cfntools" },
-      "U10"      : { "32" : "U10-i386-cfntools", "64" : "U10-x86_64-cfntools" },
-      "RHEL-6.1" : { "32" : "rhel61-i386-cfntools", "64" : "rhel61-x86_64-cfntools" },
-      "RHEL-6.2" : { "32" : "rhel62-i386-cfntools", "64" : "rhel62-x86_64-cfntools" },
-      "RHEL-6.3" : { "32" : "rhel63-i386-cfntools", "64" : "rhel63-x86_64-cfntools" }
-    }
-  },
-
-  "Resources" : {
-
-    "OpenShiftBrokerServer": {
-      "Type": "AWS::EC2::Instance",
-      "Metadata" : {
-        "AWS::CloudFormation::Init" : {
-          "config" : {
-            "packages" : {
-              "yum" : {
-                "ntp"                      : [],
-                "git"                      : [],
-                "vim"                      : [],
-                "emacs"                    : [],
-                "wget"                     : [],
-                "tig"                      : [],
-                "mock"                     : [],
-                "createrepo"               : [],
-                "tito"                     : [],
-                "fedora-kickstarts"        : [],
-                "livecd-tools"             : [],
-                "ruby"                     : [],
-                "rubygems"                 : [],
-                "rubygem-rake"             : [],
-                "java-1.6.0-openjdk"       : [],
-                "jpackage-utils"           : [],
-                "java-1.6.0-openjdk-devel" : []
-              }
-            }
-          }
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Template for setting up an OpenShift Origin environment",
+    "Parameters": {
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+            "Type": "String",
+            "MinLength": "1",
+            "MaxLength": "64",
+            "AllowedPattern": "[-_ a-zA-Z0-9]*"
+        },
+        "Prefix": {
+            "Description": "Your DNS Prefix",
+            "Type": "String",
+            "Default": "example.com"
+        },
+        "DnsSecKey": {
+            "Description": "Bind DNS-Sec TSIG key",
+            "Type": "String",
+            "NoEcho": "TRUE"
+        },
+        "UpstreamDNS": {
+            "Description": "Upstream DNS server",
+            "Type": "String",
+            "Default": "8.8.8.8"
         }
-      },
-      "Properties": {
-        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
-                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
-        "InstanceType"   : { "Ref" : "InstanceType" },
-        "KeyName"        : { "Ref" : "KeyName" },
-        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
-          "#!/bin/bash -v\n",
-          "# Helper function\n",
-          "function error_exit\n",
-          "{\n",
-          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandle" }, "'\n",
-          "  exit 1\n",
-          "}\n",
-
-          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r OpenShiftBrokerServer ",
-          "    --access-key Ref_HostKeys",
-          "    --secret-key Fn_GetAtt_HostKeys_SecretAccessKey",
-          "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
-
-          "useradd builder\n",
-          "usermod -a -G mock builder\n",
-          "su builder -c 'cd /home/builder ; git clone git://github.com/openshift/crankcase.git /home/builder/crankcase || error_exit failed_git_clone'\n",
-          "cd /home/builder/crankcase/build; cat /tmp/openshift-patch-rakefile.patch | patch -p2\n",
-          "echo 'Hacking Rakefile to work with notty'\n",
-          "sed -i '/.*usermod.*/d' /home/builder/crankcase/build/Rakefile\n",
-          "cd /home/builder/crankcase/build ; rake build_setup || error_exit failed_build_setup\n",
-          "cd /home/builder/crankcase/build ; rake build || error_exit failed_build\n",
-          "cd /home/builder/crankcase/build ; rake devbroker || error_exit failed_devbroker\n",
-          "ss-setup-broker\n",
-          "hostname\n",
-          "ss-register-dns --with-node-hostname node0 --with-node-ip ", { "Fn::GetAtt" : [ "OpenShiftNodeServer", "PublicIp" ]}, "\n",
-
-          "echo 'Creating example openshift application'\n",
-          "export USER='root'\n",
-          "export HOME='/root'\n",
-          "echo 'StrictHostKeyChecking no' >> /etc/ssh/ssh_config\n",
-          "yes | rhc domain create -l admin -p admin -n admin\n",
-          "rhc app create -l admin -p admin -t php-5.3 -a hello\n",
-
-          "# All is well so signal success\n",
-          "/opt/aws/bin/cfn-signal -e 0 -r \"OpenShift setup complete\" '", { "Ref" : "WaitHandle" }, "'\n"
-
-        ]]}}
-      }
     },
-
-    "OpenShiftNodeServer": {
-      "Type": "AWS::EC2::Instance",
-      "Metadata" : {
-        "AWS::CloudFormation::Init" : {
-          "config" : {
-            "packages" : {
-              "yum" : {
-                "ntp"                      : [],
-                "git"                      : [],
-                "vim"                      : [],
-                "emacs"                    : [],
-                "wget"                     : [],
-                "tig"                      : [],
-                "mock"                     : [],
-                "createrepo"               : [],
-                "tito"                     : [],
-                "fedora-kickstarts"        : [],
-                "livecd-tools"             : [],
-                "ruby"                     : [],
-                "rubygems"                 : [],
-                "rubygem-rake"             : [],
-                "java-1.6.0-openjdk"       : [],
-                "jpackage-utils"           : [],
-                "java-1.6.0-openjdk-devel" : []
-              }
+    "Mappings": {
+        "JeosImages": {
+            "Broker": {
+                "Image": "F18-x86_64-openshift-origin-broker-cfntools"
+            },
+            "Node": {
+                "Image": "F18-x86_64-openshift-origin-node-cfntools"
             }
-          }
         }
-      },
-      "Properties": {
-        "ImageId" : { "Fn::FindInMap" : [ "DistroArch2AMI", { "Ref" : "LinuxDistribution" },
-                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
-        "InstanceType"   : { "Ref" : "InstanceType" },
-        "KeyName"        : { "Ref" : "KeyName" },
-        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
-          "#!/bin/bash -v\n",
-          "# Helper function\n",
-          "function error_exit\n",
-          "{\n",
-          "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '", { "Ref" : "WaitHandle" }, "'\n",
-          "  exit 1\n",
-          "}\n",
-
-          "/opt/aws/bin/cfn-init -s ", { "Ref" : "AWS::StackName" }, " -r OpenShiftNodeServer ",
-          "    --access-key Ref_HostKeys",
-          "    --secret-key Fn_GetAtt_HostKeys_SecretAccessKey",
-          "    --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
-
-          "useradd builder\n",
-          "usermod -a -G mock builder\n",
-          "su builder -c 'cd /home/builder ; git clone git://github.com/openshift/crankcase.git /home/builder/crankcase'\n",
-          "echo 'Hacking Rakefile to work with notty'\n",
-          "sed -i '/.*usermod.*/d' /home/builder/crankcase/build/Rakefile\n",
-          "cd /home/builder/crankcase/build ; rake build_setup || error_exit failed_build_setup\n",
-          "cd /home/builder/crankcase/build ; rake build || error_exit failed_build\n",
-          "cd /home/builder/crankcase/build ; rake devnode || error_exit failed_devnode\n",
-          "ss-setup-node --with-broker-ip ", { "Fn::GetAtt" : [ "OpenShiftBrokerServer", "PublicIp" ]}, " --with-node-hostname node0\n"
-
-        ]]}}
-      }
     },
-
-    "WaitHandle" : {
-      "Type" : "AWS::CloudFormation::WaitConditionHandle"
-    },
-
-    "WaitCondition" : {
-      "Type" : "AWS::CloudFormation::WaitCondition",
-      "DependsOn" : "OpenShiftBrokerServer",
-      "Properties" : {
-        "Handle" : {"Ref" : "WaitHandle"},
-        "Timeout" : "3000"
-      }
+    "Resources": {
+        "OpenShiftOriginSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Standard firewall rules",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "udp",
+                        "FromPort": "53",
+                        "ToPort": "53",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "53",
+                        "ToPort": "53",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "443",
+                        "ToPort": "443",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8000",
+                        "ToPort": "8000",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8443",
+                        "ToPort": "8443",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "brokerWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "brokerWaitCondition": {
+            "Type": "AWS::CloudFormation::WaitCondition",
+            "DependsOn": "BrokerInstance",
+            "Properties": {
+                "Handle": {
+                    "Ref": "brokerWaitHandle"
+                },
+                "Timeout": "6000"
+            }
+        },
+        "BrokerInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": {
+                    "Fn::FindInMap": [ "JeosImages", "Broker", "Image" ]
+                },
+                "InstanceType": "m1.medium",
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "OpenShiftOriginSecurityGroup"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [ "-", [ "openshift", { "Ref": "Prefix" }, "broker" ] ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash -x", "\n",
+                                "cat << EOF > /root/configure.pp\n",
+                                    "\\$my_hostname=\"\\${ec2_instance_id}.", { "Ref": "Prefix" }, "\"\n",
+                                    "file { \"update network settings - hostname\":", "\n",
+                                    "  path    => \"/etc/sysconfig/network\",\n",
+                                    "  content => \"NETWORKING=yes\\nNETWORKING_IPV6=no\\nHOSTNAME=\\${my_hostname}\"\n",
+                                    "}\n",
+                                    "exec { \"set hostname\":\n",
+                                    "  command => \"/bin/hostname \\${my_hostname} ; echo \\${my_hostname} > /etc/hostname\"\n",
+                                    "}\n",
+                                    "augeas{ \"etc hosts setup\" :\n",
+                                    "  context => \"/files/etc/hosts\",\n",
+                                    "  changes => [\n",
+                                    "    \"set 01/ipaddr \\${ipaddress}\",\n",
+                                    "    \"set 01/canonical \\${my_hostname}\",\n",
+                                    "  ],\n",
+                                    "}\n",
+                                    "augeas{ \"network peerdns setup\" :\n",
+                                    "  context => \"/files/etc/sysconfig/network-scripts/ifcfg-eth0\",\n",
+                                    "  changes => [\n",
+                                    "    \"set PEERDNS no\",\n",
+                                    "  ],\n",
+                                    "}\n",
+                                    "class { \"openshift_origin\" :\n",
+                                    "  node_fqdn                  => \\$my_hostname,\n",
+                                    "  cloud_domain               => \"", { "Ref": "Prefix" }, "\",", "\n",
+                                    "  named_tsig_priv_key        => \"", { "Ref": "DnsSecKey" }, "\",", "\n",
+                                    "  dns_servers                => [\"", { "Ref": "UpstreamDNS" }, "\"],\n",
+                                    "  os_unmanaged_users         => [\"ec2-user\"],\n",
+                                    "  enable_network_services    => true,\n",
+                                    "  configure_firewall         => false,\n",
+                                    "  configure_ntp              => true,\n",
+                                    "  configure_activemq         => true,\n",
+                                    "  configure_qpid             => false,\n",
+                                    "  configure_mongodb          => true,\n",
+                                    "  configure_named            => true,\n",
+                                    "  configure_broker           => true,\n",
+                                    "  configure_console          => true,\n",
+                                    "  configure_node             => false,\n",
+                                    "  development_mode           => true,\n",
+                                    "  named_ipaddress            => \\$ipaddress,\n",
+                                    "  mongodb_fqdn               => \\$my_hostname,\n",
+                                    "  mq_fqdn                    => \\$my_hostname,\n",
+                                    "  broker_fqdn                => \\$my_hostname,\n",
+                                    "}\n",
+                                "EOF\n",
+                                "puppet module install openshift/openshift_origin", "\n",
+                                "puppet apply --verbose /root/configure.pp | tee /var/log/configure_openshift.log", "\n",
+                                "service network restart | tee /var/log/configure_openshift.log;\n",
+                                "service mongod restart | tee /var/log/configure_openshift.log;\n",
+                                "service activemq restart | tee /var/log/configure_openshift.log;\n",
+                                "service httpd restart | tee /var/log/configure_openshift.log;\n",
+                                "service openshift-broker restart | tee /var/log/configure_openshift.log;\n",
+                                "service openshift-console restart | tee /var/log/configure_openshift.log;\n",
+                                "service named restart | tee /var/log/configure_openshift.log;\n",
+                                "export EC2_INSTANCE_ID=\"`facter ec2_instance_id`\"\n",
+                                "export IP_ADDRESS=\"`facter ipaddress`\"\n",
+                                "cat << _EOF > /root/nsupdate.cmd\n",
+                                "key ", { "Ref": "Prefix" }," ",{ "Ref": "DnsSecKey" },"\n",
+                                "server ${IP_ADDRESS} 53\n",
+                                "update delete ${EC2_INSTANCE_ID}.",{ "Ref": "Prefix" }," A\n",
+                                "update add    ${EC2_INSTANCE_ID}.",{ "Ref": "Prefix" }," 180 A ${IP_ADDRESS}\n",
+                                "send\n",
+                                "_EOF\n",
+                                "cat /root/nsupdate.cmd | nsupdate\n",
+                                "# All is well so signal success\n",
+                                "/opt/aws/bin/cfn-signal -e 0 -r \"Broker setup complete\" \"", { "Ref": "brokerWaitHandle" }, "\"\n"
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "NodeInstance": {
+            "Type": "AWS::EC2::Instance",
+            "DependsOn": "brokerWaitCondition",
+            "Properties": {
+                "ImageId": {
+                    "Fn::FindInMap": [ "JeosImages", "Node", "Image" ]
+                },
+                "InstanceType": "m1.medium",
+                "KeyName": { "Ref": "KeyName" },
+                "SecurityGroups": [ { "Ref": "OpenShiftOriginSecurityGroup" } ],
+                "Tags": [ { "Key": "Name", "Value": { "Fn::Join": [ "-", [ "openshift", { "Ref": "Prefix" }, "node" ] ] } } ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash -x", "\n",
+                                "cat << EOF > /root/configure.pp\n",
+                                    "\\$my_hostname=\"\\${ec2_instance_id}.", { "Ref": "Prefix" }, "\"\n",
+                                    "file { \"update network settings - hostname\":", "\n",
+                                    "  path    => \"/etc/sysconfig/network\",\n",
+                                    "  content => \"NETWORKING=yes\\nNETWORKING_IPV6=no\\nHOSTNAME=\\${my_hostname}\"\n",
+                                    "}\n",
+                                    "exec { \"set hostname\":\n",
+                                    "  command => \"/bin/hostname \\${my_hostname} ; echo \\${my_hostname} > /etc/hostname\"\n",
+                                    "}\n",
+                                    "augeas{ \"etc hosts setup\" :\n",
+                                    "  context => \"/files/etc/hosts\",\n",
+                                    "  changes => [\n",
+                                    "    \"set 01/ipaddr \\${ipaddress}\",\n",
+                                    "    \"set 01/canonical \\${my_hostname}\",\n",
+                                    "  ],\n",
+                                    "}\n",
+                                    "augeas{ \"network peerdns setup\" :\n",
+                                    "  context => \"/files/etc/sysconfig/network-scripts/ifcfg-eth0\",\n",
+                                    "  changes => [\n",
+                                    "    \"set PEERDNS no\",\n",
+                                    "  ],\n",
+                                    "}\n",
+                                    "class { \"openshift_origin\" :\n",
+                                    "  node_fqdn                  => \\$my_hostname,\n",
+                                    "  cloud_domain               => \"", { "Ref": "Prefix" }, "\",", "\n",
+                                    "  named_tsig_priv_key        => \"", { "Ref": "DnsSecKey" }, "\",", "\n",
+                                    "  dns_servers                => [\"", { "Fn::GetAtt": [ "BrokerInstance", "PublicIp" ] }, "\"],\n",
+                                    "  os_unmanaged_users         => [\"ec2-user\"],\n",
+                                    "  enable_network_services    => true,\n",
+                                    "  configure_firewall         => false,\n",
+                                    "  configure_ntp              => true,\n",
+                                    "  configure_activemq         => false,\n",
+                                    "  configure_qpid             => false,\n",
+                                    "  configure_mongodb          => false,\n",
+                                    "  configure_named            => false,\n",
+                                    "  configure_broker           => false,\n",
+                                    "  configure_console          => false,\n",
+                                    "  configure_node             => true,\n",
+                                    "  development_mode           => true,\n",
+                                    "  named_ipaddress            => \"", { "Fn::GetAtt": [ "BrokerInstance", "PublicIp" ] }, "\",\n",
+                                    "  mongodb_fqdn               => \"", { "Fn::GetAtt": [ "BrokerInstance", "PublicIp" ] }, "\",\n",
+                                    "  mq_fqdn                    => \"", { "Fn::GetAtt": [ "BrokerInstance", "PublicIp" ] }, "\",\n",
+                                    "  broker_fqdn                => \"", { "Fn::GetAtt": [ "BrokerInstance", "PublicIp" ] }, "\",\n",
+                                    "}\n",
+                                "EOF\n",
+                                "puppet apply --verbose /root/configure.pp | tee /var/log/configure_openshift.log;", "\n",
+                                "service network restart | tee /var/log/configure_openshift.log;\n",
+                                "service cgconfig restart | tee /var/log/configure_openshift.log;\n",
+                                "service cgred restart | tee /var/log/configure_openshift.log;\n",
+                                "service openshift-cgroups restart | tee /var/log/configure_openshift.log;\n",
+                                "service openshift-node-web-proxy restart | tee /var/log/configure_openshift.log;\n",
+                                "service mcollective restart | tee /var/log/configure_openshift.log;\n",
+                                "service httpd restart | tee /var/log/configure_openshift.log;\n",
+                                "service sshd restart | tee /var/log/configure_openshift.log;\n",
+                                "export EC2_INSTANCE_ID=\"`facter ec2_instance_id`\"\n",
+                                "export IP_ADDRESS=\"`facter ipaddress`\"\n",
+                                "cat << _EOF > /root/nsupdate.cmd\n",
+                                "key ", { "Ref": "Prefix" }," ",{ "Ref": "DnsSecKey" },"\n",
+                                "server ",{ "Fn::GetAtt": [ "BrokerInstance", "PublicIp" ] }," 53\n",
+                                "update delete ${EC2_INSTANCE_ID}.",{ "Ref": "Prefix" }," A\n",
+                                "update add    ${EC2_INSTANCE_ID}.",{ "Ref": "Prefix" }," 180 A ${IP_ADDRESS}\n",
+                                "send\n",
+                                "_EOF\n",
+                                "cat /root/nsupdate.cmd | nsupdate\n"
+                            ]
+                        ]
+                    }
+                }
+            }
+        }
     }
-
-  },
-
-  "Outputs" : {
-    "WebsiteURL" : {
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "OpenShiftBrokerServer", "PublicIp" ]}, ":3000" ]] },
-      "Description" : "URL for newly created Openshift Broker Server"
-    }
-  }
 }
