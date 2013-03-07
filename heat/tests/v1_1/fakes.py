@@ -236,10 +236,6 @@ class FakeHTTPClient(base_client.HTTPClient):
         r = {'server': self.get_servers_detail()[1]['servers'][0]}
         return (200, r)
 
-    def get_servers_5678(self, **kw):
-        r = {'server': self.get_servers_detail()[1]['servers'][1]}
-        return (200, r)
-
     def put_servers_9999(self, body, **kw):
         assert body.keys() == ['server']
         fakes.assert_has_keys(body['server'], optional=['name', 'adminPass'])
@@ -420,18 +416,6 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def post_os_floating_ips(self, body, **kw):
         return (202, self.get_os_floating_ips_1()[1])
-
-    def post_os_floating_ips(self, body):
-        if body.get('pool'):
-            return (200, {'floating_ip': {'id': 1,
-                                          'fixed_ip': '10.0.0.1',
-                                          'ip': '11.0.0.1',
-                                          'pool': 'nova'}})
-        else:
-            return (200, {'floating_ip': {'id': 1,
-                                          'fixed_ip': '10.0.0.1',
-                                          'ip': '11.0.0.1',
-                                          'pool': None}})
 
     def delete_os_floating_ips_1(self, **kw):
         return (204, None)
