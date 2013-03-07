@@ -455,6 +455,26 @@ class StackTest(unittest.TestCase):
         self.assertEqual(self.stack.state, parser.Stack.UPDATE_FAILED)
 
     @stack_delete_after
+    def test_resource_by_refid(self):
+        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = parser.Stack(self.ctx, 'resource_by_refid_stack',
+                                  template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertTrue('AResource' in self.stack)
+        resource = self.stack['AResource']
+        resource.resource_id_set('aaaa')
+        self.assertNotEqual(None, resource)
+        self.assertEqual(resource, self.stack.resource_by_refid('aaaa'))
+
+        resource.state = resource.DELETE_IN_PROGRESS
+        self.assertEqual(None, self.stack.resource_by_refid('aaaa'))
+
+        self.assertEqual(None, self.stack.resource_by_refid('bbbb'))
+
+    @stack_delete_after
     def test_update_add(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
