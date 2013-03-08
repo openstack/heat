@@ -66,6 +66,11 @@ class API(wsgi.Router):
             stack_mapper.connect("stack_lookup",
                                  "/stacks/{stack_name}",
                                  action="lookup")
+            # \x3A matches on a colon.
+            # Routes treats : specially in its regexp
+            stack_mapper.connect("stack_lookup",
+                                 r"/stacks/{stack_name:arn\x3A.*}",
+                                 action="lookup")
             subpaths = ['resources', 'events']
             path = "{path:%s}" % '|'.join(subpaths)
             stack_mapper.connect("stack_lookup_subpath",

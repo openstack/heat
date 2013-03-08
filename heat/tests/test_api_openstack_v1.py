@@ -1680,6 +1680,20 @@ class RoutesTest(unittest.TestCase):
             })
         self.assertRoute(
             self.m,
+            '/aaaa/stacks/arn:openstack:heat::6548ab64fbda49deb188851a3b7d8c8b'
+            ':stacks/stack-1411-06/1c5d9bb2-3464-45e2-a728-26dfa4e1d34a',
+            'GET',
+            'lookup',
+            'StackController',
+            {
+                'tenant_id': 'aaaa',
+                'stack_name': 'arn:openstack:heat:'
+                ':6548ab64fbda49deb188851a3b7d8c8b:stacks/stack-1411-06/'
+                '1c5d9bb2-3464-45e2-a728-26dfa4e1d34a'
+            })
+
+        self.assertRoute(
+            self.m,
             '/aaaa/stacks/teststack/resources',
             'GET',
             'lookup',
