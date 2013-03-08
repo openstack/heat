@@ -80,7 +80,7 @@ class VPCGatewayAttachment(resource.Resource):
     def handle_create(self):
         client = self.quantum()
         gateway = self.stack[self.properties.get('InternetGatewayId')]
-        vpc = self.stack[self.properties.get('VpcId')]
+        vpc = self.stack.resource_by_refid(self.properties.get('VpcId'))
         external_network_id = gateway.metadata['external_network_id']
 
         for router_id in vpc.metadata['all_router_ids']:
@@ -91,7 +91,7 @@ class VPCGatewayAttachment(resource.Resource):
         from quantumclient.common.exceptions import QuantumClientException
 
         client = self.quantum()
-        vpc = self.stack[self.properties.get('VpcId')]
+        vpc = self.stack.resource_by_refid(self.properties.get('VpcId'))
         for router_id in vpc.metadata['all_router_ids']:
             try:
                 client.remove_gateway_router(router_id)

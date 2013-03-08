@@ -48,12 +48,12 @@ class NetworkInterface(resource.Resource):
     def handle_create(self):
         client = self.quantum()
 
-        subnet = self.stack[self.properties['SubnetId']]
-        fixed_ip = {'subnet_id': subnet.metadata['subnet_id']}
+        subnet = self.stack.resource_by_refid(self.properties['SubnetId'])
+        fixed_ip = {'subnet_id': self.properties['SubnetId']}
         if self.properties['PrivateIpAddress']:
             fixed_ip['ip_address'] = self.properties['PrivateIpAddress']
 
-        network_id = subnet.metadata['network_id']
+        network_id = subnet.properties.get('VpcId')
         props = {
             'name': self.physical_resource_name(),
             'admin_state_up': True,
@@ -64,17 +64,14 @@ class NetworkInterface(resource.Resource):
         if self.properties['GroupSet']:
             props['security_groups'] = self.properties['GroupSet']
         port = client.create_port({'port': props})['port']
-        md = {
-            'port_id': port['id']
-        }
-        self.metadata = md
+        self.resource_id_set(port['id'])
 
     def handle_delete(self):
         from quantumclient.common.exceptions import QuantumClientException
 
         client = self.quantum()
         try:
-            client.delete_port(self.metadata['port_id'])
+            client.delete_port(self.resource_id)
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex

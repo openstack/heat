@@ -149,8 +149,7 @@ Resources:
 
         stack = self.create_stack(self.test_template)
         resource = stack['the_vpc']
-        self.assertResourceState(resource, 'the_vpc', {
-            'network_id': 'aaaa',
+        self.assertResourceState(resource, 'aaaa', {
             'router_id': 'bbbb',
             'all_router_ids': ['bbbb']})
         self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
@@ -195,11 +194,9 @@ Resources:
         stack = self.create_stack(self.test_template)
 
         resource = stack['the_subnet']
-        self.assertResourceState(resource, 'the_subnet', {
-            'network_id': 'aaaa',
+        self.assertResourceState(resource, 'cccc', {
             'router_id': 'bbbb',
-            'default_router_id': 'bbbb',
-            'subnet_id': 'cccc'})
+            'default_router_id': 'bbbb'})
 
         self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
         self.assertRaises(
@@ -283,8 +280,7 @@ Resources:
 
         stack = self.create_stack(self.test_template)
         resource = stack['the_nic']
-        self.assertResourceState(resource, 'the_nic', {
-            'port_id': 'dddd'})
+        self.assertResourceState(resource, 'dddd')
 
         self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
 
@@ -443,8 +439,7 @@ Resources:
         self.assertEqual(['bbbb', 'ffff'], vpc.metadata['all_router_ids'])
 
         route_table = stack['the_route_table']
-        self.assertResourceState(route_table, 'the_route_table', {
-            'router_id': 'ffff'})
+        self.assertResourceState(route_table, 'ffff', {})
         self.assertEqual(
             route_table.UPDATE_REPLACE,
             route_table.handle_update({}))
