@@ -26,6 +26,7 @@ from heat.common import template_format
 from heat.engine import properties
 from heat.engine.resources.quantum import net
 from heat.engine.resources.quantum import floatingip
+from heat.engine.resources.quantum import port
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.engine import parser
 
@@ -49,6 +50,21 @@ class FakeQuantum():
 
     def update_floatingip(self, id, props):
         return {'floatingip': {
+                "status": "ACTIVE",
+                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+                }}
+
+    def create_port(self, props):
+        return {'port': {
+                "status": "ACTIVE",
+                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+                }}
+
+    def delete_port(self, id):
+        return None
+
+    def show_port(self, id):
+        return {'port': {
                 "status": "ACTIVE",
                 "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
                 }}
@@ -185,6 +201,7 @@ class QuantumFloatingIPTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.m.StubOutWithMock(floatingip.FloatingIP, 'quantum')
+        self.m.StubOutWithMock(port.Port, 'quantum')
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -242,5 +259,37 @@ class QuantumFloatingIPTest(unittest.TestCase):
         self.assertEqual(floatingip.FloatingIP.UPDATE_REPLACE,
                          fip.handle_update({}))
         self.assertEqual(fip.delete(), None)
+
+        self.m.VerifyAll()
+
+    def test_port(self):
+        fq = FakeQuantum()
+        port.Port.quantum().MultipleTimes().AndReturn(fq)
+
+        self.m.ReplayAll()
+
+        t = self.load_template('Quantum_floating')
+        stack = self.parse_stack(t)
+
+        p = stack['port_floating']
+        self.assertEqual(None, p.create())
+        self.assertEqual(port.Port.CREATE_COMPLETE, p.state)
+        p.validate()
+
+        port_id = p.FnGetRefId()
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', port_id)
+
+        self.assertEqual('ACTIVE', p.FnGetAtt('status'))
+        try:
+            p.FnGetAtt('Foo')
+            raise Exception('Expected InvalidTemplateAttribute')
+        except exception.InvalidTemplateAttribute:
+            pass
+
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         p.FnGetAtt('id'))
+
+        self.assertEqual(port.Port.UPDATE_REPLACE,
+                         p.handle_update({}))
 
         self.m.VerifyAll()
