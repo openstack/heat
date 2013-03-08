@@ -201,6 +201,7 @@ class QuantumFloatingIPTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.m.StubOutWithMock(floatingip.FloatingIP, 'quantum')
+        self.m.StubOutWithMock(floatingip.FloatingIPAssociation, 'quantum')
         self.m.StubOutWithMock(port.Port, 'quantum')
 
     def tearDown(self):
@@ -291,5 +292,45 @@ class QuantumFloatingIPTest(unittest.TestCase):
 
         self.assertEqual(port.Port.UPDATE_REPLACE,
                          p.handle_update({}))
+
+        self.m.VerifyAll()
+
+    def test_floatip_port(self):
+        fq = FakeQuantum()
+        floatingip.FloatingIP.quantum().MultipleTimes().AndReturn(fq)
+        floatingip.FloatingIPAssociation.quantum().\
+            MultipleTimes().AndReturn(fq)
+        port.Port.quantum().MultipleTimes().AndReturn(fq)
+
+        self.m.ReplayAll()
+
+        t = self.load_template('Quantum_floating')
+        stack = self.parse_stack(t)
+
+        fip = stack['floating_ip']
+        self.assertEqual(None, fip.create())
+        self.assertEqual(floatingip.FloatingIP.CREATE_COMPLETE, fip.state)
+
+        p = stack['port_floating']
+        self.assertEqual(None, p.create())
+        self.assertEqual(port.Port.CREATE_COMPLETE, p.state)
+
+        fipa = stack['floating_ip_assoc']
+        self.assertEqual(None, fipa.create())
+        self.assertEqual(floatingip.FloatingIPAssociation.CREATE_COMPLETE,
+                         fipa.state)
+
+        fipa.validate()
+
+        fipa_id = fipa.FnGetRefId()
+        fip_id = fip.FnGetRefId()
+        port_id = p.FnGetRefId()
+        self.assertEqual('%s:%s' % (fip_id, port_id), fipa_id)
+        self.assertEqual(floatingip.FloatingIP.UPDATE_REPLACE,
+                         fipa.handle_update({}))
+
+        self.assertEqual(fipa.delete(), None)
+        self.assertEqual(p.delete(), None)
+        self.assertEqual(fip.delete(), None)
 
         self.m.VerifyAll()
