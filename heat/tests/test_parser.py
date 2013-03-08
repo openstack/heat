@@ -675,6 +675,37 @@ class StackTest(unittest.TestCase):
         self.m.VerifyAll()
 
     @stack_delete_after
+    def test_update_add_failed_create(self):
+        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+
+        tmpl2 = {'Resources': {
+                 'AResource': {'Type': 'GenericResourceType'},
+                 'BResource': {'Type': 'GenericResourceType'}}}
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+
+        # patch in a dummy handle_create making BResource fail creating
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
+        generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
+        self.m.ReplayAll()
+
+        self.stack.update(updated_stack)
+        self.assertEqual(self.stack.state, parser.Stack.UPDATE_FAILED)
+        self.assertTrue('BResource' in self.stack)
+
+        # Reload the stack from the DB and prove that it contains the failed
+        # resource (to ensure it will be deleted on stack delete)
+        re_stack = parser.Stack.load(self.ctx, stack_id=self.stack.id)
+        self.assertTrue('BResource' in re_stack)
+        self.m.VerifyAll()
+
+    @stack_delete_after
     def test_update_rollback(self):
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
