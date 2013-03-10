@@ -426,13 +426,6 @@ class Stack(object):
                             raise exception.ResourceUpdateFailed(
                                 resource_name=res.name)
 
-                # flip the template & parameters to the newstack values
-                self.t = newstack.t
-                self.parameters = newstack.parameters
-                template_outputs = self.t[template.OUTPUTS]
-                self.outputs = self.resolve_static_data(template_outputs)
-                self.store()
-
                 if action == self.UPDATE:
                     stack_status = self.UPDATE_COMPLETE
                     reason = 'Stack successfully updated'
@@ -468,6 +461,16 @@ class Stack(object):
                     stack_status = self.ROLLBACK_FAILED
 
             self.state_set(stack_status, reason)
+
+            # flip the template & parameters to the newstack values
+            # Note we do this on success and failure, so the current
+            # stack resources are stored, even if one is in a failed
+            # state (otherwise we won't remove them on delete)
+            self.t = newstack.t
+            self.parameters = newstack.parameters
+            template_outputs = self.t[template.OUTPUTS]
+            self.outputs = self.resolve_static_data(template_outputs)
+            self.store()
 
     def delete(self, action=DELETE):
         '''
