@@ -15,7 +15,9 @@
 import distutils.version as dist_version
 import os
 import sys
+
 from heat.db.sqlalchemy.session import get_engine
+from heat.db import migration
 
 import sqlalchemy
 import migrate
@@ -81,20 +83,18 @@ def db_version():
     repository = _find_migrate_repo()
     try:
         return versioning_api.db_version(get_engine(), repository)
-    except versioning_exceptions.DatabaseNotControlledError:
-        # If we aren't version controlled we may already have the database
-        # in the state from before we started version control, check for that
-        # and set up version_control appropriately
+    except versioning_exceptions.DatabaseNotControlledError as exc:
+        # If we aren't version controlled there may be an existing,
+        # non-version controlled database present.
         meta = sqlalchemy.MetaData()
         engine = get_engine()
         meta.reflect(bind=engine)
-        try:
-            for table in ('stack', 'resource', 'event',
-                          'parsed_template', 'raw_template'):
-                assert table in meta.tables
-            return db_version_control(1)
-        except AssertionError:
-            return db_version_control(0)
+        tables = meta.tables
+        if len(tables):
+            raise exc
+
+        db_version_control(migration.INIT_VERSION)
+        return versioning_api.db_version(get_engine(), repository)
 
 
 def db_version_control(version=None):
