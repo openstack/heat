@@ -45,21 +45,17 @@ class WatchRuleTest(unittest.TestCase):
         # Create a dummy stack in the DB as WatchRule instances
         # must be associated with a stack
         ctx = context.get_admin_context()
+        ctx.username = 'dummyuser'
+        ctx.tenant_id = '123456'
         empty_tmpl = {"template": {}}
-        tmpl = db_api.raw_template_create(ctx, empty_tmpl)
-        dummy_stack = {'id': '6754d843-bed2-40dc-a325-84882bb90a98',
-                       'name': 'dummystack',
-                       'raw_template_id': tmpl.id,
-                       'user_creds_id': 1,
-                       'username': 'dummyuser',
-                       'owner_id': None,
-                       'status': 'CREATE_COMPLETE',
-                       'status_reason': 'foo status',
-                       'parameters': {'foo': 'bar'},
-                       'timeout': 60,
-                       'tenant': 123456}
-        db_ret = db_api.stack_create(ctx, dummy_stack)
-        cls.stack_id = db_ret.id
+        tmpl = parser.Template(empty_tmpl)
+        stack_name = 'dummystack'
+        params = parser.Parameters(stack_name, tmpl, {'foo': 'bar'})
+        dummy_stack = parser.Stack(ctx, stack_name, tmpl, params)
+        dummy_stack.state_set(dummy_stack.CREATE_COMPLETE, 'Testing')
+        dummy_stack.store()
+
+        cls.stack_id = dummy_stack.id
 
     def setUp(self):
         self.username = 'watchrule_test_user'
