@@ -13,9 +13,11 @@
 #    under the License.
 
 from nose.plugins.attrib import attr
+from nose.exc import SkipTest
 import os
 import unittest
 
+from heat.engine import clients
 from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
@@ -146,6 +148,8 @@ class JsonYamlResolvedCompareTest(unittest.TestCase):
             self.assertEqual(stack1.resources[key].t, stack2.resources[key].t)
 
     def test_quantum_resolved(self):
+        if clients.quantumclient is None:
+            raise SkipTest
         self.compare_stacks('Quantum.template', 'Quantum.yaml', {})
 
     def test_wordpress_resolved(self):

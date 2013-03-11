@@ -19,6 +19,7 @@ import unittest
 import mox
 
 from nose.plugins.attrib import attr
+from nose.exc import SkipTest
 
 from heat.common import context
 from heat.common import exception
@@ -166,6 +167,9 @@ class QuantumTest(unittest.TestCase):
                           'admin_state_up': False}, props)
 
     def test_net(self):
+        if net.clients.quantumclient is None:
+            raise SkipTest
+
         fq = FakeQuantum()
         net.Net.quantum().MultipleTimes().AndReturn(fq)
 
@@ -232,6 +236,9 @@ class QuantumFloatingIPTest(unittest.TestCase):
         return stack
 
     def test_floating_ip(self):
+        if net.clients.quantumclient is None:
+            raise SkipTest
+
         fq = FakeQuantum()
         floatingip.FloatingIP.quantum().MultipleTimes().AndReturn(fq)
 
@@ -264,6 +271,9 @@ class QuantumFloatingIPTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_port(self):
+        if net.clients.quantumclient is None:
+            raise SkipTest
+
         fq = FakeQuantum()
         port.Port.quantum().MultipleTimes().AndReturn(fq)
 
@@ -296,6 +306,9 @@ class QuantumFloatingIPTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def test_floatip_port(self):
+        if net.clients.quantumclient is None:
+            raise SkipTest
+
         fq = FakeQuantum()
         floatingip.FloatingIP.quantum().MultipleTimes().AndReturn(fq)
         floatingip.FloatingIPAssociation.quantum().\
