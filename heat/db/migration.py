@@ -20,6 +20,8 @@ from heat.db import utils
 IMPL = utils.LazyPluggable('db_backend',
                            sqlalchemy='heat.db.sqlalchemy.migration')
 
+INIT_VERSION = 0
+
 
 def db_sync(version=None):
     """Migrate the database to `version` or the most recent version."""
