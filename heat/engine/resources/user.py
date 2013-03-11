@@ -169,7 +169,6 @@ class AccessKey(resource.Resource):
         '''
         Return the user's access key, fetching it from keystone if necessary
         '''
-        user_id = self._get_user().resource_id
         if self._secret is None:
             if not self.resource_id:
                 logger.warn('could not get secret for %s Error:%s' %
@@ -177,6 +176,7 @@ class AccessKey(resource.Resource):
                             "resource_id not yet set"))
             else:
                 try:
+                    user_id = self._get_user().resource_id
                     kp = self.keystone().get_ec2_keypair(user_id)
                 except Exception as ex:
                     logger.warn('could not get secret for %s Error:%s' %
