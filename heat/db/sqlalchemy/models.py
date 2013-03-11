@@ -160,7 +160,7 @@ class Stack(BASE, HeatBase):
         Integer,
         ForeignKey('user_creds.id'),
         nullable=False)
-    owner_id = Column(Integer, nullable=True)
+    owner_id = Column(String, nullable=True)
     timeout = Column(Integer)
     disable_rollback = Column(Boolean)
 
