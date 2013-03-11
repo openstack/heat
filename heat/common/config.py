@@ -119,9 +119,12 @@ def register_api_opts():
     rpc.set_defaults(control_exchange='heat')
 
 
+def register_db_opts():
+    cfg.CONF.register_opts(db_opts)
+
+
 def register_engine_opts():
     cfg.CONF.register_opts(engine_opts)
-    cfg.CONF.register_opts(db_opts)
     cfg.CONF.register_opts(service_opts)
     cfg.CONF.register_opts(rpc_opts)
     rpc.set_defaults(control_exchange='heat')
