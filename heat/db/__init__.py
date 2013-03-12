@@ -15,4 +15,8 @@
 
 '''Database abstraction for Heat.'''
 
+from heat.common import config
+
+config.register_db_opts()
+
 from heat.db.api import *

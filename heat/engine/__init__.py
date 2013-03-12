@@ -15,3 +15,5 @@
 from heat.common import config
 
 config.register_engine_opts()
+
+from heat import db  # pyflakes_bypass register DB options
