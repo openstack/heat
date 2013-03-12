@@ -1082,3 +1082,45 @@ class StackTest(unittest.TestCase):
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
 
         self.m.VerifyAll()
+
+    def test_stack_name_valid(self):
+        stack = parser.Stack(None, 's', parser.Template({}))
+        stack = parser.Stack(None, 'stack123', parser.Template({}))
+        stack = parser.Stack(None, 'test.stack', parser.Template({}))
+        stack = parser.Stack(None, 'test_stack', parser.Template({}))
+        stack = parser.Stack(None, 'TEST', parser.Template({}))
+        stack = parser.Stack(None, 'test-stack', parser.Template({}))
+
+    def test_stack_name_invalid(self):
+        self.assertRaises(ValueError, parser.Stack, None, '_foo',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, '1bad',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, '.kcats',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, 'test stack',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, ' teststack',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, '^-^',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, '\"stack\"',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, '1234',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, 'cat|dog',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, '$(foo)',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, 'test/stack',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, 'test\stack',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, 'test::stack',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, 'test;stack',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, 'test~stack',
+                          parser.Template({}))
+        self.assertRaises(ValueError, parser.Stack, None, '#test',
+                          parser.Template({}))
