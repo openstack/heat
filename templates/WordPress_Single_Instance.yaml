@@ -35,7 +35,7 @@ Parameters:
     Default: F17
     Description: Distribution of choice
     Type: String
-    AllowedValues: [F16, F17, U10, RHEL-6.1, RHEL-6.2, RHEL-6.3]
+    AllowedValues: [F18, F17, U10, RHEL-6.1, RHEL-6.2, RHEL-6.3]
 Mappings:
   AWSInstanceType2Arch:
     t1.micro: {Arch: '32'}
@@ -49,7 +49,7 @@ Mappings:
     c1.xlarge: {Arch: '64'}
     cc1.4xlarge: {Arch: '64'}
   DistroArch2AMI:
-    F16: {'32': F16-i386-cfntools, '64': F16-x86_64-cfntools}
+    F18: {'32': F18-i386-cfntools, '64': F18-x86_64-cfntools}
     F17: {'32': F17-i386-cfntools, '64': F17-x86_64-cfntools}
     U10: {'32': U10-i386-cfntools, '64': U10-x86_64-cfntools}
     RHEL-6.1: {'32': rhel61-i386-cfntools, '64': rhel61-x86_64-cfntools}

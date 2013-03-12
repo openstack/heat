@@ -18,7 +18,7 @@
     "ImageId" : {
       "Description" : "Name of the image to use",
       "Type" : "String",
-      "Default" : "F16-x86_64-cfntools"
+      "Default" : "F17-x86_64-cfntools"
     },
     "NumInstances": {
       "Default": "1",
