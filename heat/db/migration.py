@@ -20,7 +20,7 @@ from heat.db import utils
 IMPL = utils.LazyPluggable('db_backend',
                            sqlalchemy='heat.db.sqlalchemy.migration')
 
-INIT_VERSION = 0
+INIT_VERSION = 14
 
 
 def db_sync(version=None):
