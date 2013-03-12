@@ -12,7 +12,7 @@
       "Type" : "AWS::EC2::Instance",
       "Properties" : {
         "KeyName" : { "Ref" : "KeyName" },
-        "ImageId" : "F16-x86_64-cfntools",
+        "ImageId" : "F17-x86_64-cfntools",
         "InstanceType": "m1.large",
         "UserData" : { "Fn::Base64" : "80" }
       }
