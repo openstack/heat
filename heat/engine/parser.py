@@ -15,6 +15,7 @@
 
 import eventlet
 import functools
+import re
 
 from heat.common import exception
 from heat.engine import dependencies
@@ -68,8 +69,10 @@ class Stack(object):
         stack is already in the database.
         '''
 
-        if '/' in stack_name:
-            raise ValueError(_('Stack name may not contain "/"'))
+        if re.match("[a-zA-Z][a-zA-Z0-9_.-]*$", stack_name) is None:
+            raise ValueError(_("Invalid stack name %s" % stack_name
+                               + ", must contain only alphanumeric or "
+                               + "\"_-.\" characters, must start with alpha"))
 
         self.id = stack_id
         self.context = context
