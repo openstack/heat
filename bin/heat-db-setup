@@ -238,8 +238,7 @@ if [ "${MYSQL_HEAT_PW}" != "${MYSQL_HEAT_PW_DEFAULT}" ] ; then
 	sed -i -e "s/mysql:\/\/heat:\(.*\)@/mysql:\/\/heat:${MYSQL_HEAT_PW}@/" ${HEAT_CONFIG}
 fi
 
-python -m heat.db.sqlalchemy.manage version_control
-python -m heat.db.sqlalchemy.manage upgrade
+python -m heat.db.sync
 
 
 # Do a final sanity check on the database.
