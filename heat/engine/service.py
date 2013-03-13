@@ -377,7 +377,7 @@ class EngineService(service.Service):
         # are deployed as ec2 keypairs
         try:
             ec2_creds = json.loads(cnxt.aws_creds).get('ec2Credentials')
-        except TypeError, AttributeError:
+        except (TypeError, AttributeError):
             ec2_creds = None
 
         if ec2_creds:
