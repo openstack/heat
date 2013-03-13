@@ -236,7 +236,10 @@ man_pages = [
     [u'Heat Developers'], 1),
     ('man/heat-engine', 'heat-engine',
     u'Service which performs the actions from the API calls made by the user',
-    [u'Heat Developers'], 1)
+    [u'Heat Developers'], 1),
+    ('man/heat-boto', 'heat-boto',
+    u'Command line utility to run heat actions over the CloudFormation API',
+    [u'Heat Developers'], 1),
 ]
 
 # If true, show URL addresses after external links.
