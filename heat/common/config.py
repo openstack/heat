@@ -95,6 +95,9 @@ db_opts = [
                help='timeout before idle sql connections are reaped')]
 
 engine_opts = [
+    cfg.StrOpt('instance_user',
+               default='ec2-user',
+               help='The default user for new instances'),
     cfg.StrOpt('instance_driver',
                default='heat.engine.nova',
                help='Driver to use for controlling instances'),
