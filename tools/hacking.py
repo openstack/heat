@@ -165,8 +165,8 @@ def nova_import_rules(logical_line):
     Do not import more than one module per line
 
     Examples:
-    Okay: from nova.compute import api
-    N301: from nova.compute import api, utils
+    Okay: from heat.rpc import api
+    N301: from heat.rpc import api, client
 
 
     Imports should usually be on separate lines.
@@ -179,7 +179,7 @@ def nova_import_rules(logical_line):
     Okay: from os import path as p
     Okay: from os import (path as p)
     Okay: import os.path
-    Okay: from nova.compute import rpcapi
+    Okay: from heat.engine import api
     N302: from os.path import dirname as dirname2
     N302: from os.path import (dirname as dirname2)
     N303: from os.path import *
@@ -277,7 +277,7 @@ def nova_import_alphabetical(logical_line, blank_lines, previous_logical,
     nova HACKING guide recommendation for imports:
     imports in human alphabetical order
 
-    Okay: import os\nimport sys\n\nimport nova\nfrom nova import test
+    Okay: import os\nimport sys\n\nimport heat\nfrom heat import rpc
     N306: import sys\nimport os
     """
     # handle import x
@@ -292,19 +292,6 @@ def nova_import_alphabetical(logical_line, blank_lines, previous_logical,
             if split_line[1] < split_previous[1]:
                 yield (0, "N306: imports not in alphabetical order (%s, %s)"
                        % (split_previous[1], split_line[1]))
-
-
-def nova_import_no_db_in_virt(logical_line, filename):
-    """Check for db calls from nova/virt
-
-    As of grizzly-2 all the database calls have been removed from
-    nova/virt, and we want to keep it that way.
-
-    N307
-    """
-    if "nova/virt" in filename and not filename.endswith("fake.py"):
-        if logical_line.startswith("from nova import db"):
-            yield (0, "N307: nova.db import not allowed in nova/virt/*")
 
 
 def in_docstring_position(previous_logical):
@@ -603,7 +590,7 @@ imports_on_separate_lines_N301_compliant = r"""
     E401: import sys, os
 
     N301: from subprocess import Popen, PIPE
-    Okay: from myclas import MyClass
+    Okay: from myclass import MyClass
     Okay: from foo.bar.yourclass import YourClass
     Okay: import myclass
     Okay: import foo.bar.yourclass
