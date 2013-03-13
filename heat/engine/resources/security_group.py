@@ -38,7 +38,7 @@ class SecurityGroup(resource.Resource):
 
         groups = self.nova().security_groups.list()
         for group in groups:
-            if group['name'] == self.physical_resource_name():
+            if group.name == self.physical_resource_name():
                 sec = group
                 break
 
@@ -47,12 +47,12 @@ class SecurityGroup(resource.Resource):
                 self.physical_resource_name(),
                 self.properties['GroupDescription'])
 
-        self.resource_id_set(sec['id'])
+        self.resource_id_set(sec.id)
         if self.properties['SecurityGroupIngress']:
             rules_client = self.nova().security_group_rules
             for i in self.properties['SecurityGroupIngress']:
                 try:
-                    rule = rules_client.create(sec['id'],
+                    rule = rules_client.create(sec.id,
                                                i['IpProtocol'],
                                                i['FromPort'],
                                                i['ToPort'],
@@ -75,7 +75,7 @@ class SecurityGroup(resource.Resource):
             except clients.novaclient.exceptions.NotFound:
                 pass
             else:
-                for rule in sec['rules']:
+                for rule in sec.rules:
                     try:
                         self.nova().security_group_rules.delete(rule['id'])
                     except clients.novaclient.exceptions.NotFound:

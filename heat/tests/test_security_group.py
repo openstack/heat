@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+import collections
 import unittest
 import mox
 
@@ -27,6 +27,15 @@ from heat.tests.v1_1 import fakes
 
 from novaclient.v1_1 import security_groups as nova_sg
 from novaclient.v1_1 import security_group_rules as nova_sgr
+
+
+NovaSG = collections.namedtuple('NovaSG',
+                                ' '.join([
+                                    'name',
+                                    'id',
+                                    'rules',
+                                    'description',
+                                ]))
 
 
 @attr(tag=['unit', 'resource'])
@@ -93,19 +102,20 @@ Resources:
     def test_security_group_nova(self):
         #create script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
-        nova_sg.SecurityGroupManager.list().AndReturn([{
-            'id': 1,
-            'name': 'test',
-            'description': 'FAKE_SECURITY_GROUP'
-        }])
+        nova_sg.SecurityGroupManager.list().AndReturn([NovaSG(
+            id=1,
+            name='test',
+            description='FAKE_SECURITY_GROUP',
+            rules=[],
+        )])
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sg.SecurityGroupManager.create(
             'test_stack.the_sg',
-            'HTTP and SSH access').AndReturn({
-                'id': 2,
-                'name': 'test_stack.the_sg',
-                'description': 'HTTP and SSH access'
-            })
+            'HTTP and SSH access').AndReturn(NovaSG(
+                id=2,
+                name='test_stack.the_sg',
+                description='HTTP and SSH access',
+                rules=[]))
 
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.create(
@@ -115,11 +125,11 @@ Resources:
 
         # delete script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
-        nova_sg.SecurityGroupManager.get(2).AndReturn({
-            'id': 2,
-            'name': 'test_stack.the_sg',
-            'description': 'HTTP and SSH access',
-            "rules": [{
+        nova_sg.SecurityGroupManager.get(2).AndReturn(NovaSG(
+            id=2,
+            name='test_stack.the_sg',
+            description='HTTP and SSH access',
+            rules=[{
                 "from_port": 22,
                 "group": {},
                 "ip_protocol": "tcp",
@@ -140,7 +150,7 @@ Resources:
                 },
                 "id": 131
             }]
-        })
+        ))
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.delete(130).AndReturn(None)
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
@@ -162,11 +172,12 @@ Resources:
     def test_security_group_nova_exception(self):
         #create script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
-        nova_sg.SecurityGroupManager.list().AndReturn([{
-            'id': 2,
-            'name': 'test_stack.the_sg',
-            'description': 'HTTP and SSH access'
-        }])
+        nova_sg.SecurityGroupManager.list().AndReturn([NovaSG(
+            id=2,
+            name='test_stack.the_sg',
+            description='HTTP and SSH access',
+            rules=[],
+        )])
 
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.create(
@@ -180,11 +191,11 @@ Resources:
 
         # delete script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
-        nova_sg.SecurityGroupManager.get(2).AndReturn({
-            'id': 2,
-            'name': 'test_stack.the_sg',
-            'description': 'HTTP and SSH access',
-            "rules": [{
+        nova_sg.SecurityGroupManager.get(2).AndReturn(NovaSG(
+            id=2,
+            name='test_stack.the_sg',
+            description='HTTP and SSH access',
+            rules=[{
                 "from_port": 22,
                 "group": {},
                 "ip_protocol": "tcp",
@@ -205,7 +216,7 @@ Resources:
                 },
                 "id": 131
             }]
-        })
+        ))
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.delete(130).AndRaise(
             clients.novaclient.exceptions.NotFound('goneburger'))
