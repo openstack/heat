@@ -6,7 +6,6 @@ user: ec2-user
 cloud_config_modules:
  - locale
  - set_hostname
- - ssh
  - timezone
  - update_etc_hosts
  - update_hostname
