@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+import errno
 import mox
 import os
 import pkg_resources
@@ -23,7 +23,7 @@ import StringIO
 
 from nose.plugins.attrib import attr
 
-import heat.cloudinit.loguserdata as loguserdata
+from heat.cloudinit import loguserdata
 
 
 class FakeCiVersion():
@@ -118,14 +118,62 @@ class LoguserdataTest(unittest.TestCase):
         loguserdata.main(log)
         self.m.VerifyAll()
 
-    def test_main_fails(self):
+    def test_main_script_empty(self):
 
+        log = StringIO.StringIO()
+
+        pkg_resources.get_distribution('cloud-init').AndReturn(
+            FakeCiVersion('0.7.0'))
+
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
+        subprocess.Popen(
+            ['/var/lib/heat-cfntools/cfn-userdata'],
+            stderr=log,
+            stdout=log).AndRaise(OSError(errno.ENOEXEC, "empty script"))
+
+        self.m.ReplayAll()
+        self.assertEqual(None, loguserdata.main(log))
+
+        self.m.VerifyAll()
+
+    def test_main_os_error(self):
+
+        log = StringIO.StringIO()
+
+        pkg_resources.get_distribution('cloud-init').AndReturn(
+            FakeCiVersion('0.7.0'))
+
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
+        subprocess.Popen(
+            ['/var/lib/heat-cfntools/cfn-userdata'],
+            stderr=log,
+            stdout=log).AndRaise(OSError(errno.ENOENT, "no such file"))
+
+        self.m.ReplayAll()
+        self.assertEqual(os.EX_OSERR, loguserdata.main(log))
+
+        self.m.VerifyAll()
+
+    def test_main_error_other(self):
+        log = StringIO.StringIO()
+        pkg_resources.get_distribution('cloud-init').AndReturn(
+            FakeCiVersion('0.7.0'))
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
+        subprocess.Popen(
+            ['/var/lib/heat-cfntools/cfn-userdata'],
+            stderr=log,
+            stdout=log).AndRaise(IOError("read failed"))
+
+        self.m.ReplayAll()
+        self.assertEqual(os.EX_SOFTWARE, loguserdata.main(log))
+        self.m.VerifyAll()
+
+    def test_main_fails(self):
         log = StringIO.StringIO()
 
         #fail on ci version
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.5.0'))
-
         #fail on execute cfn-userdata
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
@@ -139,5 +187,4 @@ class LoguserdataTest(unittest.TestCase):
         self.m.ReplayAll()
         self.assertEqual(-1, loguserdata.main(log))
         self.assertEqual(-2, loguserdata.main(log))
-
         self.m.VerifyAll()
