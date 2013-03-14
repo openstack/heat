@@ -171,9 +171,14 @@ class Instance(resource.Resource):
                 return msg
 
             def read_cloudinit_file(fn):
-                return pkgutil.get_data('heat', 'cloudinit/%s' % fn)
+                data = pkgutil.get_data('heat', 'cloudinit/%s' % fn)
+                data = data.replace('@INSTANCE_USER@',
+                                    cfg.CONF.instance_user)
+                return data
 
             attachments = [(read_cloudinit_file('config'), 'cloud-config'),
+                           (read_cloudinit_file('boothook.sh'), 'boothook.sh',
+                            'cloud-boothook'),
                            (read_cloudinit_file('part-handler.py'),
                             'part-handler.py'),
                            (userdata, 'cfn-userdata', 'x-cfninitdata'),

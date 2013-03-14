@@ -1,7 +1,4 @@
-runcmd:
- - setenforce 0 > /dev/null 2>&1 || true
-
-user: ec2-user
+user: @INSTANCE_USER@
 
 cloud_config_modules:
  - locale
@@ -9,7 +6,6 @@ cloud_config_modules:
  - timezone
  - update_etc_hosts
  - update_hostname
- - runcmd
 
 # Capture all subprocess output into a logfile
 # Useful for troubleshooting cloud-init issues
