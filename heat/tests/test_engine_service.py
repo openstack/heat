@@ -15,6 +15,7 @@
 
 import os
 import unittest
+import json
 
 import mox
 from nose.plugins.attrib import attr
@@ -640,6 +641,20 @@ class stackServiceTest(unittest.TestCase):
                           self.ctx, self.stack_identity, 'foo')
 
     def test_stack_authorize_stack_user_nocreds(self):
+        self.assertFalse(self.man._authorize_stack_user(self.ctx,
+                                                        self.stack_identity,
+                                                        'foo'))
+
+    def test_stack_authorize_stack_user_attribute_error(self):
+        self.m.StubOutWithMock(json, 'loads')
+        json.loads(mox.IgnoreArg()).AndRaise(AttributeError)
+        self.assertFalse(self.man._authorize_stack_user(self.ctx,
+                                                        self.stack_identity,
+                                                        'foo'))
+
+    def test_stack_authorize_stack_user_type_error(self):
+        self.m.StubOutWithMock(json, 'loads')
+        json.loads(mox.IgnoreArg()).AndRaise(TypeError)
         self.assertFalse(self.man._authorize_stack_user(self.ctx,
                                                         self.stack_identity,
                                                         'foo'))
