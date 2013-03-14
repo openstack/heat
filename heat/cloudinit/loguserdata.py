@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import errno
 import datetime
 import pkg_resources
 import os
@@ -25,8 +26,19 @@ def create_log(log_path):
 def call(args, logger):
     logger.write('%s\n' % ' '.join(args))
     logger.flush()
-    p = subprocess.Popen(args, stdout=logger, stderr=logger)
-    p.wait()
+    try:
+        p = subprocess.Popen(args, stdout=logger, stderr=logger)
+        p.wait()
+    except OSError as ex:
+        if ex.errno == errno.ENOEXEC:
+            logger.write('Userdata empty or not executable: %s\n' % str(ex))
+            return os.EX_OK
+        else:
+            logger.write('OS error running userdata: %s\n' % str(ex))
+            return os.EX_OSERR
+    except Exception as ex:
+        logger.write('Unknown error running userdata: %s\n' % str(ex))
+        return os.EX_SOFTWARE
     return p.returncode
 
 
