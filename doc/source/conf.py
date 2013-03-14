@@ -222,12 +222,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('man/heat-cfn', 'heat-cfn',
-    u'Command line utility to run heat actions over the CloudFormation API',
-    [u'Heat Developers'], 1),
-    ('man/heat-watch', 'heat-watch',
-    u'Command line utility to run heat watch actions over the CloudWatch API',
-    [u'Heat Developers'], 1),
     ('man/heat-api', 'heat-api',
     u'REST API service to the heat project.',
     [u'Heat Developers'], 1),
@@ -237,11 +231,17 @@ man_pages = [
     ('man/heat-api-cloudwatch', 'heat-api-cloudwatch',
     u'CloudWatch alike API service to the heat project',
     [u'Heat Developers'], 1),
+    ('man/heat-boto', 'heat-boto',
+    u'Command line utility to run heat actions over the CloudFormation API',
+    [u'Heat Developers'], 1),
+    ('man/heat-cfn', 'heat-cfn',
+    u'Command line utility to run heat actions over the CloudFormation API',
+    [u'Heat Developers'], 1),
     ('man/heat-engine', 'heat-engine',
     u'Service which performs the actions from the API calls made by the user',
     [u'Heat Developers'], 1),
-    ('man/heat-boto', 'heat-boto',
-    u'Command line utility to run heat actions over the CloudFormation API',
+    ('man/heat-watch', 'heat-watch',
+    u'Command line utility to run heat watch actions over the CloudWatch API',
     [u'Heat Developers'], 1),
 ]
 
