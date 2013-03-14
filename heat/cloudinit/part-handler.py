@@ -1,7 +1,8 @@
 #part-handler
 
-import os
 import datetime
+import errno
+import os
 
 
 def list_types():
