@@ -396,6 +396,13 @@ class Resource(object):
             return
         if self.state == self.DELETE_IN_PROGRESS:
             return 'Resource deletion already in progress'
+        if self.state == self.CREATE_FAILED:
+            return
+        # Further resources will not be created in a CREATE_FAILED stack.
+        # The state of these resources is None.  Do not delete as an
+        # undeleteable stack will result
+        if self.state is None:
+            return
 
         logger.info('deleting %s (inst:%s db_id:%s)' %
                     (str(self), self.resource_id, str(self.id)))
