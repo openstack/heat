@@ -343,6 +343,10 @@ class Debug(Middleware):
         print
 
 
+def debug_filter(app, conf, **local_conf):
+    return Debug(app)
+
+
 class Router(object):
     """
     WSGI middleware that maps incoming requests to WSGI apps.
