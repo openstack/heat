@@ -288,3 +288,17 @@ class validateTest(unittest.TestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
         self.assertNotEqual(res['Description'], 'Successfully validated')
+
+    def test_validate_parameters(self):
+        t = template_format.parse(test_template_ref % 'WikiDatabase')
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t))
+        self.assertEqual(res['Parameters'], {'KeyName': {
+            'Type': 'String',
+            'Description': 'Name of an existing EC2KeyPair to enable SSH '
+                           'access to the instances'}})

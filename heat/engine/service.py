@@ -26,6 +26,7 @@ from heat.engine import clients
 from heat.engine.event import Event
 from heat.common import exception
 from heat.common import identifier
+from heat.engine import parameters
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import resources  # pyflakes_bypass review 23102
@@ -286,20 +287,14 @@ class EngineService(service.Service):
                 return {'Error':
                         'Every Resources object must contain a Type member.'}
 
-        def describe_param(p):
-            description = {'NoEcho': p.no_echo() and 'true' or 'false',
-                           'ParameterKey': p.name,
-                           'Description': p.description()}
-            if p.has_default():
-                description['DefaultValue'] = p.default()
-
-            return description
-
-        params = parser.Parameters(None, tmpl).map(describe_param)
+        tmpl_params = parser.Parameters(None, tmpl)
+        format_validate_parameter = lambda p: dict(p.schema)
+        is_real_param = lambda p: p.name not in parameters.PSEUDO_PARAMETERS
+        params = tmpl_params.map(format_validate_parameter, is_real_param)
 
         result = {
             'Description': template.get('Description', ''),
-            'Parameters': params.values(),
+            'Parameters': params,
         }
         return result
 

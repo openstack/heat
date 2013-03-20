@@ -403,8 +403,23 @@ class StackController(object):
             return exception.HeatInvalidParameterValueError(detail=msg)
 
         logger.info('validate_template')
+
+        def format_validate_parameter(key, value):
+            """
+            Reformat engine output into the AWS "ValidateTemplate" format
+            """
+
+            return {
+                'ParameterKey': key,
+                'DefaultValue': value.get(engine_api.PARAM_DEFAULT, ''),
+                'Description': value.get(engine_api.PARAM_DESCRIPTION, ''),
+                'NoEcho': value.get(engine_api.PARAM_NO_ECHO, 'false')
+            }
+
         try:
             res = self.engine_rpcapi.validate_template(con, template)
+            res['Parameters'] = [format_validate_parameter(k, v)
+                                 for k, v in res['Parameters'].items()]
             return api_utils.format_response('ValidateTemplate', res)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
