@@ -124,7 +124,7 @@ Download heat-jeos via git
 
 ::
 
-    git clone -q git://github.com/heat-api/heat-jeos.git
+    git clone -q git://github.com/sdake/heat-jeos.git
     pushd heat-jeos
     sudo python setup.py install
     popd
