@@ -181,6 +181,13 @@ class AWSCommon(unittest.TestCase):
         result = api_utils.reformat_dict_keys(keymap, data)
         self.assertEqual(result, expected)
 
+    def test_reformat_dict_keys_missing(self):
+        keymap = {"foo": "bar", "foo2": "bar2"}
+        data = {"foo": 123}
+        expected = {"bar": 123}
+        result = api_utils.reformat_dict_keys(keymap, data)
+        self.assertEqual(result, expected)
+
     def setUp(self):
         print "setup complete"
 

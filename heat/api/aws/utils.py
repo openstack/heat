@@ -111,4 +111,5 @@ def reformat_dict_keys(keymap={}, inputdict={}):
     '''
     Utility function for mapping one dict format to another
     '''
-    return dict([(outk, inputdict[ink]) for ink, outk in keymap.items()])
+    return dict([(outk, inputdict[ink]) for ink, outk in keymap.items()
+                if ink in inputdict])
