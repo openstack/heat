@@ -3,7 +3,6 @@
 build
 dist
 heat.egg-info
-heat/versioninfo
 tags
 *.log
 heat-test.db
