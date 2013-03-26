@@ -20,21 +20,13 @@ import json
 import eventlet
 from oslo.config import cfg
 
+from keystoneclient.contrib.ec2.utils import Ec2Signer
+
 from heat.common import exception
 from heat.common import identifier
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
-
-# FIXME : we should remove the common.ec2signer fallback implementation
-# when the versions of keystoneclient we support all have the Ec2Signer
-# utility class
-# Ref https://review.openstack.org/#/c/16964/
-# https://blueprints.launchpad.net/keystone/+spec/ec2signer-to-keystoneclient
-try:
-    from keystoneclient.contrib.ec2.utils import Ec2Signer
-except ImportError:
-    from heat.common.ec2signer import Ec2Signer
 
 logger = logging.getLogger(__name__)
 

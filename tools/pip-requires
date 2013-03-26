@@ -24,7 +24,7 @@ PasteDeploy==1.5.0
 routes==1.12.3
 SQLAlchemy>=0.7.8,<0.7.99
 WebOb==1.2.3
-python-keystoneclient
+python-keystoneclient>=0.2.3
 python-memcached
 python-swiftclient
 python-quantumclient>=2.2.0,<3.0.0
