@@ -120,7 +120,7 @@ class Parameter(object):
         if self.no_echo():
             return '******'
         else:
-            return value
+            return str(value)
 
 
 class NumberParam(Parameter):
