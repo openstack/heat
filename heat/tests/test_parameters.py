@@ -329,3 +329,17 @@ class ParametersTest(unittest.TestCase):
                     'AWS::StackName': True}
 
         self.assertEqual(params.map(lambda p: p.has_default()), expected)
+
+    def test_map_str(self):
+        template = {'Parameters': {'Foo': {'Type': 'String'},
+                                   'Bar': {'Type': 'Number'}}}
+        params = parameters.Parameters('test_params', template, {
+            'Foo': 'foo', 'Bar': 42})
+
+        expected = {'Foo': 'foo',
+                    'Bar': '42',
+                    'AWS::Region': 'ap-southeast-1',
+                    'AWS::StackId': 'None',
+                    'AWS::StackName': 'test_params'}
+
+        self.assertEqual(params.map(str), expected)
