@@ -86,6 +86,8 @@ class InstanceGroup(resource.Resource):
         active = all(i.check_active(override=False) for i in self._activating)
         if active:
             self._activating = []
+            # When all instances are active, reload the LB config
+            self._lb_reload()
         return active
 
     def _wait_for_activation(self):
@@ -202,9 +204,16 @@ class InstanceGroup(resource.Resource):
                 inst_list.remove(victim)
                 self.resource_id_set(','.join(inst_list))
 
+    def _lb_reload(self):
         # notify the LoadBalancer to reload it's config to include
-        # the changes in instances we have just made.
+        # the changes in instances we have just made, this must be after
+        # activation (instance in ACTIVE state), or we may not get network
+        # details for the instance, resulting in incorrect 0.0.0.0 config
+        # being updated via the LoadBalancer resource
         if self.properties['LoadBalancerNames']:
+            inst_list = []
+            if self.resource_id is not None:
+                inst_list = sorted(self.resource_id.split(','))
             # convert the list of instance names into a list of instance id's
             id_list = []
             for inst_name in inst_list:
@@ -326,8 +335,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         return self.UPDATE_COMPLETE
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
-        self._adjust(adjustment, adjustment_type, False)
-        self._wait_for_activation()
+        if self._adjust(adjustment, adjustment_type, False) is True:
+            self._wait_for_activation()
 
     def _adjust(self, adjustment, adjustment_type='ExactCapacity',
                 raise_on_error=True):
@@ -335,7 +344,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         if self._cooldown_inprogress():
             logger.info("%s NOT performing scaling adjustment, cooldown %s" %
                         (self.name, self.properties['Cooldown']))
-            return
+            return False
 
         inst_list = []
         if self.resource_id is not None:
@@ -352,18 +361,20 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
 
         if new_capacity > int(self.properties['MaxSize']):
             logger.warn('can not exceed %s' % self.properties['MaxSize'])
-            return
+            return False
         if new_capacity < int(self.properties['MinSize']):
             logger.warn('can not be less than %s' % self.properties['MinSize'])
-            return
+            return False
 
         if new_capacity == capacity:
             logger.debug('no change in capacity %d' % capacity)
-            return
+            return False
 
         self.resize(new_capacity, raise_on_error=raise_on_error)
 
         self._cooldown_timestamp("%s : %s" % (adjustment_type, adjustment))
+
+        return True
 
     def FnGetRefId(self):
         return unicode(self.name)
