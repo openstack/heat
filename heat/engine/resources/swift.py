@@ -96,8 +96,6 @@ class SwiftContainer(resource.Resource):
 
     def FnGetAtt(self, key):
         url, token_id = self.swift().get_auth()
-        if self.resource_id:
-            headers = self.swift().head_container(self.resource_id)
         parsed = list(urlparse(url))
         if key == 'DomainName':
             return parsed[1].split(':')[0]
@@ -106,12 +104,20 @@ class SwiftContainer(resource.Resource):
                                      self.resource_id)
         elif key == 'RootURL':
             return '%s://%s%s' % (parsed[0], parsed[1], parsed[2])
-        elif key == 'ObjectCount':
-            return headers['x-container-object-count']
-        elif key == 'BytesUsed':
-            return headers['x-container-bytes-used']
-        elif key == 'HeadContainer':
-            return headers
+        elif self.resource_id and key in (
+                'ObjectCount', 'BytesUsed', 'HeadContainer'):
+            try:
+                headers = self.swift().head_container(self.resource_id)
+            except clients.swiftclient.ClientException as ex:
+                logger.warn("Head container failed: %s" % str(ex))
+                return None
+            else:
+                if key == 'ObjectCount':
+                    return headers['x-container-object-count']
+                elif key == 'BytesUsed':
+                    return headers['x-container-bytes-used']
+                elif key == 'HeadContainer':
+                    return headers
         else:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
