@@ -142,7 +142,7 @@ EOF
 }
 
 os_start () {
-    sudo rabbitmqctl start
+    sudo rabbitmqctl start_app
     sleep 1
     if ! sudo vgs | grep -q nova-volumes
     then
