@@ -238,7 +238,7 @@ export OS_PASSWORD=verybadpass
 export OS_TENANT_NAME=admin
 export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
 export OS_AUTH_STRATEGY=keystone
-export ADMIN_PASSWORD=$OS_PASSWORD
+export ADMIN_PASSWORD=\$OS_PASSWORD
 EOF
     # Configure keystone
     source $HOME/.openstack/keystonerc
