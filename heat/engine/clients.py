@@ -120,34 +120,24 @@ class OpenStackClients(object):
 
         con = self.context
         args = {
-            'auth_version': '2'
+            'auth_version': '2',
+            'tenant_name': con.tenant,
+            'authurl': con.auth_url,
+            'user': con.username
         }
 
         if con.password is not None:
-            args['user'] = con.username
             args['key'] = con.password
-            args['authurl'] = con.auth_url
-            args['tenant_name'] = con.tenant
         elif con.auth_token is not None:
-            args['user'] = None
-            args['key'] = None
-            args['authurl'] = None
-            args['preauthtoken'] = con.auth_token
-            # Lookup endpoint for object-store service type
-            service_type = 'object-store'
-            endpoints = self.keystone().service_catalog.get_endpoints(
-                service_type=service_type)
-            if len(endpoints[service_type]) == 1:
-                args['preauthurl'] = endpoints[service_type][0]['publicURL']
-            else:
-                logger.error("No endpoint found for %s service type" %
-                             service_type)
-                return None
+            args['os_options'] = {
+                'tenant_id': con.tenant_id,
+                'auth_token': con.auth_token,
+                'tenant_name': con.tenant
+            }
         else:
             logger.error("Swift connection failed, no password or " +
                          "auth_token!")
             return None
-
         self._swift = swiftclient.Connection(**args)
         return self._swift
 
