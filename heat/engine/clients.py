@@ -89,11 +89,8 @@ class OpenStackClients(object):
             args['username'] = con.username
             args['api_key'] = con.password
         elif con.auth_token is not None:
-            args['username'] = con.service_user
-            args['api_key'] = con.service_password
-            args['project_id'] = con.service_tenant
-            args['proxy_token'] = con.auth_token
-            args['proxy_tenant_id'] = con.tenant_id
+            args['username'] = None
+            args['api_key'] = None
         else:
             logger.error("Nova connection failed, no password or auth_token!")
             return None
@@ -104,15 +101,17 @@ class OpenStackClients(object):
             # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
             # TODO(shardy): May be able to remove when the bug above is fixed
             client = novaclient.Client(1.1, no_cache=True, **args)
-            client.authenticate()
             self._nova[service_type] = client
         except TypeError:
             # for compatibility with essex, which doesn't have no_cache=True
             # TODO(shardy): remove when we no longer support essex
             client = novaclient.Client(1.1, **args)
-            client.authenticate()
             self._nova[service_type] = client
 
+        if con.password is None and con.auth_token is not None:
+            management_url = self.url_for(service_type=service_type)
+            client.client.auth_token = con.auth_token
+            client.client.management_url = management_url
         return client
 
     def swift(self):
