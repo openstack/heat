@@ -17,6 +17,7 @@ import eventlet
 from heat.openstack.common import log as logging
 
 from heat.common import exception
+from heat.engine import clients
 from heat.engine import resource
 
 logger = logging.getLogger(__name__)
@@ -51,13 +52,16 @@ class Volume(resource.Resource):
 
     def handle_delete(self):
         if self.resource_id is not None:
-            vol = self.cinder().volumes.get(self.resource_id)
+            try:
+                vol = self.cinder().volumes.get(self.resource_id)
 
-            if vol.status == 'in-use':
-                logger.warn('cant delete volume when in-use')
-                raise exception.Error("Volume in use")
+                if vol.status == 'in-use':
+                    logger.warn('cant delete volume when in-use')
+                    raise exception.Error("Volume in use")
 
-            self.cinder().volumes.delete(self.resource_id)
+                self.cinder().volumes.delete(self.resource_id)
+            except clients.cinder_exceptions.NotFound:
+                pass
 
 
 class VolumeAttachment(resource.Resource):

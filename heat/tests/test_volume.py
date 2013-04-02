@@ -103,6 +103,8 @@ class VolumeTest(unittest.TestCase):
         self.fc.volumes.get('vol-123').AndReturn(fv)
         self.fc.volumes.delete('vol-123').AndReturn(None)
 
+        self.fc.volumes.get('vol-123').AndRaise(
+            clients.cinder_exceptions.NotFound('Not found'))
         self.m.ReplayAll()
 
         t = self.load_template()
@@ -114,8 +116,13 @@ class VolumeTest(unittest.TestCase):
         self.assertEqual(resource.handle_update({}), vol.Volume.UPDATE_REPLACE)
 
         fv.status = 'in-use'
+        resource.state = 'CREATE_COMPLETE'
         self.assertEqual(resource.delete(), 'Volume in use')
         fv.status = 'available'
+        resource.state = 'CREATE_COMPLETE'
+        self.assertEqual(resource.delete(), None)
+        fv.status = 'available'
+        resource.state = 'CREATE_COMPLETE'
         self.assertEqual(resource.delete(), None)
 
         self.m.VerifyAll()
