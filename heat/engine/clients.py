@@ -123,20 +123,19 @@ class OpenStackClients(object):
 
         con = self.context
         args = {
-            'auth_version': '2',
+            'auth_version': '2.0',
             'tenant_name': con.tenant,
-            'authurl': con.auth_url,
             'user': con.username
         }
 
         if con.password is not None:
             args['key'] = con.password
+            args['authurl'] = con.auth_url
         elif con.auth_token is not None:
-            args['os_options'] = {
-                'tenant_id': con.tenant_id,
-                'auth_token': con.auth_token,
-                'tenant_name': con.tenant
-            }
+            args['key'] = None
+            args['authurl'] = None
+            args['preauthtoken'] = con.auth_token
+            args['preauthurl'] = self.url_for(service_type='object-store')
         else:
             logger.error("Swift connection failed, no password or " +
                          "auth_token!")
