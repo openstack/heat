@@ -160,10 +160,8 @@ class OpenStackClients(object):
             args['password'] = con.password
             args['tenant_name'] = con.tenant
         elif con.auth_token is not None:
-            args['username'] = con.service_user
-            args['password'] = con.service_password
-            args['tenant_name'] = con.service_tenant
             args['token'] = con.auth_token
+            args['endpoint_url'] = self.url_for(service_type='network')
         else:
             logger.error("Quantum connection failed, "
                          "no password or auth_token!")
