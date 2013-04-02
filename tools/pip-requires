@@ -19,7 +19,7 @@ kombu>=1.0.4
 argparse
 lxml>=2.3,<=2.3.5
 sqlalchemy-migrate>=0.7.2
-python-novaclient
+python-novaclient>=2.11.0,<3
 PasteDeploy==1.5.0
 routes==1.12.3
 SQLAlchemy>=0.7.8,<0.7.99
