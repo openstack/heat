@@ -241,6 +241,7 @@ class Stack(object):
             try:
                 result = res.validate()
             except Exception as ex:
+                logger.exception(ex)
                 raise StackValidationFailed(message=str(ex))
             if result:
                 raise StackValidationFailed(message=result)
