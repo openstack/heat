@@ -11,17 +11,9 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-==========
- Glossary
-==========
+Troubleshooting
+===============
 
-.. glossary::
+If you encounter issues running heat, see if the solution to the issue is documented on the Troubleshooting_ wiki page. If not, let us know about the problem in the #heat IRC channel on freenode.
 
-   OpenStack
-     Open source software for building private and public clouds.
-
-   API server
-     HTTP REST API service for heat.
-
-   orchestrate
-     Arrange or direct the elements of (a situation) to produce a desired effect.
+.. _Troubleshooting: http://wiki.openstack.org/Heat/TroubleShooting
