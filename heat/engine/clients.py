@@ -71,6 +71,9 @@ class OpenStackClients(object):
         self._keystone = hkc.KeystoneClient(self.context)
         return self._keystone
 
+    def url_for(self, **kwargs):
+        return self.keystone().client.service_catalog.url_for(**kwargs)
+
     def nova(self, service_type='compute'):
         if service_type in self._nova:
             return self._nova[service_type]
@@ -181,20 +184,17 @@ class OpenStackClients(object):
 
         con = self.context
         args = {
-            'project_id': con.tenant,
-            'auth_url': con.auth_url,
             'service_type': 'volume',
+            'auth_url': con.auth_url,
+            'project_id': con.tenant
         }
 
         if con.password is not None:
             args['username'] = con.username
             args['api_key'] = con.password
         elif con.auth_token is not None:
-            args['username'] = con.service_user
-            args['api_key'] = con.service_password
-            args['project_id'] = con.service_tenant
-            args['proxy_token'] = con.auth_token
-            args['proxy_token_id'] = con.tenant_id
+            args['username'] = None
+            args['api_key'] = None
         else:
             logger.error("Cinder connection failed, "
                          "no password or auth_token!")
@@ -202,6 +202,10 @@ class OpenStackClients(object):
         logger.debug('cinder args %s', args)
 
         self._cinder = cinderclient.Client(**args)
+        if con.password is None and con.auth_token is not None:
+            management_url = self.url_for(service_type='volume')
+            self._cinder.client.auth_token = con.auth_token
+            self._cinder.client.management_url = management_url
 
         return self._cinder
 
