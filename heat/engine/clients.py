@@ -95,18 +95,7 @@ class OpenStackClients(object):
             logger.error("Nova connection failed, no password or auth_token!")
             return None
 
-        client = None
-        try:
-            # Workaround for issues with python-keyring, need no_cache=True
-            # ref https://bugs.launchpad.net/python-novaclient/+bug/1020238
-            # TODO(shardy): May be able to remove when the bug above is fixed
-            client = novaclient.Client(1.1, no_cache=True, **args)
-            self._nova[service_type] = client
-        except TypeError:
-            # for compatibility with essex, which doesn't have no_cache=True
-            # TODO(shardy): remove when we no longer support essex
-            client = novaclient.Client(1.1, **args)
-            self._nova[service_type] = client
+        client = novaclient.Client(1.1, **args)
 
         if con.password is None and con.auth_token is not None:
             management_url = self.url_for(service_type=service_type)
