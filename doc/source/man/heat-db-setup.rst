@@ -1,6 +1,6 @@
-========
+=============
 heat-db-setup
-========
+=============
 
 .. program:: heat-db-setup
 
