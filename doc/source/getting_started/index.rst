@@ -11,17 +11,15 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-==========
- Glossary
-==========
+Getting Started Guides
+======================
 
-.. glossary::
+.. toctree::
+   :maxdepth: 2
 
-   OpenStack
-     Open source software for building private and public clouds.
+   on_devstack
+   on_fedora
+   on_ubuntu
+   on_other
 
-   API server
-     HTTP REST API service for heat.
-
-   orchestrate
-     Arrange or direct the elements of (a situation) to produce a desired effect.
+.. update index

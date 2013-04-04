@@ -22,7 +22,7 @@ What is the purpose of the project and vision for it?
 =====================================================
 
 * Heat provides a template based orchestration for describing a cloud application
-  by executing appropriate OpenStack API calls to generate running cloud applications.
+  by executing appropriate :term:`OpenStack` API calls to generate running cloud applications.
 * The software integrates other core components of OpenStack into a one-file
   template system. The templates allow creation of most OpenStack resource types
   (such as instances, floating ips, volumes, security groups, users, etc), as well
@@ -41,6 +41,8 @@ Table of contents
    :maxdepth: 2
 
    man/index
+   getting_started/index
+   troubleshooting/index
    glossary
 
 .. update index

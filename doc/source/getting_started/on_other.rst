@@ -11,17 +11,12 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-==========
- Glossary
-==========
+Installing OpenStack on other Distributions
+===========================================
 
-.. glossary::
+- There is a `Debian packaging team for OpenStack`_.
+- There are instructions for `installing OpenStack on Ubuntu`_.
+- Various other distributions may have packaging teams or Getting Started guides available.
 
-   OpenStack
-     Open source software for building private and public clouds.
-
-   API server
-     HTTP REST API service for heat.
-
-   orchestrate
-     Arrange or direct the elements of (a situation) to produce a desired effect.
+.. _Debian packaging team for OpenStack: http://wiki.openstack.org/Packaging/Debian
+.. _installing OpenStack on Ubuntu: http://docs.openstack.org/bexar/openstack-compute/admin/content/ch03s02.html
