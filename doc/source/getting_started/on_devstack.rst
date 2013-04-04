@@ -39,7 +39,7 @@ Before any heat commands can be run, the authentication environment needs to be 
 
 You can confirm that Heat is running and responding with this command
 ::
-    heat list
+    heat stack-list
 
 This should return an empty line
 
@@ -60,7 +60,7 @@ Launching a stack
 -----------------
 Now lets launch a stack, assuming that DEST is left as the default /opt/stack::
 
-    heat create teststack -f
+    heat stack-create teststack -f
     /opt/stack/heat/templates/WordPress_Single_Instance.template -P "InstanceType=m1.large;DBUsername=wp;DBPassword=verybadpassword;KeyName=heat_key;LinuxDistribution=F16"
 
 Which will respond::
@@ -76,7 +76,7 @@ List stacks
 ~~~~~~~~~~~
 List the stacks in your tenant::
 
-    heat list
+    heat stack-list
 
 List stack events
 ~~~~~~~~~~~~~~~~~
@@ -90,7 +90,7 @@ Describe the wordpress stack
 
 Show detailed state of a stack::
 
-   heat describe teststack
+   heat stack-show teststack
 
 Note: After a few seconds, the stack_status should change from IN_PROGRESS to CREATE_COMPLETE.
 
@@ -107,5 +107,5 @@ Delete the instance when done
 
 Note: The list operation will show no running stack.::
 
-    heat delete teststack
-    heat list
+    heat stack-delete teststack
+    heat stack-list
