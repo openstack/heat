@@ -7,7 +7,371 @@
              xmlns:wadl="http://wadl.dev.java.net/2009/02">
 
     <resources base="https://heat.example.com/">
+        <resource id="version" path="v1">
+            <resource id="tenant_id" path="{tenant_id}">
+                <param name="tenant_id" style="template">
+                    <doc>
+                        <p xmlns="http://www.w3.org/1999/xhtml">
+                            The unique identifier of the tenant or account.
+                        </p>
+                    </doc>
+                </param>
 
+                <resource id="stacks" path="stacks">
+                    <method href="#stack_create" />
+                    <method href="#stack_list" />
+
+                    <resource path="{stack_name}">
+                        <param name="stack_name" style="template" required="true">
+                            <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                                The name of an existing stack.
+                            </p></doc>
+                        </param>
+
+                        <method href="#stack_find" />
+
+                        <resource path="resources">
+                            <method href="#stack_resources_find" />
+                        </resource>
+
+                        <resource path="events">
+                            <method href="#stack_events_find" />
+                        </resource>
+
+                        <resource path="{stack_id}">
+                            <param name="stack_id" style="template" required="true">
+                                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                                    The unique identifier of an existing stack.
+                                </p></doc>
+                            </param>
+
+                            <method href="#stack_show" />
+                            <method href="#stack_update" />
+                            <method href="#stack_delete" />
+
+                            <resource path="events">
+                                <method href="#stack_event_list" />
+                            </resource>
+
+                            <resource path="resources">
+                                <method href="#resource_list" />
+
+                                <resource path="{resource_name}">
+                                    <param name="resource_name" style="template" required="true">
+                                        <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                                            The name of a resource in the stack.
+                                        </p></doc>
+                                    </param>
+
+                                    <method href="#resource_show" />
+
+                                    <resource path="metadata">
+                                        <method href="#resource_metadata" />
+                                    </resource>
+                                </resource>
+
+                                <resource path="events">
+                                    <method href="#resource_event_list" />
+
+                                    <resource path="{event_id}">
+                                        <param name="event_id" style="template" required="true">
+                                            <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                                                The unique identifier of an event related to the resource in the stack.
+                                            </p></doc>
+                                        </param>
+
+                                        <method href="#event_show" />
+                                    </resource>
+                                </resource>
+
+                            </resource>
+
+                            <resource path="template">
+                                <method href="#stack_template" />
+                            </resource>
+                        </resource>
+                    </resource>
+                </resource>
+
+                <resource id="validate_template" path="validate_template">
+                    <method href="#template_validate" />
+                </resource>
+
+                <resource id="resource_types" path="resource_types">
+                    <method href="#resource_type_list" />
+                </resource>
+
+            </resource>
+        </resource>
     </resources>
+
+    <method name="GET" id="stack_list">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Get Stack Data">
+            <p xmlns="http://www.w3.org/1999/xhtml">Get a list of active stacks.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="POST" id="stack_create">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Create Stack">
+            <p xmlns="http://www.w3.org/1999/xhtml">Create a Stack.</p>
+        </wadl:doc>
+
+        <request>
+            <param name="stack_name" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    The name of the stack to create.
+                </p></doc>
+            </param>
+
+            <param name="template_url" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    The URL of the template to instantiate.
+                </p><p xmlns="http://www.w3.org/1999/xhtml">
+                    This is ignored if the template is supplied inline.
+                </p></doc>
+            </param>
+
+            <param name="template" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    A JSON template to instantiate.
+                </p><p xmlns="http://www.w3.org/1999/xhtml">
+                    This takes precedence over the Template URL if both are supplied.
+                </p></doc>
+            </param>
+
+            <param name="param_name-n" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    User-defined parameter names to pass to the template.
+                </p></doc>
+            </param>
+
+            <param name="param_value-n" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    User-defined parameter values to pass to the template.
+                </p></doc>
+            </param>
+
+            <param name="timeout_mins" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    The timeout for stack creation in minutes.
+                </p></doc>
+            </param>
+
+            <representation mediaType="application/json">
+                <doc xml:lang="EN">
+                    <xsdxt:code href="samples/stack_create.json" />
+                </doc>
+            </representation>
+        </request>
+
+        <response status="201" />
+    </method>
+
+    <method name="GET" id="stack_find">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Find Stack">
+            <p xmlns="http://www.w3.org/1999/xhtml">Find the canonical URL for a stack with a given name.</p>
+            <p xmlns="http://www.w3.org/1999/xhtml">This operation also works
+                with verbs other than GET, so you can also use it to perform
+                PUT and DELETE operations on a current stack. Just set your
+                client to follow redirects. Note that when redirecting, the
+                request method should not change, as defined in RFC2626.
+                However, in many clients the default behaviour is to change the
+                method to GET when receiving a 302 because this behaviour is
+                ubiquitous in web browsers.</p>
+        </wadl:doc>
+
+        <response status="302" />
+    </method>
+
+    <method name="GET" id="stack_show">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Get Stack Data">
+            <p xmlns="http://www.w3.org/1999/xhtml">Get data about a stack.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="GET" id="stack_template">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Get Stack Template">
+            <p xmlns="http://www.w3.org/1999/xhtml">Retrieve a stack's template.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="PUT" id="stack_update">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Update Stack">
+            <p xmlns="http://www.w3.org/1999/xhtml">Update a Stack.</p>
+        </wadl:doc>
+
+        <request>
+            <param name="template_url" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    The URL of the template to instantiate.
+                </p><p xmlns="http://www.w3.org/1999/xhtml">
+                    This is ignored if the template is supplied inline.
+                </p></doc>
+            </param>
+
+            <param name="template" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    A JSON template to instantiate.
+                </p><p xmlns="http://www.w3.org/1999/xhtml">
+                    This takes precedence over the Template URL if both are supplied.
+                </p></doc>
+            </param>
+
+            <param name="param_name-n" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    User-defined parameter names to pass to the template.
+                </p></doc>
+            </param>
+
+            <param name="param_value-n" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    User-defined parameter values to pass to the template.
+                </p></doc>
+            </param>
+
+            <param name="timeout_mins" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    The timeout for stack creation in minutes.
+                </p></doc>
+            </param>
+
+            <representation mediaType="application/json">
+                <doc xml:lang="EN">
+                    <xsdxt:code href="samples/stack_update.json" />
+                </doc>
+            </representation>
+        </request>
+
+        <response status="202" />
+    </method>
+
+    <method name="DELETE" id="stack_delete">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Delete Stack">
+            <p xmlns="http://www.w3.org/1999/xhtml">Delete a stack.</p>
+        </wadl:doc>
+
+        <response status="204" />
+    </method>
+
+    <method name="POST" id="template_validate">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Update Stack">
+            <p xmlns="http://www.w3.org/1999/xhtml">Update a Stack.</p>
+        </wadl:doc>
+
+        <request>
+            <param name="template_url" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    The URL of the template to instantiate.
+                </p><p xmlns="http://www.w3.org/1999/xhtml">
+                    This is ignored if the template is supplied inline.
+                </p></doc>
+            </param>
+
+            <param name="template" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    A JSON template to instantiate.
+                </p><p xmlns="http://www.w3.org/1999/xhtml">
+                    This takes precedence over the Template URL if both are supplied.
+                </p></doc>
+            </param>
+
+            <representation mediaType="application/json">
+                <doc xml:lang="EN">
+                    <xsdxt:code href="samples/template_validate.json" />
+                </doc>
+            </representation>
+        </request>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="GET" id="resource_type_list">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="List Resource Types">
+            <p xmlns="http://www.w3.org/1999/xhtml">Get a list of the template resource types that are supported.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="GET" id="stack_resources_find">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Find Stack Resources">
+            <p xmlns="http://www.w3.org/1999/xhtml">Find the canonical URL for the resource list of a stack with a given name.</p>
+        </wadl:doc>
+
+        <response status="302" />
+    </method>
+
+    <method name="GET" id="resource_list">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Get Resources">
+            <p xmlns="http://www.w3.org/1999/xhtml">Get a list of resources in a stack.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="GET" id="resource_show">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Get Resource Data">
+            <p xmlns="http://www.w3.org/1999/xhtml">Get data about a resource.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="GET" id="resource_metadata">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Get Resource Metadata">
+            <p xmlns="http://www.w3.org/1999/xhtml">Get data a resource's metadata.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="GET" id="stack_events_find">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Find Stack Events">
+            <p xmlns="http://www.w3.org/1999/xhtml">Find the canonical URL for the event list of a stack with a given name.</p>
+        </wadl:doc>
+
+        <response status="302" />
+    </method>
+
+    <method name="GET" id="stack_event_list">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="List Stack Events">
+            <p xmlns="http://www.w3.org/1999/xhtml">Get a list of events for a stack.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="GET" id="resource_event_list">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="List Resource Events">
+            <p xmlns="http://www.w3.org/1999/xhtml">Get a list of events for a stack resource.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
+
+    <method name="GET" id="event_show">
+        <wadl:doc xmlns="http://www.w3.org/1999/xhtml" xml:lang="EN" title="Show Event">
+            <p xmlns="http://www.w3.org/1999/xhtml">Get data about an event.</p>
+        </wadl:doc>
+
+        <response status="200">
+        </response>
+    </method>
 
 </application>
