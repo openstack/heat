@@ -53,10 +53,18 @@ then
     echo "status - show service status for all required OpenStack services"
 fi
 
-OS_SERVICES=(qpidd mysqld openstack-keystone tgtd openstack-glance-api openstack-glance-registry openstack-nova-api openstack-nova-objectstore openstack-nova-compute openstack-nova-network openstack-nova-scheduler openstack-nova-cert $VOLUME_SERVICE-volume)
-if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
-    OS_SERVICES+=($VOLUME_SERVICE-api $VOLUME_SERVICE-scheduler)
-fi
+os_dist='unknown'
+function check_os_version() {
+    #determine which OpenStack version we'll be running
+    os_version=$(rpm -q openstack-nova-common --qf='%{VERSION}')
+    case $os_version in
+        2012.1|2012.1.*) os_dist='essex';;
+        2012.2|2012.2.*) os_dist='folsom';;
+        2013.1|2013.1.*) os_dist='grizzly';;
+        *) echo 'Could not detect installed OpenStack version';;
+    esac
+    echo "Detected os_version $os_version os_dist=$os_dist"
+}
 
 function os_status() {
     for service in ${OS_SERVICES[@]}
@@ -132,6 +140,11 @@ function os_start() {
     # policy problem. See https://bugzilla.redhat.com/show_bug.cgi?id=857747
     sleep 2
     sudo systemctl $action openstack-nova-network.service
+
+    # conductor service is new for grizzly
+    if [ "$os_dist" = 'grizzly' ]; then
+        sudo systemctl $action openstack-nova-conductor.service
+    fi
 }
 
 function os_stop() {
@@ -204,6 +217,9 @@ function os_erase() {
 function os_install() {
     sudo yum -q -y groupinstall Virtualization
     sudo yum -q -y install openstack-utils openstack-nova openstack-glance openstack-keystone openstack-dashboard scsi-target-utils qpid-cpp-server qpid-cpp-server-daemon $VOLUME_SERVICE
+
+    check_os_version
+
     sudo dd if=/dev/zero of=$VOLUME_PATH bs=1M seek=20k count=0
     # Note if mysql-server is not installed, this will fail
     # and openstack-db --yes will install/start it
@@ -220,8 +236,24 @@ function os_install() {
     fi
 
     # Create a keystone RC file
+    # Note that keystone bug #1073291 "fix" removes a chunk of stuff from
+    # /usr/share/openstack-keystone/sample_data.sh (called from
+    # openstack-keystone-sample-data below), so for grizzly we have to align
+    # our RC file with the hardcoded values, because the password variables
+    # are now ignored, also the admin tenant is no longer created.
+    # I raised bug #1166182 to potentially fix this, but for now workaround:
     mkdir -p $HOME/.openstack
-    cat > $HOME/.openstack/keystonerc <<EOF
+    if [ "$os_dist" = 'grizzly' ]; then
+        cat > $HOME/.openstack/keystonerc <<EOF
+export ADMIN_TOKEN=$(openssl rand -hex 10)
+export OS_USERNAME=admin
+export OS_PASSWORD=secrete
+export OS_TENANT_NAME=demo
+export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
+export OS_AUTH_STRATEGY=keystone
+EOF
+    else
+        cat > $HOME/.openstack/keystonerc <<EOF
 export ADMIN_TOKEN=$(openssl rand -hex 10)
 export OS_USERNAME=admin
 export OS_PASSWORD=verybadpass
@@ -229,9 +261,17 @@ export OS_TENANT_NAME=admin
 export OS_AUTH_URL=http://127.0.0.1:5000/v2.0/
 export OS_AUTH_STRATEGY=keystone
 EOF
+    fi
     # Install keystone catalog
     source $HOME/.openstack/keystonerc
     sudo openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token $ADMIN_TOKEN
+
+    # Need to setup pki on grizzly or you get "Unable to sign token." error
+    if [ "$os_dist" = 'grizzly' ]; then
+        keystone-manage pki_setup
+        chown -R keystone /etc/keystone/ssl/
+    fi
+
     sudo systemctl start openstack-keystone.service
     sleep 1
 
@@ -240,14 +280,22 @@ EOF
     # Configure nova to use keystone
     sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_tenant_name service
     sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_user nova
-    sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
+    if [ "$os_dist" = 'grizzly' ]; then
+        sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password nova
+    else
+        sudo openstack-config --set /etc/nova/api-paste.ini filter:authtoken admin_password servicepass
+    fi
     sudo openstack-config --set /etc/nova/nova.conf DEFAULT auth_strategy keystone
     # Configure glance to use keystone
     sudo openstack-config --set /etc/glance/glance-api.conf paste_deploy flavor keystone
     sudo openstack-config --set /etc/glance/glance-registry.conf paste_deploy flavor keystone
     sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_tenant_name service
     sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_user glance
-    sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_password servicepass
+    if [ "$os_dist" = 'grizzly' ]; then
+        sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_password glance
+    else
+        sudo openstack-config --set /etc/glance/glance-api-paste.ini filter:authtoken admin_password servicepass
+    fi
     sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_tenant_name service
     sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_user glance
     sudo openstack-config --set /etc/glance/glance-registry-paste.ini filter:authtoken admin_password servicepass
@@ -296,6 +344,16 @@ EOF
     echo "If 10.0.0.0/24 clashes with your local network, pick another range."
 
 }
+
+OS_SERVICES=(qpidd mysqld openstack-keystone tgtd openstack-glance-api openstack-glance-registry openstack-nova-api openstack-nova-objectstore openstack-nova-compute openstack-nova-network openstack-nova-scheduler openstack-nova-cert $VOLUME_SERVICE-volume)
+if [[ $VOLUME_SERVICE == "openstack-cinder" ]]; then
+    OS_SERVICES+=($VOLUME_SERVICE-api $VOLUME_SERVICE-scheduler)
+fi
+
+check_os_version
+if [ "$os_dist" = 'grizzly' ]; then
+    OS_SERVICES+=(openstack-nova-conductor)
+fi
 
 case $action in
     "")
