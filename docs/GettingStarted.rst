@@ -28,13 +28,12 @@ Optionally, one may wish to install Heat via RPM. Creation instructions are in t
 Install OpenStack
 -----------------
 
-Installing OpenStack on Fedora 16/17/18
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Installing OpenStack on Fedora 17/18
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note:
-    - On Fedora 16 you have to enable the `Preview Repository`_ to install the required OpenStack Essex release.
-    - On Fedora 17 you can use the included OpenStack Essex release, or optionally enable the `Preview Repository`_ to install the newer OpenStack Folsom release.
-    - On Fedora 18 you can use the included OpenStack Folsom release
+    - On Fedora 17 using the `Preview Repository`_ to install the OpenStack Folsom release is recommended
+    - On Fedora 18 you can use the included OpenStack Folsom release or the Grizzly `Preview Repository`_
 
 A script called "``openstack``" in the tools directory of the repository will install and start OpenStack for you on Fedora::
 
@@ -153,6 +152,12 @@ Install heat from source
 In the heat directory, run the install script::
 
     sudo ./install.sh
+
+If running OpenStack grizzly installed via tools/openstack, it is necessary to modify the default service user password::
+
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cfn-paste.ini
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cloudwatch-paste.ini
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-paste.ini
 
 Source the keystone credentials created with tools/openstack
 ------------------------------------------------------------

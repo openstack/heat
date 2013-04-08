@@ -25,7 +25,7 @@ Getting Started With Heat on Fedora
 
 ..
     #!/bin/bash
-
+    
     # Exit on error
     set -e
 
@@ -41,13 +41,12 @@ Optionally, one may wish to install Heat via RPM. Creation instructions are in t
 Install OpenStack
 -----------------
 
-Installing OpenStack on Fedora 16/17/18
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Installing OpenStack on Fedora 17/18
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note:
-    - On Fedora 16 you have to enable the `Preview Repository`_ to install the required OpenStack Essex release.
-    - On Fedora 17 you can use the included OpenStack Essex release, or optionally enable the `Preview Repository`_ to install the newer OpenStack Folsom release.
-    - On Fedora 18 you can use the included OpenStack Folsom release
+    - On Fedora 17 using the `Preview Repository`_ to install the OpenStack Folsom release is recommended
+    - On Fedora 18 you can use the included OpenStack Folsom release or the Grizzly `Preview Repository`_
 
 A script called "``openstack``" in the tools directory of the repository will install and start OpenStack for you on Fedora::
 
@@ -155,6 +154,12 @@ Install heat from source
 In the heat directory, run the install script::
 
     sudo ./install.sh
+
+If running OpenStack grizzly installed via tools/openstack, it is necessary to modify the default service user password::
+
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cfn-paste.ini
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cloudwatch-paste.ini
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-paste.ini
 
 Source the keystone credentials created with tools/openstack
 ------------------------------------------------------------
@@ -287,7 +292,7 @@ After a few seconds, the ``StackStatus`` should change from ``CREATE_IN_PROGRESS
         echo "Waiting for Stack creation to complete..." >&2
         sleep 5
     done
-
+    
     $HEAT_DESCRIBE | grep -q "<StackStatus>CREATE_COMPLETE</StackStatus>"
 
 
@@ -306,16 +311,16 @@ Because the software takes some time to install from the repository, it may be a
         -e d                                                      \
     )
     HOST=`echo $WebsiteURL | sed -r -e 's#http://([^/]+)/.*#\1#'`
-
+    
     retries=9
     while ! ping -q -c 1 $HOST >/dev/null && ((retries-- > 0)); do
         echo "Waiting for host networking..." >&2
         sleep 2
     done
     test $retries -ge 0
-
+    
     sleep 10
-
+    
     retries=49
     while ! ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no  \
                 -q -t -l ec2-user $HOST                                   \
@@ -326,7 +331,7 @@ Because the software takes some time to install from the repository, it may be a
         sleep 5
     done
     test $retries -ge 0
-
+    
     echo "Pausing to wait for application startup..." >&2
     sleep 60
 
