@@ -27,6 +27,8 @@ from heat.engine import parser
 from heat.engine.resources import user
 from heat.tests import fakes
 
+import keystoneclient.exceptions
+
 
 @attr(tag=['unit', 'resource', 'User'])
 @attr(speed='fast')
@@ -301,6 +303,19 @@ class AccessKeyTest(unittest.TestCase):
         self.assertEqual(None, resource.delete())
         self.m.VerifyAll()
 
+        # Check for double delete
+        test_key = object()
+        self.m.StubOutWithMock(self.fc, 'delete_ec2_keypair')
+        NotFound = keystoneclient.exceptions.NotFound
+        self.fc.delete_ec2_keypair(self.fc.user_id,
+                                   test_key).AndRaise(NotFound('Gone'))
+
+        self.m.ReplayAll()
+        resource.state = resource.CREATE_COMPLETE
+        resource.resource_id = test_key
+        self.assertEqual(None, resource.delete())
+        self.m.VerifyAll()
+
     def test_access_key_no_user(self):
         self.m.ReplayAll()
 
@@ -318,6 +333,8 @@ class AccessKeyTest(unittest.TestCase):
                          resource.create())
         self.assertEqual(user.AccessKey.CREATE_FAILED,
                          resource.state)
+
+        self.assertEqual(None, resource.delete())
 
         self.m.VerifyAll()
 
