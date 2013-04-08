@@ -29,9 +29,6 @@ class AuthProtocol(auth_token.AuthProtocol):
     def _build_user_headers(self, token_info):
         rval = super(AuthProtocol, self)._build_user_headers(token_info)
         rval['X-Auth-Url'] = self.auth_uri
-        rval['X-Admin-User'] = self.admin_user
-        rval['X-Admin-Pass'] = self.admin_password
-        rval['X-Admin-Tenant-Name'] = self.admin_tenant_name
         return rval
 
 
