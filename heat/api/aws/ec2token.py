@@ -16,6 +16,7 @@
 import urlparse
 import httplib
 import gettext
+import hashlib
 
 gettext.install('heat', unicode=1)
 
@@ -37,6 +38,43 @@ class EC2Token(wsgi.Middleware):
         self.conf = conf
         self.application = app
 
+    def _get_signature(self, req):
+        """
+        Extract the signature from the request, this can be a get/post
+        variable or for v4 also in a header called 'Authorization'
+        - params['Signature'] == version 0,1,2,3
+        - params['X-Amz-Signature'] == version 4
+        - header 'Authorization' == version 4
+        see http://docs.aws.amazon.com/general/latest/gr/
+            sigv4-signed-request-examples.html
+        """
+        sig = req.params.get('Signature') or req.params.get('X-Amz-Signature')
+        if sig is None and 'Authorization' in req.headers:
+            auth_str = req.headers['Authorization']
+            sig = auth_str.partition("Signature=")[2].split(',')[0]
+
+        return sig
+
+    def _get_access(self, req):
+        """
+        Extract the access key identifier, for v 0/1/2/3 this is passed
+        as the AccessKeyId parameter, for version4 it is either and
+        X-Amz-Credential parameter or a Credential= field in the
+        'Authorization' header string
+        """
+        access = req.params.get('AWSAccessKeyId')
+        if access is None:
+            cred_param = req.params.get('X-Amz-Credential')
+            if cred_param:
+                access = cred_param.split("/")[0]
+
+        if access is None and 'Authorization' in req.headers:
+            auth_str = req.headers['Authorization']
+            cred_str = auth_str.partition("Credential=")[2].split(',')[0]
+            access = cred_str.split("/")[0]
+
+        return access
+
     @webob.dec.wsgify(RequestClass=wsgi.Request)
     def __call__(self, req):
         # Read request signature and access id.
@@ -45,37 +83,40 @@ class EC2Token(wsgi.Middleware):
         # Returning here just means the user didn't supply AWS
         # authentication and we'll let the app try native keystone next.
         logger.info("Checking AWS credentials..")
-        try:
-            signature = req.params['Signature']
-        except KeyError:
-            logger.info("No AWS Signature found.")
+
+        signature = self._get_signature(req)
+        if not signature:
             if 'X-Auth-User' in req.headers:
                 return self.application
             else:
+                logger.info("No AWS Signature found.")
                 raise exception.HeatIncompleteSignatureError()
 
-        try:
-            access = req.params['AWSAccessKeyId']
-        except KeyError:
-            logger.info("No AWSAccessKeyId found.")
+        access = self._get_access(req)
+        if not access:
             if 'X-Auth-User' in req.headers:
                 return self.application
             else:
+                logger.info("No AWSAccessKeyId/Authorization Credential")
                 raise exception.HeatMissingAuthenticationTokenError()
 
         logger.info("AWS credentials found, checking against keystone.")
         # Make a copy of args for authentication and signature verification.
         auth_params = dict(req.params)
-        # Not part of authentication args
-        auth_params.pop('Signature')
+        # 'Signature' param Not part of authentication args
+        auth_params.pop('Signature', None)
 
         # Authenticate the request.
+        # AWS v4 authentication requires a hash of the body
+        body_hash = hashlib.sha256(req.body).hexdigest()
         creds = {'ec2Credentials': {'access': access,
                                     'signature': signature,
                                     'host': req.host,
                                     'verb': req.method,
                                     'path': req.path,
                                     'params': auth_params,
+                                    'headers': req.headers,
+                                    'body_hash': body_hash
                                     }}
         creds_json = None
         try:
