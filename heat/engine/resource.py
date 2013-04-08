@@ -396,11 +396,7 @@ class Resource(object):
             return
         if self.state == self.DELETE_IN_PROGRESS:
             return 'Resource deletion already in progress'
-        if self.state == self.CREATE_FAILED:
-            return
-        # Further resources will not be created in a CREATE_FAILED stack.
-        # The state of these resources is None.  Do not delete as an
-        # undeleteable stack will result
+        # No need to delete if the resource has never been created
         if self.state is None:
             return
 
