@@ -134,6 +134,9 @@ Resources:
             - 'sed -i "/Deny from All/d" /etc/httpd/conf.d/wordpress.conf
 
               '
+            - 'sed -i "s/Require local/Require all granted/" /etc/httpd/conf.d/wordpress.conf
+
+              '
             - sed --in-place --e s/database_name_here/
             - {Ref: DBName}
             - / --e s/username_here/
