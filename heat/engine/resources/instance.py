@@ -313,7 +313,7 @@ class Instance(resource.Resource):
 
         self._server_status = server.status
 
-    def check_active(self):
+    def check_active(self, create_data=None):
         if self._server_status == 'ACTIVE':
             return True
 

@@ -23,6 +23,7 @@ from nose.plugins.attrib import attr
 
 from heat.tests.v1_1 import fakes
 from heat.common import context
+from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import instance
@@ -65,13 +66,13 @@ class InstanceGroupTest(unittest.TestCase):
     def _stub_create(self, num):
         self.m.StubOutWithMock(eventlet, 'sleep')
 
-        self.m.StubOutWithMock(instance.Instance, 'create')
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_active')
         for x in range(num):
-            instance.Instance.create().AndReturn(None)
-        instance.Instance.check_active().AndReturn(False)
+            instance.Instance.handle_create().AndReturn(None)
+        instance.Instance.check_active(None).AndReturn(False)
         eventlet.sleep(mox.IsA(int)).AndReturn(None)
-        instance.Instance.check_active().MultipleTimes().AndReturn(True)
+        instance.Instance.check_active(None).MultipleTimes().AndReturn(True)
 
     def create_instance_group(self, t, stack, resource_name):
         resource = asc.InstanceGroup(resource_name,
@@ -113,12 +114,13 @@ class InstanceGroupTest(unittest.TestCase):
                                      t['Resources']['JobServerGroup'],
                                      stack)
 
-        self.m.StubOutWithMock(instance.Instance, 'create')
-        instance.Instance.create().AndReturn('ImageNotFound: bla')
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
+        not_found = exception.ImageNotFound(image_name='bla')
+        instance.Instance.handle_create().AndRaise(not_found)
 
         self.m.ReplayAll()
 
-        self.assertEqual(resource.create(), 'ImageNotFound: bla')
+        self.assertNotEqual(resource.create(), None)
         self.assertEqual(asc.InstanceGroup.CREATE_FAILED, resource.state)
 
         self.m.VerifyAll()

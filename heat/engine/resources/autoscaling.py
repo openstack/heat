@@ -82,7 +82,7 @@ class InstanceGroup(resource.Resource):
     def handle_create(self):
         self.resize(int(self.properties['Size']), raise_on_error=True)
 
-    def check_active(self):
+    def check_active(self, create_data=None):
         active = all(i.check_active(override=False) for i in self._activating)
         if active:
             self._activating = []
@@ -143,14 +143,14 @@ class InstanceGroup(resource.Resource):
             def state_set(self, new_state, reason="state changed"):
                 self._store_or_update(new_state, reason)
 
-            def check_active(self, override=True):
+            def check_active(self, create_data=None, override=True):
                 '''
                 By default, report that the instance is active so that we
                 won't wait for it in create().
                 '''
                 if override:
                     return True
-                return super(GroupedInstance, self).check_active()
+                return super(GroupedInstance, self).check_active(create_data)
 
         conf = self.properties['LaunchConfigurationName']
         instance_definition = self.stack.t['Resources'][conf]

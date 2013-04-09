@@ -316,9 +316,10 @@ class Resource(object):
         try:
             self.properties.validate()
             self.state_set(self.CREATE_IN_PROGRESS)
+            create_data = None
             if callable(getattr(self, 'handle_create', None)):
-                self.handle_create()
-            while not self.check_active():
+                create_data = self.handle_create()
+            while not self.check_active(create_data):
                 eventlet.sleep(1)
         except greenlet.GreenletExit:
             raise
@@ -329,12 +330,13 @@ class Resource(object):
         else:
             self.state_set(self.CREATE_COMPLETE)
 
-    def check_active(self):
+    def check_active(self, create_data):
         '''
         Check if the resource is active (ready to move to the CREATE_COMPLETE
         state). By default this happens as soon as the handle_create() method
         has completed successfully, but subclasses may customise this by
-        overriding this function.
+        overriding this function. The return value of handle_create() is
+        passed in to this function each time it is called.
         '''
         return True
 
