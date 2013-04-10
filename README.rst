@@ -3,20 +3,22 @@ HEAT
 ====
 
 Heat is a service to orchestrate multiple composite cloud applications using
-templates, through both an OpenStack-native ReST API and a 
+templates, through both an OpenStack-native ReST API and a
 CloudFormation-compatible Query API.
 
 Why heat? It makes the clouds rise and keeps them there.
 
 Getting Started
------------
+---------------
 
 If you'd like to run from the master branch, you can clone the git repo:
 
     git clone git@github.com:openstack/heat.git
 
-Wiki: http://wiki.openstack.org/Heat
-GettingStarted: http://wiki.openstack.org/Heat/GettingStartedUsingDevstack
+
+* Wiki: http://wiki.openstack.org/Heat
+* Developer docs: http://docs.openstack.org/developer/heat
+
 
 Python client
 -------------
