@@ -137,7 +137,7 @@ class V1Client(base_client.BaseClient):
         parameters = {}
         if options.parameters:
             for count, p in enumerate(options.parameters.split(';'), 1):
-                (n, v) = p.split('=')
+                (n, v) = p.split('=', 1)
                 parameters['Parameters.member.%d.ParameterKey' % count] = n
                 parameters['Parameters.member.%d.ParameterValue' % count] = v
         return parameters
