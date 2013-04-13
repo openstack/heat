@@ -101,13 +101,13 @@ Modify configuration for admin password
 Later a keystone user called '''heat''' will be created. At this point a password for that user needs to be chosen.
 The following files will need editing:
 
-- /etc/heat/heat-api-cfn-paste.ini
-- /etc/heat/heat-api-cloudwatch-paste.ini
-- /etc/heat/heat-api-paste.ini
+- /etc/heat/heat-api-cfn.conf
+- /etc/heat/heat-api-cloudwatch.conf
+- /etc/heat/heat-api.conf
 
 ::
 
-    [filter:authtoken]
+    [keystone_authtoken]
     admin_password=<heat admin password>
 
 

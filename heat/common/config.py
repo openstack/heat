@@ -34,7 +34,8 @@ DEFAULT_PORT = 8000
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
     cfg.StrOpt('flavor'),
-    cfg.StrOpt('config_file')]
+    cfg.StrOpt('api_paste_config', default="api-paste.ini",
+               help="The API paste config file to use")]
 
 
 bind_opts = [
@@ -157,17 +158,10 @@ def _get_deployment_config_file():
     absolute pathname.
     """
     _register_paste_deploy_opts()
-    config_file = cfg.CONF.paste_deploy.config_file
-    if not config_file:
-        if cfg.CONF.config_file:
-            # Assume paste config is in a paste.ini file corresponding
-            # to the last config file
-            path = os.path.splitext(cfg.CONF.config_file[-1])[0] + "-paste.ini"
-        else:
-            return None
-    else:
-        path = config_file
-    return os.path.abspath(path)
+    config_path = os.path.abspath(cfg.CONF.find_file(
+        cfg.CONF.paste_deploy['api_paste_config']))
+
+    return os.path.abspath(config_path)
 
 
 def load_paste_app(app_name=None):

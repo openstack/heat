@@ -155,9 +155,9 @@ In the heat directory, run the install script::
 
 If running OpenStack grizzly installed via tools/openstack, it is necessary to modify the default service user password::
 
-    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cfn-paste.ini
-    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cloudwatch-paste.ini
-    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-paste.ini
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cfn.conf
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cloudwatch.conf
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api.conf
 
 Source the keystone credentials created with tools/openstack
 ------------------------------------------------------------

@@ -31,4 +31,3 @@ FILES
 ========
 
 * /etc/heat/heat-api-cloudwatch.conf
-* /etc/heat/heat-api-cloudwatch-paste.ini
