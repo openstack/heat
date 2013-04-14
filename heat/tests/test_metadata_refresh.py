@@ -152,7 +152,7 @@ class MetadataRefreshTest(unittest.TestCase):
             self.m.StubOutWithMock(instance.Instance, 'handle_create')
             self.m.StubOutWithMock(instance.Instance, 'check_active')
             instance.Instance.handle_create().AndReturn(None)
-            instance.Instance.check_active().AndReturn(True)
+            instance.Instance.check_active(None).AndReturn(True)
             self.m.StubOutWithMock(instance.Instance, 'FnGetAtt')
 
         return stack
@@ -214,7 +214,7 @@ class WaitCondMetadataUpdateTest(unittest.TestCase):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_active')
         instance.Instance.handle_create().MultipleTimes().AndReturn(None)
-        instance.Instance.check_active().AndReturn(True)
+        instance.Instance.check_active(None).AndReturn(True)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)

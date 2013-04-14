@@ -86,13 +86,13 @@ class AutoScalingTest(unittest.TestCase):
     def _stub_create(self, num):
         self.m.StubOutWithMock(eventlet, 'sleep')
 
-        self.m.StubOutWithMock(instance.Instance, 'create')
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_active')
         for x in range(num):
-            instance.Instance.create().AndReturn(None)
-        instance.Instance.check_active().AndReturn(False)
+            instance.Instance.handle_create().AndReturn(None)
+        instance.Instance.check_active(None).AndReturn(False)
         eventlet.sleep(mox.IsA(int)).AndReturn(None)
-        instance.Instance.check_active().MultipleTimes().AndReturn(True)
+        instance.Instance.check_active(None).MultipleTimes().AndReturn(True)
 
     def _stub_lb_reload(self, expected_list, unset=True):
         if unset:
