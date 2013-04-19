@@ -24,16 +24,81 @@ logger = logging.getLogger(__name__)
 class SecurityGroup(resource.Resource):
     properties_schema = {'GroupDescription': {'Type': 'String',
                                               'Required': True},
-                         'VpcId': {'Type': 'String',
-                                   'Implemented': False},
+                         'VpcId': {'Type': 'String'},
                          'SecurityGroupIngress': {'Type': 'List'},
-                         'SecurityGroupEgress': {'Type': 'List',
-                                                 'Implemented': False}}
+                         'SecurityGroupEgress': {'Type': 'List'}}
 
     def __init__(self, name, json_snippet, stack):
         super(SecurityGroup, self).__init__(name, json_snippet, stack)
 
     def handle_create(self):
+        if self.properties['VpcId'] and clients.quantumclient is not None:
+            self._handle_create_quantum()
+        else:
+            self._handle_create_nova()
+
+    def _handle_create_quantum(self):
+        from quantumclient.common.exceptions import QuantumClientException
+        client = self.quantum()
+
+        sec = client.create_security_group({'security_group': {
+            'name': self.physical_resource_name(),
+            'description': self.properties['GroupDescription']}
+        })['security_group']
+
+        self.resource_id_set(sec['id'])
+        if self.properties['SecurityGroupIngress']:
+            for i in self.properties['SecurityGroupIngress']:
+                # Quantum only accepts positive ints
+                if int(i['FromPort']) < 0:
+                    i['FromPort'] = None
+                if int(i['ToPort']) < 0:
+                    i['ToPort'] = None
+                if i['FromPort'] is None and i['ToPort'] is None:
+                    i['CidrIp'] = None
+
+                try:
+                    rule = client.create_security_group_rule({
+                        'security_group_rule': {
+                            'direction': 'ingress',
+                            'remote_ip_prefix': i['CidrIp'],
+                            'port_range_min': i['FromPort'],
+                            'ethertype': 'IPv4',
+                            'port_range_max': i['ToPort'],
+                            'protocol': i['IpProtocol'],
+                            'security_group_id': sec['id']
+                        }
+                    })
+                except QuantumClientException as ex:
+                    if ex.status_code == 409:
+                        # no worries, the rule is already there
+                        pass
+                    else:
+                        # unexpected error
+                        raise
+        if self.properties['SecurityGroupEgress']:
+            for i in self.properties['SecurityGroupEgress']:
+                try:
+                    rule = client.create_security_group_rule({
+                        'security_group_rule': {
+                            'direction': 'egress',
+                            'remote_ip_prefix': i['CidrIp'],
+                            'port_range_min': i['FromPort'],
+                            'ethertype': 'IPv4',
+                            'port_range_max': i['ToPort'],
+                            'protocol': i['IpProtocol'],
+                            'security_group_id': sec['id']
+                        }
+                    })
+                except QuantumClientException as ex:
+                    if ex.status_code == 409:
+                        # no worries, the rule is already there
+                        pass
+                    else:
+                        # unexpected error
+                        raise
+
+    def _handle_create_nova(self):
         sec = None
 
         groups = self.nova().security_groups.list()
@@ -69,6 +134,12 @@ class SecurityGroup(resource.Resource):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
+        if self.properties['VpcId'] and clients.quantumclient is not None:
+            self._handle_delete_quantum()
+        else:
+            self._handle_delete_nova()
+
+    def _handle_delete_nova(self):
         if self.resource_id is not None:
             try:
                 sec = self.nova().security_groups.get(self.resource_id)
@@ -82,6 +153,32 @@ class SecurityGroup(resource.Resource):
                         pass
 
                 self.nova().security_groups.delete(self.resource_id)
+            self.resource_id = None
+
+    def _handle_delete_quantum(self):
+        from quantumclient.common.exceptions import QuantumClientException
+        client = self.quantum()
+
+        if self.resource_id is not None:
+            try:
+                sec = client.show_security_group(
+                    self.resource_id)['security_group']
+            except QuantumClientException as ex:
+                if ex.status_code != 404:
+                    raise
+            else:
+                for rule in sec['security_group_rules']:
+                    try:
+                        client.delete_security_group_rule(rule['id'])
+                    except QuantumClientException as ex:
+                        if ex.status_code != 404:
+                            raise
+
+                try:
+                    client.delete_security_group(self.resource_id)
+                except QuantumClientException as ex:
+                    if ex.status_code != 404:
+                        raise
             self.resource_id = None
 
     def FnGetRefId(self):
