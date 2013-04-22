@@ -20,8 +20,6 @@ from nose.plugins.attrib import attr
 from oslo.config import cfg
 import unittest
 
-import heat.api  # pyflakes_bypass  review 23102
-
 from heat.common import context
 from heat.common import policy
 from heat.common import exception

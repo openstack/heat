@@ -22,7 +22,6 @@ from heat.engine import clients
 from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
-import heat.engine.resources  # pyflakes_bypass review 23102
 from heat.tests.v1_1 import fakes
 
 from novaclient.v1_1 import security_groups as nova_sg

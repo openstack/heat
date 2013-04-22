@@ -16,5 +16,4 @@ ${PEP8} ${EXCLUDE} .
 # Check binaries without py extension
 ${PEP8} bin/heat-api bin/heat-api-cfn bin/heat-api-cloudwatch bin/heat-cfn bin/heat-engine bin/heat-watch
 
-! python tools/pyflakes-bypass.py heat/ | grep "imported but unused\|redefinition of function"
-
+! pyflakes heat/ | grep "imported but unused\|redefinition of function"
