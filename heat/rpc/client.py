@@ -23,22 +23,7 @@ from oslo.config import cfg
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.proxy
 
-
-FLAGS = cfg.CONF
-
-
-def _engine_topic(topic, ctxt, host):
-    '''Get the topic to use for a message.
-
-    :param topic: the base topic
-    :param ctxt: request context
-    :param host: explicit host to send the message to.
-
-    :returns: A topic string
-    '''
-    if not host:
-        host = cfg.CONF.host
-    return rpc.queue_get_for(ctxt, topic, host)
+CONF = cfg.CONF
 
 
 class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
@@ -53,7 +38,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
 
     def __init__(self):
         super(EngineClient, self).__init__(
-            topic=FLAGS.engine_topic,
+            topic=rpc.queue_get_for(None, CONF.engine_topic, CONF.host),
             default_version=self.BASE_RPC_API_VERSION)
 
     def identify_stack(self, ctxt, stack_name):
@@ -66,8 +51,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                            or None to see all
         """
         return self.call(ctxt, self.make_msg('identify_stack',
-                                             stack_name=stack_name),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             stack_name=stack_name))
 
     def list_stacks(self, ctxt):
         """
@@ -75,8 +59,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
 
         :param ctxt: RPC context.
         """
-        return self.call(ctxt, self.make_msg('list_stacks'),
-                         topic=_engine_topic(self.topic, ctxt, None))
+        return self.call(ctxt, self.make_msg('list_stacks'))
 
     def show_stack(self, ctxt, stack_identity):
         """
@@ -86,8 +69,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                                show all
         """
         return self.call(ctxt, self.make_msg('show_stack',
-                                             stack_identity=stack_identity),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             stack_identity=stack_identity))
 
     def create_stack(self, ctxt, stack_name, template, params, args):
         """
@@ -105,8 +87,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt,
                          self.make_msg('create_stack', stack_name=stack_name,
                                        template=template,
-                                       params=params, args=args),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                       params=params, args=args))
 
     def update_stack(self, ctxt, stack_identity, template, params, args):
         """
@@ -124,8 +105,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt, self.make_msg('update_stack',
                                              stack_identity=stack_identity,
                                              template=template,
-                                             params=params, args=args),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             params=params, args=args))
 
     def validate_template(self, ctxt, template):
         """
@@ -137,8 +117,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         :param params: Params passed from API.
         """
         return self.call(ctxt, self.make_msg('validate_template',
-                                             template=template),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             template=template))
 
     def authenticated_to_backend(self, ctxt):
         """
@@ -147,8 +126,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
 
         :param ctxt: RPC context.
         """
-        return self.call(ctxt, self.make_msg('authenticated_to_backend'),
-                         topic=_engine_topic(self.topic, ctxt, None))
+        return self.call(ctxt, self.make_msg('authenticated_to_backend'))
 
     def get_template(self, ctxt, stack_identity):
         """
@@ -159,8 +137,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         :param params: Dict of http request parameters passed in from API side.
         """
         return self.call(ctxt, self.make_msg('get_template',
-                                             stack_identity=stack_identity),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             stack_identity=stack_identity))
 
     def delete_stack(self, ctxt, stack_identity, cast=True):
         """
@@ -173,8 +150,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
                           self.make_msg('delete_stack',
-                                        stack_identity=stack_identity),
-                          topic=_engine_topic(self.topic, ctxt, None))
+                                        stack_identity=stack_identity))
 
     def list_resource_types(self, ctxt):
         """
@@ -182,8 +158,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
 
         :param ctxt: RPC context.
         """
-        return self.call(ctxt, self.make_msg('list_resource_types'),
-                         topic=_engine_topic(self.topic, ctxt, None))
+        return self.call(ctxt, self.make_msg('list_resource_types'))
 
     def list_events(self, ctxt, stack_identity):
         """
@@ -194,14 +169,12 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         :param params: Params passed from API.
         """
         return self.call(ctxt, self.make_msg('list_events',
-                                             stack_identity=stack_identity),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             stack_identity=stack_identity))
 
     def describe_stack_resource(self, ctxt, stack_identity, resource_name):
         return self.call(ctxt, self.make_msg('describe_stack_resource',
                                              stack_identity=stack_identity,
-                                             resource_name=resource_name),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             resource_name=resource_name))
 
     def find_physical_resource(self, ctxt, physical_resource_id):
         """
@@ -213,28 +186,25 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt,
                          self.make_msg(
                              'find_physical_resource',
-                             physical_resource_id=physical_resource_id),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                             physical_resource_id=physical_resource_id))
 
     def describe_stack_resources(self, ctxt, stack_identity, resource_name):
         return self.call(ctxt, self.make_msg('describe_stack_resources',
                                              stack_identity=stack_identity,
-                                             resource_name=resource_name),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             resource_name=resource_name))
 
     def list_stack_resources(self, ctxt, stack_identity):
         return self.call(ctxt, self.make_msg('list_stack_resources',
-                                             stack_identity=stack_identity),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             stack_identity=stack_identity))
 
     def metadata_update(self, ctxt, stack_identity, resource_name, metadata):
         """
         Update the metadata for the given resource.
         """
         return self.call(ctxt, self.make_msg('metadata_update',
-                         stack_identity=stack_identity,
-                         resource_name=resource_name, metadata=metadata),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             stack_identity=stack_identity,
+                                             resource_name=resource_name,
+                                             metadata=metadata))
 
     def create_watch_data(self, ctxt, watch_name, stats_data):
         '''
@@ -242,8 +212,8 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         and treat HA service events like any other CloudWatch.
         '''
         return self.call(ctxt, self.make_msg('create_watch_data',
-                         watch_name=watch_name, stats_data=stats_data),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             watch_name=watch_name,
+                                             stats_data=stats_data))
 
     def show_watch(self, ctxt, watch_name):
         """
@@ -255,8 +225,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                            or None to see all
         """
         return self.call(ctxt, self.make_msg('show_watch',
-                         watch_name=watch_name),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             watch_name=watch_name))
 
     def show_watch_metric(self, ctxt, namespace=None, metric_name=None):
         """
@@ -270,8 +239,8 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                            or None to see all
         """
         return self.call(ctxt, self.make_msg('show_watch_metric',
-                         namespace=namespace, metric_name=metric_name),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             namespace=namespace,
+                                             metric_name=metric_name))
 
     def set_watch_state(self, ctxt, watch_name, state):
         '''
@@ -281,5 +250,5 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         arg3 -> State (must be one defined in WatchRule class)
         '''
         return self.call(ctxt, self.make_msg('set_watch_state',
-                         watch_name=watch_name, state=state),
-                         topic=_engine_topic(self.topic, ctxt, None))
+                                             watch_name=watch_name,
+                                             state=state))
