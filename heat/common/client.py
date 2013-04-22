@@ -501,7 +501,7 @@ class BaseClient(object):
             else:
                 raise Exception("Unknown error occurred! %s" % res.read())
 
-        except (socket.error, IOError), e:
+        except (socket.error, IOError) as e:
             raise exception.ClientConnectionError(e)
 
     def _iterable(self, body):

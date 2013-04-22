@@ -141,7 +141,7 @@ class Instance(object):
         while True:
             try:
                 self.sftp.stat('/var/lib/heat-cfntools/boot-finished')
-            except IOError, e:
+            except IOError as e:
                 tries += 1
                 if e.errno == errno.ENOENT:
                     self.testcase.assertTrue(tries < 50, 'Timed out')

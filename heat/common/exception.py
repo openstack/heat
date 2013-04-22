@@ -54,7 +54,7 @@ def wrap_exception(notifier=None, publisher_id=None, event_type=None,
         def wrapped(*args, **kw):
             try:
                 return f(*args, **kw)
-            except Exception, e:
+            except Exception as e:
                 # Save exception since it can be clobbered during processing
                 # below before we can re-raise
                 exc_info = sys.exc_info()

@@ -38,11 +38,11 @@ def catch_error(action):
                 return FAILURE
             except exception.ClientConfigurationError:
                 raise
-            except exception.KeystoneError, e:
+            except exception.KeystoneError as e:
                 LOG.error("Keystone did not finish the authentication and "
                           "returned the following message:\n\n%s" % e.message)
                 return FAILURE
-            except Exception, e:
+            except Exception as e:
                 options = arguments[0]
                 if options.debug:
                     raise

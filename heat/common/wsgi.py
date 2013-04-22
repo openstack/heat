@@ -124,7 +124,7 @@ def get_socket(conf, default_port):
             if use_ssl:
                 sock = ssl.wrap_socket(sock, certfile=cert_file,
                                        keyfile=key_file)
-        except socket.error, err:
+        except socket.error as err:
             if err.args[0] != errno.EADDRINUSE:
                 raise
             eventlet.sleep(0.1)
@@ -199,7 +199,7 @@ class Server(object):
                     self.logger.error(_('Removing dead child %s') % pid)
                     self.children.remove(pid)
                     self.run_child()
-            except OSError, err:
+            except OSError as err:
                 if err.errno not in (errno.EINTR, errno.ECHILD):
                     raise
             except KeyboardInterrupt:
@@ -244,7 +244,7 @@ class Server(object):
                                  custom_pool=self.pool,
                                  url_length_limit=URL_LENGTH_LIMIT,
                                  log=WritableLogger(self.logger))
-        except socket.error, err:
+        except socket.error as err:
             if err[0] != errno.EINVAL:
                 raise
         self.pool.waitall()

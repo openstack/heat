@@ -201,7 +201,7 @@ def nova_import_rules(logical_line):
             try:
                 # NOTE(vish): handle namespace modules
                 module = __import__(mod)
-            except ImportError, exc:
+            except ImportError as exc:
                 # NOTE(vish): the import error might be due
                 #             to a missing dependency
                 missing = str(exc).split()[-1]

@@ -55,7 +55,7 @@ class HeatBase(object):
         session.add(self)
         try:
             session.flush()
-        except IntegrityError, e:
+        except IntegrityError as e:
             if str(e).endswith('is not unique'):
                 raise exception.Duplicate(str(e))
             else:
