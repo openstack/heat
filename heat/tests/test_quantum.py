@@ -81,6 +81,9 @@ class FakeQuantum():
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }}
 
+    def delete_network(self, id):
+        return None
+
     def show_network(self, id):
         return {"network": {
             "status": "ACTIVE",
