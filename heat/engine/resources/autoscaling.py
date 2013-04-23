@@ -192,9 +192,11 @@ class InstanceGroup(resource.Resource):
             self.resource_id_set(','.join(inst_list))
             logger.info('Creating Autoscaling instance %s' % name)
 
-            error_str = inst.create()
-            if raise_on_error and error_str is not None:
-                raise exception.NestedResourceFailure(message=error_str)
+            try:
+                inst.create()
+            except exception.ResourceFailure as ex:
+                if raise_on_error:
+                    raise
 
             return inst
 

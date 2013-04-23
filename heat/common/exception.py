@@ -246,5 +246,17 @@ class WatchRuleNotFound(OpenstackException):
     message = _("The Watch Rule (%(watch_name)s) could not be found.")
 
 
+class ResourceFailure(OpenstackException):
+    message = _("%(exc_type)s: %(message)s")
+
+    def __init__(self, exception):
+        if isinstance(exception, ResourceFailure):
+            exception = getattr(exception, 'exc', exception)
+        self.exc = exception
+        exc_type = type(exception).__name__
+        super(ResourceFailure, self).__init__(exc_type=exc_type,
+                                              message=str(exception))
+
+
 class NestedResourceFailure(OpenstackException):
     message = _("%(message)s")

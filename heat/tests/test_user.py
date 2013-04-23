@@ -329,8 +329,7 @@ class AccessKeyTest(unittest.TestCase):
         resource = user.AccessKey('HostKeys',
                                   t['Resources']['HostKeys'],
                                   stack)
-        self.assertEqual('could not find user test_stack.NoExist',
-                         resource.create())
+        self.assertRaises(exception.ResourceFailure, resource.create)
         self.assertEqual(user.AccessKey.CREATE_FAILED,
                          resource.state)
 

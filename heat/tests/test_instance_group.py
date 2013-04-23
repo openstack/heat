@@ -121,7 +121,7 @@ class InstanceGroupTest(unittest.TestCase):
 
         self.m.ReplayAll()
 
-        self.assertNotEqual(resource.create(), None)
+        self.assertRaises(exception.ResourceFailure, resource.create)
         self.assertEqual(asc.InstanceGroup.CREATE_FAILED, resource.state)
 
         self.m.VerifyAll()
