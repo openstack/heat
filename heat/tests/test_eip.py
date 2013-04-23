@@ -82,8 +82,7 @@ class EIPTest(unittest.TestCase):
 
     def test_eip(self):
 
-        eip.ElasticIp.nova().AndReturn(self.fc)
-        eip.ElasticIp.nova().AndReturn(self.fc)
+        eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
 
         self.m.ReplayAll()
 
@@ -91,22 +90,21 @@ class EIPTest(unittest.TestCase):
         stack = self.parse_stack(t)
         resource = self.create_eip(t, stack, 'IPAddress')
 
-        self.assertEqual('11.0.0.1', resource.FnGetRefId())
-        resource.ipaddress = None
-        self.assertEqual('11.0.0.1', resource.FnGetRefId())
-
-        self.assertEqual('1', resource.FnGetAtt('AllocationId'))
-
-        self.assertEqual(eip.ElasticIp.UPDATE_REPLACE,
-                         resource.handle_update({}))
-
         try:
-            resource.FnGetAtt('Foo')
-            raise Exception('Expected InvalidTemplateAttribute')
-        except eip.exception.InvalidTemplateAttribute:
-            pass
+            self.assertEqual('11.0.0.1', resource.FnGetRefId())
+            resource.ipaddress = None
+            self.assertEqual('11.0.0.1', resource.FnGetRefId())
 
-        resource.delete()
+            self.assertEqual('1', resource.FnGetAtt('AllocationId'))
+
+            self.assertEqual(eip.ElasticIp.UPDATE_REPLACE,
+                             resource.handle_update({}))
+
+            self.assertRaises(eip.exception.InvalidTemplateAttribute,
+                              resource.FnGetAtt, 'Foo')
+
+        finally:
+            resource.destroy()
 
         self.m.VerifyAll()
 
