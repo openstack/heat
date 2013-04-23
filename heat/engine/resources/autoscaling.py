@@ -14,6 +14,7 @@
 #    under the License.
 
 import eventlet
+import itertools
 
 from heat.common import exception
 from heat.engine import resource
@@ -77,21 +78,22 @@ class InstanceGroup(resource.Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(InstanceGroup, self).__init__(name, json_snippet, stack)
-        self._activating = []
 
     def handle_create(self):
-        self.resize(int(self.properties['Size']), raise_on_error=True)
+        return self.resize(int(self.properties['Size']), raise_on_error=True)
 
-    def check_active(self, create_data=None):
-        active = all(i.check_active(override=False) for i in self._activating)
-        if active:
-            self._activating = []
-            # When all instances are active, reload the LB config
-            self._lb_reload()
-        return active
+    def check_active(self, instances):
+        if instances:
+            check_active = lambda i: i.check_active(override=False)
+            remaining = itertools.dropwhile(check_active, instances)
+            instances[:] = list(remaining)
+            if not instances:
+                # When all instances are active, reload the LB config
+                self._lb_reload()
+        return not bool(instances)
 
-    def _wait_for_activation(self):
-        while not self.check_active():
+    def _wait_for_activation(self, instances):
+        while not self.check_active(instances):
             eventlet.sleep(1)
 
     def handle_update(self, json_snippet):
@@ -123,9 +125,9 @@ class InstanceGroup(resource.Resource):
                     inst_list = sorted(self.resource_id.split(','))
 
                 if len(inst_list) != int(self.properties['Size']):
-                    self.resize(int(self.properties['Size']),
-                                raise_on_error=True)
-                    self._wait_for_activation()
+                    new_insts = self.resize(int(self.properties['Size']),
+                                            raise_on_error=True)
+                    self._wait_for_activation(new_insts)
 
         return self.UPDATE_COMPLETE
 
@@ -181,20 +183,23 @@ class InstanceGroup(resource.Resource):
         logger.debug('adjusting capacity from %d to %d' % (capacity,
                                                            new_capacity))
 
+        def create_instance(index):
+            name = '%s-%d' % (self.name, index)
+            inst = self._make_instance(name)
+            inst_list.append(name)
+            self.resource_id_set(','.join(inst_list))
+            logger.info('Creating Autoscaling instance %s' % name)
+
+            error_str = inst.create()
+            if raise_on_error and error_str is not None:
+                raise exception.NestedResourceFailure(message=error_str)
+
+            return inst
+
         if new_capacity > capacity:
             # grow
-            for x in range(capacity, new_capacity):
-                name = '%s-%d' % (self.name, x)
-                inst = self._make_instance(name)
-                inst_list.append(name)
-                self._activating.append(inst)
-                self.resource_id_set(','.join(inst_list))
-                logger.info('creating inst')
-                error_str = inst.create()
-                if raise_on_error and error_str is not None:
-                    # try suck out the grouped resouces failure reason
-                    # and re-raise
-                    raise exception.NestedResourceFailure(message=error_str)
+            return [create_instance(x) for x in range(capacity,
+                                                      new_capacity)]
         else:
             # shrink (kill largest numbered first)
             del_list = inst_list[new_capacity:]
@@ -204,12 +209,16 @@ class InstanceGroup(resource.Resource):
                 inst_list.remove(victim)
                 self.resource_id_set(','.join(inst_list))
 
+            self._lb_reload()
+
     def _lb_reload(self):
-        # notify the LoadBalancer to reload it's config to include
-        # the changes in instances we have just made, this must be after
-        # activation (instance in ACTIVE state), or we may not get network
-        # details for the instance, resulting in incorrect 0.0.0.0 config
-        # being updated via the LoadBalancer resource
+        '''
+        Notify the LoadBalancer to reload it's config to include
+        the changes in instances we have just made.
+
+        This must be done after activation (instance in ACTIVE state),
+        otherwise the instances' IP addresses may not be available.
+        '''
         if self.properties['LoadBalancerNames']:
             inst_list = []
             if self.resource_id is not None:
@@ -285,7 +294,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         else:
             num_to_create = int(self.properties['MinSize'])
 
-        self._adjust(num_to_create)
+        return self._adjust(num_to_create)
 
     def handle_update(self, json_snippet):
         try:
@@ -329,14 +338,14 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                         new_capacity = int(self.properties['DesiredCapacity'])
 
             if new_capacity is not None:
-                self._adjust(new_capacity)
-                self._wait_for_activation()
+                new_insts = self._adjust(new_capacity)
+                self._wait_for_activation(new_insts)
 
         return self.UPDATE_COMPLETE
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
-        if self._adjust(adjustment, adjustment_type, False) is True:
-            self._wait_for_activation()
+        new_insts = self._adjust(adjustment, adjustment_type, False)
+        self._wait_for_activation(new_insts)
 
     def _adjust(self, adjustment, adjustment_type='ExactCapacity',
                 raise_on_error=True):
@@ -344,7 +353,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         if self._cooldown_inprogress():
             logger.info("%s NOT performing scaling adjustment, cooldown %s" %
                         (self.name, self.properties['Cooldown']))
-            return False
+            return
 
         inst_list = []
         if self.resource_id is not None:
@@ -361,20 +370,20 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
 
         if new_capacity > int(self.properties['MaxSize']):
             logger.warn('can not exceed %s' % self.properties['MaxSize'])
-            return False
+            return
         if new_capacity < int(self.properties['MinSize']):
             logger.warn('can not be less than %s' % self.properties['MinSize'])
-            return False
+            return
 
         if new_capacity == capacity:
             logger.debug('no change in capacity %d' % capacity)
-            return False
+            return
 
-        self.resize(new_capacity, raise_on_error=raise_on_error)
+        result = self.resize(new_capacity, raise_on_error=raise_on_error)
 
         self._cooldown_timestamp("%s : %s" % (adjustment_type, adjustment))
 
-        return True
+        return result
 
     def FnGetRefId(self):
         return unicode(self.name)
