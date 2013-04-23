@@ -18,7 +18,7 @@ import mox
 import unittest
 
 from heat.common import context
-import heat.db as db_api
+import heat.db.api as db_api
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import template

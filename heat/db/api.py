@@ -28,6 +28,7 @@ supported backend.
 
 from oslo.config import cfg
 
+from heat.common import config
 from heat.db import utils
 
 SQL_CONNECTION = 'sqlite://'
@@ -44,6 +45,7 @@ IMPL = utils.LazyPluggable('db_backend',
 def configure():
     global SQL_CONNECTION
     global SQL_IDLE_TIMEOUT
+    config.register_db_opts()
     SQL_CONNECTION = cfg.CONF.sql_connection
     SQL_IDLE_TIMEOUT = cfg.CONF.sql_idle_timeout
 

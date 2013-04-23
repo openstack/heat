@@ -20,6 +20,7 @@ import mox
 from nose.plugins.attrib import attr
 from oslo.config import cfg
 
+from heat.common import config
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
@@ -34,6 +35,7 @@ import keystoneclient.exceptions
 @attr(speed='fast')
 class UserTest(unittest.TestCase):
     def setUp(self):
+        config.register_engine_opts()
         self.m = mox.Mox()
         self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
@@ -225,6 +227,7 @@ class UserTest(unittest.TestCase):
 @attr(speed='fast')
 class AccessKeyTest(unittest.TestCase):
     def setUp(self):
+        config.register_engine_opts()
         self.m = mox.Mox()
         self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')

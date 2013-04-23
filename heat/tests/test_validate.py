@@ -23,7 +23,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import instance as instances
 from heat.engine import service
-import heat.db as db_api
+import heat.db.api as db_api
 from heat.engine import parser
 
 test_template_volumeattach = '''

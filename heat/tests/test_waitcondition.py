@@ -26,11 +26,12 @@ import unittest
 from heat.tests import fakes
 from heat.tests.utils import stack_delete_after
 
-import heat.db as db_api
+import heat.db.api as db_api
 from heat.common import template_format
 from heat.common import identifier
 from heat.engine import parser
 from heat.engine.resources import wait_condition as wc
+from heat.common import config
 from heat.common import context
 
 test_template_waitcondition = '''
@@ -79,6 +80,7 @@ test_template_wc_count = '''
 @attr(speed='slow')
 class WaitConditionTest(unittest.TestCase):
     def setUp(self):
+        config.register_engine_opts()
         self.m = mox.Mox()
         self.m.StubOutWithMock(wc.WaitConditionHandle,
                                'get_status')
@@ -381,6 +383,7 @@ class WaitConditionTest(unittest.TestCase):
 @attr(speed='fast')
 class WaitConditionHandleTest(unittest.TestCase):
     def setUp(self):
+        config.register_engine_opts()
         self.m = mox.Mox()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')

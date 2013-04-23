@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.engine import dependencies
 from heat.common import identifier
 from heat.engine import resource
+from heat.engine import resources
 from heat.engine import template
 from heat.engine import timestamp
 from heat.engine.parameters import Parameters
@@ -83,6 +84,8 @@ class Stack(object):
         self.state_description = state_description
         self.timeout_mins = timeout_mins
         self.disable_rollback = disable_rollback
+
+        resources.initialise()
 
         if parameters is None:
             parameters = Parameters(self.name, self.t)

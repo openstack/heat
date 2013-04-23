@@ -28,7 +28,6 @@ from heat.tests.v1_1 import fakes
 from novaclient.v1_1 import security_groups as nova_sg
 from novaclient.v1_1 import security_group_rules as nova_sgr
 
-
 NovaSG = collections.namedtuple('NovaSG',
                                 ' '.join([
                                     'name',
