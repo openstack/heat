@@ -84,7 +84,8 @@ class InstanceGroup(resource.Resource):
 
     def check_active(self, instances):
         if instances:
-            check_active = lambda i: i.check_active(override=False)
+            check_active = lambda i: i.check_active(i._create_data,
+                                                    override=False)
             remaining = itertools.dropwhile(check_active, instances)
             instances[:] = list(remaining)
             if not instances:
@@ -151,6 +152,7 @@ class InstanceGroup(resource.Resource):
                 won't wait for it in create().
                 '''
                 if override:
+                    self._create_data = create_data
                     return True
                 return super(GroupedInstance, self).check_active(create_data)
 

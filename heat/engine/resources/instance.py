@@ -114,7 +114,6 @@ class Instance(resource.Resource):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = None
         self.mime_string = None
-        self._server_status = None
 
     def _set_ipaddress(self, networks):
         '''
@@ -311,14 +310,13 @@ class Instance(resource.Resource):
             if server is not None:
                 self.resource_id_set(server.id)
 
-        self._server_status = server.status
+        return server
 
-    def check_active(self, create_data=None):
-        if self._server_status == 'ACTIVE':
+    def check_active(self, server):
+        if server.status == 'ACTIVE':
             return True
 
-        server = self.nova().servers.get(self.resource_id)
-        self._server_status = server.status
+        server.get()
         if server.status == 'BUILD':
             return False
         if server.status == 'ACTIVE':

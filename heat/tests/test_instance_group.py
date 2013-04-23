@@ -68,11 +68,12 @@ class InstanceGroupTest(unittest.TestCase):
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_active')
+        cookie = object()
         for x in range(num):
-            instance.Instance.handle_create().AndReturn(None)
-        instance.Instance.check_active(None).AndReturn(False)
+            instance.Instance.handle_create().AndReturn(cookie)
+        instance.Instance.check_active(cookie).AndReturn(False)
         eventlet.sleep(mox.IsA(int)).AndReturn(None)
-        instance.Instance.check_active(None).MultipleTimes().AndReturn(True)
+        instance.Instance.check_active(cookie).MultipleTimes().AndReturn(True)
 
     def create_instance_group(self, t, stack, resource_name):
         resource = asc.InstanceGroup(resource_name,

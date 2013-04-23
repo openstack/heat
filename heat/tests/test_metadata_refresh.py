@@ -148,10 +148,9 @@ class MetadataRefreshTest(unittest.TestCase):
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_active')
-        instance.Instance.handle_create().AndReturn(None)
-        instance.Instance.check_active(None).AndReturn(True)
-        instance.Instance.handle_create().AndReturn(None)
-        instance.Instance.check_active(None).AndReturn(True)
+        for cookie in (object(), object()):
+            instance.Instance.handle_create().AndReturn(cookie)
+            instance.Instance.check_active(cookie).AndReturn(True)
         self.m.StubOutWithMock(instance.Instance, 'FnGetAtt')
 
         return stack
@@ -213,8 +212,9 @@ class WaitCondMetadataUpdateTest(unittest.TestCase):
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_active')
-        instance.Instance.handle_create().AndReturn(None)
-        instance.Instance.check_active(None).AndReturn(True)
+        cookie = object()
+        instance.Instance.handle_create().AndReturn(cookie)
+        instance.Instance.check_active(cookie).AndReturn(True)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
