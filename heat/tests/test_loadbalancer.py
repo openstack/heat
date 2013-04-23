@@ -154,8 +154,6 @@ class LoadBalancerTest(unittest.TestCase):
                                      s)
             id_list.append(inst.FnGetRefId())
 
-        resource.nested().create()
-
         resource.reload(id_list)
 
         self.assertEqual('4.5.6.7', resource.FnGetAtt('DNSName'))

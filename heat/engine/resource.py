@@ -299,8 +299,7 @@ class Resource(object):
         Create the resource. Subclasses should provide a handle_create() method
         to customise creation.
         '''
-        if self.state in (self.CREATE_IN_PROGRESS, self.CREATE_COMPLETE):
-            return 'Resource creation already requested'
+        assert self.state is None, 'Resource create requested in invalid state'
 
         logger.info('creating %s' % str(self))
 
