@@ -256,7 +256,3 @@ class ResourceFailure(OpenstackException):
         exc_type = type(exception).__name__
         super(ResourceFailure, self).__init__(exc_type=exc_type,
                                               message=str(exception))
-
-
-class NestedResourceFailure(OpenstackException):
-    message = _("%(message)s")

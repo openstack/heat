@@ -167,11 +167,7 @@ class InstanceGroup(resource.Resource):
             for victim in inst_list:
                 logger.debug('handle_delete %s' % victim)
                 inst = self._make_instance(victim)
-                error_str = inst.destroy()
-                if error_str is not None:
-                    # try suck out the grouped resouces failure reason
-                    # and re-raise
-                    raise exception.NestedResourceFailure(message=error_str)
+                inst.destroy()
 
     def resize(self, new_capacity, raise_on_error=False):
         inst_list = []
