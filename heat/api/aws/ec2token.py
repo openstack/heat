@@ -21,6 +21,7 @@ gettext.install('heat', unicode=1)
 
 from heat.common import wsgi
 from heat.openstack.common import jsonutils as json
+from oslo.config import cfg
 
 import webob
 from heat.api.aws import exception
@@ -30,12 +31,26 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 
+opts = [
+    cfg.StrOpt('auth_uri', default=None),
+    cfg.StrOpt('keystone_ec2_uri', default=None)
+]
+cfg.CONF.register_opts(opts, group='ec2token')
+
+
 class EC2Token(wsgi.Middleware):
     """Authenticate an EC2 request with keystone and convert to token."""
 
     def __init__(self, app, conf):
         self.conf = conf
         self.application = app
+
+    def _conf_get(self, name):
+        # try config from paste-deploy first
+        if name in self.conf:
+            return self.conf[name]
+        else:
+            return cfg.CONF.ec2token[name]
 
     @webob.dec.wsgify(RequestClass=wsgi.Request)
     def __call__(self, req):
@@ -88,8 +103,9 @@ class EC2Token(wsgi.Middleware):
         # for httplib and urlparse
         # pylint: disable-msg=E1101
 
-        logger.info('Authenticating with %s' % self.conf['keystone_ec2_uri'])
-        o = urlparse.urlparse(self.conf['keystone_ec2_uri'])
+        keystone_ec2_uri = self._conf_get('keystone_ec2_uri')
+        logger.info('Authenticating with %s' % keystone_ec2_uri)
+        o = urlparse.urlparse(keystone_ec2_uri)
         if o.scheme == 'http':
             conn = httplib.HTTPConnection(o.netloc)
         else:
@@ -127,8 +143,8 @@ class EC2Token(wsgi.Middleware):
                                         'signature': signature}}
         req.headers['X-Auth-EC2-Creds'] = json.dumps(ec2_creds)
         req.headers['X-Auth-Token'] = token_id
-        req.headers['X-Auth-URL'] = self.conf['auth_uri']
-        req.headers['X-Auth-EC2_URL'] = self.conf['keystone_ec2_uri']
+        req.headers['X-Auth-URL'] = self._conf_get('auth_uri')
+        req.headers['X-Auth-EC2_URL'] = keystone_ec2_uri
         return self.application
 
 
