@@ -27,7 +27,8 @@ from heat.openstack.common.importutils import try_import
 from heat.engine.resources import s3
 from heat.engine import parser
 from heat.engine import scheduler
-from utils import skip_if
+from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import skip_if
 
 swiftclient = try_import('swiftclient.client')
 
@@ -44,10 +45,10 @@ class s3Test(unittest.TestCase):
         self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
 
         self.container_pattern = 'test_stack-test_resource-[0-9a-z]+'
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
-        print "s3Test teardown complete"
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

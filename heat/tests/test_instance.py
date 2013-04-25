@@ -27,6 +27,7 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.openstack.common import uuidutils
+from heat.tests.utils import setup_dummy_db
 
 
 @attr(tag=['unit', 'resource', 'instance'])
@@ -37,10 +38,10 @@ class instancesTest(unittest.TestCase):
         self.fc = fakes.FakeClient()
         self.path = os.path.dirname(os.path.realpath(__file__)).\
             replace('heat/tests', 'templates')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
-        print "instancesTest teardown complete"
 
     def test_instance_create(self):
         f = open("%s/WordPress_Single_Instance_gold.template" % self.path)

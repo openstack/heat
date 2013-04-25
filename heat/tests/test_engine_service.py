@@ -34,6 +34,7 @@ from heat.engine.properties import Properties
 from heat.engine.resources import instance as instances
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
+from heat.tests.utils import setup_dummy_db
 
 
 tests_dir = os.path.dirname(os.path.realpath(__file__))
@@ -108,10 +109,10 @@ class DummyThreadGroup(object):
 class stackCreateTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
-        print "stackTest teardown complete"
 
     def test_wordpress_single_instance_stack_create(self):
         stack = get_wordpress_stack('test_stack', create_context(self.m))
@@ -158,6 +159,7 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
         self.m = mox.Mox()
         self.username = 'stack_service_create_test_user'
         self.tenant = 'stack_service_create_test_tenant'
+        setup_dummy_db()
         self.ctx = create_context(self.m, self.username, self.tenant)
 
         self.man = service.EngineService('a-host', 'a-topic')
@@ -436,6 +438,7 @@ class stackServiceTest(unittest.TestCase):
 
     def setUp(self):
         self.m = mox.Mox()
+        setup_dummy_db()
         self.ctx = create_context(self.m, self.username, self.tenant)
         setup_mocks(self.m, self.stack)
         self.m.ReplayAll()

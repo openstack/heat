@@ -33,6 +33,7 @@ from heat.engine.resources import user
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
 from heat.engine.resource import Metadata
+from heat.tests.utils import setup_dummy_db
 from heat.tests.v1_1 import fakes
 from heat.tests import fakes as test_fakes
 
@@ -63,6 +64,7 @@ class LoadBalancerTest(unittest.TestCase):
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()

@@ -23,6 +23,7 @@ import heat.db.api as db_api
 from heat.openstack.common import timeutils
 from heat.engine import watchrule
 from heat.engine import parser
+from heat.tests import utils
 
 
 class WatchData:
@@ -44,6 +45,7 @@ class WatchRuleTest(unittest.TestCase):
     def setUpClass(cls):
         # Create a dummy stack in the DB as WatchRule instances
         # must be associated with a stack
+        utils.setup_dummy_db()
         ctx = context.get_admin_context()
         ctx.username = 'dummyuser'
         ctx.tenant_id = '123456'

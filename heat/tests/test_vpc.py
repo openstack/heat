@@ -22,6 +22,7 @@ from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
+from heat.tests.utils import setup_dummy_db
 
 try:
     from quantumclient.common.exceptions import QuantumClientException
@@ -34,6 +35,7 @@ except ImportError:
 class VPCTestBase(unittest.TestCase):
 
     def setUp(self):
+        setup_dummy_db()
         self.m = mox.Mox()
         self.m.StubOutWithMock(quantumclient.Client, 'add_interface_router')
         self.m.StubOutWithMock(quantumclient.Client, 'add_gateway_router')

@@ -14,6 +14,8 @@
 
 
 import nose.plugins.skip as skip
+from heat.db.sqlalchemy.session import get_engine
+from heat.db import migration
 
 
 class skip_test(object):
@@ -70,7 +72,7 @@ def stack_delete_after(test_fn):
     to ensure tests clean up their stacks regardless of test success/failure
     """
     def wrapped_test(test_cls):
-        print "Running test", test_fn.__name__
+        #print "Running test", test_fn.__name__
         try:
             test_fn(test_cls)
         finally:
@@ -78,5 +80,11 @@ def stack_delete_after(test_fn):
                 test_cls.stack.delete()
             except AttributeError:
                 print "Could not delete stack (already deleted?)"
-        print "Exited", test_fn.__name__
+        #print "Exited", test_fn.__name__
     return wrapped_test
+
+
+def setup_dummy_db():
+    migration.db_sync()
+    engine = get_engine()
+    conn = engine.connect()

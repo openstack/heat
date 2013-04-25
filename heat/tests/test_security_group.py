@@ -22,6 +22,7 @@ from heat.engine import clients
 from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
+from heat.tests.utils import setup_dummy_db
 from heat.tests.v1_1 import fakes
 
 from novaclient.v1_1 import security_groups as nova_sg
@@ -68,6 +69,7 @@ Resources:
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'delete')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'get')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'list')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()

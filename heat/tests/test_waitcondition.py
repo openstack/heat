@@ -25,6 +25,7 @@ import unittest
 
 from heat.tests import fakes
 from heat.tests.utils import stack_delete_after
+from heat.tests.utils import setup_dummy_db
 
 import heat.db.api as db_api
 from heat.common import template_format
@@ -79,8 +80,10 @@ test_template_wc_count = '''
 @attr(tag=['unit', 'resource', 'WaitCondition'])
 @attr(speed='slow')
 class WaitConditionTest(unittest.TestCase):
+
     def setUp(self):
         config.register_engine_opts()
+        setup_dummy_db()
         self.m = mox.Mox()
         self.m.StubOutWithMock(wc.WaitConditionHandle,
                                'get_status')
@@ -389,6 +392,7 @@ class WaitConditionHandleTest(unittest.TestCase):
                              'http://127.0.0.1:8000/v1/waitcondition')
 
         self.fc = fakes.FakeKeystoneClient()
+        setup_dummy_db()
         self.stack = self.create_stack()
 
     def tearDown(self):

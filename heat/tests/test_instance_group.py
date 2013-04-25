@@ -30,6 +30,7 @@ from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine import parser
 from heat.engine import scheduler
+from heat.tests.utils import setup_dummy_db
 
 
 @attr(tag=['unit', 'resource'])
@@ -39,10 +40,10 @@ class InstanceGroupTest(unittest.TestCase):
         self.fc = fakes.FakeClient()
         self.m = mox.Mox()
         self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'reload')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
-        print "InstanceGroupTest teardown complete"
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

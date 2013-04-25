@@ -25,6 +25,7 @@ from heat.engine.resources import instance as instances
 from heat.engine import service
 import heat.db.api as db_api
 from heat.engine import parser
+from heat.tests.utils import setup_dummy_db
 
 test_template_volumeattach = '''
 {
@@ -272,10 +273,10 @@ class validateTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.fc = fakes.FakeClient()
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
-        print "volumeTest teardown complete"
 
     def test_validate_volumeattach_valid(self):
         t = template_format.parse(test_template_volumeattach % 'vdq')
@@ -311,7 +312,6 @@ class validateTest(unittest.TestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
-        print 'res %s' % res
         self.assertEqual(res['Description'], 'test.')
 
     def test_validate_ref_invalid(self):

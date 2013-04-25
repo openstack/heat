@@ -24,6 +24,7 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import stack as nested_stack
 from heat.common import urlfetch
+from heat.tests.utils import setup_dummy_db
 
 
 @attr(tag=['unit', 'resource'])
@@ -50,6 +51,7 @@ Outputs:
     def setUp(self):
         self.m = mox.Mox()
         self.m.StubOutWithMock(urlfetch, 'get')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()

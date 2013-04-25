@@ -21,6 +21,7 @@ from nose.plugins.attrib import attr
 
 from oslo.config import cfg
 from heat.tests import fakes
+from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import stack_delete_after
 
 from heat.common import identifier
@@ -129,6 +130,7 @@ class MetadataRefreshTest(unittest.TestCase):
         self.m = mox.Mox()
         self.m.StubOutWithMock(eventlet, 'sleep')
         self.fc = fakes.FakeKeystoneClient()
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
@@ -189,6 +191,7 @@ class MetadataRefreshTest(unittest.TestCase):
 class WaitCondMetadataUpdateTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
+        setup_dummy_db()
         self.ctx = context.get_admin_context()
         self.ctx.tenant_id = 'test_tenant'
         self.fc = fakes.FakeKeystoneClient()

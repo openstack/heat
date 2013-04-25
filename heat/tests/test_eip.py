@@ -26,6 +26,7 @@ from heat.engine.resources import eip
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.v1_1 import fakes
+from heat.tests.utils import setup_dummy_db
 
 
 @attr(tag=['unit', 'resource'])
@@ -37,10 +38,10 @@ class EIPTest(unittest.TestCase):
         self.m.StubOutWithMock(eip.ElasticIp, 'nova')
         self.m.StubOutWithMock(eip.ElasticIpAssociation, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'get')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
-        print "EIPTest teardown complete"
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

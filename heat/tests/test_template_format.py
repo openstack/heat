@@ -21,6 +21,7 @@ from heat.engine import clients
 from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
+from heat.tests.utils import setup_dummy_db
 
 
 @attr(tag=['unit'])
@@ -99,6 +100,7 @@ class JsonYamlResolvedCompareTest(unittest.TestCase):
     def setUp(self):
         self.longMessage = True
         self.maxDiff = None
+        setup_dummy_db()
 
     def load_template(self, file_name):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

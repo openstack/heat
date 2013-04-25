@@ -29,6 +29,7 @@ from heat.engine import scheduler
 from heat.engine.resources import volume as vol
 from heat.engine import clients
 from heat.tests.v1_1 import fakes
+from heat.tests.utils import setup_dummy_db
 
 
 @attr(tag=['unit', 'resource', 'volume'])
@@ -45,6 +46,7 @@ class VolumeTest(unittest.TestCase):
         self.m.StubOutWithMock(self.fc.volumes, 'create_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
         self.m.StubOutWithMock(eventlet, 'sleep')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()

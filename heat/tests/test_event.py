@@ -24,6 +24,7 @@ from heat.engine import resource
 from heat.engine import template
 from heat.engine import event
 
+from heat.tests.utils import setup_dummy_db
 from heat.tests import generic_resource as generic_rsrc
 
 
@@ -46,6 +47,7 @@ class EventTest(unittest.TestCase):
 
         self.m = mox.Mox()
 
+        setup_dummy_db()
         self.ctx = context.get_admin_context()
         self.m.StubOutWithMock(self.ctx, 'username')
         self.ctx.username = self.username

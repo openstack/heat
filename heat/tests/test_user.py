@@ -28,22 +28,26 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resources import user
 from heat.tests import fakes
+from heat.tests.utils import setup_dummy_db
 
 import keystoneclient.exceptions
 
 
-@attr(tag=['unit', 'resource', 'User'])
-@attr(speed='fast')
-class UserTest(unittest.TestCase):
+class UserPolicyTestCase(unittest.TestCase):
     def setUp(self):
         config.register_engine_opts()
         self.m = mox.Mox()
         self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
-        print "UserTest teardown complete"
+
+
+@attr(tag=['unit', 'resource', 'User'])
+@attr(speed='fast')
+class UserTest(UserPolicyTestCase):
 
     def load_template(self, template_name='Rails_Single_Instance.template'):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
@@ -226,16 +230,7 @@ class UserTest(unittest.TestCase):
 
 @attr(tag=['unit', 'resource', 'AccessKey'])
 @attr(speed='fast')
-class AccessKeyTest(unittest.TestCase):
-    def setUp(self):
-        config.register_engine_opts()
-        self.m = mox.Mox()
-        self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
-        cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
-
-    def tearDown(self):
-        self.m.UnsetStubs()
-        print "AccessKey teardown complete"
+class AccessKeyTest(UserPolicyTestCase):
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
@@ -345,15 +340,7 @@ class AccessKeyTest(unittest.TestCase):
 
 @attr(tag=['unit', 'resource', 'AccessPolicy'])
 @attr(speed='fast')
-class AccessPolicyTest(unittest.TestCase):
-    def setUp(self):
-        self.m = mox.Mox()
-        self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
-        cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
-
-    def tearDown(self):
-        self.m.UnsetStubs()
-        print "UserTest teardown complete"
+class AccessPolicyTest(UserPolicyTestCase):
 
     def load_template(self):
         template_name =\

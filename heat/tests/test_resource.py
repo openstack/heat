@@ -25,6 +25,7 @@ from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 
 from heat.tests import generic_resource as generic_rsrc
+from heat.tests.utils import setup_dummy_db
 
 
 @attr(tag=['unit', 'resource'])
@@ -32,6 +33,7 @@ from heat.tests import generic_resource as generic_rsrc
 class ResourceTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
+        setup_dummy_db()
         self.stack = parser.Stack(None, 'test_stack', parser.Template({}),
                                   stack_id=uuidutils.generate_uuid())
 
@@ -322,6 +324,7 @@ class MetadataTest(unittest.TestCase):
             'Type': 'Foo',
             'Metadata': {'Test': 'Initial metadata'}
         }
+        setup_dummy_db()
         ctx = context.get_admin_context()
         self.m.StubOutWithMock(ctx, 'username')
         ctx.username = 'metadata_test_user'

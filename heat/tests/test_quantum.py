@@ -31,6 +31,7 @@ from heat.engine.resources.quantum import floatingip
 from heat.engine.resources.quantum import port
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.engine import parser
+from heat.tests.utils import setup_dummy_db
 
 
 class FakeQuantum():
@@ -103,10 +104,10 @@ class QuantumTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
         self.m.StubOutWithMock(net.Net, 'quantum')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
-        print "QuantumTest teardown complete"
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
@@ -211,6 +212,7 @@ class QuantumFloatingIPTest(unittest.TestCase):
         self.m.StubOutWithMock(floatingip.FloatingIP, 'quantum')
         self.m.StubOutWithMock(floatingip.FloatingIPAssociation, 'quantum')
         self.m.StubOutWithMock(port.Port, 'quantum')
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()

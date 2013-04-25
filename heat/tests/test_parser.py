@@ -26,6 +26,7 @@ from heat.engine import parser
 from heat.engine import parameters
 from heat.engine import template
 
+from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import stack_delete_after
 from heat.tests import generic_resource as generic_rsrc
 
@@ -300,6 +301,7 @@ class StackTest(unittest.TestCase):
 
         self.m = mox.Mox()
 
+        setup_dummy_db()
         self.ctx = context.get_admin_context()
         self.m.StubOutWithMock(self.ctx, 'username')
         self.ctx.username = self.username

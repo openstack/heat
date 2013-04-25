@@ -16,21 +16,3 @@
 # The code below enables nosetests to work with i18n _() blocks
 import __builtin__
 setattr(__builtin__, '_', lambda x: x)
-
-import os
-
-from heat.db.sqlalchemy.session import get_engine
-
-
-def reset_db():
-    if os.path.exists('heat-test.db'):
-        os.remove('heat-test.db')
-
-
-def setup():
-    from heat.db import migration
-
-    reset_db()
-    migration.db_sync()
-    engine = get_engine()
-    conn = engine.connect()

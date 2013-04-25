@@ -32,6 +32,7 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resource import Metadata
 from heat.openstack.common import timeutils
+from heat.tests.utils import setup_dummy_db
 
 
 @attr(tag=['unit', 'resource'])
@@ -39,10 +40,10 @@ from heat.openstack.common import timeutils
 class AutoScalingTest(unittest.TestCase):
     def setUp(self):
         self.m = mox.Mox()
+        setup_dummy_db()
 
     def tearDown(self):
         self.m.UnsetStubs()
-        print "AutoScalingTest teardown complete"
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
