@@ -1,18 +1,17 @@
 Heat testing
 ------------
 
-All tests are to be placed in the heat/tests directory. The directory is
-organized by test type (unit, functional, etc). Within each type
+All tests are to be placed in the heat/tests directory. The directory
+is organized by test type (unit, functional, etc). Within each type
 directory one may create another directory for additional test files as
-well as a separate __init__.py, which allows setup and teardown code to
-be shared with the tests present in the same directory.
+well as a separate __init__.py, which should be blank.
 
 An example directory structure illustrating the above:
 
 heat/tests
 |-- examples
-|   |-- __init__.py <-- tests1-3 will execute the fixtures (setup and
-|   |-- test1.py        teardown routines) only once
+|   |-- __init__.py
+|   |-- test1.py
 |   |-- test2.py
 |   |-- test3.py
 |-- __init__.py
@@ -27,77 +26,8 @@ test type.
 Implementing a test
 -------------------
 
-Nose, the testing framework - http://pypi.python.org/pypi/nose, finds on
-demand available tests to run. The name of the file must contain "test"
-or "Test" at a word boundary. The recommended format is for the test to
-be named test_<NAME>.
-
-There are many different ways to write a test. Three different ways are
-present in the tests/examples directory. The differences are slight
-enough to just describe the make up of just one test.
-
----
-Example 1:
-
-import sys
-import nose
-from nose.plugins.attrib import attr
-from nose import with_setup
-
-# module level
-def setUp():
-    print "test1 setup complete"
-
-def tearDown():
-    print "test1 teardown complete"
-
-@with_setup(setUp, tearDown) # test level
-@attr(tag=['example', 'func'])
-def test_a():
-    assert 'a' == 'a'
-    print "assert a"
-
-def test_b():
-    assert 'b' == 'b'
-    print "assert b"
-
-# allows testing of the test directly, shown below
-if __name__ == '__main__':
-    sys.argv.append(__file__)
-    nose.main()
----
-
-Example 1 illustrates fixture execution at the test, module, and package
-level:
-
-$ python test1.py -s
-package setup complete
-test1 setup complete
-test1 setup complete
-assert a
-test1 teardown complete
-.assert b
-.test1 teardown complete
-package teardown complete
-
-----------------------------------------------------------------------
-Ran 2 tests in 0.001s
-
-OK
-
-
-All fixtures are optional. In the above output you can trace the order
-execution of the fixtures relative to the tests. Fixtures at the class
-level are present in example 2, which consists of simply defining them
-within the class. 
-
-Note the attribute decorator with a list of values, which functionality
-is provided via the attributeselector plugin. This "tag" allows running
-tests all matching the assigned attribute(s). Tests should always
-include the tag attribute with at least these values: <test type>,
-<test area>. Also an attribute of speed should be used with a value of
-either slow, normal, or fast. Following this convention allows for finer
-granular testing without having to find the specific tests to run.
+Testrepository - http://pypi.python.org/pypi/testrepository is used to
+find and run tests, parallelize their runs, and record timing/results.
 
 If new dependencies are introduced upon the development of a test, the
 tools/test-requires file needs to be updated so that the virtual
@@ -106,21 +36,14 @@ environment will be able to successfully execute all tests.
 Running the tests
 -----------------
 
-There is a run_tests.sh script in the top level of the tree. The script
-will by default execute all found tests, but can be modified with the
-tag argument:
+During development, the simplest way to run tests is to simply invoke
+testr directly.
 
-$ ./run_tests.sh -V -a tag=example  # (runs all the examples)
+$ testr run
 
-There are two important options provided by the run_tests.sh script that
-should have special attention. The '--virtual-env' or '-V' will build
-and run all the tests inside of an isolated python environment located
-in the .venv directory. It's sort of like mock just for python :)
+To run the tests with a clean virtual env in the same manner as the
+OpenStack testing infrastructure does so, use tox.
 
-The other option of note is the '--pep8' or '-p' flag. This is a python
-style checker that is good to run periodically. Pep8 is automatically
-executed when tests are run inside the virtual environment since pep8 is
-intentionally installed.
-
-Please see ./run_tests.sh -h for future enhancements and/or minor
-non-documented functionality.
+$ tox -epy27 # test suite on python 2.7
+$ tox -epy26 # test suite on python 2.6
+$ tox -epep8 # run full source code checker
