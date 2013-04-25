@@ -11,3 +11,6 @@ AUTHORS
 ChangeLog
 templates/cloudformation-examples
 .tox
+.coverage
+cover
+.testrepository

@@ -3,8 +3,8 @@ python-setuptools
 
 python-coverage
 python-mox
+python-testrepository
 python-nose
-#nosexcover
 #openstack.nose_plugin>=0.7
 python-pep8
 python-sphinx
