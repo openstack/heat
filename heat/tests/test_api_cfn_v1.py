@@ -14,9 +14,7 @@
 
 import json
 import os
-import unittest
 
-import mox
 from nose.plugins.attrib import attr
 from oslo.config import cfg
 
@@ -29,11 +27,14 @@ from heat.common.wsgi import Request
 from heat.rpc import api as rpc_api
 from heat.api.aws import exception
 import heat.api.cfn.v1.stacks as stacks
+from heat.tests.common import HeatTestCase
+
+policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 
 
 @attr(tag=['unit', 'api-cfn-v1-stacks', 'StackController'])
 @attr(speed='fast')
-class CfnStackControllerTest(unittest.TestCase):
+class CfnStackControllerTest(HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
@@ -87,7 +88,7 @@ class CfnStackControllerTest(unittest.TestCase):
         params = {'Action': 'ListStacks'}
         dummy_req = self._dummy_GET_request(params)
         dummy_req.context.roles = ['heat_stack_user']
-        self.controller.policy.policy_path = (self.policy_path +
+        self.controller.policy.policy_path = (policy_path +
                                               'deny_stack_user.json')
         self.assertRaises(exception.HeatAccessDeniedError,
                           self.controller._enforce, dummy_req, 'ListStacks')
@@ -103,7 +104,7 @@ class CfnStackControllerTest(unittest.TestCase):
                                 ).AndRaise(AttributeError)
         self.m.ReplayAll()
 
-        self.controller.policy.policy_path = (self.policy_path +
+        self.controller.policy.policy_path = (policy_path +
                                               'deny_stack_user.json')
         self.assertRaises(exception.HeatInternalFailureError,
                           self.controller._enforce, dummy_req, 'ListStacks')
@@ -1396,13 +1397,10 @@ class CfnStackControllerTest(unittest.TestCase):
         self.m.VerifyAll()
 
     def setUp(self):
-        self.maxDiff = None
-        self.m = mox.Mox()
+        super(CfnStackControllerTest, self).setUp()
 
-        self.path = os.path.dirname(os.path.realpath(__file__))
-        self.policy_path = self.path + "/policy/"
         opts = [
-            cfg.StrOpt('config_dir', default=self.policy_path),
+            cfg.StrOpt('config_dir', default=policy_path),
             cfg.StrOpt('config_file', default='foo'),
             cfg.StrOpt('project', default='heat'),
         ]
@@ -1416,8 +1414,3 @@ class CfnStackControllerTest(unittest.TestCase):
             bind_port = 8000
         cfgopts = DummyConfig()
         self.controller = stacks.StackController(options=cfgopts)
-        print "setup complete"
-
-    def tearDown(self):
-        self.m.UnsetStubs()
-        print "teardown complete"

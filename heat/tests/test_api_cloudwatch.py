@@ -13,9 +13,7 @@
 #    under the License.
 
 import os
-import unittest
 
-import mox
 from nose.plugins.attrib import attr
 from oslo.config import cfg
 
@@ -25,13 +23,13 @@ from heat.openstack.common import rpc
 from heat.common.wsgi import Request
 from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches
-from heat.engine import api as engine_api
-from heat.rpc import api as rpc_api
+from heat.rpc import api as engine_api
+from heat.tests.common import HeatTestCase
 
 
 @attr(tag=['unit', 'api-cloudwatch', 'WatchController'])
 @attr(speed='fast')
-class WatchControllerTest(unittest.TestCase):
+class WatchControllerTest(HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
@@ -510,9 +508,7 @@ class WatchControllerTest(unittest.TestCase):
         self.assert_(type(result) == exception.HeatInvalidParameterValueError)
 
     def setUp(self):
-        self.maxDiff = None
-        self.m = mox.Mox()
-
+        super(WatchControllerTest, self).setUp()
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.policy_path = self.path + "/policy/"
         opts = [
@@ -522,7 +518,7 @@ class WatchControllerTest(unittest.TestCase):
         ]
         cfg.CONF.register_opts(opts)
         cfg.CONF.set_default('host', 'host')
-        self.topic = rpc_api.ENGINE_TOPIC
+        self.topic = engine_api.ENGINE_TOPIC
         self.api_version = '1.0'
 
         # Create WSGI controller instance
@@ -531,9 +527,7 @@ class WatchControllerTest(unittest.TestCase):
         cfgopts = DummyConfig()
         self.controller = watches.WatchController(options=cfgopts)
         self.controller.policy.policy_path = None
-        print "setup complete"
 
     def tearDown(self):
-        self.m.UnsetStubs()
         self.m.VerifyAll()
-        print "teardown complete"
+        super(WatchControllerTest, self).tearDown()

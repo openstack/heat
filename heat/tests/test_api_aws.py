@@ -13,7 +13,7 @@
 #    under the License.
 
 
-import unittest
+from heat.tests.common import HeatTestCase
 from nose.plugins.attrib import attr
 
 from heat.api.aws import utils as api_utils
@@ -21,7 +21,7 @@ from heat.api.aws import utils as api_utils
 
 @attr(tag=['unit', 'api-aws', 'AWSCommon'])
 @attr(speed='fast')
-class AWSCommon(unittest.TestCase):
+class AWSCommon(HeatTestCase):
     '''
     Tests the api/aws common componenents
     '''
@@ -187,9 +187,3 @@ class AWSCommon(unittest.TestCase):
         expected = {"bar": 123}
         result = api_utils.reformat_dict_keys(keymap, data)
         self.assertEqual(result, expected)
-
-    def setUp(self):
-        print "setup complete"
-
-    def tearDown(self):
-        print "teardown complete"

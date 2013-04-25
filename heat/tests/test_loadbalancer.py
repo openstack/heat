@@ -13,11 +13,9 @@
 #    under the License.
 
 
+import mox
 import re
 import os
-
-import unittest
-import mox
 
 from nose.plugins.attrib import attr
 
@@ -33,6 +31,7 @@ from heat.engine.resources import user
 from heat.engine.resources import loadbalancer as lb
 from heat.engine.resources import wait_condition as wc
 from heat.engine.resource import Metadata
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 from heat.tests.v1_1 import fakes
 from heat.tests import fakes as test_fakes
@@ -50,10 +49,10 @@ def create_context(mocks, user='lb_test_user',
 
 @attr(tag=['unit', 'resource'])
 @attr(speed='fast')
-class LoadBalancerTest(unittest.TestCase):
+class LoadBalancerTest(HeatTestCase):
     def setUp(self):
+        super(LoadBalancerTest, self).setUp()
         config.register_engine_opts()
-        self.m = mox.Mox()
         self.fc = fakes.FakeClient()
         self.m.StubOutWithMock(lb.LoadBalancer, 'nova')
         self.m.StubOutWithMock(instance.Instance, 'nova')
@@ -65,10 +64,6 @@ class LoadBalancerTest(unittest.TestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
-        print "LoadBalancerTest teardown complete"
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

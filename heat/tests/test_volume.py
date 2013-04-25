@@ -16,8 +16,6 @@
 import os
 
 import eventlet
-import mox
-import unittest
 
 from nose.plugins.attrib import attr
 
@@ -28,15 +26,16 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resources import volume as vol
 from heat.engine import clients
+from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes
 from heat.tests.utils import setup_dummy_db
 
 
 @attr(tag=['unit', 'resource', 'volume'])
 @attr(speed='fast')
-class VolumeTest(unittest.TestCase):
+class VolumeTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(VolumeTest, self).setUp()
         self.fc = fakes.FakeClient()
         self.m.StubOutWithMock(clients.OpenStackClients, 'cinder')
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
@@ -47,10 +46,6 @@ class VolumeTest(unittest.TestCase):
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
         self.m.StubOutWithMock(eventlet, 'sleep')
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
-        print "VolumeTest teardown complete"
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

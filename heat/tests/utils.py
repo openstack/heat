@@ -72,15 +72,13 @@ def stack_delete_after(test_fn):
     to ensure tests clean up their stacks regardless of test success/failure
     """
     def wrapped_test(test_cls):
-        #print "Running test", test_fn.__name__
         try:
             test_fn(test_cls)
         finally:
             try:
                 test_cls.stack.delete()
             except AttributeError:
-                print "Could not delete stack (already deleted?)"
-        #print "Exited", test_fn.__name__
+                pass
     return wrapped_test
 
 
