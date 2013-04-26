@@ -37,4 +37,3 @@ FILES
 ========
 
 * /etc/heat/heat-api.conf
-* /etc/heat/heat-api-paste.ini
