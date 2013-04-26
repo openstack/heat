@@ -16,6 +16,7 @@
 from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine import resource
+from heat.common import exception
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,16 @@ class NetworkInterface(resource.Resource):
         }
 
         if self.properties['GroupSet']:
-            props['security_groups'] = self.properties['GroupSet']
+            props['security_groups'] = []
+
+            for sg in self.properties.get('GroupSet'):
+                resource = self.stack.resource_by_refid(sg)
+                if resource:
+                    props['security_groups'].append(resource.resource_id)
+                else:
+                    raise exception.InvalidTemplateAttribute(
+                        resource=self.name,
+                        key='GroupSet')
         port = client.create_port({'port': props})['port']
         self.resource_id_set(port['id'])
 
