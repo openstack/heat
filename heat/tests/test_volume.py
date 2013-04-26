@@ -17,8 +17,6 @@ import os
 
 import eventlet
 
-from nose.plugins.attrib import attr
-
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
@@ -31,8 +29,6 @@ from heat.tests.v1_1 import fakes
 from heat.tests.utils import setup_dummy_db
 
 
-@attr(tag=['unit', 'resource', 'volume'])
-@attr(speed='fast')
 class VolumeTest(HeatTestCase):
     def setUp(self):
         super(VolumeTest, self).setUp()

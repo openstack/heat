@@ -13,10 +13,7 @@
 #    under the License.
 
 import json
-import unittest
 
-import mox
-from nose.plugins.attrib import attr
 from oslo.config import cfg
 import webob.exc
 
@@ -27,6 +24,7 @@ import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
 from heat.common import urlfetch
 from heat.rpc import api as rpc_api
+from heat.tests.common import HeatTestCase
 
 import heat.api.openstack.v1 as api_v1
 import heat.api.openstack.v1.stacks as stacks
@@ -34,15 +32,7 @@ import heat.api.openstack.v1.resources as resources
 import heat.api.openstack.v1.events as events
 
 
-@attr(tag=['unit', 'api-openstack-v1'])
-@attr(speed='fast')
-class InstantiationDataTest(unittest.TestCase):
-
-    def setUp(self):
-        self.m = mox.Mox()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
+class InstantiationDataTest(HeatTestCase):
 
     def test_format_parse(self):
         data = {"key1": ["val1[0]", "val1[1]"], "key2": "val2"}
@@ -156,16 +146,10 @@ class ControllerTest(object):
     def __init__(self, *args, **kwargs):
         super(ControllerTest, self).__init__(*args, **kwargs)
 
-        self.maxDiff = None
-        self.m = mox.Mox()
-
         cfg.CONF.set_default('host', 'host')
         self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
         self.tenant = 't'
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def _create_context(self, user='api_test_user'):
         ctx = context.get_admin_context()
@@ -220,18 +204,19 @@ class ControllerTest(object):
         return 'http://%s%s' % (host, path)
 
 
-@attr(tag=['unit', 'api-openstack-v1', 'StackController'])
-@attr(speed='fast')
-class StackControllerTest(ControllerTest, unittest.TestCase):
+class StackControllerTest(ControllerTest, HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
     '''
 
     def setUp(self):
+        super(StackControllerTest, self).setUp()
         # Create WSGI controller instance
+
         class DummyConfig():
             bind_port = 8004
+
         cfgopts = DummyConfig()
         self.controller = stacks.StackController(options=cfgopts)
 
@@ -894,18 +879,19 @@ class StackControllerTest(ControllerTest, unittest.TestCase):
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'api-openstack-v1', 'ResourceController'])
-@attr(speed='fast')
-class ResourceControllerTest(ControllerTest, unittest.TestCase):
+class ResourceControllerTest(ControllerTest, HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
     '''
 
     def setUp(self):
+        super(ResourceControllerTest, self).setUp()
         # Create WSGI controller instance
+
         class DummyConfig():
             bind_port = 8004
+
         cfgopts = DummyConfig()
         self.controller = resources.ResourceController(options=cfgopts)
 
@@ -1211,18 +1197,19 @@ class ResourceControllerTest(ControllerTest, unittest.TestCase):
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'api-openstack-v1', 'EventController'])
-@attr(speed='fast')
-class EventControllerTest(ControllerTest, unittest.TestCase):
+class EventControllerTest(ControllerTest, HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
     '''
 
     def setUp(self):
+        super(EventControllerTest, self).setUp()
         # Create WSGI controller instance
+
         class DummyConfig():
             bind_port = 8004
+
         cfgopts = DummyConfig()
         self.controller = events.EventController(options=cfgopts)
 
@@ -1612,7 +1599,7 @@ class EventControllerTest(ControllerTest, unittest.TestCase):
         self.m.VerifyAll()
 
 
-class RoutesTest(unittest.TestCase):
+class RoutesTest(HeatTestCase):
 
     def assertRoute(self, mapper, path, method, action, controller, params={}):
         route = mapper.match(path, {'REQUEST_METHOD': method})
@@ -1625,6 +1612,7 @@ class RoutesTest(unittest.TestCase):
         self.assertEqual(params, route)
 
     def setUp(self):
+        super(RoutesTest, self).setUp()
         self.m = api_v1.API({}).map
 
     def test_template_handling(self):

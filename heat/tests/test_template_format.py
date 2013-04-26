@@ -12,8 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from nose.plugins.attrib import attr
-from nose.exc import SkipTest
+from testtools import skipIf
 import os
 import unittest
 
@@ -24,7 +23,6 @@ from heat.engine import parser
 from heat.tests.utils import setup_dummy_db
 
 
-@attr(tag=['unit'])
 class JsonToYamlTest(unittest.TestCase):
 
     def setUp(self):
@@ -78,7 +76,6 @@ class JsonToYamlTest(unittest.TestCase):
             yield (json_str, yml_str, f.name)
 
 
-@attr(tag=['unit'])
 class YamlMinimalTest(unittest.TestCase):
 
     def test_minimal_yaml(self):
@@ -94,7 +91,6 @@ Outputs: {}
         self.assertEqual(tpl1, tpl2)
 
 
-@attr(tag=['unit'])
 class JsonYamlResolvedCompareTest(unittest.TestCase):
 
     def setUp(self):
@@ -150,8 +146,7 @@ class JsonYamlResolvedCompareTest(unittest.TestCase):
             self.assertEqual(stack1.resources[key].t, stack2.resources[key].t)
 
     def test_quantum_resolved(self):
-        if clients.quantumclient is None:
-            raise SkipTest
+        skipIf(clients.quantumclient is None, 'quantumclient unavailable')
         self.compare_stacks('Quantum.template', 'Quantum.yaml', {})
 
     def test_wordpress_resolved(self):

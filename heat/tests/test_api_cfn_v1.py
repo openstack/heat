@@ -15,7 +15,6 @@
 import json
 import os
 
-from nose.plugins.attrib import attr
 from oslo.config import cfg
 
 from heat.common import context
@@ -32,8 +31,6 @@ from heat.tests.common import HeatTestCase
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 
 
-@attr(tag=['unit', 'api-cfn-v1-stacks', 'StackController'])
-@attr(speed='fast')
 class CfnStackControllerTest(HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,

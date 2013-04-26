@@ -16,14 +16,11 @@
 import pkgutil
 import sys
 import unittest
-from nose.plugins.attrib import attr
 
 import heat.engine
 from heat.common import plugin_loader
 
 
-@attr(tag=['unit', 'plugin_loader'])
-@attr(speed='fast')
 class PluginLoaderTest(unittest.TestCase):
     def test_module_name(self):
         self.assertEqual(plugin_loader._module_name('foo.bar', 'blarg.wibble'),

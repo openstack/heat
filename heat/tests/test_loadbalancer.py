@@ -17,8 +17,6 @@ import mox
 import re
 import os
 
-from nose.plugins.attrib import attr
-
 from oslo.config import cfg
 from heat.common import exception
 from heat.common import config
@@ -47,8 +45,6 @@ def create_context(mocks, user='lb_test_user',
     return ctx
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
 class LoadBalancerTest(HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()

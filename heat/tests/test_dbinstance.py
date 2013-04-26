@@ -17,8 +17,6 @@ import os
 
 import mox
 
-from nose.plugins.attrib import attr
-
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
@@ -28,8 +26,6 @@ from heat.engine.resources import dbinstance as dbi
 from heat.tests.common import HeatTestCase
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
 class DBInstanceTest(HeatTestCase):
     def setUp(self):
         super(DBInstanceTest, self).setUp()

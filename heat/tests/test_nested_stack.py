@@ -13,8 +13,6 @@
 #    under the License.
 
 
-from nose.plugins.attrib import attr
-
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
@@ -25,8 +23,6 @@ from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
 class NestedStackTest(HeatTestCase):
     test_template = '''
 HeatTemplateFormatVersion: '2012-12-12'

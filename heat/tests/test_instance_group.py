@@ -16,10 +16,7 @@ import copy
 import os
 
 import eventlet
-import unittest
 import mox
-
-from nose.plugins.attrib import attr
 
 from heat.tests.v1_1 import fakes
 from heat.common import context
@@ -30,20 +27,16 @@ from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine import parser
 from heat.engine import scheduler
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
-class InstanceGroupTest(unittest.TestCase):
+class InstanceGroupTest(HeatTestCase):
     def setUp(self):
+        super(InstanceGroupTest, self).setUp()
         self.fc = fakes.FakeClient()
-        self.m = mox.Mox()
         self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'reload')
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

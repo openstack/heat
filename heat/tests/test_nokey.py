@@ -15,32 +15,23 @@
 
 import os
 
-import unittest
-import mox
-
-from nose.plugins.attrib import attr
-
 from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.openstack.common import uuidutils
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
-@attr(tag=['unit', 'resource', 'instance'])
-@attr(speed='fast')
-class nokeyTest(unittest.TestCase):
+class nokeyTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(nokeyTest, self).setUp()
         self.fc = fakes.FakeClient()
         self.path = os.path.dirname(os.path.realpath(__file__)).\
             replace('heat/tests', 'templates')
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def test_nokey_create(self):
         f = open("%s/WordPress_NoKey.template" % self.path)

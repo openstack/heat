@@ -14,10 +14,7 @@
 
 
 import os
-import unittest
 
-import mox
-from nose.plugins.attrib import attr
 from oslo.config import cfg
 
 from heat.common import config
@@ -27,26 +24,22 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resources import user
+from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests.utils import setup_dummy_db
 
 import keystoneclient.exceptions
 
 
-class UserPolicyTestCase(unittest.TestCase):
+class UserPolicyTestCase(HeatTestCase):
     def setUp(self):
+        super(UserPolicyTestCase, self).setUp()
         config.register_engine_opts()
-        self.m = mox.Mox()
         self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
         setup_dummy_db()
 
-    def tearDown(self):
-        self.m.UnsetStubs()
 
-
-@attr(tag=['unit', 'resource', 'User'])
-@attr(speed='fast')
 class UserTest(UserPolicyTestCase):
 
     def load_template(self, template_name='Rails_Single_Instance.template'):
@@ -228,8 +221,6 @@ class UserTest(UserPolicyTestCase):
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'resource', 'AccessKey'])
-@attr(speed='fast')
 class AccessKeyTest(UserPolicyTestCase):
 
     def load_template(self):
@@ -338,8 +329,6 @@ class AccessKeyTest(UserPolicyTestCase):
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'resource', 'AccessPolicy'])
-@attr(speed='fast')
 class AccessPolicyTest(UserPolicyTestCase):
 
     def load_template(self):

@@ -13,11 +13,6 @@
 #    under the License.
 
 
-import unittest
-import mox
-
-from nose.plugins.attrib import attr
-
 from heat.tests.v1_1 import fakes
 from heat.common import exception
 from heat.common import template_format
@@ -25,6 +20,7 @@ from heat.engine.resources import instance as instances
 from heat.engine import service
 import heat.db.api as db_api
 from heat.engine import parser
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 test_template_volumeattach = '''
@@ -267,16 +263,11 @@ test_template_unimplemented_property = '''
     '''
 
 
-@attr(tag=['unit', 'validate'])
-@attr(speed='fast')
-class validateTest(unittest.TestCase):
+class validateTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(validateTest, self).setUp()
         self.fc = fakes.FakeClient()
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def test_validate_volumeattach_valid(self):
         t = template_format.parse(test_template_volumeattach % 'vdq')

@@ -14,14 +14,11 @@
 
 
 import unittest
-from nose.plugins.attrib import attr
 
 from heat.common import short_id
 import uuid
 
 
-@attr(tag=['unit', 'short_id'])
-@attr(speed='fast')
 class ShortIdTest(unittest.TestCase):
 
     def test_byte_string_8(self):

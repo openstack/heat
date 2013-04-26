@@ -14,14 +14,11 @@
 
 
 import unittest
-from nose.plugins.attrib import attr
 
 from heat.engine import properties
 from heat.common import exception
 
 
-@attr(tag=['unit', 'properties'])
-@attr(speed='fast')
 class PropertyTest(unittest.TestCase):
     def test_required_default(self):
         p = properties.Property({'Type': 'String'})
@@ -259,8 +256,6 @@ class PropertyTest(unittest.TestCase):
         self.assertRaises(TypeError, p.validate_data, [42, 'fish'])
 
 
-@attr(tag=['unit', 'properties'])
-@attr(speed='fast')
 class PropertiesTest(unittest.TestCase):
     def setUp(self):
         schema = {
@@ -306,8 +301,6 @@ class PropertiesTest(unittest.TestCase):
         self.assertEqual(self.props.get('foo', 'wibble'), 'wibble')
 
 
-@attr(tag=['unit', 'properties'])
-@attr(speed='fast')
 class PropertiesValidationTest(unittest.TestCase):
     def test_required(self):
         schema = {'foo': {'Type': 'String', 'Required': True}}

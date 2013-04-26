@@ -18,10 +18,7 @@ import datetime
 import copy
 
 import eventlet
-import unittest
 import mox
-
-from nose.plugins.attrib import attr
 
 from heat.common import context
 from heat.common import template_format
@@ -32,18 +29,14 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resource import Metadata
 from heat.openstack.common import timeutils
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
-class AutoScalingTest(unittest.TestCase):
+class AutoScalingTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(AutoScalingTest, self).setUp()
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

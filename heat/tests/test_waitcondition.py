@@ -13,16 +13,14 @@
 #    under the License.
 
 
-import mox
 import uuid
 import datetime
 import json
 
 import eventlet
-from nose.plugins.attrib import attr
 from oslo.config import cfg
-import unittest
 
+from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests.utils import stack_delete_after
 from heat.tests.utils import setup_dummy_db
@@ -77,14 +75,12 @@ test_template_wc_count = '''
 '''
 
 
-@attr(tag=['unit', 'resource', 'WaitCondition'])
-@attr(speed='slow')
-class WaitConditionTest(unittest.TestCase):
+class WaitConditionTest(HeatTestCase):
 
     def setUp(self):
+        super(WaitConditionTest, self).setUp()
         config.register_engine_opts()
         setup_dummy_db()
-        self.m = mox.Mox()
         self.m.StubOutWithMock(wc.WaitConditionHandle,
                                'get_status')
         self.m.StubOutWithMock(wc.WaitCondition,
@@ -95,9 +91,6 @@ class WaitConditionTest(unittest.TestCase):
                              'http://127.0.0.1:8000/v1/waitcondition')
 
         self.fc = fakes.FakeKeystoneClient()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
@@ -382,21 +375,16 @@ class WaitConditionTest(unittest.TestCase):
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'resource', 'WaitConditionHandle'])
-@attr(speed='fast')
-class WaitConditionHandleTest(unittest.TestCase):
+class WaitConditionHandleTest(HeatTestCase):
     def setUp(self):
+        super(WaitConditionHandleTest, self).setUp()
         config.register_engine_opts()
-        self.m = mox.Mox()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
 
         self.fc = fakes.FakeKeystoneClient()
         setup_dummy_db()
         self.stack = self.create_stack()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def create_stack(self, stack_name='test_stack2', params={}):
         temp = template_format.parse(test_template_waitcondition)

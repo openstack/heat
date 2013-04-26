@@ -14,11 +14,9 @@
 
 
 import os
-import unittest
 import json
 
 import mox
-from nose.plugins.attrib import attr
 from oslo.config import cfg
 
 from heat.common import context
@@ -34,6 +32,7 @@ from heat.engine.properties import Properties
 from heat.engine.resources import instance as instances
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
@@ -104,15 +103,10 @@ class DummyThreadGroup(object):
         pass
 
 
-@attr(tag=['unit', 'stack'])
-@attr(speed='slow')
-class stackCreateTest(unittest.TestCase):
+class stackCreateTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(stackCreateTest, self).setUp()
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def test_wordpress_single_instance_stack_create(self):
         stack = get_wordpress_stack('test_stack', create_context(self.m))
@@ -151,21 +145,16 @@ class stackCreateTest(unittest.TestCase):
         self.assertEqual(db_s.status, 'DELETE_COMPLETE')
 
 
-@attr(tag=['unit', 'engine-api', 'engine-service'])
-@attr(speed='fast')
-class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
+class stackServiceCreateUpdateDeleteTest(HeatTestCase):
 
     def setUp(self):
-        self.m = mox.Mox()
+        super(stackServiceCreateUpdateDeleteTest, self).setUp()
         self.username = 'stack_service_create_test_user'
         self.tenant = 'stack_service_create_test_tenant'
         setup_dummy_db()
         self.ctx = create_context(self.m, self.username, self.tenant)
 
         self.man = service.EngineService('a-host', 'a-topic')
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def test_stack_create(self):
         stack_name = 'service_create_test_stack'
@@ -396,57 +385,62 @@ class stackServiceCreateUpdateDeleteTest(unittest.TestCase):
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'engine-api', 'engine-service'])
-@attr(speed='fast')
-class stackServiceTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+class stackServiceTestBase(HeatTestCase):
+
+    tenant = 'stack_service_test_tenant'
+
+    def tearDown(self):
+        super(stackServiceTestBase, self).tearDown()
+        # testtools runs cleanups *after* tearDown, but we need to mock some
+        # things now.
+        self.m.UnsetStubs()
+
         m = mox.Mox()
-        cls.username = 'stack_service_test_user'
-        cls.tenant = 'stack_service_test_tenant'
-        ctx = create_context(m, cls.username, cls.tenant)
-        cls.stack_name = 'service_test_stack'
+        create_context(m, self.username, self.tenant, ctx=self.stack.context)
+        fc = setup_mocks(m, self.stack)
+        m.StubOutWithMock(fc.client, 'get_servers_9999')
+        get = fc.client.get_servers_9999
+        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
+        m.ReplayAll()
+
+        self.stack.delete()
+
+        m.UnsetStubs()
+
+    def setUp(self):
+        setup_dummy_db()
+        m = mox.Mox()
+        self.username = 'stack_service_test_user'
+        ctx = create_context(m, self.username, self.tenant)
+        self.stack_name = 'service_test_stack'
 
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
-        stack = get_wordpress_stack(cls.stack_name, ctx)
+        stack = get_wordpress_stack(self.stack_name, ctx)
 
         setup_mocks(m, stack)
         m.ReplayAll()
 
         stack.store()
         stack.create()
-        cls.stack = stack
-        cls.stack_identity = stack.identifier()
+        self.stack = stack
+        self.stack_identity = stack.identifier()
 
         m.UnsetStubs()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls = cls
-        m = mox.Mox()
-        create_context(m, cls.username, cls.tenant, ctx=cls.stack.context)
-        fc = setup_mocks(m, cls.stack)
-        m.StubOutWithMock(fc.client, 'get_servers_9999')
-        get = fc.client.get_servers_9999
-        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
-        m.ReplayAll()
-
-        cls.stack.delete()
-
-        m.UnsetStubs()
-
-    def setUp(self):
-        self.m = mox.Mox()
-        setup_dummy_db()
+        super(stackServiceTestBase, self).setUp()
+        self.m.UnsetStubs()
         self.ctx = create_context(self.m, self.username, self.tenant)
         setup_mocks(self.m, self.stack)
+
+
+class stackServiceTest(stackServiceTestBase):
+
+    def setUp(self):
+        super(stackServiceTest, self).setUp()
         self.m.ReplayAll()
 
         self.man = service.EngineService('a-host', 'a-topic')
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def test_stack_identify(self):
         identity = self.man.identify_stack(self.ctx, self.stack_name)
@@ -529,15 +523,6 @@ class stackServiceTest(unittest.TestCase):
             self.assertTrue('description' in s)
             self.assertNotEqual(s['description'].find('WordPress'), -1)
 
-    def test_stack_list_all_empty(self):
-        self.tearDown()
-        self.tenant = 'stack_list_all_empty_tenant'
-        self.setUp()
-
-        sl = self.man.list_stacks(self.ctx)
-
-        self.assertEqual(len(sl), 0)
-
     def test_stack_describe_nonexistent(self):
         nonexist = dict(self.stack_identity)
         nonexist['stack_name'] = 'wibble'
@@ -587,15 +572,6 @@ class stackServiceTest(unittest.TestCase):
         self.assertTrue('description' in s)
         self.assertNotEqual(s['description'].find('WordPress'), -1)
         self.assertTrue('parameters' in s)
-
-    def test_stack_describe_all_empty(self):
-        self.tearDown()
-        self.tenant = 'stack_describe_all_empty_tenant'
-        self.setUp()
-
-        sl = self.man.show_stack(self.ctx, None)
-
-        self.assertEqual(len(sl), 0)
 
     def test_list_resource_types(self):
         resources = self.man.list_resource_types(self.ctx)
@@ -941,3 +917,26 @@ class stackServiceTest(unittest.TestCase):
         self.assertRaises(exception.WatchRuleNotFound,
                           self.man.set_watch_state,
                           self.ctx, watch_name="nonexistent", state=state)
+
+
+class stackServiceTestEmpty(stackServiceTestBase):
+
+    def setUp(self):
+        super(stackServiceTestEmpty, self).setUp()
+
+        # Change to a new, empty tenant context
+        self.ctx = create_context(self.m, self.username,
+                                  'stack_list_all_empty_tenant')
+        self.m.ReplayAll()
+
+        self.man = service.EngineService('a-host', 'a-topic')
+
+    def test_stack_list_all_empty(self):
+        sl = self.man.list_stacks(self.ctx)
+
+        self.assertEqual(len(sl), 0)
+
+    def test_stack_describe_all_empty(self):
+        sl = self.man.show_stack(self.ctx, None)
+
+        self.assertEqual(len(sl), 0)

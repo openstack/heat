@@ -13,10 +13,6 @@
 #    under the License.
 
 
-from nose.plugins.attrib import attr
-import mox
-import unittest
-
 from heat.common import context
 import heat.db.api as db_api
 from heat.engine import parser
@@ -24,6 +20,7 @@ from heat.engine import resource
 from heat.engine import template
 from heat.engine import event
 
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 from heat.tests import generic_resource as generic_rsrc
 
@@ -38,14 +35,11 @@ tmpl = {
 }
 
 
-@attr(tag=['unit', 'event'])
-@attr(speed='fast')
-class EventTest(unittest.TestCase):
+class EventTest(HeatTestCase):
 
     def setUp(self):
+        super(EventTest, self).setUp()
         self.username = 'event_test_user'
-
-        self.m = mox.Mox()
 
         setup_dummy_db()
         self.ctx = context.get_admin_context()
@@ -70,7 +64,7 @@ class EventTest(unittest.TestCase):
 
     def tearDown(self):
         db_api.stack_delete(self.ctx, self.stack.id)
-        self.m.UnsetStubs()
+        super(EventTest, self).tearDown()
 
     def test_load(self):
         self.resource.resource_id_set('resource_physical_id')

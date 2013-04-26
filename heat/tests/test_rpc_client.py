@@ -19,7 +19,6 @@ Unit Tests for heat.rpc.client
 """
 
 
-from nose.plugins.attrib import attr
 from oslo.config import cfg
 import stubout
 import unittest
@@ -32,7 +31,6 @@ from heat.rpc import client as rpc_client
 from heat.openstack.common import rpc
 
 
-@attr(tag=['unit', 'rpcapi'])
 class EngineRpcAPITestCase(unittest.TestCase):
 
     def setUp(self):
@@ -48,9 +46,6 @@ class EngineRpcAPITestCase(unittest.TestCase):
                                                        '6',
                                                        'wordpress'))
         super(EngineRpcAPITestCase, self).setUp()
-
-    def tearDown(self):
-        super(EngineRpcAPITestCase, self).tearDown()
 
     def _test_engine_api(self, method, rpc_method, **kwargs):
         ctxt = context.RequestContext('fake_user', 'fake_project')

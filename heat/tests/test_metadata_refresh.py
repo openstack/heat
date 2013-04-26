@@ -13,14 +13,12 @@
 #    under the License.
 
 
-import mox
-
 import eventlet
-import unittest
-from nose.plugins.attrib import attr
+import mox
 
 from oslo.config import cfg
 from heat.tests import fakes
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import stack_delete_after
 
@@ -118,22 +116,17 @@ test_template_waitcondition = '''
 '''
 
 
-@attr(tag=['unit', 'resource', 'Metadata'])
-@attr(speed='slow')
-class MetadataRefreshTest(unittest.TestCase):
+class MetadataRefreshTest(HeatTestCase):
     '''
     The point of the test is to confirm that metadata gets updated
     when FnGetAtt() returns something different.
     gets called.
     '''
     def setUp(self):
-        self.m = mox.Mox()
+        super(MetadataRefreshTest, self).setUp()
         self.m.StubOutWithMock(eventlet, 'sleep')
         self.fc = fakes.FakeKeystoneClient()
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
@@ -186,11 +179,9 @@ class MetadataRefreshTest(unittest.TestCase):
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'resource', 'Metadata'])
-@attr(speed='slow')
-class WaitCondMetadataUpdateTest(unittest.TestCase):
+class WaitCondMetadataUpdateTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(WaitCondMetadataUpdateTest, self).setUp()
         setup_dummy_db()
         self.ctx = context.get_admin_context()
         self.ctx.tenant_id = 'test_tenant'
@@ -198,9 +189,6 @@ class WaitCondMetadataUpdateTest(unittest.TestCase):
         self.man = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up

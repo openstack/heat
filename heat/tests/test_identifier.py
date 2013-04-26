@@ -14,13 +14,10 @@
 
 
 import unittest
-from nose.plugins.attrib import attr
 
 from heat.common import identifier
 
 
-@attr(tag=['unit', 'identifier'])
-@attr(speed='fast')
 class IdentifierTest(unittest.TestCase):
     url_prefix = 'http://1.2.3.4/foo/'
 
@@ -357,8 +354,6 @@ class IdentifierTest(unittest.TestCase):
         self.assertEqual(hi._path_components(), ['p1', 'p2', 'p3'])
 
 
-@attr(tag=['unit', 'identifier'])
-@attr(speed='fast')
 class ResourceIdentifierTest(unittest.TestCase):
     def test_resource_init_no_path(self):
         si = identifier.HeatIdentifier('t', 's', 'i')
@@ -390,8 +385,6 @@ class ResourceIdentifierTest(unittest.TestCase):
                           't', 's', 'i', 'p', 'r/r')
 
 
-@attr(tag=['unit', 'identifier'])
-@attr(speed='fast')
 class EventIdentifierTest(unittest.TestCase):
     def test_event_init(self):
         si = identifier.HeatIdentifier('t', 's', 'i')

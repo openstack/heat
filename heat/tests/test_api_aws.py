@@ -14,13 +14,9 @@
 
 
 from heat.tests.common import HeatTestCase
-from nose.plugins.attrib import attr
-
 from heat.api.aws import utils as api_utils
 
 
-@attr(tag=['unit', 'api-aws', 'AWSCommon'])
-@attr(speed='fast')
 class AWSCommon(HeatTestCase):
     '''
     Tests the api/aws common componenents

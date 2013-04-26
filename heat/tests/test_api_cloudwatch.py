@@ -14,7 +14,6 @@
 
 import os
 
-from nose.plugins.attrib import attr
 from oslo.config import cfg
 
 from heat.common import context
@@ -27,8 +26,6 @@ from heat.rpc import api as engine_api
 from heat.tests.common import HeatTestCase
 
 
-@attr(tag=['unit', 'api-cloudwatch', 'WatchController'])
-@attr(speed='fast')
 class WatchControllerTest(HeatTestCase):
     '''
     Tests the API class which acts as the WSGI controller,

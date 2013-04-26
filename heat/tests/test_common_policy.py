@@ -15,21 +15,17 @@
 
 import os.path
 
-import mox
-from nose.plugins.attrib import attr
 from oslo.config import cfg
-import unittest
 
 from heat.common import context
 from heat.common import policy
 from heat.common import exception
+from heat.tests.common import HeatTestCase
 
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 
 
-@attr(tag=['unit', 'common-policy', 'Enforcer'])
-@attr(speed='fast')
-class TestPolicyEnforcer(unittest.TestCase):
+class TestPolicyEnforcer(HeatTestCase):
     cfn_actions = ("ListStacks", "CreateStack", "DescribeStacks",
                    "DeleteStack", "UpdateStack", "DescribeStackEvents",
                    "ValidateTemplate", "GetTemplate",
@@ -42,16 +38,13 @@ class TestPolicyEnforcer(unittest.TestCase):
                   "PutMetricAlarm", "PutMetricData", "SetAlarmState")
 
     def setUp(self):
-        self.m = mox.Mox()
+        super(TestPolicyEnforcer, self).setUp()
         opts = [
             cfg.StrOpt('config_dir', default=policy_path),
             cfg.StrOpt('config_file', default='foo'),
             cfg.StrOpt('project', default='heat'),
         ]
         cfg.CONF.register_opts(opts)
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def test_policy_cfn_default(self):
         enforcer = policy.Enforcer(scope='cloudformation')

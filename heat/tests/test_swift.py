@@ -16,10 +16,7 @@
 import os
 import re
 
-import unittest
 import mox
-
-from nose.plugins.attrib import attr
 
 from heat.common import context
 from heat.common import template_format
@@ -27,18 +24,17 @@ from heat.openstack.common.importutils import try_import
 from heat.engine.resources import swift
 from heat.engine import parser
 from heat.engine import scheduler
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import skip_if
 
 swiftclient = try_import('swiftclient.client')
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
-class swiftTest(unittest.TestCase):
+class swiftTest(HeatTestCase):
     @skip_if(swiftclient is None, 'unable to import swiftclient')
     def setUp(self):
-        self.m = mox.Mox()
+        super(swiftTest, self).setUp()
         self.m.CreateMock(swiftclient.Connection)
         self.m.StubOutWithMock(swiftclient.Connection, 'put_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'delete_container')
@@ -47,9 +43,6 @@ class swiftTest(unittest.TestCase):
 
         self.container_pattern = 'test_stack-test_resource-[0-9a-z]+'
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

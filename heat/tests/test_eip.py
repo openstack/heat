@@ -15,33 +15,24 @@
 
 import os
 
-import unittest
-import mox
-
-from nose.plugins.attrib import attr
-
 from heat.common import context
 from heat.common import template_format
 from heat.engine.resources import eip
 from heat.engine import parser
 from heat.engine import scheduler
+from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes
 from heat.tests.utils import setup_dummy_db
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
-class EIPTest(unittest.TestCase):
+class EIPTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(EIPTest, self).setUp()
         self.fc = fakes.FakeClient()
         self.m.StubOutWithMock(eip.ElasticIp, 'nova')
         self.m.StubOutWithMock(eip.ElasticIpAssociation, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'get')
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

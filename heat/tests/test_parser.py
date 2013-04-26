@@ -13,9 +13,6 @@
 #    under the License.
 
 
-import unittest
-from nose.plugins.attrib import attr
-import mox
 import uuid
 
 from heat.common import context
@@ -26,6 +23,7 @@ from heat.engine import parser
 from heat.engine import parameters
 from heat.engine import template
 
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import stack_delete_after
 from heat.tests import generic_resource as generic_rsrc
@@ -37,9 +35,7 @@ def join(raw):
     return parser.Template.resolve_joins(raw)
 
 
-@attr(tag=['unit', 'parser'])
-@attr(speed='fast')
-class ParserTest(unittest.TestCase):
+class ParserTest(HeatTestCase):
 
     def test_list(self):
         raw = ['foo', 'bar', 'baz']
@@ -115,15 +111,7 @@ mapping_template = template_format.parse('''{
 }''')
 
 
-@attr(tag=['unit', 'parser', 'template'])
-@attr(speed='fast')
-class TemplateTest(unittest.TestCase):
-    def setUp(self):
-        self.m = mox.Mox()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
-
+class TemplateTest(HeatTestCase):
     def test_defaults(self):
         empty = parser.Template({})
         try:
@@ -293,13 +281,11 @@ class TemplateTest(unittest.TestCase):
                           dict_snippet)
 
 
-@attr(tag=['unit', 'parser', 'stack'])
-@attr(speed='fast')
-class StackTest(unittest.TestCase):
+class StackTest(HeatTestCase):
     def setUp(self):
-        self.username = 'parser_stack_test_user'
+        super(StackTest, self).setUp()
 
-        self.m = mox.Mox()
+        self.username = 'parser_stack_test_user'
 
         setup_dummy_db()
         self.ctx = context.get_admin_context()
@@ -312,9 +298,6 @@ class StackTest(unittest.TestCase):
                                  generic_rsrc.GenericResource)
 
         self.m.ReplayAll()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def test_state_defaults(self):
         stack = parser.Stack(None, 'test_stack', parser.Template({}))

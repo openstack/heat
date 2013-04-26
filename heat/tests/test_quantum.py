@@ -15,11 +15,7 @@
 
 import os
 
-import unittest
-import mox
-
-from nose.plugins.attrib import attr
-from nose.exc import SkipTest
+from testtools import skipIf
 
 from heat.common import context
 from heat.common import exception
@@ -31,6 +27,7 @@ from heat.engine.resources.quantum import floatingip
 from heat.engine.resources.quantum import port
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.engine import parser
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
@@ -98,16 +95,11 @@ class FakeQuantum():
         }}
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
-class QuantumTest(unittest.TestCase):
+class QuantumTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(QuantumTest, self).setUp()
         self.m.StubOutWithMock(net.Net, 'quantum')
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
@@ -172,8 +164,7 @@ class QuantumTest(unittest.TestCase):
                           'admin_state_up': False}, props)
 
     def test_net(self):
-        if net.clients.quantumclient is None:
-            raise SkipTest
+        skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
 
         fq = FakeQuantum()
         net.Net.quantum().MultipleTimes().AndReturn(fq)
@@ -204,18 +195,13 @@ class QuantumTest(unittest.TestCase):
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
-class QuantumFloatingIPTest(unittest.TestCase):
+class QuantumFloatingIPTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(QuantumFloatingIPTest, self).setUp()
         self.m.StubOutWithMock(floatingip.FloatingIP, 'quantum')
         self.m.StubOutWithMock(floatingip.FloatingIPAssociation, 'quantum')
         self.m.StubOutWithMock(port.Port, 'quantum')
         setup_dummy_db()
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def load_template(self, name='Quantum'):
         self.path = os.path.dirname(os.path.realpath(__file__)).\

@@ -14,14 +14,11 @@
 
 
 import unittest
-from nose.plugins.attrib import attr
 import json
 
 from heat.engine import parameters
 
 
-@attr(tag=['unit', 'parameters'])
-@attr(speed='fast')
 class ParameterTest(unittest.TestCase):
     def test_new_string(self):
         p = parameters.Parameter('p', {'Type': 'String'})
@@ -271,8 +268,6 @@ params_schema = json.loads('''{
 }''')
 
 
-@attr(tag=['unit', 'parameters'])
-@attr(speed='fast')
 class ParametersTest(unittest.TestCase):
     def test_pseudo_params(self):
         params = parameters.Parameters('test_stack', {"Parameters": {}})

@@ -12,31 +12,28 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import unittest
-import mox
-
-from nose.plugins.attrib import attr
+from testtools import skipIf
 
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 try:
     from quantumclient.common.exceptions import QuantumClientException
     from quantumclient.v2_0 import client as quantumclient
 except ImportError:
-    from nose.exc import SkipTest
-    raise SkipTest()
+    quantumclient = None
 
 
-class VPCTestBase(unittest.TestCase):
+class VPCTestBase(HeatTestCase):
 
     def setUp(self):
+        super(VPCTestBase, self).setUp()
+        skipIf(quantumclient is None, 'quantumclient unavaialble')
         setup_dummy_db()
-        self.m = mox.Mox()
         self.m.StubOutWithMock(quantumclient.Client, 'add_interface_router')
         self.m.StubOutWithMock(quantumclient.Client, 'add_gateway_router')
         self.m.StubOutWithMock(quantumclient.Client, 'create_network')
@@ -52,9 +49,6 @@ class VPCTestBase(unittest.TestCase):
         self.m.StubOutWithMock(quantumclient.Client, 'remove_interface_router')
         self.m.StubOutWithMock(quantumclient.Client, 'show_subnet')
         self.m.StubOutWithMock(quantumclient.Client, 'show_network')
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def create_stack(self, template):
         t = template_format.parse(template)
@@ -131,8 +125,6 @@ class VPCTestBase(unittest.TestCase):
         self.assertEqual(metadata, dict(resource.metadata))
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
 class VPCTest(VPCTestBase):
 
     test_template = '''
@@ -159,8 +151,6 @@ Resources:
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
 class SubnetTest(VPCTestBase):
 
     test_template = '''
@@ -214,8 +204,6 @@ Resources:
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
 class NetworkInterfaceTest(VPCTestBase):
 
     test_template = '''
@@ -289,8 +277,6 @@ Resources:
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
 class InternetGatewayTest(VPCTestBase):
 
     test_template = '''
@@ -363,8 +349,6 @@ Resources:
         self.m.VerifyAll()
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
 class RouteTableTest(VPCTestBase):
 
     test_template = '''

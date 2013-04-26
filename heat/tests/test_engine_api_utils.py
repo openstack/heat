@@ -14,13 +14,10 @@
 
 
 import unittest
-from nose.plugins.attrib import attr
 
 import heat.engine.api as api
 
 
-@attr(tag=['unit', 'engine-api'])
-@attr(speed='fast')
 class EngineApiTest(unittest.TestCase):
     def test_timeout_extract(self):
         p = {'timeout_mins': '5'}

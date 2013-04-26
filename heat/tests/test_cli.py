@@ -13,7 +13,6 @@
 #    under the License.
 
 
-from nose.plugins.attrib import attr
 import unittest
 import heat
 import os
@@ -22,8 +21,6 @@ import subprocess
 basepath = os.path.join(heat.__path__[0], os.path.pardir)
 
 
-@attr(tag=['unit', 'cli'])
-@attr(speed='medium')
 class CliTest(unittest.TestCase):
 
     def test_bins(self):

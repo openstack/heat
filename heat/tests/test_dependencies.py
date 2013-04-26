@@ -14,14 +14,11 @@
 
 
 import unittest
-from nose.plugins.attrib import attr
 
 from heat.engine.dependencies import Dependencies
 from heat.engine.dependencies import CircularDependencyException
 
 
-@attr(tag=['unit', 'dependencies'])
-@attr(speed='fast')
 class dependenciesTest(unittest.TestCase):
 
     def _dep_test(self, func, checkorder, deps):

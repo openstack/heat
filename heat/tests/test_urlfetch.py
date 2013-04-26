@@ -13,24 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mox
-from nose.plugins.attrib import attr
 import StringIO
-import unittest
 import urllib2
 
 from heat.common import urlfetch
+from heat.tests.common import HeatTestCase
 
 
-@attr(tag=['unit', 'urlfetch'])
-@attr(speed='fast')
-class UrlFetchTest(unittest.TestCase):
+class UrlFetchTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(UrlFetchTest, self).setUp()
         self.m.StubOutWithMock(urllib2, 'urlopen')
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def test_file_scheme(self):
         self.m.ReplayAll()

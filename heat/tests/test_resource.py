@@ -13,10 +13,6 @@
 #    under the License.
 
 
-import unittest
-from nose.plugins.attrib import attr
-import mox
-
 from heat.common import context
 from heat.common import exception
 from heat.engine import parser
@@ -25,23 +21,19 @@ from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 
 from heat.tests import generic_resource as generic_rsrc
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
-class ResourceTest(unittest.TestCase):
+class ResourceTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(ResourceTest, self).setUp()
         setup_dummy_db()
         self.stack = parser.Stack(None, 'test_stack', parser.Template({}),
                                   stack_id=uuidutils.generate_uuid())
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-
-    def tearDown(self):
-        self.m.UnsetStubs()
 
     def test_get_class_ok(self):
         cls = resource.get_class('GenericResourceType')
@@ -315,11 +307,9 @@ class ResourceTest(unittest.TestCase):
         self.assertEqual(res.UPDATE_FAILED, res.state)
 
 
-@attr(tag=['unit', 'resource'])
-@attr(speed='fast')
-class MetadataTest(unittest.TestCase):
+class MetadataTest(HeatTestCase):
     def setUp(self):
-        self.m = mox.Mox()
+        super(MetadataTest, self).setUp()
         tmpl = {
             'Type': 'Foo',
             'Metadata': {'Test': 'Initial metadata'}
@@ -336,7 +326,7 @@ class MetadataTest(unittest.TestCase):
 
     def tearDown(self):
         self.stack.delete()
-        self.m.UnsetStubs()
+        super(HeatTestCase, self).tearDown()
 
     def test_read_initial(self):
         self.assertEqual(self.res.metadata, {'Test': 'Initial metadata'})
