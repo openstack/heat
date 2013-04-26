@@ -346,10 +346,11 @@ class Stack(object):
                     if not res.name in newstack.keys():
                         logger.debug("resource %s not found in updated stack"
                                      % res.name + " definition, deleting")
-                        result = res.destroy()
-                        if result:
+                        try:
+                            res.destroy()
+                        except exception.ResourceFailure as ex:
                             logger.error("Failed to remove %s : %s" %
-                                         (res.name, result))
+                                         (res.name, str(ex)))
                             raise exception.ResourceUpdateFailed(
                                 resource_name=res.name)
                         else:
@@ -408,10 +409,11 @@ class Stack(object):
                                         (res.name, self.name) +
                                         " update requires replacement")
                             # Resource requires replacement for update
-                            result = self[res.name].destroy()
-                            if result:
+                            try:
+                                self[res.name].destroy()
+                            except exception.ResourceFailure as ex:
                                 logger.error("Failed to delete %s : %s" %
-                                             (res.name, result))
+                                             (res.name, str(ex)))
                                 raise exception.ResourceUpdateFailed(
                                     resource_name=res.name)
                             else:
@@ -497,10 +499,11 @@ class Stack(object):
 
         failures = []
         for res in reversed(self):
-            result = res.destroy()
-            if result:
+            try:
+                res.destroy()
+            except exception.ResourceFailure as ex:
                 logger.error('Failed to delete %s error: %s' % (str(res),
-                                                                result))
+                                                                str(ex)))
                 failures.append(str(res))
 
         if failures:
@@ -535,7 +538,7 @@ class Stack(object):
         for res in reversed(deps):
             try:
                 res.destroy()
-            except Exception as ex:
+            except exception.ResourceFailure as ex:
                 failed = True
                 logger.error('delete: %s' % str(ex))
 

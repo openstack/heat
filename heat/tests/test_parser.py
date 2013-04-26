@@ -470,9 +470,12 @@ class StackTest(unittest.TestCase):
         self.assertEqual(resource, self.stack.resource_by_refid('aaaa'))
 
         resource.state = resource.DELETE_IN_PROGRESS
-        self.assertEqual(None, self.stack.resource_by_refid('aaaa'))
+        try:
+            self.assertEqual(None, self.stack.resource_by_refid('aaaa'))
 
-        self.assertEqual(None, self.stack.resource_by_refid('bbbb'))
+            self.assertEqual(None, self.stack.resource_by_refid('bbbb'))
+        finally:
+            resource.state = resource.CREATE_COMPLETE
 
     @stack_delete_after
     def test_update_add(self):
@@ -628,7 +631,8 @@ class StackTest(unittest.TestCase):
 
         # make the update fail deleting the existing resource
         self.m.StubOutWithMock(resource.Resource, 'destroy')
-        resource.Resource.destroy().AndReturn("Error")
+        exc = exception.ResourceFailure(Exception())
+        resource.Resource.destroy().AndRaise(exc)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -839,16 +843,17 @@ class StackTest(unittest.TestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
 
-        # patch in a dummy destroy making the delete fail
-        self.m.StubOutWithMock(resource.Resource, 'destroy')
-        resource.Resource.destroy().AndReturn('Error')
+        # patch in a dummy delete making the destroy fail
+        self.m.StubOutWithMock(resource.Resource, 'delete')
+        exc = exception.ResourceFailure(Exception())
+        resource.Resource.delete().AndRaise(exc)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
         self.assertEqual(self.stack.state, parser.Stack.ROLLBACK_COMPLETE)
         self.assertTrue('BResource' in self.stack)
         self.m.VerifyAll()
-        # Unset here so destroy() is not stubbed for stack.delete cleanup
+        # Unset here so delete() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
 
     @stack_delete_after

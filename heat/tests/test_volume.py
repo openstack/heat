@@ -117,14 +117,13 @@ class VolumeTest(unittest.TestCase):
         self.assertEqual(resource.handle_update({}), vol.Volume.UPDATE_REPLACE)
 
         fv.status = 'in-use'
-        resource.state = 'CREATE_COMPLETE'
-        self.assertEqual(resource.delete(), 'Volume in use')
+        self.assertRaises(exception.ResourceFailure, resource.destroy)
         fv.status = 'available'
-        resource.state = 'CREATE_COMPLETE'
-        self.assertEqual(resource.delete(), None)
-        fv.status = 'available'
-        resource.state = 'CREATE_COMPLETE'
-        self.assertEqual(resource.delete(), None)
+        self.assertEqual(resource.destroy(), None)
+
+        # Test when volume already deleted
+        resource.state = resource.CREATE_COMPLETE
+        self.assertEqual(resource.destroy(), None)
 
         self.m.VerifyAll()
 

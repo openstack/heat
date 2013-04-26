@@ -410,32 +410,37 @@ class Resource(object):
         if self.state == self.DELETE_COMPLETE:
             return
         if self.state == self.DELETE_IN_PROGRESS:
-            return 'Resource deletion already in progress'
+            raise exception.Error('Resource deletion already in progress')
         # No need to delete if the resource has never been created
         if self.state is None:
             return
 
-        logger.info('deleting %s (inst:%s db_id:%s)' %
-                    (str(self), self.resource_id, str(self.id)))
-        self.state_set(self.DELETE_IN_PROGRESS)
+        logger.info('deleting %s' % str(self))
 
         try:
+            self.state_set(self.DELETE_IN_PROGRESS)
+
             if callable(getattr(self, 'handle_delete', None)):
                 self.handle_delete()
         except Exception as ex:
             logger.exception('Delete %s', str(self))
-            self.state_set(self.DELETE_FAILED, str(ex))
-            return str(ex) or "Error : %s" % type(ex)
-
-        self.state_set(self.DELETE_COMPLETE)
+            failure = exception.ResourceFailure(ex)
+            self.state_set(self.DELETE_FAILED, str(failure))
+            raise failure
+        except:
+            with excutils.save_and_reraise_exception():
+                try:
+                    self.state_set(self.DELETE_FAILED, 'Deletion aborted')
+                except Exception:
+                    logger.exception('Error marking resource deletion failed')
+        else:
+            self.state_set(self.DELETE_COMPLETE)
 
     def destroy(self):
         '''
         Delete the resource and remove it from the database.
         '''
-        result = self.delete()
-        if result:
-            return result
+        self.delete()
 
         if self.id is None:
             return
@@ -446,9 +451,6 @@ class Resource(object):
             # Don't fail on delete if the db entry has
             # not been created yet.
             pass
-        except Exception as ex:
-            logger.exception('Delete %s from DB' % str(self))
-            return str(ex) or "Error : %s" % type(ex)
 
         self.id = None
 
