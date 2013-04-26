@@ -22,6 +22,7 @@ import unittest
 from nose.plugins.attrib import attr
 
 from heat.common import context
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine.resources import volume as vol
@@ -147,7 +148,7 @@ class VolumeTest(unittest.TestCase):
         resource = vol.Volume('DataVolume',
                               t['Resources']['DataVolume'],
                               stack)
-        self.assertEqual(resource.create(), 'error')
+        self.assertRaises(exception.ResourceFailure, resource.create)
 
         self.m.VerifyAll()
 
@@ -184,7 +185,7 @@ class VolumeTest(unittest.TestCase):
         resource = vol.VolumeAttachment('MountPoint',
                                         t['Resources']['MountPoint'],
                                         stack)
-        self.assertEqual(resource.create(), 'error')
+        self.assertRaises(exception.ResourceFailure, resource.create)
 
         self.m.VerifyAll()
 

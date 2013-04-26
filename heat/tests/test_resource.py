@@ -242,7 +242,7 @@ class ResourceTest(unittest.TestCase):
         res = generic_rsrc.GenericResource(rname, tmpl, self.stack)
 
         estr = 'Property error : test_resource: Property Foo not assigned'
-        self.assertEqual(estr, res.create())
+        self.assertRaises(exception.ResourceFailure, res.create)
         self.assertEqual(res.CREATE_FAILED, res.state)
 
     def test_create_fail_prop_typo(self):
@@ -255,7 +255,7 @@ class ResourceTest(unittest.TestCase):
         res = generic_rsrc.GenericResource(rname, tmpl, self.stack)
 
         estr = 'Property error : test_resource: Property Foo not assigned'
-        self.assertEqual(estr, res.create())
+        self.assertRaises(exception.ResourceFailure, res.create)
         self.assertEqual(res.CREATE_FAILED, res.state)
 
     def test_update_ok(self):

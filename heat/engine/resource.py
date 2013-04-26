@@ -324,8 +324,9 @@ class Resource(object):
             raise
         except Exception as ex:
             logger.exception('create %s', str(self))
-            self.state_set(self.CREATE_FAILED, str(ex))
-            return str(ex) or "Error : %s" % type(ex)
+            failure = exception.ResourceFailure(ex)
+            self.state_set(self.CREATE_FAILED, str(failure))
+            raise failure
         else:
             self.state_set(self.CREATE_COMPLETE)
 

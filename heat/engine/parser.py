@@ -275,12 +275,12 @@ class Stack(object):
             try:
                 for res in self:
                     if stack_status != self.CREATE_FAILED:
-                        result = res.create()
-                        if result:
+                        try:
+                            res.create()
+                        except exception.ResourceFailure as ex:
                             stack_status = self.CREATE_FAILED
                             reason = 'Resource %s failed with: %s' % (str(res),
-                                                                      result)
-
+                                                                      str(ex))
                     else:
                         res.state_set(res.CREATE_FAILED,
                                       'Stack creation aborted')
@@ -366,10 +366,11 @@ class Stack(object):
                         self[res.name] = res
                         self.dependencies = self._get_dependencies(
                             self.resources.itervalues())
-                        result = self[res.name].create()
-                        if result:
+                        try:
+                            self[res.name].create()
+                        except exception.ResourceFailure as ex:
                             logger.error("Failed to add %s : %s" %
-                                         (res.name, result))
+                                         (res.name, str(ex)))
                             raise exception.ResourceUpdateFailed(
                                 resource_name=res.name)
 
@@ -418,10 +419,11 @@ class Stack(object):
                                 self[res.name] = res
                                 self.dependencies = self._get_dependencies(
                                     self.resources.itervalues())
-                                result = self[res.name].create()
-                                if result:
+                                try:
+                                    self[res.name].create()
+                                except exception.ResourceFailure as ex:
                                     logger.error("Failed to create %s : %s" %
-                                                 (res.name, result))
+                                                 (res.name, str(ex)))
                                     raise exception.ResourceUpdateFailed(
                                         resource_name=res.name)
                         else:
@@ -541,7 +543,7 @@ class Stack(object):
             if not failed:
                 try:
                     res.create()
-                except Exception as ex:
+                except exception.ResourceFailure as ex:
                     logger.exception('create')
                     failed = True
             else:
