@@ -20,6 +20,7 @@ from eventlet.support import greenlets as greenlet
 
 from heat.engine import event
 from heat.common import exception
+from heat.openstack.common import excutils
 from heat.db import api as db_api
 from heat.common import identifier
 from heat.engine import timestamp
@@ -321,12 +322,24 @@ class Resource(object):
             while not self.check_active(create_data):
                 eventlet.sleep(1)
         except greenlet.GreenletExit:
-            raise
+            # Older versions of greenlet erroneously had GreenletExit inherit
+            # from Exception instead of BaseException
+            with excutils.save_and_reraise_exception():
+                try:
+                    self.state_set(self.CREATE_FAILED, 'Creation aborted')
+                except Exception:
+                    logger.exception('Error marking resource as failed')
         except Exception as ex:
             logger.exception('create %s', str(self))
             failure = exception.ResourceFailure(ex)
             self.state_set(self.CREATE_FAILED, str(failure))
             raise failure
+        except:
+            with excutils.save_and_reraise_exception():
+                try:
+                    self.state_set(self.CREATE_FAILED, 'Creation aborted')
+                except Exception:
+                    logger.exception('Error marking resource as failed')
         else:
             self.state_set(self.CREATE_COMPLETE)
 
