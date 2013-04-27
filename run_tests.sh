@@ -9,11 +9,11 @@ function usage {
     echo "  -V, --virtual-env        Use virtualenv.  Install automatically if not present."
     echo "                           (Default is to run tests in local environment)"
     echo "  -F, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
-    echo "  -f, --func               Run functional tests"
+    echo "  -f, --func               Functional tests have been removed."
     echo "  -u, --unit               Run unit tests (default when nothing specified)"
     echo "  -p, --pep8               Run pep8 tests"
-    echo "  --all                    Run all tests"
-    echo "  -c, --coverage           Generate coverage report (selects --unit)"
+    echo "  --all                    Run pep8 and unit tests"
+    echo "  -c, --coverage           Generate coverage report"
     echo "  -h, --help               Print this usage message"
     exit
 }
@@ -24,13 +24,13 @@ function process_option {
     case "$1" in
         -V|--virtual-env) no_venv=0;;
         -F|--force) force=1;;
-        -f|--func) test_func=1; noseargs="$noseargs -a tag=func";;
-        -u|--unit) test_unit=1; noseargs="$noseargs -a tag=unit";;
+        -f|--func) test_func=1;;
+        -u|--unit) test_unit=1;;
         -p|--pep8) test_pep8=1;;
-        --all) test_func=1; test_unit=1; test_pep8=1; noseargs="$noseargs -a tag=func -a tag=unit";;
-        -c|--coverage) coverage=1; test_unit=1; noseargs="$noseargs -a tag=unit";;
+        --all) test_unit=1; test_pep8=1;;
+        -c|--coverage) coverage=1;;
         -h|--help) usage;;
-        *) noseargs="$noseargs $1"
+        *) args="$args $1"; test_unit=1;;
     esac
 }
 
@@ -40,9 +40,11 @@ wrapper=""
 
 function run_tests {
     echo 'Running tests'
-    NOSETESTS="python heat/testing/runner.py $noseopts $noseargs"
     # Just run the test suites in current environment
-    ${wrapper} $NOSETESTS 2> run_tests.err.log
+    if [ -n "$args" ] ; then
+        args="-t $args"
+    fi
+    python setup.py testr --slowest $args
 }
 
 function run_pep8 {
@@ -53,17 +55,12 @@ function run_pep8 {
 # run unit tests with pep8 when no arguments are specified
 # otherwise process CLI options
 if [[ $# == 0 ]]; then
-    noseargs="$noseargs -a tag=unit"
     test_pep8=1
+    test_unit=1
 else
     for arg in "$@"; do
         process_option $arg
     done
-fi
-
-# If enabled, tell nose to collect coverage data
-if [ "$coverage" == 1 ]; then
-    noseopts="$noseopts --with-coverage --cover-package=heat"
 fi
 
 if [ "$no_venv" == 0 ]
@@ -82,15 +79,10 @@ then
     fi
 fi
 
-# Delete old coverage data from previous runs
-if [ "$coverage" == 1 ]; then
-    ${wrapper} coverage erase
-fi
-
 result=0
 
 # If functional or unit tests have been selected, run them
-if [ ! -z "$noseargs" ]; then
+if [ "$test_unit" == 1 ] ; then
     run_tests
     result=$?
 fi
@@ -102,9 +94,8 @@ fi
 
 # Generate coverage report
 if [ "$coverage" == 1 ]; then
-    echo "Generating coverage report in covhtml/"
-    # Don't compute coverage for common code, which is tested elsewhere
-    ${wrapper} coverage html --include='heat/*' --omit='heat/openstack/common/*' -d covhtml -i
+    echo "Generating coverage report in ./cover"
+    python setup.py testr --coverage --slowest
 fi
 
 exit $result
