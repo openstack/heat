@@ -26,6 +26,7 @@ from heat.common import policy
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
+from heat.rpc import api as rpc_api
 from heat.api.aws import exception
 import heat.api.cfn.v1.stacks as stacks
 
@@ -1406,9 +1407,8 @@ class CfnStackControllerTest(unittest.TestCase):
             cfg.StrOpt('project', default='heat'),
         ]
         cfg.CONF.register_opts(opts)
-        cfg.CONF.set_default('engine_topic', 'engine')
         cfg.CONF.set_default('host', 'host')
-        self.topic = cfg.CONF.engine_topic
+        self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
 
         # Create WSGI controller instance

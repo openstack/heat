@@ -26,6 +26,7 @@ from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
 from heat.common import urlfetch
+from heat.rpc import api as rpc_api
 
 import heat.api.openstack.v1 as api_v1
 import heat.api.openstack.v1.stacks as stacks
@@ -158,9 +159,8 @@ class ControllerTest(object):
         self.maxDiff = None
         self.m = mox.Mox()
 
-        cfg.CONF.set_default('engine_topic', 'engine')
         cfg.CONF.set_default('host', 'host')
-        self.topic = cfg.CONF.engine_topic
+        self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
         self.tenant = 't'
 

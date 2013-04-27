@@ -111,10 +111,7 @@ rpc_opts = [
                default=socket.gethostname(),
                help='Name of the engine node. '
                     'This can be an opaque identifier.'
-                    'It is not necessarily a hostname, FQDN, or IP address.'),
-    cfg.StrOpt('engine_topic',
-               default='engine',
-               help='the topic engine nodes listen on')]
+                    'It is not necessarily a hostname, FQDN, or IP address.')]
 
 
 def register_api_opts():

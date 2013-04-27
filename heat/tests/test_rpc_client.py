@@ -26,6 +26,7 @@ import unittest
 
 from heat.common import context
 from heat.common import identifier
+from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 from heat.openstack.common import rpc
 
@@ -38,7 +39,6 @@ class EngineRpcAPITestCase(unittest.TestCase):
         cfg.CONF.set_default('rpc_backend',
                              'heat.openstack.common.rpc.impl_fake')
         cfg.CONF.set_default('verbose', True)
-        cfg.CONF.set_default('engine_topic', 'engine')
         cfg.CONF.set_default('host', 'host')
 
         self.stubs = stubout.StubOutForTesting()
@@ -64,7 +64,7 @@ class EngineRpcAPITestCase(unittest.TestCase):
         expected_msg = rpcapi.make_msg(method, **kwargs)
 
         expected_msg['version'] = expected_version
-        expected_topic = cfg.CONF.engine_topic
+        expected_topic = rpc_api.ENGINE_TOPIC
 
         cast_and_call = ['delete_stack']
         if rpc_method == 'call' and method in cast_and_call:

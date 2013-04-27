@@ -18,11 +18,8 @@
 Client side of the heat engine RPC API.
 """
 
-from oslo.config import cfg
-
+from heat.engine import api
 import heat.openstack.common.rpc.proxy
-
-CONF = cfg.CONF
 
 
 class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
@@ -37,7 +34,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
 
     def __init__(self):
         super(EngineClient, self).__init__(
-            topic=CONF.engine_topic,
+            topic=api.ENGINE_TOPIC,
             default_version=self.BASE_RPC_API_VERSION)
 
     def identify_stack(self, ctxt, stack_name):

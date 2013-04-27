@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+ENGINE_TOPIC = 'engine'
+
 PARAM_KEYS = (
     PARAM_TIMEOUT, PARAM_DISABLE_ROLLBACK
 ) = (

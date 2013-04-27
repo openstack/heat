@@ -25,7 +25,8 @@ from heat.openstack.common import rpc
 from heat.common.wsgi import Request
 from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches
-from heat.rpc import api as engine_api
+from heat.engine import api as engine_api
+from heat.rpc import api as rpc_api
 
 
 @attr(tag=['unit', 'api-cloudwatch', 'WatchController'])
@@ -520,9 +521,8 @@ class WatchControllerTest(unittest.TestCase):
             cfg.StrOpt('project', default='heat'),
         ]
         cfg.CONF.register_opts(opts)
-        cfg.CONF.set_default('engine_topic', 'engine')
         cfg.CONF.set_default('host', 'host')
-        self.topic = cfg.CONF.engine_topic
+        self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
 
         # Create WSGI controller instance

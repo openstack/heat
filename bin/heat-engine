@@ -44,6 +44,7 @@ from heat.openstack.common import service
 
 from heat.common import config
 from heat.db import api as db_api
+from heat.rpc import api as rpc_api
 
 
 LOG = logging.getLogger('heat.engine')
@@ -62,6 +63,6 @@ if __name__ == '__main__':
     from heat.engine import service as engine
 
     db_api.configure()
-    srv = engine.EngineService(cfg.CONF.host, 'engine')
+    srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
     launcher = service.launch(srv)
     launcher.wait()
