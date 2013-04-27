@@ -1,8 +1,6 @@
 #!/bin/bash
 
 set -e
-# This is used by run_tests.sh and tox.ini
-python tools/hacking.py --doctest
 
 # Until all these issues get fixed, ignore.
 PEP8='python tools/hacking.py --ignore=N101,N201,N202,N301,N302,N303,N304,N305,N306,N401,N402,N403,N404,N702,N703,N801,N902'
