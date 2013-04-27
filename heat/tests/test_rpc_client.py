@@ -64,7 +64,7 @@ class EngineRpcAPITestCase(unittest.TestCase):
         expected_msg = rpcapi.make_msg(method, **kwargs)
 
         expected_msg['version'] = expected_version
-        expected_topic = '%s.%s' % (cfg.CONF.engine_topic, cfg.CONF.host)
+        expected_topic = cfg.CONF.engine_topic
 
         cast_and_call = ['delete_stack']
         if rpc_method == 'call' and method in cast_and_call:

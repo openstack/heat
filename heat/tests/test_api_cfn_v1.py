@@ -1408,7 +1408,7 @@ class CfnStackControllerTest(unittest.TestCase):
         cfg.CONF.register_opts(opts)
         cfg.CONF.set_default('engine_topic', 'engine')
         cfg.CONF.set_default('host', 'host')
-        self.topic = '%s.%s' % (cfg.CONF.engine_topic, cfg.CONF.host)
+        self.topic = cfg.CONF.engine_topic
         self.api_version = '1.0'
 
         # Create WSGI controller instance
