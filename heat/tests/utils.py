@@ -18,20 +18,6 @@ from heat.db.sqlalchemy.session import get_engine
 from heat.db import migration
 
 
-class skip_test(object):
-    """Decorator that skips a test."""
-    def __init__(self, msg):
-        self.message = msg
-
-    def __call__(self, func):
-        def _skipper(*args, **kw):
-            """Wrapped skipper function."""
-            raise skip.SkipTest(self.message)
-        _skipper.__name__ = func.__name__
-        _skipper.__doc__ = func.__doc__
-        return _skipper
-
-
 class skip_if(object):
     """Decorator that skips a test if condition is true."""
     def __init__(self, condition, msg):
@@ -42,23 +28,6 @@ class skip_if(object):
         def _skipper(*args, **kw):
             """Wrapped skipper function."""
             if self.condition:
-                raise skip.SkipTest(self.message)
-            func(*args, **kw)
-        _skipper.__name__ = func.__name__
-        _skipper.__doc__ = func.__doc__
-        return _skipper
-
-
-class skip_unless(object):
-    """Decorator that skips a test if condition is not true."""
-    def __init__(self, condition, msg):
-        self.condition = condition
-        self.message = msg
-
-    def __call__(self, func):
-        def _skipper(*args, **kw):
-            """Wrapped skipper function."""
-            if not self.condition:
                 raise skip.SkipTest(self.message)
             func(*args, **kw)
         _skipper.__name__ = func.__name__
