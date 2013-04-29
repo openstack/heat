@@ -19,6 +19,7 @@ import json
 from oslo.config import cfg
 import webob
 
+from heat.common import config
 from heat.common import context
 from heat.db import api as db_api
 from heat.engine import api
@@ -65,6 +66,7 @@ class EngineService(service.Service):
         super(EngineService, self).__init__(host, topic)
         # stg == "Stack Thread Groups"
         self.stg = {}
+        config.register_engine_opts()
 
     def _start_in_thread(self, stack_id, func, *args, **kwargs):
         if stack_id not in self.stg:

@@ -42,9 +42,18 @@ def _register_modules(modules):
     _register_resources(itertools.chain.from_iterable(resource_lists))
 
 
-def _initialise():
+_initialized = False
+
+
+def initialise():
+    global _initialized
+    if _initialized:
+        return
     import sys
+    from heat.common import config
     from heat.common import plugin_loader
+
+    config.register_engine_opts()
 
     _register_modules(plugin_loader.load_modules(sys.modules[__name__]))
 
@@ -53,6 +62,4 @@ def _initialise():
     plugin_pkg = plugin_loader.create_subpackage(cfg.CONF.plugin_dirs,
                                                  'heat.engine')
     _register_modules(plugin_loader.load_modules(plugin_pkg, True))
-
-
-_initialise()
+    _initialized = True

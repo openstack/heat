@@ -29,7 +29,7 @@ from heat.engine import template
 from heat.tests.utils import stack_delete_after
 from heat.tests import generic_resource as generic_rsrc
 
-import heat.db as db_api
+import heat.db.api as db_api
 
 
 def join(raw):

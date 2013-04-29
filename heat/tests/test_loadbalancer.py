@@ -23,6 +23,7 @@ from nose.plugins.attrib import attr
 
 from oslo.config import cfg
 from heat.common import exception
+from heat.common import config
 from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
@@ -49,6 +50,7 @@ def create_context(mocks, user='lb_test_user',
 @attr(speed='fast')
 class LoadBalancerTest(unittest.TestCase):
     def setUp(self):
+        config.register_engine_opts()
         self.m = mox.Mox()
         self.fc = fakes.FakeClient()
         self.m.StubOutWithMock(lb.LoadBalancer, 'nova')

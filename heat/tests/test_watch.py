@@ -18,7 +18,7 @@ import mox
 from nose.plugins.attrib import attr
 import unittest
 from heat.common import context
-import heat.db as db_api
+import heat.db.api as db_api
 
 from heat.openstack.common import timeutils
 from heat.engine import watchrule
