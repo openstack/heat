@@ -12,7 +12,7 @@ error() {
 }
 
 run() {
-    bash -c "$($TOOLS_DIR/rst2script.sed $HEAT_DIR/docs/GettingStarted.rst)" || error
+    bash -c "$($TOOLS_DIR/rst2script.sed $HEAT_DIR/doc/source/getting_started/on_fedora.rst)" || error
 }
 
 case $1 in
