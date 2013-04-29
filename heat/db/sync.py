@@ -22,7 +22,7 @@ gettext.install('heat', unicode=1)
 
 from oslo.config import cfg
 from heat.openstack.common import log as logging
-import heat.db
+from heat.db import api
 from heat.db import migration
 
 
@@ -32,7 +32,7 @@ LOG = logging.getLogger(__name__)
 if __name__ == '__main__':
     cfg.CONF(project='heat', prog='heat-engine')
 
-    heat.db.configure()
+    api.configure()
 
     try:
         migration.db_sync()
