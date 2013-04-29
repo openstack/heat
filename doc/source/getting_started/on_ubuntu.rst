@@ -123,41 +123,34 @@ Create the keystone authentication parameters
 
     sudo -E ./bin/heat-keystone-setup
 
-Install Oz from the upstream master location
---------------------------------------------
+Download or alternatively generate a JEOS image
+----------------------------------------------
+It is possible to either use an image-building tool to create an image or download a prebuilt image of a desired distribution.
+
+Download a prebuilt image and copy to libvirt images location
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Download a prebuilt image from ``http://fedorapeople.org/groups/heat/prebuilt-jeos-images/``.
+
+Note: This example assumes U10-x86_64-cfntools qcow2 was downloaded.
 
 ::
 
-    git clone https://github.com/clalancette/oz.git
-    cd oz
-    make deb
-    cd ..
-    sudo dpkg -i oz_*_all.deb
-    sudo apt-get -f install
+  sudo cp Downloads/U10-x86_64-cfntools.qcow2 /var/lib/libvirt/images
 
-Note: Select yes to "Create or update supermin appliance.".  This will rebuild the guestfs appliance to work with latest updates of Ubuntu.  Oz will not work properly without updating the guestfs appliance.
+Register with glance:
 
-Note: We recommend cloning oz from the latest master.  The debian packaging is broken in older versions and U10/U12 support is not available in Oz shipped with distros.
-
-Install heat-jeos from master
------------------------------
-
-The heat-jeos tool builds virtual machine images for use with Heat.
 ::
 
-    git clone git://github.com/sdake/heat-jeos.git
-    cd heat-jeos
-    sudo python setup.py install
+  glance image-create --name=U10-x86_64-cfntools --disk-format=qcow2 --container-format=bare < /var/lib/libvirt/images/U10-x86_64-cfntools.qcow2
 
-Download ISO images for various distributions
----------------------------------------------
-If you just want to try a basic wordpress template, download http://releases.ubuntu.com/10.04.4/ubuntu-10.04.4-server-amd64.iso
+Alternatively see JEOS image-building documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to try more templates, also download http://download.fedoraproject.org/pub/fedora/linux/releases/17/Fedora/x86_64/iso/Fedora-17-x86_64-DVD.iso
+If you wish to create your own JEOS image from scratch, there are a number of approaches which can be used.
 
-After download completes, copy the iso image to the location heat-jeos expects:::
+One approach is using the Oz image-building tool, which is documented in the `jeos building documentation`_.
 
-    sudo cp Downloads/ubuntu-10.04.4-server-amd64.iso /var/lib/libvirt/images
+.. _jeos building documentation: http://docs.openstack.org/developer/heat/getting_started/jeos_building.html
 
 Configure your host to work with Heat
 -------------------------------------
@@ -182,38 +175,6 @@ If dnsmasq is not running on the default network
 
     sudo virsh net-destroy default
     sudo virsh net-start default
-
-Configure libguestfs (required by Oz) to work in latest Ubuntu 12
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Some files shipped with Ubuntu 12 are incompatible with libguestfs
-used by the image creation software Oz.  To allow heat-jeos to work
-properly, run the following commands:
-
-::
-
-    sudo chmod 644 /boot/vmlinuz*
-    sudo update-guestfs-appliance
-
-Note: For more details see: http://permalink.gmane.org/gmane.comp.emulators.guestfs/1382
-and http://libguestfs.org/guestfs-faq.1.html
-
-Note: If you want to create F17 images, you may need a new libguestfs binary of version 1.18.0 or later.  Ubuntu Precise may not have this version yet.
-
-You can use the Debian Wheezy version including the `guestfs shared library`_, the tools_ and the `python libraries`_.
-
-.. _guestfs shared library: http://packages.debian.org/wheezy/amd64/libguestfs0/download
-.. _tools: http://packages.debian.org/wheezy/amd64/libguestfs-tools/download
-.. _python libraries: http://packages.debian.org/wheezy/amd64/python-guestfs/download
-
-Create the Heat JEOS image
---------------------------
-::
-
-    sudo -E heat-jeos -y create U10-x86_64-cfntools --register-with-glance
-
-Note: The -E option to sudo preserves the environment, specifically the keystone credentials, when heat-jeos is run as root.
-
-Note: heat-jeos must be run as root in order to create the cfntools disk image.
 
 Experiment with Heat
 --------------------

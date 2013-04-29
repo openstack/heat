@@ -70,16 +70,12 @@ If you wish to set up OpenStack manually on Fedora, read `Getting Started With O
 .. _Getting Started With OpenStack on Fedora: http://fedoraproject.org/wiki/Getting_started_with_OpenStack_on_Fedora_17
 .. _Preview Repository: http://fedoraproject.org/wiki/OpenStack#Preview_repository
 
-Download or alternatvely generate a JEOS image
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-It is possible to use either heat-jeos to create an image or download a
-prebuilt image of a desired distribution.
-
-Note heat-jeos does not work in virt on virt situations.  In this case, it
-is recommended that the prebuilt images are used.
+Download or alternatively generate a JEOS image
+-----------------------------------------------
+It is possible to either use an image-building tool to create an image or download a prebuilt image of a desired distribution.
 
 Download a prebuilt image and copy to libvirt images location
--------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Download a prebuilt image from ``http://fedorapeople.org/groups/heat/prebuilt-jeos-images/``.
 
 Note: This example assumes F17-x86_64-cfntools qcow2 was downloaded.
@@ -94,56 +90,14 @@ Register with glance:
 
   glance image-create --name=F17-x86_64-cfntools --disk-format=qcow2 --container-format=bare < /var/lib/libvirt/images/F17-x86_64-cfntools.qcow2
 
-Alternatively Download Fedora 17 DVD and copy it to libvirt images location
----------------------------------------------------------------------------
+Alternatively see JEOS image-building documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-::
+If you wish to create your own JEOS image from scratch, there are a number of approaches which can be used.
 
-  sudo cp Downloads/Fedora-17-x86_64-DVD.iso /var/lib/libvirt/images
+One approach is using the Oz image-building tool, which is documented in the `jeos building documentation`_.
 
-Alternatively Install OZ
-------------------------
-
-It is recommended to install the latest upstream oz, as this supports Fedora 17 (and Ubuntu U10/U12) guests::
-
-    git clone -q https://github.com/clalancette/oz.git
-    pushd oz
-    rm -f ~/rpmbuild/RPMS/noarch/oz-*
-    make rpm
-    sudo yum -q -y localinstall ~/rpmbuild/RPMS/noarch/oz-*
-    popd
-
-Note: In the steps above, it's only necessary to be root for the yum localinstall, it's recommended not to be root while building the rpm.
-
-If you do not require F17/U10/U12 support, oz can be installed directly via yum::
-
-  yum install oz
-
-Alternatively Download and install heat-jeos via git
-----------------------------------------------------
-Download heat-jeos via git
-
-::
-
-    git clone -q git://github.com/sdake/heat-jeos.git
-    pushd heat-jeos
-    sudo python setup.py install
-    popd
-
-Alternatively Create a JEOS with heat_jeos tools
-------------------------------------------------
-::
-
-    sudo -E heat-jeos -y create F17-x86_64-cfntools --register-with-glance
-
-Note: The ``-E`` option to ``sudo`` preserves the environment, specifically the keystone credentials, when ``heat-jeos`` is run as root.
-
-Note: ``heat-jeos`` must be run as root in order to create the cfntools disk image.
-
-Note: If you want to enable debugging output from Oz, add '``-d``' (debugging) to the ``heat-jeos`` command.
-
-You can run ``heat-jeos list`` to pick a different JEOS image.
-
+.. _jeos building documentation: http://docs.openstack.org/developer/heat/getting_started/jeos_building.html
 
 Install and Configure Heat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
