@@ -35,7 +35,7 @@ opts = [
     cfg.StrOpt('auth_uri', default=None),
     cfg.StrOpt('keystone_ec2_uri', default=None)
 ]
-cfg.CONF.register_opts(opts, group='ec2token')
+cfg.CONF.register_opts(opts, group='ec2authtoken')
 
 
 class EC2Token(wsgi.Middleware):
@@ -50,7 +50,7 @@ class EC2Token(wsgi.Middleware):
         if name in self.conf:
             return self.conf[name]
         else:
-            return cfg.CONF.ec2token[name]
+            return cfg.CONF.ec2authtoken[name]
 
     @webob.dec.wsgify(RequestClass=wsgi.Request)
     def __call__(self, req):
