@@ -18,6 +18,7 @@ import itertools
 
 from heat.common import exception
 from heat.engine import resource
+from heat.engine import scheduler
 
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
@@ -84,9 +85,8 @@ class InstanceGroup(resource.Resource):
 
     def check_active(self, instances):
         if instances:
-            check_active = lambda i: i.check_active(i._create_data,
-                                                    override=False)
-            remaining = itertools.dropwhile(check_active, instances)
+            remaining = itertools.dropwhile(lambda i: i.step(),
+                                            instances)
             instances[:] = list(remaining)
             if not instances:
                 # When all instances are active, reload the LB config
@@ -146,16 +146,6 @@ class InstanceGroup(resource.Resource):
             def state_set(self, new_state, reason="state changed"):
                 self._store_or_update(new_state, reason)
 
-            def check_active(self, create_data=None, override=True):
-                '''
-                By default, report that the instance is active so that we
-                won't wait for it in create().
-                '''
-                if override:
-                    self._create_data = create_data
-                    return True
-                return super(GroupedInstance, self).check_active(create_data)
-
         conf = self.properties['LaunchConfigurationName']
         instance_definition = self.stack.t['Resources'][conf]
         return GroupedInstance(name, instance_definition, self.stack)
@@ -188,13 +178,15 @@ class InstanceGroup(resource.Resource):
             self.resource_id_set(','.join(inst_list))
             logger.info('Creating Autoscaling instance %s' % name)
 
+            runner = scheduler.TaskRunner(inst.create)
+
             try:
-                inst.create()
+                runner.start()
             except exception.ResourceFailure as ex:
                 if raise_on_error:
                     raise
 
-            return inst
+            return runner
 
         if new_capacity > capacity:
             # grow

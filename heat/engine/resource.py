@@ -15,7 +15,6 @@
 
 import base64
 from datetime import datetime
-import eventlet
 from eventlet.support import greenlets as greenlet
 
 from heat.engine import event
@@ -319,8 +318,9 @@ class Resource(object):
             create_data = None
             if callable(getattr(self, 'handle_create', None)):
                 create_data = self.handle_create()
+                yield
             while not self.check_active(create_data):
-                eventlet.sleep(1)
+                yield
         except greenlet.GreenletExit:
             # Older versions of greenlet erroneously had GreenletExit inherit
             # from Exception instead of BaseException

@@ -27,6 +27,7 @@ from heat.common import config
 from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.engine.resources import instance
 from heat.engine.resources import user
 from heat.engine.resources import loadbalancer as lb
@@ -89,7 +90,7 @@ class LoadBalancerTest(unittest.TestCase):
                                    t['Resources'][resource_name],
                                    stack)
         self.assertEqual(None, resource.validate())
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(lb.LoadBalancer.CREATE_COMPLETE, resource.state)
         return resource
 

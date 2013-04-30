@@ -26,6 +26,7 @@ from heat.common import template_format
 from heat.openstack.common.importutils import try_import
 from heat.engine.resources import swift
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.tests.utils import skip_if
 
 swiftclient = try_import('swiftclient.client')
@@ -72,7 +73,7 @@ class swiftTest(unittest.TestCase):
             'test_resource',
             t['Resources'][resource_name],
             stack)
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(swift.SwiftContainer.CREATE_COMPLETE, resource.state)
         return resource
 

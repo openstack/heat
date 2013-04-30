@@ -24,6 +24,7 @@ from heat.common import context
 from heat.common import template_format
 from heat.engine.resources import eip
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.tests.v1_1 import fakes
 
 
@@ -66,7 +67,7 @@ class EIPTest(unittest.TestCase):
                                  t['Resources'][resource_name],
                                  stack)
         self.assertEqual(None, resource.validate())
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(eip.ElasticIp.CREATE_COMPLETE, resource.state)
         return resource
 
@@ -75,7 +76,7 @@ class EIPTest(unittest.TestCase):
                                             t['Resources'][resource_name],
                                             stack)
         self.assertEqual(None, resource.validate())
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(eip.ElasticIpAssociation.CREATE_COMPLETE,
                          resource.state)
         return resource

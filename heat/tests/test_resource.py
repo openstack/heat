@@ -21,6 +21,7 @@ from heat.common import context
 from heat.common import exception
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 
 from heat.tests import generic_resource as generic_rsrc
@@ -229,7 +230,7 @@ class ResourceTest(unittest.TestCase):
 
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertEqual(None, res.create())
+        scheduler.TaskRunner(res.create)()
         self.assertEqual(res.CREATE_COMPLETE, res.state)
 
     def test_create_fail_missing_req_prop(self):
@@ -242,7 +243,8 @@ class ResourceTest(unittest.TestCase):
         res = generic_rsrc.GenericResource(rname, tmpl, self.stack)
 
         estr = 'Property error : test_resource: Property Foo not assigned'
-        self.assertRaises(exception.ResourceFailure, res.create)
+        create = scheduler.TaskRunner(res.create)
+        self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(res.CREATE_FAILED, res.state)
 
     def test_create_fail_prop_typo(self):
@@ -255,7 +257,8 @@ class ResourceTest(unittest.TestCase):
         res = generic_rsrc.GenericResource(rname, tmpl, self.stack)
 
         estr = 'Property error : test_resource: Property Foo not assigned'
-        self.assertRaises(exception.ResourceFailure, res.create)
+        create = scheduler.TaskRunner(res.create)
+        self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(res.CREATE_FAILED, res.state)
 
     def test_update_ok(self):
@@ -265,7 +268,7 @@ class ResourceTest(unittest.TestCase):
 
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertEqual(None, res.create())
+        scheduler.TaskRunner(res.create)()
         self.assertEqual(res.CREATE_COMPLETE, res.state)
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
@@ -285,7 +288,7 @@ class ResourceTest(unittest.TestCase):
 
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertEqual(None, res.create())
+        scheduler.TaskRunner(res.create)()
         self.assertEqual(res.CREATE_COMPLETE, res.state)
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {}}
@@ -301,7 +304,7 @@ class ResourceTest(unittest.TestCase):
 
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertEqual(None, res.create())
+        scheduler.TaskRunner(res.create)()
         self.assertEqual(res.CREATE_COMPLETE, res.state)
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Food': 'xyz'}}
@@ -326,7 +329,7 @@ class MetadataTest(unittest.TestCase):
         self.stack.store()
         self.res = generic_rsrc.GenericResource('metadata_resource',
                                                 tmpl, self.stack)
-        self.res.create()
+        scheduler.TaskRunner(self.res.create)()
 
     def tearDown(self):
         self.stack.delete()
