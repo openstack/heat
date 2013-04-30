@@ -89,7 +89,7 @@ class Template(collections.Mapping):
                         handle_find_in_map, s)
 
     @staticmethod
-    def resolve_availability_zones(s):
+    def resolve_availability_zones(s, stack):
         '''
             looking for { "Fn::GetAZs" : "str" }
         '''
@@ -98,7 +98,10 @@ class Template(collections.Mapping):
                     isinstance(value, basestring))
 
         def handle_get_az(ref):
-            return ['nova']
+            if stack is None:
+                return ['nova']
+            else:
+                return stack.get_availability_zones()
 
         return _resolve(match_get_az, handle_get_az, s)
 

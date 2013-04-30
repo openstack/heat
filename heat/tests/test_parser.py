@@ -18,6 +18,7 @@ import uuid
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine import resource
 from heat.engine import parser
 from heat.engine import parameters
@@ -25,6 +26,7 @@ from heat.engine import template
 
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
+from heat.tests.v1_1 import fakes
 from heat.tests.utils import stack_delete_after
 from heat.tests import generic_resource as generic_rsrc
 
@@ -279,6 +281,23 @@ class TemplateTest(HeatTestCase):
         dict_snippet = {"Fn::Base64": {"foo": "bar"}}
         self.assertRaises(TypeError, parser.Template.resolve_base64,
                           dict_snippet)
+
+    def test_get_azs(self):
+        snippet = {"Fn::GetAZs": ""}
+        self.assertEqual(
+            parser.Template.resolve_availability_zones(snippet, None),
+            ["nova"])
+
+    def test_get_azs_with_stack(self):
+        snippet = {"Fn::GetAZs": ""}
+        stack = parser.Stack(None, 'test_stack', parser.Template({}))
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        fc = fakes.FakeClient()
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
+        self.m.ReplayAll()
+        self.assertEqual(
+            parser.Template.resolve_availability_zones(snippet, stack),
+            ["nova1"])
 
 
 class StackTest(HeatTestCase):

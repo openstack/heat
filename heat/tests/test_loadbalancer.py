@@ -22,6 +22,7 @@ from heat.common import exception
 from heat.common import config
 from heat.common import context
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resources import instance
@@ -50,8 +51,7 @@ class LoadBalancerTest(HeatTestCase):
         super(LoadBalancerTest, self).setUp()
         config.register_engine_opts()
         self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(lb.LoadBalancer, 'nova')
-        self.m.StubOutWithMock(instance.Instance, 'nova')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.m.StubOutWithMock(Metadata, '__set__')
         self.fkc = test_fakes.FakeKeystoneClient(
@@ -96,8 +96,9 @@ class LoadBalancerTest(HeatTestCase):
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fkc)
 
-        lb.LoadBalancer.nova().AndReturn(self.fc)
-        instance.Instance.nova().MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients.nova(
+            "compute").MultipleTimes().AndReturn(self.fc)
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
             flavor=2, image=745, key_name='test',
             meta=None, nics=None, name=u'test_stack.LoadBalancer.LB_instance',
@@ -106,8 +107,6 @@ class LoadBalancerTest(HeatTestCase):
                 self.fc.servers.list()[1])
         Metadata.__set__(mox.IgnoreArg(),
                          mox.IgnoreArg()).MultipleTimes().AndReturn(None)
-
-        lb.LoadBalancer.nova().MultipleTimes().AndReturn(self.fc)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])

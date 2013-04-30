@@ -821,3 +821,6 @@ class FakeHTTPClient(base_client.HTTPClient):
         result = {'host': 'dummy'}
         result.update(body)
         return (200, result)
+
+    def get_os_availability_zone(self, *kw):
+        return (200, {"availabilityZoneInfo": [{'zoneName': 'nova1'}]})

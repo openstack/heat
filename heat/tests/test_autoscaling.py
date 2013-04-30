@@ -25,10 +25,12 @@ from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import instance
+from heat.engine import clients
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resource import Metadata
 from heat.openstack.common import timeutils
+from heat.tests.v1_1 import fakes
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
@@ -37,6 +39,9 @@ class AutoScalingTest(HeatTestCase):
     def setUp(self):
         super(AutoScalingTest, self).setUp()
         setup_dummy_db()
+        self.fc = fakes.FakeClient()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
     def load_template(self):
         self.path = os.path.dirname(os.path.realpath(__file__)).\
@@ -47,6 +52,7 @@ class AutoScalingTest(HeatTestCase):
         return t
 
     def parse_stack(self, t):
+        self.m.ReplayAll()
         ctx = context.RequestContext.from_dict({
             'tenant': 'test_tenant',
             'username': 'test_username',
