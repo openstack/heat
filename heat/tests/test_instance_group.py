@@ -29,6 +29,7 @@ from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import instance
 from heat.engine.resources import loadbalancer
 from heat.engine import parser
+from heat.engine import scheduler
 
 
 @attr(tag=['unit', 'resource'])
@@ -80,7 +81,7 @@ class InstanceGroupTest(unittest.TestCase):
                                      t['Resources'][resource_name],
                                      stack)
         self.assertEqual(None, resource.validate())
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(asc.InstanceGroup.CREATE_COMPLETE, resource.state)
         return resource
 
@@ -121,7 +122,8 @@ class InstanceGroupTest(unittest.TestCase):
 
         self.m.ReplayAll()
 
-        self.assertRaises(exception.ResourceFailure, resource.create)
+        create = scheduler.TaskRunner(resource.create)
+        self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(asc.InstanceGroup.CREATE_FAILED, resource.state)
 
         self.m.VerifyAll()

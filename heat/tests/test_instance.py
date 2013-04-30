@@ -25,6 +25,7 @@ from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 
 
@@ -76,7 +77,7 @@ class instancesTest(unittest.TestCase):
                 self.fc.servers.list()[1])
         self.m.ReplayAll()
 
-        self.assertEqual(instance.create(), None)
+        scheduler.TaskRunner(instance.create)()
 
         # this makes sure the auto increment worked on instance creation
         self.assertTrue(instance.id > 0)
@@ -123,7 +124,7 @@ class instancesTest(unittest.TestCase):
                 self.fc.servers.list()[1])
         self.m.ReplayAll()
 
-        self.assertEqual(instance.create(), None)
+        scheduler.TaskRunner(instance.create)()
         instance.resource_id = 1234
 
         # this makes sure the auto increment worked on instance creation
@@ -174,7 +175,7 @@ class instancesTest(unittest.TestCase):
                 self.fc.servers.list()[1])
         self.m.ReplayAll()
 
-        self.assertEqual(instance.create(), None)
+        scheduler.TaskRunner(instance.create)()
 
         update_template = copy.deepcopy(instance.t)
         update_template['Metadata'] = {'test': 123}

@@ -24,6 +24,7 @@ from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 
 
@@ -75,4 +76,4 @@ class nokeyTest(unittest.TestCase):
                 self.fc.servers.list()[1])
         self.m.ReplayAll()
 
-        self.assertEqual(instance.create(), None)
+        scheduler.TaskRunner(instance.create)()

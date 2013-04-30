@@ -29,6 +29,7 @@ from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import instance
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.engine.resource import Metadata
 from heat.openstack.common import timeutils
 
@@ -68,7 +69,7 @@ class AutoScalingTest(unittest.TestCase):
                                         t['Resources'][resource_name],
                                         stack)
         self.assertEqual(None, resource.validate())
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(asc.AutoScalingGroup.CREATE_COMPLETE, resource.state)
         return resource
 
@@ -78,7 +79,7 @@ class AutoScalingTest(unittest.TestCase):
                                      stack)
 
         self.assertEqual(None, resource.validate())
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(asc.ScalingPolicy.CREATE_COMPLETE,
                          resource.state)
         return resource

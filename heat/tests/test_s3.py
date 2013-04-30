@@ -26,6 +26,7 @@ from heat.common import template_format
 from heat.openstack.common.importutils import try_import
 from heat.engine.resources import s3
 from heat.engine import parser
+from heat.engine import scheduler
 from utils import skip_if
 
 swiftclient = try_import('swiftclient.client')
@@ -70,7 +71,7 @@ class s3Test(unittest.TestCase):
         resource = s3.S3Bucket('test_resource',
                                t['Resources'][resource_name],
                                stack)
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(s3.S3Bucket.CREATE_COMPLETE, resource.state)
         return resource
 

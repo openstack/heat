@@ -25,6 +25,7 @@ from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.engine.resources import user
 from heat.tests import fakes
 
@@ -74,7 +75,7 @@ class UserTest(unittest.TestCase):
                              t['Resources'][resource_name],
                              stack)
         self.assertEqual(None, resource.validate())
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(user.User.CREATE_COMPLETE, resource.state)
         return resource
 
@@ -266,7 +267,7 @@ class AccessKeyTest(unittest.TestCase):
                                   t['Resources'][resource_name],
                                   stack)
         self.assertEqual(None, resource.validate())
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(user.AccessKey.CREATE_COMPLETE,
                          resource.state)
         return resource
@@ -332,7 +333,8 @@ class AccessKeyTest(unittest.TestCase):
         resource = user.AccessKey('HostKeys',
                                   t['Resources']['HostKeys'],
                                   stack)
-        self.assertRaises(exception.ResourceFailure, resource.create)
+        create = scheduler.TaskRunner(resource.create)
+        self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual(user.AccessKey.CREATE_FAILED,
                          resource.state)
 
@@ -388,7 +390,7 @@ class AccessPolicyTest(unittest.TestCase):
         resource = user.AccessPolicy(resource_name,
                                      t['Resources'][resource_name],
                                      stack)
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(user.User.CREATE_COMPLETE, resource.state)
 
     def test_accesspolicy_create_ok_empty(self):
@@ -400,7 +402,7 @@ class AccessPolicyTest(unittest.TestCase):
         resource = user.AccessPolicy(resource_name,
                                      t['Resources'][resource_name],
                                      stack)
-        self.assertEqual(None, resource.create())
+        scheduler.TaskRunner(resource.create)()
         self.assertEqual(user.User.CREATE_COMPLETE, resource.state)
 
     def test_accesspolicy_create_err_notfound(self):
