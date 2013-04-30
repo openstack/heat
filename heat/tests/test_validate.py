@@ -207,6 +207,64 @@ test_template_findinmap_invalid = '''
 }
 '''
 
+test_template_invalid_property = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Parameters" : {
+
+    "KeyName" : {
+''' + \
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        }
+      },
+
+      "Resources" : {
+        "WikiDatabase": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" },
+            "UnknownProperty": "unknown"
+          }
+        }
+      }
+    }
+    '''
+
+test_template_unimplemented_property = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Parameters" : {
+
+    "KeyName" : {
+''' + \
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        }
+      },
+
+      "Resources" : {
+        "WikiDatabase": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" },
+            "SourceDestCheck": "false"
+          }
+        }
+      }
+    }
+    '''
+
 
 @attr(tag=['unit', 'validate'])
 @attr(speed='fast')
@@ -302,3 +360,25 @@ class validateTest(unittest.TestCase):
             'Type': 'String',
             'Description': 'Name of an existing EC2KeyPair to enable SSH '
                            'access to the instances'}})
+
+    def test_validate_properties(self):
+        t = template_format.parse(test_template_invalid_property)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t))
+        self.assertEqual(res, {'Error': 'Unknown Property UnknownProperty'})
+
+    def test_unimplemented_property(self):
+        t = template_format.parse(test_template_unimplemented_property)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t))
+        self.assertEqual(
+            res,
+            {'Error': 'Property SourceDestCheck not implemented yet'})

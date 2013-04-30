@@ -172,13 +172,14 @@ class Properties(collections.Mapping):
         else:
             self.error_prefix = parent_name + ': '
 
-    def validate(self):
+    def validate(self, with_value=True):
         for (key, prop) in self.props.items():
-            try:
-                self[key]
-            except ValueError as e:
-                msg = "Property error : %s" % str(e)
-                raise exception.StackValidationFailed(message=msg)
+            if with_value:
+                try:
+                    self[key]
+                except ValueError as e:
+                    msg = "Property error : %s" % str(e)
+                    raise exception.StackValidationFailed(message=msg)
 
             # are there unimplemented Properties
             if not prop.implemented() and key in self.data:
