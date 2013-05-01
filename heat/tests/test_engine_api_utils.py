@@ -13,12 +13,11 @@
 #    under the License.
 
 
-import unittest
-
+from heat.tests.common import HeatTestCase
 import heat.engine.api as api
 
 
-class EngineApiTest(unittest.TestCase):
+class EngineApiTest(HeatTestCase):
     def test_timeout_extract(self):
         p = {'timeout_mins': '5'}
         args = api.extract_args(p)

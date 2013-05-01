@@ -14,18 +14,19 @@
 
 from testtools import skipIf
 import os
-import unittest
 
 from heat.engine import clients
 from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
+from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
-class JsonToYamlTest(unittest.TestCase):
+class JsonToYamlTest(HeatTestCase):
 
     def setUp(self):
+        super(JsonToYamlTest, self).setUp()
         self.expected_test_count = 10
         self.longMessage = True
         self.maxDiff = None
@@ -76,7 +77,7 @@ class JsonToYamlTest(unittest.TestCase):
             yield (json_str, yml_str, f.name)
 
 
-class YamlMinimalTest(unittest.TestCase):
+class YamlMinimalTest(HeatTestCase):
 
     def test_minimal_yaml(self):
         yaml1 = ''
@@ -91,9 +92,10 @@ Outputs: {}
         self.assertEqual(tpl1, tpl2)
 
 
-class JsonYamlResolvedCompareTest(unittest.TestCase):
+class JsonYamlResolvedCompareTest(HeatTestCase):
 
     def setUp(self):
+        super(JsonYamlResolvedCompareTest, self).setUp()
         self.longMessage = True
         self.maxDiff = None
         setup_dummy_db()
