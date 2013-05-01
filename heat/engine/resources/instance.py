@@ -110,6 +110,17 @@ class Instance(resource.Resource):
     # is required for a single item to get a tuple not a string
     update_allowed_keys = ('Metadata',)
 
+    _deferred_server_statuses = ['BUILD',
+                                 'HARD_REBOOT',
+                                 'PASSWORD',
+                                 'REBOOT',
+                                 'RESCUE',
+                                 'RESIZE',
+                                 'REVERT_RESIZE',
+                                 'SHUTOFF',
+                                 'SUSPENDED',
+                                 'VERIFY_RESIZE']
+
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = None
@@ -317,7 +328,7 @@ class Instance(resource.Resource):
             return True
 
         server.get()
-        if server.status == 'BUILD':
+        if server.status in self._deferred_server_statuses:
             return False
         if server.status == 'ACTIVE':
             self._set_ipaddress(server.networks)

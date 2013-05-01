@@ -113,6 +113,7 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (200, {"servers": [
             {'id': 1234, 'name': 'sample-server'},
             {'id': 5678, 'name': 'sample-server2'},
+            {'id': 9101, 'name': 'hard-reboot'},
             {'id': 9999, 'name': 'sample-server3'}
         ]})
 
@@ -152,6 +153,24 @@ class FakeHTTPClient(base_client.HTTPClient):
                                                             {"version": 4,
                                                              "addr":
                                                              "5.6.9.8"}],
+                                   "private": [{"version": 4,
+                                                "addr": "10.13.12.13"}]},
+                                   "metadata": {"Server Label": "DB 1"}},
+                                  {"id": 9101,
+                                   "name": "hard-reboot",
+                                   "image": {"id": 2,
+                                             "name": "sample image"},
+                                   "flavor": {"id": 1,
+                                              "name": "256 MB Server"},
+                                   "hostId":
+                                   "9e44d8d435c43dd8d96bb63ed995605f",
+                                   "status": "HARD_REBOOT",
+                                   "addresses": {"public": [{"version": 4,
+                                                             "addr":
+                                                             "172.17.1.2"},
+                                                            {"version": 4,
+                                                             "addr":
+                                                             "10.20.30.40"}],
                                    "private": [{"version": 4,
                                                 "addr": "10.13.12.13"}]},
                                    "metadata": {"Server Label": "DB 1"}},

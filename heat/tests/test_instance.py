@@ -15,6 +15,7 @@
 
 import copy
 
+import eventlet
 import mox
 
 from heat.tests.v1_1 import fakes
@@ -153,6 +154,58 @@ class instancesTest(HeatTestCase):
         def activate_status(server):
             server.status = 'ACTIVE'
         return_server.get = activate_status.__get__(return_server)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.create)()
+        self.assertEqual(instance.state, instance.CREATE_COMPLETE)
+
+    def test_instance_status_hard_reboot(self):
+        self._test_instance_status_not_build_active('HARD_REBOOT')
+
+    def test_instance_status_password(self):
+        self._test_instance_status_not_build_active('PASSWORD')
+
+    def test_instance_status_reboot(self):
+        self._test_instance_status_not_build_active('REBOOT')
+
+    def test_instance_status_rescue(self):
+        self._test_instance_status_not_build_active('RESCUE')
+
+    def test_instance_status_resize(self):
+        self._test_instance_status_not_build_active('RESIZE')
+
+    def test_instance_status_revert_resize(self):
+        self._test_instance_status_not_build_active('REVERT_RESIZE')
+
+    def test_instance_status_shutoff(self):
+        self._test_instance_status_not_build_active('SHUTOFF')
+
+    def test_instance_status_suspended(self):
+        self._test_instance_status_not_build_active('SUSPENDED')
+
+    def test_instance_status_verify_resize(self):
+        self._test_instance_status_not_build_active('VERIFY_RESIZE')
+
+    def _test_instance_status_not_build_active(self, uncommon_status):
+        return_server = self.fc.servers.list()[0]
+        instance = self._setup_test_instance(return_server,
+                                             'test_instance_status_build')
+        instance.resource_id = 1234
+
+        # Bind new fake get method which Instance.check_active will call
+        def activate_status(server):
+            if hasattr(server, '_test_check_iterations'):
+                server._test_check_iterations += 1
+            else:
+                server._test_check_iterations = 1
+            if server._test_check_iterations == 1:
+                server.status = uncommon_status
+            if server._test_check_iterations > 2:
+                server.status = 'ACTIVE'
+        return_server.get = activate_status.__get__(return_server)
+        self.m.StubOutWithMock(eventlet, 'sleep')
+        eventlet.sleep(1).AndReturn(None)
+        eventlet.sleep(1).AndReturn(None)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()
