@@ -36,12 +36,12 @@ class instancesTest(HeatTestCase):
             replace('heat/tests', 'templates')
         setup_dummy_db()
 
-    def test_instance_create(self):
+    def _create_test_instance(self, return_server, name):
         f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
         t = template_format.parse(f.read())
         f.close()
 
-        stack_name = 'instance_create_test_stack'
+        stack_name = '%s_stack' % name
         template = parser.Template(t)
         params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
         stack = parser.Stack(None, stack_name, template, params,
@@ -50,7 +50,7 @@ class instancesTest(HeatTestCase):
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
             '256 MB Server'
-        instance = instances.Instance('create_instance_name',
+        instance = instances.Instance('%s_name' % name,
                                       t['Resources']['WebServer'], stack)
 
         self.m.StubOutWithMock(instance, 'nova')
@@ -68,57 +68,31 @@ class instancesTest(HeatTestCase):
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
             meta=None, nics=None, availability_zone=None).AndReturn(
-                self.fc.servers.list()[1])
+                return_server)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()
+        return instance
 
+    def test_instance_create(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_create')
         # this makes sure the auto increment worked on instance creation
         self.assertTrue(instance.id > 0)
 
-        self.assertEqual(instance.FnGetAtt('PublicIp'), '4.5.6.7')
-        self.assertEqual(instance.FnGetAtt('PrivateIp'), '4.5.6.7')
-        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), '4.5.6.7')
-        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), '4.5.6.7')
+        expected_ip = return_server.networks['public'][0]
+        self.assertEqual(instance.FnGetAtt('PublicIp'), expected_ip)
+        self.assertEqual(instance.FnGetAtt('PrivateIp'), expected_ip)
+        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
+        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
 
         self.m.VerifyAll()
 
     def test_instance_create_delete(self):
-        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-
-        stack_name = 'instance_create_delete_test_stack'
-        template = parser.Template(t)
-        params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
-        stack = parser.Stack(None, stack_name, template, params,
-                             stack_id=uuidutils.generate_uuid())
-
-        t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
-        t['Resources']['WebServer']['Properties']['InstanceType'] = \
-            '256 MB Server'
-        instance = instances.Instance('create_delete_instance_name',
-                                      t['Resources']['WebServer'], stack)
-
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
-
-        instance.t = instance.stack.resolve_runtime_data(instance.t)
-
-        # need to resolve the template functions
-        server_userdata = instance._build_userdata(
-            instance.t['Properties']['UserData'])
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(
-            image=1, flavor=1, key_name='test',
-            name='%s.%s' % (stack_name, instance.name),
-            security_groups=None,
-            userdata=server_userdata, scheduler_hints=None,
-            meta=None, nics=None, availability_zone=None).AndReturn(
-                self.fc.servers.list()[1])
-        self.m.ReplayAll()
-
-        scheduler.TaskRunner(instance.create)()
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_create_delete')
         instance.resource_id = 1234
 
         # this makes sure the auto increment worked on instance creation
@@ -135,41 +109,9 @@ class instancesTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_instance_update_metadata(self):
-        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-
-        stack_name = 'instance_update_test_stack'
-        template = parser.Template(t)
-        params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
-        stack = parser.Stack(None, stack_name, template, params,
-                             stack_id=uuidutils.generate_uuid())
-
-        t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
-        t['Resources']['WebServer']['Properties']['InstanceType'] = \
-            '256 MB Server'
-        instance = instances.Instance('create_instance_name',
-                                      t['Resources']['WebServer'], stack)
-
-        self.m.StubOutWithMock(instance, 'nova')
-        instance.nova().MultipleTimes().AndReturn(self.fc)
-
-        instance.t = instance.stack.resolve_runtime_data(instance.t)
-
-        # need to resolve the template functions
-        server_userdata = instance._build_userdata(
-            instance.t['Properties']['UserData'])
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(
-            image=1, flavor=1, key_name='test',
-            name='%s.%s' % (stack_name, instance.name),
-            security_groups=None,
-            userdata=server_userdata, scheduler_hints=None,
-            meta=None, nics=None, availability_zone=None).AndReturn(
-                self.fc.servers.list()[1])
-        self.m.ReplayAll()
-
-        scheduler.TaskRunner(instance.create)()
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_update')
 
         update_template = copy.deepcopy(instance.t)
         update_template['Metadata'] = {'test': 123}
