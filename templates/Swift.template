@@ -6,13 +6,13 @@
   "Resources" : {
     "SwiftContainerWebsite" : {
       "Type" : "OS::Swift::Container",
+      "DeletionPolicy" : "Delete",
       "Properties" : {
         "X-Container-Read" : ".r:*",
         "X-Container-Meta" : {
           "Web-Index" : "index.html",
           "Web-Error" : "error.html"
-         },
-         "DeletionPolicy" : "Delete"
+         }
       }
     },
     "SwiftContainer" : {

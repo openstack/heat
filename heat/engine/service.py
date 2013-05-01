@@ -290,6 +290,7 @@ class EngineService(service.Service):
             props = properties.Properties(ResourceClass.properties_schema,
                                           res.get('Properties', {}))
             try:
+                ResourceClass.validate_deletion_policy(res)
                 props.validate(with_value=False)
             except Exception as ex:
                 return {'Error': str(ex)}

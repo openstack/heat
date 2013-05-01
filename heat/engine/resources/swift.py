@@ -29,10 +29,7 @@ class SwiftContainer(resource.Resource):
         'name': {'Type': 'String'},
         'X-Container-Read': {'Type': 'String'},
         'X-Container-Write': {'Type': 'String'},
-        'X-Container-Meta': {'Type': 'Map', 'Default': {}},
-        'DeletionPolicy': {
-            'Type': 'String',
-            'AllowedValues': ['Delete', 'Retain']}}
+        'X-Container-Meta': {'Type': 'Map', 'Default': {}}}
 
     def __init__(self, name, json_snippet, stack):
         super(SwiftContainer, self).__init__(name, json_snippet, stack)
@@ -82,8 +79,6 @@ class SwiftContainer(resource.Resource):
 
     def handle_delete(self):
         """Perform specified delete policy"""
-        if self.properties['DeletionPolicy'] == 'Retain':
-            return
         logger.debug('SwiftContainer delete container %s' % self.resource_id)
         if self.resource_id is not None:
             try:

@@ -6,13 +6,13 @@
   "Resources" : {
     "S3BucketWebsite" : {
       "Type" : "AWS::S3::Bucket",
+      "DeletionPolicy" : "Delete",
       "Properties" : {
         "AccessControl" : "PublicRead",
         "WebsiteConfiguration" : {
           "IndexDocument" : "index.html",
           "ErrorDocument" : "error.html"
-         },
-         "DeletionPolicy" : "Delete"
+         }
       }
     },
     "S3Bucket" : {

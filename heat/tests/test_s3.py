@@ -225,12 +225,13 @@ class s3Test(HeatTestCase):
         self.m.ReplayAll()
         t = self.load_template()
 
-        properties = t['Resources']['S3Bucket']['Properties']
-        properties['DeletionPolicy'] = 'Retain'
+        bucket = t['Resources']['S3Bucket']
+        bucket['DeletionPolicy'] = 'Retain'
         stack = self.parse_stack(t)
         resource = self.create_resource(t, stack, 'S3Bucket')
         # if delete_container is called, mox verify will succeed
         resource.delete()
+        self.assertEqual(resource.DELETE_COMPLETE, resource.state)
 
         try:
             self.m.VerifyAll()

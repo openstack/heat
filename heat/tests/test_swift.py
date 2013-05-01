@@ -246,12 +246,13 @@ class swiftTest(HeatTestCase):
         self.m.ReplayAll()
         t = self.load_template()
 
-        properties = t['Resources']['SwiftContainer']['Properties']
-        properties['DeletionPolicy'] = 'Retain'
+        container = t['Resources']['SwiftContainer']
+        container['DeletionPolicy'] = 'Retain'
         stack = self.parse_stack(t)
         resource = self.create_resource(t, stack, 'SwiftContainer')
         # if delete_container is called, mox verify will succeed
         resource.delete()
+        self.assertEqual(resource.DELETE_COMPLETE, resource.state)
 
         try:
             self.m.VerifyAll()
