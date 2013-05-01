@@ -13,7 +13,8 @@
 #    under the License.
 
 
-import nose.plugins.skip as skip
+from testtools import skipIf
+
 from heat.db.sqlalchemy.session import get_engine
 from heat.db import migration
 
@@ -27,8 +28,7 @@ class skip_if(object):
     def __call__(self, func):
         def _skipper(*args, **kw):
             """Wrapped skipper function."""
-            if self.condition:
-                raise skip.SkipTest(self.message)
+            skipIf(self.condition, self.message)
             func(*args, **kw)
         _skipper.__name__ = func.__name__
         _skipper.__doc__ = func.__doc__
