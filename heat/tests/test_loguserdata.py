@@ -13,6 +13,7 @@
 #    under the License.
 
 import errno
+import fixtures
 import os
 import pkg_resources
 import subprocess
@@ -85,7 +86,8 @@ class LoguserdataTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_log(self):
-        log_name = os.tmpnam()
+        tempdir = self.useFixture(fixtures.TempDir())
+        log_name = os.path.join(tempdir.path, 'test_log')
         with loguserdata.create_log(log_name) as log:
             log.write('testing')
 
