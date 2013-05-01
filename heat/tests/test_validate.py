@@ -16,6 +16,7 @@
 from heat.tests.v1_1 import fakes
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import resources
 from heat.engine.resources import instance as instances
 from heat.engine import service
 import heat.db.api as db_api
@@ -266,6 +267,7 @@ test_template_unimplemented_property = '''
 class validateTest(HeatTestCase):
     def setUp(self):
         super(validateTest, self).setUp()
+        resources.initialise()
         self.fc = fakes.FakeClient()
         setup_dummy_db()
 
