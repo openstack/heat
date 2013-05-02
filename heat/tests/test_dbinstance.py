@@ -24,11 +24,13 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resources import dbinstance as dbi
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import setup_dummy_db
 
 
 class DBInstanceTest(HeatTestCase):
     def setUp(self):
         super(DBInstanceTest, self).setUp()
+        setup_dummy_db()
         self.m.StubOutWithMock(dbi.DBInstance, 'create_with_template')
         self.m.StubOutWithMock(dbi.DBInstance, 'nested')
 
