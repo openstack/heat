@@ -325,6 +325,7 @@ class AccessKeyTest(UserPolicyTestCase):
                          resource.state)
 
         self.assertEqual(None, resource.delete())
+        self.assertEqual(user.AccessKey.DELETE_COMPLETE, resource.state)
 
         self.m.VerifyAll()
 
