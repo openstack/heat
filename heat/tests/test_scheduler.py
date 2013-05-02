@@ -13,7 +13,6 @@
 #    under the License.
 
 import mox
-from nose.plugins.attrib import attr
 
 import eventlet
 
@@ -33,8 +32,6 @@ class DummyTask(object):
         print self, step_num
 
 
-@attr(tag=['unit', 'scheduler'])
-@attr(speed='fast')
 class TaskTest(mox.MoxTestBase):
 
     def test_run(self):
