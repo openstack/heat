@@ -25,6 +25,7 @@ from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import instance
+from heat.engine.resources import cloud_watch
 from heat.engine import clients
 from heat.engine import parser
 from heat.engine import scheduler
@@ -81,6 +82,16 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual(None, resource.validate())
         scheduler.TaskRunner(resource.create)()
         self.assertEqual(asc.ScalingPolicy.CREATE_COMPLETE,
+                         resource.state)
+        return resource
+
+    def create_alarm(self, t, stack, resource_name):
+        resource = cloud_watch.CloudWatchAlarm(resource_name,
+                                               t['Resources'][resource_name],
+                                               stack)
+        self.assertEqual(None, resource.validate())
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(cloud_watch.CloudWatchAlarm.CREATE_COMPLETE,
                          resource.state)
         return resource
 
@@ -266,10 +277,68 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual('WebServerGroup', resource.FnGetRefId())
         self.assertEqual('WebServerGroup-0', resource.resource_id)
         update_snippet = copy.deepcopy(resource.parsed_template())
-        old_cd = update_snippet['Properties']['Cooldown']
         update_snippet['Properties']['Cooldown'] = '61'
         self.assertEqual(asc.AutoScalingGroup.UPDATE_COMPLETE,
                          resource.handle_update(update_snippet))
+
+        resource.delete()
+        self.m.VerifyAll()
+
+    def test_mem_alarm_high_update_no_replace(self):
+        '''
+        Make sure that we can change the update-able properties
+        without replacing the Alarm resource.
+        '''
+        t = self.load_template()
+
+        #short circuit the alarm's references
+        properties = t['Resources']['MEMAlarmHigh']['Properties']
+        properties['AlarmActions'] = ['a']
+        properties['Dimensions'] = [{'a': 'v'}]
+
+        stack = self.parse_stack(t)
+        # the watch rule needs a valid stack_id
+        stack.store()
+
+        self.m.ReplayAll()
+        resource = self.create_alarm(t, stack, 'MEMAlarmHigh')
+        snippet = copy.deepcopy(resource.parsed_template())
+        snippet['Properties']['ComparisonOperator'] = 'LessThanThreshold'
+        snippet['Properties']['AlarmDescription'] = 'fruity'
+        snippet['Properties']['EvaluationPeriods'] = '2'
+        snippet['Properties']['Period'] = '90'
+        snippet['Properties']['Statistic'] = 'Maximum'
+        snippet['Properties']['Threshold'] = '39'
+
+        self.assertEqual(cloud_watch.CloudWatchAlarm.UPDATE_COMPLETE,
+                         resource.handle_update(snippet))
+
+        resource.delete()
+        self.m.VerifyAll()
+
+    def test_mem_alarm_high_update_replace(self):
+        '''
+        Make sure that the Alarm resource IS replaced when non-update-able
+        properties are changed.
+        '''
+        t = self.load_template()
+
+        #short circuit the alarm's references
+        properties = t['Resources']['MEMAlarmHigh']['Properties']
+        properties['AlarmActions'] = ['a']
+        properties['Dimensions'] = [{'a': 'v'}]
+
+        stack = self.parse_stack(t)
+        # the watch rule needs a valid stack_id
+        stack.store()
+
+        self.m.ReplayAll()
+        resource = self.create_alarm(t, stack, 'MEMAlarmHigh')
+        snippet = copy.deepcopy(resource.parsed_template())
+        snippet['Properties']['MetricName'] = 'temp'
+
+        self.assertEqual(cloud_watch.CloudWatchAlarm.UPDATE_REPLACE,
+                         resource.handle_update(snippet))
 
         resource.delete()
         self.m.VerifyAll()
