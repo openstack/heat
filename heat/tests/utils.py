@@ -45,7 +45,8 @@ def stack_delete_after(test_fn):
             test_fn(test_cls)
         finally:
             try:
-                test_cls.stack.delete()
+                if test_cls.stack.id is not None:
+                    test_cls.stack.delete()
             except AttributeError:
                 pass
     return wrapped_test

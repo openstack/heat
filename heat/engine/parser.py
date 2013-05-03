@@ -525,6 +525,7 @@ class Stack(object):
             elif action == self.ROLLBACK:
                 self.state_set(self.ROLLBACK_COMPLETE, 'Rollback completed')
             db_api.stack_delete(self.context, self.id)
+            self.id = None
 
     def output(self, key):
         '''
