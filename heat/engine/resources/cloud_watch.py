@@ -16,6 +16,7 @@
 from heat.common import exception
 from heat.engine import watchrule
 from heat.engine import resource
+from heat.engine.properties import Properties
 from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
@@ -73,6 +74,14 @@ class CloudWatchAlarm(resource.Resource):
                                                      'Count/Second', None]}}
 
     strict_dependency = False
+    update_allowed_keys = ('Properties',)
+    # allow the properties that affect the watch calculation.
+    # note: when using in-instance monitoring you can only change the
+    # metric name if you re-configure the instance too.
+    update_allowed_properties = ('ComparisonOperator', 'AlarmDescription',
+                                 'EvaluationPeriods', 'Period', 'Statistic',
+                                 'AlarmActions', 'OKActions', 'Units'
+                                 'InsufficientDataActions', 'Threshold')
 
     def handle_create(self):
         wr = watchrule.WatchRule(context=self.context,
@@ -82,7 +91,33 @@ class CloudWatchAlarm(resource.Resource):
         wr.store()
 
     def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
+        try:
+            self.update_template_diff(json_snippet)
+        except NotImplementedError:
+            logger.error("Could not update %s, invalid key" % self.name)
+            return self.UPDATE_REPLACE
+
+        try:
+            prop_diff = self.update_template_diff_properties(json_snippet)
+        except NotImplementedError:
+            logger.error("Could not update %s, invalid Property" % self.name)
+            return self.UPDATE_REPLACE
+
+        # If Properties has changed, update self.properties, so we
+        # get the new values during any subsequent adjustment
+        if prop_diff:
+            self.properties = Properties(self.properties_schema,
+                                         json_snippet.get('Properties', {}),
+                                         self.stack.resolve_runtime_data,
+                                         self.name)
+            loader = watchrule.WatchRule.load
+            wr = loader(self.context,
+                        watch_name=self.physical_resource_name())
+
+            wr.rule = self.parsed_template('Properties')
+            wr.store()
+
+        return self.UPDATE_COMPLETE
 
     def handle_delete(self):
         try:
