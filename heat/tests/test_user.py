@@ -13,22 +13,78 @@
 #    under the License.
 
 
-import os
-
 from oslo.config import cfg
 
 from heat.common import config
-from heat.common import context
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resources import user
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import parse_stack
 
 import keystoneclient.exceptions
+
+user_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Just a User",
+  "Parameters" : {},
+  "Resources" : {
+    "CfnUser" : {
+      "Type" : "AWS::IAM::User"
+    }
+  }
+}
+'''
+
+user_accesskey_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Just a User",
+  "Parameters" : {},
+  "Resources" : {
+    "CfnUser" : {
+      "Type" : "AWS::IAM::User"
+    },
+
+    "HostKeys" : {
+      "Type" : "AWS::IAM::AccessKey",
+      "Properties" : {
+        "UserName" : {"Ref": "CfnUser"}
+      }
+    }
+  }
+}
+'''
+
+
+user_policy_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Just a User",
+  "Parameters" : {},
+  "Resources" : {
+    "CfnUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "Policies" : [ { "Ref": "WebServerAccessPolicy"} ]
+      }
+    },
+    "WebServerAccessPolicy" : {
+      "Type" : "OS::Heat::AccessPolicy",
+      "Properties" : {
+        "AllowedResources" : [ "WikiDatabase" ]
+      }
+    },
+    "WikiDatabase" : {
+      "Type" : "AWS::EC2::Instance",
+    }
+  }
+}
+'''
 
 
 class UserPolicyTestCase(HeatTestCase):
@@ -41,31 +97,6 @@ class UserPolicyTestCase(HeatTestCase):
 
 
 class UserTest(UserPolicyTestCase):
-
-    def load_template(self, template_name='Rails_Single_Instance.template'):
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/%s" % (self.path, template_name))
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        ctx = context.RequestContext.from_dict({
-            'tenant_id': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
-        template = parser.Template(t)
-        params = parser.Parameters('test_stack',
-                                   template,
-                                   {'KeyName': 'test',
-                                    'DBRootPassword': 'test',
-                                    'DBUsername': 'test',
-                                    'DBPassword': 'test'})
-        stack = parser.Stack(ctx, 'test_stack', template, params)
-
-        return stack
 
     def create_user(self, t, stack, resource_name):
         resource = user.User(resource_name,
@@ -83,8 +114,8 @@ class UserTest(UserPolicyTestCase):
 
         self.m.ReplayAll()
 
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(user_template)
+        stack = parse_stack(t)
 
         resource = self.create_user(t, stack, 'CfnUser')
         self.assertEqual(self.fc.user_id, resource.resource_id)
@@ -119,9 +150,8 @@ class UserTest(UserPolicyTestCase):
 
         self.m.ReplayAll()
 
-        tmpl = 'WordPress_Single_Instance_With_HA_AccessPolicy.template'
-        t = self.load_template(template_name=tmpl)
-        stack = self.parse_stack(t)
+        t = template_format.parse(user_policy_template)
+        stack = parse_stack(t)
 
         resource = self.create_user(t, stack, 'CfnUser')
         self.assertEqual(self.fc.user_id, resource.resource_id)
@@ -158,10 +188,9 @@ class UserTest(UserPolicyTestCase):
     def test_user_create_bad_policies(self):
         self.m.ReplayAll()
 
-        tmpl = 'WordPress_Single_Instance_With_HA_AccessPolicy.template'
-        t = self.load_template(template_name=tmpl)
+        t = template_format.parse(user_policy_template)
         t['Resources']['CfnUser']['Properties']['Policies'] = ['NoExistBad']
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
         resource_name = 'CfnUser'
         resource = user.User(resource_name,
                              t['Resources'][resource_name],
@@ -181,9 +210,8 @@ class UserTest(UserPolicyTestCase):
 
         self.m.ReplayAll()
 
-        tmpl = 'WordPress_Single_Instance_With_HA_AccessPolicy.template'
-        t = self.load_template(template_name=tmpl)
-        stack = self.parse_stack(t)
+        t = template_format.parse(user_policy_template)
+        stack = parse_stack(t)
 
         resource = self.create_user(t, stack, 'CfnUser')
         self.assertEqual(self.fc.user_id, resource.resource_id)
@@ -205,11 +233,10 @@ class UserTest(UserPolicyTestCase):
 
         self.m.ReplayAll()
 
-        tmpl = 'WordPress_Single_Instance_With_HA_AccessPolicy.template'
-        t = self.load_template(template_name=tmpl)
+        t = template_format.parse(user_policy_template)
         t['Resources']['CfnUser']['Properties']['Policies'] = [
             'WebServerAccessPolicy', {'an_ignored': 'policy'}]
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         resource = self.create_user(t, stack, 'CfnUser')
         self.assertEqual(self.fc.user_id, resource.resource_id)
@@ -222,31 +249,6 @@ class UserTest(UserPolicyTestCase):
 
 
 class AccessKeyTest(UserPolicyTestCase):
-
-    def load_template(self):
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/Rails_Single_Instance.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        ctx = context.RequestContext.from_dict({
-            'tenant_id': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
-        template = parser.Template(t)
-        params = parser.Parameters('test_stack',
-                                   template,
-                                   {'KeyName': 'test',
-                                    'DBRootPassword': 'test',
-                                    'DBUsername': 'test',
-                                    'DBPassword': 'test'})
-        stack = parser.Stack(ctx, 'test_stack', template, params)
-
-        return stack
 
     def create_access_key(self, t, stack, resource_name):
         resource = user.AccessKey(resource_name,
@@ -264,12 +266,12 @@ class AccessKeyTest(UserPolicyTestCase):
 
         self.m.ReplayAll()
 
-        t = self.load_template()
+        t = template_format.parse(user_accesskey_template)
         # Override the Ref for UserName with a hard-coded name,
         # so we don't need to create the User resource
         t['Resources']['HostKeys']['Properties']['UserName'] =\
             'test_stack.CfnUser'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
         stack.resources['CfnUser'].resource_id = self.fc.user_id
         stack.resources['CfnUser'].state = 'CREATE_COMPLETE'
 
@@ -309,11 +311,11 @@ class AccessKeyTest(UserPolicyTestCase):
     def test_access_key_no_user(self):
         self.m.ReplayAll()
 
-        t = self.load_template()
+        t = template_format.parse(user_accesskey_template)
         # Set the resource properties UserName to an unknown user
         t['Resources']['HostKeys']['Properties']['UserName'] =\
             'test_stack.NoExist'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
         stack.resources['CfnUser'].resource_id = self.fc.user_id
 
         resource = user.AccessKey('HostKeys',
@@ -332,36 +334,9 @@ class AccessKeyTest(UserPolicyTestCase):
 
 class AccessPolicyTest(UserPolicyTestCase):
 
-    def load_template(self):
-        template_name =\
-            'WordPress_Single_Instance_With_HA_AccessPolicy.template'
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/%s" % (self.path, template_name))
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        ctx = context.RequestContext.from_dict({
-            'tenant_id': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
-        template = parser.Template(t)
-        params = parser.Parameters('test_stack',
-                                   template,
-                                   {'KeyName': 'test',
-                                    'DBRootPassword': 'test',
-                                    'DBUsername': 'test',
-                                    'DBPassword': 'test'})
-        stack = parser.Stack(ctx, 'test_stack', template, params)
-
-        return stack
-
     def test_accesspolicy_create_ok(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(user_policy_template)
+        stack = parse_stack(t)
 
         resource_name = 'WebServerAccessPolicy'
         resource = user.AccessPolicy(resource_name,
@@ -371,10 +346,10 @@ class AccessPolicyTest(UserPolicyTestCase):
         self.assertEqual(user.User.CREATE_COMPLETE, resource.state)
 
     def test_accesspolicy_create_ok_empty(self):
-        t = self.load_template()
+        t = template_format.parse(user_policy_template)
         resource_name = 'WebServerAccessPolicy'
         t['Resources'][resource_name]['Properties']['AllowedResources'] = []
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         resource = user.AccessPolicy(resource_name,
                                      t['Resources'][resource_name],
@@ -383,11 +358,11 @@ class AccessPolicyTest(UserPolicyTestCase):
         self.assertEqual(user.User.CREATE_COMPLETE, resource.state)
 
     def test_accesspolicy_create_err_notfound(self):
-        t = self.load_template()
+        t = template_format.parse(user_policy_template)
         resource_name = 'WebServerAccessPolicy'
         t['Resources'][resource_name]['Properties']['AllowedResources'] = [
             'NoExistResource']
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         resource = user.AccessPolicy(resource_name,
                                      t['Resources'][resource_name],
@@ -395,9 +370,9 @@ class AccessPolicyTest(UserPolicyTestCase):
         self.assertRaises(exception.ResourceNotFound, resource.handle_create)
 
     def test_accesspolicy_update(self):
-        t = self.load_template()
+        t = template_format.parse(user_policy_template)
         resource_name = 'WebServerAccessPolicy'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         resource = user.AccessPolicy(resource_name,
                                      t['Resources'][resource_name],
@@ -406,9 +381,9 @@ class AccessPolicyTest(UserPolicyTestCase):
                          resource.handle_update({}))
 
     def test_accesspolicy_access_allowed(self):
-        t = self.load_template()
+        t = template_format.parse(user_policy_template)
         resource_name = 'WebServerAccessPolicy'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         resource = user.AccessPolicy(resource_name,
                                      t['Resources'][resource_name],

@@ -12,28 +12,98 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import os
 import datetime
 import copy
 
 import eventlet
 import mox
 
-from heat.common import context
 from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import instance
 from heat.engine.resources import cloud_watch
 from heat.engine import clients
-from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resource import Metadata
 from heat.openstack.common import timeutils
 from heat.tests.v1_1 import fakes
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import parse_stack
+
+as_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "AutoScaling Test",
+  "Parameters" : {},
+  "Resources" : {
+    "WebServerGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "AvailabilityZones" : ["nova"],
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : "1",
+        "MaxSize" : "3",
+        "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ]
+      }
+    },
+    "WebServerScaleUpPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WebServerGroup" },
+        "Cooldown" : "60",
+        "ScalingAdjustment" : "1"
+      }
+    },
+    "WebServerScaleDownPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WebServerGroup" },
+        "Cooldown" : "60",
+        "ScalingAdjustment" : "-1"
+      }
+    },
+    "ElasticLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+    },
+    "LaunchConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId" : "foo",
+        "InstanceType"   : "bar",
+      }
+    }
+  }
+}
+'''
+
+alarm_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Alarm Test",
+  "Parameters" : {},
+  "Resources" : {
+    "MEMAlarmHigh": {
+     "Type": "AWS::CloudWatch::Alarm",
+     "Properties": {
+        "AlarmDescription": "Scale-up if MEM > 50% for 1 minute",
+        "MetricName": "MemoryUtilization",
+        "Namespace": "system/linux",
+        "Statistic": "Average",
+        "Period": "60",
+        "EvaluationPeriods": "1",
+        "Threshold": "50",
+        "AlarmActions": [],
+        "Dimensions": [],
+        "ComparisonOperator": "GreaterThanThreshold"
+      }
+    }
+  }
+}
+'''
 
 
 class AutoScalingTest(HeatTestCase):
@@ -42,28 +112,6 @@ class AutoScalingTest(HeatTestCase):
         setup_dummy_db()
         self.fc = fakes.FakeClient()
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
-    def load_template(self):
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/AutoScalingMultiAZSample.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        self.m.ReplayAll()
-        ctx = context.RequestContext.from_dict({
-            'tenant': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
-        template = parser.Template(t)
-        params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
-        stack = parser.Stack(ctx, 'test_stack', template, params)
-
-        return stack
 
     def create_scaling_group(self, t, stack, resource_name):
         resource = asc.AutoScalingGroup(resource_name,
@@ -129,8 +177,8 @@ class AutoScalingTest(HeatTestCase):
             Metadata.__set__(mox.IgnoreArg(), expected).AndReturn(None)
 
     def test_scaling_group_update(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         self._stub_lb_reload(['WebServerGroup-0'])
         now = timeutils.utcnow()
@@ -148,11 +196,11 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_group_update_ok_maxsize(self):
-        t = self.load_template()
+        t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['MinSize'] = '1'
         properties['MaxSize'] = '3'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         self._stub_lb_reload(['WebServerGroup-0'])
         now = timeutils.utcnow()
@@ -173,11 +221,11 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_group_update_ok_minsize(self):
-        t = self.load_template()
+        t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['MinSize'] = '1'
         properties['MaxSize'] = '3'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         self._stub_lb_reload(['WebServerGroup-0'])
         now = timeutils.utcnow()
@@ -204,11 +252,11 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_group_update_ok_desired(self):
-        t = self.load_template()
+        t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['MinSize'] = '1'
         properties['MaxSize'] = '3'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         self._stub_lb_reload(['WebServerGroup-0'])
         now = timeutils.utcnow()
@@ -235,10 +283,10 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_group_update_ok_desired_remove(self):
-        t = self.load_template()
+        t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
         now = timeutils.utcnow()
@@ -262,10 +310,10 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_group_update_ok_cooldown(self):
-        t = self.load_template()
+        t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['Cooldown'] = '60'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         self._stub_lb_reload(['WebServerGroup-0'])
         now = timeutils.utcnow()
@@ -289,14 +337,14 @@ class AutoScalingTest(HeatTestCase):
         Make sure that we can change the update-able properties
         without replacing the Alarm resource.
         '''
-        t = self.load_template()
+        t = template_format.parse(alarm_template)
 
         #short circuit the alarm's references
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         properties['AlarmActions'] = ['a']
         properties['Dimensions'] = [{'a': 'v'}]
 
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
         # the watch rule needs a valid stack_id
         stack.store()
 
@@ -321,14 +369,14 @@ class AutoScalingTest(HeatTestCase):
         Make sure that the Alarm resource IS replaced when non-update-able
         properties are changed.
         '''
-        t = self.load_template()
+        t = template_format.parse(alarm_template)
 
         #short circuit the alarm's references
         properties = t['Resources']['MEMAlarmHigh']['Properties']
         properties['AlarmActions'] = ['a']
         properties['Dimensions'] = [{'a': 'v'}]
 
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
         # the watch rule needs a valid stack_id
         stack.store()
 
@@ -344,8 +392,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_group_adjust(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # start with 3
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -387,8 +435,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_group_nochange(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -421,8 +469,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_group_percent(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -458,8 +506,8 @@ class AutoScalingTest(HeatTestCase):
         resource.delete()
 
     def test_scaling_group_cooldown_toosoon(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group, 2 instances, Cooldown 60s
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -511,8 +559,8 @@ class AutoScalingTest(HeatTestCase):
         resource.delete()
 
     def test_scaling_group_cooldown_ok(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group, 2 instances, Cooldown 60s
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -564,8 +612,8 @@ class AutoScalingTest(HeatTestCase):
         resource.delete()
 
     def test_scaling_group_cooldown_zero(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group, 2 instances, Cooldown 0
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -614,8 +662,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_policy_up(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])
@@ -642,8 +690,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_policy_down(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -671,8 +719,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_policy_cooldown_toosoon(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])
@@ -722,8 +770,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_policy_cooldown_ok(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])
@@ -773,8 +821,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_policy_cooldown_zero(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])
@@ -824,8 +872,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_scaling_policy_cooldown_none(self):
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
 
         # Create initial group
         self._stub_lb_reload(['WebServerGroup-0'])

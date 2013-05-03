@@ -13,16 +13,37 @@
 #    under the License.
 
 
-import os
-
-from heat.common import context
 from heat.common import template_format
 from heat.engine.resources import eip
-from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import parse_stack
+
+
+eip_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "EIP Test",
+  "Parameters" : {},
+  "Resources" : {
+    "IPAddress" : {
+      "Type" : "AWS::EC2::EIP"
+    },
+    "IPAssoc" : {
+      "Type" : "AWS::EC2::EIPAssociation",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "WebServer" },
+        "EIP" : { "Ref" : "IPAddress" }
+      }
+    },
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+    }
+  }
+}
+'''
 
 
 class EIPTest(HeatTestCase):
@@ -33,26 +54,6 @@ class EIPTest(HeatTestCase):
         self.m.StubOutWithMock(eip.ElasticIpAssociation, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'get')
         setup_dummy_db()
-
-    def load_template(self):
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/WordPress_Single_Instance_With_EIP.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        ctx = context.RequestContext.from_dict({
-            'tenant': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
-        template = parser.Template(t)
-        params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
-        stack = parser.Stack(ctx, 'test_stack', template, params)
-
-        return stack
 
     def create_eip(self, t, stack, resource_name):
         resource = eip.ElasticIp(resource_name,
@@ -79,8 +80,9 @@ class EIPTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(eip_template)
+        stack = parse_stack(t)
+
         resource = self.create_eip(t, stack, 'IPAddress')
 
         try:
@@ -111,8 +113,8 @@ class EIPTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(eip_template)
+        stack = parse_stack(t)
 
         resource = self.create_eip(t, stack, 'IPAddress')
         association = self.create_association(t, stack, 'IPAssoc')

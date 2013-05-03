@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import os
 import copy
 
 import mox
@@ -28,20 +27,41 @@ from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
+wp_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "WordPress",
+  "Parameters" : {
+    "KeyName" : {
+      "Description" : "KeyName",
+      "Type" : "String",
+      "Default" : "test"
+    }
+  },
+  "Resources" : {
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId" : "F17-x86_64-gold",
+        "InstanceType"   : "m1.large",
+        "KeyName"        : "test",
+        "UserData"       : "wordpress"
+      }
+    }
+  }
+}
+'''
+
+
 class instancesTest(HeatTestCase):
     def setUp(self):
         super(instancesTest, self).setUp()
         self.fc = fakes.FakeClient()
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
         setup_dummy_db()
 
     def _create_test_instance(self, return_server, name):
-        f = open("%s/WordPress_Single_Instance_gold.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-
         stack_name = '%s_stack' % name
+        t = template_format.parse(wp_template)
         template = parser.Template(t)
         params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
         stack = parser.Stack(None, stack_name, template, params,

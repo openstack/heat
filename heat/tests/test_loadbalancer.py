@@ -15,15 +15,12 @@
 
 import mox
 import re
-import os
 
 from oslo.config import cfg
 from heat.common import exception
 from heat.common import config
-from heat.common import context
 from heat.common import template_format
 from heat.engine import clients
-from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resources import instance
 from heat.engine.resources import user
@@ -32,18 +29,47 @@ from heat.engine.resources import wait_condition as wc
 from heat.engine.resource import Metadata
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import parse_stack
 from heat.tests.v1_1 import fakes
 from heat.tests import fakes as test_fakes
 
 
-def create_context(mocks, user='lb_test_user',
-                   tenant='test_tenant', ctx=None):
-    ctx = ctx or context.get_admin_context()
-    mocks.StubOutWithMock(ctx, 'username')
-    mocks.StubOutWithMock(ctx, 'tenant_id')
-    ctx.username = user
-    ctx.tenant_id = tenant
-    return ctx
+lb_template = '''
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LB Template",
+  "Parameters" : {
+    "KeyName" : {
+      "Description" : "KeyName",
+      "Type" : "String",
+      "Default" : "test"
+    }
+   },
+  "Resources": {
+    "WikiServerOne": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "F17-x86_64-gold",
+        "InstanceType"   : "m1.large",
+        "KeyName"        : "test",
+        "UserData"       : "some data"
+      }
+    },
+    "LoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "AvailabilityZones" : ["nova"],
+        "Instances" : [{"Ref": "WikiServerOne"}],
+        "Listeners" : [ {
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "80",
+          "Protocol" : "HTTP"
+        }]
+      }
+    }
+  }
+}
+'''
 
 
 class LoadBalancerTest(HeatTestCase):
@@ -61,23 +87,6 @@ class LoadBalancerTest(HeatTestCase):
                              'http://127.0.0.1:8000/v1/waitcondition')
         setup_dummy_db()
 
-    def load_template(self):
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/WordPress_With_LB.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        template = parser.Template(t)
-        params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
-        stack = parser.Stack(create_context(self.m), 'test_stack', template,
-                             params, stack_id=None, disable_rollback=True)
-        stack.store()
-
-        return stack
-
     def create_loadbalancer(self, t, stack, resource_name):
         resource = lb.LoadBalancer(resource_name,
                                    t['Resources'][resource_name],
@@ -89,16 +98,15 @@ class LoadBalancerTest(HeatTestCase):
 
     def test_loadbalancer(self):
         self.m.StubOutWithMock(user.User, 'keystone')
-        user.User.keystone().MultipleTimes().AndReturn(self.fkc)
+        user.User.keystone().AndReturn(self.fkc)
         self.m.StubOutWithMock(user.AccessKey, 'keystone')
-        user.AccessKey.keystone().MultipleTimes().AndReturn(self.fkc)
+        user.AccessKey.keystone().AndReturn(self.fkc)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fkc)
 
         clients.OpenStackClients.nova(
             "compute").MultipleTimes().AndReturn(self.fc)
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
             flavor=2, image=745, key_name='test',
             meta=None, nics=None, name=u'test_stack.LoadBalancer.LB_instance',
@@ -106,14 +114,15 @@ class LoadBalancerTest(HeatTestCase):
             security_groups=None, availability_zone=None).AndReturn(
                 self.fc.servers.list()[1])
         Metadata.__set__(mox.IgnoreArg(),
-                         mox.IgnoreArg()).MultipleTimes().AndReturn(None)
+                         mox.IgnoreArg()).AndReturn(None)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
         self.m.ReplayAll()
 
-        t = self.load_template()
-        s = self.parse_stack(t)
+        t = template_format.parse(lb_template)
+        s = parse_stack(t)
+        s.store()
 
         resource = self.create_loadbalancer(t, s, 'LoadBalancer')
 
