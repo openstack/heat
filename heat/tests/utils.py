@@ -15,6 +15,9 @@
 
 from testtools import skipIf
 
+from heat.common import context
+from heat.engine import parser
+
 from heat.db.sqlalchemy.session import get_engine
 from heat.db import migration
 
@@ -55,3 +58,16 @@ def setup_dummy_db():
     migration.db_sync()
     engine = get_engine()
     conn = engine.connect()
+
+
+def parse_stack(t, params={}, stack_name='test_stack'):
+    ctx = context.RequestContext.from_dict({'tenant_id': 'test_tenant',
+                                            'username': 'test_username',
+                                            'password': 'password',
+                                            'auth_url':
+                                            'http://localhost:5000/v2.0'})
+    template = parser.Template(t)
+    parameters = parser.Parameters(stack_name, template, params)
+    stack = parser.Stack(ctx, stack_name, template, parameters)
+
+    return stack
