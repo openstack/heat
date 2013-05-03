@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import sys
+import functools
 
 from testtools import skipIf
 
@@ -40,15 +42,24 @@ def stack_delete_after(test_fn):
     Decorator which calls test class self.stack.delete()
     to ensure tests clean up their stacks regardless of test success/failure
     """
-    def wrapped_test(test_cls):
+    @functools.wraps(test_fn)
+    def wrapped_test(test_case, *args, **kwargs):
+        def delete_stack():
+            stack = getattr(test_case, 'stack', None)
+            if stack is not None and stack.id is not None:
+                stack.delete()
+
         try:
-            test_fn(test_cls)
-        finally:
+            test_fn(test_case, *args, **kwargs)
+        except:
+            exc_class, exc_val, exc_tb = sys.exc_info()
             try:
-                if test_cls.stack.id is not None:
-                    test_cls.stack.delete()
-            except AttributeError:
-                pass
+                delete_stack()
+            finally:
+                raise exc_class, exc_val, exc_tb
+        else:
+            delete_stack()
+
     return wrapped_test
 
 
