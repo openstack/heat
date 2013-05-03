@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import os
 import json
 
 import mox
@@ -36,10 +35,30 @@ from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
 
-tests_dir = os.path.dirname(os.path.realpath(__file__))
-templates_dir = os.path.normpath(os.path.join(tests_dir,
-                                              os.path.pardir, os.path.pardir,
-                                              'templates'))
+wp_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "WordPress",
+  "Parameters" : {
+    "KeyName" : {
+      "Description" : "KeyName",
+      "Type" : "String",
+      "Default" : "test"
+    }
+  },
+  "Resources" : {
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId" : "F17-x86_64-gold",
+        "InstanceType"   : "m1.large",
+        "KeyName"        : "test",
+        "UserData"       : "wordpress"
+      }
+    }
+  }
+}
+'''
 
 
 def create_context(mocks, user='stacks_test_user',
@@ -53,17 +72,12 @@ def create_context(mocks, user='stacks_test_user',
 
 
 def get_wordpress_stack(stack_name, ctx):
-    tmpl_path = os.path.join(templates_dir,
-                             'WordPress_Single_Instance_gold.template')
-    with open(tmpl_path) as f:
-        t = template_format.parse(f.read())
-
+    t = template_format.parse(wp_template)
     template = parser.Template(t)
     parameters = parser.Parameters(stack_name, template,
                                    {'KeyName': 'test'})
 
     stack = parser.Stack(ctx, stack_name, template, parameters)
-
     return stack
 
 

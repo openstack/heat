@@ -13,54 +13,52 @@
 #    under the License.
 
 import copy
-import os
 
 import eventlet
 import mox
 
-from heat.tests.v1_1 import fakes
-from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import instance
-from heat.engine.resources import loadbalancer
-from heat.engine import clients
-from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import parse_stack
+
+ig_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to create multiple instances.",
+  "Parameters" : {},
+  "Resources" : {
+    "JobServerGroup" : {
+      "Type" : "OS::Heat::InstanceGroup",
+      "Properties" : {
+        "LaunchConfigurationName" : { "Ref" : "JobServerConfig" },
+        "Size" : "1",
+        "AvailabilityZones" : ["nova"]
+      }
+    },
+
+    "JobServerConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId"           : "foo",
+        "InstanceType"      : "m1.large",
+        "KeyName"           : "test",
+        "UserData"          : "jsconfig data"
+      }
+    }
+  }
+}
+'''
 
 
 class InstanceGroupTest(HeatTestCase):
     def setUp(self):
         super(InstanceGroupTest, self).setUp()
-        self.fc = fakes.FakeClient()
-        self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'reload')
         setup_dummy_db()
-        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
-    def load_template(self):
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/InstanceGroup.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        self.m.ReplayAll()
-        ctx = context.RequestContext.from_dict({
-            'tenant': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
-        template = parser.Template(t)
-        params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
-        stack = parser.Stack(ctx, 'test_stack', template, params)
-
-        return stack
 
     def _stub_create(self, num):
         self.m.StubOutWithMock(eventlet, 'sleep')
@@ -85,8 +83,8 @@ class InstanceGroupTest(HeatTestCase):
 
     def test_instance_group(self):
 
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(ig_template)
+        stack = parse_stack(t)
 
         # start with min then delete
         self._stub_create(1)
@@ -107,8 +105,8 @@ class InstanceGroupTest(HeatTestCase):
 
     def test_missing_image(self):
 
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(ig_template)
+        stack = parse_stack(t)
 
         resource = asc.InstanceGroup('JobServerGroup',
                                      t['Resources']['JobServerGroup'],
@@ -127,10 +125,10 @@ class InstanceGroupTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_size(self):
-        t = self.load_template()
+        t = template_format.parse(ig_template)
         properties = t['Resources']['JobServerGroup']['Properties']
         properties['Size'] = '2'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
 
         self._stub_create(2)
         self.m.ReplayAll()
