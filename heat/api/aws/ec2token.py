@@ -133,11 +133,7 @@ class EC2Token(wsgi.Middleware):
                                     'headers': req.headers,
                                     'body_hash': body_hash
                                     }}
-        creds_json = None
-        try:
-            creds_json = json.dumps(creds)
-        except TypeError:
-            creds_json = json.dumps(json.to_primitive(creds))
+        creds_json = json.dumps(creds)
         headers = {'Content-Type': 'application/json'}
 
         # Disable 'has no x member' pylint error
