@@ -2,6 +2,7 @@
 distribute>=0.6.24
 
 coverage
+discover
 mox==0.5.3
 testrepository>=0.0.13
 paramiko
