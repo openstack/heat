@@ -34,14 +34,23 @@ class Volume(resource.Resource):
                          'SnapshotId': {'Type': 'String'},
                          'Tags': {'Type': 'List'}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(Volume, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
-        vol = self.cinder().volumes.create(
-            self.properties['Size'],
-            display_name=self.physical_resource_name(),
-            display_description=self.physical_resource_name())
+        backup_id = self.properties.get('SnapshotId')
+        cinder = self.cinder()
+        if backup_id is not None:
+            if volume_backups is None:
+                raise exception.Error('SnapshotId not supported')
+            vol_id = cinder.restores.restore(backup_id)['volume_id']
+
+            vol = cinder.volumes.get(vol_id)
+            vol.update(
+                display_name=self.physical_resource_name(),
+                display_description=self.physical_resource_name())
+        else:
+            vol = cinder.volumes.create(
+                self.properties['Size'],
+                display_name=self.physical_resource_name(),
+                display_description=self.physical_resource_name())
 
         while vol.status == 'creating':
             eventlet.sleep(1)

@@ -326,6 +326,34 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_create_from_snapshot(self):
+        stack_name = 'test_volume_stack'
+        fv = FakeVolume('creating', 'available')
+
+        # create script
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
+        self.cinder_fc.restores.restore('backup-123').AndReturn(
+            {'volume_id': 'vol-123'})
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
+        self.m.StubOutWithMock(fv, 'update')
+        fv.update(
+            display_description='%s.DataVolume' % stack_name,
+            display_name='%s.DataVolume' % stack_name)
+        eventlet.sleep(1).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        t = self.load_template()
+        t['Resources']['DataVolume']['Properties']['SnapshotId'] = 'backup-123'
+        stack = self.parse_stack(t, stack_name)
+
+        self.create_volume(t, stack, 'DataVolume')
+        self.assertEqual(fv.status, 'available')
+
+        self.m.VerifyAll()
+
 
 class FakeVolume:
     status = 'attaching'
@@ -337,6 +365,9 @@ class FakeVolume:
 
     def get(self):
         self.status = self.final_status
+
+    def update(self, **kw):
+        pass
 
 
 class FakeBackup(FakeVolume):
