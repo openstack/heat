@@ -16,6 +16,7 @@
 import eventlet
 import functools
 import itertools
+import sys
 import types
 
 from heat.openstack.common import excutils
@@ -142,6 +143,55 @@ class TaskRunner(object):
     def __nonzero__(self):
         """Return True if there are steps remaining."""
         return not self.done()
+
+
+def wrappertask(task):
+    """
+    Decorator for a task that needs to drive a subtask.
+
+    This is essentially a replacement for the Python 3-only "yield from"
+    keyword (PEP 380), using the "yield" keyword that is supported in
+    Python 2. For example:
+
+        @wrappertask
+        def parent_task(self):
+            self.setup()
+
+            yield self.child_task()
+
+            self.cleanup()
+    """
+
+    @functools.wraps(task)
+    def wrapper(*args, **kwargs):
+        parent = task(*args, **kwargs)
+
+        for subtask in parent:
+            try:
+                if subtask is not None:
+                    for step in subtask:
+                        try:
+                            yield step
+                        except GeneratorExit as exit:
+                            subtask.close()
+                            raise exit
+                        except:
+                            try:
+                                subtask.throw(*sys.exc_info())
+                            except StopIteration:
+                                break
+                else:
+                    yield
+            except GeneratorExit as exit:
+                parent.close()
+                raise exit
+            except:
+                try:
+                    parent.throw(*sys.exc_info())
+                except StopIteration:
+                    break
+
+    return wrapper
 
 
 class PollingTaskGroup(object):
