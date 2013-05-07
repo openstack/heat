@@ -58,10 +58,10 @@ Heat needs to launch instances with a keypair, so we need to generate one
 
 Launching a stack
 -----------------
-Now lets launch a stack, assuming that DEST is left as the default /opt/stack::
+Now lets launch a stack, using an example template from the heat-templates repository::
 
-    heat stack-create teststack -f
-    /opt/stack/heat/templates/WordPress_Single_Instance.template -P "InstanceType=m1.large;DBUsername=wp;DBPassword=verybadpassword;KeyName=heat_key;LinuxDistribution=F16"
+    heat stack-create teststack -u
+    https://raw.github.com/openstack/heat-templates/master/cfn/WordPress_Single_Instance.template -P "InstanceType=m1.large;DBUsername=wp;DBPassword=verybadpassword;KeyName=heat_key;LinuxDistribution=F16"
 
 Which will respond::
 
