@@ -59,7 +59,7 @@ class instancesTest(HeatTestCase):
         self.fc = fakes.FakeClient()
         setup_dummy_db()
 
-    def _create_test_instance(self, return_server, name):
+    def _setup_test_instance(self, return_server, name):
         stack_name = '%s_stack' % name
         t = template_format.parse(wp_template)
         template = parser.Template(t)
@@ -89,8 +89,12 @@ class instancesTest(HeatTestCase):
             userdata=server_userdata, scheduler_hints=None,
             meta=None, nics=None, availability_zone=None).AndReturn(
                 return_server)
-        self.m.ReplayAll()
 
+        return instance
+
+    def _create_test_instance(self, return_server, name):
+        instance = self._setup_test_instance(return_server, name)
+        self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
         return instance
 
@@ -138,6 +142,21 @@ class instancesTest(HeatTestCase):
         self.assertEqual(instance.update(update_template),
                          instance.UPDATE_COMPLETE)
         self.assertEqual(instance.metadata, {'test': 123})
+
+    def test_instance_status_build(self):
+        return_server = self.fc.servers.list()[0]
+        instance = self._setup_test_instance(return_server,
+                                             'test_instance_status_build')
+        instance.resource_id = 1234
+
+        # Bind new fake get method which Instance.check_active will call
+        def activate_status(server):
+            server.status = 'ACTIVE'
+        return_server.get = activate_status.__get__(return_server)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.create)()
+        self.assertEqual(instance.state, instance.CREATE_COMPLETE)
 
     def test_build_nics(self):
         self.assertEqual(None, instances.Instance._build_nics([]))
