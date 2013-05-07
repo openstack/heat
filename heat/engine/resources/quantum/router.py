@@ -41,6 +41,14 @@ class Router(quantum.QuantumResource):
         router = self.quantum().create_router({'router': props})['router']
         self.resource_id_set(router['id'])
 
+    def _show_resource(self):
+        return self.quantum().show_router(
+            self.resource_id)['router']
+
+    def check_create_complete(self, *args):
+        attributes = self._show_resource()
+        return self.is_built(attributes)
+
     def handle_delete(self):
         client = self.quantum()
         try:
@@ -50,8 +58,7 @@ class Router(quantum.QuantumResource):
                 raise ex
 
     def FnGetAtt(self, key):
-        attributes = self.quantum().show_router(
-            self.resource_id)['router']
+        attributes = self._show_resource()
         return self.handle_get_attributes(self.name, key, attributes)
 
 

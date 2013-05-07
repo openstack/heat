@@ -50,6 +50,14 @@ class Port(quantum.QuantumResource):
         port = self.quantum().create_port({'port': props})['port']
         self.resource_id_set(port['id'])
 
+    def _show_resource(self):
+        return self.quantum().show_port(
+            self.resource_id)['port']
+
+    def check_create_complete(self, *args):
+        attributes = self._show_resource()
+        return self.is_built(attributes)
+
     def handle_delete(self):
         from quantumclient.common.exceptions import QuantumClientException
 
@@ -61,8 +69,7 @@ class Port(quantum.QuantumResource):
                 raise ex
 
     def FnGetAtt(self, key):
-        attributes = self.quantum().show_port(
-            self.resource_id)['port']
+        attributes = self._show_resource()
         return self.handle_get_attributes(self.name, key, attributes)
 
 

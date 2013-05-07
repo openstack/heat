@@ -87,5 +87,16 @@ class QuantumResource(resource.Resource):
     def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
+    @staticmethod
+    def is_built(attributes):
+        if attributes['status'] == 'BUILD':
+            return False
+        if attributes['status'] in ('ACTIVE', 'DOWN'):
+            return True
+        else:
+            raise exception.Error('%s resource[%s] status[%s]' %
+                                  ('quantum reported unexpected',
+                                   attributes['name'], attributes['status']))
+
     def FnGetRefId(self):
         return unicode(self.resource_id)

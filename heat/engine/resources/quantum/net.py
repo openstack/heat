@@ -37,6 +37,14 @@ class Net(quantum.QuantumResource):
         net = self.quantum().create_network({'network': props})['network']
         self.resource_id_set(net['id'])
 
+    def _show_resource(self):
+        return self.quantum().show_network(
+            self.resource_id)['network']
+
+    def check_create_complete(self, *args):
+        attributes = self._show_resource()
+        return self.is_built(attributes)
+
     def handle_delete(self):
         from quantumclient.common.exceptions import QuantumClientException
 
@@ -48,8 +56,7 @@ class Net(quantum.QuantumResource):
                 raise ex
 
     def FnGetAtt(self, key):
-        attributes = self.quantum().show_network(
-            self.resource_id)['network']
+        attributes = self._show_resource()
         return self.handle_get_attributes(self.name, key, attributes)
 
 

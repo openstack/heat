@@ -158,6 +158,24 @@ class QuantumTest(HeatTestCase):
                           'router:external': True,
                           'admin_state_up': False}, props)
 
+    def test_is_built(self):
+        self.assertTrue(qr.is_built({
+            'name': 'the_net',
+            'status': 'ACTIVE'
+        }))
+        self.assertTrue(qr.is_built({
+            'name': 'the_net',
+            'status': 'DOWN'
+        }))
+        self.assertFalse(qr.is_built({
+            'name': 'the_net',
+            'status': 'BUILD'
+        }))
+        self.assertRaises(exception.Error, qr.is_built, {
+            'name': 'the_net',
+            'status': 'FROBULATING'
+        })
+
 
 @skipIf(quantumclient is None, 'quantumclient unavailable')
 class QuantumNetTest(HeatTestCase):
@@ -180,6 +198,18 @@ class QuantumNetTest(HeatTestCase):
             'network': {'name': u'the_network', 'admin_state_up': True}
         }).AndReturn({"network": {
             "status": "ACTIVE",
+            "subnets": [],
+            "name": "name",
+            "admin_state_up": False,
+            "shared": False,
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        quantumclient.Client.show_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({"network": {
+            "status": "BUILD",
             "subnets": [],
             "name": "name",
             "admin_state_up": False,
@@ -386,7 +416,13 @@ class QuantumFloatingIPTest(HeatTestCase):
             'name': u'test_stack.port_floating',
             'admin_state_up': True}}
         ).AndReturn({'port': {
-            "status": "ACTIVE",
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        quantumclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
         quantumclient.Client.show_port(
@@ -441,10 +477,15 @@ class QuantumFloatingIPTest(HeatTestCase):
             'name': u'test_stack.port_floating',
             'admin_state_up': True}}
         ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        quantumclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-
         quantumclient.Client.update_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {
