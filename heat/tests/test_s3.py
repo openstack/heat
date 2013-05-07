@@ -18,6 +18,8 @@ import re
 
 import mox
 
+from testtools import skipIf
+
 from heat.common import context
 from heat.common import template_format
 from heat.openstack.common.importutils import try_import
@@ -26,13 +28,12 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import skip_if
 
 swiftclient = try_import('swiftclient.client')
 
 
 class s3Test(HeatTestCase):
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def setUp(self):
         super(s3Test, self).setUp()
         self.m.CreateMock(swiftclient.Connection)
@@ -69,7 +70,7 @@ class s3Test(HeatTestCase):
         self.assertEqual(s3.S3Bucket.CREATE_COMPLETE, resource.state)
         return resource
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_create_container_name(self):
         self.m.ReplayAll()
         t = self.load_template()
@@ -80,7 +81,7 @@ class s3Test(HeatTestCase):
         self.assertTrue(re.match(self.container_pattern,
                                  resource._create_container_name()))
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_attributes(self):
         swiftclient.Connection.put_container(
             mox.Regex(self.container_pattern),
@@ -118,7 +119,7 @@ class s3Test(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_public_read(self):
         swiftclient.Connection.put_container(
             mox.Regex(self.container_pattern),
@@ -136,7 +137,7 @@ class s3Test(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_public_read_write(self):
         swiftclient.Connection.put_container(
             mox.Regex(self.container_pattern),
@@ -154,7 +155,7 @@ class s3Test(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_authenticated_read(self):
         swiftclient.Connection.put_container(
             mox.Regex(self.container_pattern),
@@ -172,7 +173,7 @@ class s3Test(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_website(self):
 
         swiftclient.Connection.put_container(
@@ -191,7 +192,7 @@ class s3Test(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_delete_exception(self):
 
         swiftclient.Connection.put_container(
@@ -210,7 +211,7 @@ class s3Test(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_delete_retain(self):
 
         # first run, with retain policy

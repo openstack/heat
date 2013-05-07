@@ -17,6 +17,8 @@ import os
 
 import eventlet
 
+from testtools import skipIf
+
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
@@ -27,7 +29,7 @@ from heat.engine import clients
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes
-from heat.tests.utils import setup_dummy_db, skip_if
+from heat.tests.utils import setup_dummy_db
 
 from cinderclient.v1 import client as cinderclient
 
@@ -236,7 +238,7 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @skip_if(volume_backups is None, 'unable to import volume_backups')
+    @skipIf(volume_backups is None, 'unable to import volume_backups')
     def test_snapshot(self):
         stack_name = 'test_volume_stack'
         fv = FakeVolume('creating', 'available')
@@ -268,7 +270,7 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @skip_if(volume_backups is None, 'unable to import volume_backups')
+    @skipIf(volume_backups is None, 'unable to import volume_backups')
     def test_snapshot_error(self):
         stack_name = 'test_volume_stack'
         fv = FakeVolume('creating', 'available')
@@ -298,6 +300,7 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    @skipIf(volume_backups is None, 'unable to import volume_backups')
     def test_snapshot_no_volume(self):
         stack_name = 'test_volume_stack'
         fv = FakeVolume('creating', 'error')

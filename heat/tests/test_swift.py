@@ -18,6 +18,8 @@ import re
 
 import mox
 
+from testtools import skipIf
+
 from heat.common import context
 from heat.common import template_format
 from heat.openstack.common.importutils import try_import
@@ -26,13 +28,12 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import skip_if
 
 swiftclient = try_import('swiftclient.client')
 
 
 class swiftTest(HeatTestCase):
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def setUp(self):
         super(swiftTest, self).setUp()
         self.m.CreateMock(swiftclient.Connection)
@@ -71,7 +72,7 @@ class swiftTest(HeatTestCase):
         self.assertEqual(swift.SwiftContainer.CREATE_COMPLETE, resource.state)
         return resource
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_create_container_name(self):
         self.m.ReplayAll()
         t = self.load_template()
@@ -87,7 +88,7 @@ class swiftTest(HeatTestCase):
             'the_name',
             resource._create_container_name('the_name'))
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_build_meta_headers(self):
         self.m.UnsetStubs()
         self.assertEqual({}, swift.SwiftContainer._build_meta_headers({}))
@@ -101,7 +102,7 @@ class swiftTest(HeatTestCase):
             "Web-Error": "error.html"
         }))
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_attributes(self):
         headers = {
             "content-length": "0",
@@ -156,7 +157,7 @@ class swiftTest(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_public_read(self):
         swiftclient.Connection.put_container(
             mox.Regex(self.container_pattern),
@@ -174,7 +175,7 @@ class swiftTest(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_public_read_write(self):
         swiftclient.Connection.put_container(
             mox.Regex(self.container_pattern),
@@ -193,7 +194,7 @@ class swiftTest(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_website(self):
 
         swiftclient.Connection.put_container(
@@ -212,7 +213,7 @@ class swiftTest(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_delete_exception(self):
 
         swiftclient.Connection.put_container(
@@ -231,7 +232,7 @@ class swiftTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @skip_if(swiftclient is None, 'unable to import swiftclient')
+    @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_delete_retain(self):
 
         # first run, with retain policy
