@@ -351,3 +351,250 @@ class TaskTest(mox.MoxTestBase):
         runner.start()
         self.assertTrue(runner.step())
         self.assertTrue(runner.step())
+
+
+class WrapperTaskTest(mox.MoxTestBase):
+
+    def test_wrap(self):
+        child_tasks = [DummyTask() for i in range(3)]
+
+        @scheduler.wrappertask
+        def task():
+            for child_task in child_tasks:
+                yield child_task()
+
+            yield
+
+        for child_task in child_tasks:
+            self.mox.StubOutWithMock(child_task, 'do_step')
+        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+
+        for child_task in child_tasks:
+            child_task.do_step(1).AndReturn(None)
+            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+            child_task.do_step(2).AndReturn(None)
+            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+            child_task.do_step(3).AndReturn(None)
+            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+
+        self.mox.ReplayAll()
+
+        scheduler.TaskRunner(task)()
+
+    def test_child_exception(self):
+        class MyException(Exception):
+            pass
+
+        def child_task():
+            yield
+
+            raise MyException()
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield child_task()
+            except MyException:
+                raise
+            else:
+                self.fail('No exception raised in parent_task')
+
+        task = parent_task()
+        task.next()
+        self.assertRaises(MyException, task.next)
+
+    def test_child_exception_exit(self):
+        class MyException(Exception):
+            pass
+
+        def child_task():
+            yield
+
+            raise MyException()
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield child_task()
+            except MyException:
+                return
+            else:
+                self.fail('No exception raised in parent_task')
+
+        task = parent_task()
+        task.next()
+        self.assertRaises(StopIteration, task.next)
+
+    def test_child_exception_swallow(self):
+        class MyException(Exception):
+            pass
+
+        def child_task():
+            yield
+
+            raise MyException()
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield child_task()
+            except MyException:
+                yield
+            else:
+                self.fail('No exception raised in parent_task')
+
+            yield
+
+        task = parent_task()
+        task.next()
+        task.next()
+
+    def test_parent_exception(self):
+        class MyException(Exception):
+            pass
+
+        def child_task():
+            yield
+
+        @scheduler.wrappertask
+        def parent_task():
+            yield child_task()
+            raise MyException()
+
+        task = parent_task()
+        task.next()
+        self.assertRaises(MyException, task.next)
+
+    def test_parent_throw(self):
+        class MyException(Exception):
+            pass
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield DummyTask()()
+            except MyException:
+                raise
+            else:
+                self.fail('No exception raised in parent_task')
+
+        task = parent_task()
+        task.next()
+        self.assertRaises(MyException, task.throw, MyException())
+
+    def test_parent_throw_exit(self):
+        class MyException(Exception):
+            pass
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield DummyTask()()
+            except MyException:
+                return
+            else:
+                self.fail('No exception raised in parent_task')
+
+        task = parent_task()
+        task.next()
+        self.assertRaises(StopIteration, task.throw, MyException())
+
+    def test_parent_cancel(self):
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield
+            except GeneratorExit:
+                raise
+            else:
+                self.fail('parent_task not closed')
+
+        task = parent_task()
+        task.next()
+        task.close()
+
+    def test_parent_cancel_exit(self):
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield
+            except GeneratorExit:
+                return
+            else:
+                self.fail('parent_task not closed')
+
+        task = parent_task()
+        task.next()
+        task.close()
+
+    def test_cancel(self):
+        def child_task():
+            yield
+
+            try:
+                yield
+            except GeneratorExit:
+                raise
+            else:
+                self.fail('child_task not closed')
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield DummyTask()()
+            except GeneratorExit:
+                raise
+            else:
+                self.fail('parent_task not closed')
+
+        task = parent_task()
+        task.next()
+        task.close()
+
+    def test_cancel_exit(self):
+        def child_task():
+            yield
+
+            try:
+                yield
+            except GeneratorExit:
+                return
+            else:
+                self.fail('child_task not closed')
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield DummyTask()()
+            except GeneratorExit:
+                raise
+            else:
+                self.fail('parent_task not closed')
+
+        task = parent_task()
+        task.next()
+        task.close()
+
+    def test_cancel_parent_exit(self):
+        def child_task():
+            yield
+
+            try:
+                yield
+            except GeneratorExit:
+                return
+            else:
+                self.fail('child_task not closed')
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield DummyTask()()
+            except GeneratorExit:
+                return
+            else:
+                self.fail('parent_task not closed')
+
+        task = parent_task()
+        task.next()
+        task.close()
