@@ -14,6 +14,7 @@
 
 import mox
 
+import contextlib
 import eventlet
 
 from heat.engine import scheduler
@@ -25,11 +26,137 @@ class DummyTask(object):
 
     def __call__(self, *args, **kwargs):
         for i in range(1, self.num_steps + 1):
-            self.do_step(i)
+            self.do_step(i, *args, **kwargs)
             yield
 
-    def do_step(self, step_num):
+    def do_step(self, step_num, *args, **kwargs):
         print self, step_num
+
+
+class PollingTaskGroupTest(mox.MoxTestBase):
+
+    def test_group(self):
+        tasks = [DummyTask() for i in range(3)]
+        for t in tasks:
+            self.mox.StubOutWithMock(t, 'do_step')
+
+        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+
+        for t in tasks:
+            t.do_step(1).AndReturn(None)
+        for t in tasks:
+            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+            t.do_step(2).AndReturn(None)
+            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+            t.do_step(3).AndReturn(None)
+
+        self.mox.ReplayAll()
+
+        tg = scheduler.PollingTaskGroup(tasks)
+        scheduler.TaskRunner(tg)()
+
+    def test_kwargs(self):
+        input_kwargs = {'i': [0, 1, 2],
+                        'i2': [0, 1, 4]}
+
+        output_kwargs = scheduler.PollingTaskGroup._kwargs(input_kwargs)
+
+        expected_kwargs = [{'i': 0, 'i2': 0},
+                           {'i': 1, 'i2': 1},
+                           {'i': 2, 'i2': 4}]
+
+        self.assertEqual(list(output_kwargs), expected_kwargs)
+
+    def test_kwargs_short(self):
+        input_kwargs = {'i': [0, 1, 2],
+                        'i2': [0]}
+
+        output_kwargs = scheduler.PollingTaskGroup._kwargs(input_kwargs)
+
+        expected_kwargs = [{'i': 0, 'i2': 0}]
+
+        self.assertEqual(list(output_kwargs), expected_kwargs)
+
+    def test_no_kwargs(self):
+        output_kwargs = scheduler.PollingTaskGroup._kwargs({})
+        self.assertEqual(list(output_kwargs), [])
+
+    def test_args(self):
+        input_args = ([0, 1, 2],
+                      [0, 1, 4])
+
+        output_args = scheduler.PollingTaskGroup._args(input_args)
+
+        expected_args = [(0, 0), (1, 1), (2, 4)]
+
+        self.assertEqual(list(output_args), expected_args)
+
+    def test_args_short(self):
+        input_args = ([0, 1, 2],
+                      [0])
+
+        output_args = scheduler.PollingTaskGroup._args(input_args)
+
+        expected_args = [(0, 0)]
+
+        self.assertEqual(list(output_args), expected_args)
+
+    def test_no_args(self):
+        output_args = scheduler.PollingTaskGroup._args([])
+        self.assertEqual(list(output_args), [])
+
+    @contextlib.contextmanager
+    def _args_test(self, *arg_lists, **kwarg_lists):
+        dummy = DummyTask(1)
+
+        tg = scheduler.PollingTaskGroup.from_task_with_args(dummy,
+                                                            *arg_lists,
+                                                            **kwarg_lists)
+
+        self.mox.StubOutWithMock(dummy, 'do_step')
+        yield dummy
+
+        self.mox.ReplayAll()
+        scheduler.TaskRunner(tg)(wait_time=None)
+        self.mox.VerifyAll()
+
+    def test_with_all_args(self):
+        with self._args_test([0, 1, 2], [0, 1, 8],
+                             i=[0, 1, 2], i2=[0, 1, 4]) as dummy:
+            for i in range(3):
+                dummy.do_step(1, i, i * i * i, i=i, i2=i * i)
+
+    def test_with_short_args(self):
+        with self._args_test([0, 1, 2], [0, 1],
+                             i=[0, 1, 2], i2=[0, 1, 4]) as dummy:
+            for i in range(2):
+                dummy.do_step(1, i, i * i, i=i, i2=i * i)
+
+    def test_with_short_kwargs(self):
+        with self._args_test([0, 1, 2], [0, 1, 8],
+                             i=[0, 1], i2=[0, 1, 4]) as dummy:
+            for i in range(2):
+                dummy.do_step(1, i, i * i, i=i, i2=i * i)
+
+    def test_with_empty_args(self):
+        with self._args_test([],
+                             i=[0, 1, 2], i2=[0, 1, 4]) as dummy:
+            pass
+
+    def test_with_empty_kwargs(self):
+        with self._args_test([0, 1, 2], [0, 1, 8],
+                             i=[]) as dummy:
+            pass
+
+    def test_with_no_args(self):
+        with self._args_test(i=[0, 1, 2], i2=[0, 1, 4]) as dummy:
+            for i in range(3):
+                dummy.do_step(1, i=i, i2=i * i)
+
+    def test_with_no_kwargs(self):
+        with self._args_test([0, 1, 2], [0, 1, 4]) as dummy:
+            for i in range(3):
+                dummy.do_step(1, i, i * i)
 
 
 class TaskTest(mox.MoxTestBase):
