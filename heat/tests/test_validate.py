@@ -323,6 +323,23 @@ test_template_snapshot_deletion_policy = '''
     }
     '''
 
+test_template_volume_snapshot = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Resources" : {
+    "DataVolume" : {
+      "Type" : "AWS::EC2::Volume",
+      "DeletionPolicy": "Snapshot",
+      "Properties" : {
+        "Size" : "6",
+        "AvailabilityZone" : "nova"
+      }
+    }
+  }
+}
+'''
+
 
 class validateTest(HeatTestCase):
     def setUp(self):
@@ -457,3 +474,13 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, t))
         self.assertEqual(
             res, {'Error': 'Snapshot DeletionPolicy not supported'})
+
+    def test_volume_snapshot_deletion_policy(self):
+        t = template_format.parse(test_template_volume_snapshot)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t))
+        self.assertEqual(res, {'Description': u'test.', 'Parameters': {}})

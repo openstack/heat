@@ -15,15 +15,19 @@
 
 import eventlet
 from heat.openstack.common import log as logging
+from heat.openstack.common.importutils import try_import
 
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import resource
 
+volume_backups = try_import('cinderclient.v1.volume_backups')
+
 logger = logging.getLogger(__name__)
 
 
 class Volume(resource.Resource):
+
     properties_schema = {'AvailabilityZone': {'Type': 'String',
                                               'Required': True},
                          'Size': {'Type': 'Number'},
@@ -49,6 +53,18 @@ class Volume(resource.Resource):
 
     def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
+
+    if volume_backups is not None:
+        def handle_snapshot(self):
+            if self.resource_id is not None:
+                # We use backups as snapshots are not independent of volumes
+                backup = self.cinder().backups.create(self.resource_id)
+                while backup.status == 'creating':
+                    eventlet.sleep(1)
+                    backup.get()
+                if backup.status != 'available':
+                    raise exception.Error(backup.status)
+                self.handle_delete()
 
     def handle_delete(self):
         if self.resource_id is not None:

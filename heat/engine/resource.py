@@ -403,18 +403,16 @@ class Resource(object):
         self.validate_deletion_policy(self.t)
         return self.properties.validate()
 
-    @staticmethod
-    def validate_deletion_policy(template):
+    @classmethod
+    def validate_deletion_policy(cls, template):
         deletion_policy = template.get('DeletionPolicy', 'Delete')
         if deletion_policy not in ('Delete', 'Retain', 'Snapshot'):
             msg = 'Invalid DeletionPolicy %s' % deletion_policy
             raise exception.StackValidationFailed(message=msg)
         elif deletion_policy == 'Snapshot':
-            # Some resources will support it in the future, in which case we
-            # should check for the presence of a handle_snapshot method for
-            # example.
-            msg = 'Snapshot DeletionPolicy not supported'
-            raise exception.StackValidationFailed(message=msg)
+            if not callable(getattr(cls, 'handle_snapshot', None)):
+                msg = 'Snapshot DeletionPolicy not supported'
+                raise exception.StackValidationFailed(message=msg)
 
     def delete(self):
         '''
@@ -434,9 +432,13 @@ class Resource(object):
         try:
             self.state_set(self.DELETE_IN_PROGRESS)
 
-            if self.t.get('DeletionPolicy', 'Delete') == 'Delete':
+            deletion_policy = self.t.get('DeletionPolicy', 'Delete')
+            if deletion_policy == 'Delete':
                 if callable(getattr(self, 'handle_delete', None)):
                     self.handle_delete()
+            elif deletion_policy == 'Snapshot':
+                if callable(getattr(self, 'handle_snapshot', None)):
+                    self.handle_snapshot()
         except Exception as ex:
             logger.exception('Delete %s', str(self))
             failure = exception.ResourceFailure(ex)
