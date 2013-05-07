@@ -74,6 +74,7 @@ def setup_dummy_db():
 
 def parse_stack(t, params={}, stack_name='test_stack', stack_id=None):
     ctx = context.RequestContext.from_dict({'tenant_id': 'test_tenant',
+                                            'tenant': 'test_tenant',
                                             'username': 'test_username',
                                             'password': 'password',
                                             'auth_url':
