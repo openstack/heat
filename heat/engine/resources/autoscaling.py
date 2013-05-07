@@ -14,7 +14,6 @@
 #    under the License.
 
 import eventlet
-import itertools
 
 from heat.common import exception
 from heat.engine import resource
@@ -83,18 +82,14 @@ class InstanceGroup(resource.Resource):
     def handle_create(self):
         return self.resize(int(self.properties['Size']), raise_on_error=True)
 
-    def check_active(self, instances):
-        if instances:
-            remaining = itertools.dropwhile(lambda i: i.step(),
-                                            instances)
-            instances[:] = list(remaining)
-            if not instances:
-                # When all instances are active, reload the LB config
-                self._lb_reload()
-        return not bool(instances)
+    def check_active(self, creator):
+        if creator is None:
+            return True
 
-    def _wait_for_activation(self, instances):
-        while not self.check_active(instances):
+        return creator.step()
+
+    def _wait_for_activation(self, creator):
+        while not self.check_active(creator):
             eventlet.sleep(1)
 
     def handle_update(self, json_snippet):
@@ -126,9 +121,9 @@ class InstanceGroup(resource.Resource):
                     inst_list = sorted(self.resource_id.split(','))
 
                 if len(inst_list) != int(self.properties['Size']):
-                    new_insts = self.resize(int(self.properties['Size']),
-                                            raise_on_error=True)
-                    self._wait_for_activation(new_insts)
+                    creator = self.resize(int(self.properties['Size']),
+                                          raise_on_error=True)
+                    self._wait_for_activation(creator)
 
         return self.UPDATE_COMPLETE
 
@@ -159,6 +154,15 @@ class InstanceGroup(resource.Resource):
                 inst = self._make_instance(victim)
                 inst.destroy()
 
+    @scheduler.wrappertask
+    def _scale(self, instance_task, indices):
+        group = scheduler.PollingTaskGroup.from_task_with_args(instance_task,
+                                                               indices)
+        yield group()
+
+        # When all instance tasks are complete, reload the LB config
+        self._lb_reload()
+
     def resize(self, new_capacity, raise_on_error=False):
         inst_list = []
         if self.resource_id is not None:
@@ -171,27 +175,28 @@ class InstanceGroup(resource.Resource):
         logger.debug('adjusting capacity from %d to %d' % (capacity,
                                                            new_capacity))
 
+        @scheduler.wrappertask
         def create_instance(index):
             name = '%s-%d' % (self.name, index)
             inst = self._make_instance(name)
             inst_list.append(name)
             self.resource_id_set(','.join(inst_list))
-            logger.info('Creating Autoscaling instance %s' % name)
 
-            runner = scheduler.TaskRunner(inst.create)
+            logger.debug('Creating %s instance %d' % (str(self), index))
 
             try:
-                runner.start()
+                yield inst.create()
             except exception.ResourceFailure as ex:
                 if raise_on_error:
                     raise
 
-            return runner
-
         if new_capacity > capacity:
             # grow
-            return [create_instance(x) for x in range(capacity,
-                                                      new_capacity)]
+            creator = scheduler.TaskRunner(self._scale,
+                                           create_instance,
+                                           xrange(capacity, new_capacity))
+            creator.start()
+            return creator
         else:
             # shrink (kill largest numbered first)
             del_list = inst_list[new_capacity:]
@@ -330,14 +335,14 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                         new_capacity = int(self.properties['DesiredCapacity'])
 
             if new_capacity is not None:
-                new_insts = self._adjust(new_capacity)
-                self._wait_for_activation(new_insts)
+                creator = self._adjust(new_capacity)
+                self._wait_for_activation(creator)
 
         return self.UPDATE_COMPLETE
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
-        new_insts = self._adjust(adjustment, adjustment_type, False)
-        self._wait_for_activation(new_insts)
+        creator = self._adjust(adjustment, adjustment_type, False)
+        self._wait_for_activation(creator)
 
     def _adjust(self, adjustment, adjustment_type='ExactCapacity',
                 raise_on_error=True):
