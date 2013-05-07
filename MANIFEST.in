@@ -6,7 +6,6 @@ include README.rst
 include MANIFEST.in pylintrc
 include openstack-common.conf
 include babel.cfg install.sh run_tests.sh tox.ini uninstall.sh
-graft templates
 include heat/cloudinit/config
 include heat/cloudinit/boothook.sh
 include heat/cloudinit/loguserdata.py
