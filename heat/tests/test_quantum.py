@@ -13,11 +13,8 @@
 #    under the License.
 
 
-import os
-
 from testtools import skipIf
 
-from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import properties
@@ -26,9 +23,98 @@ from heat.engine.resources.quantum import net
 from heat.engine.resources.quantum import floatingip
 from heat.engine.resources.quantum import port
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
-from heat.engine import parser
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import parse_stack
+
+quantum_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test Quantum resources",
+  "Parameters" : {},
+  "Resources" : {
+    "network": {
+      "Type": "OS::Quantum::Net",
+      "Properties": {
+        "name": "the_network"
+      }
+    },
+    "unnamed_network": {
+      "Type": "OS::Quantum::Net"
+    },
+    "admin_down_network": {
+      "Type": "OS::Quantum::Net",
+      "Properties": {
+        "admin_state_up": false
+      }
+    },
+    "subnet": {
+      "Type": "OS::Quantum::Subnet",
+      "Properties": {
+        "network_id": { "Ref" : "network" },
+        "ip_version": 4,
+        "cidr": "10.0.3.0/24",
+        "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}]
+      }
+    },
+    "port": {
+      "Type": "OS::Quantum::Port",
+      "Properties": {
+        "device_id": "d6b4d3a5-c700-476f-b609-1493dd9dadc0",
+        "name": "port1",
+        "network_id": { "Ref" : "network" },
+        "fixed_ips": [{
+          "subnet_id": { "Ref" : "subnet" },
+          "ip_address": "10.0.3.21"
+        }]
+      }
+    },
+    "router": {
+      "Type": "OS::Quantum::Router"
+    },
+    "router_interface": {
+      "Type": "OS::Quantum::RouterInterface",
+      "Properties": {
+        "router_id": { "Ref" : "router" },
+        "subnet_id": { "Ref" : "subnet" }
+      }
+    }
+  }
+}
+'''
+
+quantum_floating_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test Quantum resources",
+  "Parameters" : {},
+  "Resources" : {
+    "port_floating": {
+      "Type": "OS::Quantum::Port",
+      "Properties": {
+        "network_id": "xyz1234",
+        "fixed_ips": [{
+          "subnet_id": "12.12.12.0",
+          "ip_address": "10.0.0.10"
+        }]
+      }
+    },
+    "floating_ip": {
+      "Type": "OS::Quantum::FloatingIP",
+      "Properties": {
+        "floating_network_id": "abcd1234",
+      }
+    },
+    "floating_ip_assoc": {
+      "Type": "OS::Quantum::FloatingIPAssociation",
+      "Properties": {
+        "floatingip_id": { "Ref" : "floating_ip" },
+        "port_id": { "Ref" : "port_floating" }
+      }
+    }
+  }
+}
+'''
 
 
 class FakeQuantum():
@@ -101,28 +187,6 @@ class QuantumTest(HeatTestCase):
         self.m.StubOutWithMock(net.Net, 'quantum')
         setup_dummy_db()
 
-    def load_template(self):
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/Quantum.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        ctx = context.RequestContext.from_dict({
-            'tenant': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
-        stack_name = 'test_stack'
-        tmpl = parser.Template(t)
-        params = parser.Parameters(stack_name, tmpl,
-                                   {'external_network': 'abcd1234'})
-        stack = parser.Stack(ctx, stack_name, tmpl, params)
-
-        return stack
-
     def create_net(self, t, stack, resource_name):
         resource = net.Net('test_net', t['Resources'][resource_name], stack)
         scheduler.TaskRunner(resource.create)()
@@ -170,8 +234,8 @@ class QuantumTest(HeatTestCase):
         net.Net.quantum().MultipleTimes().AndReturn(fq)
 
         self.m.ReplayAll()
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(quantum_template)
+        stack = parse_stack(t)
         resource = self.create_net(t, stack, 'network')
 
         resource.validate()
@@ -203,30 +267,6 @@ class QuantumFloatingIPTest(HeatTestCase):
         self.m.StubOutWithMock(port.Port, 'quantum')
         setup_dummy_db()
 
-    def load_template(self, name='Quantum'):
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/%s.template" % (self.path, name))
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        ctx = context.RequestContext.from_dict({
-            'tenant': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
-        stack_name = 'test_stack'
-        tmpl = parser.Template(t)
-        params = parser.Parameters(stack_name, tmpl,
-                                   {'external_network': 'abcd1234',
-                                    'internal_network': 'xyz1234',
-                                    'internal_subnet': '12.12.12.0'})
-        stack = parser.Stack(ctx, stack_name, tmpl, params)
-
-        return stack
-
     def test_floating_ip(self):
         if net.clients.quantumclient is None:
             raise SkipTest
@@ -236,8 +276,8 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = self.load_template('Quantum_floating')
-        stack = self.parse_stack(t)
+        t = template_format.parse(quantum_floating_template)
+        stack = parse_stack(t)
 
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()
@@ -271,8 +311,8 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = self.load_template('Quantum_floating')
-        stack = self.parse_stack(t)
+        t = template_format.parse(quantum_floating_template)
+        stack = parse_stack(t)
 
         p = stack['port_floating']
         scheduler.TaskRunner(p.create)()
@@ -309,8 +349,8 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = self.load_template('Quantum_floating')
-        stack = self.parse_stack(t)
+        t = template_format.parse(quantum_floating_template)
+        stack = parse_stack(t)
 
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()

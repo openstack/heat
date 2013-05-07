@@ -12,37 +12,47 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import os
-
 from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
 from heat.common import template_format
-from heat.engine import parser
 from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import parse_stack
+
+
+nokey_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "NoKey Test",
+  "Parameters" : {},
+  "Resources" : {
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId" : "foo",
+        "InstanceType"   : "m1.large",
+        "UserData"       : "some data"
+      }
+    }
+  }
+}
+'''
 
 
 class nokeyTest(HeatTestCase):
     def setUp(self):
         super(nokeyTest, self).setUp()
         self.fc = fakes.FakeClient()
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
         setup_dummy_db()
 
     def test_nokey_create(self):
-        f = open("%s/WordPress_NoKey.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
 
         stack_name = 'instance_create_test_nokey_stack'
-        template = parser.Template(t)
-        params = parser.Parameters(stack_name, template, {})
-        stack = parser.Stack(None, stack_name, template, params,
-                             stack_id=uuidutils.generate_uuid())
+        t = template_format.parse(nokey_template)
+        stack = parse_stack(t, stack_name=stack_name,
+                            stack_id=uuidutils.generate_uuid())
 
         t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \

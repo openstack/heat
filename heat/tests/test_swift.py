@@ -13,23 +13,46 @@
 #    under the License.
 
 
-import os
 import re
 
 import mox
 
 from testtools import skipIf
 
-from heat.common import context
 from heat.common import template_format
 from heat.openstack.common.importutils import try_import
 from heat.engine.resources import swift
-from heat.engine import parser
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import parse_stack
 
 swiftclient = try_import('swiftclient.client')
+
+swift_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test OS::Swift::Container resources",
+  "Resources" : {
+    "SwiftContainerWebsite" : {
+      "Type" : "OS::Swift::Container",
+      "DeletionPolicy" : "Delete",
+      "Properties" : {
+        "X-Container-Read" : ".r:*",
+        "X-Container-Meta" : {
+          "Web-Index" : "index.html",
+          "Web-Error" : "error.html"
+         }
+      }
+    },
+    "SwiftContainer" : {
+      "Type" : "OS::Swift::Container",
+      "Properties" : {
+      }
+    }
+  }
+}
+'''
 
 
 class swiftTest(HeatTestCase):
@@ -45,24 +68,6 @@ class swiftTest(HeatTestCase):
         self.container_pattern = 'test_stack-test_resource-[0-9a-z]+'
         setup_dummy_db()
 
-    def load_template(self):
-        self.path = os.path.dirname(os.path.realpath(__file__)).\
-            replace('heat/tests', 'templates')
-        f = open("%s/Swift.template" % self.path)
-        t = template_format.parse(f.read())
-        f.close()
-        return t
-
-    def parse_stack(self, t):
-        ctx = context.RequestContext.from_dict({
-            'tenant': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
-        stack = parser.Stack(ctx, 'test_stack', parser.Template(t))
-
-        return stack
-
     def create_resource(self, t, stack, resource_name):
         resource = swift.SwiftContainer(
             'test_resource',
@@ -75,8 +80,8 @@ class swiftTest(HeatTestCase):
     @skipIf(swiftclient is None, 'unable to import swiftclient')
     def test_create_container_name(self):
         self.m.ReplayAll()
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(swift_template)
+        stack = parse_stack(t)
         resource = swift.SwiftContainer(
             'test_resource',
             t['Resources']['SwiftContainer'],
@@ -129,8 +134,8 @@ class swiftTest(HeatTestCase):
             mox.Regex(self.container_pattern)).AndReturn(None)
 
         self.m.ReplayAll()
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(swift_template)
+        stack = parse_stack(t)
         resource = self.create_resource(t, stack, 'SwiftContainer')
 
         ref_id = resource.FnGetRefId()
@@ -167,10 +172,10 @@ class swiftTest(HeatTestCase):
             mox.Regex(self.container_pattern)).AndReturn(None)
 
         self.m.ReplayAll()
-        t = self.load_template()
+        t = template_format.parse(swift_template)
         properties = t['Resources']['SwiftContainer']['Properties']
         properties['X-Container-Read'] = '.r:*'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
         resource = self.create_resource(t, stack, 'SwiftContainer')
         resource.delete()
         self.m.VerifyAll()
@@ -185,11 +190,11 @@ class swiftTest(HeatTestCase):
             mox.Regex(self.container_pattern)).AndReturn(None)
 
         self.m.ReplayAll()
-        t = self.load_template()
+        t = template_format.parse(swift_template)
         properties = t['Resources']['SwiftContainer']['Properties']
         properties['X-Container-Read'] = '.r:*'
         properties['X-Container-Write'] = '.r:*'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
         resource = self.create_resource(t, stack, 'SwiftContainer')
         resource.delete()
         self.m.VerifyAll()
@@ -207,8 +212,8 @@ class swiftTest(HeatTestCase):
             mox.Regex(self.container_pattern)).AndReturn(None)
 
         self.m.ReplayAll()
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(swift_template)
+        stack = parse_stack(t)
         resource = self.create_resource(t, stack, 'SwiftContainerWebsite')
         resource.delete()
         self.m.VerifyAll()
@@ -225,8 +230,8 @@ class swiftTest(HeatTestCase):
                 swiftclient.ClientException('Test delete failure'))
 
         self.m.ReplayAll()
-        t = self.load_template()
-        stack = self.parse_stack(t)
+        t = template_format.parse(swift_template)
+        stack = parse_stack(t)
         resource = self.create_resource(t, stack, 'SwiftContainer')
         resource.delete()
 
@@ -245,11 +250,11 @@ class swiftTest(HeatTestCase):
             mox.Regex(self.container_pattern)).AndReturn(None)
 
         self.m.ReplayAll()
-        t = self.load_template()
+        t = template_format.parse(swift_template)
 
         container = t['Resources']['SwiftContainer']
         container['DeletionPolicy'] = 'Retain'
-        stack = self.parse_stack(t)
+        stack = parse_stack(t)
         resource = self.create_resource(t, stack, 'SwiftContainer')
         # if delete_container is called, mox verify will succeed
         resource.delete()
