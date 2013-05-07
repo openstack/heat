@@ -1,0 +1,100 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Template to test Quantum resources",
+
+  "Parameters" : {
+
+  },
+
+  "Resources" : {
+    "network": {
+      "Type": "OS::Quantum::Net",
+      "Properties": {
+        "name": "the_network"
+      }
+    },
+    "unnamed_network": {
+      "Type": "OS::Quantum::Net"
+    },
+    "admin_down_network": {
+      "Type": "OS::Quantum::Net",
+      "Properties": {
+        "admin_state_up": false
+      }
+    },
+
+    "subnet": {
+      "Type": "OS::Quantum::Subnet",
+      "Properties": {
+        "network_id": { "Ref" : "network" },
+        "ip_version": 4,
+        "cidr": "10.0.3.0/24",
+        "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}]
+      }
+    },
+
+    "port": {
+      "Type": "OS::Quantum::Port",
+      "Properties": {
+        "device_id": "d6b4d3a5-c700-476f-b609-1493dd9dadc0",
+        "name": "port1",
+        "network_id": { "Ref" : "network" },
+        "fixed_ips": [{
+          "subnet_id": { "Ref" : "subnet" },
+          "ip_address": "10.0.3.21"
+        }]
+      }
+    },
+
+    "router": {
+      "Type": "OS::Quantum::Router"
+    },
+
+    "router_interface": {
+      "Type": "OS::Quantum::RouterInterface",
+      "Properties": {
+        "router_id": { "Ref" : "router" },
+        "subnet_id": { "Ref" : "subnet" }
+      }
+    }
+  },
+  "Outputs" : {
+    "the_network_status" : {
+      "Value" : { "Fn::GetAtt" : [ "network", "status" ]},
+      "Description" : "Status of network"
+    },
+    "port_device_owner" : {
+      "Value" : { "Fn::GetAtt" : [ "port", "device_owner" ]},
+      "Description" : "Device owner of the port"
+    },
+    "port_fixed_ips" : {
+      "Value" : { "Fn::GetAtt" : [ "port", "fixed_ips" ]},
+      "Description" : "Fixed IPs of the port"
+    },
+    "port_mac_address" : {
+      "Value" : { "Fn::GetAtt" : [ "port", "mac_address" ]},
+      "Description" : "MAC address of the port"
+    },
+    "port_status" : {
+      "Value" : { "Fn::GetAtt" : [ "port", "status" ]},
+      "Description" : "Status of the port"
+    },
+    "port_show" : {
+      "Value" : { "Fn::GetAtt" : [ "port", "show" ]},
+      "Description" : "All attributes for port"
+    },
+    "subnet_show" : {
+      "Value" : { "Fn::GetAtt" : [ "subnet", "show" ]},
+      "Description" : "All attributes for subnet"
+    },
+    "network_show" : {
+      "Value" : { "Fn::GetAtt" : [ "network", "show" ]},
+      "Description" : "All attributes for network"
+    },
+    "router_show" : {
+      "Value" : { "Fn::GetAtt" : [ "router", "show" ]},
+      "Description" : "All attributes for router"
+    }
+  }
+}

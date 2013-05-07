@@ -1,0 +1,161 @@
+HeatTemplateFormatVersion: '2012-12-12'
+Description: 'AWS CloudFormation Sample Template WordPress_Single_Instance:
+  WordPress is web software you can use to create a beautiful website or blog. This
+  template installs a single-instance WordPress deployment using a local MySQL database
+  to store the data.'
+Parameters:
+  KeyName: {Description: Name of an existing EC2 KeyPair
+      to enable SSH access to the instances, Type: String}
+  InstanceType:
+    Description: WebServer EC2 instance type
+    Type: String
+    Default: m1.large
+    AllowedValues: [t1.micro, m1.small, m1.large, m1.xlarge, m2.xlarge,
+      m2.2xlarge, m2.4xlarge, c1.medium, c1.xlarge, cc1.4xlarge]
+    ConstraintDescription: must be a valid EC2 instance type.
+  DBName: {Default: wordpress, Description: The
+      WordPress database name, Type: String, MinLength: '1',
+    MaxLength: '64', AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*',
+    ConstraintDescription: must begin with a letter and contain only
+      alphanumeric characters.}
+  DBUsername: {Default: admin, NoEcho: 'true',
+    Description: The WordPress database admin account username, Type: String,
+    MinLength: '1', MaxLength: '16', AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*',
+    ConstraintDescription: must begin with a letter and contain only
+      alphanumeric characters.}
+  DBPassword: {Default: admin, NoEcho: 'true',
+    Description: The WordPress database admin account password, Type: String,
+    MinLength: '1', MaxLength: '41', AllowedPattern: '[a-zA-Z0-9]*',
+    ConstraintDescription: must contain only alphanumeric characters.}
+  DBRootPassword: {Default: admin, NoEcho: 'true',
+    Description: Root password for MySQL, Type: String,
+    MinLength: '1', MaxLength: '41', AllowedPattern: '[a-zA-Z0-9]*',
+    ConstraintDescription: must contain only alphanumeric characters.}
+  LinuxDistribution:
+    Default: F17
+    Description: Distribution of choice
+    Type: String
+    AllowedValues: [F18, F17, U10, RHEL-6.1, RHEL-6.2, RHEL-6.3]
+Mappings:
+  AWSInstanceType2Arch:
+    t1.micro: {Arch: '32'}
+    m1.small: {Arch: '32'}
+    m1.large: {Arch: '64'}
+    m1.xlarge: {Arch: '64'}
+    m2.xlarge: {Arch: '64'}
+    m2.2xlarge: {Arch: '64'}
+    m2.4xlarge: {Arch: '64'}
+    c1.medium: {Arch: '32'}
+    c1.xlarge: {Arch: '64'}
+    cc1.4xlarge: {Arch: '64'}
+  DistroArch2AMI:
+    F18: {'32': F18-i386-cfntools, '64': F18-x86_64-cfntools}
+    F17: {'32': F17-i386-cfntools, '64': F17-x86_64-cfntools}
+    U10: {'32': U10-i386-cfntools, '64': U10-x86_64-cfntools}
+    RHEL-6.1: {'32': rhel61-i386-cfntools, '64': rhel61-x86_64-cfntools}
+    RHEL-6.2: {'32': rhel62-i386-cfntools, '64': rhel62-x86_64-cfntools}
+    RHEL-6.3: {'32': rhel63-i386-cfntools, '64': rhel63-x86_64-cfntools}
+Resources:
+  WikiDatabase:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              mysql: []
+              mysql-server: []
+              httpd: []
+              wordpress: []
+          services:
+            systemd:
+              mysqld: {enabled: 'true', ensureRunning: 'true'}
+              httpd: {enabled: 'true', ensureRunning: 'true'}
+    Properties:
+      ImageId:
+        Fn::FindInMap:
+        - DistroArch2AMI
+        - {Ref: LinuxDistribution}
+        - Fn::FindInMap:
+          - AWSInstanceType2Arch
+          - {Ref: InstanceType}
+          - Arch
+      InstanceType: {Ref: InstanceType}
+      KeyName: {Ref: KeyName}
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - '#!/bin/bash -v
+
+              '
+            - '/opt/aws/bin/cfn-init
+
+              '
+            - '# Setup MySQL root password and create a user
+
+              '
+            - mysqladmin -u root password '
+            - {Ref: DBRootPassword}
+            - '''
+
+              '
+            - cat << EOF | mysql -u root --password='
+            - {Ref: DBRootPassword}
+            - '''
+
+              '
+            - 'CREATE DATABASE '
+            - {Ref: DBName}
+            - ';
+
+              '
+            - 'GRANT ALL PRIVILEGES ON '
+            - {Ref: DBName}
+            - .* TO "
+            - {Ref: DBUsername}
+            - '"@"localhost"
+
+              '
+            - IDENTIFIED BY "
+            - {Ref: DBPassword}
+            - '";
+
+              '
+            - 'FLUSH PRIVILEGES;
+
+              '
+            - 'EXIT
+
+              '
+            - 'EOF
+
+              '
+            - 'sed -i "/Deny from All/d" /etc/httpd/conf.d/wordpress.conf
+
+              '
+            - 'sed -i "s/Require local/Require all granted/" /etc/httpd/conf.d/wordpress.conf
+
+              '
+            - sed --in-place --e s/database_name_here/
+            - {Ref: DBName}
+            - / --e s/username_here/
+            - {Ref: DBUsername}
+            - / --e s/password_here/
+            - {Ref: DBPassword}
+            - '/ /usr/share/wordpress/wp-config.php
+
+              '
+            - 'systemctl restart httpd.service
+
+              '
+Outputs:
+  WebsiteURL:
+    Value:
+      Fn::Join:
+      - ''
+      - - http://
+        - Fn::GetAtt: [WikiDatabase, PublicIp]
+        - /wordpress
+    Description: URL for Wordpress wiki
+
