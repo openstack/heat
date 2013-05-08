@@ -341,6 +341,7 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    @skipIf(volume_backups is None, 'unable to import volume_backups')
     def test_create_from_snapshot(self):
         stack_name = 'test_volume_stack'
         fv = FakeVolume('creating', 'available')

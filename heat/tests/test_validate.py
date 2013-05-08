@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from testtools import skipIf
 
 from heat.tests.v1_1 import fakes
 from heat.common import exception
@@ -20,6 +21,7 @@ from heat.engine import resources
 from heat.engine.resources import instance as instances
 from heat.engine import resources
 from heat.engine import service
+from heat.openstack.common.importutils import try_import
 import heat.db.api as db_api
 from heat.engine import parser
 from heat.tests.common import HeatTestCase
@@ -475,6 +477,8 @@ class validateTest(HeatTestCase):
         self.assertEqual(
             res, {'Error': 'Snapshot DeletionPolicy not supported'})
 
+    @skipIf(try_import('cinderclient.v1.volume_backups') is None,
+            'unable to import volume_backups')
     def test_volume_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_volume_snapshot)
         self.m.StubOutWithMock(instances.Instance, 'nova')
