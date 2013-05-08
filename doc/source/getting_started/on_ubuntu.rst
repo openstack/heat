@@ -192,7 +192,7 @@ Run the debian wordpress example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
-    heat stack-create wordpress --template-file=templates/WordPress_Single_Instance_deb.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpassword;KeyName=${USER}_key;LinuxDistribution=U10"
+    heat stack-create wordpress --template-url=https://raw.github.com/openstack/heat-templates/master/cfn/WordPress_Single_Instance_deb.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpassword;KeyName=${USER}_key;LinuxDistribution=U10"
 
 List stacks
 ~~~~~~~~~~~

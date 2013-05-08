@@ -205,7 +205,7 @@ Launch a Wordpress instance
 
 ::
 
-    heat-cfn create wordpress --template-file=templates/WordPress_Single_Instance.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpass;KeyName=${USER}_key"
+    heat-cfn create wordpress --template-url=https://raw.github.com/openstack/heat-templates/master/cfn/WordPress_Single_Instance.template --parameters="InstanceType=m1.xlarge;DBUsername=${USER};DBPassword=verybadpass;KeyName=${USER}_key"
 
 List stacks
 -----------
