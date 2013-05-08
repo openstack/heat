@@ -85,9 +85,9 @@ class VolumeTest(HeatTestCase):
         setup_dummy_db()
 
     def create_volume(self, t, stack, resource_name):
-        resource = vol.Volume(resource_name,
-                              t['Resources'][resource_name],
-                              stack)
+        data = t['Resources'][resource_name]
+        data['Properties']['AvailabilityZone'] = 'nova'
+        resource = vol.Volume(resource_name, data, stack)
         self.assertEqual(resource.validate(), None)
         scheduler.TaskRunner(resource.create)()
         self.assertEqual(resource.state, vol.Volume.CREATE_COMPLETE)
@@ -110,7 +110,8 @@ class VolumeTest(HeatTestCase):
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            u'1', display_description='%s.DataVolume' % stack_name,
+            size=u'1', availability_zone='nova',
+            display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # delete script
@@ -150,7 +151,8 @@ class VolumeTest(HeatTestCase):
         # create script
         clients.OpenStackClients.cinder().AndReturn(self.cinder_fc)
         self.cinder_fc.volumes.create(
-            u'1', display_description='%s.DataVolume' % stack_name,
+            size=u'1', availability_zone='nova',
+            display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         eventlet.sleep(1).AndReturn(None)
@@ -158,6 +160,7 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = parse_stack(t, stack_name=stack_name)
 
         resource = vol.Volume('DataVolume',
@@ -177,7 +180,8 @@ class VolumeTest(HeatTestCase):
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            u'1', display_description='%s.DataVolume' % stack_name,
+            size=u'1', availability_zone='nova',
+            display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
@@ -194,6 +198,7 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = parse_stack(t, stack_name=stack_name)
 
         scheduler.TaskRunner(stack['DataVolume'].create)()
@@ -215,7 +220,8 @@ class VolumeTest(HeatTestCase):
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            u'1', display_description='%s.DataVolume' % stack_name,
+            size=u'1', availability_zone='nova',
+            display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
         # create script
@@ -238,6 +244,7 @@ class VolumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = parse_stack(t, stack_name=stack_name)
 
         scheduler.TaskRunner(stack['DataVolume'].create)()
@@ -260,7 +267,8 @@ class VolumeTest(HeatTestCase):
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            u'1', display_description='%s.DataVolume' % stack_name,
+            size=u'1', availability_zone='nova',
+            display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
         eventlet.sleep(1).AndReturn(None)
 
@@ -292,7 +300,8 @@ class VolumeTest(HeatTestCase):
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            u'1', display_description='%s.DataVolume' % stack_name,
+            size=u'1', availability_zone='nova',
+            display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
         eventlet.sleep(1).AndReturn(None)
 
@@ -321,7 +330,8 @@ class VolumeTest(HeatTestCase):
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.cinder_fc.volumes.create(
-            u'1', display_description='%s.DataVolume' % stack_name,
+            size=u'1', availability_zone='nova',
+            display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
         eventlet.sleep(1).AndReturn(None)
 
@@ -329,6 +339,7 @@ class VolumeTest(HeatTestCase):
 
         t = template_format.parse(volume_template)
         t['Resources']['DataVolume']['DeletionPolicy'] = 'Snapshot'
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = parse_stack(t, stack_name=stack_name)
         resource = vol.Volume('DataVolume',
                               t['Resources']['DataVolume'],
@@ -366,6 +377,85 @@ class VolumeTest(HeatTestCase):
         stack = parse_stack(t, stack_name=stack_name)
 
         self.create_volume(t, stack, 'DataVolume')
+        self.assertEqual(fv.status, 'available')
+
+        self.m.VerifyAll()
+
+    def test_cinder_create(self):
+        fv = FakeVolume('creating', 'available')
+        stack_name = 'test_volume_stack'
+
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            size=u'1', availability_zone='nova',
+            display_description='CustomDescription',
+            display_name='CustomName',
+            imageRef='Image1',
+            snapshot_id='snap-123',
+            metadata={'key': 'value'},
+            source_volid='vol-012',
+            volume_type='lvm').AndReturn(fv)
+
+        eventlet.sleep(1).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties'] = {
+            'size': '1',
+            'availability_zone': 'nova',
+            'name': 'CustomName',
+            'description': 'CustomDescription',
+            'volume_type': 'lvm',
+            'metadata': {'key': 'value'},
+            # Note that specifying all these arguments doesn't work in
+            # practice, as they are conflicting, but we just want to check they
+            # are sent to the backend.
+            'imageRef': 'Image1',
+            'snapshot_id': 'snap-123',
+            'source_volid': 'vol-012',
+        }
+        stack = parse_stack(t, stack_name=stack_name)
+
+        resource = vol.CinderVolume('DataVolume',
+                                    t['Resources']['DataVolume'],
+                                    stack)
+        self.assertEqual(resource.validate(), None)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(resource.state, vol.Volume.CREATE_COMPLETE)
+        self.assertEqual(fv.status, 'available')
+
+        self.m.VerifyAll()
+
+    def test_cinder_default(self):
+        fv = FakeVolume('creating', 'available')
+        stack_name = 'test_volume_stack'
+
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            size=u'1', availability_zone='nova',
+            display_description=None,
+            display_name='%s.DataVolume' % stack_name).AndReturn(fv)
+
+        eventlet.sleep(1).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties'] = {
+            'size': '1',
+            'availability_zone': 'nova',
+        }
+        stack = parse_stack(t, stack_name=stack_name)
+
+        resource = vol.CinderVolume('DataVolume',
+                                    t['Resources']['DataVolume'],
+                                    stack)
+        self.assertEqual(resource.validate(), None)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(resource.state, vol.Volume.CREATE_COMPLETE)
         self.assertEqual(fv.status, 'available')
 
         self.m.VerifyAll()
