@@ -97,6 +97,7 @@ def remote_error(ex):
         'InvalidTenant': exc.HTTPForbidden,
         'StackExists': exc.HTTPConflict,
         'StackValidationFailed': exc.HTTPBadRequest,
+        'InvalidTemplateReference': exc.HTTPBadRequest,
     }
 
     Exc = error_map.get(ex.exc_type, exc.HTTPInternalServerError)

@@ -196,6 +196,11 @@ class InvalidTemplateAttribute(OpenstackException):
                 " is incorrect.")
 
 
+class InvalidTemplateReference(OpenstackException):
+    message = _("The specified reference (%(resource)s %(key)s)"
+                " is incorrect.")
+
+
 class UserKeyPairMissing(OpenstackException):
     message = _("The Key (%(key_name)s) could not be found.")
 

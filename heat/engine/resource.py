@@ -262,21 +262,26 @@ class Resource(object):
     def __str__(self):
         return '%s "%s"' % (self.__class__.__name__, self.name)
 
-    def _add_dependencies(self, deps, fragment):
+    def _add_dependencies(self, deps, head, fragment):
         if isinstance(fragment, dict):
             for key, value in fragment.items():
                 if key in ('DependsOn', 'Ref'):
-                    target = self.stack.resources[value]
+                    try:
+                        target = self.stack.resources[value]
+                    except KeyError:
+                        raise exception.InvalidTemplateReference(
+                            resource=value,
+                            key=head)
                     if key == 'DependsOn' or target.strict_dependency:
                         deps += (self, target)
                 elif key != 'Fn::GetAtt':
-                    self._add_dependencies(deps, value)
+                    self._add_dependencies(deps, key, value)
         elif isinstance(fragment, list):
             for item in fragment:
-                self._add_dependencies(deps, item)
+                self._add_dependencies(deps, head, item)
 
     def add_dependencies(self, deps):
-        self._add_dependencies(deps, self.t)
+        self._add_dependencies(deps, None, self.t)
         deps += (self, None)
 
     def keystone(self):
