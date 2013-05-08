@@ -529,8 +529,6 @@ class WrapperTaskTest(mox.MoxTestBase):
 
     def test_cancel(self):
         def child_task():
-            yield
-
             try:
                 yield
             except GeneratorExit:
@@ -541,7 +539,7 @@ class WrapperTaskTest(mox.MoxTestBase):
         @scheduler.wrappertask
         def parent_task():
             try:
-                yield DummyTask()()
+                yield child_task()
             except GeneratorExit:
                 raise
             else:
@@ -553,8 +551,6 @@ class WrapperTaskTest(mox.MoxTestBase):
 
     def test_cancel_exit(self):
         def child_task():
-            yield
-
             try:
                 yield
             except GeneratorExit:
@@ -565,7 +561,7 @@ class WrapperTaskTest(mox.MoxTestBase):
         @scheduler.wrappertask
         def parent_task():
             try:
-                yield DummyTask()()
+                yield child_task()
             except GeneratorExit:
                 raise
             else:
@@ -577,8 +573,6 @@ class WrapperTaskTest(mox.MoxTestBase):
 
     def test_cancel_parent_exit(self):
         def child_task():
-            yield
-
             try:
                 yield
             except GeneratorExit:
@@ -589,7 +583,7 @@ class WrapperTaskTest(mox.MoxTestBase):
         @scheduler.wrappertask
         def parent_task():
             try:
-                yield DummyTask()()
+                yield child_task()
             except GeneratorExit:
                 return
             else:
