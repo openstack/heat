@@ -54,7 +54,7 @@ def setup_dummy_db():
     conn = engine.connect()
 
 
-def parse_stack(t, params={}, stack_name='test_stack'):
+def parse_stack(t, params={}, stack_name='test_stack', stack_id=None):
     ctx = context.RequestContext.from_dict({'tenant_id': 'test_tenant',
                                             'username': 'test_username',
                                             'password': 'password',
@@ -62,6 +62,6 @@ def parse_stack(t, params={}, stack_name='test_stack'):
                                             'http://localhost:5000/v2.0'})
     template = parser.Template(t)
     parameters = parser.Parameters(stack_name, template, params)
-    stack = parser.Stack(ctx, stack_name, template, parameters)
+    stack = parser.Stack(ctx, stack_name, template, parameters, stack_id)
 
     return stack
