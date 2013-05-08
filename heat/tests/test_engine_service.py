@@ -18,6 +18,7 @@ import json
 import mox
 from oslo.config import cfg
 
+from heat.common import config
 from heat.common import context
 from heat.common import exception
 from heat.tests.v1_1 import fakes
@@ -423,6 +424,7 @@ class stackServiceTestBase(HeatTestCase):
 
     def setUp(self):
         setup_dummy_db()
+        config.register_engine_opts()
         m = mox.Mox()
         self.username = 'stack_service_test_user'
         ctx = create_context(m, self.username, self.tenant)
