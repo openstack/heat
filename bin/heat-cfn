@@ -465,13 +465,16 @@ def create_options(parser):
                            "client to the heat server")
     parser.add_option('-I', '--username', dest="username",
                       metavar="USER", default=None,
-                      help="User name used to acquire an authentication token")
+                      help="User name used to acquire an authentication "
+                           "token, defaults to env[OS_USERNAME]")
     parser.add_option('-K', '--password', dest="password",
                       metavar="PASSWORD", default=None,
-                      help="Password used to acquire an authentication token")
+                      help="Password used to acquire an authentication "
+                           "token, defaults to env[OS_PASSWORD]")
     parser.add_option('-T', '--tenant', dest="tenant",
                       metavar="TENANT", default=None,
-                      help="Tenant name used for Keystone authentication")
+                      help="Tenant name used for Keystone authentication, "
+                           "defaults to env[OS_TENANT_NAME]")
     parser.add_option('-R', '--region', dest="region",
                       metavar="REGION", default=None,
                       help="Region name. When using keystone authentication "
@@ -481,7 +484,8 @@ def create_options(parser):
                       "region endpoint is available")
     parser.add_option('-N', '--auth_url', dest="auth_url",
                       metavar="AUTH_URL", default=None,
-                      help="Authentication URL")
+                      help="Authentication URL, "
+                           "defaults to env[OS_AUTH_URL]")
     parser.add_option('-S', '--auth_strategy', dest="auth_strategy",
                       metavar="STRATEGY", default=None,
                       help="Authentication strategy (keystone or noauth)")
@@ -536,6 +540,12 @@ def parse_options(parser, cli_args):
         if options.url is not None:
             logging.error("Use boto.cfg or ~/.boto cfn_region_endpoint")
             raise ValueError("--url option not supported by heat-boto")
+
+    if not (options.username and options.password) and not options.auth_token:
+        logging.error("Must specify credentials, " +
+                      "either username/password or token")
+        logging.error("See %s --help for options" % scriptname)
+        sys.exit(1)
 
     if options.url is not None:
         u = urlparse(options.url)
