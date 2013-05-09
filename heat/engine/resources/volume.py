@@ -14,6 +14,8 @@
 #    under the License.
 
 import eventlet
+import json
+
 from heat.openstack.common import log as logging
 from heat.openstack.common.importutils import try_import
 
@@ -167,6 +169,21 @@ class CinderVolume(Volume):
         arguments.update((prop, self.properties[prop]) for prop in optionals
                          if self.properties[prop])
         return arguments
+
+    def FnGetAtt(self, key):
+        if key == 'id':
+            return self.resource_id
+        attributes = ['availability_zone', 'size', 'snapshot_id',
+                      'display_name', 'display_description', 'volume_type',
+                      'metadata', 'source_volid', 'status', 'created_at',
+                      'bootable']
+        if key not in attributes:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
+        vol = self.cinder().volumes.get(self.resource_id)
+        if key == 'metadata':
+            return unicode(json.dumps(vol.metadata))
+        return unicode(getattr(vol, key))
 
 
 def resource_mapping():

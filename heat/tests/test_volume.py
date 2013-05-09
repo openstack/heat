@@ -14,6 +14,7 @@
 
 
 import eventlet
+import json
 
 from testtools import skipIf
 
@@ -460,14 +461,68 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_cinder_fn_getatt(self):
+        fv = FakeVolume('creating', 'available', availability_zone='zone1',
+                        size=1, snapshot_id='snap-123', display_name='name',
+                        display_description='desc', volume_type='lvm',
+                        metadata={'key': 'value'}, source_volid=None,
+                        status='available', bootable=False,
+                        created_at='2013-02-25T02:40:21.000000')
+        stack_name = 'test_volume_stack'
+
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            size=u'1', availability_zone='nova',
+            display_description=None,
+            display_name='%s.DataVolume' % stack_name).AndReturn(fv)
+
+        eventlet.sleep(1).AndReturn(None)
+        self.cinder_fc.volumes.get('vol-123').MultipleTimes().AndReturn(fv)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties'] = {
+            'size': '1',
+            'availability_zone': 'nova',
+        }
+        stack = parse_stack(t, stack_name=stack_name)
+
+        resource = vol.CinderVolume('DataVolume',
+                                    t['Resources']['DataVolume'],
+                                    stack)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(u'vol-123', resource.FnGetAtt('id'))
+        self.assertEqual(u'zone1', resource.FnGetAtt('availability_zone'))
+        self.assertEqual(u'1', resource.FnGetAtt('size'))
+        self.assertEqual(u'snap-123', resource.FnGetAtt('snapshot_id'))
+        self.assertEqual(u'name', resource.FnGetAtt('display_name'))
+        self.assertEqual(u'desc', resource.FnGetAtt('display_description'))
+        self.assertEqual(u'lvm', resource.FnGetAtt('volume_type'))
+        self.assertEqual(json.dumps({'key': 'value'}),
+                         resource.FnGetAtt('metadata'))
+        self.assertEqual(u'None', resource.FnGetAtt('source_volid'))
+        self.assertEqual(u'available', resource.FnGetAtt('status'))
+        self.assertEqual(u'2013-02-25T02:40:21.000000',
+                         resource.FnGetAtt('created_at'))
+        self.assertEqual(u'False', resource.FnGetAtt('bootable'))
+        error = self.assertRaises(exception.InvalidTemplateAttribute,
+                                  resource.FnGetAtt, 'unknown')
+        self.assertEqual(
+            'The Referenced Attribute (DataVolume unknown) is incorrect.',
+            str(error))
+
 
 class FakeVolume:
     status = 'attaching'
     id = 'vol-123'
 
-    def __init__(self, initial_status, final_status):
+    def __init__(self, initial_status, final_status, **attrs):
         self.status = initial_status
         self.final_status = final_status
+        for key, value in attrs.iteritems():
+            setattr(self, key, value)
 
     def get(self):
         self.status = self.final_status
