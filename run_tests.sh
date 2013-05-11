@@ -48,8 +48,8 @@ function run_tests {
 }
 
 function run_pep8 {
-    echo "Running PEP8 and HACKING compliance check..."
-    bash -c "${wrapper} tools/run_pep8.sh"
+    echo "Running flake8..."
+    bash -c "${wrapper} flake8"
 }
 
 # run unit tests with pep8 when no arguments are specified
