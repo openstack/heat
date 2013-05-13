@@ -212,16 +212,20 @@ class instancesTest(HeatTestCase):
         self.assertEqual(instance.state, instance.CREATE_COMPLETE)
 
     def test_build_nics(self):
-        self.assertEqual(None, instances.Instance._build_nics([]))
-        self.assertEqual(None, instances.Instance._build_nics(None))
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_build_nics')
+
+        self.assertEqual(None, instance._build_nics([]))
+        self.assertEqual(None, instance._build_nics(None))
         self.assertEqual([
             {'port-id': 'id3'}, {'port-id': 'id1'}, {'port-id': 'id2'}],
-            instances.Instance._build_nics([
+            instance._build_nics([
                 'id3', 'id1', 'id2']))
         self.assertEqual([
             {'port-id': 'id1'},
             {'port-id': 'id2'},
-            {'port-id': 'id3'}], instances.Instance._build_nics([
+            {'port-id': 'id3'}], instance._build_nics([
                 {'NetworkInterfaceId': 'id3', 'DeviceIndex': '3'},
                 {'NetworkInterfaceId': 'id1', 'DeviceIndex': '1'},
                 {'NetworkInterfaceId': 'id2', 'DeviceIndex': 2},
@@ -232,7 +236,7 @@ class instancesTest(HeatTestCase):
             {'port-id': 'id3'},
             {'port-id': 'id4'},
             {'port-id': 'id5'}
-        ], instances.Instance._build_nics([
+        ], instance._build_nics([
             {'NetworkInterfaceId': 'id3', 'DeviceIndex': '3'},
             {'NetworkInterfaceId': 'id1', 'DeviceIndex': '1'},
             {'NetworkInterfaceId': 'id2', 'DeviceIndex': 2},
