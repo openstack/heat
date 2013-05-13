@@ -200,14 +200,22 @@ keystone_setup() {
     ADMIN_ROLE=$(get_data 2 admin 1 keystone role-list)
     SERVICE_TENANT=$(get_data 2 service 1 keystone tenant-list)
     SERVICE_PASSWORD=${SERVICE_PASSWORD:-$OS_PASSWORD}
+    SERVICE_HOST=${SERVICE_HOST:-localhost}
+
     if [[ "$SERVICE_PASSWORD" == "$OS_PASSWORD" ]]; then
         echo "Using the OS_PASSWORD for the SERVICE_PASSWORD." >&2
+    fi
+
+    if [[ "$SERVICE_HOST" == "localhost" ]]; then
+        echo "Endpoints will be registered as localhost, but this usually won't work."
+        echo  "Set SERVICE_HOST to a publically accessible hostname/IP instead."
     fi
 
     echo ADMIN_ROLE $ADMIN_ROLE
     echo SERVICE_TENANT $SERVICE_TENANT
     echo SERVICE_PASSWORD $SERVICE_PASSWORD
     echo SERVICE_TOKEN $SERVICE_TOKEN
+    echo SERVICE_HOST $SERVICE_HOST
 
     HEAT_USERNAME="heat"
     HEAT_USERID=$(get_user $HEAT_USERNAME)
@@ -223,11 +231,11 @@ keystone_setup() {
 
     HEAT_CFN_SERVICE=$(get_service heat-cfn cloudformation \
                        "Heat CloudFormation API")
-    add_endpoint $HEAT_CFN_SERVICE 'http://localhost:8000/v1'
+    add_endpoint $HEAT_CFN_SERVICE "http://$SERVICE_HOST:8000/v1"
 
     HEAT_OS_SERVICE=$(get_service heat orchestration \
                       "Heat API")
-    add_endpoint $HEAT_OS_SERVICE 'http://localhost:8004/v1/%(tenant_id)s'
+    add_endpoint $HEAT_OS_SERVICE "http://$SERVICE_HOST:8004/v1/%(tenant_id)s"
 }
 
 if [[ ${BASH_SOURCE[0]} == ${0} ]]; then
