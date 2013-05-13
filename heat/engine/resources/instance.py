@@ -323,7 +323,7 @@ class Instance(resource.Resource):
 
         return server
 
-    def check_active(self, server):
+    def check_create_complete(self, server):
         if server.status == 'ACTIVE':
             return True
 

@@ -142,10 +142,10 @@ class MetadataRefreshTest(HeatTestCase):
         self.stack_id = stack.store()
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_active')
+        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         for cookie in (object(), object()):
             instance.Instance.handle_create().AndReturn(cookie)
-            instance.Instance.check_active(cookie).AndReturn(True)
+            instance.Instance.check_create_complete(cookie).AndReturn(True)
         self.m.StubOutWithMock(instance.Instance, 'FnGetAtt')
 
         return stack
@@ -202,10 +202,10 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         self.stack_id = stack.store()
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_active')
+        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         cookie = object()
         instance.Instance.handle_create().AndReturn(cookie)
-        instance.Instance.check_active(cookie).AndReturn(True)
+        instance.Instance.check_create_complete(cookie).AndReturn(True)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)

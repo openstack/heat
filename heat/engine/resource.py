@@ -319,7 +319,7 @@ class Resource(object):
             if callable(getattr(self, 'handle_create', None)):
                 create_data = self.handle_create()
                 yield
-            while not self.check_active(create_data):
+            while not self.check_create_complete(create_data):
                 yield
         except greenlet.GreenletExit:
             # Older versions of greenlet erroneously had GreenletExit inherit
@@ -343,7 +343,7 @@ class Resource(object):
         else:
             self.state_set(self.CREATE_COMPLETE)
 
-    def check_active(self, create_data):
+    def check_create_complete(self, create_data):
         '''
         Check if the resource is active (ready to move to the CREATE_COMPLETE
         state). By default this happens as soon as the handle_create() method

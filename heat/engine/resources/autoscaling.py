@@ -80,7 +80,7 @@ class InstanceGroup(resource.Resource):
     def handle_create(self):
         return self.resize(int(self.properties['Size']), raise_on_error=True)
 
-    def check_active(self, creator):
+    def check_create_complete(self, creator):
         if creator is None:
             return True
 

@@ -150,7 +150,7 @@ class instancesTest(HeatTestCase):
                                              'test_instance_status_build')
         instance.resource_id = 1234
 
-        # Bind new fake get method which Instance.check_active will call
+        # Bind fake get method which Instance.check_create_complete will call
         def activate_status(server):
             server.status = 'ACTIVE'
         return_server.get = activate_status.__get__(return_server)
@@ -192,7 +192,7 @@ class instancesTest(HeatTestCase):
                                              'test_instance_status_build')
         instance.resource_id = 1234
 
-        # Bind new fake get method which Instance.check_active will call
+        # Bind fake get method which Instance.check_create_complete will call
         def activate_status(server):
             if hasattr(server, '_test_check_iterations'):
                 server._test_check_iterations += 1

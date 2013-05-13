@@ -64,13 +64,14 @@ class InstanceGroupTest(HeatTestCase):
         self.m.StubOutWithMock(eventlet, 'sleep')
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_active')
+        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         cookie = object()
         for x in range(num):
             instance.Instance.handle_create().AndReturn(cookie)
-        instance.Instance.check_active(cookie).AndReturn(False)
+        instance.Instance.check_create_complete(cookie).AndReturn(False)
         eventlet.sleep(mox.IsA(int)).AndReturn(None)
-        instance.Instance.check_active(cookie).MultipleTimes().AndReturn(True)
+        instance.Instance.check_create_complete(
+            cookie).MultipleTimes().AndReturn(True)
 
     def create_instance_group(self, t, stack, resource_name):
         resource = asc.InstanceGroup(resource_name,
