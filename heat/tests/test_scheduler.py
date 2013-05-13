@@ -352,6 +352,82 @@ class TaskTest(mox.MoxTestBase):
         self.assertTrue(runner.step())
         self.assertTrue(runner.step())
 
+    def test_timeout(self):
+        st = scheduler.wallclock()
+
+        def task():
+            while True:
+                yield
+
+        self.mox.StubOutWithMock(scheduler, 'wallclock')
+        scheduler.wallclock().AndReturn(st)
+        scheduler.wallclock().AndReturn(st + 0.5)
+        scheduler.wallclock().AndReturn(st + 1.5)
+
+        self.mox.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        runner.start(timeout=1)
+        self.assertTrue(runner)
+        self.assertRaises(scheduler.Timeout, runner.step)
+
+        self.mox.VerifyAll()
+
+    def test_timeout_return(self):
+        st = scheduler.wallclock()
+
+        def task():
+            while True:
+                try:
+                    yield
+                except scheduler.Timeout:
+                    return
+
+        self.mox.StubOutWithMock(scheduler, 'wallclock')
+        scheduler.wallclock().AndReturn(st)
+        scheduler.wallclock().AndReturn(st + 0.5)
+        scheduler.wallclock().AndReturn(st + 1.5)
+
+        self.mox.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        runner.start(timeout=1)
+        self.assertTrue(runner)
+        self.assertTrue(runner.step())
+        self.assertFalse(runner)
+
+        self.mox.VerifyAll()
+
+    def test_timeout_swallowed(self):
+        st = scheduler.wallclock()
+
+        def task():
+            while True:
+                try:
+                    yield
+                except scheduler.Timeout:
+                    yield
+                    self.fail('Task still running')
+
+        self.mox.StubOutWithMock(scheduler, 'wallclock')
+        scheduler.wallclock().AndReturn(st)
+        scheduler.wallclock().AndReturn(st + 0.5)
+        scheduler.wallclock().AndReturn(st + 1.5)
+
+        self.mox.ReplayAll()
+
+        runner = scheduler.TaskRunner(task)
+
+        runner.start(timeout=1)
+        self.assertTrue(runner)
+        self.assertTrue(runner.step())
+        self.assertFalse(runner)
+        self.assertTrue(runner.step())
+
+        self.mox.VerifyAll()
+
 
 class WrapperTaskTest(mox.MoxTestBase):
 
