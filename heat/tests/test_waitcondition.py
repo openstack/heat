@@ -12,10 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mox
 
-import uuid
 import datetime
+import time
 import json
+import uuid
 
 import eventlet
 from oslo.config import cfg
@@ -29,6 +31,7 @@ import heat.db.api as db_api
 from heat.common import template_format
 from heat.common import identifier
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.engine.resources import wait_condition as wc
 from heat.common import config
 from heat.common import context
@@ -83,8 +86,6 @@ class WaitConditionTest(HeatTestCase):
         setup_dummy_db()
         self.m.StubOutWithMock(wc.WaitConditionHandle,
                                'get_status')
-        self.m.StubOutWithMock(wc.WaitCondition,
-                               '_create_timeout')
         self.m.StubOutWithMock(eventlet, 'sleep')
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
@@ -122,7 +123,6 @@ class WaitConditionTest(HeatTestCase):
     @stack_delete_after
     def test_post_success_to_handle(self):
         self.stack = self.create_stack()
-        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
         wc.WaitConditionHandle.get_status().AndReturn([])
         eventlet.sleep(1).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn([])
@@ -145,7 +145,6 @@ class WaitConditionTest(HeatTestCase):
     @stack_delete_after
     def test_post_failure_to_handle(self):
         self.stack = self.create_stack()
-        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
         wc.WaitConditionHandle.get_status().AndReturn([])
         eventlet.sleep(1).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn([])
@@ -157,8 +156,9 @@ class WaitConditionTest(HeatTestCase):
         self.stack.create()
 
         resource = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(resource.state,
-                         'CREATE_FAILED')
+        self.assertEqual(resource.state, resource.CREATE_FAILED)
+        reason = resource.state_description
+        self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   self.stack.id)
@@ -168,7 +168,6 @@ class WaitConditionTest(HeatTestCase):
     @stack_delete_after
     def test_post_success_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
-        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
         wc.WaitConditionHandle.get_status().AndReturn([])
         eventlet.sleep(1).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
@@ -194,7 +193,6 @@ class WaitConditionTest(HeatTestCase):
     @stack_delete_after
     def test_post_failure_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
-        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
         wc.WaitConditionHandle.get_status().AndReturn([])
         eventlet.sleep(1).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
@@ -206,8 +204,9 @@ class WaitConditionTest(HeatTestCase):
         self.stack.create()
 
         resource = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(resource.state,
-                         'CREATE_FAILED')
+        self.assertEqual(resource.state, resource.CREATE_FAILED)
+        reason = resource.state_description
+        self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   self.stack.id)
@@ -216,13 +215,21 @@ class WaitConditionTest(HeatTestCase):
 
     @stack_delete_after
     def test_timeout(self):
+        st = time.time()
+
         self.stack = self.create_stack()
-        tmo = eventlet.Timeout(6)
-        wc.WaitCondition._create_timeout().AndReturn(tmo)
+
+        self.m.StubOutWithMock(scheduler, 'wallclock')
+
+        scheduler.wallclock().AndReturn(st)
+        scheduler.wallclock().AndReturn(st + 0.001)
+        scheduler.wallclock().AndReturn(st + 0.1)
         wc.WaitConditionHandle.get_status().AndReturn([])
-        eventlet.sleep(1).AndReturn(None)
+        eventlet.sleep(mox.IsA(int)).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 4.1)
         wc.WaitConditionHandle.get_status().AndReturn([])
-        eventlet.sleep(1).AndRaise(tmo)
+        eventlet.sleep(mox.IsA(int)).AndReturn(None)
+        scheduler.wallclock().AndReturn(st + 5.1)
 
         self.m.ReplayAll()
 
@@ -230,8 +237,10 @@ class WaitConditionTest(HeatTestCase):
 
         resource = self.stack.resources['WaitForTheHandle']
 
-        self.assertEqual(resource.state,
-                         'CREATE_FAILED')
+        self.assertEqual(resource.state, resource.CREATE_FAILED)
+        reason = resource.state_description
+        self.assertTrue(reason.startswith('WaitConditionTimeout:'))
+
         self.assertEqual(wc.WaitCondition.UPDATE_REPLACE,
                          resource.handle_update({}))
         self.m.VerifyAll()
@@ -239,7 +248,6 @@ class WaitConditionTest(HeatTestCase):
     @stack_delete_after
     def test_FnGetAtt(self):
         self.stack = self.create_stack()
-        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
         self.m.ReplayAll()
@@ -403,8 +411,6 @@ class WaitConditionHandleTest(HeatTestCase):
         # Stub waitcondition status so all goes CREATE_COMPLETE
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        self.m.StubOutWithMock(wc.WaitCondition, '_create_timeout')
-        wc.WaitCondition._create_timeout().AndReturn(eventlet.Timeout(5))
 
         # Stub keystone() with fake client
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')

@@ -17,7 +17,6 @@ import urllib
 import urlparse
 import json
 
-import eventlet
 from oslo.config import cfg
 
 from keystoneclient.contrib.ec2.utils import Ec2Signer
@@ -25,6 +24,7 @@ from keystoneclient.contrib.ec2.utils import Ec2Signer
 from heat.common import exception
 from heat.common import identifier
 from heat.engine import resource
+from heat.engine import scheduler
 
 from heat.openstack.common import log as logging
 
@@ -119,7 +119,7 @@ class WaitConditionHandle(resource.Resource):
         """
         expected_keys = ['Data', 'Reason', 'Status', 'UniqueId']
         if sorted(metadata.keys()) == expected_keys:
-            return metadata['Status'] in (SUCCESS, FAILURE)
+            return metadata['Status'] in WAIT_STATUSES
 
     def metadata_update(self, new_metadata=None):
         '''
@@ -163,14 +163,28 @@ class WaitConditionHandle(resource.Resource):
 
 
 WAIT_STATUSES = (
-    FAILURE,
-    TIMEDOUT,
-    SUCCESS,
+    STATUS_FAILURE,
+    STATUS_SUCCESS,
 ) = (
     'FAILURE',
-    'TIMEDOUT',
     'SUCCESS',
 )
+
+
+class WaitConditionFailure(Exception):
+    def __init__(self, wait_condition, handle):
+        reasons = handle.get_status_reason(STATUS_FAILURE)
+        super(WaitConditionFailure, self).__init__(reasons)
+
+
+class WaitConditionTimeout(Exception):
+    def __init__(self, wait_condition, handle):
+        reasons = handle.get_status_reason(STATUS_SUCCESS)
+        message = '%d of %d received' % (len(reasons), wait_condition.count)
+        if reasons:
+            message += ' - %s' % reasons
+
+        super(WaitConditionTimeout, self).__init__(message)
 
 
 class WaitCondition(resource.Resource):
@@ -182,21 +196,10 @@ class WaitCondition(resource.Resource):
                          'Count': {'Type': 'Number',
                                    'MinValue': '1'}}
 
-    # Sleep time between polling for wait completion
-    # is calculated as a fraction of timeout time
-    # bounded by MIN_SLEEP and MAX_SLEEP
-    MIN_SLEEP = 1  # seconds
-    MAX_SLEEP = 10
-    SLEEP_DIV = 100  # 1/100'th of timeout
-
     def __init__(self, name, json_snippet, stack):
         super(WaitCondition, self).__init__(name, json_snippet, stack)
 
-        self.timeout = int(self.t['Properties']['Timeout'])
         self.count = int(self.t['Properties'].get('Count', '1'))
-        self.sleep_time = max(min(self.MAX_SLEEP,
-                              self.timeout / self.SLEEP_DIV),
-                              self.MIN_SLEEP)
 
     def _validate_handle_url(self):
         handle_url = self.properties['Handle']
@@ -223,50 +226,38 @@ class WaitCondition(resource.Resource):
         handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
         return handle_id.resource_name
 
-    def _create_timeout(self):
-        return eventlet.Timeout(self.timeout)
+    def _wait(self, handle):
+        while True:
+            try:
+                yield
+            except scheduler.Timeout:
+                timeout = WaitConditionTimeout(self, handle)
+                logger.info('%s Timed out (%s)' % (str(self), str(timeout)))
+                raise timeout
+
+            handle_status = handle.get_status()
+
+            if any(s != STATUS_SUCCESS for s in handle_status):
+                failure = WaitConditionFailure(self, handle)
+                logger.info('%s Failed (%s)' % (str(self), str(failure)))
+                raise failure
+
+            if len(handle_status) >= self.count:
+                logger.info("%s Succeeded" % str(self))
+                return
 
     def handle_create(self):
         self._validate_handle_url()
-        tmo = None
-        status = FAILURE
-        reason = "Unknown reason"
-        try:
-            # keep polling our Metadata to see if the cfn-signal has written
-            # it yet. The execution here is limited by timeout.
-            with self._create_timeout() as tmo:
-                handle_res_name = self._get_handle_resource_name()
-                handle = self.stack[handle_res_name]
-                self.resource_id_set(handle_res_name)
+        handle_res_name = self._get_handle_resource_name()
+        handle = self.stack[handle_res_name]
+        self.resource_id_set(handle_res_name)
 
-                # Poll for WaitConditionHandle signals indicating
-                # SUCCESS/FAILURE.  We need self.count SUCCESS signals
-                # before we can declare the WaitCondition CREATE_COMPLETE
-                handle_status = handle.get_status()
-                while (FAILURE not in handle_status
-                       and len(handle_status) < self.count):
-                    logger.debug('Polling for WaitCondition completion,' +
-                                 ' sleeping for %s seconds, timeout %s' %
-                                 (self.sleep_time, self.timeout))
-                    eventlet.sleep(self.sleep_time)
-                    handle_status = handle.get_status()
+        runner = scheduler.TaskRunner(self._wait, handle)
+        runner.start(timeout=float(self.properties['Timeout']))
+        return runner
 
-                if FAILURE in handle_status:
-                    reason = handle.get_status_reason(FAILURE)
-                elif (len(handle_status) == self.count and
-                      handle_status == [SUCCESS] * self.count):
-                    logger.debug("WaitCondition %s SUCCESS" % self.name)
-                    status = SUCCESS
-
-        except eventlet.Timeout as t:
-            if t is not tmo:
-                # not my timeout
-                raise
-            else:
-                (status, reason) = (TIMEDOUT, 'Timed out waiting for instance')
-
-        if status != SUCCESS:
-            raise exception.Error(reason)
+    def check_create_complete(self, runner):
+        return runner.step()
 
     def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
