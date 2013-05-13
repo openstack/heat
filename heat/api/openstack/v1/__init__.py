@@ -71,7 +71,7 @@ class API(wsgi.Router):
             stack_mapper.connect("stack_lookup",
                                  r"/stacks/{stack_name:arn\x3A.*}",
                                  action="lookup")
-            subpaths = ['resources', 'events']
+            subpaths = ['resources', 'events', 'template']
             path = "{path:%s}" % '|'.join(subpaths)
             stack_mapper.connect("stack_lookup_subpath",
                                  "/stacks/{stack_name}/" + path,
