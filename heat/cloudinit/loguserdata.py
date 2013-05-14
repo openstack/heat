@@ -2,6 +2,7 @@
 
 import errno
 import datetime
+import logging
 import pkg_resources
 import os
 import subprocess
@@ -11,6 +12,7 @@ from distutils.version import LooseVersion
 
 
 VAR_PATH = '/var/lib/heat-cfntools'
+LOG = logging.getLogger('heat-provision')
 
 
 def chk_ci_version():
@@ -18,56 +20,69 @@ def chk_ci_version():
     return v >= LooseVersion('0.6.0')
 
 
-def create_log(log_path):
-    fd = os.open(log_path, os.O_WRONLY | os.O_CREAT, 0600)
-    return os.fdopen(fd, 'w')
+def init_logging():
+    LOG.setLevel(logging.INFO)
+    LOG.addHandler(logging.StreamHandler())
+    fh = logging.FileHandler("/var/log/heat-provision.log")
+    os.chmod(fh.baseFilename, 0600)
+    LOG.addHandler(fh)
 
 
-def call(args, logger):
-    logger.write('%s\n' % ' '.join(args))
-    logger.flush()
+def call(args):
+
+    class LogStream:
+
+        def write(self, data):
+            LOG.info(data)
+
+        def __getattr__(self, attr):
+            return getattr(sys.stdout, attr)
+
+    LOG.info('%s\n' % ' '.join(args))
     try:
-        p = subprocess.Popen(args, stdout=logger, stderr=logger)
+        ls = LogStream()
+        p = subprocess.Popen(args, stdout=ls, stderr=ls)
         p.wait()
     except OSError as ex:
         if ex.errno == errno.ENOEXEC:
-            logger.write('Userdata empty or not executable: %s\n' % str(ex))
+            LOG.error('Userdata empty or not executable: %s\n' % str(ex))
             return os.EX_OK
         else:
-            logger.write('OS error running userdata: %s\n' % str(ex))
+            LOG.error('OS error running userdata: %s\n' % str(ex))
             return os.EX_OSERR
     except Exception as ex:
-        logger.write('Unknown error running userdata: %s\n' % str(ex))
+        LOG.error('Unknown error running userdata: %s\n' % str(ex))
         return os.EX_SOFTWARE
     return p.returncode
 
 
-def main(logger):
+def main():
 
     if not chk_ci_version():
         # pre 0.6.0 - user data executed via cloudinit, not this helper
-        logger.write('Unable to log provisioning, need a newer version of'
-                     ' cloud-init\n')
+        LOG.info('Unable to log provisioning, need a newer version of'
+                 ' cloud-init\n')
         return -1
 
     userdata_path = os.path.join(VAR_PATH, 'cfn-userdata')
     os.chmod(userdata_path, 0700)
 
-    logger.write('Provision began: %s\n' % datetime.datetime.now())
-    logger.flush()
-    returncode = call([userdata_path], logger)
-    logger.write('Provision done: %s\n' % datetime.datetime.now())
+    LOG.info('Provision began: %s\n' % datetime.datetime.now())
+    returncode = call([userdata_path])
+    LOG.info('Provision done: %s\n' % datetime.datetime.now())
     if returncode:
         return returncode
 
 
 if __name__ == '__main__':
-    with create_log('/var/log/heat-provision.log') as log:
-        code = main(log)
-        if code:
-            log.write('Provision failed')
-            sys.exit(code)
+    init_logging()
+
+    code = main()
+    if code:
+        LOG.error('Provision failed with exit code %s' % code)
+        sys.exit(code)
 
     provision_log = os.path.join(VAR_PATH, 'provision-finished')
-    with create_log(provision_log) as log:
-        log.write('%s\n' % datetime.datetime.now())
+    # touch the file so it is timestamped with when finished
+    with file(provision_log, 'a'):
+        os.utime(provision_log, None)
