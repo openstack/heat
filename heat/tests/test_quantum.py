@@ -227,8 +227,8 @@ class QuantumTest(HeatTestCase):
                           'router:external': True,
                           'admin_state_up': False}, props)
 
+    @skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
     def test_net(self):
-        skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
 
         fq = FakeQuantum()
         net.Net.quantum().MultipleTimes().AndReturn(fq)
@@ -267,9 +267,8 @@ class QuantumFloatingIPTest(HeatTestCase):
         self.m.StubOutWithMock(port.Port, 'quantum')
         setup_dummy_db()
 
+    @skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
     def test_floating_ip(self):
-        if net.clients.quantumclient is None:
-            raise SkipTest
 
         fq = FakeQuantum()
         floatingip.FloatingIP.quantum().MultipleTimes().AndReturn(fq)
@@ -302,9 +301,8 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    @skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
     def test_port(self):
-        if net.clients.quantumclient is None:
-            raise SkipTest
 
         fq = FakeQuantum()
         port.Port.quantum().MultipleTimes().AndReturn(fq)
@@ -337,9 +335,8 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    @skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
     def test_floatip_port(self):
-        if net.clients.quantumclient is None:
-            raise SkipTest
 
         fq = FakeQuantum()
         floatingip.FloatingIP.quantum().MultipleTimes().AndReturn(fq)
