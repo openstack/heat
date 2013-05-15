@@ -37,6 +37,7 @@ class Subnet(quantum.QuantumResource):
                          'ip_version': {'Type': 'Integer',
                                         'AllowedValues': [4, 6],
                                         'Default': 4},
+                         'dns_nameservers': {'Type': 'List'},
                          'gateway_ip': {'Type': 'String'},
                          'allocation_pools': {'Type': 'List',
                                               'Schema': {

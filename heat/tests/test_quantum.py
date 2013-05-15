@@ -20,6 +20,7 @@ from heat.common import template_format
 from heat.engine import properties
 from heat.engine import scheduler
 from heat.engine.resources.quantum import net
+from heat.engine.resources.quantum import subnet
 from heat.engine.resources.quantum import floatingip
 from heat.engine.resources.quantum import port
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
@@ -54,7 +55,8 @@ quantum_template = '''
         "network_id": { "Ref" : "network" },
         "ip_version": 4,
         "cidr": "10.0.3.0/24",
-        "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}]
+        "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
+        "dns_nameservers": ["8.8.8.8"]
       }
     },
     "port": {
@@ -180,17 +182,56 @@ class FakeQuantum():
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }}
 
+    def create_subnet(self, name):
+        return {"subnet": {
+            "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
+            "cidr": "10.0.3.0/24",
+            "dns_nameservers": ["8.8.8.8"],
+            "enable_dhcp": True,
+            "gateway_ip": "10.0.3.1",
+            "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
+            "ip_version": 4,
+            "name": "name",
+            "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f"
+        }}
+
+    def delete_subnet(self, id):
+        return None
+
+    def show_subnet(self, id):
+        return {"subnet": {
+            "name": "name",
+            "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+            "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
+            "gateway_ip": "10.0.3.1",
+            "ip_version": 4,
+            "cidr": "10.0.3.0/24",
+            "dns_nameservers": ["8.8.8.8"],
+            "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
+            "enable_dhcp": False,
+        }}
+
 
 class QuantumTest(HeatTestCase):
     def setUp(self):
         super(QuantumTest, self).setUp()
         self.m.StubOutWithMock(net.Net, 'quantum')
+        self.m.StubOutWithMock(subnet.Subnet, 'quantum')
         setup_dummy_db()
 
     def create_net(self, t, stack, resource_name):
         resource = net.Net('test_net', t['Resources'][resource_name], stack)
         scheduler.TaskRunner(resource.create)()
         self.assertEqual(net.Net.CREATE_COMPLETE, resource.state)
+        return resource
+
+    def create_subnet(self, t, stack, resource_name):
+        resource = subnet.Subnet('test_subnet', t['Resources'][resource_name],
+                                 stack)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(subnet.Subnet.CREATE_COMPLETE, resource.state)
         return resource
 
     def test_validate_properties(self):
@@ -254,6 +295,34 @@ class QuantumTest(HeatTestCase):
                          resource.FnGetAtt('id'))
 
         self.assertEqual(net.Net.UPDATE_REPLACE, resource.handle_update({}))
+
+        resource.delete()
+        self.m.VerifyAll()
+
+    def test_subnet(self):
+        skipIf(subnet.clients.quantumclient is None,
+               'quantumclient unavailable')
+
+        fq = FakeQuantum()
+        subnet.Subnet.quantum().MultipleTimes().AndReturn(fq)
+
+        self.m.ReplayAll()
+        t = template_format.parse(quantum_template)
+        stack = parse_stack(t)
+        resource = self.create_subnet(t, stack, 'subnet')
+
+        resource.validate()
+
+        ref_id = resource.FnGetRefId()
+        self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         resource.FnGetAtt('network_id'))
+        self.assertEqual('8.8.8.8', resource.FnGetAtt('dns_nameservers')[0])
+        self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1',
+                         resource.FnGetAtt('id'))
+
+        self.assertEqual(subnet.Subnet.UPDATE_REPLACE,
+                         resource.handle_update({}))
 
         resource.delete()
         self.m.VerifyAll()
