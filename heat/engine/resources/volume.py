@@ -34,23 +34,36 @@ class Volume(resource.Resource):
                          'SnapshotId': {'Type': 'String'},
                          'Tags': {'Type': 'List'}}
 
+    _restore_property = 'SnapshotId'
+
+    def _display_name(self):
+        return self.physical_resource_name()
+
+    def _display_description(self):
+        return self.physical_resource_name()
+
+    def _create_arguments(self):
+        return {'size': self.properties['Size'],
+                'availability_zone': self.properties['AvailabilityZone']}
+
     def handle_create(self):
-        backup_id = self.properties.get('SnapshotId')
+        backup_id = self.properties.get(self._restore_property)
         cinder = self.cinder()
         if backup_id is not None:
             if volume_backups is None:
-                raise exception.Error('SnapshotId not supported')
+                raise exception.Error(
+                    '%s not supported' % self._restore_property)
             vol_id = cinder.restores.restore(backup_id)['volume_id']
 
             vol = cinder.volumes.get(vol_id)
             vol.update(
-                display_name=self.physical_resource_name(),
-                display_description=self.physical_resource_name())
+                display_name=self._display_name(),
+                display_description=self._display_description())
         else:
             vol = cinder.volumes.create(
-                self.properties['Size'],
-                display_name=self.physical_resource_name(),
-                display_description=self.physical_resource_name())
+                display_name=self._display_name(),
+                display_description=self._display_description(),
+                **self._create_arguments())
 
         while vol.status == 'creating':
             eventlet.sleep(1)
@@ -119,8 +132,46 @@ class VolumeAttachment(resource.Resource):
         self.stack.clients.detach_volume_from_instance(server_id, volume_id)
 
 
+class CinderVolume(Volume):
+
+    properties_schema = {'availability_zone': {'Type': 'String',
+                                               'Required': True},
+                         'size': {'Type': 'Number'},
+                         'snapshot_id': {'Type': 'String'},
+                         'backup_id': {'Type': 'String'},
+                         'name': {'Type': 'String'},
+                         'description': {'Type': 'String'},
+                         'volume_type': {'Type': 'String'},
+                         'metadata': {'Type': 'Map'},
+                         'imageRef': {'Type': 'String'},
+                         'source_volid': {'Type': 'String'}}
+
+    _restore_property = 'backup_id'
+
+    def _display_name(self):
+        name = self.properties['name']
+        if name:
+            return name
+        return super(CinderVolume, self)._display_name()
+
+    def _display_description(self):
+        return self.properties['description']
+
+    def _create_arguments(self):
+        arguments = {
+            'size': self.properties['size'],
+            'availability_zone': self.properties['availability_zone']
+        }
+        optionals = ['snapshot_id', 'volume_type', 'imageRef', 'source_volid',
+                     'metadata']
+        arguments.update((prop, self.properties[prop]) for prop in optionals
+                         if self.properties[prop])
+        return arguments
+
+
 def resource_mapping():
     return {
         'AWS::EC2::Volume': Volume,
         'AWS::EC2::VolumeAttachment': VolumeAttachment,
+        'OS::Cinder::Volume': CinderVolume,
     }
