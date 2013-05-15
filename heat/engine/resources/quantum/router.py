@@ -58,7 +58,11 @@ class Router(quantum.QuantumResource):
                 raise ex
 
     def FnGetAtt(self, key):
-        attributes = self._show_resource()
+        try:
+            attributes = self._show_resource()
+        except QuantumClientException as ex:
+            logger.warn("failed to fetch resource attributes: %s" % str(ex))
+            return None
         return self.handle_get_attributes(self.name, key, attributes)
 
 

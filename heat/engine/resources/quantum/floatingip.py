@@ -48,8 +48,12 @@ class FloatingIP(quantum.QuantumResource):
                 raise ex
 
     def FnGetAtt(self, key):
-        attributes = self.quantum().show_floatingip(
-            self.resource_id)['floatingip']
+        try:
+            attributes = self.quantum().show_floatingip(
+                self.resource_id)['floatingip']
+        except QuantumClientException as ex:
+            logger.warn("failed to fetch resource attributes: %s" % str(ex))
+            return None
         return self.handle_get_attributes(self.name, key, attributes)
 
 

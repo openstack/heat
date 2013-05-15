@@ -30,6 +30,7 @@ from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
 
 quantumclient = try_import('quantumclient.v2_0.client')
+qe = try_import('quantumclient.common.exceptions')
 
 quantum_template = '''
 {
@@ -220,6 +221,22 @@ class QuantumNetTest(HeatTestCase):
 
         quantumclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({"network": {
+            "status": "ACTIVE",
+            "subnets": [],
+            "name": "name",
+            "admin_state_up": False,
+            "shared": False,
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        quantumclient.Client.show_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+
+        quantumclient.Client.show_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({"network": {
             "status": "ACTIVE",
             "subnets": [],
@@ -234,6 +251,10 @@ class QuantumNetTest(HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
 
+        quantumclient.Client.delete_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+
         self.m.ReplayAll()
         t = template_format.parse(quantum_template)
         stack = parse_stack(t)
@@ -244,6 +265,7 @@ class QuantumNetTest(HeatTestCase):
         ref_id = resource.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', ref_id)
 
+        self.assertEqual(None, resource.FnGetAtt('status'))
         self.assertEqual('ACTIVE', resource.FnGetAtt('status'))
         try:
             resource.FnGetAtt('Foo')
@@ -256,6 +278,8 @@ class QuantumNetTest(HeatTestCase):
 
         self.assertEqual(net.Net.UPDATE_REPLACE, resource.handle_update({}))
 
+        resource.delete()
+        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
         resource.delete()
         self.m.VerifyAll()
 
@@ -305,6 +329,9 @@ class QuantumSubnetTest(HeatTestCase):
             }
         })
         quantumclient.Client.show_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1').AndRaise(
+                qe.QuantumClientException(status_code=404))
+        quantumclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1').MultipleTimes().AndReturn({
                 "subnet": {
                     "name": "name",
@@ -320,9 +347,13 @@ class QuantumSubnetTest(HeatTestCase):
                     "enable_dhcp": False,
                 }
             })
+
         quantumclient.Client.delete_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
         ).AndReturn(None)
+        quantumclient.Client.delete_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
 
         self.m.ReplayAll()
         t = template_format.parse(quantum_template)
@@ -333,6 +364,8 @@ class QuantumSubnetTest(HeatTestCase):
 
         ref_id = resource.FnGetRefId()
         self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
+        self.assertEqual(None,
+                         resource.FnGetAtt('network_id'))
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          resource.FnGetAtt('network_id'))
         self.assertEqual('8.8.8.8', resource.FnGetAtt('dns_nameservers')[0])
@@ -342,7 +375,9 @@ class QuantumSubnetTest(HeatTestCase):
         self.assertEqual(subnet.Subnet.UPDATE_REPLACE,
                          resource.handle_update({}))
 
-        resource.delete()
+        self.assertEqual(resource.delete(), None)
+        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
+        self.assertEqual(resource.delete(), None)
         self.m.VerifyAll()
 
 
@@ -371,6 +406,9 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         quantumclient.Client.show_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+        quantumclient.Client.show_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({'floatingip': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -378,6 +416,9 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         quantumclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndReturn(None)
+        quantumclient.Client.delete_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndRaise(
+                qe.QuantumClientException(status_code=404))
         self.m.ReplayAll()
 
         t = template_format.parse(quantum_floating_template)
@@ -391,6 +432,7 @@ class QuantumFloatingIPTest(HeatTestCase):
         fip_id = fip.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', fip_id)
 
+        self.assertEqual(None, fip.FnGetAtt('status'))
         self.assertEqual('ACTIVE', fip.FnGetAtt('status'))
         try:
             fip.FnGetAtt('Foo')
@@ -402,6 +444,8 @@ class QuantumFloatingIPTest(HeatTestCase):
                          fip.FnGetAtt('id'))
         self.assertEqual(floatingip.FloatingIP.UPDATE_REPLACE,
                          fip.handle_update({}))
+        self.assertEqual(fip.delete(), None)
+        fip.state_set(fip.CREATE_COMPLETE, 'to delete again')
         self.assertEqual(fip.delete(), None)
 
         self.m.VerifyAll()
@@ -427,6 +471,15 @@ class QuantumFloatingIPTest(HeatTestCase):
         }})
         quantumclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        quantumclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+        quantumclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({'port': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -445,6 +498,7 @@ class QuantumFloatingIPTest(HeatTestCase):
         port_id = p.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', port_id)
 
+        self.assertEqual(None, p.FnGetAtt('status'))
         self.assertEqual('ACTIVE', p.FnGetAtt('status'))
         try:
             p.FnGetAtt('Foo')
@@ -510,6 +564,20 @@ class QuantumFloatingIPTest(HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
 
+        quantumclient.Client.update_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'floatingip': {
+                'port_id': None
+            }}).AndRaise(qe.QuantumClientException(status_code=404))
+
+        quantumclient.Client.delete_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+
+        quantumclient.Client.delete_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+
         self.m.ReplayAll()
 
         t = template_format.parse(quantum_floating_template)
@@ -536,6 +604,14 @@ class QuantumFloatingIPTest(HeatTestCase):
         self.assertEqual('%s:%s' % (fip_id, port_id), fipa_id)
         self.assertEqual(floatingip.FloatingIP.UPDATE_REPLACE,
                          fipa.handle_update({}))
+
+        self.assertEqual(fipa.delete(), None)
+        self.assertEqual(p.delete(), None)
+        self.assertEqual(fip.delete(), None)
+
+        fipa.state_set(fipa.CREATE_COMPLETE, 'to delete again')
+        fip.state_set(fip.CREATE_COMPLETE, 'to delete again')
+        p.state_set(p.CREATE_COMPLETE, 'to delete again')
 
         self.assertEqual(fipa.delete(), None)
         self.assertEqual(p.delete(), None)
