@@ -474,6 +474,22 @@ class EngineService(service.Service):
                 for resource in stack if resource.id is not None]
 
     @request_context
+    def stack_suspend(self, cnxt, stack_identity):
+        '''
+        Handle request to perform an action on an existing stack
+        actions are non-lifecycle operations which manipulate the
+        state of the stack but not the definition
+        '''
+        def _stack_suspend(stack):
+            logger.debug("suspending stack %s" % stack.name)
+            stack.suspend()
+
+        s = self._get_stack(cnxt, stack_identity)
+
+        stack = parser.Stack.load(cnxt, stack=s)
+        self._start_in_thread(stack.id, _stack_suspend, stack)
+
+    @request_context
     def metadata_update(self, cnxt, stack_identity,
                         resource_name, metadata):
         """

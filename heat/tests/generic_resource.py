@@ -35,3 +35,6 @@ class GenericResource(resource.Resource):
 
     def _resolve_attribute(self, name):
         return self.name
+
+    def handle_suspend(self):
+        logger.warning('Suspending generic resource (Type "%s")' % self.type())

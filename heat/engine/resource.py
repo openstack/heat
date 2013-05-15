@@ -102,8 +102,8 @@ class Metadata(object):
 
 
 class Resource(object):
-    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK
-               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK')
+    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND
+               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND')
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
@@ -394,6 +394,16 @@ class Resource(object):
         '''
         return True
 
+    def check_suspend_complete(self, suspend_data):
+        '''
+        Check if the resource is suspended
+        By default this happens as soon as the handle_suspend() method
+        has completed successfully, but subclasses may customise this by
+        overriding this function. The return value of handle_suspend() is
+        passed in to this function each time it is called.
+        '''
+        return True
+
     def update(self, json_snippet=None):
         '''
         update the resource. Subclasses should provide a handle_update() method
@@ -430,6 +440,24 @@ class Resource(object):
         else:
             self.t = self.stack.resolve_static_data(json_snippet)
             self.state_set(self.UPDATE, self.COMPLETE)
+
+    def suspend(self):
+        '''
+        Suspend the resource.  Subclasses should provide a handle_suspend()
+        method to implement suspend, the base-class handle_update does nothing
+        Note this uses the same coroutine logic as create() since suspending
+        instances is a non-immediate operation and we want to paralellize
+        '''
+        # Don't try to suspend the resource unless it's in a stable state
+        if self.state not in ((self.CREATE, self.COMPLETE),
+                              (self.UPDATE, self.COMPLETE),
+                              (self.ROLLBACK, self.COMPLETE)):
+            exc = exception.Error('State %s invalid for suspend'
+                                  % str(self.state))
+            raise exception.ResourceFailure(exc)
+
+        logger.info('suspending %s' % str(self))
+        return self._do_action(self.SUSPEND)
 
     def physical_resource_name(self):
         if self.id is None:

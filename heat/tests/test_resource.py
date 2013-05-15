@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from eventlet.support import greenlets as greenlet
 
 from heat.common import context
 from heat.common import exception
@@ -385,6 +386,79 @@ class ResourceTest(HeatTestCase):
         self.assertRaises(exception.ResourceFailure, res.update, utmpl)
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
         self.m.VerifyAll()
+
+    def test_suspend_ok(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String'}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ('Properties',)
+        res.update_allowed_properties = ('Foo',)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        scheduler.TaskRunner(res.suspend)()
+        self.assertEqual((res.SUSPEND, res.COMPLETE), res.state)
+
+    def test_suspend_fail_inprogress(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String'}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+        res.state_set(res.CREATE, res.IN_PROGRESS)
+        suspend = scheduler.TaskRunner(res.suspend)
+        self.assertRaises(exception.ResourceFailure, suspend)
+
+        res.state_set(res.UPDATE, res.IN_PROGRESS)
+        suspend = scheduler.TaskRunner(res.suspend)
+        self.assertRaises(exception.ResourceFailure, suspend)
+
+        res.state_set(res.DELETE, res.IN_PROGRESS)
+        suspend = scheduler.TaskRunner(res.suspend)
+        self.assertRaises(exception.ResourceFailure, suspend)
+
+    def test_suspend_fail_exit(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String'}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
+        generic_rsrc.GenericResource.handle_suspend().AndRaise(
+            greenlet.GreenletExit())
+        self.m.ReplayAll()
+
+        suspend = scheduler.TaskRunner(res.suspend)
+        self.assertRaises(greenlet.GreenletExit, suspend)
+        self.assertEqual((res.SUSPEND, res.FAILED), res.state)
+
+    def test_suspend_fail_exception(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String'}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
+        generic_rsrc.GenericResource.handle_suspend().AndRaise(Exception())
+        self.m.ReplayAll()
+
+        suspend = scheduler.TaskRunner(res.suspend)
+        self.assertRaises(exception.ResourceFailure, suspend)
+        self.assertEqual((res.SUSPEND, res.FAILED), res.state)
 
 
 class MetadataTest(HeatTestCase):
