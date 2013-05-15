@@ -319,6 +319,25 @@ Resources:
       - Ref: the_sg
 '''
 
+    test_template_no_groupset = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_vpc:
+    Type: AWS::EC2::VPC
+    Properties: {CidrBlock: '10.0.0.0/16'}
+  the_subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      VpcId: {Ref: the_vpc}
+      AvailabilityZone: moon
+  the_nic:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      PrivateIpAddress: 10.0.0.100
+      SubnetId: {Ref: the_subnet}
+'''
+
     test_template_error = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:
@@ -350,35 +369,57 @@ Resources:
       - Ref: INVALID-REF-IN-TEMPLATE
 '''
 
-    def mock_create_network_interface(self):
-        quantumclient.Client.create_port({
-            'port': {
-                'network_id': 'aaaa', 'fixed_ips': [{
+    test_template_error_no_ref = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_vpc:
+    Type: AWS::EC2::VPC
+    Properties: {CidrBlock: '10.0.0.0/16'}
+  the_subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.0.0.0/24
+      VpcId: {Ref: the_vpc}
+      AvailabilityZone: moon
+  the_nic:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      PrivateIpAddress: 10.0.0.100
+      SubnetId: {Ref: the_subnet}
+      GroupSet:
+      - INVALID-NO-REF
+'''
+
+    def mock_create_network_interface(self, security_groups=['aaaa']):
+        port = {'network_id': 'aaaa',
+                'fixed_ips': [{
                     'subnet_id': u'cccc',
                     'ip_address': u'10.0.0.100'
                 }],
                 'name': u'test_stack.the_nic',
+                'admin_state_up': True}
+        if security_groups:
+                port['security_groups'] = security_groups
+
+        quantumclient.Client.create_port({'port': port}).AndReturn({
+            'port': {
                 'admin_state_up': True,
-                'security_groups': ['aaaa']
-            }}).AndReturn({
-                'port': {
-                    'admin_state_up': True,
-                    'device_id': '',
-                    'device_owner': '',
-                    'fixed_ips': [
-                        {
-                            'ip_address': '10.0.0.100',
-                            'subnet_id': 'cccc'
-                        }
-                    ],
-                    'id': 'dddd',
-                    'mac_address': 'fa:16:3e:25:32:5d',
-                    'name': 'test_stack.the_nic',
-                    'network_id': 'aaaa',
-                    'status': 'ACTIVE',
-                    'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'
-                }
-            })
+                'device_id': '',
+                'device_owner': '',
+                'fixed_ips': [
+                    {
+                        'ip_address': '10.0.0.100',
+                        'subnet_id': 'cccc'
+                    }
+                ],
+                'id': 'dddd',
+                'mac_address': 'fa:16:3e:25:32:5d',
+                'name': 'test_stack.the_nic',
+                'network_id': 'aaaa',
+                'status': 'ACTIVE',
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'
+            }
+        })
 
     def mock_delete_network_interface(self):
         quantumclient.Client.delete_port('dddd').AndReturn(None)
@@ -397,12 +438,32 @@ Resources:
         self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)
-        resource = stack['the_nic']
-        self.assertResourceState(resource, 'dddd')
+        try:
+            resource = stack['the_nic']
+            self.assertResourceState(resource, 'dddd')
 
-        self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
+            self.assertEqual(resource.UPDATE_REPLACE,
+                             resource.handle_update({}))
 
+        finally:
+            stack.delete()
+
+        self.m.VerifyAll()
+
+    def test_network_interface_no_groupset(self):
+        self.mock_create_network()
+        self.mock_create_subnet()
+        self.mock_show_subnet()
+        self.mock_create_network_interface(security_groups=None)
+        self.mock_delete_network_interface()
+        self.mock_delete_subnet()
+        self.mock_delete_network()
+
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template_no_groupset)
         stack.delete()
+
         self.m.VerifyAll()
 
     def test_network_interface_error(self):
@@ -415,6 +476,27 @@ Resources:
             key='GroupSet')
 
         self.assertEquals(str(expected_exception), str(real_exception))
+
+    def test_network_interface_error_no_ref(self):
+        self.mock_create_network()
+        self.mock_create_subnet()
+        self.mock_show_subnet()
+        self.mock_delete_subnet()
+        self.mock_delete_network()
+
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template_error_no_ref)
+        try:
+            self.assertEqual(stack.CREATE_FAILED, stack.state)
+            self.assertEqual(stack['the_nic'].CREATE_FAILED,
+                             stack['the_nic'].state)
+            reason = stack['the_nic'].state_description
+            self.assertTrue(reason.startswith('InvalidTemplateAttribute:'))
+        finally:
+            stack.delete()
+
+        self.m.VerifyAll()
 
 
 class InternetGatewayTest(VPCTestBase):
