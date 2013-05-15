@@ -13,12 +13,10 @@
 #    under the License.
 
 import errno
-import fixtures
+import mox
 import os
 import pkg_resources
 import subprocess
-import stat
-import StringIO
 
 from heat.cloudinit import loguserdata
 from heat.tests.common import HeatTestCase
@@ -75,95 +73,78 @@ class LoguserdataTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_call(self):
-        log = StringIO.StringIO()
         subprocess.Popen(
             ['echo', 'hi'],
-            stderr=log,
-            stdout=log).AndReturn(FakePOpen(0))
+            stderr=mox.IgnoreArg(),
+            stdout=mox.IgnoreArg()).AndReturn(FakePOpen(0))
 
         self.m.ReplayAll()
-        self.assertEqual(0, loguserdata.call(['echo', 'hi'], log))
+        self.assertEqual(0, loguserdata.call(['echo', 'hi']))
         self.m.VerifyAll()
-
-    def test_create_log(self):
-        tempdir = self.useFixture(fixtures.TempDir())
-        log_name = os.path.join(tempdir.path, 'test_log')
-        with loguserdata.create_log(log_name) as log:
-            log.write('testing')
-
-        log = open(log_name, 'r')
-        self.assertEqual('testing', log.read())
-        mode = os.stat(log_name).st_mode
-        self.assertEqual(0600, stat.S_IMODE(mode))
 
     def test_main(self):
 
-        log = StringIO.StringIO()
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
 
         os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=log,
-            stdout=log).AndReturn(FakePOpen(0))
+            stderr=mox.IgnoreArg(),
+            stdout=mox.IgnoreArg()).AndReturn(FakePOpen(0))
 
         self.m.ReplayAll()
-        loguserdata.main(log)
+        loguserdata.main()
         self.m.VerifyAll()
 
     def test_main_script_empty(self):
 
-        log = StringIO.StringIO()
-
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
 
         os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=log,
-            stdout=log).AndRaise(OSError(errno.ENOEXEC, "empty script"))
+            stderr=mox.IgnoreArg(),
+            stdout=mox.IgnoreArg()).AndRaise(
+                OSError(errno.ENOEXEC, "empty script"))
 
         self.m.ReplayAll()
-        self.assertEqual(None, loguserdata.main(log))
+        self.assertEqual(None, loguserdata.main())
 
         self.m.VerifyAll()
 
     def test_main_os_error(self):
 
-        log = StringIO.StringIO()
-
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
 
         os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=log,
-            stdout=log).AndRaise(OSError(errno.ENOENT, "no such file"))
+            stderr=mox.IgnoreArg(),
+            stdout=mox.IgnoreArg()).AndRaise(
+                OSError(errno.ENOENT, "no such file"))
 
         self.m.ReplayAll()
-        self.assertEqual(os.EX_OSERR, loguserdata.main(log))
+        self.assertEqual(os.EX_OSERR, loguserdata.main())
 
         self.m.VerifyAll()
 
     def test_main_error_other(self):
-        log = StringIO.StringIO()
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
         os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=log,
-            stdout=log).AndRaise(IOError("read failed"))
+            stderr=mox.IgnoreArg(),
+            stdout=mox.IgnoreArg()).AndRaise(IOError("read failed"))
 
         self.m.ReplayAll()
-        self.assertEqual(os.EX_SOFTWARE, loguserdata.main(log))
+        self.assertEqual(os.EX_SOFTWARE, loguserdata.main())
         self.m.VerifyAll()
 
     def test_main_fails(self):
-        log = StringIO.StringIO()
 
         #fail on ci version
         pkg_resources.get_distribution('cloud-init').AndReturn(
@@ -175,10 +156,10 @@ class LoguserdataTest(HeatTestCase):
         os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
-            stderr=log,
-            stdout=log).AndReturn(FakePOpen(-2))
+            stderr=mox.IgnoreArg(),
+            stdout=mox.IgnoreArg()).AndReturn(FakePOpen(-2))
 
         self.m.ReplayAll()
-        self.assertEqual(-1, loguserdata.main(log))
-        self.assertEqual(-2, loguserdata.main(log))
+        self.assertEqual(-1, loguserdata.main())
+        self.assertEqual(-2, loguserdata.main())
         self.m.VerifyAll()
