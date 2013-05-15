@@ -68,10 +68,16 @@ class Volume(resource.Resource):
                 **self._create_arguments())
         self.resource_id_set(vol.id)
 
-        while vol.status == 'creating':
-            eventlet.sleep(1)
-            vol.get()
-        if vol.status != 'available':
+        return vol
+
+    def check_create_complete(self, vol):
+        vol.get()
+
+        if vol.status == 'available':
+            return True
+        elif vol.status == 'creating':
+            return False
+        else:
             raise exception.Error(vol.status)
 
     def handle_update(self, json_snippet):
