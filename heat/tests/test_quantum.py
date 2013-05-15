@@ -24,9 +24,12 @@ from heat.engine.resources.quantum import subnet
 from heat.engine.resources.quantum import floatingip
 from heat.engine.resources.quantum import port
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
+from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
+
+quantumclient = try_import('quantumclient.v2_0.client')
 
 quantum_template = '''
 {
@@ -119,120 +122,7 @@ quantum_floating_template = '''
 '''
 
 
-class FakeQuantum():
-
-    def create_floatingip(self, props):
-        return {'floatingip': {
-                "status": "ACTIVE",
-                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-                }}
-
-    def delete_floatingip(self, id):
-        return None
-
-    def show_floatingip(self, id):
-        return {'floatingip': {
-                "status": "ACTIVE",
-                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-                }}
-
-    def update_floatingip(self, id, props):
-        return {'floatingip': {
-                "status": "ACTIVE",
-                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-                }}
-
-    def create_port(self, props):
-        return {'port': {
-                "status": "ACTIVE",
-                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-                }}
-
-    def delete_port(self, id):
-        return None
-
-    def show_port(self, id):
-        return {'port': {
-                "status": "ACTIVE",
-                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-                }}
-
-    def create_network(self, name):
-        return {"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": False,
-            "shared": False,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }}
-
-    def delete_network(self, id):
-        return None
-
-    def show_network(self, id):
-        return {"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": False,
-            "shared": False,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }}
-
-    def create_subnet(self, name):
-        return {"subnet": {
-            "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
-            "cidr": "10.0.3.0/24",
-            "dns_nameservers": ["8.8.8.8"],
-            "enable_dhcp": True,
-            "gateway_ip": "10.0.3.1",
-            "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
-            "ip_version": 4,
-            "name": "name",
-            "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f"
-        }}
-
-    def delete_subnet(self, id):
-        return None
-
-    def show_subnet(self, id):
-        return {"subnet": {
-            "name": "name",
-            "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
-            "gateway_ip": "10.0.3.1",
-            "ip_version": 4,
-            "cidr": "10.0.3.0/24",
-            "dns_nameservers": ["8.8.8.8"],
-            "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
-            "enable_dhcp": False,
-        }}
-
-
 class QuantumTest(HeatTestCase):
-    def setUp(self):
-        super(QuantumTest, self).setUp()
-        self.m.StubOutWithMock(net.Net, 'quantum')
-        self.m.StubOutWithMock(subnet.Subnet, 'quantum')
-        setup_dummy_db()
-
-    def create_net(self, t, stack, resource_name):
-        resource = net.Net('test_net', t['Resources'][resource_name], stack)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(net.Net.CREATE_COMPLETE, resource.state)
-        return resource
-
-    def create_subnet(self, t, stack, resource_name):
-        resource = subnet.Subnet('test_subnet', t['Resources'][resource_name],
-                                 stack)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(subnet.Subnet.CREATE_COMPLETE, resource.state)
-        return resource
 
     def test_validate_properties(self):
         vs = {'router:external': True}
@@ -268,11 +158,51 @@ class QuantumTest(HeatTestCase):
                           'router:external': True,
                           'admin_state_up': False}, props)
 
-    @skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
-    def test_net(self):
 
-        fq = FakeQuantum()
-        net.Net.quantum().MultipleTimes().AndReturn(fq)
+@skipIf(quantumclient is None, 'quantumclient unavailable')
+class QuantumNetTest(HeatTestCase):
+
+    def setUp(self):
+        super(QuantumNetTest, self).setUp()
+        self.m.StubOutWithMock(quantumclient.Client, 'create_network')
+        self.m.StubOutWithMock(quantumclient.Client, 'delete_network')
+        self.m.StubOutWithMock(quantumclient.Client, 'show_network')
+        setup_dummy_db()
+
+    def create_net(self, t, stack, resource_name):
+        resource = net.Net('test_net', t['Resources'][resource_name], stack)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(net.Net.CREATE_COMPLETE, resource.state)
+        return resource
+
+    def test_net(self):
+        quantumclient.Client.create_network({
+            'network': {'name': u'the_network', 'admin_state_up': True}
+        }).AndReturn({"network": {
+            "status": "ACTIVE",
+            "subnets": [],
+            "name": "name",
+            "admin_state_up": False,
+            "shared": False,
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        quantumclient.Client.show_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).MultipleTimes().AndReturn({"network": {
+            "status": "ACTIVE",
+            "subnets": [],
+            "name": "name",
+            "admin_state_up": False,
+            "shared": False,
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        quantumclient.Client.delete_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(quantum_template)
@@ -299,12 +229,70 @@ class QuantumTest(HeatTestCase):
         resource.delete()
         self.m.VerifyAll()
 
-    def test_subnet(self):
-        skipIf(subnet.clients.quantumclient is None,
-               'quantumclient unavailable')
 
-        fq = FakeQuantum()
-        subnet.Subnet.quantum().MultipleTimes().AndReturn(fq)
+@skipIf(quantumclient is None, 'quantumclient unavailable')
+class QuantumSubnetTest(HeatTestCase):
+
+    def setUp(self):
+        super(QuantumSubnetTest, self).setUp()
+        self.m.StubOutWithMock(quantumclient.Client, 'create_subnet')
+        self.m.StubOutWithMock(quantumclient.Client, 'delete_subnet')
+        self.m.StubOutWithMock(quantumclient.Client, 'show_subnet')
+        setup_dummy_db()
+
+    def create_subnet(self, t, stack, resource_name):
+        resource = subnet.Subnet('test_subnet', t['Resources'][resource_name],
+                                 stack)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(subnet.Subnet.CREATE_COMPLETE, resource.state)
+        return resource
+
+    def test_subnet(self):
+
+        quantumclient.Client.create_subnet({
+            'subnet': {
+                'name': 'test_stack.test_subnet',
+                'network_id': u'None',
+                'dns_nameservers': [u'8.8.8.8'],
+                'allocation_pools': [
+                    {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
+                'ip_version': 4,
+                'cidr': u'10.0.3.0/24'
+            }
+        }).AndReturn({
+            "subnet": {
+                "allocation_pools": [
+                    {"start": "10.0.3.20", "end": "10.0.3.150"}],
+                "cidr": "10.0.3.0/24",
+                "dns_nameservers": ["8.8.8.8"],
+                "enable_dhcp": True,
+                "gateway_ip": "10.0.3.1",
+                "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
+                "ip_version": 4,
+                "name": "name",
+                "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+                "tenant_id": "c1210485b2424d48804aad5d39c61b8f"
+            }
+        })
+        quantumclient.Client.show_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1').MultipleTimes().AndReturn({
+                "subnet": {
+                    "name": "name",
+                    "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+                    "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+                    "allocation_pools": [
+                        {"start": "10.0.3.20", "end": "10.0.3.150"}],
+                    "gateway_ip": "10.0.3.1",
+                    "ip_version": 4,
+                    "cidr": "10.0.3.0/24",
+                    "dns_nameservers": ["8.8.8.8"],
+                    "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
+                    "enable_dhcp": False,
+                }
+            })
+        quantumclient.Client.delete_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1'
+        ).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(quantum_template)
@@ -328,20 +316,37 @@ class QuantumTest(HeatTestCase):
         self.m.VerifyAll()
 
 
+@skipIf(quantumclient is None, 'quantumclient unavailable')
 class QuantumFloatingIPTest(HeatTestCase):
     def setUp(self):
         super(QuantumFloatingIPTest, self).setUp()
-        self.m.StubOutWithMock(floatingip.FloatingIP, 'quantum')
-        self.m.StubOutWithMock(floatingip.FloatingIPAssociation, 'quantum')
-        self.m.StubOutWithMock(port.Port, 'quantum')
+        self.m.StubOutWithMock(quantumclient.Client, 'create_floatingip')
+        self.m.StubOutWithMock(quantumclient.Client, 'delete_floatingip')
+        self.m.StubOutWithMock(quantumclient.Client, 'show_floatingip')
+        self.m.StubOutWithMock(quantumclient.Client, 'update_floatingip')
+        self.m.StubOutWithMock(quantumclient.Client, 'create_port')
+        self.m.StubOutWithMock(quantumclient.Client, 'delete_port')
+        self.m.StubOutWithMock(quantumclient.Client, 'show_port')
         setup_dummy_db()
 
-    @skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
     def test_floating_ip(self):
 
-        fq = FakeQuantum()
-        floatingip.FloatingIP.quantum().MultipleTimes().AndReturn(fq)
+        quantumclient.Client.create_floatingip({
+            'floatingip': {'floating_network_id': u'abcd1234'}
+        }).AndReturn({'floatingip': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
 
+        quantumclient.Client.show_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).MultipleTimes().AndReturn({'floatingip': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        quantumclient.Client.delete_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndReturn(None)
         self.m.ReplayAll()
 
         t = template_format.parse(quantum_floating_template)
@@ -370,11 +375,25 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
     def test_port(self):
 
-        fq = FakeQuantum()
-        port.Port.quantum().MultipleTimes().AndReturn(fq)
+        quantumclient.Client.create_port({'port': {
+            'network_id': u'xyz1234',
+            'fixed_ips': [
+                {'subnet_id': u'12.12.12.0', 'ip_address': u'10.0.0.10'}
+            ],
+            'name': u'test_stack.port_floating',
+            'admin_state_up': True}}
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        quantumclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).MultipleTimes().AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
 
         self.m.ReplayAll()
 
@@ -404,14 +423,50 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @skipIf(net.clients.quantumclient is None, 'quantumclient unavailable')
     def test_floatip_port(self):
 
-        fq = FakeQuantum()
-        floatingip.FloatingIP.quantum().MultipleTimes().AndReturn(fq)
-        floatingip.FloatingIPAssociation.quantum().\
-            MultipleTimes().AndReturn(fq)
-        port.Port.quantum().MultipleTimes().AndReturn(fq)
+        quantumclient.Client.create_floatingip({
+            'floatingip': {'floating_network_id': u'abcd1234'}
+        }).AndReturn({'floatingip': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        quantumclient.Client.create_port({'port': {
+            'network_id': u'xyz1234',
+            'fixed_ips': [
+                {'subnet_id': u'12.12.12.0', 'ip_address': u'10.0.0.10'}
+            ],
+            'name': u'test_stack.port_floating',
+            'admin_state_up': True}}
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        quantumclient.Client.update_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {
+                'floatingip': {
+                    'port_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}}
+        ).AndReturn({'floatingip': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        quantumclient.Client.update_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'floatingip': {
+                'port_id': None
+            }}).AndReturn(None)
+
+        quantumclient.Client.delete_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn(None)
+
+        quantumclient.Client.delete_floatingip(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn(None)
 
         self.m.ReplayAll()
 
