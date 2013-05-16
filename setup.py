@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+# Copyright (c) 2013 Hewlett-Packard Development Company, L.P.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,42 +16,6 @@
 
 import setuptools
 
-from heat.openstack.common import setup
-
-requires = setup.parse_requirements()
-depend_links = setup.parse_dependency_links()
-project = 'heat'
-
-
 setuptools.setup(
-    name=project,
-    version=setup.get_version(project, '2013.2'),
-    description='The heat project provides services for provisioning '
-                'virtual machines',
-    license='Apache License (2.0)',
-    author='Heat API Developers',
-    author_email='discuss@heat-api.org',
-    url='http://heat.openstack.org/',
-    cmdclass=setup.get_cmdclass(),
-    packages=setuptools.find_packages(exclude=['bin']),
-    include_package_data=True,
-    install_requires=requires,
-    dependency_links=depend_links,
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.6',
-        'Environment :: No Input/Output (Daemon)',
-    ],
-    scripts=['bin/heat-cfn',
-             'bin/heat-api',
-             'bin/heat-api-cfn',
-             'bin/heat-api-cloudwatch',
-             'bin/heat-boto',
-             'bin/heat-engine',
-             'bin/heat-watch',
-             'bin/heat-db-setup',
-             'bin/cinder-keystone-setup',
-             'bin/heat-keystone-setup'],
-    py_modules=[])
+    setup_requires=['d2to1>=0.2.10,<0.3', 'pbr>=0.5.10,<0.6'],
+    d2to1=True)

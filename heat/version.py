@@ -14,6 +14,6 @@
 #    under the License.
 
 
-from heat.openstack.common import version as common_version
+import pbr.version
 
-version_info = common_version.VersionInfo('heat')
+version_info = pbr.version.VersionInfo('heat')
