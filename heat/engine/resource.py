@@ -415,7 +415,7 @@ class Resource(object):
             msg = 'Invalid DeletionPolicy %s' % deletion_policy
             raise exception.StackValidationFailed(message=msg)
         elif deletion_policy == 'Snapshot':
-            if not callable(getattr(cls, 'handle_snapshot', None)):
+            if not callable(getattr(cls, 'handle_snapshot_delete', None)):
                 msg = 'Snapshot DeletionPolicy not supported'
                 raise exception.StackValidationFailed(message=msg)
 
@@ -432,6 +432,8 @@ class Resource(object):
         if self.state is None:
             return
 
+        initial_state = self.state
+
         logger.info('deleting %s' % str(self))
 
         try:
@@ -442,8 +444,8 @@ class Resource(object):
                 if callable(getattr(self, 'handle_delete', None)):
                     self.handle_delete()
             elif deletion_policy == 'Snapshot':
-                if callable(getattr(self, 'handle_snapshot', None)):
-                    self.handle_snapshot()
+                if callable(getattr(self, 'handle_snapshot_delete', None)):
+                    self.handle_snapshot_delete(initial_state)
         except Exception as ex:
             logger.exception('Delete %s', str(self))
             failure = exception.ResourceFailure(ex)

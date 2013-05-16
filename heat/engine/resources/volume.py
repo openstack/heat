@@ -79,7 +79,7 @@ class Volume(resource.Resource):
         return self.UPDATE_REPLACE
 
     if volume_backups is not None:
-        def handle_snapshot(self):
+        def handle_snapshot_delete(self, state):
             if self.resource_id is not None:
                 # We use backups as snapshots are not independent of volumes
                 backup = self.cinder().backups.create(self.resource_id)
