@@ -329,6 +329,7 @@ class QuantumTest(HeatTestCase):
 
 
 class QuantumFloatingIPTest(HeatTestCase):
+    @skipIf(net.clients.quantumclient is None, "Missing Quantum Client")
     def setUp(self):
         super(QuantumFloatingIPTest, self).setUp()
         self.m.StubOutWithMock(floatingip.FloatingIP, 'quantum')
