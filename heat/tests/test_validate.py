@@ -19,7 +19,6 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import resources
 from heat.engine.resources import instance as instances
-from heat.engine import resources
 from heat.engine import service
 from heat.openstack.common.importutils import try_import
 import heat.db.api as db_api

@@ -42,7 +42,6 @@ gettext.install('heat', unicode=1)
 
 from heat.cfn_client import boto_client_cloudwatch as heat_client
 from heat.version import version_info as version
-from heat.common import config
 from heat.common import exception
 from heat.cfn_client import utils
 
