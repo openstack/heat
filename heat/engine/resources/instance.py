@@ -452,6 +452,16 @@ class Instance(resource.Resource):
             except clients.novaclient.exceptions.NotFound:
                 break
 
+    def _detach_volumes_task(self):
+        '''
+        Detach volumes from the instance
+        '''
+        detach_tasks = (volume.VolumeDetachTask(self.stack,
+                                                self.resource_id,
+                                                volume_id)
+                        for volume_id, device in self.volumes())
+        return scheduler.PollingTaskGroup(detach_tasks)
+
     def handle_delete(self):
         '''
         Delete an instance, blocking until it is disposed by OpenStack
@@ -459,11 +469,7 @@ class Instance(resource.Resource):
         if self.resource_id is None:
             return
 
-        detach_tasks = (volume.VolumeDetachTask(self.stack,
-                                                self.resource_id,
-                                                volume_id)
-                        for volume_id, device in self.volumes())
-        scheduler.TaskRunner(scheduler.PollingTaskGroup(detach_tasks))()
+        scheduler.TaskRunner(self._detach_volumes_task())()
 
         try:
             server = self.nova().servers.get(self.resource_id)
@@ -499,6 +505,60 @@ class Instance(resource.Resource):
                 raise exception.NoUniqueImageFound(image_name=image_identifier)
             image_id = image_names.popitem()[0]
         return image_id
+
+    def handle_suspend(self):
+        '''
+        Suspend an instance - note we do not wait for the SUSPENDED state,
+        this is polled for by check_suspend_complete in a similar way to the
+        create logic so we can take advantage of coroutines
+        '''
+        if self.resource_id is None:
+            raise exception.Error(_('Cannot suspend %s, resource_id not set') %
+                                  self.name)
+
+        try:
+            server = self.nova().servers.get(self.resource_id)
+        except clients.novaclient.exceptions.NotFound:
+            raise exception.NotFound(_('Failed to find instance %s') %
+                                     self.resource_id)
+        else:
+            logger.debug("suspending instance %s" % self.resource_id)
+            # We want the server.suspend to happen after the volume
+            # detachement has finished, so pass both tasks and the server
+            suspend_runner = scheduler.TaskRunner(server.suspend)
+            volumes_runner = scheduler.TaskRunner(self._detach_volumes_task())
+            return server, suspend_runner, volumes_runner
+
+    def check_suspend_complete(self, cookie):
+        server, suspend_runner, volumes_runner = cookie
+
+        if not volumes_runner.started():
+            volumes_runner.start()
+
+        if volumes_runner.done():
+            if not suspend_runner.started():
+                suspend_runner.start()
+
+            if suspend_runner.done():
+                if server.status == 'SUSPENDED':
+                    return True
+
+                server.get()
+                logger.debug("%s check_suspend_complete status = %s" %
+                             (self.name, server.status))
+                if server.status in list(self._deferred_server_statuses +
+                                         ['ACTIVE']):
+                    return server.status == 'SUSPENDED'
+                else:
+                    raise exception.Error(_(' nova reported unexpected '
+                                            'instance[%(instance)s] '
+                                            'status[%(status)s]') %
+                                          {'instance': self.name,
+                                           'status': server.status})
+            else:
+                suspend_runner.step()
+        else:
+            return volumes_runner.step()
 
 
 def resource_mapping():

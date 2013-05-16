@@ -358,6 +358,8 @@ class FakeHTTPClient(base_client.HTTPClient):
             assert body[action] is None
         elif action == 'unlock':
             assert body[action] is None
+        elif action == 'suspend':
+            assert body[action] is None
         elif action == 'addFixedIp':
             assert body[action].keys() == ['networkId']
         elif action == 'removeFixedIp':
