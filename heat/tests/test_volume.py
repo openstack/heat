@@ -307,6 +307,7 @@ class VolumeTest(HeatTestCase):
         eventlet.sleep(1).AndReturn(None)
 
         # snapshot script
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
         self.cinder_fc.backups.create('vol-123').AndReturn(fb)
         eventlet.sleep(1).AndReturn(None)
@@ -335,6 +336,9 @@ class VolumeTest(HeatTestCase):
             display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
         eventlet.sleep(1).AndReturn(None)
+
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
+        self.cinder_fc.volumes.delete('vol-123').AndReturn(None)
 
         self.m.ReplayAll()
 
