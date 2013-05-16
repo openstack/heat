@@ -48,22 +48,6 @@ def identified_stack(handler):
     return handle_stack_method
 
 
-def identified_resource(handler):
-    '''
-    Decorator for a handler method that passes a resource identifier in place
-    of the various path components.
-    '''
-    @identified_stack
-    @wraps(handler)
-    def handle_stack_method(controller, stack_identity,
-                            resource_name, **kwargs):
-        resource_identity = identifier.ResourceIdentifier(stack_identity,
-                                                          resource_name)
-        return handler(controller, req, dict(resource_identity), **kwargs)
-
-    return handle_stack_method
-
-
 def make_url(req, identity):
     '''Return the URL for the supplied identity dictionary.'''
     try:

@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import exception
+
 import eventlet
 from keystoneclient.v2_0 import client as kc
 from oslo.config import cfg

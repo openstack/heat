@@ -17,6 +17,8 @@
 Client implementation based on the boto AWS client library
 """
 
+import sys
+
 from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
