@@ -83,6 +83,7 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.volumes, 'create_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
         self.m.StubOutWithMock(eventlet, 'sleep')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         setup_dummy_db()
 
     def create_volume(self, t, stack, resource_name):
@@ -272,7 +273,6 @@ class VolumeTest(HeatTestCase):
         # snapshot script
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
         self.cinder_fc.backups.create('vol-123').AndReturn(fb)
-        eventlet.sleep(1).AndReturn(None)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.cinder_fc.volumes.delete('vol-123').AndReturn(None)
         self.m.ReplayAll()
@@ -305,7 +305,6 @@ class VolumeTest(HeatTestCase):
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
         self.cinder_fc.backups.create('vol-123').AndReturn(fb)
-        eventlet.sleep(1).AndReturn(None)
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)

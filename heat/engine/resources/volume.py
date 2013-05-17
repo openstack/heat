@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
 import json
 
 from heat.openstack.common import log as logging
@@ -22,6 +21,7 @@ from heat.openstack.common.importutils import try_import
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import resource
+from heat.engine import scheduler
 
 volume_backups = try_import('cinderclient.v1.volume_backups')
 
@@ -86,7 +86,7 @@ class Volume(resource.Resource):
     def _backup(self):
         backup = self.cinder().backups.create(self.resource_id)
         while backup.status == 'creating':
-            eventlet.sleep(1)
+            yield
             backup.get()
         if backup.status != 'available':
             raise exception.Error(backup.status)
@@ -97,7 +97,7 @@ class Volume(resource.Resource):
                 vol = self.cinder().volumes.get(self.resource_id)
 
                 if backup:
-                    self._backup()
+                    scheduler.TaskRunner(self._backup)()
                     vol.get()
 
                 if vol.status == 'in-use':
