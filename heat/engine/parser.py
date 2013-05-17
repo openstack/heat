@@ -581,7 +581,9 @@ def resolve_static_data(template, stack, parameters, snippet):
 
     Example:
 
-    >>> template = Template(template_format.parse(template_path))
+    >>> from heat.common import template_format
+    >>> template_str = '# JSON or YAML encoded template'
+    >>> template = Template(template_format.parse(template_str))
     >>> parameters = Parameters('stack', template, {'KeyName': 'my_key'})
     >>> resolve_static_data(template, None, parameters, {'Ref': 'KeyName'})
     'my_key'
