@@ -47,6 +47,7 @@ ig_template = '''
         "ImageId"           : "foo",
         "InstanceType"      : "m1.large",
         "KeyName"           : "test",
+        "SecurityGroups"    : [ "sg-1" ],
         "UserData"          : "jsconfig data"
       }
     }
