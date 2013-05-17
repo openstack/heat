@@ -62,16 +62,18 @@ class Dependencies(object):
             return self
 
         def __nonzero__(self):
-            '''Test if this node is a leaf (requires nothing)'''
+            '''
+            Return True if this node is not a leaf (it requires other nodes)
+            '''
             return bool(self.require)
 
         def stem(self):
-            '''Test if this node is a stem (required by nothing)'''
+            '''Return True if this node is a stem (required by nothing)'''
             return not bool(self.satisfy)
 
         def disjoint(self):
-            '''Test if this node is both a lead and a stem'''
-            return self and self.stem()
+            '''Return True if this node is both a leaf and a stem'''
+            return (not self) and self.stem()
 
         def __len__(self):
             '''Count the number of keys required by this node'''
@@ -159,11 +161,12 @@ class Dependencies(object):
             else:
                 for rqd in node:
                     yield (rqr, rqd)
-        return (outgoing_edges(*item) for item in self.deps.iteritems())
+        return itertools.chain.from_iterable(outgoing_edges(*item)
+                                             for item in self.deps.iteritems())
 
     def __repr__(self):
         '''Return a string representation of the object'''
-        return 'Dependencies([%s])' % ', '.join(repr(e) for e in edges)
+        return 'Dependencies([%s])' % ', '.join(repr(e) for e in self._edges())
 
     def _toposort(self, deps):
         '''Generate a topological sort of a dependency graph'''
