@@ -30,6 +30,7 @@ from heat.engine import parameters
 from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import resources
 from heat.engine import watchrule
 
 from heat.openstack.common import log as logging
@@ -65,6 +66,7 @@ class EngineService(service.Service):
         super(EngineService, self).__init__(host, topic)
         # stg == "Stack Thread Groups"
         self.stg = {}
+        resources.initialise()
 
     def _start_in_thread(self, stack_id, func, *args, **kwargs):
         if stack_id not in self.stg:
