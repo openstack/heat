@@ -426,8 +426,35 @@ class ScalingPolicy(resource.Resource, CooldownMixin):
         'Cooldown': {'Type': 'Number'},
     }
 
+    update_allowed_keys = ('Properties',)
+    update_allowed_properties = ('ScalingAdjustment', 'AdjustmentType',
+                                 'Cooldown',)
+
     def __init__(self, name, json_snippet, stack):
         super(ScalingPolicy, self).__init__(name, json_snippet, stack)
+
+    def handle_update(self, json_snippet):
+        try:
+            tmpl_diff = self.update_template_diff(json_snippet)
+        except NotImplementedError:
+            logger.error("Could not update %s, invalid key" % self.name)
+            return self.UPDATE_REPLACE
+
+        try:
+            prop_diff = self.update_template_diff_properties(json_snippet)
+        except NotImplementedError:
+            logger.error("Could not update %s, invalid Property" % self.name)
+            return self.UPDATE_REPLACE
+
+        # If Properties has changed, update self.properties, so we
+        # get the new values during any subsequent adjustment
+        if prop_diff:
+            self.properties = Properties(self.properties_schema,
+                                         json_snippet.get('Properties', {}),
+                                         self.stack.resolve_runtime_data,
+                                         self.name)
+
+        return self.UPDATE_COMPLETE
 
     def alarm(self):
         if self._cooldown_inprogress():
