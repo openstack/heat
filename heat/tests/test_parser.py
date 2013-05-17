@@ -597,8 +597,7 @@ class StackTest(HeatTestCase):
         # patch in a dummy handle_update
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_FAILED)
+            tmpl2['Resources']['AResource']).AndRaise(Exception("Foo"))
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)

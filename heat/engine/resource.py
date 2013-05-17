@@ -364,10 +364,12 @@ class Resource(object):
         to customise update, the base-class handle_update will fail by default.
         '''
         if self.state in (self.CREATE_IN_PROGRESS, self.UPDATE_IN_PROGRESS):
-            return 'Resource update already requested'
+            raise exception.ResourceFailure(
+                'Resource update already requested')
 
         if not json_snippet:
-            return 'Must specify json snippet for resource update!'
+            raise exception.ResourceFailure(
+                'Must specify json snippet for resource update!')
 
         logger.info('updating %s' % str(self))
 
@@ -383,8 +385,9 @@ class Resource(object):
                 result = self.handle_update(json_snippet)
         except Exception as ex:
             logger.exception('update %s : %s' % (str(self), str(ex)))
-            self.state_set(self.UPDATE_FAILED, str(ex))
-            return str(ex) or "Error : %s" % type(ex)
+            failure = exception.ResourceFailure(ex)
+            self.state_set(self.UPDATE_FAILED, str(failure))
+            raise failure
         else:
             # If resource was updated (with or without interruption),
             # then we set the resource to UPDATE_COMPLETE
