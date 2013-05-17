@@ -66,34 +66,33 @@ class Volume(resource.Resource):
                 display_name=self._display_name(),
                 display_description=self._display_description(),
                 **self._create_arguments())
+        self.resource_id_set(vol.id)
 
         while vol.status == 'creating':
             eventlet.sleep(1)
             vol.get()
-        if vol.status == 'available':
-            self.resource_id_set(vol.id)
-        else:
+        if vol.status != 'available':
             raise exception.Error(vol.status)
 
     def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
 
-    if volume_backups is not None:
-        def handle_snapshot_delete(self, state):
-            if self.resource_id is not None:
-                # We use backups as snapshots are not independent of volumes
-                backup = self.cinder().backups.create(self.resource_id)
-                while backup.status == 'creating':
-                    eventlet.sleep(1)
-                    backup.get()
-                if backup.status != 'available':
-                    raise exception.Error(backup.status)
-                self.handle_delete()
+    def _backup(self):
+        backup = self.cinder().backups.create(self.resource_id)
+        while backup.status == 'creating':
+            eventlet.sleep(1)
+            backup.get()
+        if backup.status != 'available':
+            raise exception.Error(backup.status)
 
-    def handle_delete(self):
+    def _delete(self, backup=False):
         if self.resource_id is not None:
             try:
                 vol = self.cinder().volumes.get(self.resource_id)
+
+                if backup:
+                    self._backup()
+                    vol.get()
 
                 if vol.status == 'in-use':
                     logger.warn('cant delete volume when in-use')
@@ -102,6 +101,15 @@ class Volume(resource.Resource):
                 self.cinder().volumes.delete(self.resource_id)
             except clients.cinder_exceptions.NotFound:
                 pass
+
+    if volume_backups is not None:
+        def handle_snapshot_delete(self, state):
+            backup = state not in (self.CREATE_FAILED,
+                                   self.UPDATE_FAILED)
+            return self._delete(backup=backup)
+
+    def handle_delete(self):
+        return self._delete()
 
 
 class VolumeAttachment(resource.Resource):
