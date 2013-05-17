@@ -48,6 +48,11 @@ class dependenciesTest(unittest.TestCase):
                             '"%s" is not greater than "%s"' % (str(a), str(b)))
         self._dep_test(reversed, assertGreater, deps)
 
+    def test_repr(self):
+        dp = Dependencies([('1', None), ('2', '3'), ('2', '4')])
+        s = "Dependencies([('1', None), ('2', '3'), ('2', '4')])"
+        self.assertEqual(repr(dp), s)
+
     def test_single_node(self):
         d = Dependencies([('only', None)])
         l = list(iter(d))
