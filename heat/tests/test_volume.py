@@ -123,7 +123,7 @@ class VolumeTest(HeatTestCase):
         self.cinder_fc.volumes.delete('vol-123').AndReturn(None)
 
         self.cinder_fc.volumes.get('vol-123').AndRaise(
-            clients.cinder_exceptions.NotFound('Not found'))
+            clients.cinderclient.exceptions.NotFound('Not found'))
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)

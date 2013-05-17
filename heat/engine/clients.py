@@ -36,8 +36,7 @@ except ImportError:
     quantumclient = None
     logger.info('quantumclient not available')
 try:
-    from cinderclient.v1 import client as cinderclient
-    from cinderclient import exceptions as cinder_exceptions
+    from cinderclient import client as cinderclient
 except ImportError:
     cinderclient = None
     logger.info('cinderclient not available')
@@ -186,7 +185,7 @@ class OpenStackClients(object):
             return None
         logger.debug('cinder args %s', args)
 
-        self._cinder = cinderclient.Client(**args)
+        self._cinder = cinderclient.Client('1', **args)
         if con.password is None and con.auth_token is not None:
             management_url = self.url_for(service_type='volume')
             self._cinder.client.auth_token = con.auth_token
@@ -218,7 +217,7 @@ class OpenStackClients(object):
 
         try:
             vol = self.cinder().volumes.get(volume_id)
-        except cinder_exceptions.NotFound:
+        except cinderclient.exceptions.NotFound:
             logger.warning('Volume %s - not found' %
                           (volume_id))
             return
@@ -242,7 +241,7 @@ class OpenStackClients(object):
                     pass
                 vol.get()
             logger.info('volume status of %s now %s' % (volume_id, vol.status))
-        except cinder_exceptions.NotFound:
+        except cinderclient.exceptions.NotFound:
             logger.warning('Volume %s - not found' %
                           (volume_id))
 
