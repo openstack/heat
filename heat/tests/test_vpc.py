@@ -30,9 +30,9 @@ except ImportError:
 
 class VPCTestBase(HeatTestCase):
 
+    @skipIf(quantumclient is None, 'quantumclient unavaialble')
     def setUp(self):
         super(VPCTestBase, self).setUp()
-        skipIf(quantumclient is None, 'quantumclient unavaialble')
         setup_dummy_db()
         self.m.StubOutWithMock(quantumclient.Client, 'add_interface_router')
         self.m.StubOutWithMock(quantumclient.Client, 'add_gateway_router')
