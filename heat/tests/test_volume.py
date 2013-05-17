@@ -117,7 +117,6 @@ class VolumeTest(HeatTestCase):
 
         # delete script
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
-        eventlet.sleep(1).AndReturn(None)
 
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.cinder_fc.volumes.delete('vol-123').AndReturn(None)
@@ -155,8 +154,6 @@ class VolumeTest(HeatTestCase):
             size=u'1', availability_zone='nova',
             display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
-
-        eventlet.sleep(1).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -271,7 +268,6 @@ class VolumeTest(HeatTestCase):
             size=u'1', availability_zone='nova',
             display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
-        eventlet.sleep(1).AndReturn(None)
 
         # snapshot script
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
@@ -304,7 +300,6 @@ class VolumeTest(HeatTestCase):
             size=u'1', availability_zone='nova',
             display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
-        eventlet.sleep(1).AndReturn(None)
 
         # snapshot script
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
@@ -335,7 +330,6 @@ class VolumeTest(HeatTestCase):
             size=u'1', availability_zone='nova',
             display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
-        eventlet.sleep(1).AndReturn(None)
 
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.cinder_fc.volumes.delete('vol-123').AndReturn(None)
@@ -373,7 +367,6 @@ class VolumeTest(HeatTestCase):
         fv.update(
             display_description='%s.DataVolume' % stack_name,
             display_name='%s.DataVolume' % stack_name)
-        eventlet.sleep(1).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -401,8 +394,6 @@ class VolumeTest(HeatTestCase):
             metadata={'key': 'value'},
             source_volid='vol-012',
             volume_type='lvm').AndReturn(fv)
-
-        eventlet.sleep(1).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -443,8 +434,6 @@ class VolumeTest(HeatTestCase):
             size=u'1', availability_zone='nova',
             display_description=None,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
-
-        eventlet.sleep(1).AndReturn(None)
 
         self.m.ReplayAll()
 
