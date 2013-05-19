@@ -23,6 +23,7 @@ from heat.engine.resources.quantum import net
 from heat.engine.resources.quantum import subnet
 from heat.engine.resources.quantum import floatingip
 from heat.engine.resources.quantum import port
+from heat.engine.resources.quantum import router
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
@@ -83,6 +84,13 @@ quantum_template = '''
       "Properties": {
         "router_id": { "Ref" : "router" },
         "subnet_id": { "Ref" : "subnet" }
+      }
+    },
+    "gateway": {
+      "Type": "OS::Quantum::RouterGateway",
+      "Properties": {
+        "router_id": { "Ref" : "router" },
+        "network_id": { "Ref" : "network" }
       }
     }
   }
@@ -374,6 +382,187 @@ class QuantumSubnetTest(HeatTestCase):
 
         self.assertEqual(subnet.Subnet.UPDATE_REPLACE,
                          resource.handle_update({}))
+
+        self.assertEqual(resource.delete(), None)
+        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
+        self.assertEqual(resource.delete(), None)
+        self.m.VerifyAll()
+
+
+@skipIf(quantumclient is None, 'quantumclient unavailable')
+class QuantumRouterTest(HeatTestCase):
+    def setUp(self):
+        super(QuantumRouterTest, self).setUp()
+        self.m.StubOutWithMock(quantumclient.Client, 'create_router')
+        self.m.StubOutWithMock(quantumclient.Client, 'delete_router')
+        self.m.StubOutWithMock(quantumclient.Client, 'show_router')
+        self.m.StubOutWithMock(quantumclient.Client, 'add_interface_router')
+        self.m.StubOutWithMock(quantumclient.Client, 'remove_interface_router')
+        self.m.StubOutWithMock(quantumclient.Client, 'add_gateway_router')
+        self.m.StubOutWithMock(quantumclient.Client, 'remove_gateway_router')
+        setup_dummy_db()
+
+    def create_router(self, t, stack, resource_name):
+        resource = router.Router('router', t['Resources'][resource_name],
+                                 stack)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(router.Router.CREATE_COMPLETE, resource.state)
+        return resource
+
+    def create_router_interface(self, t, stack, resource_name, properties={}):
+        t['Resources'][resource_name]['Properties'] = properties
+        resource = router.RouterInterface(
+            'router_interface',
+            t['Resources'][resource_name],
+            stack)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(
+            router.RouterInterface.CREATE_COMPLETE, resource.state)
+        return resource
+
+    def create_gateway_router(self, t, stack, resource_name, properties={}):
+        t['Resources'][resource_name]['Properties'] = properties
+        resource = router.RouterGateway(
+            'gateway',
+            t['Resources'][resource_name],
+            stack)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(router.RouterGateway.CREATE_COMPLETE, resource.state)
+        return resource
+
+    def test_router(self):
+        quantumclient.Client.create_router({
+            'router': {'name': 'test_stack.router', 'admin_state_up': True}
+        }).AndReturn({
+            "router": {
+                "status": "BUILD",
+                "external_gateway_info": None,
+                "name": "test_stack.router",
+                "admin_state_up": True,
+                "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
+            }
+        })
+        quantumclient.Client.show_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
+                "router": {
+                    "status": "BUILD",
+                    "external_gateway_info": None,
+                    "name": "test_stack.router",
+                    "admin_state_up": True,
+                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                    "routes": [],
+                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
+                }
+            })
+        quantumclient.Client.show_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
+                "router": {
+                    "status": "ACTIVE",
+                    "external_gateway_info": None,
+                    "name": "test_stack.router",
+                    "admin_state_up": True,
+                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                    "routes": [],
+                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
+                }
+            })
+
+        quantumclient.Client.show_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8').AndRaise(
+                qe.QuantumClientException(status_code=404))
+        quantumclient.Client.show_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8').MultipleTimes().AndReturn({
+                "router": {
+                    "status": "ACTIVE",
+                    "external_gateway_info": None,
+                    "name": "test_stack.router",
+                    "admin_state_up": True,
+                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                    "routes": [],
+                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
+                }
+            })
+
+        quantumclient.Client.delete_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn(None)
+        quantumclient.Client.delete_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+
+        self.m.ReplayAll()
+        t = template_format.parse(quantum_template)
+        stack = parse_stack(t)
+        resource = self.create_router(t, stack, 'router')
+
+        resource.validate()
+
+        ref_id = resource.FnGetRefId()
+        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8', ref_id)
+        self.assertEqual(None,
+                         resource.FnGetAtt('tenant_id'))
+        self.assertEqual('3e21026f2dc94372b105808c0e721661',
+                         resource.FnGetAtt('tenant_id'))
+        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8',
+                         resource.FnGetAtt('id'))
+
+        self.assertEqual(router.Router.UPDATE_REPLACE,
+                         resource.handle_update({}))
+
+        self.assertEqual(resource.delete(), None)
+        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
+        self.assertEqual(resource.delete(), None)
+        self.m.VerifyAll()
+
+    def test_router_interface(self):
+        quantumclient.Client.add_interface_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
+        ).AndReturn(None)
+        quantumclient.Client.remove_interface_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
+        ).AndReturn(None)
+        quantumclient.Client.remove_interface_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+        self.m.ReplayAll()
+        t = template_format.parse(quantum_template)
+        stack = parse_stack(t)
+
+        resource = self.create_router_interface(
+            t, stack, 'router_interface', properties={
+                'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
+                'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'
+            })
+
+        self.assertEqual(resource.delete(), None)
+        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
+        self.assertEqual(resource.delete(), None)
+        self.m.VerifyAll()
+
+    def test_gateway_router(self):
+        quantumclient.Client.add_gateway_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
+        ).AndReturn(None)
+        quantumclient.Client.remove_gateway_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndReturn(None)
+        quantumclient.Client.remove_gateway_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+        self.m.ReplayAll()
+        t = template_format.parse(quantum_template)
+        stack = parse_stack(t)
+
+        resource = self.create_gateway_router(
+            t, stack, 'gateway', properties={
+                'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
+                'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+            })
 
         self.assertEqual(resource.delete(), None)
         resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
