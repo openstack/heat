@@ -58,31 +58,42 @@ install_mysql_server() {
 }
 
 start_mysql_server() {
-	sudo $SERVICE_START
+	$SERVICE_START
 }
 
 MYSQL_HEAT_PW_DEFAULT="heat"
 MYSQL_HEAT_PW=${MYSQL_HEAT_PW_DEFAULT}
 HEAT_CONFIG="/etc/heat/heat-engine.conf"
 ASSUME_YES=""
+ELEVATE=""
+
+# Check for root privileges
+if [[ $EUID -ne 0 ]] ; then
+	echo "This operation requires superuser privileges, using sudo:"
+	if sudo -l > /dev/null ; then
+		ELEVATE="sudo"
+	else
+		exit 1
+	fi
+fi
 
 case "$1" in
 	rpm)
 		echo "Installing on an RPM system."
-		PACKAGE_INSTALL="yum install"
+		PACKAGE_INSTALL="$ELEVATE yum install"
 		PACKAGE_STATUS="rpm -q"
 		SERVICE_MYSQLD="mysqld"
-		SERVICE_START="service $SERVICE_MYSQLD start"
+		SERVICE_START="$ELEVATE service $SERVICE_MYSQLD start"
 		SERVICE_STATUS="service $SERVICE_MYSQLD status"
-		SERVICE_ENABLE="chkconfig"
+		SERVICE_ENABLE="$ELEVATE chkconfig"
 		;;
 	deb)
 		echo "Installing on a Debian system."
-		PACKAGE_INSTALL="apt-get install"
+		PACKAGE_INSTALL="$ELEVATE apt-get install"
 		PACKAGE_STATUS="dpkg-query -s"
 		SERVICE_MYSQLD="mysql"
-		SERVICE_START="service $SERVICE_MYSQLD start"
-		SERVICE_STATUS="service $SERVICE_MYSQLD status"
+		SERVICE_START="$ELEVATE service $SERVICE_MYSQLD start"
+		SERVICE_STATUS="$ELEVATE service $SERVICE_MYSQLD status"
 		SERVICE_ENABLE=""
 		;;
 	*)
