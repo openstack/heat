@@ -412,7 +412,7 @@ Resources:
         sg = stack['the_sg']
         self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
-        self.assertResourceState(sg, 'test_stack.the_sg')
+        self.assertResourceState(sg, 'aaaa')
 
         stack.delete()
         self.m.VerifyAll()
@@ -528,7 +528,7 @@ Resources:
         sg = stack['the_sg']
         self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
-        self.assertResourceState(sg, 'test_stack.the_sg')
+        self.assertResourceState(sg, 'aaaa')
 
         self.assertEqual(None, sg.delete())
 

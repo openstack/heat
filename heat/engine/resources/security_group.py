@@ -179,7 +179,10 @@ class SecurityGroup(resource.Resource):
             self.resource_id = None
 
     def FnGetRefId(self):
-        return self.physical_resource_name()
+        if self.properties['VpcId']:
+            return super(SecurityGroup, self).FnGetRefId()
+        else:
+            return self.physical_resource_name()
 
 
 def resource_mapping():
