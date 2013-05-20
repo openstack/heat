@@ -20,7 +20,8 @@ from sqlalchemy.orm import relationship, backref, object_mapper
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import types as types
-from json import dumps, loads
+from json import dumps
+from json import loads
 from heat.openstack.common import uuidutils
 from heat.openstack.common import timeutils
 from heat.db.sqlalchemy.session import get_session

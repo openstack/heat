@@ -32,7 +32,8 @@ except ImportError:
     import ssl
 
 from heat.common import auth
-from heat.common import exception, utils
+from heat.common import exception
+from heat.common import utils
 
 
 # common chunk size for get and put
