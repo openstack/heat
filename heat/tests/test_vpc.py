@@ -50,10 +50,12 @@ class VPCTestBase(HeatTestCase):
         self.m.StubOutWithMock(quantumclient.Client, 'delete_router')
         self.m.StubOutWithMock(quantumclient.Client, 'delete_subnet')
         self.m.StubOutWithMock(quantumclient.Client, 'list_networks')
+        self.m.StubOutWithMock(quantumclient.Client, 'list_routers')
         self.m.StubOutWithMock(quantumclient.Client, 'remove_gateway_router')
         self.m.StubOutWithMock(quantumclient.Client, 'remove_interface_router')
         self.m.StubOutWithMock(quantumclient.Client, 'show_subnet')
         self.m.StubOutWithMock(quantumclient.Client, 'show_network')
+        self.m.StubOutWithMock(quantumclient.Client, 'show_router')
         self.m.StubOutWithMock(quantumclient.Client, 'create_security_group')
         self.m.StubOutWithMock(quantumclient.Client, 'show_security_group')
         self.m.StubOutWithMock(quantumclient.Client, 'delete_security_group')
@@ -87,51 +89,87 @@ class VPCTestBase(HeatTestCase):
         return stack
 
     def mock_create_network(self):
-        vpc_name = utils.PhysName('test_stack', 'the_vpc')
+        self.vpc_name = utils.PhysName('test_stack', 'the_vpc')
         quantumclient.Client.create_network(
             {
-                'network': {'name': vpc_name}
+                'network': {'name': self.vpc_name}
             }).AndReturn({'network': {
-                'status': 'ACTIVE',
+                'status': 'BUILD',
                 'subnets': [],
-                'name': vpc_name,
+                'name': 'name',
                 'admin_state_up': True,
                 'shared': False,
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'id': 'aaaa'
             }})
+        quantumclient.Client.show_network(
+            'aaaa'
+        ).AndReturn({"network": {
+            "status": "BUILD",
+            "subnets": [],
+            "name": self.vpc_name,
+            "admin_state_up": False,
+            "shared": False,
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+            "id": "aaaa"
+        }})
+
+        quantumclient.Client.show_network(
+            'aaaa'
+        ).MultipleTimes().AndReturn({"network": {
+            "status": "ACTIVE",
+            "subnets": [],
+            "name": self.vpc_name,
+            "admin_state_up": False,
+            "shared": False,
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+            "id": "aaaa"
+        }})
         quantumclient.Client.create_router(
-            {'router': {'name': vpc_name}}).AndReturn({'router': {
-                'status': 'ACTIVE',
-                'name': vpc_name,
-                'admin_state_up': True,
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'id': 'rrrr'
-            }})
+            {'router': {'name': self.vpc_name}}).AndReturn({
+                'router': {
+                    'status': 'BUILD',
+                    'name': self.vpc_name,
+                    'admin_state_up': True,
+                    'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                    'id': 'bbbb'
+                }})
+        quantumclient.Client.list_routers(name=self.vpc_name).AndReturn({
+            "routers": [{
+                "status": "BUILD",
+                "external_gateway_info": None,
+                "name": self.vpc_name,
+                "admin_state_up": True,
+                "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                "routes": [],
+                "id": "bbbb"
+            }]
+        })
+        self.mock_router_for_vpc()
 
     def mock_create_subnet(self):
-        subnet_name = utils.PhysName('test_stack', 'the_subnet')
+        self.subnet_name = utils.PhysName('test_stack', 'the_subnet')
         quantumclient.Client.create_subnet(
             {'subnet': {
                 'network_id': u'aaaa',
                 'cidr': u'10.0.0.0/24',
                 'ip_version': 4,
-                'name': subnet_name}}).AndReturn({
+                'name': self.subnet_name}}).AndReturn({
                     'subnet': {
                         'status': 'ACTIVE',
-                        'name': subnet_name,
+                        'name': self.subnet_name,
                         'admin_state_up': True,
                         'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                         'id': 'cccc'}})
+        self.mock_router_for_vpc()
         quantumclient.Client.add_interface_router(
-            u'rrrr',
+            u'bbbb',
             {'subnet_id': 'cccc'}).AndReturn(None)
 
     def mock_show_subnet(self):
-        subnet_name = utils.PhysName('test_stack', 'the_subnet')
         quantumclient.Client.show_subnet('cccc').AndReturn({
             'subnet': {
-                'name': subnet_name,
+                'name': self.subnet_name,
                 'network_id': 'aaaa',
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'allocation_pools': [{'start': '10.0.0.2',
@@ -144,16 +182,16 @@ class VPCTestBase(HeatTestCase):
             }})
 
     def mock_create_security_group(self):
-        sg_name = utils.PhysName('test_stack', 'the_sg')
+        self.sg_name = utils.PhysName('test_stack', 'the_sg')
         quantumclient.Client.create_security_group({
             'security_group': {
-                'name': sg_name,
+                'name': self.sg_name,
                 'description': 'SSH access'
             }
         }).AndReturn({
             'security_group': {
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'name': sg_name,
+                'name': self.sg_name,
                 'description': 'SSH access',
                 'security_group_rules': [],
                 'id': 'eeee'
@@ -205,21 +243,95 @@ class VPCTestBase(HeatTestCase):
         quantumclient.Client.delete_security_group_rule('bbbb').AndReturn(None)
         quantumclient.Client.delete_security_group('eeee').AndReturn(None)
 
+    def mock_router_for_vpc(self):
+        quantumclient.Client.list_routers(name=self.vpc_name).AndReturn({
+            "routers": [{
+                "status": "ACTIVE",
+                "external_gateway_info": {
+                    "network_id": "zzzz",
+                    "enable_snat": True},
+                "name": self.vpc_name,
+                "admin_state_up": True,
+                "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                "routes": [],
+                "id": "bbbb"
+            }]
+        })
+
     def mock_delete_network(self):
-        quantumclient.Client.delete_router('rrrr').AndReturn(None)
+        self.mock_router_for_vpc()
+        quantumclient.Client.delete_router('bbbb').AndReturn(None)
         quantumclient.Client.delete_network('aaaa').AndReturn(None)
 
     def mock_delete_subnet(self):
+        self.mock_router_for_vpc()
         quantumclient.Client.remove_interface_router(
-            u'rrrr',
+            u'bbbb',
             {'subnet_id': 'cccc'}).AndReturn(None)
         quantumclient.Client.delete_subnet('cccc').AndReturn(None)
 
-    def assertResourceState(self, rsrc, ref_id, metadata={}):
-        self.assertEqual(None, rsrc.validate())
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.assertEqual(ref_id, rsrc.FnGetRefId())
-        self.assertEqual(metadata, dict(rsrc.metadata))
+    def mock_create_route_table(self):
+        self.rt_name = utils.PhysName('test_stack', 'the_route_table')
+        quantumclient.Client.create_router({
+            'router': {'name': self.rt_name}}).AndReturn({
+                'router': {
+                    'status': 'BUILD',
+                    'name': self.rt_name,
+                    'admin_state_up': True,
+                    'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                    'id': 'ffff'
+                }
+            })
+        quantumclient.Client.show_router('ffff').AndReturn({
+            'router': {
+                'status': 'BUILD',
+                'name': self.rt_name,
+                'admin_state_up': True,
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'id': 'ffff'
+            }
+        })
+        quantumclient.Client.show_router('ffff').AndReturn({
+            'router': {
+                'status': 'ACTIVE',
+                'name': self.rt_name,
+                'admin_state_up': True,
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'id': 'ffff'
+            }
+        })
+        self.mock_router_for_vpc()
+        quantumclient.Client.add_gateway_router(
+            'ffff', {'network_id': 'zzzz'}).AndReturn(None)
+
+    def mock_create_association(self):
+        self.mock_show_subnet()
+        self.mock_router_for_vpc()
+        quantumclient.Client.remove_interface_router(
+            'bbbb',
+            {'subnet_id': u'cccc'}).AndReturn(None)
+        quantumclient.Client.add_interface_router(
+            u'ffff',
+            {'subnet_id': 'cccc'}).AndReturn(None)
+
+    def mock_delete_association(self):
+        self.mock_show_subnet()
+        self.mock_router_for_vpc()
+        quantumclient.Client.remove_interface_router(
+            'ffff',
+            {'subnet_id': u'cccc'}).AndReturn(None)
+        quantumclient.Client.add_interface_router(
+            u'bbbb',
+            {'subnet_id': 'cccc'}).AndReturn(None)
+
+    def mock_delete_route_table(self):
+        quantumclient.Client.delete_router('ffff').AndReturn(None)
+        quantumclient.Client.remove_gateway_router('ffff').AndReturn(None)
+
+    def assertResourceState(self, resource, ref_id):
+        self.assertEqual(None, resource.validate())
+        self.assertEqual((resource.CREATE, resource.COMPLETE), resource.state)
+        self.assertEqual(ref_id, resource.FnGetRefId())
 
 
 class VPCTest(VPCTestBase):
@@ -232,23 +344,18 @@ Resources:
     Properties: {CidrBlock: '10.0.0.0/16'}
 '''
 
-    def stub_sleep(self):
-        pass
-
     def test_vpc(self):
         self.mock_create_network()
         self.mock_delete_network()
         self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)
-        rsrc = stack['the_vpc']
-        self.assertResourceState(rsrc, 'aaaa', {
-            'router_id': 'rrrr',
-            'all_router_ids': ['rrrr']})
+        vpc = stack['the_vpc']
+        self.assertResourceState(vpc, 'aaaa')
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
+                          vpc.handle_update, {}, {}, {})
 
-        self.assertEqual(None, rsrc.delete())
+        self.assertEqual(None, vpc.delete())
         self.m.VerifyAll()
 
 
@@ -275,8 +382,9 @@ Resources:
         self.mock_delete_network()
 
         # mock delete subnet which is already deleted
+        self.mock_router_for_vpc()
         quantumclient.Client.remove_interface_router(
-            u'rrrr',
+            u'bbbb',
             {'subnet_id': 'cccc'}).AndRaise(
                 QuantumClientException(status_code=404))
         quantumclient.Client.delete_subnet('cccc').AndRaise(
@@ -285,23 +393,21 @@ Resources:
         self.m.ReplayAll()
         stack = self.create_stack(self.test_template)
 
-        rsrc = stack['the_subnet']
-        self.assertResourceState(rsrc, 'cccc', {
-            'router_id': 'rrrr',
-            'default_router_id': 'rrrr'})
+        subnet = stack['the_subnet']
+        self.assertResourceState(subnet, 'cccc')
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
+                          subnet.handle_update, {}, {}, {})
         self.assertRaises(
             exception.InvalidTemplateAttribute,
-            rsrc.FnGetAtt,
+            subnet.FnGetAtt,
             'Foo')
 
-        self.assertEqual('moon', rsrc.FnGetAtt('AvailabilityZone'))
+        self.assertEqual('moon', subnet.FnGetAtt('AvailabilityZone'))
 
-        self.assertEqual(None, rsrc.delete())
-        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        self.assertEqual(None, rsrc.delete())
+        self.assertEqual(None, subnet.delete())
+        subnet.state_set(subnet.CREATE, subnet.COMPLETE, 'to delete again')
+        self.assertEqual(None, subnet.delete())
         self.assertEqual(None, stack['the_vpc'].delete())
         self.m.VerifyAll()
 
@@ -411,13 +517,13 @@ Resources:
 '''
 
     def mock_create_network_interface(self, security_groups=['eeee']):
-        nic_name = utils.PhysName('test_stack', 'the_nic')
+        self.nic_name = utils.PhysName('test_stack', 'the_nic')
         port = {'network_id': 'aaaa',
                 'fixed_ips': [{
                     'subnet_id': u'cccc',
                     'ip_address': u'10.0.0.100'
                 }],
-                'name': nic_name,
+                'name': self.nic_name,
                 'admin_state_up': True}
         if security_groups:
                 port['security_groups'] = security_groups
@@ -435,7 +541,7 @@ Resources:
                 ],
                 'id': 'dddd',
                 'mac_address': 'fa:16:3e:25:32:5d',
-                'name': nic_name,
+                'name': self.nic_name,
                 'network_id': 'aaaa',
                 'status': 'ACTIVE',
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'
@@ -530,7 +636,6 @@ Resources:
     Type: AWS::EC2::InternetGateway
   the_vpc:
     Type: AWS::EC2::VPC
-    DependsOn : the_gateway
     Properties:
       CidrBlock: '10.0.0.0/16'
   the_subnet:
@@ -541,10 +646,18 @@ Resources:
       AvailabilityZone: moon
   the_attachment:
     Type: AWS::EC2::VPCGatewayAttachment
-    DependsOn : the_subnet
     Properties:
       VpcId: {Ref: the_vpc}
       InternetGatewayId: {Ref: the_gateway}
+  the_route_table:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: {Ref: the_vpc}
+  the_association:
+    Type: AWS::EC2::SubnetRouteTableAssocation
+    Properties:
+      RouteTableId: {Ref: the_route_table}
+      SubnetId: {Ref: the_subnet}
 '''
 
     def mock_create_internet_gateway(self):
@@ -562,17 +675,21 @@ Resources:
 
     def mock_create_gateway_attachment(self):
         quantumclient.Client.add_gateway_router(
-            'rrrr', {'network_id': 'eeee'}).AndReturn(None)
+            'ffff', {'network_id': 'eeee'}).AndReturn(None)
 
     def mock_delete_gateway_attachment(self):
-        quantumclient.Client.remove_gateway_router('rrrr').AndReturn(None)
+        quantumclient.Client.remove_gateway_router('ffff').AndReturn(None)
 
     def test_internet_gateway(self):
         self.mock_create_internet_gateway()
         self.mock_create_network()
         self.mock_create_subnet()
+        self.mock_create_route_table()
+        self.mock_create_association()
         self.mock_create_gateway_attachment()
         self.mock_delete_gateway_attachment()
+        self.mock_delete_association()
+        self.mock_delete_route_table()
         self.mock_delete_subnet()
         self.mock_delete_network()
 
@@ -581,8 +698,7 @@ Resources:
         stack = self.create_stack(self.test_template)
 
         gateway = stack['the_gateway']
-        self.assertResourceState(gateway, 'the_gateway', {
-            'external_network_id': 'eeee'})
+        self.assertResourceState(gateway, gateway.physical_resource_name())
         self.assertRaises(resource.UpdateReplace, gateway.handle_update,
                           {}, {}, {})
 
@@ -590,6 +706,9 @@ Resources:
         self.assertResourceState(attachment, 'the_attachment')
         self.assertRaises(resource.UpdateReplace,
                           attachment.handle_update, {}, {}, {})
+
+        route_table = stack['the_route_table']
+        self.assertEqual([route_table], list(attachment._vpc_route_tables()))
 
         stack.delete()
         self.m.VerifyAll()
@@ -621,38 +740,6 @@ Resources:
       SubnetId: {Ref: the_subnet}
 '''
 
-    def mock_create_route_table(self):
-        rt_name = utils.PhysName('test_stack', 'the_route_table')
-        quantumclient.Client.create_router(
-            {'router': {'name': rt_name}}).AndReturn({
-                'router': {
-                    'status': 'ACTIVE',
-                    'name': 'name',
-                    'admin_state_up': True,
-                    'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                    'id': 'ffff'
-                }
-            })
-
-    def mock_create_association(self):
-        quantumclient.Client.remove_interface_router(
-            'rrrr',
-            {'subnet_id': u'cccc'}).AndReturn(None)
-        quantumclient.Client.add_interface_router(
-            u'ffff',
-            {'subnet_id': 'cccc'}).AndReturn(None)
-
-    def mock_delete_association(self):
-        quantumclient.Client.remove_interface_router(
-            'ffff',
-            {'subnet_id': u'cccc'}).AndReturn(None)
-        quantumclient.Client.add_interface_router(
-            u'rrrr',
-            {'subnet_id': 'cccc'}).AndReturn(None)
-
-    def mock_delete_route_table(self):
-        quantumclient.Client.delete_router('ffff').AndReturn(None)
-
     def test_route_table(self):
         self.mock_create_network()
         self.mock_create_subnet()
@@ -667,26 +754,20 @@ Resources:
 
         stack = self.create_stack(self.test_template)
 
-        vpc = stack['the_vpc']
-        self.assertEqual(['rrrr', 'ffff'], vpc.metadata['all_router_ids'])
-
         route_table = stack['the_route_table']
-        self.assertResourceState(route_table, 'ffff', {})
+        self.assertResourceState(route_table, 'ffff')
         self.assertRaises(
             resource.UpdateReplace,
             route_table.handle_update, {}, {}, {})
 
         association = stack['the_association']
-        self.assertResourceState(association, 'the_association', {})
+        self.assertResourceState(association, 'the_association')
         self.assertRaises(
             resource.UpdateReplace,
             association.handle_update, {}, {}, {})
 
         association.delete()
         route_table.delete()
-
-        vpc = stack['the_vpc']
-        self.assertEqual(['rrrr'], vpc.metadata['all_router_ids'])
 
         stack.delete()
         self.m.VerifyAll()

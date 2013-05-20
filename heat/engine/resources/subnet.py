@@ -17,6 +17,7 @@ from heat.engine import clients
 from heat.common import exception
 from heat.openstack.common import log as logging
 from heat.engine import resource
+from heat.engine.resources.vpc import VPC
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +46,6 @@ class Subnet(resource.Resource):
         client = self.quantum()
         # TODO(sbaker) Verify that this CidrBlock is within the vpc CidrBlock
         network_id = self.properties.get('VpcId')
-        vpc = self.stack.resource_by_refid(network_id)
-        router_id = vpc.metadata['router_id']
 
         props = {
             'network_id': network_id,
@@ -56,31 +55,26 @@ class Subnet(resource.Resource):
         }
         subnet = client.create_subnet({'subnet': props})['subnet']
 
-        #TODO(sbaker) check for a non-default router for this network
-        # and use that instead if it exists
-        client.add_interface_router(
-            router_id,
-            {'subnet_id': subnet['id']})
-        md = {
-            'router_id': router_id,
-            'default_router_id': router_id
-        }
-        self.metadata = md
+        router = VPC.router_for_vpc(self.quantum(), network_id)
+        if router:
+            client.add_interface_router(
+                router['id'],
+                {'subnet_id': subnet['id']})
         self.resource_id_set(subnet['id'])
 
     def handle_delete(self):
         from quantumclient.common.exceptions import QuantumClientException
 
         client = self.quantum()
-        router_id = self.metadata['router_id']
+        network_id = self.properties.get('VpcId')
         subnet_id = self.resource_id
 
-        #TODO(sbaker) check for a non-default router for this network
-        # and remove that instead if it exists
         try:
-            client.remove_interface_router(
-                router_id,
-                {'subnet_id': subnet_id})
+            router = VPC.router_for_vpc(self.quantum(), network_id)
+            if router:
+                client.remove_interface_router(
+                    router['id'],
+                    {'subnet_id': subnet_id})
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex
