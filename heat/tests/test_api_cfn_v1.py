@@ -427,7 +427,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_get_template_int_body(self):
-        ''' Test the internal _get_template function '''
+        '''Test the internal _get_template function.'''
         params = {'TemplateBody': "abcdef"}
         dummy_req = self._dummy_GET_request(params)
         result = self.controller._get_template(dummy_req)

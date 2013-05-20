@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 def _module_name(*components):
-    '''Assemble a fully-qualified module name from its components'''
+    '''Assemble a fully-qualified module name from its components.'''
     return '.'.join(components)
 
 

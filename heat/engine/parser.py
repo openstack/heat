@@ -124,7 +124,7 @@ class Stack(object):
 
     @staticmethod
     def _get_dependencies(resources):
-        '''Return the dependency graph for a list of resources'''
+        '''Return the dependency graph for a list of resources.'''
         deps = dependencies.Dependencies()
         for resource in resources:
             resource.add_dependencies(deps)
@@ -133,7 +133,7 @@ class Stack(object):
 
     @classmethod
     def load(cls, context, stack_id=None, stack=None, resolve_data=True):
-        '''Retrieve a Stack from the database'''
+        '''Retrieve a Stack from the database.'''
         if stack is None:
             stack = db_api.stack_get(context, stack_id)
         if stack is None:
@@ -200,7 +200,7 @@ class Stack(object):
         return reversed(self.dependencies)
 
     def __len__(self):
-        '''Return the number of resources'''
+        '''Return the number of resources.'''
         return len(self.resources)
 
     def __getitem__(self, key):
@@ -208,19 +208,19 @@ class Stack(object):
         return self.resources[key]
 
     def __setitem__(self, key, value):
-        '''Set the resource with the specified name to a specific value'''
+        '''Set the resource with the specified name to a specific value.'''
         self.resources[key] = value
 
     def __contains__(self, key):
-        '''Determine whether the stack contains the specified resource'''
+        '''Determine whether the stack contains the specified resource.'''
         return key in self.resources
 
     def keys(self):
-        '''Return a list of resource keys for the stack'''
+        '''Return a list of resource keys for the stack.'''
         return self.resources.keys()
 
     def __str__(self):
-        '''Return a human-readable string representation of the stack'''
+        '''Return a human-readable string representation of the stack.'''
         return 'Stack "%s"' % self.name
 
     def resource_by_refid(self, refid):
@@ -253,7 +253,7 @@ class Stack(object):
                 raise StackValidationFailed(message=result)
 
     def state_set(self, new_status, reason):
-        '''Update the stack state in the database'''
+        '''Update the stack state in the database.'''
         self.state = new_status
         self.state_description = reason
 

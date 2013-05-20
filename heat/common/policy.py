@@ -44,7 +44,7 @@ DEFAULT_RULES = {
 
 
 class Enforcer(object):
-    """Responsible for loading and enforcing rules"""
+    """Responsible for loading and enforcing rules."""
 
     def __init__(self, scope='heat', exc=exception.Forbidden):
         self.scope = scope
@@ -55,12 +55,12 @@ class Enforcer(object):
         self.policy_file_contents = None
 
     def set_rules(self, rules):
-        """Create a new Rules object based on the provided dict of rules"""
+        """Create a new Rules object based on the provided dict of rules."""
         rules_obj = policy.Rules(rules, self.default_rule)
         policy.set_rules(rules_obj)
 
     def load_rules(self):
-        """Set the rules found in the json file on disk"""
+        """Set the rules found in the json file on disk."""
         if self.policy_path:
             rules = self._read_policy_file()
             rule_type = ""
@@ -74,7 +74,7 @@ class Enforcer(object):
 
     @staticmethod
     def _find_policy_file():
-        """Locate the policy json data file"""
+        """Locate the policy json data file."""
         policy_file = CONF.find_file(CONF.policy_file)
         if policy_file:
             return policy_file

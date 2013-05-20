@@ -145,7 +145,7 @@ class HTTPSClientAuthConnection(httplib.HTTPSConnection):
 
 class BaseClient(object):
 
-    """A base client class"""
+    """A base client class."""
 
     DEFAULT_PORT = 80
     DEFAULT_DOC_ROOT = None

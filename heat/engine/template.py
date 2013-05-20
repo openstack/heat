@@ -38,12 +38,12 @@ class Template(collections.Mapping):
 
     @classmethod
     def load(cls, context, template_id):
-        '''Retrieve a Template with the given ID from the database'''
+        '''Retrieve a Template with the given ID from the database.'''
         t = db_api.raw_template_get(context, template_id)
         return cls(t.template, template_id)
 
     def store(self, context=None):
-        '''Store the Template in the database and return its ID'''
+        '''Store the Template in the database and return its ID.'''
         if self.id is None:
             rt = {'template': self.t}
             new_rt = db_api.raw_template_create(context, rt)
@@ -51,7 +51,7 @@ class Template(collections.Mapping):
         return self.id
 
     def __getitem__(self, section):
-        '''Get the relevant section in the template'''
+        '''Get the relevant section in the template.'''
         if section not in SECTIONS:
             raise KeyError('"%s" is not a valid template section' % section)
         if section == VERSION:
@@ -65,11 +65,11 @@ class Template(collections.Mapping):
         return self.t.get(section, default)
 
     def __iter__(self):
-        '''Return an iterator over the section names'''
+        '''Return an iterator over the section names.'''
         return iter(SECTIONS)
 
     def __len__(self):
-        '''Return the number of sections'''
+        '''Return the number of sections.'''
         return len(SECTIONS)
 
     def resolve_find_in_map(self, s):

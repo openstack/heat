@@ -48,7 +48,7 @@ class Event(object):
 
     @classmethod
     def load(cls, context, event_id):
-        '''Retrieve an Event from the database'''
+        '''Retrieve an Event from the database.'''
         from heat.engine import parser
 
         ev = db_api.event_get(context, event_id)
@@ -67,7 +67,7 @@ class Event(object):
         return event
 
     def store(self):
-        '''Store the Event in the database'''
+        '''Store the Event in the database.'''
         ev = {
             'logical_resource_id': self.resource.name,
             'physical_resource_id': self.physical_resource_id,
@@ -91,7 +91,7 @@ class Event(object):
         return self.id
 
     def identifier(self):
-        '''Return a unique identifier for the event'''
+        '''Return a unique identifier for the event.'''
         if self.id is None:
             return None
 

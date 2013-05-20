@@ -95,7 +95,7 @@ class RequestContext(object):
 
     @property
     def show_deleted(self):
-        """Admins can see deleted by default"""
+        """Admins can see deleted by default."""
         if self._show_deleted or self.is_admin:
             return True
         return False

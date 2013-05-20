@@ -120,7 +120,7 @@ class HeatIdentifier(collections.Mapping):
                                    urllib.quote(self.path))
 
     def _path_components(self):
-        '''Return a list of the path components'''
+        '''Return a list of the path components.'''
         return self.path.lstrip('/').split('/')
 
     def __getattr__(self, attr):
@@ -155,7 +155,7 @@ class HeatIdentifier(collections.Mapping):
 
 
 class ResourceIdentifier(HeatIdentifier):
-    '''An identifier for a resource'''
+    '''An identifier for a resource.'''
 
     RESOURCE_NAME = 'resource_name'
 
@@ -194,7 +194,7 @@ class ResourceIdentifier(HeatIdentifier):
 
 
 class EventIdentifier(HeatIdentifier):
-    '''An identifier for an event'''
+    '''An identifier for an event.'''
 
     (RESOURCE_NAME, EVENT_ID) = (ResourceIdentifier.RESOURCE_NAME, 'event_id')
 

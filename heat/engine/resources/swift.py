@@ -78,7 +78,7 @@ class SwiftContainer(resource.Resource):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
-        """Perform specified delete policy"""
+        """Perform specified delete policy."""
         logger.debug('SwiftContainer delete container %s' % self.resource_id)
         if self.resource_id is not None:
             try:

@@ -24,7 +24,7 @@ class CircularDependencyException(exception.OpenstackException):
 
 
 class Dependencies(object):
-    '''Helper class for calculating a dependency graph'''
+    '''Helper class for calculating a dependency graph.'''
 
     class Node(object):
         def __init__(self, requires=None, required_by=None):
@@ -36,11 +36,11 @@ class Dependencies(object):
             self.satisfy = required_by and required_by.copy() or set()
 
         def copy(self):
-            '''Make a copy of the node'''
+            '''Make a copy of the node.'''
             return Dependencies.Node(self.require, self.satisfy)
 
         def reverse_copy(self):
-            '''Make a copy of the node with the edge directions reversed'''
+            '''Make a copy of the node with the edge directions reversed.'''
             return Dependencies.Node(self.satisfy, self.require)
 
         def required_by(self, source=None):
@@ -53,11 +53,11 @@ class Dependencies(object):
             return iter(self.satisfy)
 
         def requires(self, target):
-            '''Add a key that this node requires'''
+            '''Add a key that this node requires.'''
             self.require.add(target)
 
         def __isub__(self, target):
-            '''Remove a key that this node requires'''
+            '''Remove a key that this node requires.'''
             self.require.remove(target)
             return self
 
@@ -68,27 +68,27 @@ class Dependencies(object):
             return bool(self.require)
 
         def stem(self):
-            '''Return True if this node is a stem (required by nothing)'''
+            '''Return True if this node is a stem (required by nothing).'''
             return not bool(self.satisfy)
 
         def disjoint(self):
-            '''Return True if this node is both a leaf and a stem'''
+            '''Return True if this node is both a leaf and a stem.'''
             return (not self) and self.stem()
 
         def __len__(self):
-            '''Count the number of keys required by this node'''
+            '''Count the number of keys required by this node.'''
             return len(self.require)
 
         def __iter__(self):
-            '''Iterate over the keys required by this node'''
+            '''Iterate over the keys required by this node.'''
             return iter(self.require)
 
         def __str__(self):
-            '''Return a human-readable string representation of the node'''
+            '''Return a human-readable string representation of the node.'''
             return '{%s}' % ', '.join(str(n) for n in self)
 
         def __repr__(self):
-            '''Return a string representation of the node'''
+            '''Return a string representation of the node.'''
             return repr(self.require)
 
     def __init__(self, edges=[]):
@@ -101,7 +101,7 @@ class Dependencies(object):
             self += e
 
     def __iadd__(self, edge):
-        '''Add another edge, in the form of a (requirer, required) tuple'''
+        '''Add another edge, in the form of a (requirer, required) tuple.'''
         requirer, required = edge
 
         if required is None:
@@ -143,7 +143,7 @@ class Dependencies(object):
 
     @staticmethod
     def _deps_to_str(deps):
-        '''Convert the given dependency graph to a human-readable string'''
+        '''Convert the given dependency graph to a human-readable string.'''
         pairs = ('%s: %s' % (str(k), str(v)) for k, v in deps.items())
         return '{%s}' % ', '.join(pairs)
 
@@ -154,7 +154,7 @@ class Dependencies(object):
         return self._deps_to_str(self.deps)
 
     def _edges(self):
-        '''Return an iterator over all of the edges in the graph'''
+        '''Return an iterator over all of the edges in the graph.'''
         def outgoing_edges(rqr, node):
             if node.disjoint():
                 yield (rqr, None)
@@ -165,11 +165,11 @@ class Dependencies(object):
                                              for item in self.deps.iteritems())
 
     def __repr__(self):
-        '''Return a string representation of the object'''
+        '''Return a string representation of the object.'''
         return 'Dependencies([%s])' % ', '.join(repr(e) for e in self._edges())
 
     def _toposort(self, deps):
-        '''Generate a topological sort of a dependency graph'''
+        '''Generate a topological sort of a dependency graph.'''
         def next_leaf():
             for leaf, node in deps.items():
                 if not node:

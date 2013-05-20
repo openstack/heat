@@ -36,7 +36,7 @@ SUPPORTED_PARAMS = ('StackName', 'TemplateBody', 'TemplateUrl',
 
 class V1Client(base_client.BaseClient):
 
-    """Main client class for accessing heat resources"""
+    """Main client class for accessing heat resources."""
 
     DEFAULT_DOC_ROOT = "/v1"
 

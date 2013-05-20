@@ -158,7 +158,7 @@ class StringParam(Parameter):
     '''A template parameter of type "String".'''
 
     def _validate(self, value):
-        '''Check that the supplied value is compatible with the constraints'''
+        '''Check that the supplied value is compatible with the constraints.'''
         if not isinstance(value, basestring):
             raise ValueError(self._error_msg('value must be a string'))
 
@@ -195,7 +195,7 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
     '''A template parameter of type "CommaDelimitedList".'''
 
     def _validate(self, value):
-        '''Check that the supplied value is compatible with the constraints'''
+        '''Check that the supplied value is compatible with the constraints.'''
         try:
             sp = value.split(',')
         except AttributeError:
@@ -205,11 +205,11 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
             Parameter._validate(self, li)
 
     def __len__(self):
-        '''Return the length of the list'''
+        '''Return the length of the list.'''
         return len(self.value().split(','))
 
     def __getitem__(self, index):
-        '''Return an item from the list'''
+        '''Return an item from the list.'''
         return self.value().split(',')[index]
 
 
@@ -249,7 +249,7 @@ class Parameters(collections.Mapping):
         self.params = dict((p.name, p) for p in parameters())
 
     def __contains__(self, key):
-        '''Return whether the specified parameter exists'''
+        '''Return whether the specified parameter exists.'''
         return key in self.params
 
     def __iter__(self):
@@ -257,7 +257,7 @@ class Parameters(collections.Mapping):
         return iter(self.params)
 
     def __len__(self):
-        '''Return the number of parameters defined'''
+        '''Return the number of parameters defined.'''
         return len(self.params)
 
     def __getitem__(self, key):

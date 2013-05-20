@@ -34,12 +34,12 @@ _resource_classes = {}
 
 
 def get_types():
-    '''Return an iterator over the list of valid resource types'''
+    '''Return an iterator over the list of valid resource types.'''
     return iter(_resource_classes)
 
 
 def get_class(resource_type):
-    '''Return the Resource class for a given resource type'''
+    '''Return the Resource class for a given resource type.'''
     cls = _resource_classes.get(resource_type)
     if cls is None:
         msg = "Unknown resource Type : %s" % resource_type
@@ -155,7 +155,7 @@ class Resource(object):
             self.id = None
 
     def __eq__(self, other):
-        '''Allow == comparison of two resources'''
+        '''Allow == comparison of two resources.'''
         # For the purposes of comparison, we declare two resource objects
         # equal if their names and parsed_templates are the same
         if isinstance(other, Resource):
@@ -164,7 +164,7 @@ class Resource(object):
         return NotImplemented
 
     def __ne__(self, other):
-        '''Allow != comparison of two resources'''
+        '''Allow != comparison of two resources.'''
         result = self.__eq__(other)
         if result is NotImplemented:
             return result
@@ -174,7 +174,7 @@ class Resource(object):
         return self.t['Type']
 
     def identifier(self):
-        '''Return an identifier for this resource'''
+        '''Return an identifier for this resource.'''
         return identifier.ResourceIdentifier(resource_name=self.name,
                                              **self.stack.identifier())
 
@@ -488,7 +488,7 @@ class Resource(object):
                 logger.warn('db error %s' % str(ex))
 
     def _store(self):
-        '''Create the resource in the database'''
+        '''Create the resource in the database.'''
         try:
             rs = {'state': self.state,
                   'stack_id': self.stack.id,
@@ -506,7 +506,7 @@ class Resource(object):
             logger.error('DB error %s' % str(ex))
 
     def _add_event(self, new_state, reason):
-        '''Add a state change event to the database'''
+        '''Add a state change event to the database.'''
         ev = event.Event(self.context, self.stack, self,
                          new_state, reason,
                          self.resource_id, self.properties)

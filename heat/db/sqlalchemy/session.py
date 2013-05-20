@@ -39,7 +39,7 @@ def get_session(autocommit=True, expire_on_commit=False):
 
 class SynchronousSwitchListener(sqlalchemy.interfaces.PoolListener):
 
-    """Switch sqlite connections to non-synchronous mode"""
+    """Switch sqlite connections to non-synchronous mode."""
 
     def connect(self, dbapi_con, con_record):
         dbapi_con.execute("PRAGMA synchronous = OFF")

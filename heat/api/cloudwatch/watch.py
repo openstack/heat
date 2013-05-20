@@ -43,7 +43,7 @@ class WatchController(object):
         self.policy = policy.Enforcer(scope='cloudwatch')
 
     def _enforce(self, req, action):
-        """Authorize an action against the policy.json"""
+        """Authorize an action against the policy.json."""
         try:
             self.policy.enforce(req.context, action, {})
         except heat_exception.Forbidden:

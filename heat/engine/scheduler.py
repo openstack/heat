@@ -256,7 +256,7 @@ class PollingTaskGroup(object):
     """
 
     def __init__(self, tasks, name=None):
-        """Initialise with a list of tasks"""
+        """Initialise with a list of tasks."""
         self._tasks = list(tasks)
         if name is None:
             name = ', '.join(task_description(t) for t in self._tasks)
@@ -321,7 +321,7 @@ class PollingTaskGroup(object):
         return '%s(%s)' % (type(self).__name__, self.name)
 
     def __call__(self):
-        """Return a co-routine which runs the task group"""
+        """Return a co-routine which runs the task group."""
         runners = [TaskRunner(t) for t in self._tasks]
 
         try:
