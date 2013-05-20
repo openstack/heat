@@ -133,7 +133,7 @@ class StackController(object):
             result = api_utils.reformat_dict_keys(keymap, s)
 
             # AWS docs indicate DeletionTime is ommitted for current stacks
-            # This is still TODO in the engine, we don't keep data for
+            # This is still TODO(unknown) in the engine, we don't keep data for
             # stacks after they are deleted
             if engine_api.STACK_DELETION_TIME in s:
                 result['DeletionTime'] = s[engine_api.STACK_DELETION_TIME]
@@ -279,7 +279,7 @@ class StackController(object):
             the engine API.  FIXME: we currently only support a subset of
             the AWS defined parameters (both here and in the engine)
             """
-            # TODO : Capabilities, NotificationARNs
+            # TODO(shardy) : Capabilities, NotificationARNs
             keymap = {'TimeoutInMinutes': engine_api.PARAM_TIMEOUT,
                       'DisableRollback': engine_api.PARAM_DISABLE_ROLLBACK}
 

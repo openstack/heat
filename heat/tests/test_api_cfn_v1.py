@@ -434,7 +434,7 @@ class CfnStackControllerTest(HeatTestCase):
         expected = "abcdef"
         self.assertEqual(result, expected)
 
-    # TODO : test the _get_template TemplateUrl case
+    # TODO(shardy) : test the _get_template TemplateUrl case
 
     def test_create(self):
         # Format a dummy request

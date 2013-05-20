@@ -46,7 +46,7 @@ class Subnet(resource.Resource):
 
     def handle_create(self):
         client = self.quantum()
-        # TODO sbaker Verify that this CidrBlock is within the vpc CidrBlock
+        # TODO(sbaker) Verify that this CidrBlock is within the vpc CidrBlock
         network_id = self.properties.get('VpcId')
         vpc = self.stack.resource_by_refid(network_id)
         router_id = vpc.metadata['router_id']
@@ -59,7 +59,7 @@ class Subnet(resource.Resource):
         }
         subnet = client.create_subnet({'subnet': props})['subnet']
 
-        #TODO sbaker check for a non-default router for this network
+        #TODO(sbaker) check for a non-default router for this network
         # and use that instead if it exists
         client.add_interface_router(
             router_id,
@@ -78,7 +78,7 @@ class Subnet(resource.Resource):
         router_id = self.metadata['router_id']
         subnet_id = self.resource_id
 
-        #TODO sbaker check for a non-default router for this network
+        #TODO(sbaker) check for a non-default router for this network
         # and remove that instead if it exists
         try:
             client.remove_interface_router(

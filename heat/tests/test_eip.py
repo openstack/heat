@@ -119,7 +119,7 @@ class EIPTest(HeatTestCase):
         resource = self.create_eip(t, stack, 'IPAddress')
         association = self.create_association(t, stack, 'IPAssoc')
 
-        # TODO sbaker, figure out why this is an empty string
+        # TODO(sbaker), figure out why this is an empty string
         #self.assertEqual('', association.FnGetRefId())
 
         association.delete()

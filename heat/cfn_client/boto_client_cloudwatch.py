@@ -29,7 +29,7 @@ class BotoCWClient(CloudWatchConnection):
     '''
     Wrapper class for boto CloudWatchConnection class
     '''
-    # TODO : These should probably go in the CW API and be imported
+    # TODO(unknown) : These should probably go in the CW API and be imported
     DEFAULT_NAMESPACE = "heat/unknown"
     METRIC_UNITS = ("Seconds", "Microseconds", "Milliseconds", "Bytes",
                     "Kilobytes", "Megabytes", "Gigabytes", "Terabytes",

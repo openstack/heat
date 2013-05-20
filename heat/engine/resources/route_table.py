@@ -53,7 +53,7 @@ class RouteTable(resource.Resource):
         vpc_md['all_router_ids'].append(router['id'])
         vpc.metadata = vpc_md
 
-        # TODO sbaker all_router_ids has changed, any VPCGatewayAttachment
+        # TODO(sbaker) all_router_ids has changed, any VPCGatewayAttachment
         # for this vpc needs to be notified
         self.resource_id_set(router['id'])
 
@@ -72,7 +72,7 @@ class RouteTable(resource.Resource):
         vpc_md = vpc.metadata
         vpc_md['all_router_ids'].remove(router_id)
         vpc.metadata = vpc_md
-        # TODO sbaker all_router_ids has changed, any VPCGatewayAttachment
+        # TODO(sbaker) all_router_ids has changed, any VPCGatewayAttachment
         # for this vpc needs to be notified
 
     def handle_update(self, json_snippet):

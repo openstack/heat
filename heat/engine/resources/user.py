@@ -97,7 +97,7 @@ class User(resource.Resource):
         return unicode(self.physical_resource_name())
 
     def FnGetAtt(self, key):
-        #TODO Implement Arn attribute
+        #TODO(asalkeld) Implement Arn attribute
         raise exception.InvalidTemplateAttribute(
             resource=self.physical_resource_name(), key=key)
 
