@@ -406,8 +406,8 @@ class Stack(object):
                                 self.resources.itervalues())
                             scheduler.TaskRunner(res.create)()
                         else:
-                            raise exception.ResourceFailure(
-                                "Unexpected update retval %s" % retval)
+                            raise exception.ResourceFailure(ValueError(
+                                "Unexpected update retval %s" % retval))
 
                 if action == self.UPDATE:
                     stack_status = self.UPDATE_COMPLETE
