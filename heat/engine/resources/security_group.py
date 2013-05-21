@@ -179,7 +179,7 @@ class SecurityGroup(resource.Resource):
             self.resource_id = None
 
     def FnGetRefId(self):
-        return unicode(self.name)
+        return self.physical_resource_name()
 
 
 def resource_mapping():

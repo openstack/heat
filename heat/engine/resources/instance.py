@@ -272,12 +272,7 @@ class Instance(resource.Resource):
         return nics
 
     def handle_create(self):
-        if self.properties.get('SecurityGroups') is None:
-            security_groups = None
-        else:
-            security_groups = [self.physical_resource_name_find(sg)
-                               for sg in self.properties.get('SecurityGroups')]
-
+        security_groups = self.properties.get('SecurityGroups')
         userdata = self.properties['UserData'] or ''
         flavor = self.properties['InstanceType']
         key_name = self.properties['KeyName']
