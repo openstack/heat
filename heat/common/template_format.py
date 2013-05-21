@@ -57,12 +57,12 @@ def default_for_missing(tpl, version_param, versions):
     This is currently only applied to YAML templates.
     '''
     # if version is missing, implicitly use the lastest one
-    if not version_param in tpl:
+    if version_param not in tpl:
         tpl[version_param] = versions[-1]
 
     # create empty placeholders for any of the main dict sections
     for param in (u'Parameters', u'Mappings', u'Resources', u'Outputs'):
-        if not param in tpl:
+        if param not in tpl:
             tpl[param] = {}
 
 

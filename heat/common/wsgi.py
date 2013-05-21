@@ -80,7 +80,7 @@ class WritableLogger(object):
 def get_bind_addr(conf, default_port=None):
     """Return the host and port to bind to."""
     for opt in bind_opts:
-        if not opt.name in conf:
+        if opt.name not in conf:
             conf.register_opt(opt)
     return (conf.bind_host, conf.bind_port or default_port)
 
@@ -415,7 +415,7 @@ class Request(webob.Request):
 
     def get_content_type(self, allowed_content_types):
         """Determine content type of the request body."""
-        if not "Content-Type" in self.headers:
+        if "Content-Type" not in self.headers:
             raise exception.InvalidContentType(content_type=None)
 
         content_type = self.content_type

@@ -230,7 +230,7 @@ class WatchRule(object):
         logger.info('WATCH: stack:%s, watch_name:%s %s',
                     self.stack_id, self.name, new_state)
         actions = []
-        if not self.ACTION_MAP[new_state] in self.rule:
+        if self.ACTION_MAP[new_state] not in self.rule:
             logger.info('no action for new state %s',
                         new_state)
         else:
@@ -246,7 +246,7 @@ class WatchRule(object):
         return actions
 
     def create_watch_data(self, data):
-        if not self.rule['MetricName'] in data:
+        if self.rule['MetricName'] not in data:
             # Our simplified cloudwatch implementation only expects a single
             # Metric associated with each alarm, but some cfn-push-stats
             # options, e.g --haproxy try to push multiple metrics when we
