@@ -225,7 +225,6 @@ class VolumeTest(HeatTestCase):
 
         # create script
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        #clients.OpenStackClients.cinder().MultipleTimes().AndReturn(self.fc)
         eventlet.sleep(1).MultipleTimes().AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',
@@ -504,6 +503,61 @@ class VolumeTest(HeatTestCase):
         self.assertEqual(
             'The Referenced Attribute (DataVolume unknown) is incorrect.',
             str(error))
+
+    def test_cinder_attachment(self):
+        fv = FakeVolume('creating', 'available')
+        fva = FakeVolume('attaching', 'in-use')
+        stack_name = 'test_volume_attach_stack'
+
+        # volume create
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            size=u'1', availability_zone='nova',
+            display_description='%s.DataVolume' % stack_name,
+            display_name='%s.DataVolume' % stack_name).AndReturn(fv)
+
+        # create script
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        eventlet.sleep(1).MultipleTimes().AndReturn(None)
+        self.fc.volumes.create_server_volume(
+            device=u'/dev/vdc',
+            server_id=u'WikiDatabase',
+            volume_id=u'vol-123').AndReturn(fva)
+
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+
+        # delete script
+        fva = FakeVolume('in-use', 'available')
+        self.fc.volumes.delete_server_volume('WikiDatabase',
+                                             'vol-123').AndReturn(None)
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
+        t['Resources']['MountPoint']['Properties'] = {
+            'instance_uuid': {'Ref': 'WikiDatabase'},
+            'volume_id': {'Ref': 'DataVolume'},
+            'mountpoint': '/dev/vdc'
+        }
+        stack = parse_stack(t, stack_name=stack_name)
+
+        scheduler.TaskRunner(stack['DataVolume'].create)()
+        self.assertEqual(fv.status, 'available')
+        resource = vol.CinderVolumeAttachment('MountPoint',
+                                              t['Resources']['MountPoint'],
+                                              stack)
+        self.assertEqual(resource.validate(), None)
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual(resource.state, vol.VolumeAttachment.CREATE_COMPLETE)
+
+        self.assertEqual(resource.handle_update({}), vol.Volume.UPDATE_REPLACE)
+
+        self.assertEqual(resource.delete(), None)
+
+        self.m.VerifyAll()
 
 
 class FakeVolume:
