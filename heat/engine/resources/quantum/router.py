@@ -95,6 +95,16 @@ class RouterGateway(quantum.QuantumResource):
                          'network_id': {'Type': 'String',
                                         'Required': True}}
 
+    def add_dependencies(self, deps):
+        super(RouterGateway, self).add_dependencies(deps)
+        # depend on any RouterInterface in this template with the same
+        # router_id as this router_id
+        for resource in self.stack.resources.itervalues():
+            if (resource.type() == 'OS::Quantum::RouterInterface' and
+                resource.properties.get('router_id') ==
+                    self.properties.get('router_id')):
+                        deps += (self, resource)
+
     def handle_create(self):
         router_id = self.properties.get('router_id')
         network_id = self.properties.get('network_id')
