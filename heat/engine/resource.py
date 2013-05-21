@@ -93,11 +93,8 @@ class Resource(object):
     UPDATE_FAILED = 'UPDATE_FAILED'
     UPDATE_COMPLETE = 'UPDATE_COMPLETE'
 
-    # Status values, returned from subclasses to indicate update method
+    # Status value, returned from subclasses to indicate replacement required
     UPDATE_REPLACE = 'UPDATE_REPLACE'
-    UPDATE_INTERRUPTION = 'UPDATE_INTERRUPTION'
-    UPDATE_NO_INTERRUPTION = 'UPDATE_NO_INTERRUPTION'
-    UPDATE_NOT_IMPLEMENTED = 'UPDATE_NOT_IMPLEMENTED'
 
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
@@ -373,7 +370,6 @@ class Resource(object):
 
         logger.info('updating %s' % str(self))
 
-        result = self.UPDATE_NOT_IMPLEMENTED
         try:
             self.state_set(self.UPDATE_IN_PROGRESS)
             properties = Properties(self.properties_schema,

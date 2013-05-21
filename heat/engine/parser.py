@@ -375,16 +375,11 @@ class Stack(object):
                 # based on the parsed template snippet for the resource.
                 # If this  test fails, we call the underlying resource.update
                 #
-                # FIXME : Implement proper update logic for the resources
-                # AWS define three update strategies, applied depending
-                # on the resource and what is being updated within a
-                # resource :
-                # - Update with no interruption
-                # - Update with some interruption
-                # - Update requires replacement
-                #
-                # Currently all resource have a default handle_update method
+                # Currently many resources have a default handle_update method
                 # which returns "requires replacement" (res.UPDATE_REPLACE)
+                # optionally they may implement non-interruptive logic and
+                # return UPDATE_COMPLETE. If resources do not implement the
+                # handle_update method at all, update will fail.
                 for res in newstack:
                     # Compare resolved pre/post update resource snippets,
                     # note the new resource snippet is resolved in the context
