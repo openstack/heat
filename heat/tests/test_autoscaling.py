@@ -41,7 +41,7 @@ as_template = '''
         "AvailabilityZones" : ["nova"],
         "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
         "MinSize" : "1",
-        "MaxSize" : "3",
+        "MaxSize" : "5",
         "LoadBalancerNames" : [ { "Ref" : "ElasticLoadBalancer" } ]
       }
     },
@@ -354,7 +354,7 @@ class AutoScalingTest(HeatTestCase):
                          resource.resource_id)
 
         # raise above the max
-        resource.adjust(2)
+        resource.adjust(4)
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
                          resource.resource_id)
 
@@ -821,6 +821,73 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         up_policy.alarm()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
+                         resource.resource_id)
+
+        resource.delete()
+        self.m.VerifyAll()
+
+    def test_scaling_policy_update(self):
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
+
+        # Create initial group
+        self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        resource = self.create_scaling_group(t, stack, 'WebServerGroup')
+        stack.resources['WebServerGroup'] = resource
+        self.assertEqual('WebServerGroup-0', resource.resource_id)
+
+        # Create initial scaling policy
+        up_policy = self.create_scaling_policy(t, stack,
+                                               'WebServerScaleUpPolicy')
+
+        # Scale up one
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
+        self._stub_create(1)
+        self.m.ReplayAll()
+
+        # Trigger alarm
+        up_policy.alarm()
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1',
+                         resource.resource_id)
+
+        # Update scaling policy
+        update_snippet = copy.deepcopy(up_policy.parsed_template())
+        update_snippet['Properties']['ScalingAdjustment'] = '2'
+        self.assertEqual(asc.ScalingPolicy.UPDATE_COMPLETE,
+                         up_policy.handle_update(update_snippet))
+        self.assertEqual('2',
+                         up_policy.properties['ScalingAdjustment'])
+
+        # Now move time on 61 seconds - Cooldown in template is 60
+        # so this should trigger a scale-up
+        previous_meta = {timeutils.strtime(now): 'ChangeInCapacity : 1'}
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        self.m.StubOutWithMock(Metadata, '__get__')
+        Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
+                         ).AndReturn(previous_meta)
+        Metadata.__get__(mox.IgnoreArg(), resource, mox.IgnoreArg()
+                         ).AndReturn(previous_meta)
+
+        now = now + datetime.timedelta(seconds=61)
+
+        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
+                              'WebServerGroup-2', 'WebServerGroup-3'],
+                             unset=False)
+        self._stub_meta_expected(now, 'ChangeInCapacity : 2', 2)
+        self._stub_create(2)
+        self.m.ReplayAll()
+
+        # Trigger alarm
+        up_policy.alarm()
+        self.assertEqual('WebServerGroup-0,WebServerGroup-1,'
+                         'WebServerGroup-2,WebServerGroup-3',
                          resource.resource_id)
 
         resource.delete()
