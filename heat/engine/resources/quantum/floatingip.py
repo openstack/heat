@@ -31,6 +31,16 @@ class FloatingIP(quantum.QuantumResource):
                          'port_id': {'Type': 'String'},
                          'fixed_ip_address': {'Type': 'String'}}
 
+    def add_dependencies(self, deps):
+        super(FloatingIP, self).add_dependencies(deps)
+        # depend on any RouterGateway in this template with the same
+        # network_id as this floating_network_id
+        for resource in self.stack.resources.itervalues():
+            if (resource.type() == 'OS::Quantum::RouterGateway' and
+                resource.properties.get('network_id') ==
+                    self.properties.get('floating_network_id')):
+                        deps += (self, resource)
+
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
@@ -74,6 +84,8 @@ class FloatingIPAssociation(quantum.QuantumResource):
         self.resource_id_set('%s:%s' % (floatingip_id, props['port_id']))
 
     def handle_delete(self):
+        if not self.resource_id:
+            return
         client = self.quantum()
         (floatingip_id, port_id) = self.resource_id.split(':')
         try:
