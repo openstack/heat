@@ -25,7 +25,7 @@ Adding the following line to your `localrc` file will enable the heat services
 
 It would also be useful to automatically download and register a VM image that Heat can launch.
 ::
-    IMAGE_URLS+=",http://fedorapeople.org/groups/heat/prebuilt-jeos-images/F16-x86_64-cfntools.qcow2,http://fedorapeople.org/groups/heat/prebuilt-jeos-images/F16-i386-cfntools.qcow2"
+    IMAGE_URLS+=",http://fedorapeople.org/groups/heat/prebuilt-jeos-images/F17-x86_64-cfntools.qcow2,http://fedorapeople.org/groups/heat/prebuilt-jeos-images/F17-i386-cfntools.qcow2"
 
 URLs for any of [http://fedorapeople.org/groups/heat/prebuilt-jeos-images/ these prebuilt JEOS images] can be specified.
 
@@ -61,7 +61,7 @@ Launching a stack
 Now lets launch a stack, using an example template from the heat-templates repository::
 
     heat stack-create teststack -u
-    https://raw.github.com/openstack/heat-templates/master/cfn/WordPress_Single_Instance.template -P "InstanceType=m1.large;DBUsername=wp;DBPassword=verybadpassword;KeyName=heat_key;LinuxDistribution=F16"
+    https://raw.github.com/openstack/heat-templates/master/cfn/WordPress_Single_Instance.template -P "InstanceType=m1.large;DBUsername=wp;DBPassword=verybadpassword;KeyName=heat_key;LinuxDistribution=F17"
 
 Which will respond::
 
