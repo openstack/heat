@@ -275,6 +275,24 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(res.UPDATE_COMPLETE, res.state)
         self.m.VerifyAll()
 
+    def test_update_replace(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String'}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual(res.CREATE_COMPLETE, res.state)
+
+        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(utmpl).AndReturn(
+            resource.Resource.UPDATE_REPLACE)
+        self.m.ReplayAll()
+        self.assertEqual(res.UPDATE_REPLACE, res.update(utmpl))
+        self.m.VerifyAll()
+
     def test_update_fail_missing_req_prop(self):
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String', 'Required': True}}
@@ -287,8 +305,7 @@ class ResourceTest(HeatTestCase):
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {}}
 
-        estr = 'Property error : test_resource: Property Foo not assigned'
-        self.assertEqual(estr, res.update(utmpl))
+        self.assertRaises(exception.ResourceFailure, res.update, utmpl)
         self.assertEqual(res.UPDATE_FAILED, res.state)
 
     def test_update_fail_prop_typo(self):
@@ -303,8 +320,27 @@ class ResourceTest(HeatTestCase):
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Food': 'xyz'}}
 
-        self.assertEqual('Unknown Property Food', res.update(utmpl))
+        self.assertRaises(exception.ResourceFailure, res.update, utmpl)
         self.assertEqual(res.UPDATE_FAILED, res.state)
+
+    def test_update_not_implemented(self):
+        # patch in a dummy property schema for GenericResource
+        dummy_schema = {'Foo': {'Type': 'String'}}
+        generic_rsrc.GenericResource.properties_schema = dummy_schema
+
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual(res.CREATE_COMPLETE, res.state)
+
+        utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        generic_rsrc.GenericResource.handle_update(utmpl).AndRaise(
+            NotImplemented)
+        self.m.ReplayAll()
+        self.assertRaises(exception.ResourceFailure, res.update, utmpl)
+        self.assertEqual(res.UPDATE_FAILED, res.state)
+        self.m.VerifyAll()
 
 
 class MetadataTest(HeatTestCase):

@@ -352,17 +352,11 @@ class Stack(object):
                     if not res.name in newstack.keys():
                         logger.debug("resource %s not found in updated stack"
                                      % res.name + " definition, deleting")
-                        try:
-                            res.destroy()
-                        except exception.ResourceFailure as ex:
-                            logger.error("Failed to remove %s : %s" %
-                                         (res.name, str(ex)))
-                            raise exception.ResourceUpdateFailed(
-                                resource_name=res.name)
-                        else:
-                            del self.resources[res.name]
-                            self.dependencies = self._get_dependencies(
-                                self.resources.itervalues())
+                        # res.destroy raises exception.ResourceFailure on error
+                        res.destroy()
+                        del self.resources[res.name]
+                        self.dependencies = self._get_dependencies(
+                            self.resources.itervalues())
 
                 # Then create any which are defined in newstack but not self
                 for res in newstack:
@@ -373,13 +367,8 @@ class Stack(object):
                         self[res.name] = res
                         self.dependencies = self._get_dependencies(
                             self.resources.itervalues())
-                        try:
-                            scheduler.TaskRunner(res.create)()
-                        except exception.ResourceFailure as ex:
-                            logger.error("Failed to add %s : %s" %
-                                         (res.name, str(ex)))
-                            raise exception.ResourceUpdateFailed(
-                                resource_name=res.name)
+                        # res.create raises exception.ResourceFailure on error
+                        scheduler.TaskRunner(res.create)()
 
                 # Now (the hard part :) update existing resources
                 # The Resource base class allows equality-test of resources,
@@ -404,9 +393,9 @@ class Stack(object):
                     new_snippet = self.resolve_runtime_data(res.t)
 
                     if old_snippet != new_snippet:
-                        # Can fail if underlying resource class does not
-                        # implement update logic or update requires replacement
+                        # res.update raises exception.ResourceFailure on error
                         retval = self[res.name].update(new_snippet)
+
                         if retval == self[res.name].UPDATE_COMPLETE:
                             logger.info("Resource %s for stack %s updated" %
                                         (res.name, self.name))
@@ -415,30 +404,15 @@ class Stack(object):
                                         (res.name, self.name) +
                                         " update requires replacement")
                             # Resource requires replacement for update
-                            try:
-                                self[res.name].destroy()
-                            except exception.ResourceFailure as ex:
-                                logger.error("Failed to delete %s : %s" %
-                                             (res.name, str(ex)))
-                                raise exception.ResourceUpdateFailed(
-                                    resource_name=res.name)
-                            else:
-                                res.stack = self
-                                self[res.name] = res
-                                self.dependencies = self._get_dependencies(
-                                    self.resources.itervalues())
-                                try:
-                                    scheduler.TaskRunner(res.create)()
-                                except exception.ResourceFailure as ex:
-                                    logger.error("Failed to create %s : %s" %
-                                                 (res.name, str(ex)))
-                                    raise exception.ResourceUpdateFailed(
-                                        resource_name=res.name)
+                            self[res.name].destroy()
+                            res.stack = self
+                            self[res.name] = res
+                            self.dependencies = self._get_dependencies(
+                                self.resources.itervalues())
+                            scheduler.TaskRunner(res.create)()
                         else:
-                            logger.error("Failed to %s %s" %
-                                         (action, res.name))
-                            raise exception.ResourceUpdateFailed(
-                                resource_name=res.name)
+                            raise exception.ResourceFailure(
+                                "Unexpected update retval %s" % retval)
 
                 if action == self.UPDATE:
                     stack_status = self.UPDATE_COMPLETE
@@ -454,16 +428,13 @@ class Stack(object):
                 else:
                     # not my timeout
                     raise
-            except exception.ResourceUpdateFailed as e:
+            except exception.ResourceFailure as e:
                 reason = str(e) or "Error : %s" % type(e)
 
                 if action == self.UPDATE:
                     stack_status = self.UPDATE_FAILED
                     # If rollback is enabled, we do another update, with the
                     # existing template, so we roll back to the original state
-                    # Note - ensure nothing after the "flip the template..."
-                    # section above can raise ResourceUpdateFailed or this
-                    # will not work ;)
                     if self.disable_rollback:
                         stack_status = self.UPDATE_FAILED
                     else:
