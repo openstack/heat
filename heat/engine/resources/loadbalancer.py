@@ -381,7 +381,7 @@ class LoadBalancer(stack_resource.StackResource):
                  'SourceSecurityGroupName',
                  'SourceSecurityGroupOwnerAlias')
 
-        if not key in allow:
+        if key not in allow:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
 

@@ -349,7 +349,7 @@ class Stack(object):
             try:
                 # First delete any resources which are not in newstack
                 for res in reversed(self):
-                    if not res.name in newstack.keys():
+                    if res.name not in newstack.keys():
                         logger.debug("resource %s not found in updated stack"
                                      % res.name + " definition, deleting")
                         # res.destroy raises exception.ResourceFailure on error
@@ -360,7 +360,7 @@ class Stack(object):
 
                 # Then create any which are defined in newstack but not self
                 for res in newstack:
-                    if not res.name in self.keys():
+                    if res.name not in self.keys():
                         logger.debug("resource %s not found in current stack"
                                      % res.name + " definition, adding")
                         res.stack = self
