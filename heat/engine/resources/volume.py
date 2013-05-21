@@ -102,7 +102,7 @@ class Volume(resource.Resource):
 
                 if vol.status == 'in-use':
                     logger.warn('cant delete volume when in-use')
-                    raise exception.Error("Volume in use")
+                    raise exception.Error('Volume in use')
 
                 self.cinder().volumes.delete(self.resource_id)
             except clients.cinderclient.exceptions.NotFound:
@@ -123,17 +123,18 @@ class VolumeAttachment(resource.Resource):
                                         'Required': True},
                          'VolumeId': {'Type': 'String',
                                       'Required': True},
-                         'Device': {'Type': "String",
+                         'Device': {'Type': 'String',
                                     'Required': True,
                                     'AllowedPattern': '/dev/vd[b-z]'}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(VolumeAttachment, self).__init__(name, json_snippet, stack)
+    _instance_property = 'InstanceId'
+    _volume_property = 'VolumeId'
+    _device_property = 'Device'
 
     def handle_create(self):
-        server_id = self.properties['InstanceId']
-        volume_id = self.properties['VolumeId']
-        dev = self.properties['Device']
+        server_id = self.properties[self._instance_property]
+        volume_id = self.properties[self._volume_property]
+        dev = self.properties[self._device_property]
         inst = self.stack.clients.attach_volume_to_instance(server_id,
                                                             volume_id,
                                                             dev)
@@ -143,8 +144,8 @@ class VolumeAttachment(resource.Resource):
         return self.UPDATE_REPLACE
 
     def handle_delete(self):
-        server_id = self.properties['InstanceId']
-        volume_id = self.properties['VolumeId']
+        server_id = self.properties[self._instance_property]
+        volume_id = self.properties[self._volume_property]
         self.stack.clients.detach_volume_from_instance(server_id, volume_id)
 
 
@@ -200,9 +201,24 @@ class CinderVolume(Volume):
         return unicode(getattr(vol, key))
 
 
+class CinderVolumeAttachment(VolumeAttachment):
+
+    properties_schema = {'instance_uuid': {'Type': 'String',
+                                           'Required': True},
+                         'volume_id': {'Type': 'String',
+                                       'Required': True},
+                         'mountpoint': {'Type': 'String',
+                                        'Required': True}}
+
+    _instance_property = 'instance_uuid'
+    _volume_property = 'volume_id'
+    _device_property = 'mountpoint'
+
+
 def resource_mapping():
     return {
         'AWS::EC2::Volume': Volume,
         'AWS::EC2::VolumeAttachment': VolumeAttachment,
         'OS::Cinder::Volume': CinderVolume,
+        'OS::Cinder::VolumeAttachment': CinderVolumeAttachment,
     }
