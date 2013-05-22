@@ -293,6 +293,8 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
 
+        self.man.tg = DummyThreadGroup()
+
         self.m.ReplayAll()
 
         self.assertEqual(self.man.delete_stack(self.ctx, stack.identifier()),
@@ -337,6 +339,9 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
+
+        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
+        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
 
         self.m.ReplayAll()
 
