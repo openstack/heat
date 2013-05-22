@@ -22,6 +22,7 @@ from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
@@ -142,6 +143,26 @@ class instancesTest(HeatTestCase):
         update_template['Metadata'] = {'test': 123}
         self.assertEqual(None, instance.update(update_template))
         self.assertEqual(instance.metadata, {'test': 123})
+
+    def test_instance_update_replace(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_update')
+
+        update_template = copy.deepcopy(instance.t)
+        update_template['Notallowed'] = {'test': 123}
+        self.assertRaises(resource.UpdateReplace,
+                          instance.update, update_template)
+
+    def test_instance_update_properties(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_update')
+
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['KeyName'] = 'mustreplace'
+        self.assertRaises(resource.UpdateReplace,
+                          instance.update, update_template)
 
     def test_instance_status_build(self):
         return_server = self.fc.servers.list()[0]
