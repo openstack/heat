@@ -14,6 +14,7 @@
 
 
 import eventlet
+import mox
 import json
 
 from testtools import skipIf
@@ -186,7 +187,7 @@ class VolumeTest(HeatTestCase):
         # create script
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        eventlet.sleep(1).MultipleTimes().AndReturn(None)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',
             server_id=u'WikiDatabase',
@@ -225,7 +226,7 @@ class VolumeTest(HeatTestCase):
 
         # create script
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        eventlet.sleep(1).MultipleTimes().AndReturn(None)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',
             server_id=u'WikiDatabase',
@@ -238,6 +239,7 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.delete_server_volume('WikiDatabase',
                                              'vol-123').AndReturn(None)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+        eventlet.sleep(mox.IsA(int)).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -520,7 +522,7 @@ class VolumeTest(HeatTestCase):
 
         # create script
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        eventlet.sleep(1).MultipleTimes().AndReturn(None)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',
             server_id=u'WikiDatabase',
@@ -533,6 +535,7 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.delete_server_volume('WikiDatabase',
                                              'vol-123').AndReturn(None)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+        eventlet.sleep(mox.IsA(int)).AndReturn(None)
 
         self.m.ReplayAll()
 

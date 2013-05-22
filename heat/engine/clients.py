@@ -22,7 +22,6 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 
-from heat.common import exception
 from heat.common import heat_keystoneclient as hkc
 from novaclient import client as novaclient
 try:
@@ -192,24 +191,6 @@ class OpenStackClients(object):
             self._cinder.client.management_url = management_url
 
         return self._cinder
-
-    def attach_volume_to_instance(self, server_id, volume_id, device_id):
-        logger.warn('Attaching InstanceId %s VolumeId %s Device %s' %
-                    (server_id, volume_id, device_id))
-
-        va = self.nova().volumes.create_server_volume(
-            server_id=server_id,
-            volume_id=volume_id,
-            device=device_id)
-
-        vol = self.cinder().volumes.get(va.id)
-        while vol.status == 'available' or vol.status == 'attaching':
-            eventlet.sleep(1)
-            vol.get()
-        if vol.status == 'in-use':
-            return va.id
-        else:
-            raise exception.Error(vol.status)
 
     def detach_volume_from_instance(self, server_id, volume_id):
         logger.info('VolumeAttachment un-attaching %s %s' %
