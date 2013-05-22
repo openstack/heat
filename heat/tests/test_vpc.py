@@ -96,7 +96,7 @@ class VPCTestBase(HeatTestCase):
                 'name': 'name',
                 'admin_state_up': True,
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'id': 'bbbb'
+                'id': 'rrrr'
             }})
 
     def mock_create_subnet(self):
@@ -113,7 +113,7 @@ class VPCTestBase(HeatTestCase):
                         'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                         'id': 'cccc'}})
         quantumclient.Client.add_interface_router(
-            u'bbbb',
+            u'rrrr',
             {'subnet_id': 'cccc'}).AndReturn(None)
 
     def mock_show_subnet(self):
@@ -143,7 +143,7 @@ class VPCTestBase(HeatTestCase):
                 'name': 'test_stack.the_sg',
                 'description': 'SSH access',
                 'security_group_rules': [],
-                'id': 'aaaa'
+                'id': 'eeee'
             }
         })
 
@@ -155,7 +155,7 @@ class VPCTestBase(HeatTestCase):
                 'ethertype': 'IPv4',
                 'port_range_max': 22,
                 'protocol': 'tcp',
-                'security_group_id': 'aaaa'
+                'security_group_id': 'eeee'
             }
         }).AndReturn({
             'security_group_rule': {
@@ -165,13 +165,13 @@ class VPCTestBase(HeatTestCase):
                 'ethertype': 'IPv4',
                 'port_range_max': 22,
                 'protocol': 'tcp',
-                'security_group_id': 'aaaa',
+                'security_group_id': 'eeee',
                 'id': 'bbbb'
             }
         })
 
     def mock_delete_security_group(self):
-        quantumclient.Client.show_security_group('aaaa').AndReturn({
+        quantumclient.Client.show_security_group('eeee').AndReturn({
             'security_group': {
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'name': 'sc1',
@@ -182,22 +182,22 @@ class VPCTestBase(HeatTestCase):
                     'port_range_max': 22,
                     'id': 'bbbb',
                     'ethertype': 'IPv4',
-                    'security_group_id': 'aaaa',
+                    'security_group_id': 'eeee',
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                     'port_range_min': 22
                 }],
-                'id': 'aaaa'}})
+                'id': 'eeee'}})
         quantumclient.Client.delete_security_group_rule('bbbb').AndReturn(None)
-        quantumclient.Client.delete_security_group('aaaa').AndReturn(None)
+        quantumclient.Client.delete_security_group('eeee').AndReturn(None)
 
     def mock_delete_network(self):
-        quantumclient.Client.delete_router('bbbb').AndReturn(None)
+        quantumclient.Client.delete_router('rrrr').AndReturn(None)
         quantumclient.Client.delete_network('aaaa').AndReturn(None)
 
     def mock_delete_subnet(self):
         quantumclient.Client.remove_interface_router(
-            u'bbbb',
+            u'rrrr',
             {'subnet_id': 'cccc'}).AndReturn(None)
         quantumclient.Client.delete_subnet('cccc').AndReturn(None)
 
@@ -226,8 +226,8 @@ Resources:
         stack = self.create_stack(self.test_template)
         rsrc = stack['the_vpc']
         self.assertResourceState(rsrc, 'aaaa', {
-            'router_id': 'bbbb',
-            'all_router_ids': ['bbbb']})
+            'router_id': 'rrrr',
+            'all_router_ids': ['rrrr']})
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
 
@@ -259,7 +259,7 @@ Resources:
 
         # mock delete subnet which is already deleted
         quantumclient.Client.remove_interface_router(
-            u'bbbb',
+            u'rrrr',
             {'subnet_id': 'cccc'}).AndRaise(
                 QuantumClientException(status_code=404))
         quantumclient.Client.delete_subnet('cccc').AndRaise(
@@ -270,8 +270,8 @@ Resources:
 
         rsrc = stack['the_subnet']
         self.assertResourceState(rsrc, 'cccc', {
-            'router_id': 'bbbb',
-            'default_router_id': 'bbbb'})
+            'router_id': 'rrrr',
+            'default_router_id': 'rrrr'})
 
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
@@ -393,7 +393,7 @@ Resources:
       - INVALID-NO-REF
 '''
 
-    def mock_create_network_interface(self, security_groups=['aaaa']):
+    def mock_create_network_interface(self, security_groups=['eeee']):
         port = {'network_id': 'aaaa',
                 'fixed_ips': [{
                     'subnet_id': u'cccc',
@@ -442,6 +442,7 @@ Resources:
 
         stack = self.create_stack(self.test_template)
         try:
+            self.assertEqual(stack.CREATE_COMPLETE, stack.state)
             rsrc = stack['the_nic']
             self.assertResourceState(rsrc, 'dddd')
 
@@ -543,10 +544,10 @@ Resources:
 
     def mock_create_gateway_attachment(self):
         quantumclient.Client.add_gateway_router(
-            'bbbb', {'network_id': 'eeee'}).AndReturn(None)
+            'rrrr', {'network_id': 'eeee'}).AndReturn(None)
 
     def mock_delete_gateway_attachment(self):
-        quantumclient.Client.remove_gateway_router('bbbb').AndReturn(None)
+        quantumclient.Client.remove_gateway_router('rrrr').AndReturn(None)
 
     def test_internet_gateway(self):
         self.mock_create_internet_gateway()
@@ -616,7 +617,7 @@ Resources:
 
     def mock_create_association(self):
         quantumclient.Client.remove_interface_router(
-            'bbbb',
+            'rrrr',
             {'subnet_id': u'cccc'}).AndReturn(None)
         quantumclient.Client.add_interface_router(
             u'ffff',
@@ -627,7 +628,7 @@ Resources:
             'ffff',
             {'subnet_id': u'cccc'}).AndReturn(None)
         quantumclient.Client.add_interface_router(
-            u'bbbb',
+            u'rrrr',
             {'subnet_id': 'cccc'}).AndReturn(None)
 
     def mock_delete_route_table(self):
@@ -648,7 +649,7 @@ Resources:
         stack = self.create_stack(self.test_template)
 
         vpc = stack['the_vpc']
-        self.assertEqual(['bbbb', 'ffff'], vpc.metadata['all_router_ids'])
+        self.assertEqual(['rrrr', 'ffff'], vpc.metadata['all_router_ids'])
 
         route_table = stack['the_route_table']
         self.assertResourceState(route_table, 'ffff', {})
@@ -666,7 +667,7 @@ Resources:
         route_table.delete()
 
         vpc = stack['the_vpc']
-        self.assertEqual(['bbbb'], vpc.metadata['all_router_ids'])
+        self.assertEqual(['rrrr'], vpc.metadata['all_router_ids'])
 
         stack.delete()
         self.m.VerifyAll()
