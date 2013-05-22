@@ -388,11 +388,8 @@ class Instance(resource.Resource):
     def handle_update(self, json_snippet):
         tmpl_diff = self.update_template_diff(json_snippet)
 
-        for k in tmpl_diff:
-            if k == 'Metadata':
-                self.metadata = json_snippet.get('Metadata', {})
-            else:
-                raise resource.UpdateReplace(resource_name=self.name)
+        if 'Metadata' in tmpl_diff:
+            self.metadata = tmpl_diff.get('Metadata', {})
 
     def metadata_update(self, new_metadata=None):
         '''
