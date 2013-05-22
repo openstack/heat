@@ -168,6 +168,67 @@ class VolumeAttachTask(object):
         logger.info('%s - complete' % str(self))
 
 
+class VolumeDetachTask(object):
+    """A task for attaching a volume to a Nova server."""
+
+    def __init__(self, stack, server_id, volume_id):
+        """
+        Initialise with the stack (for obtaining the clients), and the IDs of
+        the server and volume.
+        """
+        self.clients = stack.clients
+        self.server_id = server_id
+        self.volume_id = volume_id
+
+    def __str__(self):
+        """Return a human-readable string description of the task."""
+        return 'Detaching Volume %s from Instance %s' % (self.volume_id,
+                                                         self.server_id)
+
+    def __repr__(self):
+        """Return a brief string description of the task."""
+        return '%s(%s -/> %s)' % (type(self).__name__,
+                                  self.volume_id,
+                                  self.server_id)
+
+    def __call__(self):
+        """Return a co-routine which runs the task."""
+        logger.debug(str(self))
+
+        try:
+            vol = self.clients.cinder().volumes.get(self.volume_id)
+        except clients.cinder_exceptions.NotFound:
+            logger.warning('%s - volume not found' % str(self))
+            return
+
+        server_api = self.clients.nova().volumes
+
+        try:
+            server_api.delete_server_volume(self.server_id, self.volume_id)
+        except clients.novaclient.exceptions.NotFound:
+            logger.warning('%s - not found' % str(self))
+
+        yield
+
+        try:
+            vol.get()
+            while vol.status == 'in-use':
+                logger.debug('%s - volume still in use' % str(self))
+                yield
+
+                try:
+                    server_api.delete_server_volume(self.server_id,
+                                                    self.volume_id)
+                except clients.novaclient.exceptions.NotFound:
+                    pass
+                vol.get()
+
+            logger.info('%s - status: %s' % (str(self), vol.status))
+
+        except clients.cinderclient.exceptions.NotFound:
+            logger.warning('%s - volume not found' % str(self))
+
+
 class VolumeAttachment(resource.Resource):
     properties_schema = {'InstanceId': {'Type': 'String',
                                         'Required': True},
@@ -195,7 +256,8 @@ class VolumeAttachment(resource.Resource):
     def handle_delete(self):
         server_id = self.properties[self._instance_property]
         volume_id = self.properties[self._volume_property]
-        self.stack.clients.detach_volume_from_instance(server_id, volume_id)
+        detach_task = VolumeDetachTask(self.stack, server_id, volume_id)
+        scheduler.TaskRunner(detach_task)()
 
 
 class CinderVolume(Volume):

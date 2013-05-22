@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import eventlet
 import mox
 import json
 
@@ -83,7 +82,6 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'delete')
         self.m.StubOutWithMock(self.fc.volumes, 'create_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
-        self.m.StubOutWithMock(eventlet, 'sleep')
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         setup_dummy_db()
 
@@ -239,7 +237,6 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.delete_server_volume('WikiDatabase',
                                              'vol-123').AndReturn(None)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
-        eventlet.sleep(mox.IsA(int)).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -535,7 +532,6 @@ class VolumeTest(HeatTestCase):
         self.fc.volumes.delete_server_volume('WikiDatabase',
                                              'vol-123').AndReturn(None)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
-        eventlet.sleep(mox.IsA(int)).AndReturn(None)
 
         self.m.ReplayAll()
 

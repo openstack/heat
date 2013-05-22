@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
 from oslo.config import cfg
 
 from heat.openstack.common import importutils
@@ -191,41 +190,6 @@ class OpenStackClients(object):
             self._cinder.client.management_url = management_url
 
         return self._cinder
-
-    def detach_volume_from_instance(self, server_id, volume_id):
-        logger.info('VolumeAttachment un-attaching %s %s' %
-                    (server_id, volume_id))
-
-        try:
-            vol = self.cinder().volumes.get(volume_id)
-        except cinderclient.exceptions.NotFound:
-            logger.warning('Volume %s - not found' %
-                          (volume_id))
-            return
-        try:
-            self.nova().volumes.delete_server_volume(server_id,
-                                                     volume_id)
-        except novaclient.exceptions.NotFound:
-            logger.warning('Deleting VolumeAttachment %s %s - not found' %
-                          (server_id, volume_id))
-        try:
-            logger.info('un-attaching %s, status %s' % (volume_id, vol.status))
-            while vol.status == 'in-use':
-                logger.info('trying to un-attach %s, but still %s' %
-                            (volume_id, vol.status))
-                eventlet.sleep(1)
-                try:
-                    self.nova().volumes.delete_server_volume(
-                        server_id,
-                        volume_id)
-                except Exception:
-                    pass
-                vol.get()
-            logger.info('volume status of %s now %s' % (volume_id, vol.status))
-        except cinderclient.exceptions.NotFound:
-            logger.warning('Volume %s - not found' %
-                          (volume_id))
-
 
 if cfg.CONF.cloud_backend:
     cloud_backend_module = importutils.import_module(cfg.CONF.cloud_backend)
