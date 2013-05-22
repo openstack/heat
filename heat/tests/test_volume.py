@@ -468,7 +468,6 @@ class VolumeTest(HeatTestCase):
             display_description=None,
             display_name='%s.DataVolume' % stack_name).AndReturn(fv)
 
-        eventlet.sleep(1).AndReturn(None)
         self.cinder_fc.volumes.get('vol-123').MultipleTimes().AndReturn(fv)
 
         self.m.ReplayAll()
@@ -503,6 +502,8 @@ class VolumeTest(HeatTestCase):
         self.assertEqual(
             'The Referenced Attribute (DataVolume unknown) is incorrect.',
             str(error))
+
+        self.m.VerifyAll()
 
     def test_cinder_attachment(self):
         fv = FakeVolume('creating', 'available')
