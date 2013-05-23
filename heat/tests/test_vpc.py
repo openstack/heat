@@ -18,6 +18,7 @@ from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import resource
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
@@ -200,11 +201,11 @@ class VPCTestBase(HeatTestCase):
             {'subnet_id': 'cccc'}).AndReturn(None)
         quantumclient.Client.delete_subnet('cccc').AndReturn(None)
 
-    def assertResourceState(self, resource, ref_id, metadata={}):
-        self.assertEqual(None, resource.validate())
-        self.assertEqual(resource.CREATE_COMPLETE, resource.state)
-        self.assertEqual(ref_id, resource.FnGetRefId())
-        self.assertEqual(metadata, dict(resource.metadata))
+    def assertResourceState(self, rsrc, ref_id, metadata={}):
+        self.assertEqual(None, rsrc.validate())
+        self.assertEqual(rsrc.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual(ref_id, rsrc.FnGetRefId())
+        self.assertEqual(metadata, dict(rsrc.metadata))
 
 
 class VPCTest(VPCTestBase):
@@ -223,13 +224,14 @@ Resources:
         self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)
-        resource = stack['the_vpc']
-        self.assertResourceState(resource, 'aaaa', {
+        rsrc = stack['the_vpc']
+        self.assertResourceState(rsrc, 'aaaa', {
             'router_id': 'bbbb',
             'all_router_ids': ['bbbb']})
-        self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
 
-        self.assertEqual(None, resource.delete())
+        self.assertEqual(None, rsrc.delete())
         self.m.VerifyAll()
 
 
@@ -266,22 +268,23 @@ Resources:
         self.m.ReplayAll()
         stack = self.create_stack(self.test_template)
 
-        resource = stack['the_subnet']
-        self.assertResourceState(resource, 'cccc', {
+        rsrc = stack['the_subnet']
+        self.assertResourceState(rsrc, 'cccc', {
             'router_id': 'bbbb',
             'default_router_id': 'bbbb'})
 
-        self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
         self.assertRaises(
             exception.InvalidTemplateAttribute,
-            resource.FnGetAtt,
+            rsrc.FnGetAtt,
             'Foo')
 
-        self.assertEqual('moon', resource.FnGetAtt('AvailabilityZone'))
+        self.assertEqual('moon', rsrc.FnGetAtt('AvailabilityZone'))
 
-        self.assertEqual(None, resource.delete())
-        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
-        self.assertEqual(None, resource.delete())
+        self.assertEqual(None, rsrc.delete())
+        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        self.assertEqual(None, rsrc.delete())
         self.assertEqual(None, stack['the_vpc'].delete())
         self.m.VerifyAll()
 
@@ -439,11 +442,11 @@ Resources:
 
         stack = self.create_stack(self.test_template)
         try:
-            resource = stack['the_nic']
-            self.assertResourceState(resource, 'dddd')
+            rsrc = stack['the_nic']
+            self.assertResourceState(rsrc, 'dddd')
 
-            self.assertEqual(resource.UPDATE_REPLACE,
-                             resource.handle_update({}))
+            self.assertRaises(resource.UpdateReplace,
+                              rsrc.handle_update, {})
 
         finally:
             stack.delete()
@@ -561,11 +564,12 @@ Resources:
         gateway = stack['the_gateway']
         self.assertResourceState(gateway, 'the_gateway', {
             'external_network_id': 'eeee'})
-        self.assertEqual(gateway.UPDATE_REPLACE, gateway.handle_update({}))
+        self.assertRaises(resource.UpdateReplace, gateway.handle_update, {})
 
         attachment = stack['the_attachment']
         self.assertResourceState(attachment, 'the_attachment')
-        self.assertEqual(gateway.UPDATE_REPLACE, attachment.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          attachment.handle_update, {})
 
         stack.delete()
         self.m.VerifyAll()
@@ -647,15 +651,15 @@ Resources:
 
         route_table = stack['the_route_table']
         self.assertResourceState(route_table, 'ffff', {})
-        self.assertEqual(
-            route_table.UPDATE_REPLACE,
-            route_table.handle_update({}))
+        self.assertRaises(
+            resource.UpdateReplace,
+            route_table.handle_update, {})
 
         association = stack['the_association']
         self.assertResourceState(association, 'the_association', {})
-        self.assertEqual(
-            association.UPDATE_REPLACE,
-            association.handle_update({}))
+        self.assertRaises(
+            resource.UpdateReplace,
+            association.handle_update, {})
 
         association.delete()
         route_table.delete()

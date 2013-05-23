@@ -74,9 +74,6 @@ class VPC(resource.Resource):
             if ex.status_code != 404:
                 raise ex
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
 
 def resource_mapping():
     if clients.quantumclient is None:

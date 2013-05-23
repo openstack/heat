@@ -91,17 +91,8 @@ class CloudWatchAlarm(resource.Resource):
         wr.store()
 
     def handle_update(self, json_snippet):
-        try:
-            self.update_template_diff(json_snippet)
-        except NotImplementedError:
-            logger.error("Could not update %s, invalid key" % self.name)
-            return self.UPDATE_REPLACE
-
-        try:
-            prop_diff = self.update_template_diff_properties(json_snippet)
-        except NotImplementedError:
-            logger.error("Could not update %s, invalid Property" % self.name)
-            return self.UPDATE_REPLACE
+        self.update_template_diff(json_snippet)
+        prop_diff = self.update_template_diff_properties(json_snippet)
 
         # If Properties has changed, update self.properties, so we
         # get the new values during any subsequent adjustment
@@ -116,8 +107,6 @@ class CloudWatchAlarm(resource.Resource):
 
             wr.rule = self.parsed_template('Properties')
             wr.store()
-
-        return self.UPDATE_COMPLETE
 
     def handle_delete(self):
         try:

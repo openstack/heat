@@ -84,9 +84,6 @@ class QuantumResource(resource.Resource):
 
         raise exception.InvalidTemplateAttribute(resource=name, key=key)
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
     @staticmethod
     def is_built(attributes):
         if attributes['status'] == 'BUILD':

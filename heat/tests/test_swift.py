@@ -22,6 +22,7 @@ from testtools import skipIf
 from heat.common import template_format
 from heat.openstack.common.importutils import try_import
 from heat.engine.resources import swift
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
@@ -69,28 +70,28 @@ class swiftTest(HeatTestCase):
         setup_dummy_db()
 
     def create_resource(self, t, stack, resource_name):
-        resource = swift.SwiftContainer(
+        rsrc = swift.SwiftContainer(
             'test_resource',
             t['Resources'][resource_name],
             stack)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(swift.SwiftContainer.CREATE_COMPLETE, resource.state)
-        return resource
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(swift.SwiftContainer.CREATE_COMPLETE, rsrc.state)
+        return rsrc
 
     def test_create_container_name(self):
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
         stack = parse_stack(t)
-        resource = swift.SwiftContainer(
+        rsrc = swift.SwiftContainer(
             'test_resource',
             t['Resources']['SwiftContainer'],
             stack)
 
         self.assertTrue(re.match(self.container_pattern,
-                                 resource._create_container_name()))
+                                 rsrc._create_container_name()))
         self.assertEqual(
             'the_name',
-            resource._create_container_name('the_name'))
+            rsrc._create_container_name('the_name'))
 
     def test_build_meta_headers(self):
         self.m.UnsetStubs()
@@ -133,30 +134,30 @@ class swiftTest(HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
         stack = parse_stack(t)
-        resource = self.create_resource(t, stack, 'SwiftContainer')
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
 
-        ref_id = resource.FnGetRefId()
+        ref_id = rsrc.FnGetRefId()
         self.assertTrue(re.match(self.container_pattern,
                                  ref_id))
 
-        self.assertEqual('localhost', resource.FnGetAtt('DomainName'))
+        self.assertEqual('localhost', rsrc.FnGetAtt('DomainName'))
         url = 'http://localhost:8080/v_2/%s' % ref_id
 
-        self.assertEqual(url, resource.FnGetAtt('WebsiteURL'))
-        self.assertEqual('82', resource.FnGetAtt('ObjectCount'))
-        self.assertEqual('17680980', resource.FnGetAtt('BytesUsed'))
-        self.assertEqual(headers, resource.FnGetAtt('HeadContainer'))
+        self.assertEqual(url, rsrc.FnGetAtt('WebsiteURL'))
+        self.assertEqual('82', rsrc.FnGetAtt('ObjectCount'))
+        self.assertEqual('17680980', rsrc.FnGetAtt('BytesUsed'))
+        self.assertEqual(headers, rsrc.FnGetAtt('HeadContainer'))
 
         try:
-            resource.FnGetAtt('Foo')
+            rsrc.FnGetAtt('Foo')
             raise Exception('Expected InvalidTemplateAttribute')
         except swift.exception.InvalidTemplateAttribute:
             pass
 
-        self.assertEqual(swift.SwiftContainer.UPDATE_REPLACE,
-                         resource.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
 
-        resource.delete()
+        rsrc.delete()
         self.m.VerifyAll()
 
     def test_public_read(self):
@@ -172,8 +173,8 @@ class swiftTest(HeatTestCase):
         properties = t['Resources']['SwiftContainer']['Properties']
         properties['X-Container-Read'] = '.r:*'
         stack = parse_stack(t)
-        resource = self.create_resource(t, stack, 'SwiftContainer')
-        resource.delete()
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
+        rsrc.delete()
         self.m.VerifyAll()
 
     def test_public_read_write(self):
@@ -190,8 +191,8 @@ class swiftTest(HeatTestCase):
         properties['X-Container-Read'] = '.r:*'
         properties['X-Container-Write'] = '.r:*'
         stack = parse_stack(t)
-        resource = self.create_resource(t, stack, 'SwiftContainer')
-        resource.delete()
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
+        rsrc.delete()
         self.m.VerifyAll()
 
     def test_website(self):
@@ -208,8 +209,8 @@ class swiftTest(HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
         stack = parse_stack(t)
-        resource = self.create_resource(t, stack, 'SwiftContainerWebsite')
-        resource.delete()
+        rsrc = self.create_resource(t, stack, 'SwiftContainerWebsite')
+        rsrc.delete()
         self.m.VerifyAll()
 
     def test_delete_exception(self):
@@ -225,8 +226,8 @@ class swiftTest(HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
         stack = parse_stack(t)
-        resource = self.create_resource(t, stack, 'SwiftContainer')
-        resource.delete()
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
+        rsrc.delete()
 
         self.m.VerifyAll()
 
@@ -247,10 +248,10 @@ class swiftTest(HeatTestCase):
         container = t['Resources']['SwiftContainer']
         container['DeletionPolicy'] = 'Retain'
         stack = parse_stack(t)
-        resource = self.create_resource(t, stack, 'SwiftContainer')
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
         # if delete_container is called, mox verify will succeed
-        resource.delete()
-        self.assertEqual(resource.DELETE_COMPLETE, resource.state)
+        rsrc.delete()
+        self.assertEqual(rsrc.DELETE_COMPLETE, rsrc.state)
 
         try:
             self.m.VerifyAll()

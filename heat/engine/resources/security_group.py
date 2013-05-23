@@ -130,9 +130,6 @@ class SecurityGroup(resource.Resource):
                         # unexpected error
                         raise
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
     def handle_delete(self):
         if self.properties['VpcId'] and clients.quantumclient is not None:
             self._handle_delete_quantum()

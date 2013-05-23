@@ -19,6 +19,7 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import properties
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources.quantum import net
 from heat.engine.resources.quantum import subnet
@@ -199,10 +200,10 @@ class QuantumNetTest(HeatTestCase):
         setup_dummy_db()
 
     def create_net(self, t, stack, resource_name):
-        resource = net.Net('test_net', t['Resources'][resource_name], stack)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(net.Net.CREATE_COMPLETE, resource.state)
-        return resource
+        rsrc = net.Net('test_net', t['Resources'][resource_name], stack)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(net.Net.CREATE_COMPLETE, rsrc.state)
+        return rsrc
 
     def test_net(self):
         quantumclient.Client.create_network({
@@ -269,29 +270,30 @@ class QuantumNetTest(HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(quantum_template)
         stack = parse_stack(t)
-        resource = self.create_net(t, stack, 'network')
+        rsrc = self.create_net(t, stack, 'network')
 
-        resource.validate()
+        rsrc.validate()
 
-        ref_id = resource.FnGetRefId()
+        ref_id = rsrc.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', ref_id)
 
-        self.assertEqual(None, resource.FnGetAtt('status'))
-        self.assertEqual('ACTIVE', resource.FnGetAtt('status'))
+        self.assertEqual(None, rsrc.FnGetAtt('status'))
+        self.assertEqual('ACTIVE', rsrc.FnGetAtt('status'))
         try:
-            resource.FnGetAtt('Foo')
+            rsrc.FnGetAtt('Foo')
             raise Exception('Expected InvalidTemplateAttribute')
         except exception.InvalidTemplateAttribute:
             pass
 
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                         resource.FnGetAtt('id'))
+                         rsrc.FnGetAtt('id'))
 
-        self.assertEqual(net.Net.UPDATE_REPLACE, resource.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
 
-        resource.delete()
-        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
-        resource.delete()
+        rsrc.delete()
+        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        rsrc.delete()
         self.m.VerifyAll()
 
 
@@ -306,11 +308,11 @@ class QuantumSubnetTest(HeatTestCase):
         setup_dummy_db()
 
     def create_subnet(self, t, stack, resource_name):
-        resource = subnet.Subnet('test_subnet', t['Resources'][resource_name],
-                                 stack)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(subnet.Subnet.CREATE_COMPLETE, resource.state)
-        return resource
+        rsrc = subnet.Subnet('test_subnet', t['Resources'][resource_name],
+                             stack)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(subnet.Subnet.CREATE_COMPLETE, rsrc.state)
+        return rsrc
 
     def test_subnet(self):
 
@@ -369,26 +371,26 @@ class QuantumSubnetTest(HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(quantum_template)
         stack = parse_stack(t)
-        resource = self.create_subnet(t, stack, 'subnet')
+        rsrc = self.create_subnet(t, stack, 'subnet')
 
-        resource.validate()
+        rsrc.validate()
 
-        ref_id = resource.FnGetRefId()
+        ref_id = rsrc.FnGetRefId()
         self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
         self.assertEqual(None,
-                         resource.FnGetAtt('network_id'))
+                         rsrc.FnGetAtt('network_id'))
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                         resource.FnGetAtt('network_id'))
-        self.assertEqual('8.8.8.8', resource.FnGetAtt('dns_nameservers')[0])
+                         rsrc.FnGetAtt('network_id'))
+        self.assertEqual('8.8.8.8', rsrc.FnGetAtt('dns_nameservers')[0])
         self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1',
-                         resource.FnGetAtt('id'))
+                         rsrc.FnGetAtt('id'))
 
-        self.assertEqual(subnet.Subnet.UPDATE_REPLACE,
-                         resource.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
 
-        self.assertEqual(resource.delete(), None)
-        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
-        self.assertEqual(resource.delete(), None)
+        self.assertEqual(rsrc.delete(), None)
+        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        self.assertEqual(rsrc.delete(), None)
         self.m.VerifyAll()
 
 
@@ -407,32 +409,31 @@ class QuantumRouterTest(HeatTestCase):
         setup_dummy_db()
 
     def create_router(self, t, stack, resource_name):
-        resource = router.Router('router', t['Resources'][resource_name],
-                                 stack)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(router.Router.CREATE_COMPLETE, resource.state)
-        return resource
+        rsrc = router.Router('router', t['Resources'][resource_name], stack)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(router.Router.CREATE_COMPLETE, rsrc.state)
+        return rsrc
 
     def create_router_interface(self, t, stack, resource_name, properties={}):
         t['Resources'][resource_name]['Properties'] = properties
-        resource = router.RouterInterface(
+        rsrc = router.RouterInterface(
             'router_interface',
             t['Resources'][resource_name],
             stack)
-        scheduler.TaskRunner(resource.create)()
+        scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(
-            router.RouterInterface.CREATE_COMPLETE, resource.state)
-        return resource
+            router.RouterInterface.CREATE_COMPLETE, rsrc.state)
+        return rsrc
 
     def create_gateway_router(self, t, stack, resource_name, properties={}):
         t['Resources'][resource_name]['Properties'] = properties
-        resource = router.RouterGateway(
+        rsrc = router.RouterGateway(
             'gateway',
             t['Resources'][resource_name],
             stack)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(router.RouterGateway.CREATE_COMPLETE, resource.state)
-        return resource
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(router.RouterGateway.CREATE_COMPLETE, rsrc.state)
+        return rsrc
 
     def test_router(self):
         quantumclient.Client.create_router({
@@ -499,25 +500,25 @@ class QuantumRouterTest(HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(quantum_template)
         stack = parse_stack(t)
-        resource = self.create_router(t, stack, 'router')
+        rsrc = self.create_router(t, stack, 'router')
 
-        resource.validate()
+        rsrc.validate()
 
-        ref_id = resource.FnGetRefId()
+        ref_id = rsrc.FnGetRefId()
         self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8', ref_id)
         self.assertEqual(None,
-                         resource.FnGetAtt('tenant_id'))
+                         rsrc.FnGetAtt('tenant_id'))
         self.assertEqual('3e21026f2dc94372b105808c0e721661',
-                         resource.FnGetAtt('tenant_id'))
+                         rsrc.FnGetAtt('tenant_id'))
         self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8',
-                         resource.FnGetAtt('id'))
+                         rsrc.FnGetAtt('id'))
 
-        self.assertEqual(router.Router.UPDATE_REPLACE,
-                         resource.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
 
-        self.assertEqual(resource.delete(), None)
-        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
-        self.assertEqual(resource.delete(), None)
+        self.assertEqual(rsrc.delete(), None)
+        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        self.assertEqual(rsrc.delete(), None)
         self.m.VerifyAll()
 
     def test_router_interface(self):
@@ -537,15 +538,15 @@ class QuantumRouterTest(HeatTestCase):
         t = template_format.parse(quantum_template)
         stack = parse_stack(t)
 
-        resource = self.create_router_interface(
+        rsrc = self.create_router_interface(
             t, stack, 'router_interface', properties={
                 'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
                 'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'
             })
 
-        self.assertEqual(resource.delete(), None)
-        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
-        self.assertEqual(resource.delete(), None)
+        self.assertEqual(rsrc.delete(), None)
+        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        self.assertEqual(rsrc.delete(), None)
         self.m.VerifyAll()
 
     def test_gateway_router(self):
@@ -563,15 +564,15 @@ class QuantumRouterTest(HeatTestCase):
         t = template_format.parse(quantum_template)
         stack = parse_stack(t)
 
-        resource = self.create_gateway_router(
+        rsrc = self.create_gateway_router(
             t, stack, 'gateway', properties={
                 'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
                 'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
             })
 
-        self.assertEqual(resource.delete(), None)
-        resource.state_set(resource.CREATE_COMPLETE, 'to delete again')
-        self.assertEqual(resource.delete(), None)
+        self.assertEqual(rsrc.delete(), None)
+        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        self.assertEqual(rsrc.delete(), None)
         self.m.VerifyAll()
 
 
@@ -637,8 +638,8 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          fip.FnGetAtt('id'))
-        self.assertEqual(floatingip.FloatingIP.UPDATE_REPLACE,
-                         fip.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          fip.handle_update, {})
         self.assertEqual(fip.delete(), None)
         fip.state_set(fip.CREATE_COMPLETE, 'to delete again')
         self.assertEqual(fip.delete(), None)
@@ -705,8 +706,8 @@ class QuantumFloatingIPTest(HeatTestCase):
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          p.FnGetAtt('id'))
 
-        self.assertEqual(port.Port.UPDATE_REPLACE,
-                         p.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          p.handle_update, {})
 
         self.m.VerifyAll()
 
@@ -798,8 +799,8 @@ class QuantumFloatingIPTest(HeatTestCase):
         fip_id = fip.FnGetRefId()
         port_id = p.FnGetRefId()
         self.assertEqual('%s:%s' % (fip_id, port_id), fipa_id)
-        self.assertEqual(floatingip.FloatingIP.UPDATE_REPLACE,
-                         fipa.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          fipa.handle_update, {})
 
         self.assertEqual(fipa.delete(), None)
         self.assertEqual(p.delete(), None)

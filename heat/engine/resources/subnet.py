@@ -94,9 +94,6 @@ class Subnet(resource.Resource):
             if ex.status_code != 404:
                 raise ex
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
     def FnGetAtt(self, key):
         if key == 'AvailabilityZone':
             return self.properties.get(key, '')

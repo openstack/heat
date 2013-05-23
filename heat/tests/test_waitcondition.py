@@ -31,6 +31,7 @@ import heat.db.api as db_api
 from heat.common import template_format
 from heat.common import identifier
 from heat.engine import parser
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources import wait_condition as wc
 from heat.common import config
@@ -133,8 +134,8 @@ class WaitConditionTest(HeatTestCase):
 
         self.stack.create()
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(resource.state,
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertEqual(rsrc.state,
                          'CREATE_COMPLETE')
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
@@ -155,9 +156,9 @@ class WaitConditionTest(HeatTestCase):
 
         self.stack.create()
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(resource.state, resource.CREATE_FAILED)
-        reason = resource.state_description
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertEqual(rsrc.state, rsrc.CREATE_FAILED)
+        reason = rsrc.state_description
         self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
@@ -181,8 +182,8 @@ class WaitConditionTest(HeatTestCase):
 
         self.stack.create()
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(resource.state,
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertEqual(rsrc.state,
                          'CREATE_COMPLETE')
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
@@ -203,9 +204,9 @@ class WaitConditionTest(HeatTestCase):
 
         self.stack.create()
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(resource.state, resource.CREATE_FAILED)
-        reason = resource.state_description
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertEqual(rsrc.state, rsrc.CREATE_FAILED)
+        reason = rsrc.state_description
         self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
@@ -235,14 +236,14 @@ class WaitConditionTest(HeatTestCase):
 
         self.stack.create()
 
-        resource = self.stack.resources['WaitForTheHandle']
+        rsrc = self.stack.resources['WaitForTheHandle']
 
-        self.assertEqual(resource.state, resource.CREATE_FAILED)
-        reason = resource.state_description
+        self.assertEqual(rsrc.state, rsrc.CREATE_FAILED)
+        reason = rsrc.state_description
         self.assertTrue(reason.startswith('WaitConditionTimeout:'))
 
-        self.assertEqual(wc.WaitCondition.UPDATE_REPLACE,
-                         resource.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
         self.m.VerifyAll()
 
     @stack_delete_after
@@ -253,10 +254,10 @@ class WaitConditionTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(resource.state, 'CREATE_COMPLETE')
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
 
-        wc_att = resource.FnGetAtt('Data')
+        wc_att = rsrc.FnGetAtt('Data')
         self.assertEqual(wc_att, unicode({}))
 
         handle = self.stack.resources['WaitHandle']
@@ -265,13 +266,13 @@ class WaitConditionTest(HeatTestCase):
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
         handle.metadata_update(new_metadata=test_metadata)
-        wc_att = resource.FnGetAtt('Data')
+        wc_att = rsrc.FnGetAtt('Data')
         self.assertEqual(wc_att, '{"123": "foo"}')
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
         handle.metadata_update(new_metadata=test_metadata)
-        wc_att = resource.FnGetAtt('Data')
+        wc_att = rsrc.FnGetAtt('Data')
         self.assertEqual(wc_att, u'{"123": "foo", "456": "dog"}')
         self.m.VerifyAll()
 
@@ -293,8 +294,8 @@ class WaitConditionTest(HeatTestCase):
         self.stack = self.create_stack(template=json.dumps(t), stub=False)
         self.m.ReplayAll()
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertRaises(ValueError, resource.handle_create)
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, rsrc.handle_create)
 
         self.m.VerifyAll()
 
@@ -314,8 +315,8 @@ class WaitConditionTest(HeatTestCase):
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
         self.stack = self.create_stack(template=json.dumps(t), stub=False)
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertRaises(ValueError, resource.handle_create)
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, rsrc.handle_create)
 
         self.m.VerifyAll()
 
@@ -335,8 +336,8 @@ class WaitConditionTest(HeatTestCase):
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
         self.stack = self.create_stack(template=json.dumps(t), stub=False)
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertRaises(ValueError, resource.handle_create)
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, rsrc.handle_create)
 
         self.m.VerifyAll()
 
@@ -356,8 +357,8 @@ class WaitConditionTest(HeatTestCase):
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
         self.stack = self.create_stack(template=json.dumps(t), stub=False)
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertRaises(ValueError, resource.handle_create)
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, rsrc.handle_create)
 
         self.m.VerifyAll()
 
@@ -377,8 +378,8 @@ class WaitConditionTest(HeatTestCase):
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
         self.stack = self.create_stack(template=json.dumps(t), stub=False)
 
-        resource = self.stack.resources['WaitForTheHandle']
-        self.assertRaises(ValueError, resource.handle_create)
+        rsrc = self.stack.resources['WaitForTheHandle']
+        self.assertRaises(ValueError, rsrc.handle_create)
 
         self.m.VerifyAll()
 
@@ -430,9 +431,9 @@ class WaitConditionHandleTest(HeatTestCase):
     def test_handle(self):
         created_time = datetime.datetime(2012, 11, 29, 13, 49, 37)
 
-        resource = self.stack.resources['WaitHandle']
-        resource.created_time = created_time
-        self.assertEqual(resource.state, 'CREATE_COMPLETE')
+        rsrc = self.stack.resources['WaitHandle']
+        rsrc.created_time = created_time
+        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
 
         expected_url = "".join([
             'http://127.0.0.1:8000/v1/waitcondition/',
@@ -446,88 +447,89 @@ class WaitConditionHandleTest(HeatTestCase):
             'Signature=',
             'ePyTwmC%2F1kSigeo%2Fha7kP8Avvb45G9Y7WOQWe4F%2BnXM%3D'])
 
-        self.assertEqual(expected_url, resource.FnGetRefId())
+        self.assertEqual(expected_url, rsrc.FnGetRefId())
 
-        self.assertEqual(resource.UPDATE_REPLACE, resource.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
         self.m.VerifyAll()
 
     @stack_delete_after
     def test_metadata_update(self):
-        resource = self.stack.resources['WaitHandle']
-        self.assertEqual(resource.state, 'CREATE_COMPLETE')
+        rsrc = self.stack.resources['WaitHandle']
+        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        resource.metadata_update(new_metadata=test_metadata)
+        rsrc.metadata_update(new_metadata=test_metadata)
         handle_metadata = {u'123': {u'Data': u'foo',
                                     u'Reason': u'bar',
                                     u'Status': u'SUCCESS'}}
-        self.assertEqual(resource.metadata, handle_metadata)
+        self.assertEqual(rsrc.metadata, handle_metadata)
         self.m.VerifyAll()
 
     @stack_delete_after
     def test_metadata_update_invalid(self):
-        resource = self.stack.resources['WaitHandle']
-        self.assertEqual(resource.state, 'CREATE_COMPLETE')
+        rsrc = self.stack.resources['WaitHandle']
+        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
 
         # metadata_update should raise a ValueError if the metadata
         # is missing any of the expected keys
         err_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update,
+        self.assertRaises(ValueError, rsrc.metadata_update,
                           new_metadata=err_metadata)
 
         err_metadata = {'Data': 'foo', 'Reason': 'bar', 'UniqueId': '1234'}
-        self.assertRaises(ValueError, resource.metadata_update,
+        self.assertRaises(ValueError, rsrc.metadata_update,
                           new_metadata=err_metadata)
 
         err_metadata = {'Data': 'foo', 'Reason': 'bar', 'UniqueId': '1234'}
-        self.assertRaises(ValueError, resource.metadata_update,
+        self.assertRaises(ValueError, rsrc.metadata_update,
                           new_metadata=err_metadata)
 
         err_metadata = {'data': 'foo', 'reason': 'bar',
                         'status': 'SUCCESS', 'uniqueid': '1234'}
-        self.assertRaises(ValueError, resource.metadata_update,
+        self.assertRaises(ValueError, rsrc.metadata_update,
                           new_metadata=err_metadata)
 
         # Also any Status other than SUCCESS or FAILURE should be rejected
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'UCCESS', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update,
+        self.assertRaises(ValueError, rsrc.metadata_update,
                           new_metadata=err_metadata)
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'wibble', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update,
+        self.assertRaises(ValueError, rsrc.metadata_update,
                           new_metadata=err_metadata)
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'success', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update,
+        self.assertRaises(ValueError, rsrc.metadata_update,
                           new_metadata=err_metadata)
         err_metadata = {'Data': 'foo', 'Reason': 'bar',
                         'Status': 'FAIL', 'UniqueId': '123'}
-        self.assertRaises(ValueError, resource.metadata_update,
+        self.assertRaises(ValueError, rsrc.metadata_update,
                           new_metadata=err_metadata)
         self.m.VerifyAll()
 
     @stack_delete_after
     def test_get_status(self):
-        resource = self.stack.resources['WaitHandle']
-        self.assertEqual(resource.state, 'CREATE_COMPLETE')
+        rsrc = self.stack.resources['WaitHandle']
+        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
 
         # UnsetStubs, don't want get_status stubbed anymore..
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.assertEqual(resource.get_status(), [])
+        self.assertEqual(rsrc.get_status(), [])
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        resource.metadata_update(new_metadata=test_metadata)
-        self.assertEqual(resource.get_status(), ['SUCCESS'])
+        rsrc.metadata_update(new_metadata=test_metadata)
+        self.assertEqual(rsrc.get_status(), ['SUCCESS'])
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        resource.metadata_update(new_metadata=test_metadata)
-        self.assertEqual(resource.get_status(), ['SUCCESS', 'SUCCESS'])
+        rsrc.metadata_update(new_metadata=test_metadata)
+        self.assertEqual(rsrc.get_status(), ['SUCCESS', 'SUCCESS'])
 
         # re-stub keystone() with fake client or stack delete fails
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
@@ -536,21 +538,21 @@ class WaitConditionHandleTest(HeatTestCase):
 
     @stack_delete_after
     def test_get_status_reason(self):
-        resource = self.stack.resources['WaitHandle']
-        self.assertEqual(resource.state, 'CREATE_COMPLETE')
+        rsrc = self.stack.resources['WaitHandle']
+        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
-        resource.metadata_update(new_metadata=test_metadata)
-        self.assertEqual(resource.get_status_reason('SUCCESS'), 'bar')
+        rsrc.metadata_update(new_metadata=test_metadata)
+        self.assertEqual(rsrc.get_status_reason('SUCCESS'), 'bar')
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
-        resource.metadata_update(new_metadata=test_metadata)
-        self.assertEqual(resource.get_status_reason('SUCCESS'), 'bar;cat')
+        rsrc.metadata_update(new_metadata=test_metadata)
+        self.assertEqual(rsrc.get_status_reason('SUCCESS'), 'bar;cat')
 
         test_metadata = {'Data': 'boo', 'Reason': 'hoo',
                          'Status': 'FAILURE', 'UniqueId': '789'}
-        resource.metadata_update(new_metadata=test_metadata)
-        self.assertEqual(resource.get_status_reason('FAILURE'), 'hoo')
+        rsrc.metadata_update(new_metadata=test_metadata)
+        self.assertEqual(rsrc.get_status_reason('FAILURE'), 'hoo')
         self.m.VerifyAll()

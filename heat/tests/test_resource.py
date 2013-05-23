@@ -143,14 +143,14 @@ class ResourceTest(HeatTestCase):
         tmpl = {'Type': 'Foo'}
         update_snippet = {}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertRaises(NotImplementedError, res.update_template_diff,
+        self.assertRaises(resource.UpdateReplace, res.update_template_diff,
                           update_snippet)
 
     def test_update_template_diff_changed_notallowed(self):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Bar'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertRaises(NotImplementedError, res.update_template_diff,
+        self.assertRaises(resource.UpdateReplace, res.update_template_diff,
                           update_snippet)
 
     def test_update_template_diff_changed_modified(self):
@@ -213,7 +213,7 @@ class ResourceTest(HeatTestCase):
         update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 456}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Cat',)
-        self.assertRaises(NotImplementedError,
+        self.assertRaises(resource.UpdateReplace,
                           res.update_template_diff_properties,
                           update_snippet)
 
@@ -267,11 +267,10 @@ class ResourceTest(HeatTestCase):
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(utmpl).AndReturn(
-            resource.Resource.UPDATE_COMPLETE)
+        generic_rsrc.GenericResource.handle_update(utmpl).AndReturn(None)
         self.m.ReplayAll()
 
-        self.assertEqual(res.UPDATE_COMPLETE, res.update(utmpl))
+        self.assertEqual(None, res.update(utmpl))
         self.assertEqual(res.UPDATE_COMPLETE, res.state)
         self.m.VerifyAll()
 
@@ -287,10 +286,11 @@ class ResourceTest(HeatTestCase):
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(utmpl).AndReturn(
-            resource.Resource.UPDATE_REPLACE)
+        generic_rsrc.GenericResource.handle_update(utmpl).AndRaise(
+            resource.UpdateReplace())
         self.m.ReplayAll()
-        self.assertEqual(res.UPDATE_REPLACE, res.update(utmpl))
+        # should be re-raised so parser.Stack can handle replacement
+        self.assertRaises(resource.UpdateReplace, res.update, utmpl)
         self.m.VerifyAll()
 
     def test_update_fail_missing_req_prop(self):

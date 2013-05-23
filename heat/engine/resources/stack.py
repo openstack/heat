@@ -44,9 +44,6 @@ class NestedStack(stack_resource.StackResource):
 
         self.create_with_template(template, self.properties[PROP_PARAMETERS])
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
     def handle_delete(self):
         self.delete_nested()
 

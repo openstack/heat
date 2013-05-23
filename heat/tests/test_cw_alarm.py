@@ -17,6 +17,7 @@ import copy
 
 from heat.common import template_format
 from heat.engine.resources import cloud_watch
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
@@ -55,19 +56,19 @@ class CloudWatchAlarmTest(HeatTestCase):
         setup_dummy_db()
 
     def create_alarm(self, t, stack, resource_name):
-        resource = cloud_watch.CloudWatchAlarm(resource_name,
-                                               t['Resources'][resource_name],
-                                               stack)
-        self.assertEqual(None, resource.validate())
-        scheduler.TaskRunner(resource.create)()
+        rsrc = cloud_watch.CloudWatchAlarm(resource_name,
+                                           t['Resources'][resource_name],
+                                           stack)
+        self.assertEqual(None, rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(cloud_watch.CloudWatchAlarm.CREATE_COMPLETE,
-                         resource.state)
-        return resource
+                         rsrc.state)
+        return rsrc
 
     def test_mem_alarm_high_update_no_replace(self):
         '''
         Make sure that we can change the update-able properties
-        without replacing the Alarm resource.
+        without replacing the Alarm rsrc.
         '''
         t = template_format.parse(alarm_template)
 
@@ -81,8 +82,8 @@ class CloudWatchAlarmTest(HeatTestCase):
         stack.store()
 
         self.m.ReplayAll()
-        resource = self.create_alarm(t, stack, 'MEMAlarmHigh')
-        snippet = copy.deepcopy(resource.parsed_template())
+        rsrc = self.create_alarm(t, stack, 'MEMAlarmHigh')
+        snippet = copy.deepcopy(rsrc.parsed_template())
         snippet['Properties']['ComparisonOperator'] = 'LessThanThreshold'
         snippet['Properties']['AlarmDescription'] = 'fruity'
         snippet['Properties']['EvaluationPeriods'] = '2'
@@ -90,10 +91,9 @@ class CloudWatchAlarmTest(HeatTestCase):
         snippet['Properties']['Statistic'] = 'Maximum'
         snippet['Properties']['Threshold'] = '39'
 
-        self.assertEqual(cloud_watch.CloudWatchAlarm.UPDATE_COMPLETE,
-                         resource.handle_update(snippet))
+        self.assertEqual(None, rsrc.handle_update(snippet))
 
-        resource.delete()
+        rsrc.delete()
         self.m.VerifyAll()
 
     def test_mem_alarm_high_update_replace(self):
@@ -113,12 +113,12 @@ class CloudWatchAlarmTest(HeatTestCase):
         stack.store()
 
         self.m.ReplayAll()
-        resource = self.create_alarm(t, stack, 'MEMAlarmHigh')
-        snippet = copy.deepcopy(resource.parsed_template())
+        rsrc = self.create_alarm(t, stack, 'MEMAlarmHigh')
+        snippet = copy.deepcopy(rsrc.parsed_template())
         snippet['Properties']['MetricName'] = 'temp'
 
-        self.assertEqual(cloud_watch.CloudWatchAlarm.UPDATE_REPLACE,
-                         resource.handle_update(snippet))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, snippet)
 
-        resource.delete()
+        rsrc.delete()
         self.m.VerifyAll()

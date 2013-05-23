@@ -468,18 +468,18 @@ class StackTest(HeatTestCase):
         self.stack.create()
         self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
         self.assertTrue('AResource' in self.stack)
-        resource = self.stack['AResource']
-        resource.resource_id_set('aaaa')
+        rsrc = self.stack['AResource']
+        rsrc.resource_id_set('aaaa')
         self.assertNotEqual(None, resource)
-        self.assertEqual(resource, self.stack.resource_by_refid('aaaa'))
+        self.assertEqual(rsrc, self.stack.resource_by_refid('aaaa'))
 
-        resource.state = resource.DELETE_IN_PROGRESS
+        rsrc.state = rsrc.DELETE_IN_PROGRESS
         try:
             self.assertEqual(None, self.stack.resource_by_refid('aaaa'))
 
             self.assertEqual(None, self.stack.resource_by_refid('bbbb'))
         finally:
-            resource.state = resource.CREATE_COMPLETE
+            rsrc.state = rsrc.CREATE_COMPLETE
 
     @stack_delete_after
     def test_update_add(self):
@@ -563,8 +563,8 @@ class StackTest(HeatTestCase):
         # patch in a dummy handle_update
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl2['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -629,8 +629,8 @@ class StackTest(HeatTestCase):
         # patch in a dummy handle_update
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl2['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
 
         # make the update fail deleting the existing resource
         self.m.StubOutWithMock(resource.Resource, 'destroy')
@@ -669,8 +669,8 @@ class StackTest(HeatTestCase):
         # patch in a dummy handle_update
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl2['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
 
         # patch in a dummy handle_create making the replace fail creating
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
@@ -738,14 +738,14 @@ class StackTest(HeatTestCase):
         # then another (with the initial template) for rollback
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl2['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
         generic_rsrc.GenericResource.handle_update(
-            tmpl['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
 
         # patch in a dummy handle_create making the replace fail when creating
-        # the replacement resource, but succeed the second call (rollback)
+        # the replacement rsrc, but succeed the second call (rollback)
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
         generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
         generic_rsrc.GenericResource.handle_create().AndReturn(None)
@@ -782,14 +782,14 @@ class StackTest(HeatTestCase):
         # then another (with the initial template) for rollback
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl2['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
         generic_rsrc.GenericResource.handle_update(
-            tmpl['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
 
         # patch in a dummy handle_create making the replace fail when creating
-        # the replacement resource, and again on the second call (rollback)
+        # the replacement rsrc, and again on the second call (rollback)
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
         generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
         generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
@@ -818,7 +818,7 @@ class StackTest(HeatTestCase):
                                      template.Template(tmpl2))
 
         # patch in a dummy handle_create making the replace fail when creating
-        # the replacement resource, and succeed on the second call (rollback)
+        # the replacement rsrc, and succeed on the second call (rollback)
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
         generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
         self.m.ReplayAll()
@@ -893,14 +893,13 @@ class StackTest(HeatTestCase):
 
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl2['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
 
         br2_snip = {'Type': 'GenericResourceType',
                     'Properties': {'Foo': 'inst-007'}}
         generic_rsrc.GenericResource.handle_update(
-            br2_snip).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            br2_snip).AndRaise(resource.UpdateReplace)
 
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'FnGetRefId')
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
@@ -956,8 +955,8 @@ class StackTest(HeatTestCase):
 
         # mocks for first (failed update)
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl2['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'AResource')
 
@@ -966,8 +965,8 @@ class StackTest(HeatTestCase):
 
         # mocks for second rollback update
         generic_rsrc.GenericResource.handle_update(
-            tmpl['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
 
         generic_rsrc.GenericResource.handle_create().AndReturn(None)
         generic_rsrc.GenericResource.FnGetRefId().MultipleTimes().AndReturn(
@@ -1023,13 +1022,12 @@ class StackTest(HeatTestCase):
 
         # mocks for first and second (failed update)
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl2['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
         br2_snip = {'Type': 'GenericResourceType',
                     'Properties': {'Foo': 'inst-007'}}
         generic_rsrc.GenericResource.handle_update(
-            br2_snip).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            br2_snip).AndRaise(resource.UpdateReplace)
 
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'AResource')
@@ -1058,13 +1056,12 @@ class StackTest(HeatTestCase):
 
         # mocks for second rollback update
         generic_rsrc.GenericResource.handle_update(
-            tmpl['Resources']['AResource']).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            tmpl['Resources']['AResource']).AndRaise(
+                resource.UpdateReplace)
         br2_snip = {'Type': 'GenericResourceType',
                     'Properties': {'Foo': 'AResource'}}
         generic_rsrc.GenericResource.handle_update(
-            br2_snip).AndReturn(
-                resource.Resource.UPDATE_REPLACE)
+            br2_snip).AndRaise(resource.UpdateReplace)
 
         # self.state_set(self.DELETE_IN_PROGRESS)
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(

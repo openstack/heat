@@ -140,8 +140,7 @@ class instancesTest(HeatTestCase):
 
         update_template = copy.deepcopy(instance.t)
         update_template['Metadata'] = {'test': 123}
-        self.assertEqual(instance.update(update_template),
-                         instance.UPDATE_COMPLETE)
+        self.assertEqual(None, instance.update(update_template))
         self.assertEqual(instance.metadata, {'test': 123})
 
     def test_instance_status_build(self):

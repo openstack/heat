@@ -75,9 +75,6 @@ class RouteTable(resource.Resource):
         # TODO(sbaker) all_router_ids has changed, any VPCGatewayAttachment
         # for this vpc needs to be notified
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
 
 class SubnetRouteTableAssocation(resource.Resource):
 
@@ -132,9 +129,6 @@ class SubnetRouteTableAssocation(resource.Resource):
         # add back the default router
         client.add_interface_router(
             default_router_id, {'subnet_id': subnet_id})
-
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
 
 
 def resource_mapping():

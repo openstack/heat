@@ -91,9 +91,6 @@ class WaitConditionHandle(resource.Resource):
             return
         self.keystone().delete_stack_user(self.resource_id)
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
     def FnGetRefId(self):
         '''
         Override the default resource FnGetRefId so we return the signed URL
@@ -258,9 +255,6 @@ class WaitCondition(resource.Resource):
 
     def check_create_complete(self, runner):
         return runner.step()
-
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
 
     def handle_delete(self):
         if self.resource_id is None:

@@ -57,6 +57,21 @@ def _register_class(resource_type, resource_class):
     _resource_classes[resource_type] = resource_class
 
 
+class UpdateReplace(Exception):
+    '''
+    Raised when resource update requires replacement
+    '''
+    _message = _("The Resource %s requires replacement.")
+
+    def __init__(self, resource_name='Unknown',
+                 message=_("The Resource %s requires replacement.")):
+        try:
+            msg = message % resource_name
+        except TypeError:
+            msg = message
+        super(Exception, self).__init__(msg)
+
+
 class Metadata(object):
     '''
     A descriptor for accessing the metadata of a resource while ensuring the
@@ -92,9 +107,6 @@ class Resource(object):
     UPDATE_IN_PROGRESS = 'UPDATE_IN_PROGRESS'
     UPDATE_FAILED = 'UPDATE_FAILED'
     UPDATE_COMPLETE = 'UPDATE_COMPLETE'
-
-    # Status value, returned from subclasses to indicate replacement required
-    UPDATE_REPLACE = 'UPDATE_REPLACE'
 
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
@@ -203,7 +215,8 @@ class Resource(object):
         Returns the difference between json_template and self.t
         If something has been removed in json_snippet which exists
         in self.t we set it to None.  If any keys have changed which
-        are not in update_allowed_keys, raises NotImplementedError
+        are not in update_allowed_keys, raises UpdateReplace if the
+        differing keys are not in update_allowed_keys
         '''
         update_allowed_set = set(self.update_allowed_keys)
 
@@ -221,8 +234,7 @@ class Resource(object):
 
         if not changed_keys_set.issubset(update_allowed_set):
             badkeys = changed_keys_set - update_allowed_set
-            raise NotImplementedError("Cannot update keys %s for %s" %
-                                      (badkeys, self.name))
+            raise UpdateReplace(self.name)
 
         return dict((k, new_template.get(k)) for k in changed_keys_set)
 
@@ -231,7 +243,8 @@ class Resource(object):
         Returns the changed Properties between json_template and self.t
         If a property has been removed in json_snippet which exists
         in self.t we set it to None.  If any properties have changed which
-        are not in update_allowed_properties, raises NotImplementedError
+        are not in update_allowed_properties, raises UpdateReplace if the
+        modified properties are not in the update_allowed_properties
         '''
         update_allowed_set = set(self.update_allowed_properties)
 
@@ -249,9 +262,7 @@ class Resource(object):
                                      updated_properties.get(k))
 
         if not changed_properties_set.issubset(update_allowed_set):
-            badkeys = changed_properties_set - update_allowed_set
-            raise NotImplementedError("Cannot update properties %s for %s" %
-                                      (badkeys, self.name))
+            raise UpdateReplace(self.name)
 
         return dict((k, updated_properties.get(k))
                     for k in changed_properties_set)
@@ -377,18 +388,17 @@ class Resource(object):
             properties.validate()
             if callable(getattr(self, 'handle_update', None)):
                 result = self.handle_update(json_snippet)
+        except UpdateReplace:
+            logger.debug("Resource %s update requires replacement" % self.name)
+            raise
         except Exception as ex:
             logger.exception('update %s : %s' % (str(self), str(ex)))
             failure = exception.ResourceFailure(ex)
             self.state_set(self.UPDATE_FAILED, str(failure))
             raise failure
         else:
-            # If resource was updated (with or without interruption),
-            # then we set the resource to UPDATE_COMPLETE
-            if not result == self.UPDATE_REPLACE:
-                self.t = self.stack.resolve_static_data(json_snippet)
-                self.state_set(self.UPDATE_COMPLETE)
-            return result
+            self.t = self.stack.resolve_static_data(json_snippet)
+            self.state_set(self.UPDATE_COMPLETE)
 
     def physical_resource_name(self):
         return '%s.%s' % (self.stack.name, self.name)
@@ -566,8 +576,7 @@ class Resource(object):
         return base64.b64encode(data)
 
     def handle_update(self, json_snippet=None):
-        raise NotImplementedError("Update not implemented for Resource %s"
-                                  % type(self))
+        raise UpdateReplace(self.name)
 
     def metadata_update(self, new_metadata=None):
         '''

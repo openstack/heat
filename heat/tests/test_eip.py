@@ -15,6 +15,7 @@
 
 from heat.common import template_format
 from heat.engine.resources import eip
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes
@@ -56,23 +57,23 @@ class EIPTest(HeatTestCase):
         setup_dummy_db()
 
     def create_eip(self, t, stack, resource_name):
-        resource = eip.ElasticIp(resource_name,
-                                 t['Resources'][resource_name],
-                                 stack)
-        self.assertEqual(None, resource.validate())
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(eip.ElasticIp.CREATE_COMPLETE, resource.state)
-        return resource
+        rsrc = eip.ElasticIp(resource_name,
+                             t['Resources'][resource_name],
+                             stack)
+        self.assertEqual(None, rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(eip.ElasticIp.CREATE_COMPLETE, rsrc.state)
+        return rsrc
 
     def create_association(self, t, stack, resource_name):
-        resource = eip.ElasticIpAssociation(resource_name,
-                                            t['Resources'][resource_name],
-                                            stack)
-        self.assertEqual(None, resource.validate())
-        scheduler.TaskRunner(resource.create)()
+        rsrc = eip.ElasticIpAssociation(resource_name,
+                                        t['Resources'][resource_name],
+                                        stack)
+        self.assertEqual(None, rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(eip.ElasticIpAssociation.CREATE_COMPLETE,
-                         resource.state)
-        return resource
+                         rsrc.state)
+        return rsrc
 
     def test_eip(self):
 
@@ -83,23 +84,23 @@ class EIPTest(HeatTestCase):
         t = template_format.parse(eip_template)
         stack = parse_stack(t)
 
-        resource = self.create_eip(t, stack, 'IPAddress')
+        rsrc = self.create_eip(t, stack, 'IPAddress')
 
         try:
-            self.assertEqual('11.0.0.1', resource.FnGetRefId())
-            resource.ipaddress = None
-            self.assertEqual('11.0.0.1', resource.FnGetRefId())
+            self.assertEqual('11.0.0.1', rsrc.FnGetRefId())
+            rsrc.ipaddress = None
+            self.assertEqual('11.0.0.1', rsrc.FnGetRefId())
 
-            self.assertEqual('1', resource.FnGetAtt('AllocationId'))
+            self.assertEqual('1', rsrc.FnGetAtt('AllocationId'))
 
-            self.assertEqual(eip.ElasticIp.UPDATE_REPLACE,
-                             resource.handle_update({}))
+            self.assertRaises(resource.UpdateReplace,
+                              rsrc.handle_update, {})
 
             self.assertRaises(eip.exception.InvalidTemplateAttribute,
-                              resource.FnGetAtt, 'Foo')
+                              rsrc.FnGetAtt, 'Foo')
 
         finally:
-            resource.destroy()
+            rsrc.destroy()
 
         self.m.VerifyAll()
 
@@ -116,13 +117,13 @@ class EIPTest(HeatTestCase):
         t = template_format.parse(eip_template)
         stack = parse_stack(t)
 
-        resource = self.create_eip(t, stack, 'IPAddress')
+        rsrc = self.create_eip(t, stack, 'IPAddress')
         association = self.create_association(t, stack, 'IPAssoc')
 
         # TODO(sbaker), figure out why this is an empty string
         #self.assertEqual('', association.FnGetRefId())
 
         association.delete()
-        resource.delete()
+        rsrc.delete()
 
         self.m.VerifyAll()

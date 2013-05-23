@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.common import config
 from heat.common import template_format
 from heat.engine import clients
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources import instance
 from heat.engine.resources import user
@@ -88,13 +89,13 @@ class LoadBalancerTest(HeatTestCase):
         setup_dummy_db()
 
     def create_loadbalancer(self, t, stack, resource_name):
-        resource = lb.LoadBalancer(resource_name,
-                                   t['Resources'][resource_name],
-                                   stack)
-        self.assertEqual(None, resource.validate())
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(lb.LoadBalancer.CREATE_COMPLETE, resource.state)
-        return resource
+        rsrc = lb.LoadBalancer(resource_name,
+                               t['Resources'][resource_name],
+                               stack)
+        self.assertEqual(None, rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(lb.LoadBalancer.CREATE_COMPLETE, rsrc.state)
+        return rsrc
 
     def test_loadbalancer(self):
         self.m.StubOutWithMock(user.User, 'keystone')
@@ -124,7 +125,7 @@ class LoadBalancerTest(HeatTestCase):
         s = parse_stack(t)
         s.store()
 
-        resource = self.create_loadbalancer(t, s, 'LoadBalancer')
+        rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')
 
         hc = {
             'Target': 'HTTP:80/',
@@ -132,20 +133,19 @@ class LoadBalancerTest(HeatTestCase):
             'UnhealthyThreshold': '5',
             'Interval': '30',
             'Timeout': '5'}
-        resource.t['Properties']['HealthCheck'] = hc
-        self.assertEqual(None, resource.validate())
+        rsrc.t['Properties']['HealthCheck'] = hc
+        self.assertEqual(None, rsrc.validate())
 
         hc['Timeout'] = 35
         self.assertEqual(
             {'Error': 'Interval must be larger than Timeout'},
-            resource.validate())
+            rsrc.validate())
         hc['Timeout'] = 5
 
-        self.assertEqual('LoadBalancer', resource.FnGetRefId())
+        self.assertEqual('LoadBalancer', rsrc.FnGetRefId())
 
         templ = template_format.parse(lb.lb_template)
-        ha_cfg = resource._haproxy_config(templ,
-                                          resource.properties['Instances'])
+        ha_cfg = rsrc._haproxy_config(templ, rsrc.properties['Instances'])
         self.assertRegexpMatches(ha_cfg, 'bind \*:80')
         self.assertRegexpMatches(ha_cfg, 'server server1 1\.2\.3\.4:80 '
                                  'check inter 30s fall 5 rise 3')
@@ -158,19 +158,19 @@ class LoadBalancerTest(HeatTestCase):
                                      s)
             id_list.append(inst.FnGetRefId())
 
-        resource.reload(id_list)
+        rsrc.reload(id_list)
 
-        self.assertEqual('4.5.6.7', resource.FnGetAtt('DNSName'))
-        self.assertEqual('', resource.FnGetAtt('SourceSecurityGroupName'))
+        self.assertEqual('4.5.6.7', rsrc.FnGetAtt('DNSName'))
+        self.assertEqual('', rsrc.FnGetAtt('SourceSecurityGroupName'))
 
         try:
-            resource.FnGetAtt('Foo')
+            rsrc.FnGetAtt('Foo')
             raise Exception('Expected InvalidTemplateAttribute')
         except exception.InvalidTemplateAttribute:
             pass
 
-        self.assertEqual(lb.LoadBalancer.UPDATE_REPLACE,
-                         resource.handle_update({}))
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
 
         self.m.VerifyAll()
 

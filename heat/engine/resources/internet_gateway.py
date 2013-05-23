@@ -58,9 +58,6 @@ class InternetGateway(resource.Resource):
     def handle_delete(self):
         pass
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
 
 class VPCGatewayAttachment(resource.Resource):
 
@@ -98,9 +95,6 @@ class VPCGatewayAttachment(resource.Resource):
             except QuantumClientException as ex:
                 if ex.status_code != 404:
                     raise ex
-
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
 
 
 def resource_mapping():

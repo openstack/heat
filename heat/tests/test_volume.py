@@ -23,6 +23,7 @@ from heat.common import template_format
 from heat.engine import scheduler
 from heat.engine.resources import volume as vol
 from heat.engine import clients
+from heat.engine import resource
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes
@@ -88,20 +89,20 @@ class VolumeTest(HeatTestCase):
     def create_volume(self, t, stack, resource_name):
         data = t['Resources'][resource_name]
         data['Properties']['AvailabilityZone'] = 'nova'
-        resource = vol.Volume(resource_name, data, stack)
-        self.assertEqual(resource.validate(), None)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(resource.state, vol.Volume.CREATE_COMPLETE)
-        return resource
+        rsrc = vol.Volume(resource_name, data, stack)
+        self.assertEqual(rsrc.validate(), None)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(rsrc.state, vol.Volume.CREATE_COMPLETE)
+        return rsrc
 
     def create_attachment(self, t, stack, resource_name):
-        resource = vol.VolumeAttachment(resource_name,
-                                        t['Resources'][resource_name],
-                                        stack)
-        self.assertEqual(resource.validate(), None)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(resource.state, vol.VolumeAttachment.CREATE_COMPLETE)
-        return resource
+        rsrc = vol.VolumeAttachment(resource_name,
+                                    t['Resources'][resource_name],
+                                    stack)
+        self.assertEqual(rsrc.validate(), None)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(rsrc.state, vol.VolumeAttachment.CREATE_COMPLETE)
+        return rsrc
 
     def test_volume(self):
         fv = FakeVolume('creating', 'available')
@@ -128,19 +129,20 @@ class VolumeTest(HeatTestCase):
         t = template_format.parse(volume_template)
         stack = parse_stack(t, stack_name=stack_name)
 
-        resource = self.create_volume(t, stack, 'DataVolume')
+        rsrc = self.create_volume(t, stack, 'DataVolume')
         self.assertEqual(fv.status, 'available')
 
-        self.assertEqual(resource.handle_update({}), vol.Volume.UPDATE_REPLACE)
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
 
         fv.status = 'in-use'
-        self.assertRaises(exception.ResourceFailure, resource.destroy)
+        self.assertRaises(exception.ResourceFailure, rsrc.destroy)
         fv.status = 'available'
-        self.assertEqual(resource.destroy(), None)
+        self.assertEqual(rsrc.destroy(), None)
 
         # Test when volume already deleted
-        resource.state = resource.CREATE_COMPLETE
-        self.assertEqual(resource.destroy(), None)
+        rsrc.state = rsrc.CREATE_COMPLETE
+        self.assertEqual(rsrc.destroy(), None)
 
         self.m.VerifyAll()
 
@@ -161,10 +163,10 @@ class VolumeTest(HeatTestCase):
         t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = parse_stack(t, stack_name=stack_name)
 
-        resource = vol.Volume('DataVolume',
-                              t['Resources']['DataVolume'],
-                              stack)
-        create = scheduler.TaskRunner(resource.create)
+        rsrc = vol.Volume('DataVolume',
+                          t['Resources']['DataVolume'],
+                          stack)
+        create = scheduler.TaskRunner(rsrc.create)
         self.assertRaises(exception.ResourceFailure, create)
 
         self.m.VerifyAll()
@@ -201,10 +203,10 @@ class VolumeTest(HeatTestCase):
 
         scheduler.TaskRunner(stack['DataVolume'].create)()
         self.assertEqual(fv.status, 'available')
-        resource = vol.VolumeAttachment('MountPoint',
-                                        t['Resources']['MountPoint'],
-                                        stack)
-        create = scheduler.TaskRunner(resource.create)
+        rsrc = vol.VolumeAttachment('MountPoint',
+                                    t['Resources']['MountPoint'],
+                                    stack)
+        create = scheduler.TaskRunner(rsrc.create)
         self.assertRaises(exception.ResourceFailure, create)
 
         self.m.VerifyAll()
@@ -246,11 +248,12 @@ class VolumeTest(HeatTestCase):
 
         scheduler.TaskRunner(stack['DataVolume'].create)()
         self.assertEqual(fv.status, 'available')
-        resource = self.create_attachment(t, stack, 'MountPoint')
+        rsrc = self.create_attachment(t, stack, 'MountPoint')
 
-        self.assertEqual(resource.handle_update({}), vol.Volume.UPDATE_REPLACE)
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
 
-        self.assertEqual(resource.delete(), None)
+        self.assertEqual(rsrc.delete(), None)
 
         self.m.VerifyAll()
 
@@ -279,9 +282,9 @@ class VolumeTest(HeatTestCase):
         t['Resources']['DataVolume']['DeletionPolicy'] = 'Snapshot'
         stack = parse_stack(t, stack_name=stack_name)
 
-        resource = self.create_volume(t, stack, 'DataVolume')
+        rsrc = self.create_volume(t, stack, 'DataVolume')
 
-        self.assertEqual(resource.destroy(), None)
+        self.assertEqual(rsrc.destroy(), None)
 
         self.m.VerifyAll()
 
@@ -309,9 +312,9 @@ class VolumeTest(HeatTestCase):
         t['Resources']['DataVolume']['DeletionPolicy'] = 'Snapshot'
         stack = parse_stack(t, stack_name=stack_name)
 
-        resource = self.create_volume(t, stack, 'DataVolume')
+        rsrc = self.create_volume(t, stack, 'DataVolume')
 
-        self.assertRaises(exception.ResourceFailure, resource.destroy)
+        self.assertRaises(exception.ResourceFailure, rsrc.destroy)
 
         self.m.VerifyAll()
 
@@ -337,14 +340,14 @@ class VolumeTest(HeatTestCase):
         t['Resources']['DataVolume']['DeletionPolicy'] = 'Snapshot'
         t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = parse_stack(t, stack_name=stack_name)
-        resource = vol.Volume('DataVolume',
-                              t['Resources']['DataVolume'],
-                              stack)
+        rsrc = vol.Volume('DataVolume',
+                          t['Resources']['DataVolume'],
+                          stack)
 
-        create = scheduler.TaskRunner(resource.create)
+        create = scheduler.TaskRunner(rsrc.create)
         self.assertRaises(exception.ResourceFailure, create)
 
-        self.assertEqual(resource.destroy(), None)
+        self.assertEqual(rsrc.destroy(), None)
 
         self.m.VerifyAll()
 
@@ -411,12 +414,12 @@ class VolumeTest(HeatTestCase):
         }
         stack = parse_stack(t, stack_name=stack_name)
 
-        resource = vol.CinderVolume('DataVolume',
-                                    t['Resources']['DataVolume'],
-                                    stack)
-        self.assertEqual(resource.validate(), None)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(resource.state, vol.Volume.CREATE_COMPLETE)
+        rsrc = vol.CinderVolume('DataVolume',
+                                t['Resources']['DataVolume'],
+                                stack)
+        self.assertEqual(rsrc.validate(), None)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(rsrc.state, vol.Volume.CREATE_COMPLETE)
         self.assertEqual(fv.status, 'available')
 
         self.m.VerifyAll()
@@ -441,12 +444,12 @@ class VolumeTest(HeatTestCase):
         }
         stack = parse_stack(t, stack_name=stack_name)
 
-        resource = vol.CinderVolume('DataVolume',
-                                    t['Resources']['DataVolume'],
-                                    stack)
-        self.assertEqual(resource.validate(), None)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(resource.state, vol.Volume.CREATE_COMPLETE)
+        rsrc = vol.CinderVolume('DataVolume',
+                                t['Resources']['DataVolume'],
+                                stack)
+        self.assertEqual(rsrc.validate(), None)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(rsrc.state, vol.Volume.CREATE_COMPLETE)
         self.assertEqual(fv.status, 'available')
 
         self.m.VerifyAll()
@@ -478,26 +481,26 @@ class VolumeTest(HeatTestCase):
         }
         stack = parse_stack(t, stack_name=stack_name)
 
-        resource = vol.CinderVolume('DataVolume',
-                                    t['Resources']['DataVolume'],
-                                    stack)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(u'vol-123', resource.FnGetAtt('id'))
-        self.assertEqual(u'zone1', resource.FnGetAtt('availability_zone'))
-        self.assertEqual(u'1', resource.FnGetAtt('size'))
-        self.assertEqual(u'snap-123', resource.FnGetAtt('snapshot_id'))
-        self.assertEqual(u'name', resource.FnGetAtt('display_name'))
-        self.assertEqual(u'desc', resource.FnGetAtt('display_description'))
-        self.assertEqual(u'lvm', resource.FnGetAtt('volume_type'))
+        rsrc = vol.CinderVolume('DataVolume',
+                                t['Resources']['DataVolume'],
+                                stack)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(u'vol-123', rsrc.FnGetAtt('id'))
+        self.assertEqual(u'zone1', rsrc.FnGetAtt('availability_zone'))
+        self.assertEqual(u'1', rsrc.FnGetAtt('size'))
+        self.assertEqual(u'snap-123', rsrc.FnGetAtt('snapshot_id'))
+        self.assertEqual(u'name', rsrc.FnGetAtt('display_name'))
+        self.assertEqual(u'desc', rsrc.FnGetAtt('display_description'))
+        self.assertEqual(u'lvm', rsrc.FnGetAtt('volume_type'))
         self.assertEqual(json.dumps({'key': 'value'}),
-                         resource.FnGetAtt('metadata'))
-        self.assertEqual(u'None', resource.FnGetAtt('source_volid'))
-        self.assertEqual(u'available', resource.FnGetAtt('status'))
+                         rsrc.FnGetAtt('metadata'))
+        self.assertEqual(u'None', rsrc.FnGetAtt('source_volid'))
+        self.assertEqual(u'available', rsrc.FnGetAtt('status'))
         self.assertEqual(u'2013-02-25T02:40:21.000000',
-                         resource.FnGetAtt('created_at'))
-        self.assertEqual(u'False', resource.FnGetAtt('bootable'))
+                         rsrc.FnGetAtt('created_at'))
+        self.assertEqual(u'False', rsrc.FnGetAtt('bootable'))
         error = self.assertRaises(exception.InvalidTemplateAttribute,
-                                  resource.FnGetAtt, 'unknown')
+                                  rsrc.FnGetAtt, 'unknown')
         self.assertEqual(
             'The Referenced Attribute (DataVolume unknown) is incorrect.',
             str(error))
@@ -546,16 +549,16 @@ class VolumeTest(HeatTestCase):
 
         scheduler.TaskRunner(stack['DataVolume'].create)()
         self.assertEqual(fv.status, 'available')
-        resource = vol.CinderVolumeAttachment('MountPoint',
-                                              t['Resources']['MountPoint'],
-                                              stack)
-        self.assertEqual(resource.validate(), None)
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(resource.state, vol.VolumeAttachment.CREATE_COMPLETE)
+        rsrc = vol.CinderVolumeAttachment('MountPoint',
+                                          t['Resources']['MountPoint'],
+                                          stack)
+        self.assertEqual(rsrc.validate(), None)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(rsrc.state, vol.VolumeAttachment.CREATE_COMPLETE)
 
-        self.assertEqual(resource.handle_update({}), vol.Volume.UPDATE_REPLACE)
+        self.assertRaises(resource.UpdateReplace, rsrc.handle_update, {})
 
-        self.assertEqual(resource.delete(), None)
+        self.assertEqual(rsrc.delete(), None)
 
         self.m.VerifyAll()
 

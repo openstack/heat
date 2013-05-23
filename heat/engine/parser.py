@@ -376,7 +376,7 @@ class Stack(object):
                 # If this  test fails, we call the underlying resource.update
                 #
                 # Currently many resources have a default handle_update method
-                # which returns "requires replacement" (res.UPDATE_REPLACE)
+                # which raises exception.ResourceReplace
                 # optionally they may implement non-interruptive logic and
                 # return UPDATE_COMPLETE. If resources do not implement the
                 # handle_update method at all, update will fail.
@@ -389,15 +389,11 @@ class Stack(object):
 
                     if old_snippet != new_snippet:
                         # res.update raises exception.ResourceFailure on error
-                        retval = self[res.name].update(new_snippet)
-
-                        if retval == self[res.name].UPDATE_COMPLETE:
-                            logger.info("Resource %s for stack %s updated" %
-                                        (res.name, self.name))
-                        elif retval == self[res.name].UPDATE_REPLACE:
-                            logger.info("Resource %s for stack %s" %
-                                        (res.name, self.name) +
-                                        " update requires replacement")
+                        # or exception.ResourceReplace if update requires
+                        # replacement
+                        try:
+                            self[res.name].update(new_snippet)
+                        except resource.UpdateReplace:
                             # Resource requires replacement for update
                             self[res.name].destroy()
                             res.stack = self
@@ -406,8 +402,8 @@ class Stack(object):
                                 self.resources.itervalues())
                             scheduler.TaskRunner(res.create)()
                         else:
-                            raise exception.ResourceFailure(ValueError(
-                                "Unexpected update retval %s" % retval))
+                            logger.info("Resource %s for stack %s updated" %
+                                        (res.name, self.name))
 
                 if action == self.UPDATE:
                     stack_status = self.UPDATE_COMPLETE

@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import instance
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
@@ -75,13 +76,13 @@ class InstanceGroupTest(HeatTestCase):
             cookie).MultipleTimes().AndReturn(True)
 
     def create_instance_group(self, t, stack, resource_name):
-        resource = asc.InstanceGroup(resource_name,
-                                     t['Resources'][resource_name],
-                                     stack)
-        self.assertEqual(None, resource.validate())
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual(asc.InstanceGroup.CREATE_COMPLETE, resource.state)
-        return resource
+        rsrc = asc.InstanceGroup(resource_name,
+                                 t['Resources'][resource_name],
+                                 stack)
+        self.assertEqual(None, rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(asc.InstanceGroup.CREATE_COMPLETE, rsrc.state)
+        return rsrc
 
     def test_instance_group(self):
 
@@ -94,15 +95,15 @@ class InstanceGroupTest(HeatTestCase):
         instance.Instance.FnGetAtt('PublicIp').AndReturn('1.2.3.4')
 
         self.m.ReplayAll()
-        resource = self.create_instance_group(t, stack, 'JobServerGroup')
+        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
 
-        self.assertEqual('JobServerGroup', resource.FnGetRefId())
-        self.assertEqual('1.2.3.4', resource.FnGetAtt('InstanceList'))
-        self.assertEqual('JobServerGroup-0', resource.resource_id)
-        self.assertEqual(asc.InstanceGroup.UPDATE_REPLACE,
-                         resource.handle_update({}))
+        self.assertEqual('JobServerGroup', rsrc.FnGetRefId())
+        self.assertEqual('1.2.3.4', rsrc.FnGetAtt('InstanceList'))
+        self.assertEqual('JobServerGroup-0', rsrc.resource_id)
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.handle_update, {})
 
-        resource.delete()
+        rsrc.delete()
         self.m.VerifyAll()
 
     def test_missing_image(self):
@@ -110,9 +111,9 @@ class InstanceGroupTest(HeatTestCase):
         t = template_format.parse(ig_template)
         stack = parse_stack(t)
 
-        resource = asc.InstanceGroup('JobServerGroup',
-                                     t['Resources']['JobServerGroup'],
-                                     stack)
+        rsrc = asc.InstanceGroup('JobServerGroup',
+                                 t['Resources']['JobServerGroup'],
+                                 stack)
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         not_found = exception.ImageNotFound(image_name='bla')
@@ -120,9 +121,9 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        create = scheduler.TaskRunner(resource.create)
+        create = scheduler.TaskRunner(rsrc.create)
         self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual(asc.InstanceGroup.CREATE_FAILED, resource.state)
+        self.assertEqual(asc.InstanceGroup.CREATE_FAILED, rsrc.state)
 
         self.m.VerifyAll()
 
@@ -134,9 +135,9 @@ class InstanceGroupTest(HeatTestCase):
 
         self._stub_create(2)
         self.m.ReplayAll()
-        resource = self.create_instance_group(t, stack, 'JobServerGroup')
+        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
         self.assertEqual('JobServerGroup-0,JobServerGroup-1',
-                         resource.resource_id)
+                         rsrc.resource_id)
 
         self.m.VerifyAll()
         self.m.UnsetStubs()
@@ -152,15 +153,14 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        update_snippet = copy.deepcopy(resource.parsed_template())
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
         update_snippet['Properties']['Size'] = '5'
-        self.assertEqual(asc.AutoScalingGroup.UPDATE_COMPLETE,
-                         resource.handle_update(update_snippet))
+        self.assertEqual(None, rsrc.handle_update(update_snippet))
         assert_str = ','.join(['JobServerGroup-%s' % x for x in range(5)])
         self.assertEqual(assert_str,
-                         resource.resource_id)
+                         rsrc.resource_id)
         self.assertEqual('10.0.0.2,10.0.0.3,10.0.0.4,10.0.0.5,10.0.0.6',
-                         resource.FnGetAtt('InstanceList'))
+                         rsrc.FnGetAtt('InstanceList'))
 
-        resource.delete()
+        rsrc.delete()
         self.m.VerifyAll()

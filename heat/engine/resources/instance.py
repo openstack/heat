@@ -386,20 +386,13 @@ class Instance(resource.Resource):
             scheduler.TaskRunner(detach_task)()
 
     def handle_update(self, json_snippet):
-        status = self.UPDATE_REPLACE
-        try:
-            tmpl_diff = self.update_template_diff(json_snippet)
-        except NotImplementedError:
-            return self.UPDATE_REPLACE
+        tmpl_diff = self.update_template_diff(json_snippet)
 
         for k in tmpl_diff:
             if k == 'Metadata':
                 self.metadata = json_snippet.get('Metadata', {})
-                status = self.UPDATE_COMPLETE
             else:
-                return self.UPDATE_REPLACE
-
-        return status
+                raise resource.UpdateReplace(resource_name=self.name)
 
     def metadata_update(self, new_metadata=None):
         '''

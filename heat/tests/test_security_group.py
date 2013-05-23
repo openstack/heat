@@ -18,6 +18,7 @@ from heat.engine import clients
 from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import resource
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 from heat.tests.v1_1 import fakes
@@ -122,11 +123,11 @@ Resources:
         stack.store()
         return stack
 
-    def assertResourceState(self, resource, ref_id, metadata={}):
-        self.assertEqual(None, resource.validate())
-        self.assertEqual(resource.CREATE_COMPLETE, resource.state)
-        self.assertEqual(ref_id, resource.FnGetRefId())
-        self.assertEqual(metadata, dict(resource.metadata))
+    def assertResourceState(self, rsrc, ref_id, metadata={}):
+        self.assertEqual(None, rsrc.validate())
+        self.assertEqual(rsrc.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual(ref_id, rsrc.FnGetRefId())
+        self.assertEqual(metadata, dict(rsrc.metadata))
 
     @stack_delete_after
     def test_security_group_nova(self):
@@ -192,7 +193,7 @@ Resources:
         stack = self.create_stack(self.test_template_nova)
 
         sg = stack['the_sg']
-        self.assertEqual(sg.UPDATE_REPLACE, sg.handle_update({}))
+        self.assertRaises(resource.UpdateReplace, sg.handle_update, {})
 
         self.assertResourceState(sg, 'the_sg')
 
@@ -265,7 +266,7 @@ Resources:
         stack = self.create_stack(self.test_template_nova)
 
         sg = stack['the_sg']
-        self.assertEqual(sg.UPDATE_REPLACE, sg.handle_update({}))
+        self.assertRaises(resource.UpdateReplace, sg.handle_update, {})
 
         self.assertResourceState(sg, 'the_sg')
 
@@ -409,7 +410,7 @@ Resources:
         stack = self.create_stack(self.test_template_quantum)
 
         sg = stack['the_sg']
-        self.assertEqual(sg.UPDATE_REPLACE, sg.handle_update({}))
+        self.assertRaises(resource.UpdateReplace, sg.handle_update, {})
 
         self.assertResourceState(sg, 'the_sg')
 
@@ -525,7 +526,7 @@ Resources:
         stack = self.create_stack(self.test_template_quantum)
 
         sg = stack['the_sg']
-        self.assertEqual(sg.UPDATE_REPLACE, sg.handle_update({}))
+        self.assertRaises(resource.UpdateReplace, sg.handle_update, {})
 
         self.assertResourceState(sg, 'the_sg')
 

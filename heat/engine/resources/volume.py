@@ -80,9 +80,6 @@ class Volume(resource.Resource):
         else:
             raise exception.Error(vol.status)
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
     def _backup(self):
         backup = self.cinder().backups.create(self.resource_id)
         while backup.status == 'creating':
@@ -258,9 +255,6 @@ class VolumeAttachment(resource.Resource):
 
     def check_create_complete(self, attach_runner):
         return attach_runner.step()
-
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
 
     def handle_delete(self):
         server_id = self.properties[self._instance_property]

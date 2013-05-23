@@ -91,17 +91,8 @@ class InstanceGroup(resource.Resource):
             creator.run_to_completion()
 
     def handle_update(self, json_snippet):
-        try:
-            tmpl_diff = self.update_template_diff(json_snippet)
-        except NotImplementedError:
-            logger.error("Could not update %s, invalid key" % self.name)
-            return self.UPDATE_REPLACE
-
-        try:
-            prop_diff = self.update_template_diff_properties(json_snippet)
-        except NotImplementedError:
-            logger.error("Could not update %s, invalid Property" % self.name)
-            return self.UPDATE_REPLACE
+        tmpl_diff = self.update_template_diff(json_snippet)
+        prop_diff = self.update_template_diff_properties(json_snippet)
 
         # If Properties has changed, update self.properties, so we
         # get the new values during any subsequent adjustment
@@ -122,8 +113,6 @@ class InstanceGroup(resource.Resource):
                     creator = self.resize(int(self.properties['Size']),
                                           raise_on_error=True)
                     self._wait_for_activation(creator)
-
-        return self.UPDATE_COMPLETE
 
     def _make_instance(self, name):
 
@@ -292,17 +281,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         return self._adjust(num_to_create)
 
     def handle_update(self, json_snippet):
-        try:
-            tmpl_diff = self.update_template_diff(json_snippet)
-        except NotImplementedError:
-            logger.error("Could not update %s, invalid key" % self.name)
-            return self.UPDATE_REPLACE
-
-        try:
-            prop_diff = self.update_template_diff_properties(json_snippet)
-        except NotImplementedError:
-            logger.error("Could not update %s, invalid Property" % self.name)
-            return self.UPDATE_REPLACE
+        tmpl_diff = self.update_template_diff(json_snippet)
+        prop_diff = self.update_template_diff_properties(json_snippet)
 
         # If Properties has changed, update self.properties, so we
         # get the new values during any subsequent adjustment
@@ -335,8 +315,6 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             if new_capacity is not None:
                 creator = self._adjust(new_capacity)
                 self._wait_for_activation(creator)
-
-        return self.UPDATE_COMPLETE
 
     def adjust(self, adjustment, adjustment_type='ChangeInCapacity'):
         creator = self._adjust(adjustment, adjustment_type, False)
@@ -434,17 +412,8 @@ class ScalingPolicy(resource.Resource, CooldownMixin):
         super(ScalingPolicy, self).__init__(name, json_snippet, stack)
 
     def handle_update(self, json_snippet):
-        try:
-            tmpl_diff = self.update_template_diff(json_snippet)
-        except NotImplementedError:
-            logger.error("Could not update %s, invalid key" % self.name)
-            return self.UPDATE_REPLACE
-
-        try:
-            prop_diff = self.update_template_diff_properties(json_snippet)
-        except NotImplementedError:
-            logger.error("Could not update %s, invalid Property" % self.name)
-            return self.UPDATE_REPLACE
+        tmpl_diff = self.update_template_diff(json_snippet)
+        prop_diff = self.update_template_diff_properties(json_snippet)
 
         # If Properties has changed, update self.properties, so we
         # get the new values during any subsequent adjustment
@@ -453,8 +422,6 @@ class ScalingPolicy(resource.Resource, CooldownMixin):
                                          json_snippet.get('Properties', {}),
                                          self.stack.resolve_runtime_data,
                                          self.name)
-
-        return self.UPDATE_COMPLETE
 
     def alarm(self):
         if self._cooldown_inprogress():

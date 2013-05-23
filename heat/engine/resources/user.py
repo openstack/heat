@@ -84,9 +84,6 @@ class User(resource.Resource):
                                                 passwd)
         self.resource_id_set(uid)
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
     def handle_delete(self):
         if self.resource_id is None:
             logger.error("Cannot delete User resource before user created!")
@@ -154,9 +151,6 @@ class AccessKey(resource.Resource):
 
         self.resource_id_set(kp.access)
         self._secret = kp.secret
-
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
 
     def handle_delete(self):
         self._secret = None
@@ -240,9 +234,6 @@ class AccessPolicy(resource.Resource):
                              resource)
                 raise exception.ResourceNotFound(resource_name=resource,
                                                  stack_name=self.stack.name)
-
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
 
     def access_allowed(self, resource_name):
         return resource_name in self.properties['AllowedResources']

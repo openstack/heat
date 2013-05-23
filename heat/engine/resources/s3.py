@@ -85,9 +85,6 @@ class S3Bucket(resource.Resource):
         self.swift().put_container(container, headers)
         self.resource_id_set(container)
 
-    def handle_update(self, json_snippet):
-        return self.UPDATE_REPLACE
-
     def handle_delete(self):
         """Perform specified delete policy."""
         logger.debug('S3Bucket delete container %s' % self.resource_id)
