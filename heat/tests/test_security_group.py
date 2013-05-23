@@ -193,7 +193,7 @@ Resources:
         stack = self.create_stack(self.test_template_nova)
 
         sg = stack['the_sg']
-        self.assertRaises(resource.UpdateReplace, sg.handle_update, {})
+        self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
         self.assertResourceState(sg, 'the_sg')
 
@@ -266,7 +266,7 @@ Resources:
         stack = self.create_stack(self.test_template_nova)
 
         sg = stack['the_sg']
-        self.assertRaises(resource.UpdateReplace, sg.handle_update, {})
+        self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
         self.assertResourceState(sg, 'the_sg')
 
@@ -410,7 +410,7 @@ Resources:
         stack = self.create_stack(self.test_template_quantum)
 
         sg = stack['the_sg']
-        self.assertRaises(resource.UpdateReplace, sg.handle_update, {})
+        self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
         self.assertResourceState(sg, 'the_sg')
 
@@ -526,7 +526,7 @@ Resources:
         stack = self.create_stack(self.test_template_quantum)
 
         sg = stack['the_sg']
-        self.assertRaises(resource.UpdateReplace, sg.handle_update, {})
+        self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
 
         self.assertResourceState(sg, 'the_sg')
 

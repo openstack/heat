@@ -91,7 +91,7 @@ class CloudWatchAlarmTest(HeatTestCase):
         snippet['Properties']['Statistic'] = 'Maximum'
         snippet['Properties']['Threshold'] = '39'
 
-        self.assertEqual(None, rsrc.handle_update(snippet))
+        self.assertEqual(None, rsrc.update(snippet))
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -118,7 +118,7 @@ class CloudWatchAlarmTest(HeatTestCase):
         snippet['Properties']['MetricName'] = 'temp'
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, snippet)
+                          rsrc.update, snippet)
 
         rsrc.delete()
         self.m.VerifyAll()

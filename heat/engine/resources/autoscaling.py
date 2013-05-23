@@ -90,10 +90,7 @@ class InstanceGroup(resource.Resource):
         if creator is not None:
             creator.run_to_completion()
 
-    def handle_update(self, json_snippet):
-        tmpl_diff = self.update_template_diff(json_snippet)
-        prop_diff = self.update_template_diff_properties(json_snippet)
-
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         # If Properties has changed, update self.properties, so we
         # get the new values during any subsequent adjustment
         if prop_diff:
@@ -280,10 +277,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
 
         return self._adjust(num_to_create)
 
-    def handle_update(self, json_snippet):
-        tmpl_diff = self.update_template_diff(json_snippet)
-        prop_diff = self.update_template_diff_properties(json_snippet)
-
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         # If Properties has changed, update self.properties, so we
         # get the new values during any subsequent adjustment
         if prop_diff:
@@ -411,10 +405,7 @@ class ScalingPolicy(resource.Resource, CooldownMixin):
     def __init__(self, name, json_snippet, stack):
         super(ScalingPolicy, self).__init__(name, json_snippet, stack)
 
-    def handle_update(self, json_snippet):
-        tmpl_diff = self.update_template_diff(json_snippet)
-        prop_diff = self.update_template_diff_properties(json_snippet)
-
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         # If Properties has changed, update self.properties, so we
         # get the new values during any subsequent adjustment
         if prop_diff:

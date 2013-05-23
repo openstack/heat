@@ -124,7 +124,7 @@ class UserTest(UserPolicyTestCase):
 
         self.assertEqual('CREATE_COMPLETE', rsrc.state)
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
         rsrc.resource_id = None
         self.assertEqual(None, rsrc.delete())
@@ -279,7 +279,7 @@ class AccessKeyTest(UserPolicyTestCase):
         rsrc = self.create_access_key(t, stack, 'HostKeys')
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
         self.assertEqual(self.fc.access,
                          rsrc.resource_id)
 
@@ -379,7 +379,7 @@ class AccessPolicyTest(UserPolicyTestCase):
                                  t['Resources'][resource_name],
                                  stack)
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
     def test_accesspolicy_access_allowed(self):
         t = template_format.parse(user_policy_template)

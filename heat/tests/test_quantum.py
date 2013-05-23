@@ -289,7 +289,7 @@ class QuantumNetTest(HeatTestCase):
                          rsrc.FnGetAtt('id'))
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
         rsrc.delete()
         rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
@@ -386,7 +386,7 @@ class QuantumSubnetTest(HeatTestCase):
                          rsrc.FnGetAtt('id'))
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
         self.assertEqual(rsrc.delete(), None)
         rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
@@ -514,7 +514,7 @@ class QuantumRouterTest(HeatTestCase):
                          rsrc.FnGetAtt('id'))
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
         self.assertEqual(rsrc.delete(), None)
         rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
@@ -639,7 +639,7 @@ class QuantumFloatingIPTest(HeatTestCase):
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          fip.FnGetAtt('id'))
         self.assertRaises(resource.UpdateReplace,
-                          fip.handle_update, {})
+                          fip.handle_update, {}, {}, {})
         self.assertEqual(fip.delete(), None)
         fip.state_set(fip.CREATE_COMPLETE, 'to delete again')
         self.assertEqual(fip.delete(), None)
@@ -707,7 +707,7 @@ class QuantumFloatingIPTest(HeatTestCase):
                          p.FnGetAtt('id'))
 
         self.assertRaises(resource.UpdateReplace,
-                          p.handle_update, {})
+                          p.handle_update, {}, {}, {})
 
         self.m.VerifyAll()
 
@@ -800,7 +800,7 @@ class QuantumFloatingIPTest(HeatTestCase):
         port_id = p.FnGetRefId()
         self.assertEqual('%s:%s' % (fip_id, port_id), fipa_id)
         self.assertRaises(resource.UpdateReplace,
-                          fipa.handle_update, {})
+                          fipa.handle_update, {}, {}, {})
 
         self.assertEqual(fipa.delete(), None)
         self.assertEqual(p.delete(), None)

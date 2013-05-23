@@ -100,8 +100,6 @@ class InstanceGroupTest(HeatTestCase):
         self.assertEqual('JobServerGroup', rsrc.FnGetRefId())
         self.assertEqual('1.2.3.4', rsrc.FnGetAtt('InstanceList'))
         self.assertEqual('JobServerGroup-0', rsrc.resource_id)
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -127,7 +125,7 @@ class InstanceGroupTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_update_size(self):
+    def test_handle_update_size(self):
         t = template_format.parse(ig_template)
         properties = t['Resources']['JobServerGroup']['Properties']
         properties['Size'] = '2'
@@ -155,12 +153,59 @@ class InstanceGroupTest(HeatTestCase):
 
         update_snippet = copy.deepcopy(rsrc.parsed_template())
         update_snippet['Properties']['Size'] = '5'
-        self.assertEqual(None, rsrc.handle_update(update_snippet))
+        tmpl_diff = {'Properties': {'Size': '5'}}
+        prop_diff = {'Size': '5'}
+        self.assertEqual(None, rsrc.handle_update(update_snippet, tmpl_diff,
+                         prop_diff))
         assert_str = ','.join(['JobServerGroup-%s' % x for x in range(5)])
         self.assertEqual(assert_str,
                          rsrc.resource_id)
         self.assertEqual('10.0.0.2,10.0.0.3,10.0.0.4,10.0.0.5,10.0.0.6',
                          rsrc.FnGetAtt('InstanceList'))
+
+        rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_update_fail_badkey(self):
+        t = template_format.parse(ig_template)
+        properties = t['Resources']['JobServerGroup']['Properties']
+        properties['Size'] = '2'
+        stack = parse_stack(t)
+
+        self._stub_create(2)
+        self.m.ReplayAll()
+        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
+        self.assertEqual('JobServerGroup-0,JobServerGroup-1',
+                         rsrc.resource_id)
+
+        self.m.ReplayAll()
+
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        update_snippet['Metadata'] = 'notallowedforupdate'
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.update, update_snippet)
+
+        rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_update_fail_badprop(self):
+        t = template_format.parse(ig_template)
+        properties = t['Resources']['JobServerGroup']['Properties']
+        properties['Size'] = '2'
+        stack = parse_stack(t)
+
+        self._stub_create(2)
+        self.m.ReplayAll()
+        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
+        self.assertEqual('JobServerGroup-0,JobServerGroup-1',
+                         rsrc.resource_id)
+
+        self.m.ReplayAll()
+
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        update_snippet['Properties']['LaunchConfigurationName'] = 'wibble'
+        self.assertRaises(resource.UpdateReplace,
+                          rsrc.update, update_snippet)
 
         rsrc.delete()
         self.m.VerifyAll()

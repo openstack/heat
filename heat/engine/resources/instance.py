@@ -385,9 +385,7 @@ class Instance(resource.Resource):
                                                   vol['VolumeId'])
             scheduler.TaskRunner(detach_task)()
 
-    def handle_update(self, json_snippet):
-        tmpl_diff = self.update_template_diff(json_snippet)
-
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             self.metadata = tmpl_diff.get('Metadata', {})
 

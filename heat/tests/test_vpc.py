@@ -229,7 +229,7 @@ Resources:
             'router_id': 'bbbb',
             'all_router_ids': ['bbbb']})
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
         self.assertEqual(None, rsrc.delete())
         self.m.VerifyAll()
@@ -274,7 +274,7 @@ Resources:
             'default_router_id': 'bbbb'})
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
         self.assertRaises(
             exception.InvalidTemplateAttribute,
             rsrc.FnGetAtt,
@@ -446,7 +446,7 @@ Resources:
             self.assertResourceState(rsrc, 'dddd')
 
             self.assertRaises(resource.UpdateReplace,
-                              rsrc.handle_update, {})
+                              rsrc.handle_update, {}, {}, {})
 
         finally:
             stack.delete()
@@ -564,12 +564,13 @@ Resources:
         gateway = stack['the_gateway']
         self.assertResourceState(gateway, 'the_gateway', {
             'external_network_id': 'eeee'})
-        self.assertRaises(resource.UpdateReplace, gateway.handle_update, {})
+        self.assertRaises(resource.UpdateReplace, gateway.handle_update,
+                          {}, {}, {})
 
         attachment = stack['the_attachment']
         self.assertResourceState(attachment, 'the_attachment')
         self.assertRaises(resource.UpdateReplace,
-                          attachment.handle_update, {})
+                          attachment.handle_update, {}, {}, {})
 
         stack.delete()
         self.m.VerifyAll()
@@ -653,13 +654,13 @@ Resources:
         self.assertResourceState(route_table, 'ffff', {})
         self.assertRaises(
             resource.UpdateReplace,
-            route_table.handle_update, {})
+            route_table.handle_update, {}, {}, {})
 
         association = stack['the_association']
         self.assertResourceState(association, 'the_association', {})
         self.assertRaises(
             resource.UpdateReplace,
-            association.handle_update, {})
+            association.handle_update, {}, {}, {})
 
         association.delete()
         route_table.delete()

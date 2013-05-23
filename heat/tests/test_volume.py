@@ -133,7 +133,7 @@ class VolumeTest(HeatTestCase):
         self.assertEqual(fv.status, 'available')
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
         fv.status = 'in-use'
         self.assertRaises(exception.ResourceFailure, rsrc.destroy)
@@ -251,7 +251,7 @@ class VolumeTest(HeatTestCase):
         rsrc = self.create_attachment(t, stack, 'MountPoint')
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
         self.assertEqual(rsrc.delete(), None)
 
@@ -556,7 +556,8 @@ class VolumeTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(rsrc.state, vol.VolumeAttachment.CREATE_COMPLETE)
 
-        self.assertRaises(resource.UpdateReplace, rsrc.handle_update, {})
+        self.assertRaises(resource.UpdateReplace, rsrc.handle_update,
+                          {}, {}, {})
 
         self.assertEqual(rsrc.delete(), None)
 

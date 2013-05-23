@@ -243,7 +243,7 @@ class WaitConditionTest(HeatTestCase):
         self.assertTrue(reason.startswith('WaitConditionTimeout:'))
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
         self.m.VerifyAll()
 
     @stack_delete_after
@@ -450,7 +450,7 @@ class WaitConditionHandleTest(HeatTestCase):
         self.assertEqual(expected_url, rsrc.FnGetRefId())
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
         self.m.VerifyAll()
 
     @stack_delete_after

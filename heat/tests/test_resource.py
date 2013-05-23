@@ -262,12 +262,17 @@ class ResourceTest(HeatTestCase):
 
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ('Properties',)
+        res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual(res.CREATE_COMPLETE, res.state)
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        tmpl_diff = {'Properties': {'Foo': 'xyz'}}
+        prop_diff = {'Foo': 'xyz'}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(utmpl).AndReturn(None)
+        generic_rsrc.GenericResource.handle_update(
+            utmpl, tmpl_diff, prop_diff).AndReturn(None)
         self.m.ReplayAll()
 
         self.assertEqual(None, res.update(utmpl))
@@ -281,13 +286,17 @@ class ResourceTest(HeatTestCase):
 
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ('Properties',)
+        res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual(res.CREATE_COMPLETE, res.state)
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(utmpl).AndRaise(
-            resource.UpdateReplace())
+        tmpl_diff = {'Properties': {'Foo': 'xyz'}}
+        prop_diff = {'Foo': 'xyz'}
+        generic_rsrc.GenericResource.handle_update(
+            utmpl, tmpl_diff, prop_diff).AndRaise(resource.UpdateReplace())
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
         self.assertRaises(resource.UpdateReplace, res.update, utmpl)
@@ -300,6 +309,8 @@ class ResourceTest(HeatTestCase):
 
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ('Properties',)
+        res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual(res.CREATE_COMPLETE, res.state)
 
@@ -315,6 +326,8 @@ class ResourceTest(HeatTestCase):
 
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ('Properties',)
+        res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual(res.CREATE_COMPLETE, res.state)
 
@@ -330,13 +343,17 @@ class ResourceTest(HeatTestCase):
 
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.update_allowed_keys = ('Properties',)
+        res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
         self.assertEqual(res.CREATE_COMPLETE, res.state)
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
+        tmpl_diff = {'Properties': {'Foo': 'xyz'}}
+        prop_diff = {'Foo': 'xyz'}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(utmpl).AndRaise(
-            NotImplemented)
+        generic_rsrc.GenericResource.handle_update(utmpl, tmpl_diff, prop_diff
+                                                   ).AndRaise(NotImplemented)
         self.m.ReplayAll()
         self.assertRaises(exception.ResourceFailure, res.update, utmpl)
         self.assertEqual(res.UPDATE_FAILED, res.state)

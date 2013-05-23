@@ -90,10 +90,7 @@ class CloudWatchAlarm(resource.Resource):
                                  stack_id=self.stack.id)
         wr.store()
 
-    def handle_update(self, json_snippet):
-        self.update_template_diff(json_snippet)
-        prop_diff = self.update_template_diff_properties(json_snippet)
-
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         # If Properties has changed, update self.properties, so we
         # get the new values during any subsequent adjustment
         if prop_diff:

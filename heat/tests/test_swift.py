@@ -155,7 +155,7 @@ class swiftTest(HeatTestCase):
             pass
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
         rsrc.delete()
         self.m.VerifyAll()

@@ -78,7 +78,7 @@ Outputs:
             'arn:openstack:heat::aaaa:stacks/test_stack.the_nested/'))
 
         self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {})
+                          rsrc.handle_update, {}, {}, {})
 
         self.assertEqual('bar', rsrc.FnGetAtt('Outputs.Foo'))
         self.assertRaises(

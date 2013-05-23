@@ -28,5 +28,5 @@ class GenericResource(resource.Resource):
     def handle_create(self):
         logger.warning('Creating generic resource (Type "%s")' % self.type())
 
-    def handle_update(self, json_snippet=None):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         logger.warning('Updating generic resource (Type "%s")' % self.type())

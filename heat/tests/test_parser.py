@@ -560,11 +560,10 @@ class StackTest(HeatTestCase):
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
-        # patch in a dummy handle_update
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
+
+        # Calls to GenericResource.handle_update will raise
+        # resource.UpdateReplace because we've not specified the modified
+        # key/property in update_allowed_keys/update_allowed_properties
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -588,6 +587,10 @@ class StackTest(HeatTestCase):
         self.stack.create()
         self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
 
+        res = self.stack['AResource']
+        res.update_allowed_keys = ('Properties',)
+        res.update_allowed_properties = ('Foo',)
+
         tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                              'Properties': {'Foo': 'xyz'}}}}
 
@@ -596,8 +599,11 @@ class StackTest(HeatTestCase):
 
         # patch in a dummy handle_update
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        tmpl_diff = {'Properties': {'Foo': 'xyz'}}
+        prop_diff = {'Foo': 'xyz'}
         generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndRaise(Exception("Foo"))
+            tmpl2['Resources']['AResource'], tmpl_diff,
+            prop_diff).AndRaise(Exception("Foo"))
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -626,11 +632,9 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
 
-        # patch in a dummy handle_update
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
+        # Calls to GenericResource.handle_update will raise
+        # resource.UpdateReplace because we've not specified the modified
+        # key/property in update_allowed_keys/update_allowed_properties
 
         # make the update fail deleting the existing resource
         self.m.StubOutWithMock(resource.Resource, 'destroy')
@@ -666,11 +670,9 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
 
-        # patch in a dummy handle_update
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
+        # Calls to GenericResource.handle_update will raise
+        # resource.UpdateReplace because we've not specified the modified
+        # key/property in update_allowed_keys/update_allowed_properties
 
         # patch in a dummy handle_create making the replace fail creating
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
@@ -734,15 +736,9 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
 
-        # There will be two calls to handle_update, one for the new template
-        # then another (with the initial template) for rollback
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
-        generic_rsrc.GenericResource.handle_update(
-            tmpl['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
+        # Calls to GenericResource.handle_update will raise
+        # resource.UpdateReplace because we've not specified the modified
+        # key/property in update_allowed_keys/update_allowed_properties
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc, but succeed the second call (rollback)
@@ -778,15 +774,9 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
 
-        # There will be two calls to handle_update, one for the new template
-        # then another (with the initial template) for rollback
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
-        generic_rsrc.GenericResource.handle_update(
-            tmpl['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
+        # Calls to GenericResource.handle_update will raise
+        # resource.UpdateReplace because we've not specified the modified
+        # key/property in update_allowed_keys/update_allowed_properties
 
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc, and again on the second call (rollback)
@@ -891,15 +881,9 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack['BResource'].properties['Foo'],
                          'AResource')
 
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
-
-        br2_snip = {'Type': 'GenericResourceType',
-                    'Properties': {'Foo': 'inst-007'}}
-        generic_rsrc.GenericResource.handle_update(
-            br2_snip).AndRaise(resource.UpdateReplace)
+        # Calls to GenericResource.handle_update will raise
+        # resource.UpdateReplace because we've not specified the modified
+        # key/property in update_allowed_keys/update_allowed_properties
 
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'FnGetRefId')
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
@@ -949,24 +933,18 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack['BResource'].properties['Foo'],
                          'AResource')
 
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'FnGetRefId')
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
 
-        # mocks for first (failed update)
-        generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
+        # Calls to GenericResource.handle_update will raise
+        # resource.UpdateReplace because we've not specified the modified
+        # key/property in update_allowed_keys/update_allowed_properties
+
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'AResource')
 
         # mock to make the replace fail when creating the replacement resource
         generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
-
-        # mocks for second rollback update
-        generic_rsrc.GenericResource.handle_update(
-            tmpl['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
 
         generic_rsrc.GenericResource.handle_create().AndReturn(None)
         generic_rsrc.GenericResource.FnGetRefId().MultipleTimes().AndReturn(
@@ -1016,18 +994,12 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack['BResource'].properties['Foo'],
                          'AResource')
 
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'FnGetRefId')
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
 
-        # mocks for first and second (failed update)
-        generic_rsrc.GenericResource.handle_update(
-            tmpl2['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
-        br2_snip = {'Type': 'GenericResourceType',
-                    'Properties': {'Foo': 'inst-007'}}
-        generic_rsrc.GenericResource.handle_update(
-            br2_snip).AndRaise(resource.UpdateReplace)
+        # Calls to GenericResource.handle_update will raise
+        # resource.UpdateReplace because we've not specified the modified
+        # key/property in update_allowed_keys/update_allowed_properties
 
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'AResource')
@@ -1054,14 +1026,9 @@ class StackTest(HeatTestCase):
         generic_rsrc.GenericResource.handle_create().AndReturn(None)
         generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
 
-        # mocks for second rollback update
-        generic_rsrc.GenericResource.handle_update(
-            tmpl['Resources']['AResource']).AndRaise(
-                resource.UpdateReplace)
-        br2_snip = {'Type': 'GenericResourceType',
-                    'Properties': {'Foo': 'AResource'}}
-        generic_rsrc.GenericResource.handle_update(
-            br2_snip).AndRaise(resource.UpdateReplace)
+        # Calls to GenericResource.handle_update will raise
+        # resource.UpdateReplace because we've not specified the modified
+        # key/property in update_allowed_keys/update_allowed_properties
 
         # self.state_set(self.DELETE_IN_PROGRESS)
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(

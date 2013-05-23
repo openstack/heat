@@ -386,8 +386,10 @@ class Resource(object):
                                     self.stack.resolve_runtime_data,
                                     self.name)
             properties.validate()
+            tmpl_diff = self.update_template_diff(json_snippet)
+            prop_diff = self.update_template_diff_properties(json_snippet)
             if callable(getattr(self, 'handle_update', None)):
-                result = self.handle_update(json_snippet)
+                result = self.handle_update(json_snippet, tmpl_diff, prop_diff)
         except UpdateReplace:
             logger.debug("Resource %s update requires replacement" % self.name)
             raise
@@ -575,7 +577,7 @@ class Resource(object):
         '''
         return base64.b64encode(data)
 
-    def handle_update(self, json_snippet=None):
+    def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
         raise UpdateReplace(self.name)
 
     def metadata_update(self, new_metadata=None):
