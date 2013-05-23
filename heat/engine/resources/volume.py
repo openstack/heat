@@ -246,9 +246,18 @@ class VolumeAttachment(resource.Resource):
         server_id = self.properties[self._instance_property]
         volume_id = self.properties[self._volume_property]
         dev = self.properties[self._device_property]
+
         attach_task = VolumeAttachTask(self.stack, server_id, volume_id, dev)
-        scheduler.TaskRunner(attach_task)()
+        attach_runner = scheduler.TaskRunner(attach_task)
+
+        attach_runner.start()
+
         self.resource_id_set(attach_task.attachment_id)
+
+        return attach_runner
+
+    def check_create_complete(self, attach_runner):
+        return attach_runner.step()
 
     def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE
