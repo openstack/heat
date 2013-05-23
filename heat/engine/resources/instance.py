@@ -380,8 +380,10 @@ class Instance(resource.Resource):
     def detach_volumes(self):
         server_id = self.resource_id
         for vol in self.properties['Volumes']:
-            self.stack.clients.detach_volume_from_instance(server_id,
-                                                           vol['VolumeId'])
+            detach_task = volume.VolumeDetachTask(self.stack,
+                                                  self.resource_id,
+                                                  vol['VolumeId'])
+            scheduler.TaskRunner(detach_task)()
 
     def handle_update(self, json_snippet):
         status = self.UPDATE_REPLACE
