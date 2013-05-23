@@ -118,6 +118,56 @@ class Volume(resource.Resource):
         return self._delete()
 
 
+class VolumeAttachTask(object):
+    """A task for attaching a volume to a Nova server."""
+
+    def __init__(self, stack, server_id, volume_id, device):
+        """
+        Initialise with the stack (for obtaining the clients), ID of the
+        server and volume, and the device name on the server.
+        """
+        self.clients = stack.clients
+        self.server_id = server_id
+        self.volume_id = volume_id
+        self.device = device
+        self.attachment_id = None
+
+    def __str__(self):
+        """Return a human-readable string description of the task."""
+        return 'Attaching Volume %s to Instance %s as %s' % (self.volume_id,
+                                                             self.server_id,
+                                                             self.device)
+
+    def __repr__(self):
+        """Return a brief string description of the task."""
+        return '%s(%s -> %s [%s])' % (type(self).__name__,
+                                      self.volume_id,
+                                      self.server_id,
+                                      self.device)
+
+    def __call__(self):
+        """Return a co-routine which runs the task."""
+        logger.debug(str(self))
+
+        va = self.clients.nova().volumes.create_server_volume(
+            server_id=self.server_id,
+            volume_id=self.volume_id,
+            device=self.device)
+        self.attachment_id = va.id
+        yield
+
+        vol = self.clients.cinder().volumes.get(self.volume_id)
+        while vol.status == 'available' or vol.status == 'attaching':
+            logger.debug('%s - volume status: %s' % (str(self), vol.status))
+            yield
+            vol.get()
+
+        if vol.status != 'in-use':
+            raise exception.Error(vol.status)
+
+        logger.info('%s - complete' % str(self))
+
+
 class VolumeAttachment(resource.Resource):
     properties_schema = {'InstanceId': {'Type': 'String',
                                         'Required': True},
@@ -135,10 +185,9 @@ class VolumeAttachment(resource.Resource):
         server_id = self.properties[self._instance_property]
         volume_id = self.properties[self._volume_property]
         dev = self.properties[self._device_property]
-        inst = self.stack.clients.attach_volume_to_instance(server_id,
-                                                            volume_id,
-                                                            dev)
-        self.resource_id_set(inst)
+        attach_task = VolumeAttachTask(self.stack, server_id, volume_id, dev)
+        scheduler.TaskRunner(attach_task)()
+        self.resource_id_set(attach_task.attachment_id)
 
     def handle_update(self, json_snippet):
         return self.UPDATE_REPLACE

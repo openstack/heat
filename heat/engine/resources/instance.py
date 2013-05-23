@@ -25,6 +25,9 @@ from oslo.config import cfg
 
 from heat.engine import clients
 from heat.engine import resource
+from heat.engine import scheduler
+from heat.engine.resources import volume
+
 from heat.common import exception
 from heat.engine.resources.network_interface import NetworkInterface
 
@@ -363,15 +366,16 @@ class Instance(resource.Resource):
     def attach_volumes(self):
         if not self.properties['Volumes']:
             return
-        server_id = self.resource_id
         for vol in self.properties['Volumes']:
             if 'DeviceId' in vol:
                 dev = vol['DeviceId']
             else:
                 dev = vol['Device']
-            self.stack.clients.attach_volume_to_instance(server_id,
-                                                         vol['VolumeId'],
-                                                         dev)
+            attach_task = volume.VolumeAttachTask(self.stack,
+                                                  self.resource_id,
+                                                  vol['VolumeId'],
+                                                  vol['Device'])
+            scheduler.TaskRunner(attach_task)()
 
     def detach_volumes(self):
         server_id = self.resource_id
