@@ -360,13 +360,11 @@ class Resource(object):
         update the resource. Subclasses should provide a handle_update() method
         to customise update, the base-class handle_update will fail by default.
         '''
-        if self.state in (self.CREATE_IN_PROGRESS, self.UPDATE_IN_PROGRESS):
-            raise exception.ResourceFailure(
-                'Resource update already requested')
+        assert json_snippet is not None, 'Must specify update json snippet'
 
-        if not json_snippet:
-            raise exception.ResourceFailure(
-                'Must specify json snippet for resource update!')
+        if self.state in (self.CREATE_IN_PROGRESS, self.UPDATE_IN_PROGRESS):
+            raise exception.ResourceFailure(Exception(
+                'Resource update already requested'))
 
         logger.info('updating %s' % str(self))
 
