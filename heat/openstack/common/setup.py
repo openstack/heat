@@ -61,8 +61,7 @@ def get_reqs_from_files(requirements_files):
     return []
 
 
-def parse_requirements(requirements_files=['requirements.txt',
-                                           'tools/pip-requires']):
+def parse_requirements(requirements_files=['requirements.txt']):
     requirements = []
     for line in get_reqs_from_files(requirements_files):
         # For the requirements list, we need to inject only the portion
@@ -90,8 +89,7 @@ def parse_requirements(requirements_files=['requirements.txt',
     return requirements
 
 
-def parse_dependency_links(requirements_files=['requirements.txt',
-                                               'tools/pip-requires']):
+def parse_dependency_links(requirements_files=['requirements.txt']):
     dependency_links = []
     # dependency_links inject alternate locations to find packages listed
     # in requirements
