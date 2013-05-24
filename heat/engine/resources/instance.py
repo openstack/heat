@@ -345,23 +345,34 @@ class Instance(resource.Resource):
             if server is not None:
                 self.resource_id_set(server.id)
 
-        return server
+        attach_tasks = (volume.VolumeAttachTask(self.stack,
+                                                self.resource_id,
+                                                volume_id,
+                                                device)
+                        for volume_id, device in self.volumes())
+        attach_volumes_task = scheduler.PollingTaskGroup(attach_tasks)
 
-    def check_create_complete(self, server):
-        if server.status == 'ACTIVE':
-            return True
+        return server, scheduler.TaskRunner(attach_volumes_task)
 
-        server.get()
-        if server.status in self._deferred_server_statuses:
-            return False
-        if server.status == 'ACTIVE':
-            self._set_ipaddress(server.networks)
-            self.attach_volumes()
-            return True
+    def check_create_complete(self, cookie):
+        server, volume_attach = cookie
+
+        if not volume_attach.started():
+            if server.status != 'ACTIVE':
+                server.get()
+
+            if server.status in self._deferred_server_statuses:
+                return False
+            elif server.status == 'ACTIVE':
+                self._set_ipaddress(server.networks)
+                volume_attach.start()
+                return volume_attach.done()
+            else:
+                raise exception.Error('%s instance[%s] status[%s]' %
+                                      ('nova reported unexpected',
+                                       self.name, server.status))
         else:
-            raise exception.Error('%s instance[%s] status[%s]' %
-                                  ('nova reported unexpected',
-                                   self.name, server.status))
+            return volume_attach.step()
 
     def volumes(self):
         """
@@ -373,14 +384,6 @@ class Instance(resource.Resource):
             return []
 
         return ((vol['VolumeId'], vol['Device']) for vol in volumes)
-
-    def attach_volumes(self):
-        for volume_id, device in self.volumes():
-            attach_task = volume.VolumeAttachTask(self.stack,
-                                                  self.resource_id,
-                                                  volume_id,
-                                                  device)
-            scheduler.TaskRunner(attach_task)()
 
     def detach_volumes(self):
         for volume_id, device in self.volumes():
