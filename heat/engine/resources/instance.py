@@ -89,8 +89,7 @@ class Instance(resource.Resource):
                          'RamDiskId': {'Type': 'String',
                                        'Implemented': False},
                          'SecurityGroups': {'Type': 'List'},
-                         'SecurityGroupIds': {'Type': 'List',
-                                              'Implemented': False},
+                         'SecurityGroupIds': {'Type': 'List'},
                          'NetworkInterfaces': {'Type': 'List'},
                          'SourceDestCheck': {'Type': 'Boolean',
                                              'Implemented': False},
@@ -272,7 +271,14 @@ class Instance(resource.Resource):
         return nics
 
     def handle_create(self):
-        security_groups = self.properties.get('SecurityGroups')
+        security_groups = []
+        for property in ('SecurityGroups', 'SecurityGroupIds'):
+            if self.properties.get(property) is not None:
+                for sg in self.properties.get(property):
+                    security_groups.append(sg)
+        if not security_groups:
+            security_groups = None
+
         userdata = self.properties['UserData'] or ''
         flavor = self.properties['InstanceType']
         key_name = self.properties['KeyName']
