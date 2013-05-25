@@ -13,13 +13,13 @@
 #    under the License.
 
 
-import unittest
+import testtools
 import json
 
 from heat.engine import parameters
 
 
-class ParameterTest(unittest.TestCase):
+class ParameterTest(testtools.TestCase):
     def test_new_string(self):
         p = parameters.Parameter('p', {'Type': 'String'})
         self.assertTrue(isinstance(p, parameters.StringParam))
@@ -268,7 +268,7 @@ params_schema = json.loads('''{
 }''')
 
 
-class ParametersTest(unittest.TestCase):
+class ParametersTest(testtools.TestCase):
     def test_pseudo_params(self):
         params = parameters.Parameters('test_stack', {"Parameters": {}})
 

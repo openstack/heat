@@ -101,9 +101,6 @@ Resources:
             quantumclient.Client, 'delete_security_group_rule')
         self.m.StubOutWithMock(quantumclient.Client, 'delete_security_group')
 
-    def tearDown(self):
-        super(SecurityGroupTest, self).tearDown()
-
     def create_stack(self, template):
         t = template_format.parse(template)
         self.stack = self.parse_stack(t)
