@@ -13,7 +13,9 @@
 #    under the License.
 
 
+import functools
 import json
+import sys
 
 import mox
 from oslo.config import cfg
@@ -99,6 +101,67 @@ def setup_mocks(mocks, stack):
     return fc
 
 
+def setup_test_stack(stack_name, ctx, create_res=True):
+    stack = get_wordpress_stack(stack_name, ctx)
+    stack.store()
+    if create_res:
+        m = mox.Mox()
+        setup_mocks(m, stack)
+        m.ReplayAll()
+        stack.create()
+        m.UnsetStubs()
+    return stack
+
+
+def clean_up_stack(stack, delete_res=True):
+    if delete_res:
+        m = mox.Mox()
+        fc = setup_mocks(m, stack)
+        m.StubOutWithMock(fc.client, 'get_servers_9999')
+        get = fc.client.get_servers_9999
+        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
+        m.ReplayAll()
+    stack.delete()
+    if delete_res:
+        m.UnsetStubs()
+
+
+def stack_context(stack_name, create_res=True):
+    """
+    Decorator which creates a stack by using the test case's context and
+    deletes it afterwards to ensure tests clean up their stacks regardless
+    of test success/failure
+    """
+    def stack_delete(test_fn):
+        @functools.wraps(test_fn)
+        def wrapped_test(test_case, *args, **kwargs):
+            def create_stack():
+                ctx = getattr(test_case, 'ctx', None)
+                if ctx is not None:
+                    stack = setup_test_stack(stack_name, ctx, create_res)
+                    setattr(test_case, 'stack', stack)
+
+            def delete_stack():
+                stack = getattr(test_case, 'stack', None)
+                if stack is not None and stack.id is not None:
+                    clean_up_stack(stack, delete_res=create_res)
+
+            create_stack()
+            try:
+                test_fn(test_case, *args, **kwargs)
+            except:
+                exc_class, exc_val, exc_tb = sys.exc_info()
+                try:
+                    delete_stack()
+                finally:
+                    raise exc_class, exc_val, exc_tb
+            else:
+                delete_stack()
+
+        return wrapped_test
+    return stack_delete
+
+
 class DummyThreadGroup(object):
     def __init__(self):
         self.threads = []
@@ -152,7 +215,6 @@ class stackCreateTest(HeatTestCase):
         get = fc.client.get_servers_9999
         get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
         mox.Replay(get)
-
         stack.delete()
 
         self.assertEqual(stack.resources['WebServer'].state, 'DELETE_COMPLETE')
@@ -405,90 +467,72 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class stackServiceTestBase(HeatTestCase):
-
-    tenant = 'stack_service_test_tenant'
-
-    def tearDown(self):
-        super(stackServiceTestBase, self).tearDown()
-        # testtools runs cleanups *after* tearDown, but we need to mock some
-        # things now.
-        self.m.UnsetStubs()
-
-        m = mox.Mox()
-        create_context(m, self.username, self.tenant, ctx=self.stack.context)
-        fc = setup_mocks(m, self.stack)
-        m.StubOutWithMock(fc.client, 'get_servers_9999')
-        get = fc.client.get_servers_9999
-        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
-        m.ReplayAll()
-
-        self.stack.delete()
-
-        m.UnsetStubs()
-
-    def setUp(self):
-        setup_dummy_db()
-        config.register_engine_opts()
-        m = mox.Mox()
-        self.username = 'stack_service_test_user'
-        ctx = create_context(m, self.username, self.tenant)
-        self.stack_name = 'service_test_stack'
-
-        cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
-
-        stack = get_wordpress_stack(self.stack_name, ctx)
-
-        setup_mocks(m, stack)
-        m.ReplayAll()
-
-        stack.store()
-        stack.create()
-        self.stack = stack
-        self.stack_identity = stack.identifier()
-
-        m.UnsetStubs()
-
-        super(stackServiceTestBase, self).setUp()
-        self.m.UnsetStubs()
-        self.ctx = create_context(self.m, self.username, self.tenant)
-        setup_mocks(self.m, self.stack)
-
-
-class stackServiceTest(stackServiceTestBase):
+class stackServiceTest(HeatTestCase):
 
     def setUp(self):
         super(stackServiceTest, self).setUp()
-        self.m.ReplayAll()
 
-        self.man = service.EngineService('a-host', 'a-topic')
+        config.register_engine_opts()
+        self.username = 'stack_service_test_user'
+        self.tenant = 'stack_service_test_tenant'
 
+        self.ctx = create_context(self.m, self.username, self.tenant)
+        self.eng = service.EngineService('a-host', 'a-topic')
+        cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
+
+        setup_dummy_db()
+
+    @stack_context('service_identify_test_stack', False)
     def test_stack_identify(self):
-        identity = self.man.identify_stack(self.ctx, self.stack_name)
-        self.assertEqual(identity, self.stack_identity)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
 
+        self.m.ReplayAll()
+        identity = self.eng.identify_stack(self.ctx, self.stack.name)
+        self.assertEqual(identity, self.stack.identifier())
+
+        self.m.VerifyAll()
+
+    @stack_context('service_identify_uuid_test_stack', False)
     def test_stack_identify_uuid(self):
-        identity = self.man.identify_stack(self.ctx, self.stack.id)
-        self.assertEqual(identity, self.stack_identity)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+
+        self.m.ReplayAll()
+        identity = self.eng.identify_stack(self.ctx, self.stack.id)
+        self.assertEqual(identity, self.stack.identifier())
+
+        self.m.VerifyAll()
 
     def test_stack_identify_nonexist(self):
-        self.assertRaises(exception.StackNotFound, self.man.identify_stack,
+        self.assertRaises(exception.StackNotFound, self.eng.identify_stack,
                           self.ctx, 'wibble')
 
+    @stack_context('service_create_existing_test_stack', False)
     def test_stack_create_existing(self):
-        self.assertRaises(exception.StackExists, self.man.create_stack,
-                          self.ctx, self.stack_name, self.stack.t, {}, {})
+        self.assertRaises(exception.StackExists, self.eng.create_stack,
+                          self.ctx, self.stack.name, self.stack.t, {}, {})
 
+    @stack_context('service_name_tenants_test_stack', False)
     def test_stack_by_name_tenants(self):
         self.assertEqual(self.stack.id,
                          db_api.stack_get_by_name(self.ctx,
-                                                  self.stack_name).id)
+                                                  self.stack.name).id)
         ctx2 = create_context(self.m, self.username,
                               'stack_service_test_tenant2')
-        self.assertEqual(None, db_api.stack_get_by_name(ctx2, self.stack_name))
+        self.assertEqual(None, db_api.stack_get_by_name(ctx2, self.stack.name))
 
+    @stack_context('service_event_list_test_stack')
     def test_stack_event_list(self):
-        events = self.man.list_events(self.ctx, self.stack_identity)
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        s = db_api.stack_get(self.ctx, self.stack.id)
+        service.EngineService._get_stack(self.ctx,
+                                         self.stack.identifier()).AndReturn(s)
+        self.m.ReplayAll()
+
+        events = self.eng.list_events(self.ctx, self.stack.identifier())
 
         self.assertEqual(len(events), 2)
         for ev in events:
@@ -524,12 +568,20 @@ class stackServiceTest(stackServiceTestBase):
             self.assertTrue('stack_identity' in ev)
 
             self.assertTrue('stack_name' in ev)
-            self.assertEqual(ev['stack_name'], self.stack_name)
+            self.assertEqual(ev['stack_name'], self.stack.name)
 
             self.assertTrue('event_time' in ev)
 
+        self.m.VerifyAll()
+
+    @stack_context('service_list_all_test_stack')
     def test_stack_list_all(self):
-        sl = self.man.list_stacks(self.ctx)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=mox.IgnoreArg(), resolve_data=False)\
+            .AndReturn(self.stack)
+
+        self.m.ReplayAll()
+        sl = self.eng.list_stacks(self.ctx)
 
         self.assertEqual(len(sl), 1)
         for s in sl:
@@ -538,28 +590,54 @@ class stackServiceTest(stackServiceTestBase):
             self.assertTrue('stack_identity' in s)
             self.assertNotEqual(s['stack_identity'], None)
             self.assertTrue('stack_name' in s)
-            self.assertEqual(s['stack_name'], self.stack_name)
+            self.assertEqual(s['stack_name'], self.stack.name)
             self.assertTrue('stack_status' in s)
             self.assertTrue('stack_status_reason' in s)
             self.assertTrue('description' in s)
             self.assertNotEqual(s['description'].find('WordPress'), -1)
 
+        self.m.VerifyAll()
+
     def test_stack_describe_nonexistent(self):
-        nonexist = dict(self.stack_identity)
-        nonexist['stack_name'] = 'wibble'
+        non_exist_identifier = identifier.HeatIdentifier(
+            self.ctx.tenant_id, 'wibble',
+            '18d06e2e-44d3-4bef-9fbf-52480d604b02')
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        service.EngineService._get_stack(
+            self.ctx, non_exist_identifier).AndRaise(exception.StackNotFound)
+        self.m.ReplayAll()
+
         self.assertRaises(exception.StackNotFound,
-                          self.man.show_stack,
-                          self.ctx, nonexist)
+                          self.eng.show_stack,
+                          self.ctx, non_exist_identifier)
+        self.m.VerifyAll()
 
     def test_stack_describe_bad_tenant(self):
-        nonexist = dict(self.stack_identity)
-        nonexist['tenant'] = 'wibble'
+        non_exist_identifier = identifier.HeatIdentifier(
+            'wibble', 'wibble',
+            '18d06e2e-44d3-4bef-9fbf-52480d604b02')
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        service.EngineService._get_stack(
+            self.ctx, non_exist_identifier).AndRaise(exception.InvalidTenant)
+        self.m.ReplayAll()
+
         self.assertRaises(exception.InvalidTenant,
-                          self.man.show_stack,
-                          self.ctx, nonexist)
+                          self.eng.show_stack,
+                          self.ctx, non_exist_identifier)
 
+        self.m.VerifyAll()
+
+    @stack_context('service_describe_test_stack', False)
     def test_stack_describe(self):
-        sl = self.man.show_stack(self.ctx, self.stack_identity)
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        s = db_api.stack_get(self.ctx, self.stack.id)
+        service.EngineService._get_stack(self.ctx,
+                                         self.stack.identifier()).AndReturn(s)
+        self.m.ReplayAll()
+
+        sl = self.eng.show_stack(self.ctx, self.stack.identifier())
 
         self.assertEqual(len(sl), 1)
 
@@ -569,15 +647,18 @@ class stackServiceTest(stackServiceTestBase):
         self.assertTrue('stack_identity' in s)
         self.assertNotEqual(s['stack_identity'], None)
         self.assertTrue('stack_name' in s)
-        self.assertEqual(s['stack_name'], self.stack_name)
+        self.assertEqual(s['stack_name'], self.stack.name)
         self.assertTrue('stack_status' in s)
         self.assertTrue('stack_status_reason' in s)
         self.assertTrue('description' in s)
         self.assertNotEqual(s['description'].find('WordPress'), -1)
         self.assertTrue('parameters' in s)
 
+        self.m.VerifyAll()
+
+    @stack_context('service_describe_all_test_stack', False)
     def test_stack_describe_all(self):
-        sl = self.man.show_stack(self.ctx, None)
+        sl = self.eng.show_stack(self.ctx, None)
 
         self.assertEqual(len(sl), 1)
 
@@ -587,20 +668,27 @@ class stackServiceTest(stackServiceTestBase):
         self.assertTrue('stack_identity' in s)
         self.assertNotEqual(s['stack_identity'], None)
         self.assertTrue('stack_name' in s)
-        self.assertEqual(s['stack_name'], self.stack_name)
+        self.assertEqual(s['stack_name'], self.stack.name)
         self.assertTrue('stack_status' in s)
         self.assertTrue('stack_status_reason' in s)
         self.assertTrue('description' in s)
         self.assertNotEqual(s['description'].find('WordPress'), -1)
         self.assertTrue('parameters' in s)
 
+    @stack_context('service_list_resource_types_test_stack', False)
     def test_list_resource_types(self):
-        resources = self.man.list_resource_types(self.ctx)
+        resources = self.eng.list_resource_types(self.ctx)
         self.assertTrue(isinstance(resources, list))
         self.assertTrue('AWS::EC2::Instance' in resources)
 
+    @stack_context('service_stack_resource_describe__test_stack')
     def test_stack_resource_describe(self):
-        r = self.man.describe_stack_resource(self.ctx, self.stack_identity,
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.ReplayAll()
+
+        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
                                              'WebServer')
 
         self.assertTrue('resource_identity' in r)
@@ -609,7 +697,7 @@ class stackServiceTest(stackServiceTestBase):
         self.assertTrue('stack_identity' in r)
         self.assertNotEqual(r['stack_identity'], None)
         self.assertTrue('stack_name' in r)
-        self.assertEqual(r['stack_name'], self.stack_name)
+        self.assertEqual(r['stack_name'], self.stack.name)
         self.assertTrue('metadata' in r)
         self.assertTrue('resource_status' in r)
         self.assertTrue('resource_status_reason' in r)
@@ -618,50 +706,89 @@ class stackServiceTest(stackServiceTestBase):
         self.assertTrue('logical_resource_id' in r)
         self.assertEqual(r['logical_resource_id'], 'WebServer')
 
+        self.m.VerifyAll()
+
     def test_stack_resource_describe_nonexist_stack(self):
-        nonexist = dict(self.stack_identity)
-        nonexist['stack_name'] = 'foo'
+        non_exist_identifier = identifier.HeatIdentifier(
+            self.ctx.tenant_id,
+            'wibble',
+            '18d06e2e-44d3-4bef-9fbf-52480d604b02')
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        service.EngineService._get_stack(
+            self.ctx, non_exist_identifier).AndRaise(exception.StackNotFound)
+        self.m.ReplayAll()
+
         self.assertRaises(exception.StackNotFound,
-                          self.man.describe_stack_resource,
-                          self.ctx, nonexist, 'WebServer')
+                          self.eng.describe_stack_resource,
+                          self.ctx, non_exist_identifier, 'WebServer')
 
+        self.m.VerifyAll()
+
+    @stack_context('service_resource_describe_nonexist_test_stack')
     def test_stack_resource_describe_nonexist_resource(self):
-        self.assertRaises(exception.ResourceNotFound,
-                          self.man.describe_stack_resource,
-                          self.ctx, self.stack_identity, 'foo')
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
 
+        self.m.ReplayAll()
+        self.assertRaises(exception.ResourceNotFound,
+                          self.eng.describe_stack_resource,
+                          self.ctx, self.stack.identifier(), 'foo')
+
+        self.m.VerifyAll()
+
+    @stack_context('service_resource_describe_user_deny_test_stack')
     def test_stack_resource_describe_stack_user_deny(self):
         self.ctx.roles = [cfg.CONF.heat_stack_user_role]
         self.m.StubOutWithMock(service.EngineService, '_authorize_stack_user')
         service.EngineService._authorize_stack_user(self.ctx, mox.IgnoreArg(),
                                                     'foo').AndReturn(False)
         self.m.ReplayAll()
-        self.assertRaises(exception.Forbidden,
-                          self.man.describe_stack_resource,
-                          self.ctx, self.stack_identity, 'foo')
 
+        self.assertRaises(exception.Forbidden,
+                          self.eng.describe_stack_resource,
+                          self.ctx, self.stack.identifier(), 'foo')
+
+        self.m.VerifyAll()
+
+    @stack_context('service_authorize_stack_user_nocreds_test_stack')
     def test_stack_authorize_stack_user_nocreds(self):
-        self.assertFalse(self.man._authorize_stack_user(self.ctx,
-                                                        self.stack_identity,
+        self.assertFalse(self.eng._authorize_stack_user(self.ctx,
+                                                        self.stack,
                                                         'foo'))
 
+    @stack_context('service_authorize_user_attribute_error_test_stack')
     def test_stack_authorize_stack_user_attribute_error(self):
         self.m.StubOutWithMock(json, 'loads')
-        json.loads(mox.IgnoreArg()).AndRaise(AttributeError)
-        self.assertFalse(self.man._authorize_stack_user(self.ctx,
-                                                        self.stack_identity,
+        json.loads(None).AndRaise(AttributeError)
+        self.m.ReplayAll()
+        self.assertFalse(self.eng._authorize_stack_user(self.ctx,
+                                                        self.stack,
                                                         'foo'))
+        self.m.VerifyAll()
 
+    @stack_context('service_authorize_stack_user_type_error_test_stack')
     def test_stack_authorize_stack_user_type_error(self):
         self.m.StubOutWithMock(json, 'loads')
         json.loads(mox.IgnoreArg()).AndRaise(TypeError)
-        self.assertFalse(self.man._authorize_stack_user(self.ctx,
-                                                        self.stack_identity,
+        self.m.ReplayAll()
+
+        self.assertFalse(self.eng._authorize_stack_user(self.ctx,
+                                                        self.stack,
                                                         'foo'))
 
+        self.m.VerifyAll()
+
+    @stack_context('service_resources_describe_test_stack')
     def test_stack_resources_describe(self):
-        resources = self.man.describe_stack_resources(self.ctx,
-                                                      self.stack_identity,
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.ReplayAll()
+
+        resources = self.eng.describe_stack_resources(self.ctx,
+                                                      self.stack.identifier(),
                                                       'WebServer')
 
         self.assertEqual(len(resources), 1)
@@ -672,7 +799,7 @@ class stackServiceTest(stackServiceTestBase):
         self.assertTrue('stack_identity' in r)
         self.assertNotEqual(r['stack_identity'], None)
         self.assertTrue('stack_name' in r)
-        self.assertEqual(r['stack_name'], self.stack_name)
+        self.assertEqual(r['stack_name'], self.stack.name)
         self.assertTrue('resource_status' in r)
         self.assertTrue('resource_status_reason' in r)
         self.assertTrue('resource_type' in r)
@@ -680,9 +807,17 @@ class stackServiceTest(stackServiceTestBase):
         self.assertTrue('logical_resource_id' in r)
         self.assertEqual(r['logical_resource_id'], 'WebServer')
 
+        self.m.VerifyAll()
+
+    @stack_context('service_resources_describe_no_filter_test_stack')
     def test_stack_resources_describe_no_filter(self):
-        resources = self.man.describe_stack_resources(self.ctx,
-                                                      self.stack_identity,
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.ReplayAll()
+
+        resources = self.eng.describe_stack_resources(self.ctx,
+                                                      self.stack.identifier(),
                                                       None)
 
         self.assertEqual(len(resources), 1)
@@ -690,38 +825,55 @@ class stackServiceTest(stackServiceTestBase):
         self.assertTrue('logical_resource_id' in r)
         self.assertEqual(r['logical_resource_id'], 'WebServer')
 
+        self.m.VerifyAll()
+
     def test_stack_resources_describe_bad_lookup(self):
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        service.EngineService._get_stack(
+            self.ctx, None).AndRaise(TypeError)
+        self.m.ReplayAll()
+
         self.assertRaises(TypeError,
-                          self.man.describe_stack_resources,
+                          self.eng.describe_stack_resources,
                           self.ctx, None, 'WebServer')
+        self.m.VerifyAll()
 
     def test_stack_resources_describe_nonexist_stack(self):
-        nonexist = dict(self.stack_identity)
-        nonexist['stack_name'] = 'foo'
-        self.assertRaises(exception.StackNotFound,
-                          self.man.describe_stack_resources,
-                          self.ctx, nonexist, 'WebServer')
+        non_exist_identifier = identifier.HeatIdentifier(
+            self.ctx.tenant_id, 'wibble',
+            '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
+        self.assertRaises(exception.StackNotFound,
+                          self.eng.describe_stack_resources,
+                          self.ctx, non_exist_identifier, 'WebServer')
+
+    @stack_context('service_find_physical_resource_test_stack')
     def test_find_physical_resource(self):
-        resources = self.man.describe_stack_resources(self.ctx,
-                                                      self.stack_identity,
+        resources = self.eng.describe_stack_resources(self.ctx,
+                                                      self.stack.identifier(),
                                                       None)
         phys_id = resources[0]['physical_resource_id']
 
-        result = self.man.find_physical_resource(self.ctx, phys_id)
+        result = self.eng.find_physical_resource(self.ctx, phys_id)
         self.assertTrue(isinstance(result, dict))
         resource_identity = identifier.ResourceIdentifier(**result)
-        self.assertEqual(resource_identity.stack(), self.stack_identity)
+        self.assertEqual(resource_identity.stack(), self.stack.identifier())
         self.assertEqual(resource_identity.resource_name, 'WebServer')
 
     def test_find_physical_resource_nonexist(self):
         self.assertRaises(exception.PhysicalResourceNotFound,
-                          self.man.find_physical_resource,
+                          self.eng.find_physical_resource,
                           self.ctx, 'foo')
 
+    @stack_context('service_resources_list_test_stack')
     def test_stack_resources_list(self):
-        resources = self.man.list_stack_resources(self.ctx,
-                                                  self.stack_identity)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.ReplayAll()
+
+        resources = self.eng.list_stack_resources(self.ctx,
+                                                  self.stack.identifier())
 
         self.assertEqual(len(resources), 1)
         r = resources[0]
@@ -734,39 +886,79 @@ class stackServiceTest(stackServiceTestBase):
         self.assertTrue('resource_status_reason' in r)
         self.assertTrue('resource_type' in r)
 
-    def test_stack_resources_list_nonexist_stack(self):
-        nonexist = dict(self.stack_identity)
-        nonexist['stack_name'] = 'foo'
-        self.assertRaises(exception.StackNotFound,
-                          self.man.list_stack_resources,
-                          self.ctx, nonexist)
+        self.m.VerifyAll()
 
+    def test_stack_resources_list_nonexist_stack(self):
+        non_exist_identifier = identifier.HeatIdentifier(
+            self.ctx.tenant_id, 'wibble',
+            '18d06e2e-44d3-4bef-9fbf-52480d604b02')
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        service.EngineService._get_stack(
+            self.ctx, non_exist_identifier).AndRaise(exception.StackNotFound)
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.StackNotFound,
+                          self.eng.list_stack_resources,
+                          self.ctx, non_exist_identifier)
+
+        self.m.VerifyAll()
+
+    @stack_context('service_metadata_test_stack')
     def test_metadata(self):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
         pre_update_meta = self.stack['WebServer'].metadata
-        result = self.man.metadata_update(self.ctx,
-                                          dict(self.stack_identity),
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        s = db_api.stack_get(self.ctx, self.stack.id)
+        service.EngineService._get_stack(self.ctx,
+                                         self.stack.identifier()).AndReturn(s)
+        self.m.StubOutWithMock(instances.Instance, 'metadata_update')
+        instances.Instance.metadata_update(new_metadata=test_metadata)
+        self.m.ReplayAll()
+
+        result = self.eng.metadata_update(self.ctx,
+                                          dict(self.stack.identifier()),
                                           'WebServer', test_metadata)
         # metadata_update is a no-op for all resources except
         # WaitConditionHandle so we don't expect this to have changed
         self.assertEqual(result, pre_update_meta)
 
-    def test_metadata_err_stack(self):
-        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
-        nonexist = dict(self.stack_identity)
-        nonexist['stack_name'] = 'foo'
-        self.assertRaises(exception.StackNotFound,
-                          self.man.metadata_update,
-                          self.ctx, nonexist,
-                          'WebServer', test_metadata)
+        self.m.VerifyAll()
 
+    def test_metadata_err_stack(self):
+        non_exist_identifier = identifier.HeatIdentifier(
+            self.ctx.tenant_id, 'wibble',
+            '18d06e2e-44d3-4bef-9fbf-52480d604b02')
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        service.EngineService._get_stack(
+            self.ctx, non_exist_identifier).AndRaise(exception.StackNotFound)
+        self.m.ReplayAll()
+
+        test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
+        self.assertRaises(exception.StackNotFound,
+                          self.eng.metadata_update,
+                          self.ctx, non_exist_identifier,
+                          'WebServer', test_metadata)
+        self.m.VerifyAll()
+
+    @stack_context('service_metadata_err_resource_test_stack', False)
     def test_metadata_err_resource(self):
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        self.m.ReplayAll()
+
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
         self.assertRaises(exception.ResourceNotFound,
-                          self.man.metadata_update,
-                          self.ctx, dict(self.stack_identity),
+                          self.eng.metadata_update,
+                          self.ctx, dict(self.stack.identifier()),
                           'NooServer', test_metadata)
 
+        self.m.VerifyAll()
+
+    @stack_context('service_show_watch_test_stack', False)
     def test_show_watch(self):
         # Insert two dummy watch rules into the DB
         values = {'stack_id': self.stack.id,
@@ -788,15 +980,15 @@ class stackServiceTest(stackServiceTestBase):
         self.assertNotEqual(db_ret, None)
 
         # watch_name=None should return both watches
-        result = self.man.show_watch(self.ctx, watch_name=None)
+        result = self.eng.show_watch(self.ctx, watch_name=None)
         self.assertEqual(2, len(result))
 
         # watch_name="HttpFailureAlarm" should return only one
-        result = self.man.show_watch(self.ctx, watch_name="HttpFailureAlarm")
+        result = self.eng.show_watch(self.ctx, watch_name="HttpFailureAlarm")
         self.assertEqual(1, len(result))
 
         self.assertRaises(exception.WatchRuleNotFound,
-                          self.man.show_watch,
+                          self.eng.show_watch,
                           self.ctx, watch_name="nonexistent")
 
         # Check the response has all keys defined in the engine API
@@ -807,6 +999,7 @@ class stackServiceTest(stackServiceTestBase):
         db_api.watch_rule_delete(self.ctx, "HttpFailureAlarm")
         db_api.watch_rule_delete(self.ctx, "AnotherWatch")
 
+    @stack_context('service_show_watch_metric_test_stack', False)
     def test_show_watch_metric(self):
         # Insert dummy watch rule into the DB
         values = {'stack_id': self.stack.id,
@@ -834,14 +1027,15 @@ class stackServiceTest(stackServiceTestBase):
         watch = db_api.watch_data_create(self.ctx, values)
 
         # Check there is one result returned
-        result = self.man.show_watch_metric(self.ctx,
+        result = self.eng.show_watch_metric(self.ctx,
                                             metric_namespace=None,
                                             metric_name=None)
         self.assertEqual(1, len(result))
 
         # Create another metric datapoint and check we get two
         watch = db_api.watch_data_create(self.ctx, values)
-        result = self.man.show_watch_metric(self.ctx, metric_namespace=None,
+        result = self.eng.show_watch_metric(self.ctx,
+                                            metric_namespace=None,
                                             metric_name=None)
         self.assertEqual(2, len(result))
 
@@ -852,6 +1046,7 @@ class stackServiceTest(stackServiceTestBase):
         for key in engine_api.WATCH_DATA_KEYS:
             self.assertTrue(key in result[0])
 
+    @stack_context('service_show_watch_state_test_stack')
     def test_set_watch_state(self):
         # Insert dummy watch rule into the DB
         values = {'stack_id': self.stack.id,
@@ -879,35 +1074,37 @@ class stackServiceTest(stackServiceTestBase):
 
         # Replace the real stack threadgroup with a dummy one, so we can
         # check the function returned on ALARM is correctly scheduled
-        self.man.stg[self.stack.id] = DummyThreadGroup()
+        self.eng.stg[self.stack.id] = DummyThreadGroup()
 
         self.m.ReplayAll()
 
         state = watchrule.WatchRule.NODATA
-        result = self.man.set_watch_state(self.ctx,
+        result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
         self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
-        self.assertEqual(self.man.stg[self.stack.id].threads, [])
+        self.assertEqual(self.eng.stg[self.stack.id].threads, [])
 
         state = watchrule.WatchRule.NORMAL
-        result = self.man.set_watch_state(self.ctx,
+        result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
         self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
-        self.assertEqual(self.man.stg[self.stack.id].threads, [])
+        self.assertEqual(self.eng.stg[self.stack.id].threads, [])
 
         state = watchrule.WatchRule.ALARM
-        result = self.man.set_watch_state(self.ctx,
+        result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
         self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
-        self.assertEqual(self.man.stg[self.stack.id].threads,
+        self.assertEqual(self.eng.stg[self.stack.id].threads,
                          [DummyAction.alarm])
 
+        self.m.VerifyAll()
         # Cleanup, delete the dummy rule
         db_api.watch_rule_delete(self.ctx, "OverrideAlarm")
 
+    @stack_context('service_show_watch_state_badstate_test_stack')
     def test_set_watch_state_badstate(self):
         # Insert dummy watch rule into the DB
         values = {'stack_id': self.stack.id,
@@ -925,40 +1122,42 @@ class stackServiceTest(stackServiceTestBase):
         db_ret = db_api.watch_rule_create(self.ctx, values)
         self.assertNotEqual(db_ret, None)
 
+        self.m.StubOutWithMock(watchrule.WatchRule, 'set_watch_state')
+        for state in ["HGJHGJHG", "1234", "!\*(&%"]:
+            watchrule.WatchRule.set_watch_state(state)\
+                .InAnyOrder().AndRaise(ValueError)
+        self.m.ReplayAll()
+
         for state in ["HGJHGJHG", "1234", "!\*(&%"]:
             self.assertRaises(ValueError,
-                              self.man.set_watch_state,
+                              self.eng.set_watch_state,
                               self.ctx, watch_name="OverrideAlarm2",
                               state=state)
+
+        self.m.VerifyAll()
 
         # Cleanup, delete the dummy rule
         db_api.watch_rule_delete(self.ctx, "OverrideAlarm2")
 
     def test_set_watch_state_noexist(self):
         state = watchrule.WatchRule.ALARM   # State valid
-        self.assertRaises(exception.WatchRuleNotFound,
-                          self.man.set_watch_state,
-                          self.ctx, watch_name="nonexistent", state=state)
 
-
-class stackServiceTestEmpty(stackServiceTestBase):
-
-    def setUp(self):
-        super(stackServiceTestEmpty, self).setUp()
-
-        # Change to a new, empty tenant context
-        self.ctx = create_context(self.m, self.username,
-                                  'stack_list_all_empty_tenant')
+        self.m.StubOutWithMock(watchrule.WatchRule, 'load')
+        watchrule.WatchRule.load(self.ctx, "nonexistent")\
+            .AndRaise(exception.WatchRuleNotFound)
         self.m.ReplayAll()
 
-        self.man = service.EngineService('a-host', 'a-topic')
+        self.assertRaises(exception.WatchRuleNotFound,
+                          self.eng.set_watch_state,
+                          self.ctx, watch_name="nonexistent", state=state)
+        self.m.VerifyAll()
 
     def test_stack_list_all_empty(self):
-        sl = self.man.list_stacks(self.ctx)
+        sl = self.eng.list_stacks(self.ctx)
 
         self.assertEqual(len(sl), 0)
 
     def test_stack_describe_all_empty(self):
-        sl = self.man.show_stack(self.ctx, None)
+        sl = self.eng.show_stack(self.ctx, None)
 
         self.assertEqual(len(sl), 0)
