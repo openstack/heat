@@ -386,13 +386,6 @@ class Instance(resource.Resource):
 
         return ((vol['VolumeId'], vol['Device']) for vol in volumes)
 
-    def detach_volumes(self):
-        for volume_id, device in self.volumes():
-            detach_task = volume.VolumeDetachTask(self.stack,
-                                                  self.resource_id,
-                                                  volume_id)
-            scheduler.TaskRunner(detach_task)()
-
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             self.metadata = tmpl_diff.get('Metadata', {})
@@ -434,7 +427,11 @@ class Instance(resource.Resource):
         if self.resource_id is None:
             return
 
-        self.detach_volumes()
+        detach_tasks = (volume.VolumeDetachTask(self.stack,
+                                                self.resource_id,
+                                                volume_id)
+                        for volume_id, device in self.volumes())
+        scheduler.TaskRunner(scheduler.PollingTaskGroup(detach_tasks))()
 
         try:
             server = self.nova().servers.get(self.resource_id)
