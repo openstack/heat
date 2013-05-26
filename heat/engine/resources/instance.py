@@ -364,26 +364,30 @@ class Instance(resource.Resource):
                                   ('nova reported unexpected',
                                    self.name, server.status))
 
+    def volumes(self):
+        """
+        Return an iterator over (volume_id, device) tuples for all volumes
+        that should be attached to this instance.
+        """
+        volumes = self.properties['Volumes']
+        if volumes is None:
+            return []
+
+        return ((vol['VolumeId'], vol['Device']) for vol in volumes)
+
     def attach_volumes(self):
-        if not self.properties['Volumes']:
-            return
-        for vol in self.properties['Volumes']:
-            if 'DeviceId' in vol:
-                dev = vol['DeviceId']
-            else:
-                dev = vol['Device']
+        for volume_id, device in self.volumes():
             attach_task = volume.VolumeAttachTask(self.stack,
                                                   self.resource_id,
-                                                  vol['VolumeId'],
-                                                  vol['Device'])
+                                                  volume_id,
+                                                  device)
             scheduler.TaskRunner(attach_task)()
 
     def detach_volumes(self):
-        server_id = self.resource_id
-        for vol in self.properties['Volumes']:
+        for volume_id, device in self.volumes():
             detach_task = volume.VolumeDetachTask(self.stack,
                                                   self.resource_id,
-                                                  vol['VolumeId'])
+                                                  volume_id)
             scheduler.TaskRunner(detach_task)()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -427,8 +431,7 @@ class Instance(resource.Resource):
         if self.resource_id is None:
             return
 
-        if self.properties['Volumes']:
-            self.detach_volumes()
+        self.detach_volumes()
 
         try:
             server = self.nova().servers.get(self.resource_id)
