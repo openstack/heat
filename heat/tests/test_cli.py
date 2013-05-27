@@ -13,7 +13,7 @@
 #    under the License.
 
 
-import unittest
+import testtools
 import heat
 import os
 import subprocess
@@ -21,7 +21,7 @@ import subprocess
 basepath = os.path.join(heat.__path__[0], os.path.pardir)
 
 
-class CliTest(unittest.TestCase):
+class CliTest(testtools.TestCase):
 
     def test_heat_cfn(self):
             self.bin_test_run('heat-cfn')

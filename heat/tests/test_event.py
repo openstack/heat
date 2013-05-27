@@ -61,10 +61,7 @@ class EventTest(HeatTestCase):
 
         self.resource = self.stack['EventTestResource']
         self.resource._store()
-
-    def tearDown(self):
-        db_api.stack_delete(self.ctx, self.stack.id)
-        super(EventTest, self).tearDown()
+        self.addCleanup(db_api.stack_delete, self.ctx, self.stack.id)
 
     def test_load(self):
         self.resource.resource_id_set('resource_physical_id')

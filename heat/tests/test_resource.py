@@ -376,10 +376,7 @@ class MetadataTest(HeatTestCase):
         self.res = generic_rsrc.GenericResource('metadata_resource',
                                                 tmpl, self.stack)
         scheduler.TaskRunner(self.res.create)()
-
-    def tearDown(self):
-        self.stack.delete()
-        super(HeatTestCase, self).tearDown()
+        self.addCleanup(self.stack.delete)
 
     def test_read_initial(self):
         self.assertEqual(self.res.metadata, {'Test': 'Initial metadata'})

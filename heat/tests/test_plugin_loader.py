@@ -15,13 +15,13 @@
 
 import pkgutil
 import sys
-import unittest
+import testtools
 
 import heat.engine
 from heat.common import plugin_loader
 
 
-class PluginLoaderTest(unittest.TestCase):
+class PluginLoaderTest(testtools.TestCase):
     def test_module_name(self):
         self.assertEqual(plugin_loader._module_name('foo.bar', 'blarg.wibble'),
                          'foo.bar.blarg.wibble')

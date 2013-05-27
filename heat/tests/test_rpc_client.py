@@ -21,7 +21,7 @@ Unit Tests for heat.rpc.client
 
 from oslo.config import cfg
 import stubout
-import unittest
+import testtools
 
 from heat.common import config
 from heat.common import context
@@ -31,7 +31,7 @@ from heat.rpc import client as rpc_client
 from heat.openstack.common import rpc
 
 
-class EngineRpcAPITestCase(unittest.TestCase):
+class EngineRpcAPITestCase(testtools.TestCase):
 
     def setUp(self):
         config.register_engine_opts()

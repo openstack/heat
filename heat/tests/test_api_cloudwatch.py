@@ -524,7 +524,4 @@ class WatchControllerTest(HeatTestCase):
         cfgopts = DummyConfig()
         self.controller = watches.WatchController(options=cfgopts)
         self.controller.policy.policy_path = None
-
-    def tearDown(self):
-        self.m.VerifyAll()
-        super(WatchControllerTest, self).tearDown()
+        self.addCleanup(self.m.VerifyAll)

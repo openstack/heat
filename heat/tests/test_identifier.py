@@ -13,12 +13,12 @@
 #    under the License.
 
 
-import unittest
+import testtools
 
 from heat.common import identifier
 
 
-class IdentifierTest(unittest.TestCase):
+class IdentifierTest(testtools.TestCase):
     url_prefix = 'http://1.2.3.4/foo/'
 
     def test_attrs(self):
@@ -354,7 +354,7 @@ class IdentifierTest(unittest.TestCase):
         self.assertEqual(hi._path_components(), ['p1', 'p2', 'p3'])
 
 
-class ResourceIdentifierTest(unittest.TestCase):
+class ResourceIdentifierTest(testtools.TestCase):
     def test_resource_init_no_path(self):
         si = identifier.HeatIdentifier('t', 's', 'i')
         ri = identifier.ResourceIdentifier(resource_name='r', **si)
@@ -385,7 +385,7 @@ class ResourceIdentifierTest(unittest.TestCase):
                           't', 's', 'i', 'p', 'r/r')
 
 
-class EventIdentifierTest(unittest.TestCase):
+class EventIdentifierTest(testtools.TestCase):
     def test_event_init(self):
         si = identifier.HeatIdentifier('t', 's', 'i')
         pi = identifier.ResourceIdentifier(resource_name='p', **si)

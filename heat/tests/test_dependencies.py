@@ -13,13 +13,13 @@
 #    under the License.
 
 
-import unittest
+import testtools
 
 from heat.engine.dependencies import Dependencies
 from heat.engine.dependencies import CircularDependencyException
 
 
-class dependenciesTest(unittest.TestCase):
+class dependenciesTest(testtools.TestCase):
 
     def _dep_test(self, func, checkorder, deps):
         nodes = set.union(*[set(e) for e in deps])

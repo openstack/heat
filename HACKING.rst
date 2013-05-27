@@ -86,9 +86,9 @@ Example::
   import random
   import StringIO
   import time
-  import unittest
 
   import eventlet
+  import testtools
   import webob.exc
 
   import heat.api.ec2
