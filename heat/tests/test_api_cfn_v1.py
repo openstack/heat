@@ -125,7 +125,8 @@ class CfnStackControllerTest(HeatTestCase):
                         u'stack_status': u'CREATE_COMPLETE'}]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'list_stacks',
+                 {'namespace': None,
+                  'method': 'list_stacks',
                   'args': {},
                   'version': self.api_version},
                  None).AndReturn(engine_resp)
@@ -154,7 +155,8 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'list_stacks',
+                 {'namespace': None,
+                  'method': 'list_stacks',
                   'args': {},
                   'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("AttributeError"))
@@ -175,7 +177,8 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'list_stacks',
+                 {'namespace': None,
+                  'method': 'list_stacks',
                   'args': {},
                   'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("Exception"))
@@ -225,11 +228,13 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'show_stack',
+                 {'namespace': None,
+                  'method': 'show_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -312,7 +317,8 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'show_stack',
+                 {'namespace': None,
+                  'method': 'show_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -367,7 +373,8 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'show_stack',
+                 {'namespace': None,
+                  'method': 'show_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("InvalidTenant"))
@@ -389,11 +396,13 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'show_stack',
+                 {'namespace': None,
+                  'method': 'show_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("AttributeError"))
@@ -414,7 +423,8 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("StackNotFound"))
@@ -459,7 +469,8 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'create_stack',
+                 {'namespace': None,
+                  'method': 'create_stack',
                   'args': {'stack_name': stack_name,
                            'template': template,
                            'params': engine_parms,
@@ -521,7 +532,8 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.StubOutWithMock(rpc, 'call')
 
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'create_stack',
+                 {'namespace': None,
+                  'method': 'create_stack',
                   'args': {'stack_name': stack_name,
                            'template': template,
                            'params': engine_parms,
@@ -556,7 +568,8 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.StubOutWithMock(rpc, 'call')
 
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'create_stack',
+                 {'namespace': None,
+                  'method': 'create_stack',
                   'args': {'stack_name': stack_name,
                            'template': template,
                            'params': engine_parms,
@@ -590,7 +603,8 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.StubOutWithMock(rpc, 'call')
 
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'create_stack',
+                 {'namespace': None,
+                  'method': 'create_stack',
                   'args': {'stack_name': stack_name,
                   'template': template,
                   'params': engine_parms,
@@ -626,12 +640,14 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
 
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'update_stack',
+                 {'namespace': None,
+                  'method': 'update_stack',
                   'args': {'stack_identity': identity,
                            'template': template,
                            'params': engine_parms,
@@ -668,7 +684,8 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("StackNotFound"))
@@ -697,11 +714,13 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'get_template',
+                 {'namespace': None,
+                  'method': 'get_template',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -727,11 +746,13 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'get_template',
+                 {'namespace': None,
+                  'method': 'get_template',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("AttributeError"))
@@ -753,7 +774,8 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("StackNotFound"))
@@ -778,11 +800,13 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'get_template',
+                 {'namespace': None,
+                  'method': 'get_template',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -824,12 +848,14 @@ class CfnStackControllerTest(HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         # Engine returns None when delete successful
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'delete_stack',
+                 {'namespace': None,
+                  'method': 'delete_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None).AndReturn(None)
 
@@ -851,14 +877,16 @@ class CfnStackControllerTest(HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'delete_stack',
+                 {'namespace': None,
+                  'method': 'delete_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("AttributeError"))
@@ -880,7 +908,8 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("StackNotFound"))
@@ -920,11 +949,13 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'list_events',
+                 {'namespace': None,
+                  'method': 'list_events',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -960,11 +991,13 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'list_events',
+                 {'namespace': None,
+                  'method': 'list_events',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("Exception"))
@@ -985,7 +1018,8 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("StackNotFound"))
@@ -1030,7 +1064,8 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         args = {
@@ -1038,7 +1073,8 @@ class CfnStackControllerTest(HeatTestCase):
             'resource_name': dummy_req.params.get('LogicalResourceId'),
         }
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'describe_stack_resource',
+                 {'namespace': None,
+                  'method': 'describe_stack_resource',
                   'args': args,
                   'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -1076,7 +1112,8 @@ class CfnStackControllerTest(HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("StackNotFound"))
@@ -1100,7 +1137,8 @@ class CfnStackControllerTest(HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         args = {
@@ -1108,7 +1146,8 @@ class CfnStackControllerTest(HeatTestCase):
             'resource_name': dummy_req.params.get('LogicalResourceId'),
         }
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'describe_stack_resource',
+                 {'namespace': None,
+                  'method': 'describe_stack_resource',
                   'args': args,
                   'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("ResourceNotFound"))
@@ -1153,7 +1192,8 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         args = {
@@ -1161,7 +1201,8 @@ class CfnStackControllerTest(HeatTestCase):
             'resource_name': dummy_req.params.get('LogicalResourceId'),
         }
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'describe_stack_resources',
+                 {'namespace': None,
+                  'method': 'describe_stack_resources',
                   'args': args,
                   'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -1197,7 +1238,8 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("StackNotFound"))
@@ -1242,7 +1284,8 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'find_physical_resource',
+                 {'namespace': None,
+                  'method': 'find_physical_resource',
                   'args': {'physical_resource_id':
                            'a3455d8c-9f88-404d-a85b-5315293e67de'},
                   'version': self.api_version}, None).AndReturn(identity)
@@ -1251,7 +1294,8 @@ class CfnStackControllerTest(HeatTestCase):
             'resource_name': dummy_req.params.get('LogicalResourceId'),
         }
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'describe_stack_resources',
+                 {'namespace': None,
+                  'method': 'describe_stack_resources',
                   'args': args,
                   'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -1288,7 +1332,8 @@ class CfnStackControllerTest(HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'find_physical_resource',
+                 {'namespace': None,
+                  'method': 'find_physical_resource',
                   'args': {'physical_resource_id':
                            'aaaaaaaa-9f88-404d-cccc-ffffffffffff'},
                   'version': self.api_version},
@@ -1346,11 +1391,13 @@ class CfnStackControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None).AndReturn(identity)
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'list_stack_resources',
+                 {'namespace': None,
+                  'method': 'list_stack_resources',
                  'args': {'stack_identity': identity},
                  'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -1381,7 +1428,8 @@ class CfnStackControllerTest(HeatTestCase):
         # heat exception type
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'method': 'identify_stack',
+                 {'namespace': None,
+                  'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("StackNotFound"))

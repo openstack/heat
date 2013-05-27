@@ -1,6 +1,6 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-#    Copyright 2011 OpenStack LLC
+#    Copyright 2011 OpenStack Foundation
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -57,13 +57,14 @@ class Consumer(object):
         self.topic = topic
         self.proxy = proxy
 
-    def call(self, context, version, method, args, timeout):
+    def call(self, context, version, method, namespace, args, timeout):
         done = eventlet.event.Event()
 
         def _inner():
             ctxt = RpcContext.from_dict(context.to_dict())
             try:
-                rval = self.proxy.dispatch(context, version, method, **args)
+                rval = self.proxy.dispatch(context, version, method,
+                                           namespace, **args)
                 res = []
                 # Caller might have called ctxt.reply() manually
                 for (reply, failure) in ctxt._response:
@@ -140,13 +141,15 @@ def multicall(conf, context, topic, msg, timeout=None):
         return
     args = msg.get('args', {})
     version = msg.get('version', None)
+    namespace = msg.get('namespace', None)
 
     try:
         consumer = CONSUMERS[topic][0]
     except (KeyError, IndexError):
         return iter([None])
     else:
-        return consumer.call(context, version, method, args, timeout)
+        return consumer.call(context, version, method, namespace, args,
+                             timeout)
 
 
 def call(conf, context, topic, msg, timeout=None):
@@ -183,9 +186,10 @@ def fanout_cast(conf, context, topic, msg):
         return
     args = msg.get('args', {})
     version = msg.get('version', None)
+    namespace = msg.get('namespace', None)
 
     for consumer in CONSUMERS.get(topic, []):
         try:
-            consumer.call(context, version, method, args, None)
+            consumer.call(context, version, method, namespace, args, None)
         except Exception:
             pass

@@ -1,6 +1,6 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-# Copyright 2011 OpenStack LLC.
+# Copyright 2011 OpenStack Foundation.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -98,7 +98,7 @@ def wrap_exception(f):
     def _wrap(*args, **kw):
         try:
             return f(*args, **kw)
-        except Exception, e:
+        except Exception as e:
             if not isinstance(e, Error):
                 #exc_type, exc_value, exc_traceback = sys.exc_info()
                 logging.exception(_('Uncaught exception'))

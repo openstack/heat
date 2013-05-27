@@ -227,9 +227,10 @@ class WatchController(object):
         try:
             # Engine does not currently support query by namespace/metric
             # so we pass None/None and do any filtering locally
+            null_kwargs = {'metric_namespace': None,
+                           'metric_name': None}
             watch_data = self.engine_rpcapi.show_watch_metric(con,
-                                                              namespace=None,
-                                                              metric_name=None)
+                                                              **null_kwargs)
         except rpc_common.RemoteError as ex:
             return exception.map_remote_error(ex)
 

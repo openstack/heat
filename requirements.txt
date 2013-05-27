@@ -21,6 +21,7 @@ iso8601>=0.1.4
 kombu>=1.0.4
 argparse
 lxml>=2.3,<=2.3.5
+six
 sqlalchemy-migrate>=0.7.2
 python-novaclient>=2.11.0,<3
 PasteDeploy==1.5.0

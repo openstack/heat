@@ -18,6 +18,7 @@ from oslo.config import cfg
 from heat.openstack.common import local
 from heat.common import exception
 from heat.common import wsgi
+from heat.openstack.common import context
 from heat.openstack.common import importutils
 from heat.openstack.common import uuidutils
 from heat.db import api as db_api
@@ -27,7 +28,7 @@ def generate_request_id():
     return 'req-' + uuidutils.generate_uuid()
 
 
-class RequestContext(object):
+class RequestContext(context.RequestContext):
     """
     Stores information about the security context under which the user
     accesses the system, as well as additional request information.
@@ -45,19 +46,20 @@ class RequestContext(object):
          :param kwargs: Extra arguments that might be present, but we ignore
             because they possibly came in from older rpc messages.
         """
+        super(RequestContext, self).__init__(auth_token=auth_token,
+                                             user=username, tenant=tenant,
+                                             is_admin=is_admin,
+                                             read_only=read_only,
+                                             show_deleted=show_deleted,
+                                             request_id='unused')
 
-        self.auth_token = auth_token
         self.username = username
         self.password = password
         self.aws_creds = aws_creds
         self.aws_auth_uri = aws_auth_uri
-        self.tenant = tenant
         self.tenant_id = tenant_id
         self.auth_url = auth_url
         self.roles = roles or []
-        self.is_admin = is_admin
-        self.read_only = read_only
-        self._show_deleted = show_deleted
         self.owner_is_tenant = owner_is_tenant
         if overwrite or not hasattr(local.store, 'context'):
             self.update_store()
@@ -74,7 +76,7 @@ class RequestContext(object):
 
     def to_dict(self):
         return {'auth_token': self.auth_token,
-                'username': self.username,
+                'username': self.user,
                 'password': self.password,
                 'aws_creds': self.aws_creds,
                 'aws_auth_uri': self.aws_auth_uri,
@@ -92,13 +94,6 @@ class RequestContext(object):
     def owner(self):
         """Return the owner to correlate with an image."""
         return self.tenant if self.owner_is_tenant else self.user
-
-    @property
-    def show_deleted(self):
-        """Admins can see deleted by default."""
-        if self._show_deleted or self.is_admin:
-            return True
-        return False
 
 
 def get_admin_context(read_deleted="no"):
