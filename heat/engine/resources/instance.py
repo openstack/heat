@@ -269,7 +269,7 @@ class Instance(resource.Resource):
 
         return nics
 
-    def handle_create(self):
+    def _get_security_groups(self):
         security_groups = []
         for property in ('SecurityGroups', 'SecurityGroupIds'):
             if self.properties.get(property) is not None:
@@ -277,6 +277,10 @@ class Instance(resource.Resource):
                     security_groups.append(sg)
         if not security_groups:
             security_groups = None
+        return security_groups
+
+    def handle_create(self):
+        security_groups = self._get_security_groups()
 
         userdata = self.properties['UserData'] or ''
         flavor = self.properties['InstanceType']
@@ -405,19 +409,21 @@ class Instance(resource.Resource):
             return res
 
         # check validity of key
-        try:
-            key_name = self.properties['KeyName']
-            if key_name is None:
-                return
-        except ValueError:
-            return
-        else:
+        key_name = self.properties.get('KeyName', None)
+        if key_name:
             keypairs = self.nova().keypairs.list()
-            for k in keypairs:
-                if k.name == key_name:
-                    return
-        return {'Error':
-                'Provided KeyName is not registered with nova'}
+            if not any(k.name == key_name for k in keypairs):
+                return {'Error':
+                        'Provided KeyName is not registered with nova'}
+
+        # check validity of security groups vs. network interfaces
+        security_groups = self._get_security_groups()
+        if security_groups and self.properties.get('NetworkInterfaces'):
+            return {'Error':
+                    'Cannot define both SecurityGroups/SecurityGroupIds and '
+                    'NetworkInterfaces properties.'}
+
+        return
 
     def _delete_server(self, server):
         '''

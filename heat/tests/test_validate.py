@@ -341,6 +341,94 @@ test_template_volume_snapshot = '''
 }
 '''
 
+test_unregistered_key = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Parameters" : {
+
+    "KeyName" : {
+''' + \
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        }
+      },
+
+      "Resources" : {
+        "Instance": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" }
+          }
+        }
+      }
+    }
+    '''
+
+test_template_invalid_secgroups = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Parameters" : {
+
+    "KeyName" : {
+''' + \
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        }
+      },
+
+      "Resources" : {
+        "Instance": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" },
+            "SecurityGroups": [ "default" ],
+            "NetworkInterfaces": [ "mgmt", "data" ]
+          }
+        }
+      }
+    }
+    '''
+
+test_template_invalid_secgroupids = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Parameters" : {
+
+    "KeyName" : {
+''' + \
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        }
+      },
+
+      "Resources" : {
+        "Instance": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" },
+            "SecurityGroupIds": [ "default" ],
+            "NetworkInterfaces": [ "mgmt", "data" ]
+          }
+        }
+      }
+    }
+    '''
+
 
 class validateTest(HeatTestCase):
     def setUp(self):
@@ -487,3 +575,44 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
         self.assertEqual(res, {'Description': u'test.', 'Parameters': {}})
+
+    def test_unregistered_key(self):
+        t = template_format.parse(test_unregistered_key)
+        template = parser.Template(t)
+        params = parser.Parameters(
+            'test_stack', template, {'KeyName': 'not_registered'})
+        stack = parser.Stack(None, 'test_stack', template, params)
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        resource = stack.resources['Instance']
+        self.assertNotEqual(resource.validate(), None)
+
+    def test_invalid_security_groups_with_nics(self):
+        t = template_format.parse(test_template_invalid_secgroups)
+        template = parser.Template(t)
+        params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
+        stack = parser.Stack(None, 'test_stack', template, params)
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        resource = stack.resources['Instance']
+        self.assertNotEqual(resource.validate(), None)
+
+    def test_invalid_security_group_ids_with_nics(self):
+        t = template_format.parse(test_template_invalid_secgroupids)
+        template = parser.Template(t)
+        params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
+        stack = parser.Stack(None, 'test_stack', template, params)
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        resource = stack.resources['Instance']
+        self.assertNotEqual(resource.validate(), None)
