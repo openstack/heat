@@ -834,13 +834,14 @@ class stackServiceTest(stackServiceTestBase):
         watch = db_api.watch_data_create(self.ctx, values)
 
         # Check there is one result returned
-        result = self.man.show_watch_metric(self.ctx, namespace=None,
+        result = self.man.show_watch_metric(self.ctx,
+                                            metric_namespace=None,
                                             metric_name=None)
         self.assertEqual(1, len(result))
 
         # Create another metric datapoint and check we get two
         watch = db_api.watch_data_create(self.ctx, values)
-        result = self.man.show_watch_metric(self.ctx, namespace=None,
+        result = self.man.show_watch_metric(self.ctx, metric_namespace=None,
                                             metric_name=None)
         self.assertEqual(2, len(result))
 

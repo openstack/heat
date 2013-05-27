@@ -577,7 +577,7 @@ class EngineService(service.Service):
         return result
 
     @request_context
-    def show_watch_metric(self, cnxt, namespace=None, metric_name=None):
+    def show_watch_metric(self, cnxt, metric_namespace=None, metric_name=None):
         '''
         The show_watch method returns the datapoints for a metric
         arg1 -> RPC context.
@@ -588,7 +588,7 @@ class EngineService(service.Service):
         # DB API and schema does not yet allow us to easily query by
         # namespace/metric, but we will want this at some point
         # for now, the API can query all metric data and filter locally
-        if namespace is not None or metric_name is not None:
+        if metric_namespace is not None or metric_name is not None:
             logger.error("Filtering by namespace/metric not yet supported")
             return
 

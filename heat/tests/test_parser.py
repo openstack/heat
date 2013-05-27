@@ -308,8 +308,8 @@ class StackTest(HeatTestCase):
 
         setup_dummy_db()
         self.ctx = context.get_admin_context()
-        self.m.StubOutWithMock(self.ctx, 'username')
-        self.ctx.username = self.username
+        self.m.StubOutWithMock(self.ctx, 'user')
+        self.ctx.user = self.username
         self.ctx.tenant_id = 'test_tenant'
 
         generic_rsrc.GenericResource.properties_schema = {}

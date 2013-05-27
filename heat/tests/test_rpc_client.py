@@ -156,7 +156,7 @@ class EngineRpcAPITestCase(testtools.TestCase):
 
     def test_show_watch_metric(self):
         self._test_engine_api('show_watch_metric', 'call',
-                              namespace=None, metric_name=None)
+                              metric_namespace=None, metric_name=None)
 
     def test_set_watch_state(self):
         self._test_engine_api('set_watch_state', 'call',

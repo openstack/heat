@@ -140,7 +140,8 @@ class WatchControllerTest(HeatTestCase):
 
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
-                 {'args': {'watch_name': watch_name},
+                 {'namespace': None,
+                  'args': {'watch_name': watch_name},
                   'method': 'show_watch',
                   'version': self.api_version},
                  None).AndReturn(engine_resp)
@@ -238,7 +239,8 @@ class WatchControllerTest(HeatTestCase):
         # and pass None/None for namespace/watch_name which returns
         # all metric data which we post-process in the API
         rpc.call(dummy_req.context, self.topic,
-                 {'args': {'namespace': None, 'metric_name': None},
+                 {'namespace': None,
+                  'args': {'metric_namespace': None, 'metric_name': None},
                   'method': 'show_watch_metric',
                   'version': self.api_version},
                  None).AndReturn(engine_resp)
@@ -317,9 +319,11 @@ class WatchControllerTest(HeatTestCase):
         # and pass None/None for namespace/watch_name which returns
         # all metric data which we post-process in the API
         rpc.call(dummy_req.context, self.topic, {'args':
-                 {'namespace': None,
-                 'metric_name': None},
-                 'method': 'show_watch_metric', 'version': self.api_version},
+                 {'metric_namespace': None,
+                  'metric_name': None},
+                 'namespace': None,
+                 'method': 'show_watch_metric',
+                 'version': self.api_version},
                  None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -375,10 +379,11 @@ class WatchControllerTest(HeatTestCase):
         # Current engine implementation means we filter in the API
         # and pass None/None for namespace/watch_name which returns
         # all metric data which we post-process in the API
-        rpc.call(dummy_req.context, self.topic, {'args':
-                 {'namespace': None,
-                 'metric_name': None},
-                 'method': 'show_watch_metric', 'version': self.api_version},
+        rpc.call(dummy_req.context, self.topic,
+                 {'args': {'metric_namespace': None, 'metric_name': None},
+                  'namespace': None,
+                  'method': 'show_watch_metric',
+                  'version': self.api_version},
                  None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
@@ -445,6 +450,7 @@ class WatchControllerTest(HeatTestCase):
                    'Unit': u'Count',
                    'Dimensions': []}},
                  'watch_name': u'HttpFailureAlarm'},
+                 'namespace': None,
                  'method': 'create_watch_data',
                  'version': self.api_version},
                  None).AndReturn(engine_resp)
@@ -480,6 +486,7 @@ class WatchControllerTest(HeatTestCase):
                      {'args':
                       {'state': state_map[state],
                        'watch_name': u'HttpFailureAlarm'},
+                      'namespace': None,
                       'method': 'set_watch_state',
                       'version': self.api_version},
                      None).AndReturn(engine_resp)
