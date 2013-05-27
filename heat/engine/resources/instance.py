@@ -20,7 +20,6 @@ import os
 import pkgutil
 from urlparse import urlparse
 
-import eventlet
 from oslo.config import cfg
 
 from heat.engine import clients
@@ -420,6 +419,21 @@ class Instance(resource.Resource):
         return {'Error':
                 'Provided KeyName is not registered with nova'}
 
+    def _delete_server(self, server):
+        '''
+        Return a co-routine that deletes the server and waits for it to
+        disappear from Nova.
+        '''
+        server.delete()
+
+        while True:
+            yield
+
+            try:
+                server.get()
+            except clients.novaclient.exceptions.NotFound:
+                break
+
     def handle_delete(self):
         '''
         Delete an instance, blocking until it is disposed by OpenStack
@@ -438,13 +452,9 @@ class Instance(resource.Resource):
         except clients.novaclient.exceptions.NotFound:
             pass
         else:
-            server.delete()
-            while True:
-                try:
-                    server.get()
-                except clients.novaclient.exceptions.NotFound:
-                    break
-                eventlet.sleep(0.2)
+            delete = scheduler.TaskRunner(self._delete_server, server)
+            delete(wait_time=0.2)
+
         self.resource_id = None
 
 
