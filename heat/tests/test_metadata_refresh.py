@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import eventlet
 import mox
 
 from oslo.config import cfg
@@ -25,6 +24,7 @@ from heat.tests.utils import stack_delete_after
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.engine import service
 from heat.engine.resources import instance
 from heat.common import context
@@ -124,7 +124,7 @@ class MetadataRefreshTest(HeatTestCase):
     '''
     def setUp(self):
         super(MetadataRefreshTest, self).setUp()
-        self.m.StubOutWithMock(eventlet, 'sleep')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         self.fc = fakes.FakeKeystoneClient()
         setup_dummy_db()
 
@@ -215,7 +215,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
         wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
 
-        self.m.StubOutWithMock(eventlet, 'sleep')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         return stack
 
@@ -248,8 +248,8 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         def post_success(sleep_time):
             update_metadata('123', 'foo', 'bar')
 
-        eventlet.sleep(mox.IsA(int)).WithSideEffects(check_empty)
-        eventlet.sleep(mox.IsA(int)).WithSideEffects(post_success)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).WithSideEffects(check_empty)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).WithSideEffects(post_success)
 
         self.m.ReplayAll()
         self.stack.create()

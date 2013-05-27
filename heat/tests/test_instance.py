@@ -15,7 +15,6 @@
 
 import copy
 
-import eventlet
 import mox
 
 from heat.tests.v1_1 import fakes
@@ -223,13 +222,15 @@ class instancesTest(HeatTestCase):
             if server._test_check_iterations > 2:
                 server.status = 'ACTIVE'
         return_server.get = activate_status.__get__(return_server)
-        self.m.StubOutWithMock(eventlet, 'sleep')
-        eventlet.sleep(1).AndReturn(None)
-        eventlet.sleep(1).AndReturn(None)
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()
         self.assertEqual(instance.state, instance.CREATE_COMPLETE)
+
+        self.m.VerifyAll()
 
     def test_build_nics(self):
         return_server = self.fc.servers.list()[1]

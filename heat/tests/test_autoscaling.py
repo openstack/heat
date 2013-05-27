@@ -15,7 +15,6 @@
 import datetime
 import copy
 
-import eventlet
 import mox
 
 from heat.common import template_format
@@ -105,7 +104,7 @@ class AutoScalingTest(HeatTestCase):
         return rsrc
 
     def _stub_create(self, num):
-        self.m.StubOutWithMock(eventlet, 'sleep')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
@@ -113,7 +112,7 @@ class AutoScalingTest(HeatTestCase):
         for x in range(num):
             instance.Instance.handle_create().AndReturn(cookie)
         instance.Instance.check_create_complete(cookie).AndReturn(False)
-        eventlet.sleep(mox.IsA(int)).AndReturn(None)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         instance.Instance.check_create_complete(
             cookie).MultipleTimes().AndReturn(True)
 
