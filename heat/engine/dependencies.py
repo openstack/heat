@@ -89,6 +89,58 @@ class Node(object):
         return repr(self.require)
 
 
+class Graph(collections.defaultdict):
+    '''A mutable mapping of objects to nodes in a dependency graph.'''
+
+    def __init__(self, *args):
+        super(Graph, self).__init__(Node, *args)
+
+    def map(self, func):
+        '''
+        Return a dictionary derived from mapping the supplied function onto
+        each node in the graph.
+        '''
+        return dict((k, func(n)) for k, n in self.items())
+
+    def copy(self):
+        '''Return a copy of the graph.'''
+        return Graph(self.map(lambda n: n.copy()))
+
+    def reverse_copy(self):
+        '''Return a copy of the graph with the edges reversed.'''
+        return Graph(self.map(lambda n: n.reverse_copy()))
+
+    def __str__(self):
+        '''Convert the graph to a human-readable string.'''
+        pairs = ('%s: %s' % (str(k), str(v)) for k, v in self.iteritems())
+        return '{%s}' % ', '.join(pairs)
+
+    @staticmethod
+    def toposort(graph):
+        '''
+        Return a topologically sorted iterator over a dependency graph.
+
+        This is a destructive operation for the graph.
+        '''
+        def next_leaf():
+            for leaf, node in graph.iteritems():
+                if not node:
+                    return leaf, node
+
+            # There are nodes remaining, but no more leaves: a cycle
+            raise CircularDependencyException(cycle=str(graph))
+
+        for iteration in xrange(len(graph)):
+            leaf, node = next_leaf()
+            yield leaf
+
+            # Remove the node and all edges connected to it before
+            # continuing to look for more leaves
+            for src in node.required_by():
+                graph[src] -= leaf
+            del graph[leaf]
+
+
 class Dependencies(object):
     '''Helper class for calculating a dependency graph.'''
 
@@ -97,7 +149,7 @@ class Dependencies(object):
         Initialise, optionally with a list of edges, in the form of
         (requirer, required) tuples.
         '''
-        self.deps = collections.defaultdict(Node)
+        self._graph = Graph()
         for e in edges:
             self += e
 
@@ -107,10 +159,10 @@ class Dependencies(object):
 
         if required is None:
             # Just ensure the node is created by accessing the defaultdict
-            self.deps[requirer]
+            self._graph[requirer]
         else:
-            self.deps[required].required_by(requirer)
-            self.deps[requirer].requires(required)
+            self._graph[required].required_by(requirer)
+            self._graph[requirer].requires(required)
 
         return self
 
@@ -119,7 +171,7 @@ class Dependencies(object):
         Return a partial dependency graph consisting of the specified node and
         all those that require it only.
         '''
-        if last not in self.deps:
+        if last not in self._graph:
             raise KeyError
 
         def get_edges(key):
@@ -130,11 +182,11 @@ class Dependencies(object):
 
             # Get the edge list for each node that requires the current node
             edge_lists = itertools.imap(requirer_edges,
-                                        self.deps[key].required_by())
+                                        self._graph[key].required_by())
             # Combine the lists into one long list
             return itertools.chain.from_iterable(edge_lists)
 
-        if self.deps[last].stem():
+        if self._graph[last].stem():
             # Nothing requires this, so just add the node itself
             edges = [(last, None)]
         else:
@@ -142,17 +194,11 @@ class Dependencies(object):
 
         return Dependencies(edges)
 
-    @staticmethod
-    def _deps_to_str(deps):
-        '''Convert the given dependency graph to a human-readable string.'''
-        pairs = ('%s: %s' % (str(k), str(v)) for k, v in deps.items())
-        return '{%s}' % ', '.join(pairs)
-
     def __str__(self):
         '''
         Return a human-readable string representation of the dependency graph
         '''
-        return self._deps_to_str(self.deps)
+        return str(self._graph)
 
     def _edges(self):
         '''Return an iterator over all of the edges in the graph.'''
@@ -162,44 +208,24 @@ class Dependencies(object):
             else:
                 for rqd in node:
                     yield (rqr, rqd)
-        return itertools.chain.from_iterable(outgoing_edges(*item)
-                                             for item in self.deps.iteritems())
+        return itertools.chain.from_iterable(outgoing_edges(*i)
+                                             for i in self._graph.iteritems())
 
     def __repr__(self):
         '''Return a string representation of the object.'''
         return 'Dependencies([%s])' % ', '.join(repr(e) for e in self._edges())
 
-    def _toposort(self, deps):
-        '''Generate a topological sort of a dependency graph.'''
-        def next_leaf():
-            for leaf, node in deps.items():
-                if not node:
-                    return leaf, node
-
-            # There are nodes remaining, but no more leaves: a cycle
-            cycle = self._deps_to_str(deps)
-            raise CircularDependencyException(cycle=cycle)
-
-        for iteration in xrange(len(deps)):
-            leaf, node = next_leaf()
-            yield leaf
-
-            # Remove the node and all edges connected to it before continuing
-            # to look for more leaves
-            for src in node.required_by():
-                deps[src] -= leaf
-            del deps[leaf]
-
-    def _mapgraph(self, func):
-        '''Map the supplied function onto every node in the graph.'''
-        return dict((k, func(n)) for k, n in self.deps.items())
+    def graph(self, reverse=False):
+        '''Return a copy of the underlying dependency graph.'''
+        if reverse:
+            return self._graph.reverse_copy()
+        else:
+            return self._graph.copy()
 
     def __iter__(self):
         '''Return a topologically sorted iterator'''
-        deps = self._mapgraph(lambda n: n.copy())
-        return self._toposort(deps)
+        return Graph.toposort(self.graph())
 
     def __reversed__(self):
         '''Return a reverse topologically sorted iterator'''
-        rev_deps = self._mapgraph(lambda n: n.reverse_copy())
-        return self._toposort(rev_deps)
+        return Graph.toposort(self.graph(reverse=True))
