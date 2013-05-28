@@ -155,8 +155,10 @@ def _get_deployment_config_file():
     absolute pathname.
     """
     _register_paste_deploy_opts()
-    config_path = os.path.abspath(cfg.CONF.find_file(
-        cfg.CONF.paste_deploy['api_paste_config']))
+    config_path = cfg.CONF.find_file(
+        cfg.CONF.paste_deploy['api_paste_config'])
+    if config_path is None:
+        return None
 
     return os.path.abspath(config_path)
 
