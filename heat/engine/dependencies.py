@@ -23,80 +23,81 @@ class CircularDependencyException(exception.OpenstackException):
     message = _("Circular Dependency Found: %(cycle)s")
 
 
+class Node(object):
+    '''A node in a dependency graph.'''
+
+    def __init__(self, requires=None, required_by=None):
+        '''
+        Initialise the node, optionally with a set of keys this node
+        requires and/or a set of keys that this node is required by.
+        '''
+        self.require = requires and requires.copy() or set()
+        self.satisfy = required_by and required_by.copy() or set()
+
+    def copy(self):
+        '''Return a copy of the node.'''
+        return Node(self.require, self.satisfy)
+
+    def reverse_copy(self):
+        '''Return a copy of the node with the edge directions reversed.'''
+        return Node(self.satisfy, self.require)
+
+    def required_by(self, source=None):
+        '''
+        List the keys that require this node, and optionally add a
+        new one.
+        '''
+        if source is not None:
+            self.satisfy.add(source)
+        return iter(self.satisfy)
+
+    def requires(self, target):
+        '''Add a key that this node requires.'''
+        self.require.add(target)
+
+    def __isub__(self, target):
+        '''Remove a key that this node requires.'''
+        self.require.remove(target)
+        return self
+
+    def __nonzero__(self):
+        '''Return True if this node is not a leaf (it requires other nodes).'''
+        return bool(self.require)
+
+    def stem(self):
+        '''Return True if this node is a stem (required by nothing).'''
+        return not bool(self.satisfy)
+
+    def disjoint(self):
+        '''Return True if this node is both a leaf and a stem.'''
+        return (not self) and self.stem()
+
+    def __len__(self):
+        '''Count the number of keys required by this node.'''
+        return len(self.require)
+
+    def __iter__(self):
+        '''Iterate over the keys required by this node.'''
+        return iter(self.require)
+
+    def __str__(self):
+        '''Return a human-readable string representation of the node.'''
+        return '{%s}' % ', '.join(str(n) for n in self)
+
+    def __repr__(self):
+        '''Return a string representation of the node.'''
+        return repr(self.require)
+
+
 class Dependencies(object):
     '''Helper class for calculating a dependency graph.'''
-
-    class Node(object):
-        def __init__(self, requires=None, required_by=None):
-            '''
-            Initialise the node, optionally with a set of keys this node
-            requires and/or a set of keys that this node is required by.
-            '''
-            self.require = requires and requires.copy() or set()
-            self.satisfy = required_by and required_by.copy() or set()
-
-        def copy(self):
-            '''Make a copy of the node.'''
-            return Dependencies.Node(self.require, self.satisfy)
-
-        def reverse_copy(self):
-            '''Make a copy of the node with the edge directions reversed.'''
-            return Dependencies.Node(self.satisfy, self.require)
-
-        def required_by(self, source=None):
-            '''
-            List the keys that require this node, and optionally add a
-            new one
-            '''
-            if source is not None:
-                self.satisfy.add(source)
-            return iter(self.satisfy)
-
-        def requires(self, target):
-            '''Add a key that this node requires.'''
-            self.require.add(target)
-
-        def __isub__(self, target):
-            '''Remove a key that this node requires.'''
-            self.require.remove(target)
-            return self
-
-        def __nonzero__(self):
-            '''
-            Return True if this node is not a leaf (it requires other nodes)
-            '''
-            return bool(self.require)
-
-        def stem(self):
-            '''Return True if this node is a stem (required by nothing).'''
-            return not bool(self.satisfy)
-
-        def disjoint(self):
-            '''Return True if this node is both a leaf and a stem.'''
-            return (not self) and self.stem()
-
-        def __len__(self):
-            '''Count the number of keys required by this node.'''
-            return len(self.require)
-
-        def __iter__(self):
-            '''Iterate over the keys required by this node.'''
-            return iter(self.require)
-
-        def __str__(self):
-            '''Return a human-readable string representation of the node.'''
-            return '{%s}' % ', '.join(str(n) for n in self)
-
-        def __repr__(self):
-            '''Return a string representation of the node.'''
-            return repr(self.require)
 
     def __init__(self, edges=[]):
         '''
         Initialise, optionally with a list of edges, in the form of
         (requirer, required) tuples.
         '''
-        self.deps = collections.defaultdict(self.Node)
+        self.deps = collections.defaultdict(Node)
         for e in edges:
             self += e
 
