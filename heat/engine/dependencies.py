@@ -110,6 +110,15 @@ class Graph(collections.defaultdict):
         '''Return a copy of the graph with the edges reversed.'''
         return Graph(self.map(lambda n: n.reverse_copy()))
 
+    def __delitem__(self, key):
+        '''Delete the node given by the specified key from the graph.'''
+        node = self[key]
+
+        for src in node.required_by():
+            self[src] -= key
+
+        return super(Graph, self).__delitem__(key)
+
     def __str__(self):
         '''Convert the graph to a human-readable string.'''
         pairs = ('%s: %s' % (str(k), str(v)) for k, v in self.iteritems())
@@ -122,23 +131,16 @@ class Graph(collections.defaultdict):
 
         This is a destructive operation for the graph.
         '''
-        def next_leaf():
-            for leaf, node in graph.iteritems():
-                if not node:
-                    return leaf, node
-
-            # There are nodes remaining, but no more leaves: a cycle
-            raise CircularDependencyException(cycle=str(graph))
-
         for iteration in xrange(len(graph)):
-            leaf, node = next_leaf()
-            yield leaf
-
-            # Remove the node and all edges connected to it before
-            # continuing to look for more leaves
-            for src in node.required_by():
-                graph[src] -= leaf
-            del graph[leaf]
+            for key, node in graph.iteritems():
+                if not node:
+                    yield key
+                    del graph[key]
+                    break
+            else:
+                # There are nodes remaining, but none without
+                # dependencies: a cycle
+                raise CircularDependencyException(cycle=str(graph))
 
 
 class Dependencies(object):
