@@ -63,7 +63,7 @@ command_opt = cfg.SubCommandOpt('command',
 def main():
     CONF.register_cli_opt(command_opt)
     try:
-        CONF(sys.argv[1:], project='heat',
+        CONF(sys.argv[1:], project='heat', prog='heat-engine',
              version=version.version_info.version_string())
         log.setup("heat")
         db_api.configure()
