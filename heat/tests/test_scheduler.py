@@ -17,6 +17,7 @@ import mox
 import contextlib
 import eventlet
 
+from heat.engine import dependencies
 from heat.engine import scheduler
 
 
@@ -157,6 +158,165 @@ class PollingTaskGroupTest(mox.MoxTestBase):
         with self._args_test([0, 1, 2], [0, 1, 4]) as dummy:
             for i in range(3):
                 dummy.do_step(1, i, i * i)
+
+
+class DependencyTaskGroupTest(mox.MoxTestBase):
+
+    @contextlib.contextmanager
+    def _dep_test(self, *edges):
+        dummy = DummyTask()
+
+        class TaskMaker(object):
+            def __init__(self, name):
+                self.name = name
+
+            def __repr__(self):
+                return 'Dummy task "%s"' % self.name
+
+            def __call__(self, *args, **kwargs):
+                return dummy(self.name, *args, **kwargs)
+
+        deps = dependencies.Dependencies(edges)
+
+        tg = scheduler.DependencyTaskGroup(deps, TaskMaker)
+
+        self.mox.StubOutWithMock(dummy, 'do_step')
+
+        yield dummy
+
+        self.mox.ReplayAll()
+        scheduler.TaskRunner(tg)(wait_time=None)
+        self.mox.VerifyAll()
+
+    def test_single_node(self):
+        with self._dep_test(('only', None)) as dummy:
+            dummy.do_step(1, 'only').AndReturn(None)
+            dummy.do_step(2, 'only').AndReturn(None)
+            dummy.do_step(3, 'only').AndReturn(None)
+
+    def test_disjoint(self):
+        with self._dep_test(('1', None), ('2', None)) as dummy:
+            dummy.do_step(1, '1').InAnyOrder('1')
+            dummy.do_step(1, '2').InAnyOrder('1')
+            dummy.do_step(2, '1').InAnyOrder('2')
+            dummy.do_step(2, '2').InAnyOrder('2')
+            dummy.do_step(3, '1').InAnyOrder('3')
+            dummy.do_step(3, '2').InAnyOrder('3')
+
+    def test_single_fwd(self):
+        with self._dep_test(('second', 'first')) as dummy:
+            dummy.do_step(1, 'first').AndReturn(None)
+            dummy.do_step(2, 'first').AndReturn(None)
+            dummy.do_step(3, 'first').AndReturn(None)
+            dummy.do_step(1, 'second').AndReturn(None)
+            dummy.do_step(2, 'second').AndReturn(None)
+            dummy.do_step(3, 'second').AndReturn(None)
+
+    def test_chain_fwd(self):
+        with self._dep_test(('third', 'second'),
+                            ('second', 'first')) as dummy:
+            dummy.do_step(1, 'first').AndReturn(None)
+            dummy.do_step(2, 'first').AndReturn(None)
+            dummy.do_step(3, 'first').AndReturn(None)
+            dummy.do_step(1, 'second').AndReturn(None)
+            dummy.do_step(2, 'second').AndReturn(None)
+            dummy.do_step(3, 'second').AndReturn(None)
+            dummy.do_step(1, 'third').AndReturn(None)
+            dummy.do_step(2, 'third').AndReturn(None)
+            dummy.do_step(3, 'third').AndReturn(None)
+
+    def test_diamond_fwd(self):
+        with self._dep_test(('last', 'mid1'), ('last', 'mid2'),
+                            ('mid1', 'first'), ('mid2', 'first')) as dummy:
+            dummy.do_step(1, 'first').AndReturn(None)
+            dummy.do_step(2, 'first').AndReturn(None)
+            dummy.do_step(3, 'first').AndReturn(None)
+            dummy.do_step(1, 'mid1').InAnyOrder('1')
+            dummy.do_step(1, 'mid2').InAnyOrder('1')
+            dummy.do_step(2, 'mid1').InAnyOrder('2')
+            dummy.do_step(2, 'mid2').InAnyOrder('2')
+            dummy.do_step(3, 'mid1').InAnyOrder('3')
+            dummy.do_step(3, 'mid2').InAnyOrder('3')
+            dummy.do_step(1, 'last').AndReturn(None)
+            dummy.do_step(2, 'last').AndReturn(None)
+            dummy.do_step(3, 'last').AndReturn(None)
+
+    def test_complex_fwd(self):
+        with self._dep_test(('last', 'mid1'), ('last', 'mid2'),
+                            ('mid1', 'mid3'), ('mid1', 'first'),
+                            ('mid3', 'first'), ('mid2', 'first')) as dummy:
+            dummy.do_step(1, 'first').AndReturn(None)
+            dummy.do_step(2, 'first').AndReturn(None)
+            dummy.do_step(3, 'first').AndReturn(None)
+            dummy.do_step(1, 'mid2').InAnyOrder('1')
+            dummy.do_step(1, 'mid3').InAnyOrder('1')
+            dummy.do_step(2, 'mid2').InAnyOrder('2')
+            dummy.do_step(2, 'mid3').InAnyOrder('2')
+            dummy.do_step(3, 'mid2').InAnyOrder('3')
+            dummy.do_step(3, 'mid3').InAnyOrder('3')
+            dummy.do_step(1, 'mid1').AndReturn(None)
+            dummy.do_step(2, 'mid1').AndReturn(None)
+            dummy.do_step(3, 'mid1').AndReturn(None)
+            dummy.do_step(1, 'last').AndReturn(None)
+            dummy.do_step(2, 'last').AndReturn(None)
+            dummy.do_step(3, 'last').AndReturn(None)
+
+    def test_many_edges_fwd(self):
+        with self._dep_test(('last', 'e1'), ('last', 'mid1'), ('last', 'mid2'),
+                            ('mid1', 'e2'), ('mid1', 'mid3'),
+                            ('mid2', 'mid3'),
+                            ('mid3', 'e3')) as dummy:
+            dummy.do_step(1, 'e1').InAnyOrder('1edges')
+            dummy.do_step(1, 'e2').InAnyOrder('1edges')
+            dummy.do_step(1, 'e3').InAnyOrder('1edges')
+            dummy.do_step(2, 'e1').InAnyOrder('2edges')
+            dummy.do_step(2, 'e2').InAnyOrder('2edges')
+            dummy.do_step(2, 'e3').InAnyOrder('2edges')
+            dummy.do_step(3, 'e1').InAnyOrder('3edges')
+            dummy.do_step(3, 'e2').InAnyOrder('3edges')
+            dummy.do_step(3, 'e3').InAnyOrder('3edges')
+            dummy.do_step(1, 'mid3').AndReturn(None)
+            dummy.do_step(2, 'mid3').AndReturn(None)
+            dummy.do_step(3, 'mid3').AndReturn(None)
+            dummy.do_step(1, 'mid2').InAnyOrder('1mid')
+            dummy.do_step(1, 'mid1').InAnyOrder('1mid')
+            dummy.do_step(2, 'mid2').InAnyOrder('2mid')
+            dummy.do_step(2, 'mid1').InAnyOrder('2mid')
+            dummy.do_step(3, 'mid2').InAnyOrder('3mid')
+            dummy.do_step(3, 'mid1').InAnyOrder('3mid')
+            dummy.do_step(1, 'last').AndReturn(None)
+            dummy.do_step(2, 'last').AndReturn(None)
+            dummy.do_step(3, 'last').AndReturn(None)
+
+    def test_dbldiamond_fwd(self):
+        with self._dep_test(('last', 'a1'), ('last', 'a2'),
+                            ('a1', 'b1'), ('a2', 'b1'), ('a2', 'b2'),
+                            ('b1', 'first'), ('b2', 'first')) as dummy:
+            dummy.do_step(1, 'first').AndReturn(None)
+            dummy.do_step(2, 'first').AndReturn(None)
+            dummy.do_step(3, 'first').AndReturn(None)
+            dummy.do_step(1, 'b1').InAnyOrder('1b')
+            dummy.do_step(1, 'b2').InAnyOrder('1b')
+            dummy.do_step(2, 'b1').InAnyOrder('2b')
+            dummy.do_step(2, 'b2').InAnyOrder('2b')
+            dummy.do_step(3, 'b1').InAnyOrder('3b')
+            dummy.do_step(3, 'b2').InAnyOrder('3b')
+            dummy.do_step(1, 'a1').InAnyOrder('1a')
+            dummy.do_step(1, 'a2').InAnyOrder('1a')
+            dummy.do_step(2, 'a1').InAnyOrder('2a')
+            dummy.do_step(2, 'a2').InAnyOrder('2a')
+            dummy.do_step(3, 'a1').InAnyOrder('3a')
+            dummy.do_step(3, 'a2').InAnyOrder('3a')
+            dummy.do_step(1, 'last').AndReturn(None)
+            dummy.do_step(2, 'last').AndReturn(None)
+            dummy.do_step(3, 'last').AndReturn(None)
+
+    def test_circular_deps(self):
+        d = dependencies.Dependencies([('first', 'second'),
+                                       ('second', 'third'),
+                                       ('third', 'first')])
+        self.assertRaises(dependencies.CircularDependencyException,
+                          scheduler.DependencyTaskGroup, d)
 
 
 class TaskTest(mox.MoxTestBase):
