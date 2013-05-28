@@ -243,6 +243,68 @@ def wrappertask(task):
     return wrapper
 
 
+class DependencyTaskGroup(object):
+    """
+    A task which manages a group of subtasks that have ordering dependencies.
+    """
+
+    def __init__(self, dependencies, make_task=lambda o: o,
+                 reverse=False, name=None):
+        """
+        Initialise with the task dependencies and (optionally) a function for
+        creating a task from each dependency object.
+        """
+        self._runners = dict((o, TaskRunner(make_task(o)))
+                             for o in dependencies)
+        self._graph = dependencies.graph(reverse=reverse)
+
+        if name is None:
+            name = '(%s) %s' % (getattr(make_task, '__name__',
+                                        task_description(make_task)),
+                                str(dependencies))
+        self.name = name
+
+    def __repr__(self):
+        """Return a string representation of the task."""
+        return '%s(%s)' % (type(self).__name__, self.name)
+
+    def __call__(self):
+        """Return a co-routine which runs the task group."""
+        try:
+            while any(self._runners.itervalues()):
+                for k, r in self._ready():
+                    r.start()
+
+                yield
+
+                for k, r in self._running():
+                    if r.step():
+                        del self._graph[k]
+        except:
+            with excutils.save_and_reraise_exception():
+                for r in self._runners.itervalues():
+                    r.cancel()
+
+    def _ready(self):
+        """
+        Iterate over all subtasks that are ready to start - i.e. all their
+        dependencies have been satisfied but they have not yet been started.
+        """
+        for k, n in self._graph.iteritems():
+            if not n:
+                runner = self._runners[k]
+                if not runner.started():
+                    yield k, runner
+
+    def _running(self):
+        """
+        Iterate over all subtasks that are currently running - i.e. they have
+        been started but have not yet completed.
+        """
+        return itertools.ifilter(lambda (k, r): r and r.started(),
+                                 self._runners.iteritems())
+
+
 class PollingTaskGroup(object):
     """
     A task which manages a group of subtasks.
