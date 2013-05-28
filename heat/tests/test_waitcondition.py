@@ -109,6 +109,8 @@ class WaitConditionTest(HeatTestCase):
         self.stack_id = stack.store()
 
         if stub:
+            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+
             self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
             wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(
                 self.fc)

@@ -277,27 +277,24 @@ class Stack(object):
         reason = 'Stack successfully created'
         res = None
 
+        def resource_create(r):
+            return r.create
+
+        create_task = scheduler.DependencyTaskGroup(self.dependencies,
+                                                    resource_create)
+        create = scheduler.TaskRunner(create_task)
+
         with eventlet.Timeout(self.timeout_mins * 60) as tmo:
             try:
-                for res in self:
-                    if stack_status != self.CREATE_FAILED:
-                        try:
-                            scheduler.TaskRunner(res.create)()
-                        except exception.ResourceFailure as ex:
-                            stack_status = self.CREATE_FAILED
-                            reason = 'Resource %s failed with: %s' % (str(res),
-                                                                      str(ex))
-                    else:
-                        res.state_set(res.CREATE_FAILED,
-                                      'Stack creation aborted')
-
+                create()
+            except exception.ResourceFailure as ex:
+                stack_status = self.CREATE_FAILED
+                reason = 'Resource failed: %s' % str(ex)
             except eventlet.Timeout as t:
-                if t is tmo:
-                    stack_status = self.CREATE_FAILED
-                    reason = 'Timed out waiting for %s' % str(res)
-                else:
-                    # not my timeout
+                if t is not tmo:  # not my timeout
                     raise
+                stack_status = self.CREATE_FAILED
+                reason = 'Timed out'
 
         self.state_set(stack_status, reason)
 
