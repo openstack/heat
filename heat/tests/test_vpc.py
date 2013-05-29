@@ -14,11 +14,14 @@
 
 from testtools import skipIf
 
+import mox
+
 from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
@@ -58,9 +61,15 @@ class VPCTestBase(HeatTestCase):
         self.m.StubOutWithMock(
             quantumclient.Client, 'delete_security_group_rule')
 
+    def stub_sleep(self):
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
+
     def create_stack(self, template):
         t = template_format.parse(template)
         stack = self.parse_stack(t)
+        self.stub_sleep()
         self.assertEqual(None, stack.create())
         return stack
 
@@ -217,6 +226,9 @@ Resources:
     Type: AWS::EC2::VPC
     Properties: {CidrBlock: '10.0.0.0/16'}
 '''
+
+    def stub_sleep(self):
+        pass
 
     def test_vpc(self):
         self.mock_create_network()

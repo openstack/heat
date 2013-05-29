@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mox
 
 import uuid
 
@@ -22,6 +23,7 @@ from heat.engine import clients
 from heat.engine import resource
 from heat.engine import parser
 from heat.engine import parameters
+from heat.engine import scheduler
 from heat.engine import template
 
 from heat.tests.common import HeatTestCase
@@ -874,8 +876,14 @@ class StackTest(HeatTestCase):
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl))
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        self.m.ReplayAll()
+
         self.stack.store()
         self.stack.create()
+        self.m.VerifyAll()
         self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
         self.assertEqual(self.stack['BResource'].properties['Foo'],
@@ -926,8 +934,15 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
                                   disable_rollback=False)
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        self.m.ReplayAll()
+
         self.stack.store()
         self.stack.create()
+        self.m.VerifyAll()
+
         self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
         self.assertEqual(self.stack['BResource'].properties['Foo'],
@@ -987,8 +1002,15 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
                                   disable_rollback=False)
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        self.m.ReplayAll()
+
         self.stack.store()
         self.stack.create()
+        self.m.VerifyAll()
+
         self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
         self.assertEqual(self.stack['BResource'].properties['Foo'],

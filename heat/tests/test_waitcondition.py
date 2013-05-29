@@ -410,6 +410,9 @@ class WaitConditionHandleTest(HeatTestCase):
         self.m.ReplayAll()
         stack.store()
 
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+
         # Stub waitcondition status so all goes CREATE_COMPLETE
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
