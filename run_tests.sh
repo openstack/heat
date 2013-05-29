@@ -40,6 +40,8 @@ wrapper=""
 
 function run_tests {
     echo 'Running tests'
+    # Remove any extraneous DB migrations
+    find heat/db/sqlalchemy/migrate_repo/versions/ -name '*.pyc' -delete
     # Just run the test suites in current environment
     if [ -n "$args" ] ; then
         args="-t $args"
