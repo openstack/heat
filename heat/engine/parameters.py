@@ -275,13 +275,6 @@ class Parameters(collections.Mapping):
         return dict((n, func(p))
                     for n, p in self.params.iteritems() if filter_func(p))
 
-    def user_parameters(self):
-        '''
-        Return a dictionary of all the parameters passed in by the user
-        '''
-        return self.map(lambda p: p.user_value,
-                        lambda p: p.user_value is not None)
-
     def set_stack_id(self, stack_id):
         '''
         Set the AWS::StackId pseudo parameter value
