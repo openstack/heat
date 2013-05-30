@@ -28,6 +28,15 @@ SECTIONS = (VERSION, DESCRIPTION, MAPPINGS,
 class Template(collections.Mapping):
     '''A stack template.'''
 
+    def __new__(cls, template, *args, **kwargs):
+        '''Create a new Template of the appropriate class.'''
+
+        if cls == Template:
+            if 'heat_template_version' in template:
+                return HOTemplate(template, *args, **kwargs)
+
+        return super(Template, cls).__new__(cls)
+
     def __init__(self, template, template_id=None):
         '''
         Initialise the template with a JSON object and a set of Parameters
@@ -223,6 +232,27 @@ class Template(collections.Mapping):
             return string
 
         return _resolve(lambda k, v: k == 'Fn::Base64', handle_base64, s)
+
+
+class HOTemplate(Template):
+    '''
+    A Heat Orchestration Template format stack template.
+    '''
+
+    def __getitem__(self, section):
+        '''Get the relevant section in the template.'''
+        if section not in SECTIONS:
+            raise KeyError('"%s" is not a valid template section' % section)
+
+        if section == VERSION:
+            return self.t['heat_template_version']
+
+        if section == DESCRIPTION:
+            default = 'No description'
+        else:
+            default = {}
+
+        return self.t.get(section.lower(), default)
 
 
 def _resolve(match, handle, snippet):
