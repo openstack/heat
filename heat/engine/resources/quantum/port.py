@@ -43,9 +43,6 @@ class Port(quantum.QuantumResource):
                          'device_id': {'Type': 'String'},
                          'security_groups': {'Type': 'List'}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(Port, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,

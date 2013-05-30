@@ -39,9 +39,6 @@ class RouteTable(resource.Resource):
             'Schema': tags_schema}}
     }
 
-    def __init__(self, name, json_snippet, stack):
-        super(RouteTable, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         client = self.quantum()
         props = {'name': self.physical_resource_name()}
@@ -86,10 +83,6 @@ class SubnetRouteTableAssocation(resource.Resource):
             'Type': 'String',
             'Required': True}
     }
-
-    def __init__(self, name, json_snippet, stack):
-        super(SubnetRouteTableAssocation, self).__init__(
-            name, json_snippet, stack)
 
     def handle_create(self):
         client = self.quantum()

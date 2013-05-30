@@ -43,9 +43,6 @@ class NetworkInterface(resource.Resource):
             'Schema': tags_schema}}
     }
 
-    def __init__(self, name, json_snippet, stack):
-        super(NetworkInterface, self).__init__(name, json_snippet, stack)
-
     @staticmethod
     def network_id_from_subnet_id(quantumclient, subnet_id):
         subnet_info = quantumclient.show_subnet(subnet_id)

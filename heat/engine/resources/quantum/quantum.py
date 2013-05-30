@@ -23,9 +23,6 @@ logger = logging.getLogger(__name__)
 
 class QuantumResource(resource.Resource):
 
-    def __init__(self, name, json_snippet, stack):
-        super(QuantumResource, self).__init__(name, json_snippet, stack)
-
     def validate(self):
         '''
         Validate any of the provided params

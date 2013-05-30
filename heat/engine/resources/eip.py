@@ -72,9 +72,6 @@ class ElasticIpAssociation(resource.Resource):
                          'AllocationId': {'Type': 'String',
                                           'Implemented': False}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(ElasticIpAssociation, self).__init__(name, json_snippet, stack)
-
     def FnGetRefId(self):
         return unicode(self.properties.get('EIP', '0.0.0.0'))
 

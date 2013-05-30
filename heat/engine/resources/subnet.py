@@ -41,9 +41,6 @@ class Subnet(resource.Resource):
             'Schema': tags_schema}}
     }
 
-    def __init__(self, name, json_snippet, stack):
-        super(Subnet, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         client = self.quantum()
         # TODO(sbaker) Verify that this CidrBlock is within the vpc CidrBlock

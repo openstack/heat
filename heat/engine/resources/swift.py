@@ -31,9 +31,6 @@ class SwiftContainer(resource.Resource):
         'X-Container-Write': {'Type': 'String'},
         'X-Container-Meta': {'Type': 'Map', 'Default': {}}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(SwiftContainer, self).__init__(name, json_snippet, stack)
-
     def validate(self):
         '''
         Validate any of the provided params

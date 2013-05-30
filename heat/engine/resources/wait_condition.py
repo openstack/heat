@@ -41,9 +41,6 @@ class WaitConditionHandle(resource.Resource):
     '''
     properties_schema = {}
 
-    def __init__(self, name, json_snippet, stack):
-        super(WaitConditionHandle, self).__init__(name, json_snippet, stack)
-
     def _sign_url(self, credentials, path):
         """
         Create properly formatted and pre-signed URL using supplied credentials

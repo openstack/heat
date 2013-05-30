@@ -38,9 +38,6 @@ class S3Bucket(resource.Resource):
                          'WebsiteConfiguration': {'Type': 'Map',
                                                   'Schema': website_schema}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(S3Bucket, self).__init__(name, json_snippet, stack)
-
     def validate(self):
         '''
         Validate any of the provided params

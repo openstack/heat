@@ -34,9 +34,6 @@ class InternetGateway(resource.Resource):
             'Schema': tags_schema}}
     }
 
-    def __init__(self, name, json_snippet, stack):
-        super(InternetGateway, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         client = self.quantum()
 
@@ -70,9 +67,6 @@ class VPCGatewayAttachment(resource.Resource):
             'Type': 'String',
             'Implemented': False}
     }
-
-    def __init__(self, name, json_snippet, stack):
-        super(VPCGatewayAttachment, self).__init__(name, json_snippet, stack)
 
     def handle_create(self):
         client = self.quantum()

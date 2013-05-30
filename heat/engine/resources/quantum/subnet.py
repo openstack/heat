@@ -48,9 +48,6 @@ class Subnet(quantum.QuantumResource):
                                               'Schema': allocation_schema
                                               }}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(Subnet, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,

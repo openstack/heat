@@ -30,9 +30,6 @@ class Net(quantum.QuantumResource):
                          'admin_state_up': {'Default': True,
                                             'Type': 'Boolean'}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(Net, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,

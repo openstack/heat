@@ -31,9 +31,6 @@ class Router(quantum.QuantumResource):
                          'admin_state_up': {'Type': 'Boolean',
                                             'Default': True}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(Router, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
@@ -72,9 +69,6 @@ class RouterInterface(quantum.QuantumResource):
                          'subnet_id': {'Type': 'String',
                                        'Required': True}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(RouterInterface, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         router_id = self.properties.get('router_id')
         subnet_id = self.properties.get('subnet_id')
@@ -100,9 +94,6 @@ class RouterGateway(quantum.QuantumResource):
                                        'Required': True},
                          'network_id': {'Type': 'String',
                                         'Required': True}}
-
-    def __init__(self, name, json_snippet, stack):
-        super(RouterGateway, self).__init__(name, json_snippet, stack)
 
     def handle_create(self):
         router_id = self.properties.get('router_id')

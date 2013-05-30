@@ -28,9 +28,6 @@ class SecurityGroup(resource.Resource):
                          'SecurityGroupIngress': {'Type': 'List'},
                          'SecurityGroupEgress': {'Type': 'List'}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(SecurityGroup, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         if self.properties['VpcId'] and clients.quantumclient is not None:
             self._handle_create_quantum()

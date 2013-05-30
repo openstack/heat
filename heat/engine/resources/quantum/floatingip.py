@@ -64,9 +64,6 @@ class FloatingIPAssociation(quantum.QuantumResource):
                                      'Required': True},
                          'fixed_ip_address': {'Type': 'String'}}
 
-    def __init__(self, name, json_snippet, stack):
-        super(FloatingIPAssociation, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
 
