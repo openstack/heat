@@ -15,7 +15,7 @@
 
 import base64
 from Crypto.Cipher import AES
-from Crypto import Random
+from os import urandom
 
 from oslo.config import cfg
 
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 def encrypt(auth_info):
     if auth_info is None:
         return None
-    iv = Random.new().read(AES.block_size)
+    iv = urandom(AES.block_size)
     cipher = AES.new(cfg.CONF.auth_encryption_key[:32], AES.MODE_CFB, iv)
     res = base64.b64encode(iv + cipher.encrypt(auth_info))
     return res
