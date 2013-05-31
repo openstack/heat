@@ -273,7 +273,10 @@ class Resource(object):
     def _add_dependencies(self, deps, head, fragment):
         if isinstance(fragment, dict):
             for key, value in fragment.items():
-                if key in ('DependsOn', 'Ref'):
+                if key in ('DependsOn', 'Ref', 'Fn::GetAtt'):
+                    if key == 'Fn::GetAtt':
+                        value, head = value
+
                     try:
                         target = self.stack.resources[value]
                     except KeyError:
@@ -282,7 +285,7 @@ class Resource(object):
                             key=head)
                     if key == 'DependsOn' or target.strict_dependency:
                         deps += (self, target)
-                elif key != 'Fn::GetAtt':
+                else:
                     self._add_dependencies(deps, key, value)
         elif isinstance(fragment, list):
             for item in fragment:
