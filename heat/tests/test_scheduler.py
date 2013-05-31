@@ -164,7 +164,7 @@ class DependencyTaskGroupTest(mox.MoxTestBase):
 
     @contextlib.contextmanager
     def _dep_test(self, *edges):
-        dummy = DummyTask()
+        dummy = DummyTask(getattr(self, 'steps', 3))
 
         class TaskMaker(object):
             def __init__(self, name):
@@ -187,6 +187,12 @@ class DependencyTaskGroupTest(mox.MoxTestBase):
         self.mox.ReplayAll()
         scheduler.TaskRunner(tg)(wait_time=None)
         self.mox.VerifyAll()
+
+    def test_no_steps(self):
+        self.steps = 0
+        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        with self._dep_test(('second', 'first')) as dummy:
+            scheduler.TaskRunner._sleep(None).AndReturn(None)
 
     def test_single_node(self):
         with self._dep_test(('only', None)) as dummy:
