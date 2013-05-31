@@ -63,7 +63,8 @@ class Restarter(resource.Resource):
 
 
 class Instance(resource.Resource):
-    # AWS does not require KeyName and InstanceType but we seem to
+    # AWS does not require InstanceType but Heat does because the nova
+    # create api call requires a flavor
     tags_schema = {'Key': {'Type': 'String',
                            'Required': True},
                    'Value': {'Type': 'String',
