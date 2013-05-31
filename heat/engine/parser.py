@@ -277,9 +277,14 @@ class Stack(object):
     def create(self):
         '''
         Create the stack and all of the resources.
+        '''
+        creator = scheduler.TaskRunner(self.create_task)
+        creator(timeout=self.timeout_secs())
 
-        Creation will fail if it exceeds the specified timeout. The default is
-        60 minutes, set in the constructor
+    @scheduler.wrappertask
+    def create_task(self):
+        '''
+        A task to create the stack and all of the resources.
         '''
         self.state_set(self.CREATE_IN_PROGRESS, 'Stack creation started')
 
@@ -292,19 +297,15 @@ class Stack(object):
 
         create_task = scheduler.DependencyTaskGroup(self.dependencies,
                                                     resource_create)
-        create = scheduler.TaskRunner(create_task)
 
-        with eventlet.Timeout(self.timeout_secs()) as tmo:
-            try:
-                create()
-            except exception.ResourceFailure as ex:
-                stack_status = self.CREATE_FAILED
-                reason = 'Resource failed: %s' % str(ex)
-            except eventlet.Timeout as t:
-                if t is not tmo:  # not my timeout
-                    raise
-                stack_status = self.CREATE_FAILED
-                reason = 'Timed out'
+        try:
+            yield create_task()
+        except exception.ResourceFailure as ex:
+            stack_status = self.CREATE_FAILED
+            reason = 'Resource failed: %s' % str(ex)
+        except scheduler.Timeout:
+            stack_status = self.CREATE_FAILED
+            reason = 'Timed out'
 
         self.state_set(stack_status, reason)
 

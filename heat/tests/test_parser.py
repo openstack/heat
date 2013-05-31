@@ -14,6 +14,7 @@
 
 import mox
 
+import time
 import uuid
 
 from heat.common import context
@@ -1074,6 +1075,31 @@ class StackTest(HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual(self.stack.state, parser.Stack.ROLLBACK_COMPLETE)
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
+
+        self.m.VerifyAll()
+
+    def test_stack_create_timeout(self):
+        self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
+        self.m.StubOutWithMock(scheduler, 'wallclock')
+
+        stack = parser.Stack(None, 's', parser.Template({}))
+
+        def dummy_task():
+            while True:
+                yield
+
+        start_time = time.time()
+        scheduler.wallclock().AndReturn(start_time)
+        scheduler.wallclock().AndReturn(start_time + 1)
+        scheduler.DependencyTaskGroup.__call__().AndReturn(dummy_task())
+        scheduler.wallclock().AndReturn(start_time + stack.timeout_secs() + 1)
+
+        self.m.ReplayAll()
+
+        stack.create()
+
+        self.assertEqual(stack.state, stack.CREATE_FAILED)
+        self.assertEqual(stack.state_description, 'Timed out')
 
         self.m.VerifyAll()
 
