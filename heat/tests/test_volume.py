@@ -318,6 +318,45 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_volume_detach_non_exist(self):
+        fv = FakeVolume('creating', 'available')
+        fva = FakeVolume('in-use', 'available')
+        stack_name = 'test_volume_detach_stack'
+
+        # volume create
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            size=u'1', availability_zone='nova',
+            display_description='%s.DataVolume' % stack_name,
+            display_name='%s.DataVolume' % stack_name).AndReturn(fv)
+
+        # create script
+        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
+        self.fc.volumes.create_server_volume(
+            device=u'/dev/vdc',
+            server_id=u'WikiDatabase',
+            volume_id=u'vol-123').AndReturn(fva)
+
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+
+        # delete script
+        self.cinder_fc.volumes.get('vol-123').AndRaise(
+            clients.cinderclient.exceptions.NotFound('Not found'))
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
+        stack = parse_stack(t, stack_name=stack_name)
+
+        scheduler.TaskRunner(stack['DataVolume'].create)()
+        rsrc = self.create_attachment(t, stack, 'MountPoint')
+
+        self.assertEqual(rsrc.delete(), None)
+
+        self.m.VerifyAll()
+
     @skipIf(volume_backups is None, 'unable to import volume_backups')
     def test_snapshot(self):
         stack_name = 'test_volume_stack'
