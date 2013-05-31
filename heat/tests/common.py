@@ -14,6 +14,7 @@
 
 
 import fixtures
+import logging
 import mox
 import testtools
 
@@ -24,4 +25,4 @@ class HeatTestCase(testtools.TestCase):
         super(HeatTestCase, self).setUp()
         self.m = mox.Mox()
         self.addCleanup(self.m.UnsetStubs)
-        self.useFixture(fixtures.FakeLogger())
+        self.useFixture(fixtures.FakeLogger(level=logging.DEBUG))
