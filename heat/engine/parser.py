@@ -264,6 +264,16 @@ class Stack(object):
         stack.update_and_save({'status': new_status,
                                'status_reason': reason})
 
+    def timeout_secs(self):
+        '''
+        Return the stack creation timeout in seconds, or None if no timeout
+        should be used.
+        '''
+        if self.timeout_mins is None:
+            return None
+
+        return self.timeout_mins * 60
+
     def create(self):
         '''
         Create the stack and all of the resources.
@@ -284,7 +294,7 @@ class Stack(object):
                                                     resource_create)
         create = scheduler.TaskRunner(create_task)
 
-        with eventlet.Timeout(self.timeout_mins * 60) as tmo:
+        with eventlet.Timeout(self.timeout_secs()) as tmo:
             try:
                 create()
             except exception.ResourceFailure as ex:
@@ -342,7 +352,7 @@ class Stack(object):
             r.cache_template()
 
         # Now make the resources match the new stack definition
-        with eventlet.Timeout(self.timeout_mins * 60) as tmo:
+        with eventlet.Timeout(self.timeout_secs()) as tmo:
             try:
                 # First delete any resources which are not in newstack
                 for res in reversed(self):
