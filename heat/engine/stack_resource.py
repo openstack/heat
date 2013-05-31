@@ -45,7 +45,8 @@ class StackResource(resource.Resource):
 
         return self._nested
 
-    def create_with_template(self, child_template, user_params):
+    def create_with_template(self, child_template, user_params,
+                             timeout_mins=None):
         '''
         Handle the creation of the nested stack from a given JSON template.
         '''
@@ -59,6 +60,7 @@ class StackResource(resource.Resource):
                                     self.physical_resource_name(),
                                     template,
                                     params,
+                                    timeout_mins=timeout_mins,
                                     disable_rollback=True)
 
         nested_id = self._nested.store(self.stack)
