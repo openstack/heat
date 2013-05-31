@@ -85,11 +85,11 @@ test_template_waitcondition = '''
     "KeyName" : {"Type" : "String", "Default": "mine" },
   },
   "Resources" : {
+    "WH" : {
+      "Type" : "AWS::CloudFormation::WaitConditionHandle"
+    },
     "S1": {
       "Type": "AWS::EC2::Instance",
-      "Metadata" : {
-        "test" : {"Fn::GetAtt": ["WC", "Data"]}
-      },
       "Properties": {
         "ImageId"      : "a",
         "InstanceType" : "m1.large",
@@ -100,15 +100,24 @@ test_template_waitcondition = '''
                                                 "\n" ] ] }
       }
     },
-    "WH" : {
-      "Type" : "AWS::CloudFormation::WaitConditionHandle"
-    },
     "WC" : {
       "Type" : "AWS::CloudFormation::WaitCondition",
       "DependsOn": "S1",
       "Properties" : {
         "Handle" : {"Ref" : "WH"},
         "Timeout" : "5"
+      }
+    },
+    "S2": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata" : {
+        "test" : {"Fn::GetAtt": ["WC", "Data"]}
+      },
+      "Properties": {
+        "ImageId"      : "a",
+        "InstanceType" : "m1.large",
+        "KeyName"      : { "Ref" : "KeyName" },
+        "UserData"     : "#!/bin/bash -v\n"
       }
     }
   }
@@ -203,9 +212,9 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-        cookie = object()
-        instance.Instance.handle_create().AndReturn(cookie)
-        instance.Instance.check_create_complete(cookie).AndReturn(True)
+        for cookie in (object(), object()):
+            instance.Instance.handle_create().AndReturn(cookie)
+            instance.Instance.check_create_complete(cookie).AndReturn(True)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
@@ -232,7 +241,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         self.stack = self.create_stack()
 
         watch = self.stack['WC']
-        inst = self.stack['S1']
+        inst = self.stack['S2']
 
         def check_empty(sleep_time):
             self.assertEqual(watch.FnGetAtt('Data'), '{}')
