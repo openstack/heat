@@ -331,7 +331,7 @@ class LoadBalancer(stack_resource.StackResource):
         # total hack - probably need an admin key here.
         param = self.stack.resolve_static_data({'KeyName': {'Ref': 'KeyName'}})
 
-        self.create_with_template(templ, param)
+        return self.create_with_template(templ, param)
 
     def handle_delete(self):
         self.delete_nested()

@@ -58,6 +58,7 @@ class DBInstanceTest(HeatTestCase):
         super(DBInstanceTest, self).setUp()
         setup_dummy_db()
         self.m.StubOutWithMock(dbi.DBInstance, 'create_with_template')
+        self.m.StubOutWithMock(dbi.DBInstance, 'check_create_complete')
         self.m.StubOutWithMock(dbi.DBInstance, 'nested')
 
     def create_dbinstance(self, t, stack, resource_name):
@@ -89,6 +90,7 @@ class DBInstanceTest(HeatTestCase):
 
         dbi.DBInstance.create_with_template(mox.IgnoreArg(),
                                             params).AndReturn(None)
+        dbi.DBInstance.check_create_complete(mox.IgnoreArg()).AndReturn(True)
 
         fn = FakeNested()
 

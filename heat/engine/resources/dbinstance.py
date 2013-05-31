@@ -214,7 +214,7 @@ class DBInstance(stack_resource.StackResource):
 
     def handle_create(self):
         templ = template_format.parse(mysql_template)
-        self.create_with_template(templ, self._params())
+        return self.create_with_template(templ, self._params())
 
     def handle_delete(self):
         self.delete_nested()

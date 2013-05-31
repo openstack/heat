@@ -50,7 +50,8 @@ Outputs:
     def create_stack(self, template):
         t = template_format.parse(template)
         stack = self.parse_stack(t)
-        self.assertEqual(None, stack.create())
+        stack.create()
+        self.assertEqual(stack.state, stack.CREATE_COMPLETE)
         return stack
 
     def parse_stack(self, t):
