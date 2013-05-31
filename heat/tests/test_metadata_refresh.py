@@ -145,7 +145,8 @@ class MetadataRefreshTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         for cookie in (object(), object()):
             instance.Instance.handle_create().AndReturn(cookie)
-            instance.Instance.check_create_complete(cookie).AndReturn(True)
+            create_complete = instance.Instance.check_create_complete(cookie)
+            create_complete.InAnyOrder().AndReturn(True)
         self.m.StubOutWithMock(instance.Instance, 'FnGetAtt')
 
         return stack
