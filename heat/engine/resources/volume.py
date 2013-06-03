@@ -166,7 +166,7 @@ class VolumeAttachTask(object):
 
 
 class VolumeDetachTask(object):
-    """A task for attaching a volume to a Nova server."""
+    """A task for detaching a volume from a Nova server."""
 
     def __init__(self, stack, server_id, volume_id):
         """
@@ -194,7 +194,7 @@ class VolumeDetachTask(object):
 
         try:
             vol = self.clients.cinder().volumes.get(self.volume_id)
-        except clients.cinder_exceptions.NotFound:
+        except clients.cinderclient.exceptions.NotFound:
             logger.warning('%s - volume not found' % str(self))
             return
 
