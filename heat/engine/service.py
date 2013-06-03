@@ -499,7 +499,7 @@ class EngineService(service.Service):
         # resources may refer to WaitCondition Fn::GetAtt Data, which
         # is updated here.
         for res in refresh_stack:
-            if res.name != resource_name:
+            if res.name != resource_name and res.id is not None:
                 res.metadata_update()
 
         return resource.metadata
