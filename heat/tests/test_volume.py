@@ -106,6 +106,7 @@ class VolumeTest(unittest.TestCase):
         self.m.ReplayAll()
 
         t = self.load_template()
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = self.parse_stack(t, stack_name)
 
         resource = self.create_volume(t, stack, 'DataVolume')
@@ -135,6 +136,7 @@ class VolumeTest(unittest.TestCase):
         self.m.ReplayAll()
 
         t = self.load_template()
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = self.parse_stack(t, stack_name)
 
         resource = vol.Volume('DataVolume',
@@ -170,6 +172,7 @@ class VolumeTest(unittest.TestCase):
         self.m.ReplayAll()
 
         t = self.load_template()
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = self.parse_stack(t, stack_name)
 
         self.assertEqual(stack['DataVolume'].create(), None)
@@ -212,6 +215,7 @@ class VolumeTest(unittest.TestCase):
         self.m.ReplayAll()
 
         t = self.load_template()
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
         stack = self.parse_stack(t, stack_name)
 
         self.assertEqual(stack['DataVolume'].create(), None)

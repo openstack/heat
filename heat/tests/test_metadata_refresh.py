@@ -173,6 +173,7 @@ class MetadataRefreshTest(unittest.TestCase):
         s2 = self.stack.resources['S2']
         files = s1.metadata['AWS::CloudFormation::Init']['config']['files']
         cont = files['/tmp/random_file']['content']
+        self.assertEqual(s2.CREATE_COMPLETE, s2.state)
         self.assertEqual(cont, 's2-ip=1.2.3.5')
 
         s1.metadata_update()
@@ -245,7 +246,7 @@ class WaitCondMetadataUpdateTest(unittest.TestCase):
 
         def check_empty(sleep_time):
             self.assertEqual(watch.FnGetAtt('Data'), '{}')
-            self.assertEqual(inst.metadata['test'], '{}')
+            self.assertEqual(inst.metadata['test'], None)
 
         def update_metadata(id, data, reason):
             self.man.metadata_update(self.ctx,
