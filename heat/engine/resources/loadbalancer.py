@@ -253,7 +253,8 @@ class LoadBalancer(stack_resource.StackResource):
             logger.warn('Instance (%s) not found: %s' % (inst, str(ex)))
         else:
             for n in server.networks:
-                return server.networks[n][0]
+                if len(server.networks[n]) > 0:
+                    return server.networks[n][0]
 
         return '0.0.0.0'
 

@@ -134,8 +134,9 @@ class Instance(resource.Resource):
         '''
         # Just record the first ipaddress
         for n in networks:
-            self.ipaddress = networks[n][0]
-            break
+            if len(networks[n]) > 0:
+                self.ipaddress = networks[n][0]
+                break
 
     def _ipaddress(self):
         '''

@@ -264,3 +264,10 @@ class instancesTest(HeatTestCase):
             'id4',
             'id5'
         ]))
+
+    def test_instance_without_ip_address(self):
+        return_server = self.fc.servers.list()[3]
+        instance = self._create_test_instance(return_server,
+                                              'test_without_ip_address')
+
+        self.assertEqual(instance.FnGetAtt('PrivateIp'), '0.0.0.0')
