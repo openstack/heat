@@ -155,7 +155,13 @@ class Template(collections.Mapping):
         def handle_getatt(args):
             resource, att = args
             try:
-                return resources[resource].FnGetAtt(att)
+                r = resources[resource]
+                if r.state in (
+                        r.CREATE_IN_PROGRESS,
+                        r.CREATE_COMPLETE,
+                        r.UPDATE_IN_PROGRESS,
+                        r.UPDATE_COMPLETE):
+                    return r.FnGetAtt(att)
             except KeyError:
                 raise exception.InvalidTemplateAttribute(resource=resource,
                                                          key=att)
