@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import json
 
 from heat.db import api as db_api
 from heat.common import exception
@@ -197,6 +198,50 @@ class Template(collections.Mapping):
             return {'Fn::Join': [delim, reduced]}
 
         return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s)
+
+    @staticmethod
+    def resolve_select(s):
+        '''
+        Resolve constructs of the form:
+        (for a list lookup)
+        { "Fn::Select" : [ "2", [ "apples", "grapes", "mangoes" ] ] }
+        returns "mangoes"
+
+        (for a dict lookup)
+        { "Fn::Select" : [ "red", {"red": "a", "flu": "b"} ] }
+        returns "a"
+
+        Note: can raise IndexError, KeyError, ValueError and TypeError
+        '''
+        def handle_select(args):
+            if not isinstance(args, (list, tuple)):
+                raise TypeError('Arguments to "Fn::Select" must be a list')
+
+            try:
+                lookup, strings = args
+            except ValueError as ex:
+                example = '"Fn::Select" : [ "4", [ "str1", "str2"]]'
+                raise ValueError('Incorrect arguments to "Fn::Select" %s: %s' %
+                                ('should be', example))
+
+            try:
+                index = int(lookup)
+            except ValueError as ex:
+                index = lookup
+
+            if isinstance(strings, basestring):
+                # might be serialized json.
+                # if not allow it to raise a ValueError
+                strings = json.loads(strings)
+
+            if isinstance(strings, (list, tuple)) and isinstance(index, int):
+                return strings[index]
+            if isinstance(strings, dict) and isinstance(index, basestring):
+                return strings[index]
+
+            raise TypeError('Arguments to "Fn::Select" not fully resolved')
+
+        return _resolve(lambda k, v: k == 'Fn::Select', handle_select, s)
 
     @staticmethod
     def resolve_joins(s):

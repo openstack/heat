@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import mox
-
 import time
 import uuid
 
@@ -203,6 +203,61 @@ class TemplateTest(HeatTestCase):
         self.assertEqual(parser.Template.resolve_resource_refs(p_snippet,
                                                                resources),
                          p_snippet)
+
+    def test_select_from_list(self):
+        data = {"Fn::Select": ["1", ["foo", "bar"]]}
+        self.assertEqual(parser.Template.resolve_select(data), "bar")
+
+    def test_select_from_list_not_int(self):
+        data = {"Fn::Select": ["one", ["foo", "bar"]]}
+        self.assertRaises(TypeError, parser.Template.resolve_select,
+                          data)
+
+    def test_select_from_list_out_of_bound(self):
+        data = {"Fn::Select": ["3", ["foo", "bar"]]}
+        self.assertRaises(IndexError, parser.Template.resolve_select,
+                          data)
+
+    def test_select_from_dict(self):
+        data = {"Fn::Select": ["red", {"red": "robin", "re": "foo"}]}
+        self.assertEqual(parser.Template.resolve_select(data), "robin")
+
+    def test_select_from_dict_not_str(self):
+        data = {"Fn::Select": ["1", {"red": "robin", "re": "foo"}]}
+        self.assertRaises(TypeError, parser.Template.resolve_select,
+                          data)
+
+    def test_select_from_dict_not_existing(self):
+        data = {"Fn::Select": ["green", {"red": "robin", "re": "foo"}]}
+        self.assertRaises(KeyError, parser.Template.resolve_select,
+                          data)
+
+    def test_select_from_serialized_json_map(self):
+        js = json.dumps({"red": "robin", "re": "foo"})
+        data = {"Fn::Select": ["re", js]}
+        self.assertEqual(parser.Template.resolve_select(data), "foo")
+
+    def test_select_from_serialized_json_list(self):
+        js = json.dumps(["foo", "fee", "fum"])
+        data = {"Fn::Select": ["0", js]}
+        self.assertEqual(parser.Template.resolve_select(data), "foo")
+
+    def test_select_from_serialized_json_wrong(self):
+        js = "this is really not serialized json"
+        data = {"Fn::Select": ["not", js]}
+        self.assertRaises(ValueError, parser.Template.resolve_select,
+                          data)
+
+    def test_select_wrong_num_args(self):
+        join0 = {"Fn::Select": []}
+        self.assertRaises(ValueError, parser.Template.resolve_select,
+                          join0)
+        join1 = {"Fn::Select": ["4"]}
+        self.assertRaises(ValueError, parser.Template.resolve_select,
+                          join1)
+        join3 = {"Fn::Select": ["foo", {"foo": "bar"}, ""]}
+        self.assertRaises(ValueError, parser.Template.resolve_select,
+                          join3)
 
     def test_join_reduce(self):
         join = {"Fn::Join": [" ", ["foo", "bar", "baz", {'Ref': 'baz'},
