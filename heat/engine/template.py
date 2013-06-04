@@ -205,7 +205,14 @@ class Template(collections.Mapping):
 
             if not isinstance(strings, (list, tuple)):
                 raise TypeError('Arguments to "Fn::Join" not fully resolved')
-            return delim.join(strings)
+
+            def empty_for_none(v):
+                if v is None:
+                    return ''
+                else:
+                    return v
+
+            return delim.join(empty_for_none(value) for value in strings)
 
         return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s)
 

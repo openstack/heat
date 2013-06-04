@@ -77,6 +77,10 @@ class ParserTest(unittest.TestCase):
         raw = {'Fn::Join': [' ', ['foo', 'bar', 'baz']]}
         self.assertEqual(join(raw), 'foo bar baz')
 
+    def test_join_none(self):
+        raw = {'Fn::Join': [' ', ['foo', None, 'baz']]}
+        self.assertEqual(join(raw), 'foo  baz')
+
     def test_join_list(self):
         raw = [{'Fn::Join': [' ', ['foo', 'bar', 'baz']]}, 'blarg', 'wibble']
         parsed = join(raw)
