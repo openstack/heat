@@ -361,6 +361,64 @@ class TemplateTest(HeatTestCase):
             parser.Template.resolve_availability_zones(snippet, stack),
             ["nova1"])
 
+    def test_replace(self):
+        snippet = {"Fn::Replace": [
+            {'$var1': 'foo', '%var2%': 'bar'},
+            '$var1 is %var2%'
+        ]}
+        self.assertEqual(
+            parser.Template.resolve_replace(snippet),
+            'foo is bar')
+
+    def test_replace_list_mapping(self):
+        snippet = {"Fn::Replace": [
+            ['var1', 'foo', 'var2', 'bar'],
+            '$var1 is ${var2}'
+        ]}
+        self.assertRaises(TypeError, parser.Template.resolve_replace,
+                          snippet)
+
+    def test_replace_dict(self):
+        snippet = {"Fn::Replace": {}}
+        self.assertRaises(TypeError, parser.Template.resolve_replace,
+                          snippet)
+
+    def test_replace_missing_template(self):
+        snippet = {"Fn::Replace": [['var1', 'foo', 'var2', 'bar']]}
+        self.assertRaises(ValueError, parser.Template.resolve_replace,
+                          snippet)
+
+    def test_replace_none_template(self):
+        snippet = {"Fn::Replace": [['var1', 'foo', 'var2', 'bar'], None]}
+        self.assertRaises(TypeError, parser.Template.resolve_replace,
+                          snippet)
+
+    def test_replace_list_string(self):
+        snippet = {"Fn::Replace": [
+            {'var1': 'foo', 'var2': 'bar'},
+            ['$var1 is ${var2}']
+        ]}
+        self.assertRaises(TypeError, parser.Template.resolve_replace,
+                          snippet)
+
+    def test_replace_none_values(self):
+        snippet = {"Fn::Replace": [
+            {'$var1': None, '${var2}': None},
+            '"$var1" is "${var2}"'
+        ]}
+        self.assertEqual(
+            parser.Template.resolve_replace(snippet),
+            '"" is ""')
+
+    def test_replace_missing_key(self):
+        snippet = {"Fn::Replace": [
+            {'$var1': 'foo', 'var2': 'bar'},
+            '"$var1" is "${var3}"'
+        ]}
+        self.assertEqual(
+            parser.Template.resolve_replace(snippet),
+            '"foo" is "${var3}"')
+
 
 class StackTest(HeatTestCase):
     def setUp(self):
