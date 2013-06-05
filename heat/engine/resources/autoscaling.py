@@ -211,7 +211,9 @@ class InstanceGroup(resource.Resource):
                 id_list.append(inst.FnGetRefId())
 
             for lb in self.properties['LoadBalancerNames']:
-                self.stack[lb].reload(id_list)
+                self.stack[lb].json_snippet['Properties']['Instances'] = \
+                    inst_list
+                self.stack[lb].update(self.stack[lb].json_snippet)
 
     def FnGetRefId(self):
         return unicode(self.name)
