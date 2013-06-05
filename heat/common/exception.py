@@ -191,6 +191,10 @@ class UserParameterMissing(OpenstackException):
     message = _("The Parameter (%(key)s) was not provided.")
 
 
+class UnknownUserParameter(OpenstackException):
+    message = _("The Parameter (%(key)s) was not defined in template.")
+
+
 class InvalidTemplateAttribute(OpenstackException):
     message = _("The Referenced Attribute (%(resource)s %(key)s)"
                 " is incorrect.")

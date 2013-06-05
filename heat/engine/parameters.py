@@ -16,6 +16,7 @@
 import collections
 import re
 
+from heat.common import exception
 from heat.engine import template
 
 PARAMETER_KEYS = (
@@ -246,6 +247,8 @@ class Parameters(collections.Mapping):
             for name, schema in tmpl[template.PARAMETERS].iteritems():
                 yield Parameter(name, schema, user_params.get(name))
 
+        self.tmpl = tmpl
+        self._validate(user_params)
         self.params = dict((p.name, p) for p in parameters())
 
     def __contains__(self, key):
@@ -284,3 +287,8 @@ class Parameters(collections.Mapping):
         Set the AWS::StackId pseudo parameter value
         '''
         self.params[PARAM_STACK_ID].schema[DEFAULT] = stack_id
+
+    def _validate(self, user_params):
+        for param in user_params:
+            if param not in self.tmpl[template.PARAMETERS]:
+                raise exception.UnknownUserParameter(key=param)

@@ -37,6 +37,9 @@ Resources:
 
     nested_template = '''
 HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  KeyName:
+    Type: String
 Outputs:
   Foo:
     Value: bar
