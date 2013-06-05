@@ -20,6 +20,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.common import urlfetch
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 
 
@@ -75,8 +76,11 @@ Outputs:
 
         stack = self.create_stack(self.test_template)
         rsrc = stack['the_nested']
-        self.assertTrue(rsrc.FnGetRefId().startswith(
-            'arn:openstack:heat::aaaa:stacks/test_stack.the_nested/'))
+        nested_name = utils.PhysName(stack.name, 'the_nested')
+        self.assertEqual(nested_name, rsrc.physical_resource_name())
+        arn_prefix = ('arn:openstack:heat::aaaa:stacks/%s/' %
+                      rsrc.physical_resource_name())
+        self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
 
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
@@ -86,7 +90,6 @@ Outputs:
             exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
 
         rsrc.delete()
-        self.assertTrue(rsrc.FnGetRefId().startswith(
-            'arn:openstack:heat::aaaa:stacks/test_stack.the_nested/'))
+        self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
 
         self.m.VerifyAll()

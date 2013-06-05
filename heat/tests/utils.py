@@ -66,3 +66,18 @@ def parse_stack(t, params={}, stack_name='test_stack', stack_id=None):
     stack = parser.Stack(ctx, stack_name, template, parameters, stack_id)
 
     return stack
+
+
+class PhysName(object):
+    def __init__(self, stack_name, resource_name):
+        self.stack_name = stack_name
+        self.resource_name = resource_name
+
+    def __eq__(self, physical_name):
+        return physical_name == repr(self)
+
+    def __ne__(self, physical_name):
+        return not self.__eq__(physical_name)
+
+    def __repr__(self):
+        return '%s.%s' % (self.stack_name, self.resource_name)

@@ -35,6 +35,7 @@ from heat.engine.resources import instance as instances
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 
 
@@ -93,7 +94,8 @@ def setup_mocks(mocks, stack):
     server_userdata = instance._build_userdata(instance.properties['UserData'])
     mocks.StubOutWithMock(fc.servers, 'create')
     fc.servers.create(image=744, flavor=3, key_name='test',
-                      name='%s.WebServer' % stack.name, security_groups=None,
+                      name=utils.PhysName(stack.name, 'WebServer'),
+                      security_groups=None,
                       userdata=server_userdata, scheduler_hints=None,
                       meta=None, nics=None,
                       availability_zone=None).AndReturn(

@@ -23,6 +23,7 @@ from heat.engine import scheduler
 from heat.engine.resources import user
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
 
@@ -92,7 +93,8 @@ class UserPolicyTestCase(HeatTestCase):
     def setUp(self):
         super(UserPolicyTestCase, self).setUp()
         config.register_engine_opts()
-        self.fc = fakes.FakeKeystoneClient(username='test_stack.CfnUser')
+        username = utils.PhysName('test_stack', 'CfnUser')
+        self.fc = fakes.FakeKeystoneClient(username=username)
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
         setup_dummy_db()
 
@@ -120,7 +122,8 @@ class UserTest(UserPolicyTestCase):
 
         rsrc = self.create_user(t, stack, 'CfnUser')
         self.assertEqual(self.fc.user_id, rsrc.resource_id)
-        self.assertEqual('test_stack.CfnUser', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName('test_stack', 'CfnUser'),
+                         rsrc.FnGetRefId())
 
         self.assertEqual('CREATE_COMPLETE', rsrc.state)
         self.assertRaises(resource.UpdateReplace,
@@ -156,7 +159,8 @@ class UserTest(UserPolicyTestCase):
 
         rsrc = self.create_user(t, stack, 'CfnUser')
         self.assertEqual(self.fc.user_id, rsrc.resource_id)
-        self.assertEqual('test_stack.CfnUser', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName('test_stack', 'CfnUser'),
+                         rsrc.FnGetRefId())
         self.assertEqual('CREATE_COMPLETE', rsrc.state)
 
         self.assertEqual([u'WebServerAccessPolicy'],
@@ -216,7 +220,8 @@ class UserTest(UserPolicyTestCase):
 
         rsrc = self.create_user(t, stack, 'CfnUser')
         self.assertEqual(self.fc.user_id, rsrc.resource_id)
-        self.assertEqual('test_stack.CfnUser', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName('test_stack', 'CfnUser'),
+                         rsrc.FnGetRefId())
         self.assertEqual('CREATE_COMPLETE', rsrc.state)
 
         self.assertTrue(rsrc.access_allowed('a_resource'))
@@ -241,7 +246,8 @@ class UserTest(UserPolicyTestCase):
 
         rsrc = self.create_user(t, stack, 'CfnUser')
         self.assertEqual(self.fc.user_id, rsrc.resource_id)
-        self.assertEqual('test_stack.CfnUser', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName('test_stack', 'CfnUser'),
+                         rsrc.FnGetRefId())
         self.assertEqual('CREATE_COMPLETE', rsrc.state)
 
         self.assertTrue(rsrc.access_allowed('a_resource'))
@@ -270,8 +276,9 @@ class AccessKeyTest(UserPolicyTestCase):
         t = template_format.parse(user_accesskey_template)
         # Override the Ref for UserName with a hard-coded name,
         # so we don't need to create the User resource
-        t['Resources']['HostKeys']['Properties']['UserName'] =\
-            'test_stack.CfnUser'
+        username = str(utils.PhysName('test_stack', 'CfnUser'))
+        t['Resources']['HostKeys']['Properties']['UserName'] = username
+
         stack = parse_stack(t)
         stack.resources['CfnUser'].resource_id = self.fc.user_id
         stack.resources['CfnUser'].state = 'CREATE_COMPLETE'
@@ -286,7 +293,8 @@ class AccessKeyTest(UserPolicyTestCase):
         self.assertEqual(self.fc.secret,
                          rsrc._secret)
 
-        self.assertEqual(rsrc.FnGetAtt('UserName'), 'test_stack.CfnUser')
+        self.assertEqual(utils.PhysName(stack.name, 'CfnUser'),
+                         rsrc.FnGetAtt('UserName'))
         rsrc._secret = None
         self.assertEqual(rsrc.FnGetAtt('SecretAccessKey'),
                          self.fc.secret)
@@ -314,8 +322,7 @@ class AccessKeyTest(UserPolicyTestCase):
 
         t = template_format.parse(user_accesskey_template)
         # Set the resource properties UserName to an unknown user
-        t['Resources']['HostKeys']['Properties']['UserName'] =\
-            'test_stack.NoExist'
+        t['Resources']['HostKeys']['Properties']['UserName'] = 'NonExistant'
         stack = parse_stack(t)
         stack.resources['CfnUser'].resource_id = self.fc.user_id
 

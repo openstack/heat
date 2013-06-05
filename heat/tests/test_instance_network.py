@@ -21,6 +21,7 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 
 
@@ -178,7 +179,7 @@ class instancesTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=1, flavor=3, key_name='test',
-            name='%s.%s' % (stack_name, instance.name),
+            name=utils.PhysName(stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None, meta=None,
             nics=[{'port-id': '64d913c1-bcb1-42d2-8f0a-9593dbcaf251'}],
@@ -224,7 +225,7 @@ class instancesTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=1, flavor=3, key_name='test',
-            name='%s.%s' % (stack_name, instance.name),
+            name=utils.PhysName(stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None, meta=None,
             nics=[{'port-id': '64d913c1-bcb1-42d2-8f0a-9593dbcaf251'}],

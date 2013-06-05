@@ -18,6 +18,7 @@ from heat.common import template_format
 from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
 
@@ -71,7 +72,7 @@ class nokeyTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=1, flavor=1, key_name=None,
-            name='%s.%s' % (stack_name, instance.name),
+            name=utils.PhysName(stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None,
             meta=None, nics=None, availability_zone=None).AndReturn(

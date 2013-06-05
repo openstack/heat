@@ -29,6 +29,7 @@ from heat.engine.resources.quantum import router
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
 
@@ -318,7 +319,7 @@ class QuantumSubnetTest(HeatTestCase):
 
         quantumclient.Client.create_subnet({
             'subnet': {
-                'name': 'test_stack.test_subnet',
+                'name': utils.PhysName('test_stack', 'test_subnet'),
                 'network_id': u'None',
                 'dns_nameservers': [u'8.8.8.8'],
                 'allocation_pools': [
@@ -437,12 +438,15 @@ class QuantumRouterTest(HeatTestCase):
 
     def test_router(self):
         quantumclient.Client.create_router({
-            'router': {'name': 'test_stack.router', 'admin_state_up': True}
+            'router': {
+                'name': utils.PhysName('test_stack', 'router'),
+                'admin_state_up': True,
+            }
         }).AndReturn({
             "router": {
                 "status": "BUILD",
                 "external_gateway_info": None,
-                "name": "test_stack.router",
+                "name": utils.PhysName('test_stack', 'router'),
                 "admin_state_up": True,
                 "tenant_id": "3e21026f2dc94372b105808c0e721661",
                 "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
@@ -453,7 +457,7 @@ class QuantumRouterTest(HeatTestCase):
                 "router": {
                     "status": "BUILD",
                     "external_gateway_info": None,
-                    "name": "test_stack.router",
+                    "name": utils.PhysName('test_stack', 'router'),
                     "admin_state_up": True,
                     "tenant_id": "3e21026f2dc94372b105808c0e721661",
                     "routes": [],
@@ -466,7 +470,7 @@ class QuantumRouterTest(HeatTestCase):
                 "router": {
                     "status": "ACTIVE",
                     "external_gateway_info": None,
-                    "name": "test_stack.router",
+                    "name": utils.PhysName('test_stack', 'router'),
                     "admin_state_up": True,
                     "tenant_id": "3e21026f2dc94372b105808c0e721661",
                     "routes": [],
@@ -482,7 +486,7 @@ class QuantumRouterTest(HeatTestCase):
                 "router": {
                     "status": "ACTIVE",
                     "external_gateway_info": None,
-                    "name": "test_stack.router",
+                    "name": utils.PhysName('test_stack', 'router'),
                     "admin_state_up": True,
                     "tenant_id": "3e21026f2dc94372b105808c0e721661",
                     "routes": [],
@@ -653,7 +657,7 @@ class QuantumFloatingIPTest(HeatTestCase):
             'fixed_ips': [
                 {'subnet_id': u'12.12.12.0', 'ip_address': u'10.0.0.10'}
             ],
-            'name': u'test_stack.port_floating',
+            'name': utils.PhysName('test_stack', 'port_floating'),
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -725,7 +729,7 @@ class QuantumFloatingIPTest(HeatTestCase):
             'fixed_ips': [
                 {'subnet_id': u'12.12.12.0', 'ip_address': u'10.0.0.10'}
             ],
-            'name': u'test_stack.port_floating',
+            'name': utils.PhysName('test_stack', 'port_floating'),
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",

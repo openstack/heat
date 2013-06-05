@@ -23,6 +23,7 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 
 try:
@@ -87,37 +88,39 @@ class VPCTestBase(HeatTestCase):
         return stack
 
     def mock_create_network(self):
+        vpc_name = utils.PhysName('test_stack', 'the_vpc')
         quantumclient.Client.create_network(
             {
-                'network': {'name': 'test_stack.the_vpc'}
+                'network': {'name': vpc_name}
             }).AndReturn({'network': {
                 'status': 'ACTIVE',
                 'subnets': [],
-                'name': 'name',
+                'name': vpc_name,
                 'admin_state_up': True,
                 'shared': False,
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'id': 'aaaa'
             }})
         quantumclient.Client.create_router(
-            {'router': {'name': 'test_stack.the_vpc'}}).AndReturn({'router': {
+            {'router': {'name': vpc_name}}).AndReturn({'router': {
                 'status': 'ACTIVE',
-                'name': 'name',
+                'name': vpc_name,
                 'admin_state_up': True,
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'id': 'rrrr'
             }})
 
     def mock_create_subnet(self):
+        subnet_name = utils.PhysName('test_stack', 'the_subnet')
         quantumclient.Client.create_subnet(
             {'subnet': {
                 'network_id': u'aaaa',
                 'cidr': u'10.0.0.0/24',
                 'ip_version': 4,
-                'name': u'test_stack.the_subnet'}}).AndReturn({
+                'name': subnet_name}}).AndReturn({
                     'subnet': {
                         'status': 'ACTIVE',
-                        'name': 'test_stack.the_subnet',
+                        'name': subnet_name,
                         'admin_state_up': True,
                         'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                         'id': 'cccc'}})
@@ -126,9 +129,10 @@ class VPCTestBase(HeatTestCase):
             {'subnet_id': 'cccc'}).AndReturn(None)
 
     def mock_show_subnet(self):
+        subnet_name = utils.PhysName('test_stack', 'the_subnet')
         quantumclient.Client.show_subnet('cccc').AndReturn({
             'subnet': {
-                'name': 'test_stack.the_subnet',
+                'name': subnet_name,
                 'network_id': 'aaaa',
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'allocation_pools': [{'start': '10.0.0.2',
@@ -141,15 +145,16 @@ class VPCTestBase(HeatTestCase):
             }})
 
     def mock_create_security_group(self):
+        sg_name = utils.PhysName('test_stack', 'the_sg')
         quantumclient.Client.create_security_group({
             'security_group': {
-                'name': 'test_stack.the_sg',
+                'name': sg_name,
                 'description': 'SSH access'
             }
         }).AndReturn({
             'security_group': {
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'name': 'test_stack.the_sg',
+                'name': sg_name,
                 'description': 'SSH access',
                 'security_group_rules': [],
                 'id': 'eeee'
@@ -180,10 +185,11 @@ class VPCTestBase(HeatTestCase):
         })
 
     def mock_delete_security_group(self):
+        sg_name = utils.PhysName('test_stack', 'the_sg')
         quantumclient.Client.show_security_group('eeee').AndReturn({
             'security_group': {
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'name': 'sc1',
+                'name': sg_name,
                 'description': '',
                 'security_group_rules': [{
                     'direction': 'ingress',
@@ -406,12 +412,13 @@ Resources:
 '''
 
     def mock_create_network_interface(self, security_groups=['eeee']):
+        nic_name = utils.PhysName('test_stack', 'the_nic')
         port = {'network_id': 'aaaa',
                 'fixed_ips': [{
                     'subnet_id': u'cccc',
                     'ip_address': u'10.0.0.100'
                 }],
-                'name': u'test_stack.the_nic',
+                'name': nic_name,
                 'admin_state_up': True}
         if security_groups:
                 port['security_groups'] = security_groups
@@ -429,7 +436,7 @@ Resources:
                 ],
                 'id': 'dddd',
                 'mac_address': 'fa:16:3e:25:32:5d',
-                'name': 'test_stack.the_nic',
+                'name': nic_name,
                 'network_id': 'aaaa',
                 'status': 'ACTIVE',
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'
@@ -616,8 +623,9 @@ Resources:
 '''
 
     def mock_create_route_table(self):
+        rt_name = utils.PhysName('test_stack', 'the_route_table')
         quantumclient.Client.create_router(
-            {'router': {'name': u'test_stack.the_route_table'}}).AndReturn({
+            {'router': {'name': rt_name}}).AndReturn({
                 'router': {
                     'status': 'ACTIVE',
                     'name': 'name',
