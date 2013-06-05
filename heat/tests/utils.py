@@ -80,4 +80,4 @@ class PhysName(object):
         return not self.__eq__(physical_name)
 
     def __repr__(self):
-        return '%s.%s' % (self.stack_name, self.resource_name)
+        return '%s-%s' % (self.stack_name, self.resource_name)
