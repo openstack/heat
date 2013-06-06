@@ -114,6 +114,7 @@ class FakeHTTPClient(base_client.HTTPClient):
             {'id': 1234, 'name': 'sample-server'},
             {'id': 5678, 'name': 'sample-server2'},
             {'id': 9101, 'name': 'hard-reboot'},
+            {'id': 9102, 'name': 'server-with-no-ip'},
             {'id': 9999, 'name': 'sample-server3'}
         ]})
 
@@ -174,6 +175,18 @@ class FakeHTTPClient(base_client.HTTPClient):
                                    "private": [{"version": 4,
                                                 "addr": "10.13.12.13"}]},
                                    "metadata": {"Server Label": "DB 1"}},
+                                  {"id": 9102,
+                                   "name": "server-with-no-ip",
+                                   "image": {"id": 2,
+                                             "name": "sample image"},
+                                   "flavor": {"id": 1,
+                                              "name": "256 MB Server"},
+                                   "hostId":
+                                   "c1365ba78c624df9b2ff446515a682f5",
+                                   "status": "ACTIVE",
+                                   "addresses": {
+                                       "empty_net": []},
+                                   "metadata": {"Server Label": "DB 1"}},
                                   {"id": 9999,
                                    "name": "sample-server3",
                                    "image": {"id": 3,
@@ -215,7 +228,7 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (200, r)
 
     def get_servers_WikiServerOne2(self, **kw):
-        r = {'server': self.get_servers_detail()[1]['servers'][0]}
+        r = {'server': self.get_servers_detail()[1]['servers'][3]}
         return (200, r)
 
     def get_servers_5678(self, **kw):
@@ -277,6 +290,10 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def get_servers_9999_diagnostics(self, **kw):
         return (200, 'Fake diagnostics')
+
+    def get_servers_9102(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][3]}
+        return (200, r)
 
     def get_servers_1234_actions(self, **kw):
         return (200, {'actions': [{'action': 'rebuild',
