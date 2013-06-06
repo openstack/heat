@@ -33,7 +33,11 @@ as_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "AutoScaling Test",
-  "Parameters" : {},
+  "Parameters" : {
+  "KeyName": {
+    "Type": "String"
+  }
+  },
   "Resources" : {
     "WebServerGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
@@ -64,7 +68,15 @@ as_template = '''
       }
     },
     "ElasticLoadBalancer" : {
-      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+        "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+        "Properties" : {
+            "AvailabilityZones" : ["nova"],
+            "Listeners" : [ {
+                "LoadBalancerPort" : "80",
+                "InstancePort" : "80",
+                "Protocol" : "HTTP"
+            }]
+        }
     },
     "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
@@ -120,8 +132,11 @@ class AutoScalingTest(HeatTestCase):
         if unset:
             self.m.VerifyAll()
             self.m.UnsetStubs()
-        self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'reload')
-        loadbalancer.LoadBalancer.reload(expected_list).AndReturn(None)
+        self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'handle_update')
+
+        loadbalancer.LoadBalancer.handle_update(
+            mox.IgnoreArg(), mox.IgnoreArg(), {'Instances': expected_list})\
+            .AndReturn(None)
 
     def _stub_meta_expected(self, now, data, nmeta=1):
         # Stop time at now

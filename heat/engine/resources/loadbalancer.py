@@ -230,9 +230,8 @@ class LoadBalancer(stack_resource.StackResource):
         'HealthCheck': {'Type': 'Map',
                         'Schema': healthcheck_schema},
         'Instances': {'Type': 'List'},
-        'Listeners': {'Type': 'List',
-                      'Schema': {'Type': 'Map',
-                                 'Schema': listeners_schema}},
+        'Listeners': {'Type': 'List', 'Required': True,
+                      'Schema': {'Type': 'Map', 'Schema': listeners_schema}},
         'AppCookieStickinessPolicy': {'Type': 'String',
                                       'Implemented': False},
         'LBCookieStickinessPolicy': {'Type': 'String',
@@ -242,6 +241,8 @@ class LoadBalancer(stack_resource.StackResource):
         'Subnets': {'Type': 'List',
                     'Implemented': False}
     }
+    update_allowed_keys = ('Properties',)
+    update_allowed_properties = ('Instances',)
 
     def _instance_to_ipaddress(self, inst):
         '''
@@ -334,6 +335,22 @@ class LoadBalancer(stack_resource.StackResource):
 
         return self.create_with_template(templ, param)
 
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        '''
+        re-generate the Metadata
+        save it to the db.
+        rely on the cfn-hup to reconfigure HAProxy
+        '''
+        if 'Instances' in prop_diff:
+            templ = template_format.parse(lb_template)
+            cfg = self._haproxy_config(templ, prop_diff['Instances'])
+
+            md = self.nested()['LB_instance'].metadata
+            files = md['AWS::CloudFormation::Init']['config']['files']
+            files['/etc/haproxy/haproxy.cfg']['content'] = cfg
+
+            self.nested()['LB_instance'].metadata = md
+
     def handle_delete(self):
         self.delete_nested()
 
@@ -350,21 +367,6 @@ class LoadBalancer(stack_resource.StackResource):
             if float(health_chk['Interval']) < float(health_chk['Timeout']):
                 return {'Error':
                         'Interval must be larger than Timeout'}
-
-    def reload(self, inst_list):
-        '''
-        re-generate the Metadata
-        save it to the db.
-        rely on the cfn-hup to reconfigure HAProxy
-        '''
-        templ = template_format.parse(lb_template)
-        cfg = self._haproxy_config(templ, inst_list)
-
-        md = self.nested()['LB_instance'].metadata
-        files = md['AWS::CloudFormation::Init']['config']['files']
-        files['/etc/haproxy/haproxy.cfg']['content'] = cfg
-
-        self.nested()['LB_instance'].metadata = md
 
     def FnGetRefId(self):
         return unicode(self.name)

@@ -21,7 +21,6 @@ from heat.common import exception
 from heat.common import config
 from heat.common import template_format
 from heat.engine import clients
-from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources import instance
 from heat.engine.resources import user
@@ -165,7 +164,7 @@ class LoadBalancerTest(HeatTestCase):
                                      s)
             id_list.append(inst.FnGetRefId())
 
-        rsrc.reload(id_list)
+        rsrc.handle_update(rsrc.json_snippet, {}, {'Instances': id_list})
 
         self.assertEqual('4.5.6.7', rsrc.FnGetAtt('DNSName'))
         self.assertEqual('', rsrc.FnGetAtt('SourceSecurityGroupName'))
@@ -176,8 +175,7 @@ class LoadBalancerTest(HeatTestCase):
         except exception.InvalidTemplateAttribute:
             pass
 
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
+        self.assertEqual(None, rsrc.handle_update({}, {}, {}))
 
         self.m.VerifyAll()
 
