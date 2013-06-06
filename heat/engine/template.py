@@ -331,5 +331,5 @@ def _resolve(match, handle, snippet):
                 return handle(recurse(v))
         return dict((k, recurse(v)) for k, v in snippet.items())
     elif isinstance(snippet, list):
-        return [recurse(v) for v in snippet]
+        return [recurse(s) for s in snippet]
     return snippet
