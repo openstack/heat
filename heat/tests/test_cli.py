@@ -24,15 +24,15 @@ basepath = os.path.join(heat.__path__[0], os.path.pardir)
 class CliTest(testtools.TestCase):
 
     def test_heat_cfn(self):
-            self.bin_test_run('heat-cfn')
+            self.bin_run('heat-cfn')
 
     def test_heat_boto(self):
-            self.bin_test_run('heat-boto')
+            self.bin_run('heat-boto')
 
     def test_heat_watch(self):
-            self.bin_test_run('heat-watch')
+            self.bin_run('heat-watch')
 
-    def bin_test_run(self, bin):
+    def bin_run(self, bin):
             fullpath = basepath + '/bin/' + bin
 
             proc = subprocess.Popen(fullpath,
