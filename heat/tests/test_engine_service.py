@@ -103,7 +103,7 @@ def setup_mocks(mocks, stack):
     return fc
 
 
-def setup_test_stack(stack_name, ctx, create_res=True):
+def setup_stack(stack_name, ctx, create_res=True):
     stack = get_wordpress_stack(stack_name, ctx)
     stack.store()
     if create_res:
@@ -140,7 +140,7 @@ def stack_context(stack_name, create_res=True):
             def create_stack():
                 ctx = getattr(test_case, 'ctx', None)
                 if ctx is not None:
-                    stack = setup_test_stack(stack_name, ctx, create_res)
+                    stack = setup_stack(stack_name, ctx, create_res)
                     setattr(test_case, 'stack', stack)
 
             def delete_stack():
