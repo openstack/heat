@@ -68,7 +68,8 @@ def default_for_missing(tpl, version_param, versions):
 
 def convert_json_to_yaml(json_str):
     '''Convert a string containing the AWS JSON template format
-    to an equivalent string containing the Heat YAML format.'''
+    to an equivalent string containing the Heat YAML format.
+    '''
 
     global key_order
     # Replace AWS format version with Heat format version
