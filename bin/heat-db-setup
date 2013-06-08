@@ -129,7 +129,7 @@ done
 # Make sure MySQL is installed.
 
 NEW_MYSQL_INSTALL=0
-if ! $PACKAGE_STATUS mysql-server > /dev/null
+if ! $PACKAGE_STATUS mysql-server && ! $PACKAGE_STATUS mariadb-server > /dev/null
 then
 	if [ -z "${ASSUME_YES}" ] ; then
 		printf "mysql-server is not installed.  Would you like to install it now? (y/n): "
