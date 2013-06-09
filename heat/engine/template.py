@@ -244,6 +244,8 @@ class Template(collections.Mapping):
                 return strings[index]
             if isinstance(strings, dict) and isinstance(index, basestring):
                 return strings[index]
+            if strings is None:
+                return ''
 
             raise TypeError('Arguments to "Fn::Select" not fully resolved')
 
