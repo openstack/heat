@@ -306,6 +306,49 @@ class Resource(object):
     def cinder(self):
         return self.stack.clients.cinder()
 
+    def _do_action(self, action, pre_func=None):
+        '''
+        Perform a transition to a new state via a specified action
+        action should be e.g self.CREATE, self.UPDATE etc, we set
+        status based on this, the transistion is handled by calling the
+        corresponding handle_* and check_*_complete functions
+        Note pre_func is an optional function reference which will
+        be called before the handle_<action> function
+        '''
+        assert action in self.ACTIONS, 'Invalid action %s' % action
+
+        try:
+            self.state_set(action, self.IN_PROGRESS)
+
+            action_l = action.lower()
+            handle = getattr(self, 'handle_%s' % action_l, None)
+            check = getattr(self, 'check_%s_complete' % action_l, None)
+
+            if callable(pre_func):
+                pre_func()
+
+            handle_data = None
+            if callable(handle):
+                handle_data = handle()
+                yield
+                if callable(check):
+                    while not check(handle_data):
+                        yield
+        except Exception as ex:
+            logger.exception('%s : %s' % (action, str(self)))
+            failure = exception.ResourceFailure(ex)
+            self.state_set(action, self.FAILED, str(failure))
+            raise failure
+        except:
+            with excutils.save_and_reraise_exception():
+                try:
+                    self.state_set(action, self.FAILED,
+                                   '%s aborted' % action)
+                except Exception:
+                    logger.exception('Error marking resource as failed')
+        else:
+            self.state_set(action, self.COMPLETE)
+
     def create(self):
         '''
         Create the resource. Subclasses should provide a handle_create() method
@@ -324,29 +367,7 @@ class Resource(object):
                                      self.t.get('Properties', {}),
                                      self.stack.resolve_runtime_data,
                                      self.name)
-        try:
-            self.properties.validate()
-            self.state_set(self.CREATE, self.IN_PROGRESS)
-            create_data = None
-            if callable(getattr(self, 'handle_create', None)):
-                create_data = self.handle_create()
-                yield
-            while not self.check_create_complete(create_data):
-                yield
-        except Exception as ex:
-            logger.exception('create %s', str(self))
-            failure = exception.ResourceFailure(ex)
-            self.state_set(self.CREATE, self.FAILED, str(failure))
-            raise failure
-        except:
-            with excutils.save_and_reraise_exception():
-                try:
-                    self.state_set(self.CREATE, self.FAILED,
-                                   'Creation aborted')
-                except Exception:
-                    logger.exception('Error marking resource as failed')
-        else:
-            self.state_set(self.CREATE, self.COMPLETE)
+        return self._do_action(self.CREATE, self.properties.validate)
 
     def check_create_complete(self, create_data):
         '''
