@@ -19,12 +19,13 @@ These instructions assume you already have a working DevStack installation which
 
 Configure DevStack to enable Heat
 ---------------------------------
-Adding the following line to your `localrc` file will enable the heat services
-::
+Adding the following line to your `localrc` file will enable the heat services::
+
     ENABLED_SERVICES+=,heat,h-api,h-api-cfn,h-api-cw,h-eng
 
-It would also be useful to automatically download and register a VM image that Heat can launch.
-::
+It would also be useful to automatically download and register
+a VM image that Heat can launch::
+
     IMAGE_URLS+=",http://fedorapeople.org/groups/heat/prebuilt-jeos-images/F17-x86_64-cfntools.qcow2,http://fedorapeople.org/groups/heat/prebuilt-jeos-images/F17-i386-cfntools.qcow2"
 
 URLs for any of [http://fedorapeople.org/groups/heat/prebuilt-jeos-images/ these prebuilt JEOS images] can be specified.
@@ -33,25 +34,30 @@ That is all the configuration that is required. When you run `./stack.sh` the He
 
 Confirming heat is responding
 -----------------------------
-Before any heat commands can be run, the authentication environment needs to be loaded
-::
+
+Before any heat commands can be run, the authentication environment
+needs to be loaded::
+
     source openrc
 
-You can confirm that Heat is running and responding with this command
-::
+You can confirm that Heat is running and responding
+with this command::
+
     heat stack-list
 
 This should return an empty line
 
 Preparing Nova for running stacks
 ---------------------------------
-Enabling Heat in devstack will replace the default Nova flavors with flavours that the Heat example templates expect. You can see what those flavors are by running
-::
+
+Enabling Heat in devstack will replace the default Nova flavors with
+flavours that the Heat example templates expect. You can see what
+those flavors are by running::
 
     nova flavor-list
 
-Heat needs to launch instances with a keypair, so we need to generate one
-::
+Heat needs to launch instances with a keypair, so we need
+to generate one::
 
     nova keypair-add heat_key > heat_key.priv
     chmod 600 heat_key.priv
