@@ -12,7 +12,7 @@ def list_types():
 def handle_part(data, ctype, filename, payload):
     if ctype == "__begin__":
         try:
-            os.makedirs('/var/lib/heat-cfntools', 0700)
+            os.makedirs('/var/lib/heat-cfntools', 0o700)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
