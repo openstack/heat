@@ -15,7 +15,6 @@
 
 import base64
 from datetime import datetime
-from eventlet.support import greenlets as greenlet
 
 from heat.engine import event
 from heat.common import exception
@@ -337,14 +336,6 @@ class Resource(object):
                 yield
             while not self.check_create_complete(create_data):
                 yield
-        except greenlet.GreenletExit:
-            # Older versions of greenlet erroneously had GreenletExit inherit
-            # from Exception instead of BaseException
-            with excutils.save_and_reraise_exception():
-                try:
-                    self.state_set(self.CREATE_FAILED, 'Creation aborted')
-                except Exception:
-                    logger.exception('Error marking resource as failed')
         except Exception as ex:
             logger.exception('create %s', str(self))
             failure = exception.ResourceFailure(ex)
