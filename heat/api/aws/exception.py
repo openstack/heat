@@ -255,6 +255,7 @@ def map_remote_error(ex):
             'StackExists',
             'StackValidationFailed',
             'InvalidTemplateReference',
+            'UnknownUserParameter',
         )
         denied_errors = ('Forbidden', 'NotAuthorized')
 

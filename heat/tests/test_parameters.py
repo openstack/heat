@@ -16,6 +16,7 @@
 import testtools
 import json
 
+from heat.common import exception
 from heat.engine import parameters
 
 
@@ -338,3 +339,11 @@ class ParametersTest(testtools.TestCase):
                     'AWS::StackName': 'test_params'}
 
         self.assertEqual(params.map(str), expected)
+
+    def test_unknown_params(self):
+        user_params = {'Foo': 'wibble'}
+        self.assertRaises(exception.UnknownUserParameter,
+                          parameters.Parameters,
+                          'test',
+                          params_schema,
+                          user_params)
