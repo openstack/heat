@@ -575,6 +575,7 @@ def resolve_runtime_data(template, resources, snippet):
                                         resources=resources),
                       template.resolve_select,
                       template.resolve_joins,
+                      template.resolve_replace,
                       template.resolve_base64])
 
 

@@ -280,6 +280,45 @@ class Template(collections.Mapping):
         return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s)
 
     @staticmethod
+    def resolve_replace(s):
+        """
+        Resolve constructs of the form.
+        {"Fn::Replace": [
+          {'$var1': 'foo', '%var2%': 'bar'},
+          '$var1 is %var2%'
+        ]}
+        This is implemented using python str.replace on each key
+        """
+        def handle_replace(args):
+            if not isinstance(args, (list, tuple)):
+                raise TypeError('Arguments to "Fn::Replace" must be a list')
+
+            try:
+                mapping, string = args
+            except ValueError as ex:
+                example = ('{"Fn::Replace": '
+                           '[ {"$var1": "foo", "%var2%": "bar"}, '
+                           '"$var1 is %var2%"]}')
+                raise ValueError(
+                    'Incorrect arguments to "Fn::Replace" %s: %s' %
+                    ('should be', example))
+
+            if not isinstance(mapping, dict):
+                raise TypeError(
+                    'Arguments to "Fn::Replace" not fully resolved')
+            if not isinstance(string, basestring):
+                raise TypeError(
+                    'Arguments to "Fn::Replace" not fully resolved')
+
+            for k, v in mapping.items():
+                if v is None:
+                    v = ''
+                string = string.replace(k, v)
+            return string
+
+        return _resolve(lambda k, v: k == 'Fn::Replace', handle_replace, s)
+
+    @staticmethod
     def resolve_base64(s):
         '''
         Resolve constructs of the form { "Fn::Base64" : "string" }
