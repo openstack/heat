@@ -226,6 +226,10 @@ class TemplateTest(HeatTestCase):
         data = {"Fn::Select": ["red", {"red": "robin", "re": "foo"}]}
         self.assertEqual(parser.Template.resolve_select(data), "robin")
 
+    def test_select_from_none(self):
+        data = {"Fn::Select": ["red", None]}
+        self.assertEqual(parser.Template.resolve_select(data), "")
+
     def test_select_from_dict_not_str(self):
         data = {"Fn::Select": ["1", {"red": "robin", "re": "foo"}]}
         self.assertRaises(TypeError, parser.Template.resolve_select,
