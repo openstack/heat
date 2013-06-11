@@ -291,7 +291,7 @@ class StackController(object):
             return result
 
         if action not in self.CREATE_OR_UPDATE_ACTION:
-            msg = _('Unexpected action %s') % action
+            msg = _("Unexpected action %(action)s") % ({'action': action})
             # This should not happen, so return HeatInternalFailureError
             return exception.HeatInternalFailureError(detail=msg)
 
