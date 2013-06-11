@@ -74,7 +74,7 @@ class KeystonePasswordAuthProtocol(object):
         tenant_id = token_info['token']['tenant']['id']
         tenant_name = token_info['token']['tenant']['name']
         user_id = token_info['user']['id']
-        user_name = token_info['user']['username']
+        user_name = token_info['user']['name']
         roles = ','.join(
             [role['name'] for role in token_info['user']['roles']])
         service_catalog = token_info['serviceCatalog']
