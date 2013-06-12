@@ -74,9 +74,10 @@ class Stack(object):
         '''
 
         if re.match("[a-zA-Z][a-zA-Z0-9_.-]*$", stack_name) is None:
-            raise ValueError(_("Invalid stack name %s" % stack_name
-                               + ", must contain only alphanumeric or "
-                               + "\"_-.\" characters, must start with alpha"))
+            raise ValueError(_('Invalid stack name %s'
+                               ' must contain only alphanumeric or '
+                               '\"_-.\" characters, must start with alpha'
+                               ) % stack_name)
 
         self.id = stack_id
         self.context = context
