@@ -204,6 +204,15 @@ class HeatThrottlingError(HeatAPIException):
     explanation = "Request was denied due to request throttling"
 
 
+class AlreadyExistsError(HeatAPIException):
+    '''
+    Resource with the name requested already exists
+    '''
+    code = 400
+    title = 'AlreadyExists'
+    explanation = "Resource with the name requested already exists"
+
+
 # Not documented in the AWS docs, authentication failure errors
 class HeatAccessDeniedError(HeatAPIException):
     '''
@@ -252,17 +261,19 @@ def map_remote_error(ex):
             'ResourceNotAvailable',
             'PhysicalResourceNotFound',
             'WatchRuleNotFound',
-            'StackExists',
             'StackValidationFailed',
             'InvalidTemplateReference',
             'UnknownUserParameter',
         )
         denied_errors = ('Forbidden', 'NotAuthorized')
+        already_exists_errors = ('StackExists')
 
         if ex.exc_type in inval_param_errors:
             return HeatInvalidParameterValueError(detail=ex.value)
         elif ex.exc_type in denied_errors:
             return HeatAccessDeniedError(detail=ex.value)
+        elif ex.exc_type in already_exists_errors:
+            return AlreadyExistsError(detail=ex.value)
         else:
             # Map everything else to internal server error for now
             return HeatInternalFailureError(detail=ex.value)

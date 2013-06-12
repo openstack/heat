@@ -597,7 +597,7 @@ class CfnStackControllerTest(HeatTestCase):
         result = self.controller.create(dummy_req)
 
         self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+                         exception.AlreadyExistsError)
         self.m.VerifyAll()
 
     def test_create_err_engine(self):
