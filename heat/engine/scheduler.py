@@ -215,10 +215,18 @@ def wrappertask(task):
     def wrapper(*args, **kwargs):
         parent = task(*args, **kwargs)
 
-        for subtask in parent:
+        subtask = next(parent)
+
+        while True:
             try:
                 if subtask is not None:
-                    for step in subtask:
+                    subtask_running = True
+                    try:
+                        step = next(subtask)
+                    except StopIteration:
+                        subtask_running = False
+
+                    while subtask_running:
                         try:
                             yield step
                         except GeneratorExit as exit:
@@ -226,19 +234,23 @@ def wrappertask(task):
                             raise exit
                         except:
                             try:
-                                subtask.throw(*sys.exc_info())
+                                step = subtask.throw(*sys.exc_info())
                             except StopIteration:
-                                break
+                                subtask_running = False
+                        else:
+                            try:
+                                step = next(subtask)
+                            except StopIteration:
+                                subtask_running = False
                 else:
                     yield
             except GeneratorExit as exit:
                 parent.close()
                 raise exit
             except:
-                try:
-                    parent.throw(*sys.exc_info())
-                except StopIteration:
-                    break
+                subtask = parent.throw(*sys.exc_info())
+            else:
+                subtask = next(parent)
 
     return wrapper
 
