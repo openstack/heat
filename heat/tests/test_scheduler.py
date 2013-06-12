@@ -691,6 +691,143 @@ class WrapperTaskTest(mox.MoxTestBase):
         task.next()
         task.next()
 
+    def test_child_exception_swallow_next(self):
+        class MyException(Exception):
+            pass
+
+        def child_task():
+            yield
+
+            raise MyException()
+
+        dummy = DummyTask()
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield child_task()
+            except MyException:
+                pass
+            else:
+                self.fail('No exception raised in parent_task')
+
+            yield dummy()
+
+        task = parent_task()
+        task.next()
+
+        self.mox.StubOutWithMock(dummy, 'do_step')
+        for i in range(1, dummy.num_steps + 1):
+            dummy.do_step(i).AndReturn(None)
+        self.mox.ReplayAll()
+
+        for i in range(1, dummy.num_steps + 1):
+            task.next()
+        self.assertRaises(StopIteration, task.next)
+
+    def test_thrown_exception_swallow_next(self):
+        class MyException(Exception):
+            pass
+
+        dummy = DummyTask()
+
+        @scheduler.wrappertask
+        def child_task():
+            try:
+                yield
+            except MyException:
+                yield dummy()
+            else:
+                self.fail('No exception raised in child_task')
+
+        @scheduler.wrappertask
+        def parent_task():
+            yield child_task()
+
+        task = parent_task()
+
+        self.mox.StubOutWithMock(dummy, 'do_step')
+        for i in range(1, dummy.num_steps + 1):
+            dummy.do_step(i).AndReturn(None)
+        self.mox.ReplayAll()
+
+        next(task)
+        task.throw(MyException)
+
+        for i in range(2, dummy.num_steps + 1):
+            task.next()
+        self.assertRaises(StopIteration, task.next)
+
+    def test_thrown_exception_raise(self):
+        class MyException(Exception):
+            pass
+
+        dummy = DummyTask()
+
+        @scheduler.wrappertask
+        def child_task():
+            try:
+                yield
+            except MyException:
+                raise
+            else:
+                self.fail('No exception raised in child_task')
+
+        @scheduler.wrappertask
+        def parent_task():
+            try:
+                yield child_task()
+            except MyException:
+                yield dummy()
+
+        task = parent_task()
+
+        self.mox.StubOutWithMock(dummy, 'do_step')
+        for i in range(1, dummy.num_steps + 1):
+            dummy.do_step(i).AndReturn(None)
+        self.mox.ReplayAll()
+
+        next(task)
+        task.throw(MyException)
+
+        for i in range(2, dummy.num_steps + 1):
+            task.next()
+        self.assertRaises(StopIteration, task.next)
+
+    def test_thrown_exception_exit(self):
+        class MyException(Exception):
+            pass
+
+        dummy = DummyTask()
+
+        @scheduler.wrappertask
+        def child_task():
+            try:
+                yield
+            except MyException:
+                return
+            else:
+                self.fail('No exception raised in child_task')
+
+        @scheduler.wrappertask
+        def parent_task():
+            yield child_task()
+            yield dummy()
+
+        task = parent_task()
+
+        self.mox.StubOutWithMock(dummy, 'do_step')
+        for i in range(1, dummy.num_steps + 1):
+            dummy.do_step(i).AndReturn(None)
+        self.mox.ReplayAll()
+
+        next(task)
+        task.throw(MyException)
+
+        for i in range(2, dummy.num_steps + 1):
+            task.next()
+        self.assertRaises(StopIteration, task.next)
+
     def test_parent_exception(self):
         class MyException(Exception):
             pass
