@@ -682,7 +682,7 @@ Commands:
         sys.exit(result)
     except (RuntimeError,
             NotImplementedError,
-            exception.ClientConfigurationError), ex:
+            exception.ClientConfigurationError) as ex:
         oparser.print_usage()
         logging.error("ERROR: %s" % ex)
         sys.exit(1)
