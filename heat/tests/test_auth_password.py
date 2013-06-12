@@ -45,7 +45,7 @@ TOKEN_RESPONSE = {
     },
     'user': {
         'id': 'user_id1',
-        'username': 'user_name1',
+        'name': 'user_name1',
         'roles': [
             {'name': 'role1'},
             {'name': 'role2'},
