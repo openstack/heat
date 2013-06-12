@@ -124,7 +124,8 @@ Create the keystone authentication parameters
     sudo -E ./bin/heat-keystone-setup
 
 Download or alternatively generate a JEOS image
-----------------------------------------------
+------------------------------------------------
+
 It is possible to either use an image-building tool to create an image or download a prebuilt image of a desired distribution.
 
 Download a prebuilt image and copy to libvirt images location
