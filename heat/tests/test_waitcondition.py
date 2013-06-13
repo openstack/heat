@@ -78,6 +78,19 @@ test_template_wc_count = '''
 '''
 
 
+class UUIDStub(object):
+    def __init__(self, value):
+        self.value = value
+
+    def __enter__(self):
+        self.uuid4 = uuid.uuid4
+        uuid_stub = lambda: self.value
+        uuid.uuid4 = uuid_stub
+
+    def __exit__(self, *exc_info):
+        uuid.uuid4 = self.uuid4
+
+
 class WaitConditionTest(HeatTestCase):
 
     def setUp(self):
@@ -91,6 +104,7 @@ class WaitConditionTest(HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
 
+        self.stack_id = 'STACKABCD1234'
         self.fc = fakes.FakeKeystoneClient()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
@@ -106,7 +120,9 @@ class WaitConditionTest(HeatTestCase):
         stack = parser.Stack(ctx, stack_name, template, parameters,
                              disable_rollback=True)
 
-        self.stack_id = stack.store()
+        # Stub out the stack ID so we have a known value
+        with UUIDStub(self.stack_id):
+            stack.store()
 
         if stub:
             scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
@@ -283,10 +299,6 @@ class WaitConditionTest(HeatTestCase):
 
     @stack_delete_after
     def test_validate_handle_url_bad_stackid(self):
-        # Stub out the stack ID so we have a known value
-        stack_id = 'STACKABCD1234'
-        self.m.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn(stack_id)
         self.m.ReplayAll()
 
         t = json.loads(test_template_waitcondition)
@@ -306,17 +318,13 @@ class WaitConditionTest(HeatTestCase):
 
     @stack_delete_after
     def test_validate_handle_url_bad_stackname(self):
-        # Stub out the stack ID so we have a known value
-        stack_id = 'STACKABCD1234'
-        self.m.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn(stack_id)
         self.m.ReplayAll()
 
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2FBAD_stack%2F" +
-                     stack_id + "%2Fresources%2FWaitHandle")
+                     self.stack_id + "%2Fresources%2FWaitHandle")
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
         self.stack = self.create_stack(template=json.dumps(t), stub=False)
 
@@ -327,17 +335,13 @@ class WaitConditionTest(HeatTestCase):
 
     @stack_delete_after
     def test_validate_handle_url_bad_tenant(self):
-        # Stub out the stack ID so we have a known value
-        stack_id = 'STACKABCD1234'
-        self.m.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn(stack_id)
         self.m.ReplayAll()
 
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3ABAD_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
-                     stack_id + "%2Fresources%2FWaitHandle")
+                     self.stack_id + "%2Fresources%2FWaitHandle")
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
         self.stack = self.create_stack(template=json.dumps(t), stub=False)
 
@@ -348,17 +352,13 @@ class WaitConditionTest(HeatTestCase):
 
     @stack_delete_after
     def test_validate_handle_url_bad_resource(self):
-        # Stub out the stack ID so we have a known value
-        stack_id = 'STACKABCD1234'
-        self.m.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn(stack_id)
         self.m.ReplayAll()
 
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
-                     stack_id + "%2Fresources%2FBADHandle")
+                     self.stack_id + "%2Fresources%2FBADHandle")
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
         self.stack = self.create_stack(template=json.dumps(t), stub=False)
 
@@ -369,17 +369,13 @@ class WaitConditionTest(HeatTestCase):
 
     @stack_delete_after
     def test_validate_handle_url_bad_resource_type(self):
-        # Stub out the stack ID so we have a known value
-        stack_id = 'STACKABCD1234'
-        self.m.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn(stack_id)
         self.m.ReplayAll()
 
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
-                     stack_id + "%2Fresources%2FWaitForTheHandle")
+                     self.stack_id + "%2Fresources%2FWaitForTheHandle")
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
         self.stack = self.create_stack(template=json.dumps(t), stub=False)
 
@@ -409,10 +405,8 @@ class WaitConditionHandleTest(HeatTestCase):
         stack = parser.Stack(ctx, stack_name, template, parameters,
                              disable_rollback=True)
         # Stub out the UUID for this test, so we can get an expected signature
-        self.m.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn('STACKABCD1234')
-        self.m.ReplayAll()
-        stack.store()
+        with UUIDStub('STACKABCD1234'):
+            stack.store()
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
