@@ -171,21 +171,21 @@ class ResourceTest(HeatTestCase):
         update_snippet = {}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertRaises(resource.UpdateReplace, res.update_template_diff,
-                          update_snippet)
+                          update_snippet, tmpl)
 
     def test_update_template_diff_changed_notallowed(self):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Bar'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertRaises(resource.UpdateReplace, res.update_template_diff,
-                          update_snippet)
+                          update_snippet, tmpl)
 
     def test_update_template_diff_changed_modified(self):
         tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 456}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Metadata',)
-        diff = res.update_template_diff(json_snippet=update_snippet)
+        diff = res.update_template_diff(update_snippet, tmpl)
         self.assertEqual(diff, {'Metadata': {'foo': 456}})
 
     def test_update_template_diff_changed_add(self):
@@ -193,7 +193,7 @@ class ResourceTest(HeatTestCase):
         update_snippet = {'Type': 'Foo', 'Metadata': {'foo': 123}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Metadata',)
-        diff = res.update_template_diff(json_snippet=update_snippet)
+        diff = res.update_template_diff(update_snippet, tmpl)
         self.assertEqual(diff, {'Metadata': {'foo': 123}})
 
     def test_update_template_diff_changed_remove(self):
@@ -201,14 +201,14 @@ class ResourceTest(HeatTestCase):
         update_snippet = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Metadata',)
-        diff = res.update_template_diff(json_snippet=update_snippet)
+        diff = res.update_template_diff(update_snippet, tmpl)
         self.assertEqual(diff, {'Metadata': None})
 
     def test_update_template_diff_properties_none(self):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        diff = res.update_template_diff_properties(json_snippet=update_snippet)
+        diff = res.update_template_diff_properties(update_snippet, tmpl)
         self.assertEqual(diff, {})
 
     def test_update_template_diff_properties_added(self):
@@ -216,7 +216,7 @@ class ResourceTest(HeatTestCase):
         update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 123}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Bar',)
-        diff = res.update_template_diff_properties(json_snippet=update_snippet)
+        diff = res.update_template_diff_properties(update_snippet, tmpl)
         self.assertEqual(diff, {'Bar': 123})
 
     def test_update_template_diff_properties_removed(self):
@@ -224,7 +224,7 @@ class ResourceTest(HeatTestCase):
         update_snippet = {'Type': 'Foo', 'Properties': {}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Bar',)
-        diff = res.update_template_diff_properties(json_snippet=update_snippet)
+        diff = res.update_template_diff_properties(update_snippet, tmpl)
         self.assertEqual(diff, {'Bar': None})
 
     def test_update_template_diff_properties_changed(self):
@@ -232,7 +232,7 @@ class ResourceTest(HeatTestCase):
         update_snippet = {'Type': 'Foo', 'Properties': {'Bar': 456}}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Bar',)
-        diff = res.update_template_diff_properties(json_snippet=update_snippet)
+        diff = res.update_template_diff_properties(update_snippet, tmpl)
         self.assertEqual(diff, {'Bar': 456})
 
     def test_update_template_diff_properties_notallowed(self):
@@ -242,7 +242,7 @@ class ResourceTest(HeatTestCase):
         res.update_allowed_properties = ('Cat',)
         self.assertRaises(resource.UpdateReplace,
                           res.update_template_diff_properties,
-                          update_snippet)
+                          update_snippet, tmpl)
 
     def test_resource(self):
         # patch in a dummy property schema for GenericResource
