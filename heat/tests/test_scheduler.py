@@ -166,19 +166,9 @@ class DependencyTaskGroupTest(mox.MoxTestBase):
     def _dep_test(self, *edges):
         dummy = DummyTask(getattr(self, 'steps', 3))
 
-        class TaskMaker(object):
-            def __init__(self, name):
-                self.name = name
-
-            def __repr__(self):
-                return 'Dummy task "%s"' % self.name
-
-            def __call__(self, *args, **kwargs):
-                return dummy(self.name, *args, **kwargs)
-
         deps = dependencies.Dependencies(edges)
 
-        tg = scheduler.DependencyTaskGroup(deps, TaskMaker)
+        tg = scheduler.DependencyTaskGroup(deps, dummy)
 
         self.mox.StubOutWithMock(dummy, 'do_step')
 

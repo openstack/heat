@@ -263,19 +263,22 @@ class DependencyTaskGroup(object):
     A task which manages a group of subtasks that have ordering dependencies.
     """
 
-    def __init__(self, dependencies, make_task=lambda o: o,
+    def __init__(self, dependencies, task=lambda o: o(),
                  reverse=False, name=None):
         """
-        Initialise with the task dependencies and (optionally) a function for
-        creating a task from each dependency object.
+        Initialise with the task dependencies and (optionally) a task to run on
+        each.
+
+        If no task is supplied, it is assumed that the tasks are stored
+        directly in the dependency tree. If a task is supplied, the object
+        stored in the dependency tree is passed as an argument.
         """
-        self._runners = dict((o, TaskRunner(make_task(o)))
-                             for o in dependencies)
+        self._runners = dict((o, TaskRunner(task, o)) for o in dependencies)
         self._graph = dependencies.graph(reverse=reverse)
 
         if name is None:
-            name = '(%s) %s' % (getattr(make_task, '__name__',
-                                        task_description(make_task)),
+            name = '(%s) %s' % (getattr(task, '__name__',
+                                        task_description(task)),
                                 str(dependencies))
         self.name = name
 
