@@ -1222,17 +1222,27 @@ class StackTest(HeatTestCase):
         check that rollback still works with dynamic metadata
         this test fails the second instance
         '''
+
+        class ResourceTypeA(generic_rsrc.GenericResource):
+            count = 0
+
+            def handle_create(self):
+                ResourceTypeA.count += 1
+                self.resource_id_set('%s%d' % (self.name, self.count))
+
+        resource._register_class('ResourceTypeA', ResourceTypeA)
+
         # patch in a dummy property schema for GenericResource
         dummy_schema = {'Foo': {'Type': 'String'}}
         generic_rsrc.GenericResource.properties_schema = dummy_schema
         tmpl = {'Resources': {
-                'AResource': {'Type': 'GenericResourceType',
+                'AResource': {'Type': 'ResourceTypeA',
                               'Properties': {'Foo': 'abc'}},
                 'BResource': {'Type': 'GenericResourceType',
                               'Properties': {
                               'Foo': {'Ref': 'AResource'}}}}}
         tmpl2 = {'Resources': {
-                 'AResource': {'Type': 'GenericResourceType',
+                 'AResource': {'Type': 'ResourceTypeA',
                                'Properties': {'Foo': 'smelly'}},
                  'BResource': {'Type': 'GenericResourceType',
                                'Properties': {
@@ -1254,57 +1264,23 @@ class StackTest(HeatTestCase):
                          (parser.Stack.CREATE, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
         self.assertEqual(self.stack['BResource'].properties['Foo'],
-                         'AResource')
+                         'AResource1')
 
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'FnGetRefId')
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_create')
 
         # Calls to GenericResource.handle_update will raise
         # resource.UpdateReplace because we've not specified the modified
         # key/property in update_allowed_keys/update_allowed_properties
 
-        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
-            'AResource')
-        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
-            'inst-007')
-        # self.state_set(self.UPDATE, self.IN_PROGRESS)
-        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
-            'inst-007')
-        # self.state_set(self.DELETE, self.IN_PROGRESS)
-        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
-            'inst-007')
-        # self.state_set(self.DELETE, self.COMPLETE)
-        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
-            'inst-007')
-        # self.properties.validate()
-        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
-            'inst-007')
-        # self.state_set(self.CREATE, self.IN_PROGRESS)
-        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
-            'inst-007')
-
         # mock to make the replace fail when creating the second
         # replacement resource
-        generic_rsrc.GenericResource.handle_create().AndReturn(None)
         generic_rsrc.GenericResource.handle_create().AndRaise(Exception)
 
         # Calls to GenericResource.handle_update will raise
         # resource.UpdateReplace because we've not specified the modified
         # key/property in update_allowed_keys/update_allowed_properties
 
-        # self.state_set(self.DELETE, self.IN_PROGRESS)
-        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
-            'inst-007')
-        # self.state_set(self.DELETE, self.IN_PROGRESS)
-        generic_rsrc.GenericResource.FnGetRefId().AndReturn(
-            'inst-007')
-
         generic_rsrc.GenericResource.handle_create().AndReturn(None)
-        generic_rsrc.GenericResource.handle_create().AndReturn(None)
-
-        # reverting to AResource
-        generic_rsrc.GenericResource.FnGetRefId().MultipleTimes().AndReturn(
-            'AResource')
 
         self.m.ReplayAll()
 
@@ -1315,6 +1291,8 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
+        self.assertEqual(self.stack['BResource'].properties['Foo'],
+                         'AResource3')
 
         self.m.VerifyAll()
 
