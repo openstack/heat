@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.engine import clients
-from heat.common import exception
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine import stack_resource
 
 from heat.openstack.common import log as logging
@@ -241,6 +240,18 @@ class LoadBalancer(stack_resource.StackResource):
         'Subnets': {'Type': 'List',
                     'Implemented': False}
     }
+    attributes_schema = {
+        "CanonicalHostedZoneName": ("The name of the hosted zone that is "
+                                    "associated with the LoadBalancer."),
+        "CanonicalHostedZoneNameID": ("The ID of the hosted zone name that is "
+                                      "associated with the LoadBalancer."),
+        "DNSName": "The DNS name for the LoadBalancer.",
+        "SourceSecurityGroup.GroupName": ("The security group that you can use"
+                                          " as part of your inbound rules for "
+                                          "your LoadBalancer's back-end "
+                                          "instances."),
+        "SourceSecurityGroup.OwnerAlias": "Owner of the source security group."
+    }
     update_allowed_keys = ('Properties',)
     update_allowed_properties = ('Instances',)
 
@@ -371,23 +382,15 @@ class LoadBalancer(stack_resource.StackResource):
     def FnGetRefId(self):
         return unicode(self.name)
 
-    def FnGetAtt(self, key):
+    def _resolve_attribute(self, name):
         '''
         We don't really support any of these yet.
         '''
-        allow = ('CanonicalHostedZoneName',
-                 'CanonicalHostedZoneNameID',
-                 'DNSName',
-                 'SourceSecurityGroupName',
-                 'SourceSecurityGroupOwnerAlias')
-
-        if key not in allow:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
-
-        if key == 'DNSName':
+        if name == 'DNSName':
             return self.get_output('PublicIp')
-        else:
+        elif name in self.attributes_schema:
+            # Not sure if we should return anything for the other attribs
+            # since they aren't really supported in any meaningful way
             return ''
 
 

@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
-from heat.engine import stack_resource
 from heat.common import template_format
+from heat.engine import stack_resource
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
@@ -193,6 +192,13 @@ class DBInstance(stack_resource.StackResource):
                     'Implemented': False},
     }
 
+    # We only support a couple of the attributes right now
+    attributes_schema = {
+        "Endpoint.Address": "Connection endpoint for the database.",
+        "Endpoint.Port": ("The port number on which the database accepts "
+                          "connections.")
+    }
+
     def _params(self):
         params = {
             'KeyName': {'Ref': 'KeyName'},
@@ -219,20 +225,17 @@ class DBInstance(stack_resource.StackResource):
     def handle_delete(self):
         self.delete_nested()
 
-    def FnGetAtt(self, key):
+    def _resolve_attribute(self, name):
         '''
         We don't really support any of these yet.
         '''
-        if key == 'Endpoint.Address':
+        if name == 'Endpoint.Address':
             if self.nested() and 'DatabaseInstance' in self.nested().resources:
                 return self.nested().resources['DatabaseInstance']._ipaddress()
             else:
                 return '0.0.0.0'
-        elif key == 'Endpoint.Port':
+        elif name == 'Endpoint.Port':
             return self.properties['Port']
-        else:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
 
 
 def resource_mapping():

@@ -14,9 +14,10 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import environment
-from heat.engine import resource
 from heat.engine import parser
+from heat.engine import resource
 from heat.engine import scheduler
 
 from heat.openstack.common import log as logging
@@ -32,7 +33,17 @@ class StackResource(resource.Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(StackResource, self).__init__(name, json_snippet, stack)
+        self._outputs_to_attribs(json_snippet)
         self._nested = None
+
+    def _outputs_to_attribs(self, json_snippet):
+        if not self.attributes and 'Outputs' in json_snippet:
+            self.attributes_schema = (
+                attributes.Attributes
+                .schema_from_outputs(json_snippet.get('Outputs')))
+            self.attributes = attributes.Attributes(self.name,
+                                                    self.attributes_schema,
+                                                    self._resolve_attribute)
 
     def nested(self):
         '''
@@ -53,6 +64,7 @@ class StackResource(resource.Resource):
         Handle the creation of the nested stack from a given JSON template.
         '''
         template = parser.Template(child_template)
+        self._outputs_to_attribs(child_template)
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
@@ -105,3 +117,8 @@ class StackResource(resource.Resource):
                 resource=self.name, key=op)
 
         return stack.output(op)
+
+    def _resolve_attribute(self, name):
+        if name.startswith('Outputs.'):
+            name = name.partition('.')[-1]
+        return unicode(self.get_output(name))

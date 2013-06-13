@@ -15,6 +15,7 @@
 
 from testtools import skipIf
 
+from heat.common import exception
 from heat.common import template_format
 from heat.openstack.common.importutils import try_import
 from heat.engine.resources import s3
@@ -100,7 +101,7 @@ class s3Test(HeatTestCase):
         try:
             rsrc.FnGetAtt('Foo')
             raise Exception('Expected InvalidTemplateAttribute')
-        except s3.exception.InvalidTemplateAttribute:
+        except exception.InvalidTemplateAttribute:
             pass
 
         self.assertRaises(resource.UpdateReplace,

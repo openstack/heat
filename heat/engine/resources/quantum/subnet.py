@@ -47,6 +47,20 @@ class Subnet(quantum.QuantumResource):
                                               'Type': 'Map',
                                               'Schema': allocation_schema
                                               }}}
+    attributes_schema = {
+        "name": "friendly name of the subnet",
+        "network_id": "parent network of the subnet",
+        "tenant_id": "tenant owning the subnet",
+        "allocation_pools": "ip allocation pools and their ranges",
+        "gateway_ip": "ip of the subnet's gateway",
+        "ip_version": "ip version for the subnet",
+        "cidr": "CIDR block notation for this subnet",
+        "id": "unique identifier for this subnet",
+        # dns_nameservers isn't in the api docs; is it right?
+        "dns_nameservers": "list of dns nameservers",
+        "enable_dhcp": ("'true' if DHCP is enabled for this subnet; 'false'"
+                        "otherwise")
+    }
 
     def handle_create(self):
         props = self.prepare_properties(
@@ -63,14 +77,8 @@ class Subnet(quantum.QuantumResource):
             if ex.status_code != 404:
                 raise ex
 
-    def FnGetAtt(self, key):
-        try:
-            attributes = self.quantum().show_subnet(
-                self.resource_id)['subnet']
-        except QuantumClientException as ex:
-            logger.warn("failed to fetch resource attributes: %s" % str(ex))
-            return None
-        return self.handle_get_attributes(self.name, key, attributes)
+    def _show_resource(self):
+        return self.quantum().show_subnet(self.resource_id)['subnet']
 
 
 def resource_mapping():

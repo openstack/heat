@@ -13,10 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
-from heat.engine import stack_resource
 from heat.common import template_format
 from heat.common import urlfetch
+from heat.engine import stack_resource
 
 from heat.openstack.common import log as logging
 
@@ -51,14 +50,6 @@ class NestedStack(stack_resource.StackResource):
 
     def FnGetRefId(self):
         return self.nested().identifier().arn()
-
-    def FnGetAtt(self, key):
-        if not key.startswith('Outputs.'):
-            raise exception.InvalidTemplateAttribute(
-                resource=self.name, key=key)
-
-        prefix, dot, op = key.partition('.')
-        return unicode(self.get_output(op))
 
 
 def resource_mapping():

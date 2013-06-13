@@ -13,6 +13,7 @@
 #    under the License.
 
 
+from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import eip
 from heat.engine import resource
@@ -116,7 +117,7 @@ class EIPTest(HeatTestCase):
             self.assertRaises(resource.UpdateReplace,
                               rsrc.handle_update, {}, {}, {})
 
-            self.assertRaises(eip.exception.InvalidTemplateAttribute,
+            self.assertRaises(exception.InvalidTemplateAttribute,
                               rsrc.FnGetAtt, 'Foo')
 
         finally:

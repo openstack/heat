@@ -29,6 +29,14 @@ class Net(quantum.QuantumResource):
                                          'Default': {}},
                          'admin_state_up': {'Default': True,
                                             'Type': 'Boolean'}}
+    attributes_schema = {
+        "id": "the unique identifier for this network",
+        "status": "the status of the network",
+        "name": "the name of the network",
+        "subnets": "subnets of this network",
+        "admin_state_up": "the administrative status of the network",
+        "tenant_id": "the tenant owning this network"
+    }
 
     def handle_create(self):
         props = self.prepare_properties(
@@ -52,14 +60,6 @@ class Net(quantum.QuantumResource):
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex
-
-    def FnGetAtt(self, key):
-        try:
-            attributes = self._show_resource()
-        except QuantumClientException as ex:
-            logger.warn("failed to fetch resource attributes: %s" % str(ex))
-            return None
-        return self.handle_get_attributes(self.name, key, attributes)
 
 
 def resource_mapping():
