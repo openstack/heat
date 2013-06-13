@@ -211,7 +211,7 @@ class Resource(BASE, HeatBase):
 
     __tablename__ = 'resource'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(String, primary_key=True, default=uuidutils.generate_uuid)
     state = Column('state', String)
     name = Column('name', String, nullable=False)
     nova_instance = Column('nova_instance', String)
