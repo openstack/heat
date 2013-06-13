@@ -31,6 +31,7 @@ from heat.common import exception
 from heat.engine.resources.network_interface import NetworkInterface
 
 from heat.openstack.common import log as logging
+from heat.openstack.common import uuidutils
 
 logger = logging.getLogger(__name__)
 
@@ -294,16 +295,8 @@ class Instance(resource.Resource):
             raise exception.UserKeyPairMissing(key_name=key_name)
 
         image_name = self.properties['ImageId']
-        image_id = None
-        image_list = self.nova().images.list()
-        for o in image_list:
-            if o.name == image_name:
-                image_id = o.id
-                break
 
-        if image_id is None:
-            logger.info("Image %s was not found in glance" % image_name)
-            raise exception.ImageNotFound(image_name=image_name)
+        image_id = self._get_image_id(image_name)
 
         flavor_id = None
         flavor_list = self.nova().flavors.list()
@@ -425,6 +418,17 @@ class Instance(resource.Resource):
                     'Cannot define both SecurityGroups/SecurityGroupIds and '
                     'NetworkInterfaces properties.'}
 
+        # make sure the image exists.
+        image_identifier = self.properties['ImageId']
+        try:
+            self._get_image_id(image_identifier)
+        except exception.ImageNotFound:
+            return {'Error': 'Image %s was not found in glance' %
+                    image_identifier}
+        except exception.NoUniqueImageFound:
+            return {'Error': 'Multiple images were found with name %s' %
+                    image_identifier}
+
         return
 
     def _delete_server(self, server):
@@ -464,6 +468,31 @@ class Instance(resource.Resource):
             delete(wait_time=0.2)
 
         self.resource_id = None
+
+    def _get_image_id(self, image_identifier):
+        image_id = None
+        if uuidutils.is_uuid_like(image_identifier):
+            try:
+                image_id = self.nova().images.get(image_identifier).id
+            except clients.novaclient.exceptions.NotFound:
+                logger.info("Image %s was not found in glance"
+                            % image_identifier)
+                raise exception.ImageNotFound(image_name=image_identifier)
+        else:
+            image_list = self.nova().images.list()
+            image_names = dict(
+                (o.id, o.name)
+                for o in image_list if o.name == image_identifier)
+            if len(image_names) == 0:
+                logger.info("Image %s was not found in glance" %
+                            image_identifier)
+                raise exception.ImageNotFound(image_name=image_identifier)
+            elif len(image_names) > 1:
+                logger.info("Mulitple images %s were found in glance with name"
+                            % image_identifier)
+                raise exception.NoUniqueImageFound(image_name=image_identifier)
+            image_id = image_names.popitem()[0]
+        return image_id
 
 
 def resource_mapping():

@@ -217,6 +217,10 @@ class ImageNotFound(OpenstackException):
     message = _("The Image (%(image_name)s) could not be found.")
 
 
+class NoUniqueImageFound(OpenstackException):
+    message = _("Multiple images were found with name (%(image_name)s).")
+
+
 class InvalidTenant(OpenstackException):
     message = _("Searching Tenant %(target)s "
                 "from Tenant %(actual)s forbidden.")

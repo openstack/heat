@@ -19,6 +19,7 @@ import mox
 
 from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
@@ -61,15 +62,20 @@ class instancesTest(HeatTestCase):
         self.fc = fakes.FakeClient()
         setup_dummy_db()
 
-    def _setup_test_instance(self, return_server, name):
-        stack_name = '%s_stack' % name
+    def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
         template = parser.Template(t)
         params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
         stack = parser.Stack(None, stack_name, template, params,
                              stack_id=uuidutils.generate_uuid())
+        return (t, stack)
 
-        t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
+    def _setup_test_instance(self, return_server, name, image_id=None):
+        stack_name = '%s_stack' % name
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['ImageId'] = \
+            image_id or 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
             '256 MB Server'
         instance = instances.Instance('%s_name' % name,
@@ -112,6 +118,108 @@ class instancesTest(HeatTestCase):
         self.assertEqual(instance.FnGetAtt('PrivateIp'), expected_ip)
         self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
         self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
+
+        self.m.VerifyAll()
+
+    def test_instance_create_with_image_id(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._setup_test_instance(return_server,
+                                             'test_instance_create_image_id',
+                                             image_id='1')
+        self.m.StubOutWithMock(uuidutils, "is_uuid_like")
+        uuidutils.is_uuid_like('1').AndReturn(True)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(instance.create)()
+
+        # this makes sure the auto increment worked on instance creation
+        self.assertTrue(instance.id > 0)
+
+        expected_ip = return_server.networks['public'][0]
+        self.assertEqual(instance.FnGetAtt('PublicIp'), expected_ip)
+        self.assertEqual(instance.FnGetAtt('PrivateIp'), expected_ip)
+        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
+        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
+
+        self.m.VerifyAll()
+
+    def test_instance_create_image_name_err(self):
+        stack_name = 'test_instance_create_image_name_err_stack'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        # create an instance with non exist image name
+        t['Resources']['WebServer']['Properties']['ImageId'] = 'Slackware'
+        instance = instances.Instance('instance_create_image_err',
+                                      t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(instance, 'nova')
+        instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ImageNotFound, instance.handle_create)
+
+        self.m.VerifyAll()
+
+    def test_instance_create_duplicate_image_name_err(self):
+        stack_name = 'test_instance_create_image_name_err_stack'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        # create an instance with a non unique image name
+        t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
+        instance = instances.Instance('instance_create_image_err',
+                                      t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(instance, 'nova')
+        instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(self.fc.client, "get_images_detail")
+        self.fc.client.get_images_detail().AndReturn((
+            200, {'images': [{'id': 1, 'name': 'CentOS 5.2'},
+                             {'id': 4, 'name': 'CentOS 5.2'}]}))
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.NoUniqueImageFound, instance.handle_create)
+
+        self.m.VerifyAll()
+
+    def test_instance_create_image_id_err(self):
+        stack_name = 'test_instance_create_image_id_err_stack'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        # create an instance with non exist image Id
+        t['Resources']['WebServer']['Properties']['ImageId'] = '1'
+        instance = instances.Instance('instance_create_image_err',
+                                      t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(instance, 'nova')
+        instance.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(uuidutils, "is_uuid_like")
+        uuidutils.is_uuid_like('1').AndReturn(True)
+        self.m.StubOutWithMock(self.fc.client, "get_images_1")
+        self.fc.client.get_images_1().AndRaise(
+            instances.clients.novaclient.exceptions.NotFound(404))
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ImageNotFound, instance.handle_create)
+
+        self.m.VerifyAll()
+
+    def test_instance_validate(self):
+        stack_name = 'test_instance_validate_stack'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        # create an instance with non exist image Id
+        t['Resources']['WebServer']['Properties']['ImageId'] = '1'
+        instance = instances.Instance('instance_create_image_err',
+                                      t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(instance, 'nova')
+        instance.nova().MultipleTimes().AndReturn(self.fc)
+
+        self.m.StubOutWithMock(uuidutils, "is_uuid_like")
+        uuidutils.is_uuid_like('1').AndReturn(True)
+        self.m.ReplayAll()
+
+        self.assertEqual(instance.validate(), None)
 
         self.m.VerifyAll()
 

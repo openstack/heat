@@ -333,7 +333,7 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
         resource.properties = Properties(
             resource.properties_schema,
             {
-                'ImageId': 'foo',
+                'ImageId': 'CentOS 5.2',
                 'KeyName': 'test',
                 'InstanceType': 'm1.large'
             })
