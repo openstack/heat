@@ -396,12 +396,13 @@ class Resource(object):
                                      self.name)
         return self._do_action(self.CREATE, self.properties.validate)
 
-    def update(self, json_snippet=None):
+    def update(self, after, before=None):
         '''
         update the resource. Subclasses should provide a handle_update() method
         to customise update, the base-class handle_update will fail by default.
         '''
-        assert json_snippet is not None, 'Must specify update json snippet'
+        if before is None:
+            before = self.parsed_template()
 
         if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
                                          (self.UPDATE, self.IN_PROGRESS)):
@@ -413,17 +414,14 @@ class Resource(object):
         try:
             self.state_set(self.UPDATE, self.IN_PROGRESS)
             properties = Properties(self.properties_schema,
-                                    json_snippet.get('Properties', {}),
+                                    after.get('Properties', {}),
                                     self.stack.resolve_runtime_data,
                                     self.name)
             properties.validate()
-            old_json_snippet = self.parsed_template(cached=True)
-            tmpl_diff = self.update_template_diff(json_snippet,
-                                                  old_json_snippet)
-            prop_diff = self.update_template_diff_properties(json_snippet,
-                                                             old_json_snippet)
+            tmpl_diff = self.update_template_diff(after, before)
+            prop_diff = self.update_template_diff_properties(after, before)
             if callable(getattr(self, 'handle_update', None)):
-                result = self.handle_update(json_snippet, tmpl_diff, prop_diff)
+                result = self.handle_update(after, tmpl_diff, prop_diff)
         except UpdateReplace:
             logger.debug("Resource %s update requires replacement" % self.name)
             raise
@@ -433,7 +431,7 @@ class Resource(object):
             self.state_set(self.UPDATE, self.FAILED, str(failure))
             raise failure
         else:
-            self.t = self.stack.resolve_static_data(json_snippet)
+            self.t = self.stack.resolve_static_data(after)
             self.state_set(self.UPDATE, self.COMPLETE)
 
     def suspend(self):

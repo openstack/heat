@@ -98,7 +98,8 @@ class StackUpdate(object):
 
         if new_snippet != existing_snippet:
             try:
-                yield self.existing_stack[res_name].update(new_snippet)
+                yield self.existing_stack[res_name].update(new_snippet,
+                                                           existing_snippet)
             except resource.UpdateReplace:
                 yield self._replace_resource(new_res)
             else:
