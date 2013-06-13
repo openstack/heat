@@ -56,14 +56,15 @@ class InstantiationData(object):
         self.data = data
 
     @staticmethod
-    def format_parse(data, data_type):
+    def format_parse(data, data_type, add_template_sections=True):
         """
         Parse the supplied data as JSON or YAML, raising the appropriate
         exception if it is in the wrong format.
         """
 
         try:
-            return template_format.parse(data)
+            return template_format.parse(data,
+                                         add_template_sections)
         except ValueError:
             err_reason = _("%s not in valid format") % data_type
             raise exc.HTTPBadRequest(err_reason)
