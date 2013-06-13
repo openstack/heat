@@ -197,7 +197,8 @@ class Event(BASE, HeatBase):
     stack_id = Column(String, ForeignKey('stack.id'), nullable=False)
     stack = relationship(Stack, backref=backref('events'))
 
-    name = Column(String)
+    resource_action = Column(String)
+    resource_status = Column(String)
     logical_resource_id = Column(String)
     physical_resource_id = Column(String)
     resource_status_reason = Column(String)

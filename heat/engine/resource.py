@@ -505,7 +505,7 @@ class Resource(object):
     def _add_event(self, new_state, reason):
         '''Add a state change event to the database.'''
         ev = event.Event(self.context, self.stack, self,
-                         new_state, reason,
+                         None, new_state, reason,
                          self.resource_id, self.properties)
 
         try:

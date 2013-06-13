@@ -29,6 +29,7 @@ summary_keys = [
     engine_api.EVENT_ID,
     engine_api.EVENT_TIMESTAMP,
     engine_api.EVENT_RES_NAME,
+    engine_api.EVENT_RES_ACTION,
     engine_api.EVENT_RES_STATUS,
     engine_api.EVENT_RES_STATUS_DATA,
     engine_api.EVENT_RES_PHYSICAL_ID,

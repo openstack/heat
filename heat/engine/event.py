@@ -25,7 +25,7 @@ class Event(object):
     '''Class representing a Resource state change.'''
 
     def __init__(self, context, stack, resource,
-                 new_state, reason,
+                 action, status, reason,
                  physical_resource_id, resource_properties,
                  timestamp=None, id=None):
         '''
@@ -36,7 +36,8 @@ class Event(object):
         self.context = context
         self.resource = resource
         self.stack = stack
-        self.new_state = new_state
+        self.action = action
+        self.status = status
         self.reason = reason
         self.physical_resource_id = physical_resource_id
         try:
@@ -60,7 +61,8 @@ class Event(object):
         resource = stack[ev.logical_resource_id]
 
         event = cls(context, stack, resource,
-                    ev.name, ev.resource_status_reason,
+                    ev.resource_action, ev.resource_status,
+                    ev.resource_status_reason,
                     ev.physical_resource_id, ev.resource_properties,
                     ev.created_at, ev.id)
 
@@ -72,9 +74,8 @@ class Event(object):
             'logical_resource_id': self.resource.name,
             'physical_resource_id': self.physical_resource_id,
             'stack_id': self.stack.id,
-            'stack_name': self.stack.name,
-            'resource_status': self.new_state,
-            'name': self.new_state,
+            'resource_action': self.action,
+            'resource_status': self.status,
             'resource_status_reason': self.reason,
             'resource_type': self.resource.type(),
             'resource_properties': self.resource_properties,

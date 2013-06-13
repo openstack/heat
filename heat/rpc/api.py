@@ -48,28 +48,28 @@ STACK_OUTPUT_KEYS = (
 
 RES_KEYS = (
     RES_DESCRIPTION, RES_UPDATED_TIME,
-    RES_NAME, RES_PHYSICAL_ID, RES_METADATA,
+    RES_NAME, RES_PHYSICAL_ID, RES_METADATA, RES_ACTION,
     RES_STATUS, RES_STATUS_DATA, RES_TYPE,
     RES_ID, RES_STACK_ID, RES_STACK_NAME,
 ) = (
     'description', 'updated_time',
     'logical_resource_id', 'physical_resource_id', 'metadata',
-    'resource_status', 'resource_status_reason', 'resource_type',
-    'resource_identity', STACK_ID, STACK_NAME,
+    'resource_action', 'resource_status', 'resource_status_reason',
+    'resource_type', 'resource_identity', STACK_ID, STACK_NAME,
 )
 
 EVENT_KEYS = (
     EVENT_ID,
     EVENT_STACK_ID, EVENT_STACK_NAME,
     EVENT_TIMESTAMP,
-    EVENT_RES_NAME, EVENT_RES_PHYSICAL_ID,
+    EVENT_RES_NAME, EVENT_RES_PHYSICAL_ID, EVENT_RES_ACTION,
     EVENT_RES_STATUS, EVENT_RES_STATUS_DATA, EVENT_RES_TYPE,
     EVENT_RES_PROPERTIES,
 ) = (
     'event_identity',
     STACK_ID, STACK_NAME,
     "event_time",
-    RES_NAME, RES_PHYSICAL_ID,
+    RES_NAME, RES_PHYSICAL_ID, RES_ACTION,
     RES_STATUS, RES_STATUS_DATA, RES_TYPE,
     'resource_properties',
 )

@@ -557,7 +557,7 @@ class stackServiceTest(HeatTestCase):
             self.assertEqual(ev['resource_properties']['InstanceType'],
                              'm1.large')
 
-            self.assertTrue('resource_status' in ev)
+            self.assertTrue('resource_action' in ev)
             self.assertTrue(ev['resource_status'] in ('IN_PROGRESS',
                                                       'CREATE_COMPLETE'))
 

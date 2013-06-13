@@ -469,6 +469,12 @@ class StackController(object):
             }
 
             result = api_utils.reformat_dict_keys(keymap, e)
+            action = e[engine_api.EVENT_RES_ACTION]
+            status = e[engine_api.EVENT_RES_STATUS]
+            if action and status:
+                result['ResourceStatus'] = '_'.join((action, status))
+            else:
+                result['ResourceStatus'] = status
             result['ResourceProperties'] = json.dumps(result[
                                                       'ResourceProperties'])
 
