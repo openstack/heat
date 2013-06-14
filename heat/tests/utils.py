@@ -64,6 +64,7 @@ def parse_stack(t, params={}, stack_name='test_stack', stack_id=None):
     template = parser.Template(t)
     parameters = parser.Parameters(stack_name, template, params)
     stack = parser.Stack(ctx, stack_name, template, parameters, stack_id)
+    stack.store()
 
     return stack
 

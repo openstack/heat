@@ -466,7 +466,7 @@ class AutoScalingTest(HeatTestCase):
 
         now = now + datetime.timedelta(seconds=10)
         self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().AndReturn(now)
+        timeutils.utcnow().MultipleTimes().AndReturn(now)
 
         self.m.StubOutWithMock(Metadata, '__get__')
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
@@ -677,7 +677,7 @@ class AutoScalingTest(HeatTestCase):
 
         now = now + datetime.timedelta(seconds=10)
         self.m.StubOutWithMock(timeutils, 'utcnow')
-        timeutils.utcnow().AndReturn(now)
+        timeutils.utcnow().MultipleTimes().AndReturn(now)
 
         self.m.StubOutWithMock(Metadata, '__get__')
         Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
