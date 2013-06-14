@@ -123,7 +123,7 @@ Resources:
 
     def assertResourceState(self, rsrc, ref_id, metadata={}):
         self.assertEqual(None, rsrc.validate())
-        self.assertEqual(rsrc.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(ref_id, rsrc.FnGetRefId())
         self.assertEqual(metadata, dict(rsrc.metadata))
 
@@ -272,7 +272,7 @@ Resources:
 
         self.assertEqual(None, sg.delete())
 
-        sg.state_set(sg.CREATE_COMPLETE, 'to delete again')
+        sg.state_set(sg.CREATE, sg.COMPLETE, 'to delete again')
         sg.resource_id = 2
         stack.delete()
 
@@ -534,7 +534,7 @@ Resources:
 
         self.assertEqual(None, sg.delete())
 
-        sg.state_set(sg.CREATE_COMPLETE, 'to delete again')
+        sg.state_set(sg.CREATE, sg.COMPLETE, 'to delete again')
         sg.resource_id = 'aaaa'
         stack.delete()
 

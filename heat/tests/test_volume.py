@@ -93,7 +93,7 @@ class VolumeTest(HeatTestCase):
         rsrc = vol.Volume(resource_name, data, stack)
         self.assertEqual(rsrc.validate(), None)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(rsrc.state, vol.Volume.CREATE_COMPLETE)
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         return rsrc
 
     def create_attachment(self, t, stack, resource_name):
@@ -102,7 +102,7 @@ class VolumeTest(HeatTestCase):
                                     stack)
         self.assertEqual(rsrc.validate(), None)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(rsrc.state, vol.VolumeAttachment.CREATE_COMPLETE)
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         return rsrc
 
     def test_volume(self):
@@ -143,7 +143,7 @@ class VolumeTest(HeatTestCase):
         self.assertEqual(rsrc.destroy(), None)
 
         # Test when volume already deleted
-        rsrc.state = rsrc.CREATE_COMPLETE
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
         self.assertEqual(rsrc.destroy(), None)
 
         self.m.VerifyAll()
@@ -530,7 +530,7 @@ class VolumeTest(HeatTestCase):
                                 stack)
         self.assertEqual(rsrc.validate(), None)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(rsrc.state, vol.Volume.CREATE_COMPLETE)
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         self.assertEqual(fv.status, 'available')
 
         self.m.VerifyAll()
@@ -561,7 +561,7 @@ class VolumeTest(HeatTestCase):
                                 stack)
         self.assertEqual(rsrc.validate(), None)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(rsrc.state, vol.Volume.CREATE_COMPLETE)
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         self.assertEqual(fv.status, 'available')
 
         self.m.VerifyAll()
@@ -668,7 +668,7 @@ class VolumeTest(HeatTestCase):
                                           stack)
         self.assertEqual(rsrc.validate(), None)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(rsrc.state, vol.VolumeAttachment.CREATE_COMPLETE)
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         self.assertRaises(resource.UpdateReplace, rsrc.handle_update,
                           {}, {}, {})

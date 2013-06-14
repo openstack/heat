@@ -96,16 +96,11 @@ class Metadata(object):
 
 
 class Resource(object):
-    # Status strings
-    CREATE_IN_PROGRESS = 'IN_PROGRESS'
-    CREATE_FAILED = 'CREATE_FAILED'
-    CREATE_COMPLETE = 'CREATE_COMPLETE'
-    DELETE_IN_PROGRESS = 'DELETE_IN_PROGRESS'
-    DELETE_FAILED = 'DELETE_FAILED'
-    DELETE_COMPLETE = 'DELETE_COMPLETE'
-    UPDATE_IN_PROGRESS = 'UPDATE_IN_PROGRESS'
-    UPDATE_FAILED = 'UPDATE_FAILED'
-    UPDATE_COMPLETE = 'UPDATE_COMPLETE'
+    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK
+               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK')
+
+    STATUSES = (IN_PROGRESS, FAILED, COMPLETE
+                ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
 
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
@@ -153,13 +148,15 @@ class Resource(object):
                                                          name, stack.id)
         if resource:
             self.resource_id = resource.nova_instance
-            self.state = resource.state
-            self.state_description = resource.state_description
+            self.action = resource.action
+            self.status = resource.status
+            self.status_reason = resource.status_reason
             self.id = resource.id
         else:
             self.resource_id = None
-            self.state = None
-            self.state_description = ''
+            self.action = None
+            self.status = None
+            self.status_reason = ''
             self.id = None
 
     def __eq__(self, other):
@@ -314,7 +311,7 @@ class Resource(object):
         Create the resource. Subclasses should provide a handle_create() method
         to customise creation.
         '''
-        assert self.state is None, 'Resource create requested in invalid state'
+        assert None in (self.action, self.status), 'invalid state for create'
 
         logger.info('creating %s' % str(self))
 
@@ -329,7 +326,7 @@ class Resource(object):
                                      self.name)
         try:
             self.properties.validate()
-            self.state_set(self.CREATE_IN_PROGRESS)
+            self.state_set(self.CREATE, self.IN_PROGRESS)
             create_data = None
             if callable(getattr(self, 'handle_create', None)):
                 create_data = self.handle_create()
@@ -339,16 +336,17 @@ class Resource(object):
         except Exception as ex:
             logger.exception('create %s', str(self))
             failure = exception.ResourceFailure(ex)
-            self.state_set(self.CREATE_FAILED, str(failure))
+            self.state_set(self.CREATE, self.FAILED, str(failure))
             raise failure
         except:
             with excutils.save_and_reraise_exception():
                 try:
-                    self.state_set(self.CREATE_FAILED, 'Creation aborted')
+                    self.state_set(self.CREATE, self.FAILED,
+                                   'Creation aborted')
                 except Exception:
                     logger.exception('Error marking resource as failed')
         else:
-            self.state_set(self.CREATE_COMPLETE)
+            self.state_set(self.CREATE, self.COMPLETE)
 
     def check_create_complete(self, create_data):
         '''
@@ -367,14 +365,15 @@ class Resource(object):
         '''
         assert json_snippet is not None, 'Must specify update json snippet'
 
-        if self.state in (self.CREATE_IN_PROGRESS, self.UPDATE_IN_PROGRESS):
+        if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
+                                         (self.UPDATE, self.IN_PROGRESS)):
             raise exception.ResourceFailure(Exception(
                 'Resource update already requested'))
 
         logger.info('updating %s' % str(self))
 
         try:
-            self.state_set(self.UPDATE_IN_PROGRESS)
+            self.state_set(self.UPDATE, self.IN_PROGRESS)
             properties = Properties(self.properties_schema,
                                     json_snippet.get('Properties', {}),
                                     self.stack.resolve_runtime_data,
@@ -390,11 +389,11 @@ class Resource(object):
         except Exception as ex:
             logger.exception('update %s : %s' % (str(self), str(ex)))
             failure = exception.ResourceFailure(ex)
-            self.state_set(self.UPDATE_FAILED, str(failure))
+            self.state_set(self.UPDATE, self.FAILED, str(failure))
             raise failure
         else:
             self.t = self.stack.resolve_static_data(json_snippet)
-            self.state_set(self.UPDATE_COMPLETE)
+            self.state_set(self.UPDATE, self.COMPLETE)
 
     def physical_resource_name(self):
         return '%s-%s' % (self.stack.name, self.name)
@@ -421,12 +420,12 @@ class Resource(object):
         Delete the resource. Subclasses should provide a handle_delete() method
         to customise deletion.
         '''
-        if self.state == self.DELETE_COMPLETE:
+        if (self.action, self.status) == (self.DELETE, self.COMPLETE):
             return
-        if self.state == self.DELETE_IN_PROGRESS:
+        if (self.action, self.status) == (self.DELETE, self.IN_PROGRESS):
             raise exception.Error('Resource deletion already in progress')
         # No need to delete if the resource has never been created
-        if self.state is None:
+        if self.action is None:
             return
 
         initial_state = self.state
@@ -434,7 +433,7 @@ class Resource(object):
         logger.info('deleting %s' % str(self))
 
         try:
-            self.state_set(self.DELETE_IN_PROGRESS)
+            self.state_set(self.DELETE, self.IN_PROGRESS)
 
             deletion_policy = self.t.get('DeletionPolicy', 'Delete')
             if deletion_policy == 'Delete':
@@ -446,16 +445,17 @@ class Resource(object):
         except Exception as ex:
             logger.exception('Delete %s', str(self))
             failure = exception.ResourceFailure(ex)
-            self.state_set(self.DELETE_FAILED, str(failure))
+            self.state_set(self.DELETE, self.FAILED, str(failure))
             raise failure
         except:
             with excutils.save_and_reraise_exception():
                 try:
-                    self.state_set(self.DELETE_FAILED, 'Deletion aborted')
+                    self.state_set(self.DELETE, self.FAILED,
+                                   'Deletion aborted')
                 except Exception:
                     logger.exception('Error marking resource deletion failed')
         else:
-            self.state_set(self.DELETE_COMPLETE)
+            self.state_set(self.DELETE, self.COMPLETE)
 
     def destroy(self):
         '''
@@ -487,7 +487,9 @@ class Resource(object):
     def _store(self):
         '''Create the resource in the database.'''
         try:
-            rs = {'state': self.state,
+            rs = {'action': self.action,
+                  'status': self.status,
+                  'status_reason': self.status_reason,
                   'stack_id': self.stack.id,
                   'nova_instance': self.resource_id,
                   'name': self.name,
@@ -502,10 +504,10 @@ class Resource(object):
         except Exception as ex:
             logger.error('DB error %s' % str(ex))
 
-    def _add_event(self, new_state, reason):
+    def _add_event(self, action, status, reason):
         '''Add a state change event to the database.'''
         ev = event.Event(self.context, self.stack, self,
-                         None, new_state, reason,
+                         action, status, reason,
                          self.resource_id, self.properties)
 
         try:
@@ -513,15 +515,17 @@ class Resource(object):
         except Exception as ex:
             logger.error('DB error %s' % str(ex))
 
-    def _store_or_update(self, new_state, reason):
-        self.state = new_state
-        self.state_description = reason
+    def _store_or_update(self, action, status, reason):
+        self.action = action
+        self.status = status
+        self.status_reason = reason
 
         if self.id is not None:
             try:
                 rs = db_api.resource_get(self.context, self.id)
-                rs.update_and_save({'state': self.state,
-                                    'state_description': reason,
+                rs.update_and_save({'action': self.action,
+                                    'status': self.status,
+                                    'status_reason': reason,
                                     'nova_instance': self.resource_id})
 
                 self.stack.updated_time = datetime.utcnow()
@@ -531,15 +535,27 @@ class Resource(object):
         # store resource in DB on transition to CREATE_IN_PROGRESS
         # all other transistions (other than to DELETE_COMPLETE)
         # should be handled by the update_and_save above..
-        elif new_state == self.CREATE_IN_PROGRESS:
+        elif (action, status) == (self.CREATE, self.IN_PROGRESS):
             self._store()
 
-    def state_set(self, new_state, reason="state changed"):
-        old_state = self.state
-        self._store_or_update(new_state, reason)
+    def state_set(self, action, status, reason="state changed"):
+        if action not in self.ACTIONS:
+            raise ValueError("Invalid action %s" % action)
+
+        if status not in self.STATUSES:
+            raise ValueError("Invalid status %s" % status)
+
+        old_state = (self.action, self.status)
+        new_state = (action, status)
+        self._store_or_update(action, status, reason)
 
         if new_state != old_state:
-            self._add_event(new_state, reason)
+            self._add_event(action, status, reason)
+
+    @property
+    def state(self):
+        '''Returns state, tuple of action, status.'''
+        return (self.action, self.status)
 
     def FnGetRefId(self):
         '''

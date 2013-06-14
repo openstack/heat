@@ -119,8 +119,8 @@ class InstanceGroup(resource.Resource):
             template, which causes problems for event handling since we can't
             look up the resources via parser.Stack
             '''
-            def state_set(self, new_state, reason="state changed"):
-                self._store_or_update(new_state, reason)
+            def state_set(self, action, status, reason="state changed"):
+                self._store_or_update(action, status, reason)
 
         conf = self.properties['LaunchConfigurationName']
         instance_definition = self.stack.t['Resources'][conf]

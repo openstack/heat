@@ -231,10 +231,10 @@ class Stack(object):
         '''
         for r in self.resources.values():
             if r.state in (
-                    r.CREATE_IN_PROGRESS,
-                    r.CREATE_COMPLETE,
-                    r.UPDATE_IN_PROGRESS,
-                    r.UPDATE_COMPLETE) and r.FnGetRefId() == refid:
+                    (r.CREATE, r.IN_PROGRESS),
+                    (r.CREATE, r.COMPLETE),
+                    (r.UPDATE, r.IN_PROGRESS),
+                    (r.UPDATE, r.COMPLETE)) and r.FnGetRefId() == refid:
                 return r
 
     def validate(self):
@@ -528,7 +528,8 @@ class Stack(object):
                     logger.exception('create')
                     failed = True
             else:
-                res.state_set(res.CREATE_FAILED, 'Resource restart aborted')
+                res.state_set(res.CREATE, res.FAILED,
+                              'Resource restart aborted')
         # TODO(asalkeld) if any of this fails we Should
         # restart the whole stack
 

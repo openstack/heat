@@ -94,7 +94,7 @@ class LoadBalancerTest(HeatTestCase):
                                stack)
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(lb.LoadBalancer.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def test_loadbalancer(self):

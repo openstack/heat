@@ -67,7 +67,7 @@ class DBInstanceTest(HeatTestCase):
                                   stack)
         self.assertEqual(None, resource.validate())
         scheduler.TaskRunner(resource.create)()
-        self.assertEqual(dbi.DBInstance.CREATE_COMPLETE, resource.state)
+        self.assertEqual((resource.CREATE, resource.COMPLETE), resource.state)
         return resource
 
     def test_dbinstance(self):

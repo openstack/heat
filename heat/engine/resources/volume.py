@@ -107,8 +107,8 @@ class Volume(resource.Resource):
 
     if volume_backups is not None:
         def handle_snapshot_delete(self, state):
-            backup = state not in (self.CREATE_FAILED,
-                                   self.UPDATE_FAILED)
+            backup = state not in ((self.CREATE, self.FAILED),
+                                   (self.UPDATE, self.FAILED))
             return self._delete(backup=backup)
 
     def handle_delete(self):

@@ -153,7 +153,7 @@ class WaitConditionTest(HeatTestCase):
 
         rsrc = self.stack.resources['WaitForTheHandle']
         self.assertEqual(rsrc.state,
-                         'CREATE_COMPLETE')
+                         (rsrc.CREATE, rsrc.COMPLETE))
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   self.stack.id)
@@ -174,8 +174,8 @@ class WaitConditionTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(rsrc.state, rsrc.CREATE_FAILED)
-        reason = rsrc.state_description
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.FAILED))
+        reason = rsrc.status_reason
         self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
@@ -201,7 +201,7 @@ class WaitConditionTest(HeatTestCase):
 
         rsrc = self.stack.resources['WaitForTheHandle']
         self.assertEqual(rsrc.state,
-                         'CREATE_COMPLETE')
+                         (rsrc.CREATE, rsrc.COMPLETE))
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
                                                   self.stack.id)
@@ -222,8 +222,8 @@ class WaitConditionTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(rsrc.state, rsrc.CREATE_FAILED)
-        reason = rsrc.state_description
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.FAILED))
+        reason = rsrc.status_reason
         self.assertTrue(reason.startswith('WaitConditionFailure:'))
 
         r = db_api.resource_get_by_name_and_stack(None, 'WaitHandle',
@@ -259,8 +259,8 @@ class WaitConditionTest(HeatTestCase):
 
         rsrc = self.stack.resources['WaitForTheHandle']
 
-        self.assertEqual(rsrc.state, rsrc.CREATE_FAILED)
-        reason = rsrc.state_description
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.FAILED))
+        reason = rsrc.status_reason
         self.assertTrue(reason.startswith('WaitConditionTimeout:'))
 
         self.assertRaises(resource.UpdateReplace,
@@ -276,13 +276,13 @@ class WaitConditionTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack.resources['WaitForTheHandle']
-        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         wc_att = rsrc.FnGetAtt('Data')
         self.assertEqual(wc_att, unicode({}))
 
         handle = self.stack.resources['WaitHandle']
-        self.assertEqual(handle.state, 'CREATE_COMPLETE')
+        self.assertEqual(handle.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
@@ -435,7 +435,7 @@ class WaitConditionHandleTest(HeatTestCase):
 
         rsrc = self.stack.resources['WaitHandle']
         rsrc.created_time = created_time
-        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         expected_url = "".join([
             'http://127.0.0.1:8000/v1/waitcondition/',
@@ -458,7 +458,7 @@ class WaitConditionHandleTest(HeatTestCase):
     @stack_delete_after
     def test_metadata_update(self):
         rsrc = self.stack.resources['WaitHandle']
-        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
@@ -472,7 +472,7 @@ class WaitConditionHandleTest(HeatTestCase):
     @stack_delete_after
     def test_metadata_update_invalid(self):
         rsrc = self.stack.resources['WaitHandle']
-        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         # metadata_update should raise a ValueError if the metadata
         # is missing any of the expected keys
@@ -515,7 +515,7 @@ class WaitConditionHandleTest(HeatTestCase):
     @stack_delete_after
     def test_get_status(self):
         rsrc = self.stack.resources['WaitHandle']
-        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         # UnsetStubs, don't want get_status stubbed anymore..
         self.m.VerifyAll()
@@ -541,7 +541,7 @@ class WaitConditionHandleTest(HeatTestCase):
     @stack_delete_after
     def test_get_status_reason(self):
         rsrc = self.stack.resources['WaitHandle']
-        self.assertEqual(rsrc.state, 'CREATE_COMPLETE')
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}

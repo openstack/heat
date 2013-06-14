@@ -179,7 +179,7 @@ class MetadataRefreshTest(HeatTestCase):
         s2 = self.stack.resources['S2']
         files = s1.metadata['AWS::CloudFormation::Init']['config']['files']
         cont = files['/tmp/random_file']['content']
-        self.assertEqual(s2.CREATE_COMPLETE, s2.state)
+        self.assertEqual((s2.CREATE, s2.COMPLETE), s2.state)
         self.assertEqual(cont, 's2-ip=1.2.3.5')
 
         s1.metadata_update()

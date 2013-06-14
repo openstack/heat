@@ -101,7 +101,7 @@ class AutoScalingTest(HeatTestCase):
                                     stack)
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(asc.AutoScalingGroup.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def create_scaling_policy(self, t, stack, resource_name):
@@ -111,8 +111,7 @@ class AutoScalingTest(HeatTestCase):
 
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(asc.ScalingPolicy.CREATE_COMPLETE,
-                         rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def _stub_create(self, num):

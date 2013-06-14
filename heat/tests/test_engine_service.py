@@ -219,7 +219,8 @@ class stackCreateTest(HeatTestCase):
         mox.Replay(get)
         stack.delete()
 
-        self.assertEqual(stack.resources['WebServer'].state, 'DELETE_COMPLETE')
+        rsrc = stack.resources['WebServer']
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(db_api.stack_get(ctx, stack_id), None)
         self.assertEqual(db_s.status, 'DELETE_COMPLETE')
 
@@ -557,9 +558,9 @@ class stackServiceTest(HeatTestCase):
             self.assertEqual(ev['resource_properties']['InstanceType'],
                              'm1.large')
 
-            self.assertTrue('resource_action' in ev)
+            self.assertEqual(ev['resource_action'], 'CREATE')
             self.assertTrue(ev['resource_status'] in ('IN_PROGRESS',
-                                                      'CREATE_COMPLETE'))
+                                                      'COMPLETE'))
 
             self.assertTrue('resource_status_reason' in ev)
             self.assertEqual(ev['resource_status_reason'], 'state changed')
