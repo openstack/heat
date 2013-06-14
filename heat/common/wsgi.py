@@ -130,8 +130,9 @@ def get_socket(conf, default_port):
                 raise
             eventlet.sleep(0.1)
     if not sock:
-        raise RuntimeError(_("Could not bind to %s:%s after trying for 30 "
-                             "seconds") % bind_addr)
+        raise RuntimeError(_("Could not bind to %(bind_addr)s"
+                             "after trying for 30 seconds")
+                           % {'bind_addr': bind_addr})
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # in my experience, sockets can hang around forever without keepalive
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
