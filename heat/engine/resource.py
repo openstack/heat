@@ -37,8 +37,11 @@ def get_types():
     return iter(_resource_classes)
 
 
-def get_class(resource_type):
+def get_class(resource_type, resource_name=None, environment=None):
     '''Return the Resource class for a given resource type.'''
+    if environment:
+        resource_type = environment.get_resource_type(resource_type,
+                                                      resource_name)
     cls = _resource_classes.get(resource_type)
     if cls is None:
         msg = "Unknown resource Type : %s" % resource_type
@@ -131,7 +134,9 @@ class Resource(object):
             return super(Resource, cls).__new__(cls)
 
         # Select the correct subclass to instantiate
-        ResourceClass = get_class(json['Type'])
+        ResourceClass = get_class(json['Type'],
+                                  resource_name=name,
+                                  environment=stack.env)
         return ResourceClass(name, json, stack)
 
     def __init__(self, name, json_snippet, stack):

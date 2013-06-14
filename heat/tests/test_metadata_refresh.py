@@ -21,6 +21,7 @@ from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import stack_delete_after
 
+from heat.engine import environment
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import parser
@@ -142,10 +143,10 @@ class MetadataRefreshTest(HeatTestCase):
     def create_stack(self, stack_name='test_stack', params={}):
         temp = template_format.parse(test_template_metadata)
         template = parser.Template(temp)
-        parameters = parser.Parameters(stack_name, template, params)
         ctx = context.get_admin_context()
         ctx.tenant_id = 'test_tenant'
-        stack = parser.Stack(ctx, stack_name, template, parameters,
+        stack = parser.Stack(ctx, stack_name, template,
+                             environment.Environment(params),
                              disable_rollback=True)
 
         self.stack_id = stack.store()
@@ -207,8 +208,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
     def create_stack(self, stack_name='test_stack'):
         temp = template_format.parse(test_template_waitcondition)
         template = parser.Template(temp)
-        parameters = parser.Parameters(stack_name, template, {})
-        stack = parser.Stack(self.ctx, stack_name, template, parameters,
+        stack = parser.Stack(self.ctx, stack_name, template,
                              disable_rollback=True)
 
         self.stack_id = stack.store()

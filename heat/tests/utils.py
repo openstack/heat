@@ -16,6 +16,7 @@ import sys
 import functools
 
 from heat.common import context
+from heat.engine import environment
 from heat.engine import parser
 
 from heat.db.sqlalchemy.session import get_engine
@@ -62,8 +63,8 @@ def parse_stack(t, params={}, stack_name='test_stack', stack_id=None):
                                             'auth_url':
                                             'http://localhost:5000/v2.0'})
     template = parser.Template(t)
-    parameters = parser.Parameters(stack_name, template, params)
-    stack = parser.Stack(ctx, stack_name, template, parameters, stack_id)
+    stack = parser.Stack(ctx, stack_name, template,
+                         environment.Environment(params), stack_id)
     stack.store()
 
     return stack

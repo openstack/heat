@@ -52,8 +52,7 @@ class WatchRuleTest(HeatTestCase):
         empty_tmpl = {"template": {}}
         tmpl = parser.Template(empty_tmpl)
         stack_name = 'dummystack'
-        params = parser.Parameters(stack_name, tmpl, {})
-        dummy_stack = parser.Stack(ctx, stack_name, tmpl, params)
+        dummy_stack = parser.Stack(ctx, stack_name, tmpl)
         dummy_stack.state_set(dummy_stack.CREATE_COMPLETE, 'Testing')
         dummy_stack.store()
 
