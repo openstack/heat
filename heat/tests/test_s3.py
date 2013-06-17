@@ -208,9 +208,6 @@ class s3Test(HeatTestCase):
             mox.Regex(self.container_pattern),
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
-        # This should not be called
-        swiftclient.Connection.delete_container(
-            mox.Regex(self.container_pattern)).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -219,13 +216,7 @@ class s3Test(HeatTestCase):
         bucket['DeletionPolicy'] = 'Retain'
         stack = parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
-        # if delete_container is called, mox verify will succeed
         rsrc.delete()
         self.assertEqual(rsrc.DELETE_COMPLETE, rsrc.state)
 
-        try:
-            self.m.VerifyAll()
-        except mox.ExpectedMethodCallsError:
-            return
-
-        raise Exception('delete_container was called despite Retain policy')
+        self.m.VerifyAll()

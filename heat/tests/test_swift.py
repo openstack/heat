@@ -235,9 +235,6 @@ class swiftTest(HeatTestCase):
             mox.Regex(self.container_pattern),
             {'X-Container-Write': None,
              'X-Container-Read': None}).AndReturn(None)
-        # This should not be called
-        swiftclient.Connection.delete_container(
-            mox.Regex(self.container_pattern)).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -246,13 +243,7 @@ class swiftTest(HeatTestCase):
         container['DeletionPolicy'] = 'Retain'
         stack = parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        # if delete_container is called, mox verify will succeed
         rsrc.delete()
         self.assertEqual(rsrc.DELETE_COMPLETE, rsrc.state)
 
-        try:
-            self.m.VerifyAll()
-        except mox.ExpectedMethodCallsError:
-            return
-
-        raise Exception('delete_container was called despite Retain policy')
+        self.m.VerifyAll()
