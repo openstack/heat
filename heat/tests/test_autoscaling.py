@@ -21,6 +21,7 @@ from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import instance
+from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resource import Metadata
@@ -308,6 +309,41 @@ class AutoScalingTest(HeatTestCase):
         update_snippet['Properties']['Cooldown'] = '61'
         self.assertEqual(None, rsrc.update(update_snippet))
         self.assertEqual('61', rsrc.properties['Cooldown'])
+
+        rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_lb_reload_static_resolve(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['ElasticLoadBalancer']['Properties']
+        properties['AvailabilityZones'] = {'Fn::GetAZs': ''}
+
+        self.m.StubOutWithMock(parser.Stack, 'get_availability_zones')
+        parser.Stack.get_availability_zones().MultipleTimes().AndReturn(
+            ['abc', 'xyz'])
+
+        # Check that the Fn::GetAZs is correctly resolved
+        expected = {u'Type': u'AWS::ElasticLoadBalancing::LoadBalancer',
+                    u'Properties': {'Instances': ['WebServerGroup-0'],
+                                    u'Listeners': [{u'InstancePort': u'80',
+                                                    u'LoadBalancerPort': u'80',
+                                                    u'Protocol': u'HTTP'}],
+                                    u'AvailabilityZones': ['abc', 'xyz']}}
+        self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'update')
+        loadbalancer.LoadBalancer.update(expected).AndReturn(None)
+
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        stack = parse_stack(t)
+        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
+
+        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual('WebServerGroup-0', rsrc.resource_id)
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        update_snippet['Properties']['Cooldown'] = '61'
+        self.assertEqual(None, rsrc.update(update_snippet))
 
         rsrc.delete()
         self.m.VerifyAll()

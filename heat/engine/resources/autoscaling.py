@@ -210,7 +210,9 @@ class InstanceGroup(resource.Resource):
             for lb in self.properties['LoadBalancerNames']:
                 self.stack[lb].json_snippet['Properties']['Instances'] = \
                     inst_list
-                self.stack[lb].update(self.stack[lb].json_snippet)
+                resolved_snippet = self.stack.resolve_static_data(
+                    self.stack[lb].json_snippet)
+                self.stack[lb].update(resolved_snippet)
 
     def FnGetRefId(self):
         return unicode(self.name)
