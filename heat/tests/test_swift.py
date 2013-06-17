@@ -81,17 +81,14 @@ class swiftTest(HeatTestCase):
     def test_create_container_name(self):
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
+        t['Resources']['SwiftContainer']['Properties']['name'] = 'the_name'
         stack = parse_stack(t)
         rsrc = swift.SwiftContainer(
             'test_resource',
             t['Resources']['SwiftContainer'],
             stack)
 
-        self.assertTrue(re.match(self.container_pattern,
-                                 rsrc._create_container_name()))
-        self.assertEqual(
-            'the_name',
-            rsrc._create_container_name('the_name'))
+        self.assertEqual('the_name', rsrc.physical_resource_name())
 
     def test_build_meta_headers(self):
         self.m.UnsetStubs()
