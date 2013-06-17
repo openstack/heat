@@ -34,7 +34,10 @@ class Template(collections.Mapping):
 
         if cls == Template:
             if 'heat_template_version' in template:
-                return HOTemplate(template, *args, **kwargs)
+                # deferred import of HOT module to avoid circular dependency
+                # at load time
+                from heat.engine import hot
+                return hot.HOTemplate(template, *args, **kwargs)
 
         return super(Template, cls).__new__(cls)
 
@@ -357,27 +360,6 @@ class Template(collections.Mapping):
             return string
 
         return _resolve(lambda k, v: k == 'Fn::Base64', handle_base64, s)
-
-
-class HOTemplate(Template):
-    '''
-    A Heat Orchestration Template format stack template.
-    '''
-
-    def __getitem__(self, section):
-        '''Get the relevant section in the template.'''
-        if section not in SECTIONS:
-            raise KeyError('"%s" is not a valid template section' % section)
-
-        if section == VERSION:
-            return self.t['heat_template_version']
-
-        if section == DESCRIPTION:
-            default = 'No description'
-        else:
-            default = {}
-
-        return self.t.get(section.lower(), default)
 
 
 def _resolve(match, handle, snippet):
