@@ -142,6 +142,12 @@
                 </p></doc>
             </param>
 
+            <param name="environment" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    A JSON envionment for the stack.
+                </p></doc>
+            </param>
+
             <param name="param_name-n" style="plain" required="true">
                 <doc><p xmlns="http://www.w3.org/1999/xhtml">
                     User-defined parameter names to pass to the template.
@@ -223,6 +229,12 @@
                     A JSON template to instantiate.
                 </p><p xmlns="http://www.w3.org/1999/xhtml">
                     This takes precedence over the Template URL if both are supplied.
+                </p></doc>
+            </param>
+
+            <param name="environment" style="plain" required="true">
+                <doc><p xmlns="http://www.w3.org/1999/xhtml">
+                    A JSON envionment for the stack.
                 </p></doc>
             </param>
 

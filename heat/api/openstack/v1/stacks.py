@@ -44,11 +44,13 @@ class InstantiationData(object):
         PARAM_TEMPLATE,
         PARAM_TEMPLATE_URL,
         PARAM_USER_PARAMS,
+        PARAM_ENVIRONMENT,
     ) = (
         'stack_name',
         'template',
         'template_url',
         'parameters',
+        'environment',
     )
 
     def __init__(self, data):
@@ -99,11 +101,33 @@ class InstantiationData(object):
 
         return self.format_parse(template_data, 'Template')
 
-    def user_params(self):
+    def environment(self):
         """
-        Get the user-supplied parameters for the stack in JSON format.
+        Get the user-supplied environment for the stack in YAML format.
+        If the user supplied Parameters then merge these into the
+        environment global options.
         """
-        return self.data.get(self.PARAM_USER_PARAMS, {})
+        env = {}
+        if self.PARAM_ENVIRONMENT in self.data:
+            env_data = self.data[self.PARAM_ENVIRONMENT]
+            if isinstance(env_data, dict):
+                env = env_data
+            else:
+                env = self.format_parse(env_data,
+                                        'Environment',
+                                        add_template_sections=False)
+
+            for field in env:
+                if field not in ('parameters', 'resource_registry'):
+                    reason = _("%s not in valid in the environment") % field
+                    raise exc.HTTPBadRequest(reason)
+
+        if self.PARAM_USER_PARAMS not in env:
+            env[self.PARAM_USER_PARAMS] = {}
+
+        parameters = self.data.get(self.PARAM_USER_PARAMS, {})
+        env[self.PARAM_USER_PARAMS].update(parameters)
+        return env
 
     def args(self):
         """
@@ -180,7 +204,7 @@ class StackController(object):
             result = self.engine.create_stack(req.context,
                                               data.stack_name(),
                                               data.template(),
-                                              data.user_params(),
+                                              data.environment(),
                                               data.args())
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
@@ -255,7 +279,7 @@ class StackController(object):
             res = self.engine.update_stack(req.context,
                                            identity,
                                            data.template(),
-                                           data.user_params(),
+                                           data.environment(),
                                            data.args())
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
