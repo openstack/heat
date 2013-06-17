@@ -287,6 +287,9 @@ class instancesTest(HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         self.assertEqual(instance.state, instance.CREATE_COMPLETE)
 
+    def test_instance_status_build_spawning(self):
+        self._test_instance_status_not_build_active('BUILD(SPAWNING)')
+
     def test_instance_status_hard_reboot(self):
         self._test_instance_status_not_build_active('HARD_REBOOT')
 

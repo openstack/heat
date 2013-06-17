@@ -360,7 +360,9 @@ class Instance(resource.Resource):
             if server.status != 'ACTIVE':
                 server.get()
 
-            if server.status in self._deferred_server_statuses:
+            # Some clouds append extra (STATUS) strings to the status
+            short_server_status = server.status.split('(')[0]
+            if short_server_status in self._deferred_server_statuses:
                 return False
             elif server.status == 'ACTIVE':
                 self._set_ipaddress(server.networks)
