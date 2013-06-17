@@ -223,7 +223,7 @@ class StackController(object):
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
 
-        raise exc.HTTPCreated(location=util.make_url(req, result))
+        return {'stack': format_stack(req, {engine_api.STACK_ID: result})}
 
     @util.tenant_local
     def lookup(self, req, stack_name, path='', body=None):
@@ -354,11 +354,28 @@ class StackController(object):
         return {'resource_types': types}
 
 
+class StackSerializer(wsgi.JSONResponseSerializer):
+    """Handles serialization of specific controller method responses."""
+
+    def _populate_response_header(self, response, location, status):
+        response.status = status
+        response.headers['Location'] = location.encode('utf-8')
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    def create(self, response, result):
+        self._populate_response_header(response,
+                                       result['stack']['links'][0]['href'],
+                                       201)
+        response.body = self.to_json(result)
+        return response
+
+
 def create_resource(options):
     """
     Stacks resource factory method.
     """
     # TODO(zaneb) handle XML based on Content-type/Accepts
     deserializer = wsgi.JSONRequestDeserializer()
-    serializer = wsgi.JSONResponseSerializer()
+    serializer = StackSerializer()
     return wsgi.Resource(StackController(options), deserializer, serializer)

@@ -365,14 +365,15 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                  None).AndReturn(dict(identity))
         self.m.ReplayAll()
 
-        try:
-            response = self.controller.create(req,
-                                              tenant_id=identity.tenant,
-                                              body=body)
-        except webob.exc.HTTPCreated as created:
-            self.assertEqual(created.location, self._url(identity))
-        else:
-            self.fail('HTTPCreated not raised')
+        response = self.controller.create(req,
+                                          tenant_id=identity.tenant,
+                                          body=body)
+
+        expected = {'stack':
+                    {'id': '1',
+                     'links': [{'href': self._url(identity), 'rel': 'self'}]}}
+        self.assertEqual(response, expected)
+
         self.m.VerifyAll()
 
     def test_create_with_files(self):
@@ -401,14 +402,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                  None).AndReturn(dict(identity))
         self.m.ReplayAll()
 
-        try:
-            response = self.controller.create(req,
-                                              tenant_id=identity.tenant,
-                                              body=body)
-        except webob.exc.HTTPCreated as created:
-            self.assertEqual(created.location, self._url(identity))
-        else:
-            self.fail('HTTPCreated not raised')
+        result = self.controller.create(req,
+                                        tenant_id=identity.tenant,
+                                        body=body)
+        expected = {'stack':
+                    {'id': '1',
+                     'links': [{'href': self._url(identity), 'rel': 'self'}]}}
+        self.assertEqual(result, expected)
+
         self.m.VerifyAll()
 
     def test_create_err_rpcerr(self):
@@ -995,6 +996,23 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                           self.controller.list_resource_types,
                           req, tenant_id=self.tenant)
         self.m.VerifyAll()
+
+
+class StackSerializerTest(HeatTestCase):
+
+    def setUp(self):
+        super(StackSerializerTest, self).setUp()
+        self.serializer = stacks.StackSerializer()
+
+    def test_serialize_create(self):
+        result = {'stack':
+                  {'id': '1',
+                   'links': [{'href': 'location', "rel": "self"}]}}
+        response = webob.Response()
+        response = self.serializer.create(response, result)
+        self.assertEqual(response.status_int, 201)
+        self.assertEqual(response.headers['Location'], 'location')
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
 
 
 class ResourceControllerTest(ControllerTest, HeatTestCase):
