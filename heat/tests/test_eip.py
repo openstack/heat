@@ -30,6 +30,25 @@ eip_template = '''
   "Parameters" : {},
   "Resources" : {
     "IPAddress" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "InstanceId" : { "Ref" : "WebServer" }
+      }
+    },
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+    }
+  }
+}
+'''
+
+eip_template_ipassoc = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "EIP Test",
+  "Parameters" : {},
+  "Resources" : {
+    "IPAddress" : {
       "Type" : "AWS::EC2::EIP"
     },
     "IPAssoc" : {
@@ -78,6 +97,8 @@ class EIPTest(HeatTestCase):
     def test_eip(self):
 
         eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
+        self.fc.servers.get('WebServer').AndReturn(self.fc.servers.list()[0])
+        self.fc.servers.get('WebServer')
 
         self.m.ReplayAll()
 
@@ -114,7 +135,7 @@ class EIPTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = template_format.parse(eip_template)
+        t = template_format.parse(eip_template_ipassoc)
         stack = parse_stack(t)
 
         rsrc = self.create_eip(t, stack, 'IPAddress')
