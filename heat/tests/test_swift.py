@@ -13,8 +13,6 @@
 #    under the License.
 
 
-import re
-
 import mox
 
 from testtools import skipIf
@@ -25,6 +23,7 @@ from heat.engine.resources import swift
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
 
@@ -66,7 +65,6 @@ class swiftTest(HeatTestCase):
         self.m.StubOutWithMock(swiftclient.Connection, 'head_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
 
-        self.container_pattern = 'test_stack-test_resource-[0-9a-z]+'
         setup_dummy_db()
 
     def create_resource(self, t, stack, resource_name):
@@ -116,8 +114,9 @@ class swiftTest(HeatTestCase):
             "x-container-bytes-used": "17680980",
             "content-type": "text/plain; charset=utf-8"}
 
+        container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
-            mox.Regex(self.container_pattern),
+            container_name,
             {'X-Container-Write': None,
              'X-Container-Read': None}
         ).AndReturn(None)
@@ -125,8 +124,7 @@ class swiftTest(HeatTestCase):
             ('http://localhost:8080/v_2', None))
         swiftclient.Connection.head_container(
             mox.IgnoreArg()).MultipleTimes().AndReturn(headers)
-        swiftclient.Connection.delete_container(
-            mox.Regex(self.container_pattern)).AndReturn(None)
+        swiftclient.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -134,8 +132,7 @@ class swiftTest(HeatTestCase):
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
 
         ref_id = rsrc.FnGetRefId()
-        self.assertTrue(re.match(self.container_pattern,
-                                 ref_id))
+        self.assertEqual(container_name, ref_id)
 
         self.assertEqual('localhost', rsrc.FnGetAtt('DomainName'))
         url = 'http://localhost:8080/v_2/%s' % ref_id
@@ -158,12 +155,12 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_public_read(self):
+        container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
-            mox.Regex(self.container_pattern),
+            container_name,
             {'X-Container-Write': None,
              'X-Container-Read': '.r:*'}).AndReturn(None)
-        swiftclient.Connection.delete_container(
-            mox.Regex(self.container_pattern)).AndReturn(None)
+        swiftclient.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -175,12 +172,12 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_public_read_write(self):
+        container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
-            mox.Regex(self.container_pattern),
+            container_name,
             {'X-Container-Write': '.r:*',
              'X-Container-Read': '.r:*'}).AndReturn(None)
-        swiftclient.Connection.delete_container(
-            mox.Regex(self.container_pattern)).AndReturn(None)
+        swiftclient.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -193,15 +190,14 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_website(self):
-
+        container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
-            mox.Regex(self.container_pattern),
+            container_name,
             {'X-Container-Meta-Web-Error': 'error.html',
              'X-Container-Meta-Web-Index': 'index.html',
              'X-Container-Write': None,
              'X-Container-Read': '.r:*'}).AndReturn(None)
-        swiftclient.Connection.delete_container(
-            mox.Regex(self.container_pattern)).AndReturn(None)
+        swiftclient.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -211,14 +207,13 @@ class swiftTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_exception(self):
-
+        container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
-            mox.Regex(self.container_pattern),
+            container_name,
             {'X-Container-Write': None,
              'X-Container-Read': None}).AndReturn(None)
-        swiftclient.Connection.delete_container(
-            mox.Regex(self.container_pattern)).AndRaise(
-                swiftclient.ClientException('Test delete failure'))
+        swiftclient.Connection.delete_container(container_name).AndRaise(
+            swiftclient.ClientException('Test delete failure'))
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -232,7 +227,7 @@ class swiftTest(HeatTestCase):
 
         # first run, with retain policy
         swiftclient.Connection.put_container(
-            mox.Regex(self.container_pattern),
+            utils.PhysName('test_stack', 'test_resource'),
             {'X-Container-Write': None,
              'X-Container-Read': None}).AndReturn(None)
 
