@@ -157,10 +157,10 @@ class Template(collections.Mapping):
             try:
                 r = resources[resource]
                 if r.state in (
-                        r.CREATE_IN_PROGRESS,
-                        r.CREATE_COMPLETE,
-                        r.UPDATE_IN_PROGRESS,
-                        r.UPDATE_COMPLETE):
+                        (r.CREATE, r.IN_PROGRESS),
+                        (r.CREATE, r.COMPLETE),
+                        (r.UPDATE, r.IN_PROGRESS),
+                        (r.UPDATE, r.COMPLETE)):
                     return r.FnGetAtt(att)
             except KeyError:
                 raise exception.InvalidTemplateAttribute(resource=resource,

@@ -218,7 +218,7 @@ class VPCTestBase(HeatTestCase):
 
     def assertResourceState(self, rsrc, ref_id, metadata={}):
         self.assertEqual(None, rsrc.validate())
-        self.assertEqual(rsrc.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(ref_id, rsrc.FnGetRefId())
         self.assertEqual(metadata, dict(rsrc.metadata))
 
@@ -301,7 +301,7 @@ Resources:
         self.assertEqual('moon', rsrc.FnGetAtt('AvailabilityZone'))
 
         self.assertEqual(None, rsrc.delete())
-        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         self.assertEqual(None, rsrc.delete())
         self.assertEqual(None, stack['the_vpc'].delete())
         self.m.VerifyAll()
@@ -512,9 +512,9 @@ Resources:
         stack = self.create_stack(self.test_template_error_no_ref)
         try:
             self.assertEqual(stack.CREATE_FAILED, stack.state)
-            self.assertEqual(stack['the_nic'].CREATE_FAILED,
-                             stack['the_nic'].state)
-            reason = stack['the_nic'].state_description
+            rsrc = stack['the_nic']
+            self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+            reason = rsrc.status_reason
             self.assertTrue(reason.startswith('InvalidTemplateAttribute:'))
         finally:
             stack.delete()

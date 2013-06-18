@@ -73,7 +73,7 @@ class swiftTest(HeatTestCase):
             t['Resources'][resource_name],
             stack)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(swift.SwiftContainer.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def test_create_container_name(self):
@@ -239,6 +239,6 @@ class swiftTest(HeatTestCase):
         stack = parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
         rsrc.delete()
-        self.assertEqual(rsrc.DELETE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()

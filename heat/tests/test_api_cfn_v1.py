@@ -997,67 +997,6 @@ class CfnStackControllerTest(HeatTestCase):
         self.assertEqual(response, expected)
         self.m.VerifyAll()
 
-    def test_events_list_onlystatus(self):
-        # Format a dummy request
-        stack_name = "wordpress"
-        identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
-        params = {'Action': 'DescribeStackEvents', 'StackName': stack_name}
-        dummy_req = self._dummy_GET_request(params)
-
-        # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = [{u'stack_name': u'wordpress',
-                        u'event_time': u'2012-07-23T13:05:39Z',
-                        u'stack_identity': {u'tenant': u't',
-                                            u'stack_name': u'wordpress',
-                                            u'stack_id': u'6',
-                                            u'path': u''},
-                        u'logical_resource_id': u'WikiDatabase',
-                        u'resource_status_reason': u'state changed',
-                        u'event_identity':
-                        {u'tenant': u't',
-                         u'stack_name': u'wordpress',
-                         u'stack_id': u'6',
-                         u'path': u'/resources/WikiDatabase/events/42'},
-                        u'resource_action': None,
-                        u'resource_status': u'TEST_IN_PROGRESS',
-                        u'physical_resource_id': None,
-                        u'resource_properties': {u'UserData': u'blah'},
-                        u'resource_type': u'AWS::EC2::Instance'}]
-
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'identify_stack',
-                  'args': {'stack_name': stack_name},
-                  'version': self.api_version}, None).AndReturn(identity)
-        rpc.call(dummy_req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_events',
-                  'args': {'stack_identity': identity},
-                  'version': self.api_version}, None).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
-
-        response = self.controller.events_list(dummy_req)
-
-        expected = {'DescribeStackEventsResponse':
-                    {'DescribeStackEventsResult':
-                     {'StackEvents':
-                      [{'EventId': u'42',
-                        'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                        'ResourceStatus': u'TEST_IN_PROGRESS',
-                        'ResourceType': u'AWS::EC2::Instance',
-                        'Timestamp': u'2012-07-23T13:05:39Z',
-                        'StackName': u'wordpress',
-                        'ResourceProperties':
-                        json.dumps({u'UserData': u'blah'}),
-                        'PhysicalResourceId': None,
-                        'ResourceStatusReason': u'state changed',
-                        'LogicalResourceId': u'WikiDatabase'}]}}}
-
-        self.assertEqual(response, expected)
-        self.m.VerifyAll()
-
     def test_events_list_err_rpcerr(self):
         stack_name = "wordpress"
         identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
@@ -1133,7 +1072,8 @@ class CfnStackControllerTest(HeatTestCase):
                                            u'stack_name': u'wordpress',
                                            u'stack_id': u'6',
                                            u'path': u''},
-                       u'resource_status': u'CREATE_COMPLETE',
+                       u'resource_action': u'CREATE',
+                       u'resource_status': u'COMPLETE',
                        u'physical_resource_id':
                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
                        u'resource_type': u'AWS::EC2::Instance',
@@ -1261,7 +1201,8 @@ class CfnStackControllerTest(HeatTestCase):
                                             u'stack_name': u'wordpress',
                                             u'stack_id': u'6',
                                             u'path': u''},
-                        u'resource_status': u'CREATE_COMPLETE',
+                        u'resource_action': u'CREATE',
+                        u'resource_status': u'COMPLETE',
                         u'physical_resource_id':
                         u'a3455d8c-9f88-404d-a85b-5315293e67de',
                         u'resource_type': u'AWS::EC2::Instance',
@@ -1353,7 +1294,8 @@ class CfnStackControllerTest(HeatTestCase):
                                             u'stack_name': u'wordpress',
                                             u'stack_id': u'6',
                                             u'path': u''},
-                        u'resource_status': u'CREATE_COMPLETE',
+                        u'resource_action': u'CREATE',
+                        u'resource_status': u'COMPLETE',
                         u'physical_resource_id':
                         u'a3455d8c-9f88-404d-a85b-5315293e67de',
                         u'resource_type': u'AWS::EC2::Instance',
@@ -1461,7 +1403,8 @@ class CfnStackControllerTest(HeatTestCase):
                                             u'stack_name': u'wordpress',
                                             u'stack_id': u'6',
                                             u'path': u''},
-                        u'resource_status': u'CREATE_COMPLETE',
+                        u'resource_action': u'CREATE',
+                        u'resource_status': u'COMPLETE',
                         u'physical_resource_id':
                         u'a3455d8c-9f88-404d-a85b-5315293e67de',
                         u'resource_type': u'AWS::EC2::Instance'}]

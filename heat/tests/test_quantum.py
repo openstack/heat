@@ -23,8 +23,6 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources.quantum import net
 from heat.engine.resources.quantum import subnet
-from heat.engine.resources.quantum import floatingip
-from heat.engine.resources.quantum import port
 from heat.engine.resources.quantum import router
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.openstack.common.importutils import try_import
@@ -203,7 +201,7 @@ class QuantumNetTest(HeatTestCase):
     def create_net(self, t, stack, resource_name):
         rsrc = net.Net('test_net', t['Resources'][resource_name], stack)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(net.Net.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def test_net(self):
@@ -293,7 +291,7 @@ class QuantumNetTest(HeatTestCase):
                           rsrc.handle_update, {}, {}, {})
 
         rsrc.delete()
-        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         rsrc.delete()
         self.m.VerifyAll()
 
@@ -312,7 +310,7 @@ class QuantumSubnetTest(HeatTestCase):
         rsrc = subnet.Subnet('test_subnet', t['Resources'][resource_name],
                              stack)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(subnet.Subnet.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def test_subnet(self):
@@ -390,7 +388,7 @@ class QuantumSubnetTest(HeatTestCase):
                           rsrc.handle_update, {}, {}, {})
 
         self.assertEqual(rsrc.delete(), None)
-        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         self.assertEqual(rsrc.delete(), None)
         self.m.VerifyAll()
 
@@ -412,7 +410,7 @@ class QuantumRouterTest(HeatTestCase):
     def create_router(self, t, stack, resource_name):
         rsrc = router.Router('router', t['Resources'][resource_name], stack)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(router.Router.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def create_router_interface(self, t, stack, resource_name, properties={}):
@@ -422,8 +420,7 @@ class QuantumRouterTest(HeatTestCase):
             t['Resources'][resource_name],
             stack)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(
-            router.RouterInterface.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def create_gateway_router(self, t, stack, resource_name, properties={}):
@@ -433,7 +430,7 @@ class QuantumRouterTest(HeatTestCase):
             t['Resources'][resource_name],
             stack)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(router.RouterGateway.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def test_router(self):
@@ -521,7 +518,7 @@ class QuantumRouterTest(HeatTestCase):
                           rsrc.handle_update, {}, {}, {})
 
         self.assertEqual(rsrc.delete(), None)
-        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         self.assertEqual(rsrc.delete(), None)
         self.m.VerifyAll()
 
@@ -549,7 +546,7 @@ class QuantumRouterTest(HeatTestCase):
             })
 
         self.assertEqual(rsrc.delete(), None)
-        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         self.assertEqual(rsrc.delete(), None)
         self.m.VerifyAll()
 
@@ -575,7 +572,7 @@ class QuantumRouterTest(HeatTestCase):
             })
 
         self.assertEqual(rsrc.delete(), None)
-        rsrc.state_set(rsrc.CREATE_COMPLETE, 'to delete again')
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         self.assertEqual(rsrc.delete(), None)
         self.m.VerifyAll()
 
@@ -626,7 +623,7 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()
-        self.assertEqual(floatingip.FloatingIP.CREATE_COMPLETE, fip.state)
+        self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
         fip.validate()
 
         fip_id = fip.FnGetRefId()
@@ -645,7 +642,7 @@ class QuantumFloatingIPTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace,
                           fip.handle_update, {}, {}, {})
         self.assertEqual(fip.delete(), None)
-        fip.state_set(fip.CREATE_COMPLETE, 'to delete again')
+        fip.state_set(fip.CREATE, fip.COMPLETE, 'to delete again')
         self.assertEqual(fip.delete(), None)
 
         self.m.VerifyAll()
@@ -693,7 +690,7 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         p = stack['port_floating']
         scheduler.TaskRunner(p.create)()
-        self.assertEqual(port.Port.CREATE_COMPLETE, p.state)
+        self.assertEqual((p.CREATE, p.COMPLETE), p.state)
         p.validate()
 
         port_id = p.FnGetRefId()
@@ -786,16 +783,15 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()
-        self.assertEqual(floatingip.FloatingIP.CREATE_COMPLETE, fip.state)
+        self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
 
         p = stack['port_floating']
         scheduler.TaskRunner(p.create)()
-        self.assertEqual(port.Port.CREATE_COMPLETE, p.state)
+        self.assertEqual((p.CREATE, p.COMPLETE), p.state)
 
         fipa = stack['floating_ip_assoc']
         scheduler.TaskRunner(fipa.create)()
-        self.assertEqual(floatingip.FloatingIPAssociation.CREATE_COMPLETE,
-                         fipa.state)
+        self.assertEqual((fipa.CREATE, fipa.COMPLETE), fipa.state)
 
         fipa.validate()
 
@@ -810,9 +806,9 @@ class QuantumFloatingIPTest(HeatTestCase):
         self.assertEqual(p.delete(), None)
         self.assertEqual(fip.delete(), None)
 
-        fipa.state_set(fipa.CREATE_COMPLETE, 'to delete again')
-        fip.state_set(fip.CREATE_COMPLETE, 'to delete again')
-        p.state_set(p.CREATE_COMPLETE, 'to delete again')
+        fipa.state_set(fipa.CREATE, fipa.COMPLETE, 'to delete again')
+        fip.state_set(fip.CREATE, fip.COMPLETE, 'to delete again')
+        p.state_set(p.CREATE, p.COMPLETE, 'to delete again')
 
         self.assertEqual(fipa.delete(), None)
         self.assertEqual(p.delete(), None)

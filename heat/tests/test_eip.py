@@ -62,7 +62,7 @@ class EIPTest(HeatTestCase):
                              stack)
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(eip.ElasticIp.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def create_association(self, t, stack, resource_name):
@@ -71,8 +71,7 @@ class EIPTest(HeatTestCase):
                                         stack)
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(eip.ElasticIpAssociation.CREATE_COMPLETE,
-                         rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def test_eip(self):

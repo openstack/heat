@@ -597,13 +597,12 @@ class StackTest(HeatTestCase):
         self.assertNotEqual(None, resource)
         self.assertEqual(rsrc, self.stack.resource_by_refid('aaaa'))
 
-        rsrc.state = rsrc.DELETE_IN_PROGRESS
+        rsrc.state_set(rsrc.DELETE, rsrc.IN_PROGRESS)
         try:
             self.assertEqual(None, self.stack.resource_by_refid('aaaa'))
-
             self.assertEqual(None, self.stack.resource_by_refid('bbbb'))
         finally:
-            rsrc.state = rsrc.CREATE_COMPLETE
+            rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
 
     @stack_delete_after
     def test_update_add(self):
@@ -1285,21 +1284,18 @@ class StackTest(HeatTestCase):
         rsrc.resource_id_set('aaaa')
         self.assertEqual('AResource', rsrc.FnGetAtt('foo'))
 
-        for state in (
-                rsrc.CREATE_IN_PROGRESS,
-                rsrc.CREATE_COMPLETE,
-                rsrc.UPDATE_IN_PROGRESS,
-                rsrc.UPDATE_COMPLETE):
-            rsrc.state = state
+        for action, status in (
+                (rsrc.CREATE, rsrc.IN_PROGRESS),
+                (rsrc.CREATE, rsrc.COMPLETE),
+                (rsrc.UPDATE, rsrc.IN_PROGRESS),
+                (rsrc.UPDATE, rsrc.COMPLETE)):
+            rsrc.state_set(action, status)
             self.assertEqual('AResource', self.stack.output('TestOutput'))
-        for state in (
-                rsrc.CREATE_FAILED,
-                rsrc.DELETE_IN_PROGRESS,
-                rsrc.DELETE_FAILED,
-                rsrc.DELETE_COMPLETE,
-                rsrc.UPDATE_FAILED,
-                None):
-            rsrc.state = state
+        for action, status in (
+                (rsrc.CREATE, rsrc.FAILED),
+                (rsrc.DELETE, rsrc.IN_PROGRESS),
+                (rsrc.DELETE, rsrc.FAILED),
+                (rsrc.DELETE, rsrc.COMPLETE),
+                (rsrc.UPDATE, rsrc.FAILED)):
+            rsrc.state_set(action, status)
             self.assertEqual(None, self.stack.output('TestOutput'))
-
-        rsrc.state = rsrc.CREATE_COMPLETE

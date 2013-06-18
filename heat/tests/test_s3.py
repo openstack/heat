@@ -70,7 +70,7 @@ class s3Test(HeatTestCase):
                            t['Resources'][resource_name],
                            stack)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(s3.S3Bucket.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def test_attributes(self):
@@ -212,6 +212,6 @@ class s3Test(HeatTestCase):
         stack = parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         rsrc.delete()
-        self.assertEqual(rsrc.DELETE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()

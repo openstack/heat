@@ -80,7 +80,7 @@ class InstanceGroupTest(HeatTestCase):
                                  stack)
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(asc.InstanceGroup.CREATE_COMPLETE, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def test_instance_group(self):
@@ -120,7 +120,7 @@ class InstanceGroupTest(HeatTestCase):
 
         create = scheduler.TaskRunner(rsrc.create)
         self.assertRaises(exception.ResourceFailure, create)
-        self.assertEqual(asc.InstanceGroup.CREATE_FAILED, rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
 
         self.m.VerifyAll()
 

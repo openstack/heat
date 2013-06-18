@@ -239,7 +239,7 @@ class instancesTest(HeatTestCase):
 
         instance.delete()
         self.assertTrue(instance.resource_id is None)
-        self.assertEqual(instance.state, instance.DELETE_COMPLETE)
+        self.assertEqual(instance.state, (instance.DELETE, instance.COMPLETE))
         self.m.VerifyAll()
 
     def test_instance_update_metadata(self):
@@ -285,7 +285,7 @@ class instancesTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()
-        self.assertEqual(instance.state, instance.CREATE_COMPLETE)
+        self.assertEqual(instance.state, (instance.CREATE, instance.COMPLETE))
 
     def test_instance_status_hard_reboot(self):
         self._test_instance_status_not_build_active('HARD_REBOOT')
@@ -337,7 +337,7 @@ class instancesTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()
-        self.assertEqual(instance.state, instance.CREATE_COMPLETE)
+        self.assertEqual(instance.state, (instance.CREATE, instance.COMPLETE))
 
         self.m.VerifyAll()
 

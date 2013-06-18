@@ -61,8 +61,7 @@ class CloudWatchAlarmTest(HeatTestCase):
                                            stack)
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(cloud_watch.CloudWatchAlarm.CREATE_COMPLETE,
-                         rsrc.state)
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def test_mem_alarm_high_update_no_replace(self):

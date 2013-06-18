@@ -460,7 +460,6 @@ class StackController(object):
                 engine_api.EVENT_RES_NAME: 'LogicalResourceId',
                 engine_api.EVENT_RES_PHYSICAL_ID: 'PhysicalResourceId',
                 engine_api.EVENT_RES_PROPERTIES: 'ResourceProperties',
-                engine_api.EVENT_RES_STATUS: 'ResourceStatus',
                 engine_api.EVENT_RES_STATUS_DATA: 'ResourceStatusReason',
                 engine_api.EVENT_RES_TYPE: 'ResourceType',
                 engine_api.EVENT_STACK_ID: 'StackId',
@@ -471,10 +470,7 @@ class StackController(object):
             result = api_utils.reformat_dict_keys(keymap, e)
             action = e[engine_api.EVENT_RES_ACTION]
             status = e[engine_api.EVENT_RES_STATUS]
-            if action and status:
-                result['ResourceStatus'] = '_'.join((action, status))
-            else:
-                result['ResourceStatus'] = status
+            result['ResourceStatus'] = '_'.join((action, status))
             result['ResourceProperties'] = json.dumps(result[
                                                       'ResourceProperties'])
 
@@ -493,6 +489,12 @@ class StackController(object):
         return api_utils.format_response('DescribeStackEvents',
                                          {'StackEvents': result})
 
+    @staticmethod
+    def _resource_status(res):
+        action = res[engine_api.RES_ACTION]
+        status = res[engine_api.RES_STATUS]
+        return '_'.join((action, status))
+
     def describe_stack_resource(self, req):
         """
         Implements the DescribeStackResource API action
@@ -510,7 +512,6 @@ class StackController(object):
                 engine_api.RES_NAME: 'LogicalResourceId',
                 engine_api.RES_METADATA: 'Metadata',
                 engine_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
-                engine_api.RES_STATUS: 'ResourceStatus',
                 engine_api.RES_STATUS_DATA: 'ResourceStatusReason',
                 engine_api.RES_TYPE: 'ResourceType',
                 engine_api.RES_STACK_ID: 'StackId',
@@ -518,6 +519,8 @@ class StackController(object):
             }
 
             result = api_utils.reformat_dict_keys(keymap, r)
+
+            result['ResourceStatus'] = self._resource_status(r)
 
             return self._id_format(result)
 
@@ -564,7 +567,6 @@ class StackController(object):
                 engine_api.RES_DESCRIPTION: 'Description',
                 engine_api.RES_NAME: 'LogicalResourceId',
                 engine_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
-                engine_api.RES_STATUS: 'ResourceStatus',
                 engine_api.RES_STATUS_DATA: 'ResourceStatusReason',
                 engine_api.RES_TYPE: 'ResourceType',
                 engine_api.RES_STACK_ID: 'StackId',
@@ -573,6 +575,8 @@ class StackController(object):
             }
 
             result = api_utils.reformat_dict_keys(keymap, r)
+
+            result['ResourceStatus'] = self._resource_status(r)
 
             return self._id_format(result)
 
@@ -618,12 +622,15 @@ class StackController(object):
                 engine_api.RES_UPDATED_TIME: 'LastUpdatedTimestamp',
                 engine_api.RES_NAME: 'LogicalResourceId',
                 engine_api.RES_PHYSICAL_ID: 'PhysicalResourceId',
-                engine_api.RES_STATUS: 'ResourceStatus',
                 engine_api.RES_STATUS_DATA: 'ResourceStatusReason',
                 engine_api.RES_TYPE: 'ResourceType',
             }
 
-            return api_utils.reformat_dict_keys(keymap, r)
+            result = api_utils.reformat_dict_keys(keymap, r)
+
+            result['ResourceStatus'] = self._resource_status(r)
+
+            return result
 
         con = req.context
 

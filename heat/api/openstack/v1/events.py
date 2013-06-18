@@ -29,7 +29,6 @@ summary_keys = [
     engine_api.EVENT_ID,
     engine_api.EVENT_TIMESTAMP,
     engine_api.EVENT_RES_NAME,
-    engine_api.EVENT_RES_ACTION,
     engine_api.EVENT_RES_STATUS,
     engine_api.EVENT_RES_STATUS_DATA,
     engine_api.EVENT_RES_PHYSICAL_ID,
@@ -51,9 +50,16 @@ def format_event(req, event, keys=None):
                                             'resource'),
                              util.make_link(req, identity.stack(),
                                             'stack')])
-        elif (key == engine_api.EVENT_STACK_ID or
-              key == engine_api.EVENT_STACK_NAME):
+        elif key in (engine_api.EVENT_STACK_ID, engine_api.EVENT_STACK_NAME,
+                     engine_api.EVENT_RES_ACTION):
             return
+        elif (key == engine_api.EVENT_RES_STATUS and
+              engine_api.EVENT_RES_ACTION in event):
+            # To avoid breaking API compatibility, we join RES_ACTION
+            # and RES_STATUS, so the API format doesn't expose the
+            # internal split of state into action/status
+            yield (key, '_'.join((event[engine_api.EVENT_RES_ACTION], value)))
+
         else:
             yield (key, value)
 

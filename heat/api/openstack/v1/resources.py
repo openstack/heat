@@ -23,7 +23,7 @@ from heat.rpc import client as rpc_client
 import heat.openstack.common.rpc.common as rpc_common
 
 
-def format_resource(req, stack, keys=[]):
+def format_resource(req, res, keys=[]):
     include_key = lambda k: k in keys if keys else True
 
     def transform(key, value):
@@ -35,15 +35,21 @@ def format_resource(req, stack, keys=[]):
             yield ('links', [util.make_link(req, identity),
                              util.make_link(req, identity.stack(), 'stack')])
         elif (key == engine_api.RES_STACK_NAME or
-              key == engine_api.RES_STACK_ID):
+              key == engine_api.RES_STACK_ID or
+              key == engine_api.RES_ACTION):
             return
         elif (key == engine_api.RES_METADATA):
             return
+        elif (key == engine_api.RES_STATUS and engine_api.RES_ACTION in res):
+            # To avoid breaking API compatibility, we join RES_ACTION
+            # and RES_STATUS, so the API format doesn't expose the
+            # internal split of state into action/status
+            yield (key, '_'.join((res[engine_api.RES_ACTION], value)))
         else:
             yield (key, value)
 
     return dict(itertools.chain.from_iterable(
-        transform(k, v) for k, v in stack.items()))
+        transform(k, v) for k, v in res.items()))
 
 
 class ResourceController(object):
