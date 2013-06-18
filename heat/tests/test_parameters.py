@@ -285,15 +285,6 @@ class ParametersTest(testtools.TestCase):
         params.set_stack_id('456::bar')
         self.assertEqual(params['AWS::StackId'], '456::bar')
 
-    def test_user_param(self):
-        user_params = {'User': 'wibble'}
-        params = parameters.Parameters('test', params_schema, user_params)
-        self.assertEqual(params.user_parameters(), user_params)
-
-    def test_user_param_nonexist(self):
-        params = parameters.Parameters('test', params_schema)
-        self.assertEqual(params.user_parameters(), {})
-
     def test_schema_invariance(self):
         params1 = parameters.Parameters('test', params_schema,
                                         {'Defaulted': 'wibble'})
