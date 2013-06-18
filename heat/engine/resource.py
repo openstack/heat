@@ -418,7 +418,8 @@ class Resource(object):
             self.state_set(self.UPDATE, self.COMPLETE)
 
     def physical_resource_name(self):
-        assert self.id is not None
+        if self.id is None:
+            return None
 
         return '%s-%s-%s' % (self.stack.name,
                              self.name,
