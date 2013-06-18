@@ -561,8 +561,12 @@ class Resource(object):
                                              action, request)
         action_args.update(deserialized_request)
 
-        action_result = self.dispatch(self.controller, action,
-                                      request, **action_args)
+        try:
+            action_result = self.dispatch(self.controller, action,
+                                          request, **action_args)
+        except TypeError as err:
+            logging.error(_('Exception handling resource: %s') % err.message)
+            raise webob.exc.HTTPBadRequest()
 
         # Here we support either passing in a serializer or detecting it
         # based on the content type.
