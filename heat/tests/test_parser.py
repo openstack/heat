@@ -332,6 +332,24 @@ class TemplateTest(HeatTestCase):
         self.assertRaises(TypeError, parser.Template.resolve_joins,
                           join3)
 
+    def test_split_ok(self):
+        data = {"Fn::Split": [";", "foo; bar; achoo"]}
+        self.assertEqual(parser.Template.resolve_split(data),
+                         ['foo', ' bar', ' achoo'])
+
+    def test_split_no_delim_in_str(self):
+        data = {"Fn::Split": [";", "foo, bar, achoo"]}
+        self.assertEqual(parser.Template.resolve_split(data),
+                         ['foo, bar, achoo'])
+
+    def test_split_no_delim(self):
+        data = {"Fn::Split": ["foo, bar, achoo"]}
+        self.assertRaises(ValueError, parser.Template.resolve_split, data)
+
+    def test_split_no_list(self):
+        data = {"Fn::Split": "foo, bar, achoo"}
+        self.assertRaises(TypeError, parser.Template.resolve_split, data)
+
     def test_base64(self):
         snippet = {"Fn::Base64": "foobar"}
         # For now, the Base64 function just returns the original text, and

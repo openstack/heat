@@ -282,6 +282,31 @@ class Template(collections.Mapping):
         return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s)
 
     @staticmethod
+    def resolve_split(s):
+        '''
+        Split strings in Fn::Split to a list of sub strings
+        eg the following
+        { "Fn::Split" : [ ",", "str1,str2,str3,str4"]}
+        is reduced to
+        {["str1", "str2", "str3", "str4"]}
+        '''
+        def handle_split(args):
+            if not isinstance(args, (list, tuple)):
+                raise TypeError('Arguments to "Fn::Split" must be a list')
+
+            example = '"Fn::Split" : [ ",", "str1, str2"]]'
+            try:
+                delim, strings = args
+            except ValueError as ex:
+                raise ValueError('Incorrect arguments to "Fn::Split" %s: %s' %
+                                ('should be', example))
+            if not isinstance(strings, basestring):
+                raise TypeError('Incorrect arguments to "Fn::Split" %s: %s' %
+                                ('should be', example))
+            return strings.split(delim)
+        return _resolve(lambda k, v: k == 'Fn::Split', handle_split, s)
+
+    @staticmethod
     def resolve_replace(s):
         """
         Resolve constructs of the form.
