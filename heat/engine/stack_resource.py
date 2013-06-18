@@ -103,6 +103,6 @@ class StackResource(resource.Resource):
             return None
         if op not in stack.outputs:
             raise exception.InvalidTemplateAttribute(
-                resource=self.physical_resource_name(), key=op)
+                resource=self.name, key=op)
 
         return stack.output(op)

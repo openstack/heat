@@ -55,7 +55,7 @@ class NestedStack(stack_resource.StackResource):
     def FnGetAtt(self, key):
         if not key.startswith('Outputs.'):
             raise exception.InvalidTemplateAttribute(
-                resource=self.physical_resource_name(), key=key)
+                resource=self.name, key=key)
 
         prefix, dot, op = key.partition('.')
         return unicode(self.get_output(op))

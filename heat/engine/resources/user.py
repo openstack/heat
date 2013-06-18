@@ -93,7 +93,7 @@ class User(resource.Resource):
     def FnGetAtt(self, key):
         #TODO(asalkeld) Implement Arn attribute
         raise exception.InvalidTemplateAttribute(
-            resource=self.physical_resource_name(), key=key)
+            resource=self.name, key=key)
 
     def access_allowed(self, resource_name):
         policies = (self.properties['Policies'] or [])
