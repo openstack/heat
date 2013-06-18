@@ -122,7 +122,8 @@ class CfnStackControllerTest(HeatTestCase):
                         u'stack_status_reason': u'Stack successfully created',
                         u'creation_time': u'2012-07-09T09:12:45Z',
                         u'stack_name': u'wordpress',
-                        u'stack_status': u'CREATE_COMPLETE'}]
+                        u'stack_action': u'CREATE',
+                        u'stack_status': u'COMPLETE'}]
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(dummy_req.context, self.topic,
                  {'namespace': None,
@@ -220,7 +221,8 @@ class CfnStackControllerTest(HeatTestCase):
                        u'creation_time': u'2012-07-09T09:12:45Z',
                        u'stack_name': u'wordpress',
                        u'notification_topics': [],
-                       u'stack_status': u'CREATE_COMPLETE',
+                       u'stack_action': u'CREATE',
+                       u'stack_status': u'COMPLETE',
                        u'description': u'blah',
                        u'disable_rollback': 'true',
                        u'timeout_mins':60,
@@ -309,7 +311,8 @@ class CfnStackControllerTest(HeatTestCase):
                         u'creation_time': u'2012-07-09T09:12:45Z',
                         u'stack_name': u'wordpress',
                         u'notification_topics': [],
-                        u'stack_status': u'CREATE_COMPLETE',
+                        u'stack_action': u'CREATE',
+                        u'stack_status': u'COMPLETE',
                         u'description': u'blah',
                         u'disable_rollback': 'true',
                         u'timeout_mins':60,

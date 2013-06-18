@@ -147,6 +147,14 @@ def format_stack(req, stack, keys=[]):
         if key == engine_api.STACK_ID:
             yield ('id', value['stack_id'])
             yield ('links', [util.make_link(req, value)])
+        elif key == engine_api.STACK_ACTION:
+            return
+        elif (key == engine_api.STACK_STATUS and
+              engine_api.STACK_ACTION in stack):
+            # To avoid breaking API compatibility, we join RES_ACTION
+            # and RES_STATUS, so the API format doesn't expose the
+            # internal split of state into action/status
+            yield (key, '_'.join((stack[engine_api.STACK_ACTION], value)))
         else:
             # TODO(zaneb): ensure parameters can be formatted for XML
             #elif key == engine_api.STACK_PARAMETERS:

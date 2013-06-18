@@ -220,8 +220,10 @@ class stackCreateTest(HeatTestCase):
 
         rsrc = stack.resources['WebServer']
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual((stack.DELETE, stack.COMPLETE), rsrc.state)
         self.assertEqual(db_api.stack_get(ctx, stack_id), None)
-        self.assertEqual(db_s.status, 'DELETE_COMPLETE')
+        self.assertEqual(db_s.action, 'DELETE')
+        self.assertEqual(db_s.status, 'COMPLETE')
 
 
 class stackServiceCreateUpdateDeleteTest(HeatTestCase):

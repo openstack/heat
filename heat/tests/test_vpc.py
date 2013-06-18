@@ -460,7 +460,7 @@ Resources:
 
         stack = self.create_stack(self.test_template)
         try:
-            self.assertEqual(stack.CREATE_COMPLETE, stack.state)
+            self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
             rsrc = stack['the_nic']
             self.assertResourceState(rsrc, 'dddd')
 
@@ -510,7 +510,7 @@ Resources:
 
         stack = self.create_stack(self.test_template_error_no_ref)
         try:
-            self.assertEqual(stack.CREATE_FAILED, stack.state)
+            self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
             rsrc = stack['the_nic']
             self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
             reason = rsrc.status_reason

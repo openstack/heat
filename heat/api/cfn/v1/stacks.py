@@ -125,12 +125,15 @@ class StackController(object):
                 engine_api.STACK_UPDATED_TIME: 'LastUpdatedTime',
                 engine_api.STACK_ID: 'StackId',
                 engine_api.STACK_NAME: 'StackName',
-                engine_api.STACK_STATUS: 'StackStatus',
                 engine_api.STACK_STATUS_DATA: 'StackStatusReason',
                 engine_api.STACK_TMPL_DESCRIPTION: 'TemplateDescription',
             }
 
             result = api_utils.reformat_dict_keys(keymap, s)
+
+            action = s[engine_api.STACK_ACTION]
+            status = s[engine_api.STACK_STATUS]
+            result['StackStatus'] = '_'.join((action, status))
 
             # AWS docs indicate DeletionTime is ommitted for current stacks
             # This is still TODO(unknown) in the engine, we don't keep data for
@@ -195,12 +198,15 @@ class StackController(object):
                 engine_api.STACK_PARAMETERS: 'Parameters',
                 engine_api.STACK_ID: 'StackId',
                 engine_api.STACK_NAME: 'StackName',
-                engine_api.STACK_STATUS: 'StackStatus',
                 engine_api.STACK_STATUS_DATA: 'StackStatusReason',
                 engine_api.STACK_TIMEOUT: 'TimeoutInMinutes',
             }
 
             result = api_utils.reformat_dict_keys(keymap, s)
+
+            action = s[engine_api.STACK_ACTION]
+            status = s[engine_api.STACK_STATUS]
+            result['StackStatus'] = '_'.join((action, status))
 
             # Reformat outputs, these are handled separately as they are
             # only present in the engine output for a completely created
