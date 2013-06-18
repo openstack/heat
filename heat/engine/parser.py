@@ -575,6 +575,7 @@ def resolve_runtime_data(template, resources, snippet):
                                         resources=resources),
                       functools.partial(template.resolve_attributes,
                                         resources=resources),
+                      template.resolve_split,
                       template.resolve_select,
                       template.resolve_joins,
                       template.resolve_replace,
