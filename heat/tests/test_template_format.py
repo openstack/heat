@@ -91,6 +91,24 @@ Outputs: {}
         self.assertEqual(tpl1, tpl2)
 
 
+class YamlEnvironmentTest(HeatTestCase):
+
+    def test_no_template_sections(self):
+        env = '''
+parameters: {}
+resource_registry: {}
+'''
+        parsed_env = template_format.parse(env, add_template_sections=False)
+
+        self.assertEqual('parameters' in parsed_env, True)
+        self.assertEqual('resource_registry' in parsed_env, True)
+
+        self.assertEqual('Parameters' in parsed_env, False)
+        self.assertEqual('Mappings' in parsed_env, False)
+        self.assertEqual('Resources' in parsed_env, False)
+        self.assertEqual('Outputs' in parsed_env, False)
+
+
 class JsonYamlResolvedCompareTest(HeatTestCase):
 
     def setUp(self):

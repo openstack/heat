@@ -29,7 +29,7 @@ yaml.Loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 
 
-def parse(tmpl_str):
+def parse(tmpl_str, add_template_sections=True):
     '''
     Takes a string and returns a dict containing the parsed structure.
     This includes determination of whether the string is using the
@@ -45,8 +45,9 @@ def parse(tmpl_str):
         else:
             if tpl is None:
                 tpl = {}
-            default_for_missing(tpl, u'HeatTemplateFormatVersion',
-                                HEAT_VERSIONS)
+            if add_template_sections:
+                default_for_missing(tpl, u'HeatTemplateFormatVersion',
+                                    HEAT_VERSIONS)
     return tpl
 
 
