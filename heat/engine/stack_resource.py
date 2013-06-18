@@ -14,6 +14,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import environment
 from heat.engine import resource
 from heat.engine import parser
 from heat.engine import scheduler
@@ -52,15 +53,13 @@ class StackResource(resource.Resource):
         Handle the creation of the nested stack from a given JSON template.
         '''
         template = parser.Template(child_template)
-        params = parser.Parameters(self.physical_resource_name(), template,
-                                   user_params)
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
         self._nested = parser.Stack(self.context,
                                     self.physical_resource_name(),
                                     template,
-                                    params,
+                                    environment.Environment(user_params),
                                     timeout_mins=timeout_mins,
                                     disable_rollback=True)
 

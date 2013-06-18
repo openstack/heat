@@ -82,8 +82,7 @@ class VPCTestBase(HeatTestCase):
             'auth_url': 'http://localhost:5000/v2.0'})
         stack_name = 'test_stack'
         tmpl = parser.Template(t)
-        params = parser.Parameters(stack_name, tmpl, {})
-        stack = parser.Stack(ctx, stack_name, tmpl, params)
+        stack = parser.Stack(ctx, stack_name, tmpl)
         stack.store()
         return stack
 

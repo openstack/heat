@@ -22,6 +22,7 @@ from oslo.config import cfg
 
 from heat.common import config
 from heat.common import context
+from heat.engine import environment
 from heat.common import exception
 from heat.tests.v1_1 import fakes
 import heat.engine.api as engine_api
@@ -78,10 +79,8 @@ def create_context(mocks, user='stacks_test_user',
 def get_wordpress_stack(stack_name, ctx):
     t = template_format.parse(wp_template)
     template = parser.Template(t)
-    parameters = parser.Parameters(stack_name, template,
-                                   {'KeyName': 'test'})
-
-    stack = parser.Stack(ctx, stack_name, template, parameters)
+    stack = parser.Stack(ctx, stack_name, template,
+                         environment.Environment({'KeyName': 'test'}))
     return stack
 
 
@@ -244,15 +243,13 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
         stack = get_wordpress_stack(stack_name, self.ctx)
 
         self.m.StubOutWithMock(parser, 'Template')
-        self.m.StubOutWithMock(parser, 'Parameters')
+        self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
         parser.Template(template).AndReturn(stack.t)
-        parser.Parameters(stack_name,
-                          stack.t,
-                          params).AndReturn(stack.parameters)
+        environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.parameters).AndReturn(stack)
+                     stack.t, stack.env).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -277,15 +274,14 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
         stack = get_wordpress_stack(stack_name, self.ctx)
 
         self.m.StubOutWithMock(parser, 'Template')
-        self.m.StubOutWithMock(parser, 'Parameters')
+        self.m.StubOutWithMock(environment, 'Environment')
         self.m.StubOutWithMock(parser, 'Stack')
 
         parser.Template(template).AndReturn(stack.t)
-        parser.Parameters(stack_name,
-                          stack.t,
-                          params).AndReturn(stack.parameters)
+        environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.parameters).AndReturn(stack)
+                     stack.t,
+                     stack.env).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(
@@ -393,14 +389,12 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
         parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
 
         self.m.StubOutWithMock(parser, 'Template')
-        self.m.StubOutWithMock(parser, 'Parameters')
+        self.m.StubOutWithMock(environment, 'Environment')
 
         parser.Template(template).AndReturn(stack.t)
-        parser.Parameters(stack_name,
-                          stack.t,
-                          params).AndReturn(stack.parameters)
+        environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.parameters).AndReturn(stack)
+                     stack.t, stack.env).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
@@ -434,14 +428,12 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
         parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
 
         self.m.StubOutWithMock(parser, 'Template')
-        self.m.StubOutWithMock(parser, 'Parameters')
+        self.m.StubOutWithMock(environment, 'Environment')
 
         parser.Template(template).AndReturn(stack.t)
-        parser.Parameters(stack_name,
-                          stack.t,
-                          params).AndReturn(stack.parameters)
+        environment.Environment(params).AndReturn(stack.env)
         parser.Stack(self.ctx, stack.name,
-                     stack.t, stack.parameters).AndReturn(stack)
+                     stack.t, stack.env).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndRaise(exception.StackValidationFailed(

@@ -17,6 +17,7 @@ import copy
 
 import mox
 
+from heat.engine import environment
 from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
 from heat.common import exception
@@ -65,8 +66,8 @@ class instancesTest(HeatTestCase):
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
         template = parser.Template(t)
-        params = parser.Parameters(stack_name, template, {'KeyName': 'test'})
-        stack = parser.Stack(None, stack_name, template, params,
+        stack = parser.Stack(None, stack_name, template,
+                             environment.Environment({'KeyName': 'test'}),
                              stack_id=uuidutils.generate_uuid())
         return (t, stack)
 

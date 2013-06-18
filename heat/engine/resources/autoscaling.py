@@ -110,7 +110,9 @@ class InstanceGroup(resource.Resource):
 
     def _make_instance(self, name):
 
-        Instance = resource.get_class('AWS::EC2::Instance')
+        Instance = resource.get_class('AWS::EC2::Instance',
+                                      resource_name=name,
+                                      environment=self.stack.env)
 
         class GroupedInstance(Instance):
             '''

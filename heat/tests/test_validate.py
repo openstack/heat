@@ -14,6 +14,7 @@
 
 from testtools import skipIf
 
+from heat.engine import environment
 from heat.tests.v1_1 import fakes
 from heat.common import exception
 from heat.common import template_format
@@ -579,9 +580,9 @@ class validateTest(HeatTestCase):
     def test_unregistered_key(self):
         t = template_format.parse(test_unregistered_key)
         template = parser.Template(t)
-        params = parser.Parameters(
-            'test_stack', template, {'KeyName': 'not_registered'})
-        stack = parser.Stack(None, 'test_stack', template, params)
+        params = {'KeyName': 'not_registered'}
+        stack = parser.Stack(None, 'test_stack', template,
+                             environment.Environment(params))
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -594,8 +595,8 @@ class validateTest(HeatTestCase):
     def test_invalid_security_groups_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroups)
         template = parser.Template(t)
-        params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
-        stack = parser.Stack(None, 'test_stack', template, params)
+        stack = parser.Stack(None, 'test_stack', template,
+                             environment.Environment({'KeyName': 'test'}))
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
@@ -607,8 +608,8 @@ class validateTest(HeatTestCase):
     def test_invalid_security_group_ids_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroupids)
         template = parser.Template(t)
-        params = parser.Parameters('test_stack', template, {'KeyName': 'test'})
-        stack = parser.Stack(None, 'test_stack', template, params)
+        stack = parser.Stack(None, 'test_stack', template,
+                             environment.Environment({'KeyName': 'test'}))
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)

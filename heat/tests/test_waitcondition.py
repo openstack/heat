@@ -29,6 +29,7 @@ from heat.tests.utils import setup_dummy_db
 import heat.db.api as db_api
 from heat.common import template_format
 from heat.common import identifier
+from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
@@ -114,10 +115,10 @@ class WaitConditionTest(HeatTestCase):
                      stub=True):
         temp = template_format.parse(template)
         template = parser.Template(temp)
-        parameters = parser.Parameters(stack_name, template, params)
         ctx = context.get_admin_context()
         ctx.tenant_id = 'test_tenant'
-        stack = parser.Stack(ctx, stack_name, template, parameters,
+        stack = parser.Stack(ctx, stack_name, template,
+                             environment.Environment(params),
                              disable_rollback=True)
 
         # Stub out the stack ID so we have a known value
@@ -399,10 +400,10 @@ class WaitConditionHandleTest(HeatTestCase):
     def create_stack(self, stack_name='test_stack2', params={}):
         temp = template_format.parse(test_template_waitcondition)
         template = parser.Template(temp)
-        parameters = parser.Parameters(stack_name, template, params)
         ctx = context.get_admin_context()
         ctx.tenant_id = 'test_tenant'
-        stack = parser.Stack(ctx, stack_name, template, parameters,
+        stack = parser.Stack(ctx, stack_name, template,
+                             environment.Environment(params),
                              disable_rollback=True)
         # Stub out the UUID for this test, so we can get an expected signature
         with UUIDStub('STACKABCD1234'):

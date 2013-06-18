@@ -24,6 +24,7 @@ from heat.db import api as db_api
 from heat.engine import api
 from heat.engine import clients
 from heat.engine.event import Event
+from heat.engine import environment
 from heat.common import exception
 from heat.common import identifier
 from heat.engine import parameters
@@ -212,12 +213,11 @@ class EngineService(service.Service):
 
         tmpl = parser.Template(template)
 
-        # Extract the template parameters, and any common query parameters
-        template_params = parser.Parameters(stack_name, tmpl, params)
+        # Extract the common query parameters
         common_params = api.extract_args(args)
-
-        stack = parser.Stack(cnxt, stack_name, tmpl, template_params,
-                             **common_params)
+        env = environment.Environment(params)
+        stack = parser.Stack(cnxt, stack_name, tmpl,
+                             env, **common_params)
 
         stack.validate()
 
@@ -251,11 +251,10 @@ class EngineService(service.Service):
         # stack definition.
         tmpl = parser.Template(template)
         stack_name = current_stack.name
-        template_params = parser.Parameters(stack_name, tmpl, params)
         common_params = api.extract_args(args)
-
+        env = environment.Environment(params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
-                                     template_params, **common_params)
+                                     env, **common_params)
 
         updated_stack.validate()
 

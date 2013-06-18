@@ -17,6 +17,7 @@ import eventlet
 import functools
 import re
 
+from heat.engine import environment
 from heat.common import exception
 from heat.engine import dependencies
 from heat.common import identifier
@@ -64,12 +65,12 @@ class Stack(object):
 
     _zones = None
 
-    def __init__(self, context, stack_name, tmpl, parameters=None,
+    def __init__(self, context, stack_name, tmpl, env=None,
                  stack_id=None, state=None, state_description='',
                  timeout_mins=60, resolve_data=True, disable_rollback=True):
         '''
         Initialise from a context, name, Template object and (optionally)
-        Parameters object. The database ID may also be initialised, if the
+        Environment object. The database ID may also be initialised, if the
         stack is already in the database.
         '''
 
@@ -91,9 +92,9 @@ class Stack(object):
 
         resources.initialise()
 
-        if parameters is None:
-            parameters = Parameters(self.name, self.t)
-        self.parameters = parameters
+        self.env = env or environment.Environment({})
+        self.parameters = Parameters(self.name, self.t,
+                                     user_params=self.env.params)
 
         self._set_param_stackid()
 
@@ -142,8 +143,8 @@ class Stack(object):
             raise exception.NotFound(message)
 
         template = Template.load(context, stack.raw_template_id)
-        params = Parameters(stack.name, template, stack.parameters)
-        stack = cls(context, stack.name, template, params,
+        env = environment.Environment(stack.parameters)
+        stack = cls(context, stack.name, template, env,
                     stack.id, stack.status, stack.status_reason, stack.timeout,
                     resolve_data, stack.disable_rollback)
 
@@ -159,7 +160,7 @@ class Stack(object):
         s = {
             'name': self.name,
             'raw_template_id': self.t.store(self.context),
-            'parameters': self.parameters.user_parameters(),
+            'parameters': self.env.user_env_as_dict(),
             'owner_id': owner and owner.id,
             'user_creds_id': new_creds.id,
             'username': self.context.username,
@@ -439,7 +440,7 @@ class Stack(object):
                         stack_status = self.UPDATE_FAILED
                     else:
                         oldstack = Stack(self.context, self.name, self.t,
-                                         self.parameters)
+                                         self.env)
                         self.update(oldstack, action=self.ROLLBACK)
                         return
                 else:
@@ -447,12 +448,12 @@ class Stack(object):
 
             self.state_set(stack_status, reason)
 
-            # flip the template & parameters to the newstack values
+            # flip the template & environment to the newstack values
             # Note we do this on success and failure, so the current
             # stack resources are stored, even if one is in a failed
             # state (otherwise we won't remove them on delete)
             self.t = newstack.t
-            self.parameters = newstack.parameters
+            self.env = newstack.env
             template_outputs = self.t[template.OUTPUTS]
             self.outputs = self.resolve_static_data(template_outputs)
             self.store()
