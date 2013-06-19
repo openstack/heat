@@ -18,6 +18,7 @@ import copy
 import mox
 
 from heat.common import template_format
+from heat.common import exception
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import instance
@@ -171,6 +172,30 @@ class AutoScalingTest(HeatTestCase):
                           rsrc.update, update_snippet)
 
         rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_scaling_group_create_error(self):
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
+        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
+        exc = exception.ResourceFailure(Exception())
+        instance.Instance.handle_create().AndRaise(exc)
+
+        self.m.ReplayAll()
+        rsrc = asc.AutoScalingGroup('WebServerGroup',
+                                    t['Resources']['WebServerGroup'],
+                                    stack)
+        self.assertEqual(None, rsrc.validate())
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.create))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+
+        self.assertEqual(None, rsrc.resource_id)
+
         self.m.VerifyAll()
 
     def test_scaling_group_update_ok_maxsize(self):

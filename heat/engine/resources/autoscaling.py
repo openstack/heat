@@ -162,16 +162,17 @@ class InstanceGroup(resource.Resource):
         def create_instance(index):
             name = '%s-%d' % (self.name, index)
             inst = self._make_instance(name)
-            inst_list.append(name)
-            self.resource_id_set(','.join(inst_list))
 
             logger.debug('Creating %s instance %d' % (str(self), index))
 
             try:
                 yield inst.create()
-            except exception.ResourceFailure as ex:
+            except exception.ResourceFailure:
                 if raise_on_error:
                     raise
+            else:
+                inst_list.append(name)
+                self.resource_id_set(','.join(inst_list))
 
         if new_capacity > capacity:
             # grow
