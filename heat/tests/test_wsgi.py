@@ -209,11 +209,50 @@ class JSONRequestDeserializerTest(HeatTestCase):
         request.headers['Content-Length'] = 0
         self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
 
-    def test_has_body_has_content_length(self):
+    def test_has_body_has_content_length_no_content_type(self):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
         request.body = 'asdf'
         self.assertTrue('Content-Length' in request.headers)
+        self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
+
+    def test_has_body_has_content_type_malformed(self):
+        request = wsgi.Request.blank('/')
+        request.method = 'POST'
+        request.body = 'asdf'
+        self.assertTrue('Content-Length' in request.headers)
+        request.headers['Content-Type'] = 'application/json'
+        self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
+
+    def test_has_body_has_content_type(self):
+        request = wsgi.Request.blank('/')
+        request.method = 'POST'
+        request.body = '{"key": "value"}'
+        self.assertTrue('Content-Length' in request.headers)
+        request.headers['Content-Type'] = 'application/json'
+        self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
+
+    def test_has_body_has_wrong_content_type(self):
+        request = wsgi.Request.blank('/')
+        request.method = 'POST'
+        request.body = '{"key": "value"}'
+        self.assertTrue('Content-Length' in request.headers)
+        request.headers['Content-Type'] = 'application/xml'
+        self.assertFalse(wsgi.JSONRequestDeserializer().has_body(request))
+
+    def test_has_body_has_aws_content_type_only(self):
+        request = wsgi.Request.blank('/?ContentType=JSON')
+        request.method = 'GET'
+        request.body = '{"key": "value"}'
+        self.assertTrue('Content-Length' in request.headers)
+        self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
+
+    def test_has_body_respect_aws_content_type(self):
+        request = wsgi.Request.blank('/?ContentType=JSON')
+        request.method = 'GET'
+        request.body = '{"key": "value"}'
+        self.assertTrue('Content-Length' in request.headers)
+        request.headers['Content-Type'] = 'application/xml'
         self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
 
     def test_no_body_no_content_length(self):
@@ -241,14 +280,7 @@ class JSONRequestDeserializerTest(HeatTestCase):
         request = wsgi.Request.blank('/')
         request.method = 'POST'
         request.body = '{"key": "value"}'
+        request.headers['Content-Type'] = 'application/json'
         actual = wsgi.JSONRequestDeserializer().default(request)
         expected = {"body": {"key": "value"}}
         self.assertEqual(actual, expected)
-
-    def test_has_body_has_transfer_encoding(self):
-        request = wsgi.Request.blank('/')
-        request.method = 'POST'
-        request.body = 'fake_body'
-        request.headers['transfer-encoding'] = 0
-        self.assertTrue('transfer-encoding' in request.headers)
-        self.assertTrue(wsgi.JSONRequestDeserializer().has_body(request))
