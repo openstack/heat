@@ -23,6 +23,8 @@ from heat.db import api as db_api
 from heat.common import identifier
 from heat.common import short_id
 from heat.engine import timestamp
+# import class to avoid name collisions and ugly aliasing
+from heat.engine.attributes import Attributes
 from heat.engine.properties import Properties
 
 from heat.openstack.common import log as logging
@@ -122,6 +124,10 @@ class Resource(object):
     # supported for handle_update, used by update_template_diff_properties
     update_allowed_properties = ()
 
+    # Resource implementations set this to the name: description dictionary
+    # that describes the appropriate resource attributes
+    attributes_schema = {}
+
     def __new__(cls, name, json, stack):
         '''Create a new Resource of the appropriate class for its type.'''
 
@@ -149,6 +155,9 @@ class Resource(object):
                                      self.t.get('Properties', {}),
                                      self.stack.resolve_runtime_data,
                                      self.name)
+        self.attributes = Attributes(self.name,
+                                     self.attributes_schema,
+                                     self._resolve_attribute)
 
         resource = db_api.resource_get_by_name_and_stack(self.context,
                                                          name, stack.id)
@@ -570,6 +579,17 @@ class Resource(object):
         elif (action, status) == (self.CREATE, self.IN_PROGRESS):
             self._store()
 
+    def _resolve_attribute(self, name):
+        """
+        Default implementation; should be overridden by resources that expose
+        attributes
+
+        :param name: The attribute to resolve
+        :returns: the resource attribute named key
+        """
+        # By default, no attributes resolve
+        pass
+
     def state_set(self, action, status, reason="state changed"):
         if action not in self.ACTIONS:
             raise ValueError("Invalid action %s" % action)
@@ -604,7 +624,11 @@ class Resource(object):
         http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/\
         intrinsic-function-reference-getatt.html
         '''
-        return unicode(self.name)
+        try:
+            return self.attributes[key]
+        except KeyError:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
 
     def FnBase64(self, data):
         '''

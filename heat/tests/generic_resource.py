@@ -24,9 +24,14 @@ class GenericResource(resource.Resource):
     Dummy resource for use in tests
     '''
     properties_schema = {}
+    attributes_schema = {'foo': 'A generic attribute',
+                         'Foo': 'Another generic attribute'}
 
     def handle_create(self):
         logger.warning('Creating generic resource (Type "%s")' % self.type())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         logger.warning('Updating generic resource (Type "%s")' % self.type())
+
+    def _resolve_attribute(self, name):
+        return self.name
