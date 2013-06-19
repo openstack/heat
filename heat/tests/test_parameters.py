@@ -33,6 +33,10 @@ class ParameterTest(testtools.TestCase):
         p = parameters.Parameter('p', {'Type': 'CommaDelimitedList'})
         self.assertTrue(isinstance(p, parameters.CommaDelimitedListParam))
 
+    def test_new_json(self):
+        p = parameters.Parameter('p', {'Type': 'Json'})
+        self.assertTrue(isinstance(p, parameters.JsonParam))
+
     def test_new_bad_type(self):
         self.assertRaises(ValueError, parameters.Parameter,
                           'p', {'Type': 'List'})
@@ -256,6 +260,94 @@ class ParameterTest(testtools.TestCase):
             self.assertNotEqual(msg.find('wibble'), -1)
         else:
             self.fail('ValueError not raised')
+
+    def test_map_value(self):
+        '''Happy path for value thats already a map.'''
+        schema = {'Type': 'Json'}
+        val = {"foo": "bar", "items": [1, 2, 3]}
+        val_s = json.dumps(val)
+        p = parameters.Parameter('p', schema, val)
+        self.assertEqual(val_s, p.value())
+        self.assertEqual(val, p.parsed)
+
+    def test_map_value_bad(self):
+        '''Map value is not JSON parsable.'''
+        schema = {'Type': 'Json',
+                  'ConstraintDescription': 'wibble'}
+        val = {"foo": "bar", "not_json": len}
+        try:
+            parameters.Parameter('p', schema, val)
+        except ValueError as verr:
+            self.assertIn('Value must be valid JSON', str(verr))
+        else:
+            self.fail("Value error not raised")
+
+    def test_map_value_parse(self):
+        '''Happy path for value that's a string.'''
+        schema = {'Type': 'Json'}
+        val = {"foo": "bar", "items": [1, 2, 3]}
+        val_s = json.dumps(val)
+        p = parameters.Parameter('p', schema, val_s)
+        self.assertEqual(val_s, p.value())
+        self.assertEqual(val, p.parsed)
+
+    def test_map_value_bad_parse(self):
+        '''Test value error for unparsable string value.'''
+        schema = {'Type': 'Json',
+                  'ConstraintDescription': 'wibble'}
+        val = "I am not a map"
+        try:
+            parameters.Parameter('p', schema, val)
+        except ValueError as verr:
+            self.assertIn('Value must be valid JSON', str(verr))
+        else:
+            self.fail("Value error not raised")
+
+    def test_map_values_good(self):
+        '''Happy path for map keys.'''
+        schema = {'Type': 'Json',
+                  'AllowedValues': ["foo", "bar", "baz"]}
+        val = {"foo": "bar", "baz": [1, 2, 3]}
+        val_s = json.dumps(val)
+        p = parameters.Parameter('p', schema, val_s)
+        self.assertEqual(val_s, p.value())
+        self.assertEqual(val, p.parsed)
+
+    def test_map_values_bad(self):
+        '''Test failure of invalid map keys.'''
+        schema = {'Type': 'Json',
+                  'AllowedValues': ["foo", "bar", "baz"]}
+        val = {"foo": "bar", "items": [1, 2, 3]}
+        try:
+            parameters.Parameter('p', schema, val)
+        except ValueError as verr:
+            self.assertIn("items", str(verr))
+        else:
+            self.fail("Value error not raised")
+
+    def test_map_underrun(self):
+        '''Test map length under MIN_LEN.'''
+        schema = {'Type': 'Json',
+                  'MinLength': 3}
+        val = {"foo": "bar", "items": [1, 2, 3]}
+        try:
+            parameters.Parameter('p', schema, val)
+        except ValueError as verr:
+            self.assertIn('underflows', str(verr))
+        else:
+            self.fail("Value error not raised")
+
+    def test_map_overrun(self):
+        '''Test map length over MAX_LEN.'''
+        schema = {'Type': 'Json',
+                  'MaxLength': 1}
+        val = {"foo": "bar", "items": [1, 2, 3]}
+        try:
+            parameters.Parameter('p', schema, val)
+        except ValueError as verr:
+            self.assertIn('overflows', str(verr))
+        else:
+            self.fail("Value error not raised")
 
 
 params_schema = json.loads('''{
