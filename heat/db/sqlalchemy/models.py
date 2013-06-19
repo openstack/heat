@@ -155,6 +155,7 @@ class Stack(BASE, HeatBase):
     raw_template = relationship(RawTemplate, backref=backref('stack'))
     username = Column(String)
     tenant = Column(String)
+    action = Column('action', String)
     status = Column('status', String)
     status_reason = Column('status_reason', String)
     parameters = Column('parameters', Json)

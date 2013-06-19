@@ -174,7 +174,8 @@ class MetadataRefreshTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        self.assertEqual(self.stack.state, self.stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (self.stack.CREATE, self.stack.COMPLETE))
 
         s1 = self.stack.resources['S1']
         s2 = self.stack.resources['S2']
@@ -267,7 +268,8 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        self.assertEqual(self.stack.state, self.stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (self.stack.CREATE, self.stack.COMPLETE))
 
         self.assertEqual(watch.FnGetAtt('Data'), '{"123": "foo"}')
         self.assertEqual(inst.metadata['test'], '{"123": "foo"}')

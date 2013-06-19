@@ -44,21 +44,8 @@ class Stack(object):
     ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK
                ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK')
 
-    CREATE_IN_PROGRESS = 'CREATE_IN_PROGRESS'
-    CREATE_FAILED = 'CREATE_FAILED'
-    CREATE_COMPLETE = 'CREATE_COMPLETE'
-
-    DELETE_IN_PROGRESS = 'DELETE_IN_PROGRESS'
-    DELETE_FAILED = 'DELETE_FAILED'
-    DELETE_COMPLETE = 'DELETE_COMPLETE'
-
-    UPDATE_IN_PROGRESS = 'UPDATE_IN_PROGRESS'
-    UPDATE_COMPLETE = 'UPDATE_COMPLETE'
-    UPDATE_FAILED = 'UPDATE_FAILED'
-
-    ROLLBACK_IN_PROGRESS = 'ROLLBACK_IN_PROGRESS'
-    ROLLBACK_COMPLETE = 'ROLLBACK_COMPLETE'
-    ROLLBACK_FAILED = 'ROLLBACK_FAILED'
+    STATUSES = (IN_PROGRESS, FAILED, COMPLETE
+                ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
 
     created_time = timestamp.Timestamp(db_api.stack_get, 'created_at')
     updated_time = timestamp.Timestamp(db_api.stack_get, 'updated_at')
@@ -66,8 +53,9 @@ class Stack(object):
     _zones = None
 
     def __init__(self, context, stack_name, tmpl, env=None,
-                 stack_id=None, state=None, state_description='',
-                 timeout_mins=60, resolve_data=True, disable_rollback=True):
+                 stack_id=None, action=None, status=None,
+                 status_reason='', timeout_mins=60, resolve_data=True,
+                 disable_rollback=True):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -85,8 +73,9 @@ class Stack(object):
         self.clients = Clients(context)
         self.t = tmpl
         self.name = stack_name
-        self.state = state
-        self.state_description = state_description
+        self.action = action
+        self.status = status
+        self.status_reason = status_reason
         self.timeout_mins = timeout_mins
         self.disable_rollback = disable_rollback
 
@@ -145,8 +134,8 @@ class Stack(object):
         template = Template.load(context, stack.raw_template_id)
         env = environment.Environment(stack.parameters)
         stack = cls(context, stack.name, template, env,
-                    stack.id, stack.status, stack.status_reason, stack.timeout,
-                    resolve_data, stack.disable_rollback)
+                    stack.id, stack.action, stack.status, stack.status_reason,
+                    stack.timeout, resolve_data, stack.disable_rollback)
 
         return stack
 
@@ -165,8 +154,9 @@ class Stack(object):
             'user_creds_id': new_creds.id,
             'username': self.context.username,
             'tenant': self.context.tenant_id,
-            'status': self.state,
-            'status_reason': self.state_description,
+            'action': self.action,
+            'status': self.status,
+            'status_reason': self.status_reason,
             'timeout': self.timeout_mins,
             'disable_rollback': self.disable_rollback,
         }
@@ -254,17 +244,30 @@ class Stack(object):
             if result:
                 raise StackValidationFailed(message=result)
 
-    def state_set(self, new_status, reason):
+    def state_set(self, action, status, reason):
         '''Update the stack state in the database.'''
-        self.state = new_status
-        self.state_description = reason
+        if action not in self.ACTIONS:
+            raise ValueError("Invalid action %s" % action)
+
+        if status not in self.STATUSES:
+            raise ValueError("Invalid status %s" % status)
+
+        self.action = action
+        self.status = status
+        self.status_reason = reason
 
         if self.id is None:
             return
 
         stack = db_api.stack_get(self.context, self.id)
-        stack.update_and_save({'status': new_status,
+        stack.update_and_save({'action': action,
+                               'status': status,
                                'status_reason': reason})
+
+    @property
+    def state(self):
+        '''Returns state, tuple of action, status.'''
+        return (self.action, self.status)
 
     def timeout_secs(self):
         '''
@@ -288,9 +291,9 @@ class Stack(object):
         '''
         A task to create the stack and all of the resources.
         '''
-        self.state_set(self.CREATE_IN_PROGRESS, 'Stack creation started')
+        self.state_set(self.CREATE, self.IN_PROGRESS, 'Stack creation started')
 
-        stack_status = self.CREATE_COMPLETE
+        stack_status = self.COMPLETE
         reason = 'Stack successfully created'
         res = None
 
@@ -303,15 +306,15 @@ class Stack(object):
         try:
             yield create_task()
         except exception.ResourceFailure as ex:
-            stack_status = self.CREATE_FAILED
+            stack_status = self.FAILED
             reason = 'Resource failed: %s' % str(ex)
         except scheduler.Timeout:
-            stack_status = self.CREATE_FAILED
+            stack_status = self.FAILED
             reason = 'Timed out'
 
-        self.state_set(stack_status, reason)
+        self.state_set(self.CREATE, stack_status, reason)
 
-        if stack_status == self.CREATE_FAILED and not self.disable_rollback:
+        if stack_status == self.FAILED and not self.disable_rollback:
             self.delete(action=self.ROLLBACK)
 
     def update(self, newstack, action=UPDATE):
@@ -328,27 +331,21 @@ class Stack(object):
         '''
         if action not in (self.UPDATE, self.ROLLBACK):
             logger.error("Unexpected action %s passed to update!" % action)
-            self.state_set(self.UPDATE_FAILED, "Invalid action %s" % action)
+            self.state_set(self.UPDATE, self.FAILED,
+                           "Invalid action %s" % action)
             return
 
-        if self.state not in (self.CREATE_COMPLETE, self.UPDATE_COMPLETE,
-                              self.ROLLBACK_COMPLETE):
+        if self.status != self.COMPLETE:
             if (action == self.ROLLBACK and
-                    self.state == self.UPDATE_IN_PROGRESS):
+                    self.state == (self.UPDATE, self.IN_PROGRESS)):
                 logger.debug("Starting update rollback for %s" % self.name)
             else:
-                if action == self.UPDATE:
-                    self.state_set(self.UPDATE_FAILED,
-                                   'State invalid for update')
-                else:
-                    self.state_set(self.ROLLBACK_FAILED,
-                                   'State invalid for rollback')
+                self.state_set(action, self.FAILED,
+                               'State invalid for %s' % action)
                 return
 
-        if action == self.UPDATE:
-            self.state_set(self.UPDATE_IN_PROGRESS, 'Stack update started')
-        else:
-            self.state_set(self.ROLLBACK_IN_PROGRESS, 'Stack rollback started')
+        self.state_set(self.UPDATE, self.IN_PROGRESS,
+                       'Stack %s started' % action)
 
         # cache all the resources runtime data.
         for r in self:
@@ -416,15 +413,14 @@ class Stack(object):
                                         (res.name, self.name))
 
                 if action == self.UPDATE:
-                    stack_status = self.UPDATE_COMPLETE
                     reason = 'Stack successfully updated'
                 else:
-                    stack_status = self.ROLLBACK_COMPLETE
                     reason = 'Stack rollback completed'
+                stack_status = self.COMPLETE
 
             except eventlet.Timeout as t:
                 if t is tmo:
-                    stack_status = self.UPDATE_FAILED
+                    stack_status = self.FAILED
                     reason = 'Timed out waiting for %s' % str(res)
                 else:
                     # not my timeout
@@ -432,21 +428,17 @@ class Stack(object):
             except exception.ResourceFailure as e:
                 reason = str(e) or "Error : %s" % type(e)
 
+                stack_status = self.FAILED
                 if action == self.UPDATE:
-                    stack_status = self.UPDATE_FAILED
                     # If rollback is enabled, we do another update, with the
                     # existing template, so we roll back to the original state
-                    if self.disable_rollback:
-                        stack_status = self.UPDATE_FAILED
-                    else:
+                    if not self.disable_rollback:
                         oldstack = Stack(self.context, self.name, self.t,
                                          self.env)
                         self.update(oldstack, action=self.ROLLBACK)
                         return
-                else:
-                    stack_status = self.ROLLBACK_FAILED
 
-            self.state_set(stack_status, reason)
+            self.state_set(action, stack_status, reason)
 
             # flip the template & environment to the newstack values
             # Note we do this on success and failure, so the current
@@ -466,14 +458,13 @@ class Stack(object):
         create, which amount to the same thing, but the states are recorded
         differently.
         '''
-        if action == self.DELETE:
-            self.state_set(self.DELETE_IN_PROGRESS, 'Stack deletion started')
-        elif action == self.ROLLBACK:
-            self.state_set(self.ROLLBACK_IN_PROGRESS, 'Stack rollback started')
-        else:
+        if action not in (self.DELETE, self.ROLLBACK):
             logger.error("Unexpected action %s passed to delete!" % action)
-            self.state_set(self.DELETE_FAILED, "Invalid action %s" % action)
+            self.state_set(self.DELETE, self.FAILED,
+                           "Invalid action %s" % action)
             return
+
+        self.state_set(action, self.IN_PROGRESS, 'Stack %s started' % action)
 
         failures = []
         for res in reversed(self):
@@ -485,17 +476,10 @@ class Stack(object):
                 failures.append(str(res))
 
         if failures:
-            if action == self.DELETE:
-                self.state_set(self.DELETE_FAILED,
-                               'Failed to delete ' + ', '.join(failures))
-            elif action == self.ROLLBACK:
-                self.state_set(self.ROLLBACK_FAILED,
-                               'Failed to rollback ' + ', '.join(failures))
+            self.state_set(action, self.FAILED,
+                           'Failed to %s : %s' % (action, ', '.join(failures)))
         else:
-            if action == self.DELETE:
-                self.state_set(self.DELETE_COMPLETE, 'Deleted successfully')
-            elif action == self.ROLLBACK:
-                self.state_set(self.ROLLBACK_COMPLETE, 'Rollback completed')
+            self.state_set(action, self.COMPLETE, '%s completed' % action)
             db_api.stack_delete(self.context, self.id)
             self.id = None
 

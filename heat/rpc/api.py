@@ -25,7 +25,7 @@ STACK_KEYS = (
     STACK_CREATION_TIME, STACK_UPDATED_TIME, STACK_DELETION_TIME,
     STACK_NOTIFICATION_TOPICS,
     STACK_DESCRIPTION, STACK_TMPL_DESCRIPTION,
-    STACK_PARAMETERS, STACK_OUTPUTS,
+    STACK_PARAMETERS, STACK_OUTPUTS, STACK_ACTION,
     STACK_STATUS, STACK_STATUS_DATA, STACK_CAPABILITIES,
     STACK_DISABLE_ROLLBACK, STACK_TIMEOUT,
 ) = (
@@ -33,7 +33,7 @@ STACK_KEYS = (
     'creation_time', 'updated_time', 'deletion_time',
     'notification_topics',
     'description', 'template_description',
-    'parameters', 'outputs',
+    'parameters', 'outputs', 'stack_action',
     'stack_status', 'stack_status_reason', 'capabilities',
     'disable_rollback', 'timeout_mins'
 )

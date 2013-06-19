@@ -76,15 +76,16 @@ def format_stack(stack):
         STACK_PARAMETERS: stack.parameters.map(str),
         STACK_DESCRIPTION: stack.t[template.DESCRIPTION],
         STACK_TMPL_DESCRIPTION: stack.t[template.DESCRIPTION],
-        STACK_STATUS: stack.state,
-        STACK_STATUS_DATA: stack.state_description,
+        STACK_ACTION: stack.action or '',
+        STACK_STATUS: stack.status or '',
+        STACK_STATUS_DATA: stack.status_reason,
         STACK_CAPABILITIES: [],   # TODO Not implemented yet
         STACK_DISABLE_ROLLBACK: stack.disable_rollback,
         STACK_TIMEOUT: stack.timeout_mins,
     }
 
     # only show the outputs on a completely created or updated stack
-    if stack.state in (stack.CREATE_COMPLETE, stack.UPDATE_COMPLETE):
+    if (stack.action != stack.DELETE and stack.status == stack.COMPLETE):
         info[STACK_OUTPUTS] = format_stack_outputs(stack, stack.outputs)
 
     return info

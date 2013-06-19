@@ -462,22 +462,40 @@ class StackTest(HeatTestCase):
 
     def test_state_defaults(self):
         stack = parser.Stack(None, 'test_stack', parser.Template({}))
-        self.assertEqual(stack.state, None)
-        self.assertEqual(stack.state_description, '')
+        self.assertEqual(stack.state, (None, None))
+        self.assertEqual(stack.status_reason, '')
 
     def test_state(self):
         stack = parser.Stack(None, 'test_stack', parser.Template({}),
-                             state='foo')
-        self.assertEqual(stack.state, 'foo')
-        stack.state_set('bar', '')
-        self.assertEqual(stack.state, 'bar')
+                             action=parser.Stack.CREATE,
+                             status=parser.Stack.IN_PROGRESS)
+        self.assertEqual(stack.state,
+                         (parser.Stack.CREATE, parser.Stack.IN_PROGRESS))
+        stack.state_set(parser.Stack.CREATE, parser.Stack.COMPLETE, 'test')
+        self.assertEqual(stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+        stack.state_set(parser.Stack.DELETE, parser.Stack.COMPLETE, 'test')
+        self.assertEqual(stack.state,
+                         (parser.Stack.DELETE, parser.Stack.COMPLETE))
 
-    def test_state_description(self):
+    def test_state_bad(self):
         stack = parser.Stack(None, 'test_stack', parser.Template({}),
-                             state_description='quux')
-        self.assertEqual(stack.state_description, 'quux')
-        stack.state_set('blarg', 'wibble')
-        self.assertEqual(stack.state_description, 'wibble')
+                             action=parser.Stack.CREATE,
+                             status=parser.Stack.IN_PROGRESS)
+        self.assertEqual(stack.state,
+                         (parser.Stack.CREATE, parser.Stack.IN_PROGRESS))
+        self.assertRaises(ValueError, stack.state_set,
+                          'baad', parser.Stack.COMPLETE, 'test')
+        self.assertRaises(ValueError, stack.state_set,
+                          parser.Stack.CREATE, 'oops', 'test')
+
+    def test_status_reason(self):
+        stack = parser.Stack(None, 'test_stack', parser.Template({}),
+                             status_reason='quux')
+        self.assertEqual(stack.status_reason, 'quux')
+        stack.state_set(parser.Stack.CREATE, parser.Stack.IN_PROGRESS,
+                        'wibble')
+        self.assertEqual(stack.status_reason, 'wibble')
 
     def test_load_nonexistant_id(self):
         self.assertRaises(exception.NotFound, parser.Stack.load,
@@ -542,7 +560,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.updated_time, None)
         self.stack.store()
         stored_time = self.stack.updated_time
-        self.stack.state_set(self.stack.CREATE_IN_PROGRESS, 'testing')
+        self.stack.state_set(self.stack.CREATE, self.stack.IN_PROGRESS, 'test')
         self.assertNotEqual(self.stack.updated_time, None)
         self.assertNotEqual(self.stack.updated_time, stored_time)
 
@@ -559,7 +577,8 @@ class StackTest(HeatTestCase):
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertEqual(db_s, None)
-        self.assertEqual(self.stack.state, self.stack.DELETE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.DELETE, parser.Stack.COMPLETE))
 
     @stack_delete_after
     def test_delete_rollback(self):
@@ -574,7 +593,8 @@ class StackTest(HeatTestCase):
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertEqual(db_s, None)
-        self.assertEqual(self.stack.state, self.stack.ROLLBACK_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
 
     @stack_delete_after
     def test_delete_badaction(self):
@@ -589,16 +609,20 @@ class StackTest(HeatTestCase):
 
         db_s = db_api.stack_get(self.ctx, stack_id)
         self.assertNotEqual(db_s, None)
-        self.assertEqual(self.stack.state, self.stack.DELETE_FAILED)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.DELETE, parser.Stack.FAILED))
 
     @stack_delete_after
     def test_update_badstate(self):
         self.stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
-                                  state=parser.Stack.CREATE_FAILED)
+                                  action=parser.Stack.CREATE,
+                                  status=parser.Stack.FAILED)
         stack_id = self.stack.store()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_FAILED)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.FAILED))
         self.stack.update({})
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_FAILED)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.FAILED))
 
     @stack_delete_after
     def test_resource_by_refid(self):
@@ -608,7 +632,8 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl))
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
         self.assertTrue('AResource' in self.stack)
         rsrc = self.stack['AResource']
         rsrc.resource_id_set('aaaa')
@@ -630,7 +655,8 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl))
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {
                  'AResource': {'Type': 'GenericResourceType'},
@@ -638,7 +664,8 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
         self.assertTrue('BResource' in self.stack)
 
     @stack_delete_after
@@ -651,14 +678,16 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl))
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
         self.assertFalse('BResource' in self.stack)
 
     @stack_delete_after
@@ -670,7 +699,8 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl))
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Description': 'BTemplate',
                  'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
@@ -678,7 +708,8 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
         self.assertEqual(self.stack.t[template.DESCRIPTION], 'BTemplate')
 
     @stack_delete_after
@@ -694,7 +725,8 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl))
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                              'Properties': {'Foo': 'xyz'}}}}
@@ -708,7 +740,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'xyz')
         self.m.VerifyAll()
 
@@ -726,7 +759,8 @@ class StackTest(HeatTestCase):
                                   disable_rollback=True)
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         res = self.stack['AResource']
         res.update_allowed_keys = ('Properties',)
@@ -748,7 +782,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_FAILED)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.FAILED))
         self.m.VerifyAll()
 
     @stack_delete_after
@@ -765,7 +800,8 @@ class StackTest(HeatTestCase):
                                   disable_rollback=True)
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                              'Properties': {'Foo': 'xyz'}}}}
@@ -784,7 +820,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_FAILED)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.FAILED))
         self.m.VerifyAll()
         # Unset here so destroy() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
@@ -803,7 +840,8 @@ class StackTest(HeatTestCase):
                                   disable_rollback=True)
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                              'Properties': {'Foo': 'xyz'}}}}
@@ -821,7 +859,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_FAILED)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.FAILED))
         self.m.VerifyAll()
 
     @stack_delete_after
@@ -832,7 +871,8 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl))
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {
                  'AResource': {'Type': 'GenericResourceType'},
@@ -846,7 +886,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_FAILED)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.FAILED))
         self.assertTrue('BResource' in self.stack)
 
         # Reload the stack from the DB and prove that it contains the failed
@@ -869,7 +910,8 @@ class StackTest(HeatTestCase):
                                   disable_rollback=False)
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                              'Properties': {'Foo': 'xyz'}}}}
@@ -889,7 +931,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.ROLLBACK_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
         self.m.VerifyAll()
 
@@ -907,7 +950,8 @@ class StackTest(HeatTestCase):
                                   disable_rollback=False)
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                              'Properties': {'Foo': 'xyz'}}}}
@@ -927,7 +971,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.ROLLBACK_FAILED)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.ROLLBACK, parser.Stack.FAILED))
         self.m.VerifyAll()
 
     @stack_delete_after
@@ -939,7 +984,8 @@ class StackTest(HeatTestCase):
                                   disable_rollback=False)
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {
                  'AResource': {'Type': 'GenericResourceType'},
@@ -955,7 +1001,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.ROLLBACK_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
         self.assertFalse('BResource' in self.stack)
         self.m.VerifyAll()
 
@@ -970,7 +1017,8 @@ class StackTest(HeatTestCase):
                                   disable_rollback=False)
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
@@ -984,7 +1032,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.ROLLBACK_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
         self.assertTrue('BResource' in self.stack)
         self.m.VerifyAll()
         # Unset here so delete() is not stubbed for stack.delete cleanup
@@ -1023,7 +1072,8 @@ class StackTest(HeatTestCase):
         self.stack.store()
         self.stack.create()
         self.m.VerifyAll()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
         self.assertEqual(self.stack['BResource'].properties['Foo'],
                          'AResource')
@@ -1042,7 +1092,8 @@ class StackTest(HeatTestCase):
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
                                      template.Template(tmpl2))
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.UPDATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'smelly')
         self.assertEqual(self.stack['BResource'].properties['Foo'], 'inst-007')
         self.m.VerifyAll()
@@ -1082,7 +1133,8 @@ class StackTest(HeatTestCase):
         self.stack.create()
         self.m.VerifyAll()
 
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
         self.assertEqual(self.stack['BResource'].properties['Foo'],
                          'AResource')
@@ -1110,7 +1162,8 @@ class StackTest(HeatTestCase):
                                      template.Template(tmpl2),
                                      disable_rollback=False)
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.ROLLBACK_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
 
         self.m.VerifyAll()
@@ -1150,7 +1203,8 @@ class StackTest(HeatTestCase):
         self.stack.create()
         self.m.VerifyAll()
 
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
         self.assertEqual(self.stack['BResource'].properties['Foo'],
                          'AResource')
@@ -1166,19 +1220,19 @@ class StackTest(HeatTestCase):
             'AResource')
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
-        # self.state_set(self.UPDATE_IN_PROGRESS)
+        # self.state_set(self.UPDATE, self.IN_PROGRESS)
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
-        # self.state_set(self.DELETE_IN_PROGRESS)
+        # self.state_set(self.DELETE, self.IN_PROGRESS)
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
-        # self.state_set(self.DELETE_COMPLETE)
+        # self.state_set(self.DELETE, self.COMPLETE)
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
         # self.properties.validate()
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
-        # self.state_set(self.CREATE_IN_PROGRESS)
+        # self.state_set(self.CREATE, self.IN_PROGRESS)
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
 
@@ -1191,10 +1245,10 @@ class StackTest(HeatTestCase):
         # resource.UpdateReplace because we've not specified the modified
         # key/property in update_allowed_keys/update_allowed_properties
 
-        # self.state_set(self.DELETE_IN_PROGRESS)
+        # self.state_set(self.DELETE, self.IN_PROGRESS)
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
-        # self.state_set(self.DELETE_IN_PROGRESS)
+        # self.state_set(self.DELETE, self.IN_PROGRESS)
         generic_rsrc.GenericResource.FnGetRefId().AndReturn(
             'inst-007')
 
@@ -1211,7 +1265,8 @@ class StackTest(HeatTestCase):
                                      template.Template(tmpl2),
                                      disable_rollback=False)
         self.stack.update(updated_stack)
-        self.assertEqual(self.stack.state, parser.Stack.ROLLBACK_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
 
         self.m.VerifyAll()
@@ -1236,8 +1291,9 @@ class StackTest(HeatTestCase):
 
         stack.create()
 
-        self.assertEqual(stack.state, stack.CREATE_FAILED)
-        self.assertEqual(stack.state_description, 'Timed out')
+        self.assertEqual(stack.state,
+                         (parser.Stack.CREATE, parser.Stack.FAILED))
+        self.assertEqual(stack.status_reason, 'Timed out')
 
         self.m.VerifyAll()
 
@@ -1296,7 +1352,8 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl))
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state, parser.Stack.CREATE_COMPLETE)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
         self.assertTrue('AResource' in self.stack)
         rsrc = self.stack['AResource']
         rsrc.resource_id_set('aaaa')

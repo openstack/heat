@@ -73,7 +73,8 @@ class StackResource(resource.Resource):
     def check_create_complete(self, stack_creator):
         done = stack_creator.step()
         if done:
-            if self._nested.state != self._nested.CREATE_COMPLETE:
+            if self._nested.state != (self._nested.CREATE,
+                                      self._nested.COMPLETE):
                 raise exception.Error(self._nested.state_description)
 
         return done

@@ -235,9 +235,9 @@ class WatchRule(object):
                         new_state)
         else:
             s = db_api.stack_get(self.context, self.stack_id)
-            if s and s.status in (parser.Stack.CREATE_COMPLETE,
-                                  parser.Stack.UPDATE_COMPLETE):
-                stack = parser.Stack.load(self.context, stack=s)
+            stack = parser.Stack.load(self.context, stack=s)
+            if (stack.action != stack.DELETE
+                    and stack.status == stack.COMPLETE):
                 for a in self.rule[self.ACTION_MAP[new_state]]:
                     actions.append(stack[a].alarm)
             else:
