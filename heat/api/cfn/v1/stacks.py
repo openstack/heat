@@ -324,6 +324,7 @@ class StackController(object):
 
         args = {'template': stack,
                 'params': stack_parms,
+                'files': {},
                 'args': create_args}
         try:
             stack_name = req.params['StackName']

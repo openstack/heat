@@ -67,7 +67,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt, self.make_msg('show_stack',
                                              stack_identity=stack_identity))
 
-    def create_stack(self, ctxt, stack_name, template, params, args):
+    def create_stack(self, ctxt, stack_name, template, params, files, args):
         """
         The create_stack method creates a new stack using the template
         provided.
@@ -78,14 +78,16 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         :param stack_name: Name of the stack you want to create.
         :param template: Template of stack you want to create.
         :param params: Stack Input Params/Environment
+        :param files: files referenced from the environment.
         :param args: Request parameters/args passed from API
         """
         return self.call(ctxt,
                          self.make_msg('create_stack', stack_name=stack_name,
                                        template=template,
-                                       params=params, args=args))
+                                       params=params, files=files, args=args))
 
-    def update_stack(self, ctxt, stack_identity, template, params, args):
+    def update_stack(self, ctxt, stack_identity, template, params,
+                     files, args):
         """
         The update_stack method updates an existing stack based on the
         provided template and parameters.
@@ -96,12 +98,15 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         :param stack_name: Name of the stack you want to create.
         :param template: Template of stack you want to create.
         :param params: Stack Input Params/Environment
+        :param files: files referenced from the environment.
         :param args: Request parameters/args passed from API
         """
         return self.call(ctxt, self.make_msg('update_stack',
                                              stack_identity=stack_identity,
                                              template=template,
-                                             params=params, args=args))
+                                             params=params,
+                                             files=files,
+                                             args=args))
 
     def validate_template(self, ctxt, template):
         """

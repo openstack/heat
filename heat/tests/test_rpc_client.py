@@ -92,6 +92,7 @@ class EngineRpcAPITestCase(testtools.TestCase):
         self._test_engine_api('create_stack', 'call', stack_name='wordpress',
                               template={u'Foo': u'bar'},
                               params={u'InstanceType': u'm1.xlarge'},
+                              files={u'a_file': u'the contents'},
                               args={'timeout_mins': u'30'})
 
     def test_update_stack(self):
@@ -99,6 +100,7 @@ class EngineRpcAPITestCase(testtools.TestCase):
                               stack_identity=self.identity,
                               template={u'Foo': u'bar'},
                               params={u'InstanceType': u'm1.xlarge'},
+                              files={},
                               args={})
 
     def test_validate_template(self):

@@ -38,12 +38,13 @@ class Template(collections.Mapping):
 
         return super(Template, cls).__new__(cls)
 
-    def __init__(self, template, template_id=None):
+    def __init__(self, template, template_id=None, files=None):
         '''
         Initialise the template with a JSON object and a set of Parameters
         '''
         self.id = template_id
         self.t = template
+        self.files = files or {}
         self.maps = self[MAPPINGS]
 
     @classmethod

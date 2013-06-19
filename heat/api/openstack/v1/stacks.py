@@ -45,12 +45,14 @@ class InstantiationData(object):
         PARAM_TEMPLATE_URL,
         PARAM_USER_PARAMS,
         PARAM_ENVIRONMENT,
+        PARAM_FILES,
     ) = (
         'stack_name',
         'template',
         'template_url',
         'parameters',
         'environment',
+        'files',
     )
 
     def __init__(self, data):
@@ -129,6 +131,9 @@ class InstantiationData(object):
         env[self.PARAM_USER_PARAMS].update(parameters)
         return env
 
+    def files(self):
+        return self.data.get(self.PARAM_FILES, {})
+
     def args(self):
         """
         Get any additional arguments supplied by the user.
@@ -205,6 +210,7 @@ class StackController(object):
                                               data.stack_name(),
                                               data.template(),
                                               data.environment(),
+                                              data.files(),
                                               data.args())
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)
@@ -280,6 +286,7 @@ class StackController(object):
                                            identity,
                                            data.template(),
                                            data.environment(),
+                                           data.files(),
                                            data.args())
         except rpc_common.RemoteError as ex:
             return util.remote_error(ex)

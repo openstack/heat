@@ -474,6 +474,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'args': {'stack_name': stack_name,
                            'template': template,
                            'params': engine_parms,
+                           'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None).AndReturn(engine_resp)
 
@@ -537,6 +538,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'args': {'stack_name': stack_name,
                            'template': template,
                            'params': engine_parms,
+                           'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("AttributeError"))
@@ -546,6 +548,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'args': {'stack_name': stack_name,
                            'template': template,
                            'params': engine_parms,
+                           'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("UnknownUserParameter"))
@@ -588,6 +591,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'args': {'stack_name': stack_name,
                            'template': template,
                            'params': engine_parms,
+                           'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("StackExists"))
@@ -623,6 +627,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'args': {'stack_name': stack_name,
                   'template': template,
                   'params': engine_parms,
+                  'files': {},
                   'args': engine_args},
                   'version': self.api_version}, None).AndRaise(
                       rpc_common.RemoteError(
@@ -666,6 +671,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'args': {'stack_identity': identity,
                            'template': template,
                            'params': engine_parms,
+                           'files': {},
                            'args': engine_args},
                   'version': self.api_version},
                  None).AndReturn(identity)
