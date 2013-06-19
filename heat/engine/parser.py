@@ -295,7 +295,7 @@ class Stack(object):
         res = None
 
         def resource_create(r):
-            return r.create
+            return r.create()
 
         create_task = scheduler.DependencyTaskGroup(self.dependencies,
                                                     resource_create)
