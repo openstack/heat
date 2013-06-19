@@ -126,6 +126,16 @@ quantum_floating_template = '''
         "floatingip_id": { "Ref" : "floating_ip" },
         "port_id": { "Ref" : "port_floating" }
       }
+    },
+    "router": {
+      "Type": "OS::Quantum::Router"
+    },
+    "gateway": {
+      "Type": "OS::Quantum::RouterGateway",
+      "Properties": {
+        "router_id": { "Ref" : "router" },
+        "network_id": "abcd1234"
+      }
     }
   }
 }
@@ -620,6 +630,11 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         t = template_format.parse(quantum_floating_template)
         stack = parse_stack(t)
+
+        # assert the implicit dependency between the floating_ip
+        # and the gateway
+        deps = stack.dependencies[stack['gateway']]
+        self.assertIn(stack['floating_ip'], deps)
 
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()
