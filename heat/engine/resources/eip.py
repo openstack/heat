@@ -14,7 +14,6 @@
 #    under the License.
 
 from heat.engine import clients
-from heat.common import exception
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
@@ -26,6 +25,11 @@ class ElasticIp(resource.Resource):
     properties_schema = {'Domain': {'Type': 'String',
                                     'Implemented': False},
                          'InstanceId': {'Type': 'String'}}
+    attributes_schema = {
+        "AllocationId": ("ID that AWS assigns to represent the allocation of"
+                         "the address for use with Amazon VPC. Returned only"
+                         " for VPC elastic IP addresses.")
+    }
 
     def __init__(self, name, json_snippet, stack):
         super(ElasticIp, self).__init__(name, json_snippet, stack)
@@ -69,12 +73,9 @@ class ElasticIp(resource.Resource):
     def FnGetRefId(self):
         return unicode(self._ipaddress())
 
-    def FnGetAtt(self, key):
-        if key == 'AllocationId':
+    def _resolve_attribute(self, name):
+        if name == 'AllocationId':
             return unicode(self.resource_id)
-        else:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
 
 
 class ElasticIpAssociation(resource.Resource):

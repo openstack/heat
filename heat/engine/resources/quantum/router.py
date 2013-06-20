@@ -30,6 +30,14 @@ class Router(quantum.QuantumResource):
                                          'Default': {}},
                          'admin_state_up': {'Type': 'Boolean',
                                             'Default': True}}
+    attributes_schema = {
+        "status": "the status of the router",
+        "external_gateway_info": "gateway network for the router",
+        "name": "friendly name of the router",
+        "admin_state_up": "administrative state of the router",
+        "tenant_id": "tenant owning the router",
+        "id": "unique identifier for the router"
+    }
 
     def handle_create(self):
         props = self.prepare_properties(
@@ -53,14 +61,6 @@ class Router(quantum.QuantumResource):
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex
-
-    def FnGetAtt(self, key):
-        try:
-            attributes = self._show_resource()
-        except QuantumClientException as ex:
-            logger.warn("failed to fetch resource attributes: %s" % str(ex))
-            return None
-        return self.handle_get_attributes(self.name, key, attributes)
 
 
 class RouterInterface(quantum.QuantumResource):

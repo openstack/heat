@@ -42,6 +42,19 @@ class Port(quantum.QuantumResource):
                          'mac_address': {'Type': 'String'},
                          'device_id': {'Type': 'String'},
                          'security_groups': {'Type': 'List'}}
+    attributes_schema = {
+        "admin_state_up": "the administrative state of this port",
+        "device_id": "unique identifier for the device",
+        "device_owner": "name of the network owning the port",
+        "fixed_ips": "fixed ip addresses",
+        "id": "the unique identifier for the port",
+        "mac_address": "mac address of the port",
+        "name": "friendly name of the port",
+        "network_id": "unique identifier for the network owning the port",
+        "security_groups": "a list of security groups for the port",
+        "status": "the status of the port",
+        "tenant_id": "tenant owning the port"
+    }
 
     def handle_create(self):
         props = self.prepare_properties(
@@ -65,14 +78,6 @@ class Port(quantum.QuantumResource):
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex
-
-    def FnGetAtt(self, key):
-        try:
-            attributes = self._show_resource()
-        except QuantumClientException as ex:
-            logger.warn("failed to fetch resource attributes: %s" % str(ex))
-            return None
-        return self.handle_get_attributes(self.name, key, attributes)
 
 
 def resource_mapping():

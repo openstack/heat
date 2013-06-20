@@ -73,6 +73,10 @@ class InstanceGroup(resource.Resource):
     }
     update_allowed_keys = ('Properties',)
     update_allowed_properties = ('Size',)
+    attributes_schema = {
+        "InstanceList": ("A comma-delimited list of server ip addresses. "
+                         "(Heat extension)")
+    }
 
     def handle_create(self):
         return self.resize(int(self.properties['Size']), raise_on_error=True)
@@ -220,14 +224,14 @@ class InstanceGroup(resource.Resource):
     def FnGetRefId(self):
         return unicode(self.name)
 
-    def FnGetAtt(self, key):
+    def _resolve_attribute(self, name):
         '''
         heat extension: "InstanceList" returns comma delimited list of server
         ip addresses.
         '''
-        if key == 'InstanceList':
+        if name == 'InstanceList':
             if self.resource_id is None:
-                return ''
+                return None
             name_list = sorted(self.resource_id.split(','))
             inst_list = []
             for name in name_list:

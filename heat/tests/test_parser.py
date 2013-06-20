@@ -1357,7 +1357,7 @@ class StackTest(HeatTestCase):
         self.assertTrue('AResource' in self.stack)
         rsrc = self.stack['AResource']
         rsrc.resource_id_set('aaaa')
-        self.assertEqual('AResource', rsrc.FnGetAtt('foo'))
+        self.assertEqual('AResource', rsrc.FnGetAtt('Foo'))
 
         for action, status in (
                 (rsrc.CREATE, rsrc.IN_PROGRESS),

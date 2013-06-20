@@ -167,7 +167,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc.handle_update(rsrc.json_snippet, {}, {'Instances': id_list})
 
         self.assertEqual('4.5.6.7', rsrc.FnGetAtt('DNSName'))
-        self.assertEqual('', rsrc.FnGetAtt('SourceSecurityGroupName'))
+        self.assertEqual('', rsrc.FnGetAtt('SourceSecurityGroup.GroupName'))
 
         try:
             rsrc.FnGetAtt('Foo')

@@ -109,6 +109,18 @@ class Instance(resource.Resource):
                          'UserData': {'Type': 'String'},
                          'Volumes': {'Type': 'List'}}
 
+    attributes_schema = {'AvailabilityZone': ('The Availability Zone where the'
+                                              ' specified instance is '
+                                              'launched.'),
+                         'PrivateDnsName': ('Private DNS name of the specified'
+                                            ' instance.'),
+                         'PublicDnsName': ('Public DNS name of the specified '
+                                           'instance.'),
+                         'PrivateIp': ('Private IP address of the specified '
+                                       'instance.'),
+                         'PublicIp': ('Public IP address of the specified '
+                                      'instance.')}
+
     # template keys supported for handle_update, note trailing comma
     # is required for a single item to get a tuple not a string
     update_allowed_keys = ('Metadata',)
@@ -153,24 +165,16 @@ class Instance(resource.Resource):
 
         return self.ipaddress or '0.0.0.0'
 
-    def FnGetAtt(self, key):
+    def _resolve_attribute(self, name):
         res = None
-        if key == 'AvailabilityZone':
+        if name == 'AvailabilityZone':
             res = self.properties['AvailabilityZone']
-        elif key == 'PublicIp':
+        elif name in ['PublicIp', 'PrivateIp', 'PublicDnsName',
+                      'PrivateDnsName']:
             res = self._ipaddress()
-        elif key == 'PrivateIp':
-            res = self._ipaddress()
-        elif key == 'PublicDnsName':
-            res = self._ipaddress()
-        elif key == 'PrivateDnsName':
-            res = self._ipaddress()
-        else:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=key)
 
-        logger.info('%s.GetAtt(%s) == %s' % (self.name, key, res))
-        return unicode(res)
+        logger.info('%s._resolve_attribute(%s) == %s' % (self.name, name, res))
+        return unicode(res) if res else None
 
     def _build_userdata(self, userdata):
         if not self.mime_string:
