@@ -203,12 +203,12 @@ class EngineService(service.Service):
         def _stack_create(stack):
             # Create the stack, and create the periodic task if successful
             stack.create()
-            if stack.state == stack.CREATE_COMPLETE:
+            if stack.action == stack.CREATE and stack.status == stack.COMPLETE:
                 # Schedule a periodic watcher task for this stack
                 self._timer_in_thread(stack.id, self._periodic_watcher_task,
                                       sid=stack.id)
             else:
-                logger.warning("Stack create failed, state %s" % stack.state)
+                logger.warning("Stack create failed, status %s" % stack.status)
 
         if db_api.stack_get_by_name(cnxt, stack_name):
             raise exception.StackExists(stack_name=stack_name)
