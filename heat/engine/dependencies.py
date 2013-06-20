@@ -168,6 +168,15 @@ class Dependencies(object):
 
         return self
 
+    def required_by(self, last):
+        '''
+        List the keys that require the specified node.
+        '''
+        if last not in self._graph:
+            raise KeyError
+
+        return self._graph[last].required_by()
+
     def __getitem__(self, last):
         '''
         Return a partial dependency graph consisting of the specified node and
