@@ -61,6 +61,11 @@ class KeystoneClient(object):
         the heat_stack_user_role as defined in the config
         Returns the keystone ID of the resulting user
         """
+        if(len(username) > 64):
+            logger.warning("Truncating the username %s to the last 64 "
+                           "characters." % username)
+            #get the last 64 characters of the username
+            username = username[-64:]
         user = self.client.users.create(username,
                                         password,
                                         '%s@heat-api.org' %
