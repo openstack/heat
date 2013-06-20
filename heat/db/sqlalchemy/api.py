@@ -16,10 +16,10 @@
 '''Implementation of SQLAlchemy backend.'''
 from sqlalchemy.orm.session import Session
 
-from heat.common.exception import NotFound
+from heat.common import crypt
+from heat.common import exception
 from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy.session import get_session
-from heat.common import crypt
 
 
 def model_query(context, *args):
@@ -37,7 +37,8 @@ def raw_template_get(context, template_id):
     result = model_query(context, models.RawTemplate).get(template_id)
 
     if not result:
-        raise NotFound("raw template with id %s not found" % template_id)
+        raise exception.NotFound('raw template with id %s not found' %
+                                 template_id)
 
     return result
 
@@ -46,7 +47,7 @@ def raw_template_get_all(context):
     results = model_query(context, models.RawTemplate).all()
 
     if not results:
-        raise NotFound('no raw templates were found')
+        raise exception.NotFound('no raw templates were found')
 
     return results
 
@@ -62,7 +63,7 @@ def resource_get(context, resource_id):
     result = model_query(context, models.Resource).get(resource_id)
 
     if not result:
-        raise NotFound("resource with id %s not found" % resource_id)
+        raise exception.NotFound("resource with id %s not found" % resource_id)
 
     return result
 
@@ -91,7 +92,7 @@ def resource_get_all(context):
     results = model_query(context, models.Resource).all()
 
     if not results:
-        raise NotFound('no resources were found')
+        raise exception.NotFound('no resources were found')
 
     return results
 
@@ -108,7 +109,8 @@ def resource_get_all_by_stack(context, stack_id):
         filter_by(stack_id=stack_id).all()
 
     if not results:
-        raise NotFound("no resources for stack_id %s were found" % stack_id)
+        raise exception.NotFound("no resources for stack_id %s were found" %
+                                 stack_id)
 
     return results
 
@@ -161,8 +163,8 @@ def stack_update(context, stack_id, values):
     stack = stack_get(context, stack_id)
 
     if not stack:
-        raise NotFound('Attempt to update a stack with id: %s %s' %
-                      (stack_id, 'that does not exist'))
+        raise exception.NotFound('Attempt to update a stack with id: %s %s' %
+                                 (stack_id, 'that does not exist'))
 
     old_template_id = stack.raw_template_id
 
@@ -181,8 +183,8 @@ def stack_update(context, stack_id, values):
 def stack_delete(context, stack_id):
     s = stack_get(context, stack_id)
     if not s:
-        raise NotFound('Attempt to delete a stack with id: %s %s' %
-                      (stack_id, 'that does not exist'))
+        raise exception.NotFound('Attempt to delete a stack with id: %s %s' %
+                                 (stack_id, 'that does not exist'))
 
     session = Session.object_session(s)
 
@@ -293,8 +295,8 @@ def watch_rule_update(context, watch_id, values):
     wr = watch_rule_get(context, watch_id)
 
     if not wr:
-        raise NotFound('Attempt to update a watch with id: %s %s' %
-                      (watch_id, 'that does not exist'))
+        raise exception.NotFound('Attempt to update a watch with id: %s %s' %
+                                 (watch_id, 'that does not exist'))
 
     wr.update(values)
     wr.save(_session(context))
@@ -305,8 +307,8 @@ def watch_rule_delete(context, watch_name):
         filter_by(name=watch_name).first()
 
     if not wr:
-        raise NotFound('Attempt to delete a watch_rule with name: %s %s' %
-                      (watch_name, 'that does not exist'))
+        raise exception.NotFound('Attempt to delete watch_rule: %s %s' %
+                                 (watch_name, 'that does not exist'))
 
     session = Session.object_session(wr)
 
@@ -334,8 +336,8 @@ def watch_data_delete(context, watch_name):
         filter_by(name=watch_name).all()
 
     if not ds:
-        raise NotFound('Attempt to delete watch_data with name: %s %s' %
-                      (watch_name, 'that does not exist'))
+        raise exception.NotFound('Attempt to delete watch_data: %s %s' %
+                                 (watch_name, 'that does not exist'))
 
     session = Session.object_session(ds)
     for d in ds:

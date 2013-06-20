@@ -21,8 +21,13 @@ import functools
 import urlparse
 import sys
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import exception
 
-from heat.openstack.common.exception import *
+
+OpenstackException = exception.OpenstackException
+NotFound = exception.NotFound
+Error = exception.Error
+InvalidContentType = exception.InvalidContentType
 
 
 class RedirectException(Exception):

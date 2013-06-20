@@ -12,21 +12,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from sqlalchemy import *
-from migrate import *
+import sqlalchemy
 
 
 def upgrade(migrate_engine):
-    meta = MetaData()
+    meta = sqlalchemy.MetaData()
     meta.bind = migrate_engine
 
-    stack = Table('stack', meta, autoload=True)
+    stack = sqlalchemy.Table('stack', meta, autoload=True)
     stack.c.timeout.alter(nullable=True)
 
 
 def downgrade(migrate_engine):
-    meta = MetaData()
+    meta = sqlalchemy.MetaData()
     meta.bind = migrate_engine
 
-    stack = Table('stack', meta, autoload=True)
+    stack = sqlalchemy.Table('stack', meta, autoload=True)
     stack.c.timeout.alter(nullable=False)
