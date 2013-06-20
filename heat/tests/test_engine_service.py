@@ -25,7 +25,7 @@ from heat.common import context
 from heat.engine import environment
 from heat.common import exception
 from heat.tests.v1_1 import fakes
-import heat.engine.api as engine_api
+import heat.rpc.api as engine_api
 import heat.db.api as db_api
 from heat.common import identifier
 from heat.common import template_format

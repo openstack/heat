@@ -15,13 +15,15 @@
 SQLAlchemy models for heat data.
 """
 
-from sqlalchemy import *
+import sqlalchemy
+
 from sqlalchemy.orm import relationship, backref, object_mapper
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import types as types
+from sqlalchemy import types
 from json import dumps
 from json import loads
+from heat.openstack.common import exception
 from heat.openstack.common import uuidutils
 from heat.openstack.common import timeutils
 from heat.db.sqlalchemy.session import get_session
@@ -44,8 +46,10 @@ class HeatBase(object):
     """Base class for Heat Models."""
     __table_args__ = {'mysql_engine': 'InnoDB'}
     __table_initialized__ = False
-    created_at = Column(DateTime, default=timeutils.utcnow)
-    updated_at = Column(DateTime, onupdate=timeutils.utcnow)
+    created_at = sqlalchemy.Column(sqlalchemy.DateTime,
+                                   default=timeutils.utcnow)
+    updated_at = sqlalchemy.Column(sqlalchemy.DateTime,
+                                   onupdate=timeutils.utcnow)
 
     def save(self, session=None):
         """Save this object."""
@@ -137,8 +141,8 @@ class RawTemplate(BASE, HeatBase):
     """Represents an unparsed template which should be in JSON format."""
 
     __tablename__ = 'raw_template'
-    id = Column(Integer, primary_key=True)
-    template = Column(Json)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    template = sqlalchemy.Column(Json)
 
 
 class Stack(BASE, HeatBase):
@@ -146,26 +150,27 @@ class Stack(BASE, HeatBase):
 
     __tablename__ = 'stack'
 
-    id = Column(String, primary_key=True, default=uuidutils.generate_uuid)
-    name = Column(String)
-    raw_template_id = Column(
-        Integer,
-        ForeignKey('raw_template.id'),
+    id = sqlalchemy.Column(sqlalchemy.String, primary_key=True,
+                           default=uuidutils.generate_uuid)
+    name = sqlalchemy.Column(sqlalchemy.String)
+    raw_template_id = sqlalchemy.Column(
+        sqlalchemy.Integer,
+        sqlalchemy.ForeignKey('raw_template.id'),
         nullable=False)
     raw_template = relationship(RawTemplate, backref=backref('stack'))
-    username = Column(String)
-    tenant = Column(String)
-    action = Column('action', String)
-    status = Column('status', String)
-    status_reason = Column('status_reason', String)
-    parameters = Column('parameters', Json)
-    user_creds_id = Column(
-        Integer,
-        ForeignKey('user_creds.id'),
+    username = sqlalchemy.Column(sqlalchemy.String)
+    tenant = sqlalchemy.Column(sqlalchemy.String)
+    action = sqlalchemy.Column('action', sqlalchemy.String)
+    status = sqlalchemy.Column('status', sqlalchemy.String)
+    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String)
+    parameters = sqlalchemy.Column('parameters', Json)
+    user_creds_id = sqlalchemy.Column(
+        sqlalchemy.Integer,
+        sqlalchemy.ForeignKey('user_creds.id'),
         nullable=False)
-    owner_id = Column(String, nullable=True)
-    timeout = Column(Integer)
-    disable_rollback = Column(Boolean)
+    owner_id = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    timeout = sqlalchemy.Column(sqlalchemy.Integer)
+    disable_rollback = sqlalchemy.Column(sqlalchemy.Boolean)
 
 
 class UserCreds(BASE, HeatBase):
@@ -176,16 +181,16 @@ class UserCreds(BASE, HeatBase):
 
     __tablename__ = 'user_creds'
 
-    id = Column(Integer, primary_key=True)
-    username = Column(String)
-    password = Column(String)
-    service_user = Column(String)
-    service_password = Column(String)
-    tenant = Column(String)
-    auth_url = Column(String)
-    aws_auth_url = Column(String)
-    tenant_id = Column(String)
-    aws_creds = Column(String)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    username = sqlalchemy.Column(sqlalchemy.String)
+    password = sqlalchemy.Column(sqlalchemy.String)
+    service_user = sqlalchemy.Column(sqlalchemy.String)
+    service_password = sqlalchemy.Column(sqlalchemy.String)
+    tenant = sqlalchemy.Column(sqlalchemy.String)
+    auth_url = sqlalchemy.Column(sqlalchemy.String)
+    aws_auth_url = sqlalchemy.Column(sqlalchemy.String)
+    tenant_id = sqlalchemy.Column(sqlalchemy.String)
+    aws_creds = sqlalchemy.Column(sqlalchemy.String)
     stack = relationship(Stack, backref=backref('user_creds'))
 
 
@@ -194,17 +199,19 @@ class Event(BASE, HeatBase):
 
     __tablename__ = 'event'
 
-    id = Column(Integer, primary_key=True)
-    stack_id = Column(String, ForeignKey('stack.id'), nullable=False)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    stack_id = sqlalchemy.Column(sqlalchemy.String,
+                                 sqlalchemy.ForeignKey('stack.id'),
+                                 nullable=False)
     stack = relationship(Stack, backref=backref('events'))
 
-    resource_action = Column(String)
-    resource_status = Column(String)
-    logical_resource_id = Column(String)
-    physical_resource_id = Column(String)
-    resource_status_reason = Column(String)
-    resource_type = Column(String)
-    resource_properties = Column(PickleType)
+    resource_action = sqlalchemy.Column(sqlalchemy.String)
+    resource_status = sqlalchemy.Column(sqlalchemy.String)
+    logical_resource_id = sqlalchemy.Column(sqlalchemy.String)
+    physical_resource_id = sqlalchemy.Column(sqlalchemy.String)
+    resource_status_reason = sqlalchemy.Column(sqlalchemy.String)
+    resource_type = sqlalchemy.Column(sqlalchemy.String)
+    resource_properties = sqlalchemy.Column(sqlalchemy.PickleType)
 
 
 class Resource(BASE, HeatBase):
@@ -212,16 +219,20 @@ class Resource(BASE, HeatBase):
 
     __tablename__ = 'resource'
 
-    id = Column(String, primary_key=True, default=uuidutils.generate_uuid)
-    action = Column('action', String)
-    status = Column('status', String)
-    name = Column('name', String, nullable=False)
-    nova_instance = Column('nova_instance', String)
-    status_reason = Column('status_reason', String)
+    id = sqlalchemy.Column(sqlalchemy.Integer,
+                           primary_key=True,
+                           default=uuidutils.generate_uuid)
+    action = sqlalchemy.Column('action', sqlalchemy.String)
+    status = sqlalchemy.Column('status', sqlalchemy.String)
+    name = sqlalchemy.Column('name', sqlalchemy.String, nullable=False)
+    nova_instance = sqlalchemy.Column('nova_instance', sqlalchemy.String)
+    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String)
     # odd name as "metadata" is reserved
-    rsrc_metadata = Column('rsrc_metadata', Json)
+    rsrc_metadata = sqlalchemy.Column('rsrc_metadata', Json)
 
-    stack_id = Column(String, ForeignKey('stack.id'), nullable=False)
+    stack_id = sqlalchemy.Column(sqlalchemy.String,
+                                 sqlalchemy.ForeignKey('stack.id'),
+                                 nullable=False)
     stack = relationship(Stack, backref=backref('resources'))
 
 
@@ -230,13 +241,16 @@ class WatchRule(BASE, HeatBase):
 
     __tablename__ = 'watch_rule'
 
-    id = Column(Integer, primary_key=True)
-    name = Column('name', String, nullable=False)
-    rule = Column('rule', Json)
-    state = Column('state', String)
-    last_evaluated = Column(DateTime, default=timeutils.utcnow)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    name = sqlalchemy.Column('name', sqlalchemy.String, nullable=False)
+    rule = sqlalchemy.Column('rule', Json)
+    state = sqlalchemy.Column('state', sqlalchemy.String)
+    last_evaluated = sqlalchemy.Column(sqlalchemy.DateTime,
+                                       default=timeutils.utcnow)
 
-    stack_id = Column(String, ForeignKey('stack.id'), nullable=False)
+    stack_id = sqlalchemy.Column(sqlalchemy.String,
+                                 sqlalchemy.ForeignKey('stack.id'),
+                                 nullable=False)
     stack = relationship(Stack, backref=backref('watch_rule'))
 
 
@@ -245,11 +259,11 @@ class WatchData(BASE, HeatBase):
 
     __tablename__ = 'watch_data'
 
-    id = Column(Integer, primary_key=True)
-    data = Column('data', Json)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    data = sqlalchemy.Column('data', Json)
 
-    watch_rule_id = Column(
-        Integer,
-        ForeignKey('watch_rule.id'),
+    watch_rule_id = sqlalchemy.Column(
+        sqlalchemy.Integer,
+        sqlalchemy.ForeignKey('watch_rule.id'),
         nullable=False)
     watch_rule = relationship(WatchRule, backref=backref('watch_data'))

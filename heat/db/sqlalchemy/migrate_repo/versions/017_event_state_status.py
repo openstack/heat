@@ -12,26 +12,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from sqlalchemy import *
-from migrate import *
+import sqlalchemy
 
 
 def upgrade(migrate_engine):
-    meta = MetaData()
+    meta = sqlalchemy.MetaData()
     meta.bind = migrate_engine
 
-    event = Table('event', meta, autoload=True)
+    event = sqlalchemy.Table('event', meta, autoload=True)
     # Currently there is a 'name' column which really holds the
     # resource status, so rename it and add a separate action column
     # action is e.g "CREATE" and status is e.g "IN_PROGRESS"
     event.c.name.alter(name='resource_status')
-    Column('resource_action', String(255)).create(event)
+    sqlalchemy.Column('resource_action', sqlalchemy.String(255)).create(event)
 
 
 def downgrade(migrate_engine):
-    meta = MetaData()
+    meta = sqlalchemy.MetaData()
     meta.bind = migrate_engine
 
-    event = Table('event', meta, autoload=True)
+    event = sqlalchemy.Table('event', meta, autoload=True)
     event.c.resource_status.alter(name='name')
     event.c.resource_action.drop()

@@ -22,6 +22,7 @@ import webob
 from heat.common import context
 from heat.db import api as db_api
 from heat.engine import api
+from heat.rpc import api as rpc_api
 from heat.engine import clients
 from heat.engine.event import Event
 from heat.engine import environment
@@ -619,5 +620,5 @@ class EngineService(service.Service):
         # Return the watch with the state overriden to indicate success
         # We do not update the timestamps as we are not modifying the DB
         result = api.format_watch(wr)
-        result[api.WATCH_STATE_VALUE] = state
+        result[rpc_api.WATCH_STATE_VALUE] = state
         return result

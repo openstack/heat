@@ -12,31 +12,30 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from sqlalchemy import *
-from migrate import *
+import sqlalchemy
 
 
 def upgrade(migrate_engine):
-    meta = MetaData()
-    meta.bind = migrate_engine
+    meta = sqlalchemy.MetaData(bind=migrate_engine)
 
-    resource = Table('resource', meta, autoload=True)
+    resource = sqlalchemy.Table('resource', meta, autoload=True)
     # Align the current state/state_description with the
     # action/status now used in the event table
-    Column('action', String(length=255,
-                            convert_unicode=False,
-                            assert_unicode=None,
-                            unicode_error=None,
-                            _warn_on_bytestring=False)).create(resource)
+    action = sqlalchemy.Column('action',
+                               sqlalchemy.String(length=255,
+                                                 convert_unicode=False,
+                                                 assert_unicode=None,
+                                                 unicode_error=None,
+                                                 _warn_on_bytestring=False))
+    action.create(resource)
     resource.c.state.alter(name='status')
     resource.c.state_description.alter(name='status_reason')
 
 
 def downgrade(migrate_engine):
-    meta = MetaData()
-    meta.bind = migrate_engine
+    meta = sqlalchemy.MetaData(bind=migrate_engine)
 
-    resource = Table('resource', meta, autoload=True)
+    resource = sqlalchemy.Table('resource', meta, autoload=True)
     resource.c.status.drop()
     resource.c.status.alter(name='state')
     resource.c.status_reason.alter(name='state_description')
