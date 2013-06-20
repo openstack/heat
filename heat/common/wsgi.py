@@ -427,14 +427,6 @@ class Request(webob.Request):
             return content_type
 
 
-def is_json_content_type(request):
-    content_type = request.params.get("ContentType") or request.content_type
-    if content_type in ('JSON', 'application/json')\
-            and request.body.startswith('{'):
-        return True
-    return False
-
-
 class JSONRequestDeserializer(object):
     def has_body(self, request):
         """
@@ -442,7 +434,9 @@ class JSONRequestDeserializer(object):
 
         :param request:  Webob.Request object
         """
-        if request.content_length > 0 and is_json_content_type(request):
+        if 'transfer-encoding' in request.headers:
+            return True
+        elif request.content_length > 0:
             return True
 
         return False
