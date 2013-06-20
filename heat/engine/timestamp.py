@@ -18,7 +18,7 @@ from heat.common import exception
 
 class Timestamp(object):
     '''
-    A descriptor for fetching an up-to-date timestamp from the database.
+    A descriptor for writing a timestamp to the database.
     '''
 
     def __init__(self, db_fetch, attribute):
@@ -32,13 +32,12 @@ class Timestamp(object):
 
     def __get__(self, obj, obj_class):
         '''
-        Get the latest data from the database for the given object and class.
+        Get timestamp for the given object and class.
         '''
         if obj is None or obj.id is None:
             return None
 
         o = self.db_fetch(obj.context, obj.id)
-        o.refresh(attrs=[self.attribute])
         return getattr(o, self.attribute)
 
     def __set__(self, obj, timestamp):
