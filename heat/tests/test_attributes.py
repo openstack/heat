@@ -45,6 +45,7 @@ class AttributeTest(common.HeatTestCase):
                          "Unexpected attribute value")
         self.assertIsNone(test_attr.value,
                           "Second attrib value should be None")
+        self.m.VerifyAll()
 
     def test_as_output(self):
         """Test that Attribute looks right when viewed as an Output."""
@@ -70,6 +71,10 @@ class AttributesTest(common.HeatTestCase):
         "test2": "Test attrib 2",
         "test3": "Test attrib 3"
     }
+
+    def setUp(self):
+        super(AttributesTest, self).setUp()
+        self.addCleanup(self.m.VerifyAll)
 
     def test_get_attribute(self):
         """Test that we get the attribute values we expect."""
