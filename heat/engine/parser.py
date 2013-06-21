@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
 import functools
 import re
 
@@ -26,6 +25,7 @@ from heat.engine import resources
 from heat.engine import scheduler
 from heat.engine import template
 from heat.engine import timestamp
+from heat.engine import update
 from heat.engine.parameters import Parameters
 from heat.engine.template import Template
 from heat.engine.clients import Clients
@@ -351,104 +351,48 @@ class Stack(object):
         for r in self:
             r.cache_template()
 
-        # Now make the resources match the new stack definition
-        with eventlet.Timeout(self.timeout_secs()) as tmo:
+        try:
+            update_task = update.StackUpdate(self, newstack)
+            updater = scheduler.TaskRunner(update_task)
             try:
-                # First delete any resources which are not in newstack
-                for res in reversed(self):
-                    if res.name not in newstack.keys():
-                        logger.debug("resource %s not found in updated stack"
-                                     % res.name + " definition, deleting")
-                        # res.destroy raises exception.ResourceFailure on error
-                        res.destroy()
-                        del self.resources[res.name]
-                        self.dependencies = self._get_dependencies(
-                            self.resources.itervalues())
+                updater(timeout=self.timeout_secs())
+            finally:
+                cur_deps = self._get_dependencies(self.resources.itervalues())
+                self.dependencies = cur_deps
 
-                # Then create any which are defined in newstack but not self
-                for res in newstack:
-                    if res.name not in self.keys():
-                        logger.debug("resource %s not found in current stack"
-                                     % res.name + " definition, adding")
-                        res.stack = self
-                        self[res.name] = res
-                        self.dependencies = self._get_dependencies(
-                            self.resources.itervalues())
-                        # res.create raises exception.ResourceFailure on error
-                        scheduler.TaskRunner(res.create)()
+            if action == self.UPDATE:
+                reason = 'Stack successfully updated'
+            else:
+                reason = 'Stack rollback completed'
+            stack_status = self.COMPLETE
 
-                # Now (the hard part :) update existing resources
-                # The Resource base class allows equality-test of resources,
-                # based on the parsed template snippet for the resource.
-                # If this  test fails, we call the underlying resource.update
-                #
-                # Currently many resources have a default handle_update method
-                # which raises exception.ResourceReplace
-                # optionally they may implement non-interruptive logic and
-                # return UPDATE_COMPLETE. If resources do not implement the
-                # handle_update method at all, update will fail.
-                for res in newstack:
-                    # Compare resolved pre/post update resource snippets,
-                    # note the new resource snippet is resolved in the context
-                    # of the existing stack (which is the stack being updated)
-                    old_snippet = self[res.name].parsed_template(cached=True)
-                    new_snippet = self.resolve_runtime_data(res.t)
+        except scheduler.Timeout:
+            stack_status = self.FAILED
+            reason = 'Timed out'
+        except exception.ResourceFailure as e:
+            reason = str(e)
 
-                    if old_snippet != new_snippet:
-                        # res.update raises exception.ResourceFailure on error
-                        # or exception.ResourceReplace if update requires
-                        # replacement
-                        try:
-                            self[res.name].update(new_snippet)
-                        except resource.UpdateReplace:
-                            # Resource requires replacement for update
-                            self[res.name].destroy()
-                            res.stack = self
-                            self[res.name] = res
-                            self.dependencies = self._get_dependencies(
-                                self.resources.itervalues())
-                            scheduler.TaskRunner(res.create)()
-                        else:
-                            logger.info("Resource %s for stack %s updated" %
-                                        (res.name, self.name))
+            stack_status = self.FAILED
+            if action == self.UPDATE:
+                # If rollback is enabled, we do another update, with the
+                # existing template, so we roll back to the original state
+                if not self.disable_rollback:
+                    oldstack = Stack(self.context, self.name, self.t,
+                                     self.env)
+                    self.update(oldstack, action=self.ROLLBACK)
+                    return
 
-                if action == self.UPDATE:
-                    reason = 'Stack successfully updated'
-                else:
-                    reason = 'Stack rollback completed'
-                stack_status = self.COMPLETE
+        self.state_set(action, stack_status, reason)
 
-            except eventlet.Timeout as t:
-                if t is tmo:
-                    stack_status = self.FAILED
-                    reason = 'Timed out waiting for %s' % str(res)
-                else:
-                    # not my timeout
-                    raise
-            except exception.ResourceFailure as e:
-                reason = str(e) or "Error : %s" % type(e)
-
-                stack_status = self.FAILED
-                if action == self.UPDATE:
-                    # If rollback is enabled, we do another update, with the
-                    # existing template, so we roll back to the original state
-                    if not self.disable_rollback:
-                        oldstack = Stack(self.context, self.name, self.t,
-                                         self.env)
-                        self.update(oldstack, action=self.ROLLBACK)
-                        return
-
-            self.state_set(action, stack_status, reason)
-
-            # flip the template & environment to the newstack values
-            # Note we do this on success and failure, so the current
-            # stack resources are stored, even if one is in a failed
-            # state (otherwise we won't remove them on delete)
-            self.t = newstack.t
-            self.env = newstack.env
-            template_outputs = self.t[template.OUTPUTS]
-            self.outputs = self.resolve_static_data(template_outputs)
-            self.store()
+        # flip the template & environment to the newstack values
+        # Note we do this on success and failure, so the current
+        # stack resources are stored, even if one is in a failed
+        # state (otherwise we won't remove them on delete)
+        self.t = newstack.t
+        self.env = newstack.env
+        template_outputs = self.t[template.OUTPUTS]
+        self.outputs = self.resolve_static_data(template_outputs)
+        self.store()
 
     def delete(self, action=DELETE):
         '''
