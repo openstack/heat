@@ -115,6 +115,9 @@ class CloudWatchAlarm(resource.Resource):
     def FnGetRefId(self):
         return unicode(self.physical_resource_name())
 
+    def physical_resource_name(self):
+        return '%s-%s' % (self.stack.name, self.name)
+
 
 def resource_mapping():
     return {
