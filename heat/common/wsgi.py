@@ -565,7 +565,7 @@ class Resource(object):
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
         except TypeError as err:
-            logging.error(_('Exception handling resource: %s') % err.message)
+            logging.error(_('Exception handling resource: %s') % str(err))
             raise webob.exc.HTTPBadRequest()
 
         # Here we support either passing in a serializer or detecting it
