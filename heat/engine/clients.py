@@ -98,6 +98,8 @@ class OpenStackClients(object):
             management_url = self.url_for(service_type=service_type)
             client.client.auth_token = con.auth_token
             client.client.management_url = management_url
+
+        self._nova[service_type] = client
         return client
 
     def swift(self):
