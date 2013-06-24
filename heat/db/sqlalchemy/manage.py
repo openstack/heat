@@ -22,4 +22,4 @@ if __name__ == '__main__':
     try:
         main(url=sql_connection, debug='False', repository=migrate_repo_path)
     except migrate.exceptions.DatabaseAlreadyControlledError:
-        print 'Database already version controlled.'
+        print('Database already version controlled.')

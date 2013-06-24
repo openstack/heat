@@ -31,7 +31,7 @@ class DummyTask(object):
             yield
 
     def do_step(self, step_num, *args, **kwargs):
-        print self, step_num
+        print(self, step_num)
 
 
 class PollingTaskGroupTest(mox.MoxTestBase):
