@@ -439,14 +439,12 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(watcher.state, 'ALARM')
         self.assertEqual(actions, ['DummyAction'])
 
-        # re-set last_evaluated so the rule will be evaluated again,
-        # but since we're already in ALARM state, we should not generate
-        # any additional actions
+        # re-set last_evaluated so the rule will be evaluated again.
         last = now - datetime.timedelta(seconds=300)
         watcher.last_evaluated = last
         actions = watcher.evaluate()
         self.assertEqual(watcher.state, 'ALARM')
-        self.assertEqual(actions, [])
+        self.assertEqual(actions, ['DummyAction'])
         self.m.VerifyAll()
 
     def test_rule_actions_alarm_two_actions(self):
