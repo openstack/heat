@@ -463,8 +463,6 @@ class Resource(object):
         '''
         if (self.action, self.status) == (self.DELETE, self.COMPLETE):
             return
-        if (self.action, self.status) == (self.DELETE, self.IN_PROGRESS):
-            raise exception.Error('Resource deletion already in progress')
         # No need to delete if the resource has never been created
         if self.action is None:
             return
