@@ -216,11 +216,8 @@ class WatchRule(object):
 
     def run_rule(self):
         new_state = self.get_alarm_state()
-
-        actions = []
-        if new_state != self.state:
-            actions = self.rule_actions(new_state)
-            self.state = new_state
+        actions = self.rule_actions(new_state)
+        self.state = new_state
 
         self.last_evaluated = self.now
         self.store()
