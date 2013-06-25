@@ -42,6 +42,7 @@ class Subnet(quantum.QuantumResource):
                                         'Default': 4},
                          'dns_nameservers': {'Type': 'List'},
                          'gateway_ip': {'Type': 'String'},
+                         'enable_dhcp': {'Type': 'Boolean'},
                          'allocation_pools': {'Type': 'List',
                                               'Schema': {
                                               'Type': 'Map',
