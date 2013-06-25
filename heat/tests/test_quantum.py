@@ -366,7 +366,7 @@ class QuantumSubnetTest(HeatTestCase):
                     "cidr": "10.0.3.0/24",
                     "dns_nameservers": ["8.8.8.8"],
                     "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
-                    "enable_dhcp": False,
+                    "enable_dhcp": True,
                 }
             })
 
@@ -399,6 +399,70 @@ class QuantumSubnetTest(HeatTestCase):
 
         self.assertEqual(rsrc.delete(), None)
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
+        self.assertEqual(rsrc.delete(), None)
+        self.m.VerifyAll()
+
+    def test_subnet_disable_dhcp(self):
+
+        quantumclient.Client.create_subnet({
+            'subnet': {
+                'name': utils.PhysName('test_stack', 'test_subnet'),
+                'network_id': u'None',
+                'dns_nameservers': [u'8.8.8.8'],
+                'allocation_pools': [
+                    {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
+                'ip_version': 4,
+                'enable_dhcp': False,
+                'cidr': u'10.0.3.0/24'
+            }
+        }).AndReturn({
+            "subnet": {
+                "allocation_pools": [
+                    {"start": "10.0.3.20", "end": "10.0.3.150"}],
+                "cidr": "10.0.3.0/24",
+                "dns_nameservers": ["8.8.8.8"],
+                "enable_dhcp": False,
+                "gateway_ip": "10.0.3.1",
+                "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
+                "ip_version": 4,
+                "name": "name",
+                "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+                "tenant_id": "c1210485b2424d48804aad5d39c61b8f"
+            }
+        })
+
+        quantumclient.Client.show_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn({
+                "subnet": {
+                    "name": "name",
+                    "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+                    "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+                    "allocation_pools": [
+                        {"start": "10.0.3.20", "end": "10.0.3.150"}],
+                    "gateway_ip": "10.0.3.1",
+                    "ip_version": 4,
+                    "cidr": "10.0.3.0/24",
+                    "dns_nameservers": ["8.8.8.8"],
+                    "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
+                    "enable_dhcp": False,
+                }
+            })
+
+        quantumclient.Client.delete_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1'
+        ).AndReturn(None)
+
+        self.m.ReplayAll()
+        t = template_format.parse(quantum_template)
+        t['Resources']['subnet']['Properties']['enable_dhcp'] = 'False'
+        stack = parse_stack(t)
+        rsrc = self.create_subnet(t, stack, 'subnet')
+
+        rsrc.validate()
+
+        ref_id = rsrc.FnGetRefId()
+        self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
+        self.assertEqual(False, rsrc.FnGetAtt('enable_dhcp'))
         self.assertEqual(rsrc.delete(), None)
         self.m.VerifyAll()
 
