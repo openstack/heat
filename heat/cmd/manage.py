@@ -33,7 +33,7 @@ CONF = cfg.CONF
 
 def do_db_version():
     """Print database's current migration level."""
-    print migration.db_version()
+    print(migration.db_version())
 
 
 def do_db_sync():

@@ -41,5 +41,5 @@ class CliTest(testtools.TestCase):
             stdout, stderr = proc.communicate()
 
             if proc.returncode:
-                print 'Error executing %s:\n %s %s ' % (bin, stdout, stderr)
+                print('Error executing %s:\n %s %s ' % (bin, stdout, stderr))
                 raise subprocess.CalledProcessError(proc.returncode, bin)

@@ -318,13 +318,13 @@ class Debug(Middleware):
     def __call__(self, req):
         print ("*" * 40) + " REQUEST ENVIRON"
         for key, value in req.environ.items():
-            print key, "=", value
+            print(key, "=", value)
         print
         resp = req.get_response(self.application)
 
         print ("*" * 40) + " RESPONSE HEADERS"
         for (key, value) in resp.headers.iteritems():
-            print key, "=", value
+            print(key, "=", value)
         print
 
         resp.app_iter = self.print_generator(resp.app_iter)
