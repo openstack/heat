@@ -41,8 +41,8 @@ logger = logging.getLogger(__name__)
 
 class Stack(object):
 
-    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK
-               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK')
+    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND
+               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND')
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
@@ -482,6 +482,47 @@ class Stack(object):
             self.state_set(action, self.COMPLETE, '%s completed' % action)
             db_api.stack_delete(self.context, self.id)
             self.id = None
+
+    def suspend(self):
+        '''
+        Suspend the stack, which invokes handle_suspend for all stack resources
+        waits for all resources to become SUSPEND_COMPLETE then declares the
+        stack SUSPEND_COMPLETE.
+        Note the default implementation for all resources is to do nothing
+        other than move to SUSPEND_COMPLETE, so the resources must implement
+        handle_suspend for this to have any effect.
+        '''
+        sus_task = scheduler.TaskRunner(self.suspend_task)
+        sus_task(timeout=self.timeout_secs())
+
+    @scheduler.wrappertask
+    def suspend_task(self):
+        '''
+        A task to suspend the stack, suspends each resource in reverse
+        dependency order
+        '''
+        logger.info("Stack %s suspend started" % self.name)
+        self.state_set(self.SUSPEND, self.IN_PROGRESS, 'Stack suspend started')
+
+        stack_status = self.COMPLETE
+        reason = 'Stack suspend complete'
+
+        def resource_suspend(r):
+            return r.suspend()
+
+        sus_task = scheduler.DependencyTaskGroup(self.dependencies,
+                                                 resource_suspend,
+                                                 reverse=True)
+        try:
+            yield sus_task()
+        except exception.ResourceFailure as ex:
+            stack_status = self.FAILED
+            reason = 'Resource failed: %s' % str(ex)
+        except scheduler.Timeout:
+            stack_status = self.FAILED
+            reason = 'Suspend timed out'
+
+        self.state_set(self.SUSPEND, stack_status, reason)
 
     def output(self, key):
         '''

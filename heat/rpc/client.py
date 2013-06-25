@@ -213,6 +213,10 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt, self.make_msg('list_stack_resources',
                                              stack_identity=stack_identity))
 
+    def stack_suspend(self, ctxt, stack_identity):
+        return self.call(ctxt, self.make_msg('stack_suspend',
+                                             stack_identity=stack_identity))
+
     def metadata_update(self, ctxt, stack_identity, resource_name, metadata):
         """
         Update the metadata for the given resource.

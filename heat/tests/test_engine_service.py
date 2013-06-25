@@ -465,6 +465,47 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.VerifyAll()
 
 
+class stackServiceSuspendTest(HeatTestCase):
+
+    def setUp(self):
+        super(stackServiceSuspendTest, self).setUp()
+        self.username = 'stack_service_suspend_test_user'
+        self.tenant = 'stack_service_suspend_test_tenant'
+        setup_dummy_db()
+        self.ctx = create_context(self.m, self.username, self.tenant)
+
+        self.man = service.EngineService('a-host', 'a-topic')
+
+    def test_stack_suspend(self):
+        stack_name = 'service_suspend_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        sid = stack.store()
+        s = db_api.stack_get(self.ctx, sid)
+
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
+
+        self.m.StubOutWithMock(service.EngineService, '_start_in_thread')
+        service.EngineService._start_in_thread(sid,
+                                               mox.IgnoreArg(),
+                                               stack).AndReturn(None)
+        self.m.ReplayAll()
+
+        result = self.man.stack_suspend(self.ctx, stack.identifier())
+        self.assertEqual(result, None)
+        self.m.VerifyAll()
+
+    def test_stack_suspend_nonexist(self):
+        stack_name = 'service_suspend_nonexist_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.StackNotFound,
+                          self.man.stack_suspend, self.ctx, stack.identifier())
+        self.m.VerifyAll()
+
+
 class stackServiceTest(HeatTestCase):
 
     def setUp(self):
@@ -1160,3 +1201,32 @@ class stackServiceTest(HeatTestCase):
         sl = self.eng.show_stack(self.ctx, None)
 
         self.assertEqual(len(sl), 0)
+
+    def test_stack_suspend(self):
+        stack_name = 'service_suspend_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        sid = stack.store()
+        s = db_api.stack_get(self.ctx, sid)
+
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
+
+        self.m.StubOutWithMock(service.EngineService, '_start_in_thread')
+        service.EngineService._start_in_thread(sid,
+                                               mox.IgnoreArg(),
+                                               stack).AndReturn(None)
+        self.m.ReplayAll()
+
+        result = self.eng.stack_suspend(self.ctx, stack.identifier())
+        self.assertEqual(result, None)
+        self.m.VerifyAll()
+
+    def test_stack_suspend_nonexist(self):
+        stack_name = 'service_suspend_nonexist_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.StackNotFound,
+                          self.eng.stack_suspend, self.ctx, stack.identifier())
+        self.m.VerifyAll()
