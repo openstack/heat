@@ -485,7 +485,10 @@ class Instance(resource.Resource):
                             % image_identifier)
                 raise exception.ImageNotFound(image_name=image_identifier)
         else:
-            image_list = self.nova().images.list()
+            try:
+                image_list = self.nova().images.list()
+            except clients.novaclient.exceptions.ClientException as ex:
+                raise exception.ServerError(message=str(ex))
             image_names = dict(
                 (o.id, o.name)
                 for o in image_list if o.name == image_identifier)
