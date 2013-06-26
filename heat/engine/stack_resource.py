@@ -87,7 +87,7 @@ class StackResource(resource.Resource):
         if done:
             if self._nested.state != (self._nested.CREATE,
                                       self._nested.COMPLETE):
-                raise exception.Error(self._nested.state_description)
+                raise exception.Error(self._nested.status_reason)
 
         return done
 
