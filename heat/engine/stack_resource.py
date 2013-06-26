@@ -78,7 +78,8 @@ class StackResource(resource.Resource):
         nested_id = self._nested.store(self.stack)
         self.resource_id_set(nested_id)
 
-        stack_creator = scheduler.TaskRunner(self._nested.create_task)
+        stack_creator = scheduler.TaskRunner(self._nested.stack_task,
+                                             action=self.CREATE)
         stack_creator.start(timeout=self._nested.timeout_secs())
         return stack_creator
 
@@ -109,7 +110,10 @@ class StackResource(resource.Resource):
             raise exception.Error(_('Cannot suspend %s, stack not created')
                                   % self.name)
 
-        suspend_task = scheduler.TaskRunner(self._nested.suspend_task)
+        suspend_task = scheduler.TaskRunner(self._nested.stack_task,
+                                            action=self.SUSPEND,
+                                            reverse=True)
+
         suspend_task.start(timeout=self._nested.timeout_secs())
         return suspend_task
 
