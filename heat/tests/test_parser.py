@@ -135,6 +135,22 @@ class TemplateTest(HeatTestCase):
         self.assertEqual(empty[template.RESOURCES], {})
         self.assertEqual(empty[template.OUTPUTS], {})
 
+    def test_invalid_template(self):
+        scanner_error = '''
+1
+Mappings:
+  ValidMapping:
+    TestKey: TestValue
+'''
+        parser_error = '''
+Mappings:
+  ValidMapping:
+    TestKey: {TestKey1: "Value1" TestKey2: "Value2"}
+'''
+
+        self.assertRaises(ValueError, template_format.parse, scanner_error)
+        self.assertRaises(ValueError, template_format.parse, parser_error)
+
     def test_invalid_section(self):
         tmpl = parser.Template({'Foo': ['Bar']})
         try:

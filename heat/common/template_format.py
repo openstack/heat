@@ -40,7 +40,7 @@ def parse(tmpl_str, add_template_sections=True):
     else:
         try:
             tpl = yaml.safe_load(tmpl_str)
-        except yaml.scanner.ScannerError as e:
+        except (yaml.scanner.ScannerError, yaml.parser.ParserError) as e:
             raise ValueError(e)
         else:
             if tpl is None:
