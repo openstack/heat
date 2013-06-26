@@ -221,50 +221,45 @@ class Resource(object):
         '''
         self.cached_t = self.stack.resolve_runtime_data(self.t)
 
-    def update_template_diff(self, json_snippet=None):
+    def update_template_diff(self, after, before):
         '''
-        Returns the difference between json_template and self.t
-        If something has been removed in json_snippet which exists
-        in self.t we set it to None.  If any keys have changed which
-        are not in update_allowed_keys, raises UpdateReplace if the
-        differing keys are not in update_allowed_keys
+        Returns the difference between the before and after json snippets. If
+        something has been removed in after which exists in before we set it to
+        None. If any keys have changed which are not in update_allowed_keys,
+        raises UpdateReplace if the differing keys are not in
+        update_allowed_keys
         '''
         update_allowed_set = set(self.update_allowed_keys)
 
         # Create a set containing the keys in both current and update template
-        current_template = self.parsed_template(cached=True)
-
-        template_keys = set(current_template.keys())
-        new_template = self.stack.resolve_runtime_data(json_snippet)
-        template_keys.update(set(new_template.keys()))
+        template_keys = set(before.keys())
+        template_keys.update(set(after.keys()))
 
         # Create a set of keys which differ (or are missing/added)
         changed_keys_set = set([k for k in template_keys
-                               if current_template.get(k) !=
-                               new_template.get(k)])
+                                if before.get(k) != after.get(k)])
 
         if not changed_keys_set.issubset(update_allowed_set):
             badkeys = changed_keys_set - update_allowed_set
             raise UpdateReplace(self.name)
 
-        return dict((k, new_template.get(k)) for k in changed_keys_set)
+        return dict((k, after.get(k)) for k in changed_keys_set)
 
-    def update_template_diff_properties(self, json_snippet=None):
+    def update_template_diff_properties(self, after, before):
         '''
-        Returns the changed Properties between json_template and self.t
-        If a property has been removed in json_snippet which exists
-        in self.t we set it to None.  If any properties have changed which
-        are not in update_allowed_properties, raises UpdateReplace if the
-        modified properties are not in the update_allowed_properties
+        Returns the changed Properties between the before and after json
+        snippets. If a property has been removed in after which exists in
+        before we set it to None. If any properties have changed which are not
+        in update_allowed_properties, raises UpdateReplace if the modified
+        properties are not in the update_allowed_properties
         '''
         update_allowed_set = set(self.update_allowed_properties)
 
         # Create a set containing the keys in both current and update template
-        tmpl = self.parsed_template(cached=True)
-        current_properties = tmpl.get('Properties', {})
+        current_properties = before.get('Properties', {})
 
         template_properties = set(current_properties.keys())
-        updated_properties = json_snippet.get('Properties', {})
+        updated_properties = after.get('Properties', {})
         template_properties.update(set(updated_properties.keys()))
 
         # Create a set of keys which differ (or are missing/added)
@@ -425,8 +420,11 @@ class Resource(object):
                                     self.stack.resolve_runtime_data,
                                     self.name)
             properties.validate()
-            tmpl_diff = self.update_template_diff(json_snippet)
-            prop_diff = self.update_template_diff_properties(json_snippet)
+            old_json_snippet = self.parsed_template(cached=True)
+            tmpl_diff = self.update_template_diff(json_snippet,
+                                                  old_json_snippet)
+            prop_diff = self.update_template_diff_properties(json_snippet,
+                                                             old_json_snippet)
             if callable(getattr(self, 'handle_update', None)):
                 result = self.handle_update(json_snippet, tmpl_diff, prop_diff)
         except UpdateReplace:
