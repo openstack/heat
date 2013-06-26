@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import json
 import re
 
 from heat.common import exception
@@ -29,9 +30,9 @@ PARAMETER_KEYS = (
     'Description', 'ConstraintDescription'
 )
 PARAMETER_TYPES = (
-    STRING, NUMBER, COMMA_DELIMITED_LIST
+    STRING, NUMBER, COMMA_DELIMITED_LIST, JSON
 ) = (
-    'String', 'Number', 'CommaDelimitedList'
+    'String', 'Number', 'CommaDelimitedList', 'Json'
 )
 PSEUDO_PARAMETERS = (
     PARAM_STACK_ID, PARAM_STACK_NAME, PARAM_REGION
@@ -55,6 +56,8 @@ class Parameter(object):
             ParamClass = NumberParam
         elif param_type == COMMA_DELIMITED_LIST:
             ParamClass = CommaDelimitedListParam
+        elif param_type == JSON:
+            ParamClass = JsonParam
         else:
             raise ValueError('Invalid Parameter type "%s"' % param_type)
 
@@ -198,7 +201,7 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
     def _validate(self, value):
         '''Check that the supplied value is compatible with the constraints.'''
         try:
-            sp = value.split(',')
+            value.split(',')
         except AttributeError:
             raise ValueError('Value must be a comma-delimited list string')
 
@@ -212,6 +215,56 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
     def __getitem__(self, index):
         '''Return an item from the list.'''
         return self.value().split(',')[index]
+
+
+class JsonParam(Parameter, collections.Mapping):
+    """A template parameter who's value is valid map."""
+
+    def _validate(self, value):
+        message = 'Value must be valid JSON'
+        if isinstance(value, collections.Mapping):
+            try:
+                self.user_value = json.dumps(value)
+            except (ValueError, TypeError) as err:
+                raise ValueError("%s: %s" % (message, str(err)))
+            self.parsed = value
+        else:
+            try:
+                self.parsed = json.loads(value)
+            except ValueError:
+                raise ValueError(message)
+
+        # check length
+        my_len = len(self.parsed)
+        if MAX_LENGTH in self.schema:
+            max_length = int(self.schema[MAX_LENGTH])
+            if my_len > max_length:
+                message = ('value length (%d) overflows %s %s'
+                           % (my_len, MAX_LENGTH, max_length))
+                raise ValueError(self._error_msg(message))
+        if MIN_LENGTH in self.schema:
+            min_length = int(self.schema[MIN_LENGTH])
+            if my_len < min_length:
+                message = ('value length (%d) underflows %s %s'
+                           % (my_len, MIN_LENGTH, min_length))
+                raise ValueError(self._error_msg(message))
+        # check valid keys
+        if VALUES in self.schema:
+            allowed = self.schema[VALUES]
+            bad_keys = [k for k in self.parsed if k not in allowed]
+            if bad_keys:
+                message = ('keys %s are not in %s %s'
+                           % (bad_keys, VALUES, allowed))
+                raise ValueError(self._error_msg(message))
+
+    def __getitem__(self, key):
+        return self.parsed[key]
+
+    def __iter__(self):
+        return iter(self.parsed)
+
+    def __len__(self):
+        return len(self.parsed)
 
 
 class Parameters(collections.Mapping):
