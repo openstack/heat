@@ -715,6 +715,10 @@ class StackTest(HeatTestCase):
     def test_update_add(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
+
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl))
         self.stack.store()
@@ -738,6 +742,10 @@ class StackTest(HeatTestCase):
                 'AResource': {'Type': 'GenericResourceType'},
                 'BResource': {'Type': 'GenericResourceType'}}}
 
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
+
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl))
         self.stack.store()
@@ -758,6 +766,10 @@ class StackTest(HeatTestCase):
     def test_update_description(self):
         tmpl = {'Description': 'ATemplate',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl))
@@ -784,6 +796,10 @@ class StackTest(HeatTestCase):
 
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl))
@@ -817,6 +833,10 @@ class StackTest(HeatTestCase):
 
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
@@ -859,6 +879,10 @@ class StackTest(HeatTestCase):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
 
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
+
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
                                   disable_rollback=True)
@@ -899,6 +923,10 @@ class StackTest(HeatTestCase):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
 
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
+
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
                                   disable_rollback=True)
@@ -930,6 +958,9 @@ class StackTest(HeatTestCase):
     @stack_delete_after
     def test_update_add_failed_create(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        mox.Replay(scheduler.TaskRunner._sleep)
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl))
@@ -968,6 +999,10 @@ class StackTest(HeatTestCase):
 
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
@@ -1009,6 +1044,10 @@ class StackTest(HeatTestCase):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
                                             'Properties': {'Foo': 'abc'}}}}
 
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
+
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
                                   disable_rollback=False)
@@ -1043,6 +1082,10 @@ class StackTest(HeatTestCase):
     def test_update_rollback_add(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
 
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
+
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
                                   disable_rollback=False)
@@ -1075,6 +1118,10 @@ class StackTest(HeatTestCase):
         tmpl = {'Resources': {
                 'AResource': {'Type': 'GenericResourceType'},
                 'BResource': {'Type': 'GenericResourceType'}}}
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
@@ -1130,7 +1177,7 @@ class StackTest(HeatTestCase):
                                   template.Template(tmpl))
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
         self.m.ReplayAll()
 
         self.stack.store()
@@ -1190,7 +1237,7 @@ class StackTest(HeatTestCase):
                                   disable_rollback=False)
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
         self.m.ReplayAll()
 
         self.stack.store()
@@ -1260,7 +1307,7 @@ class StackTest(HeatTestCase):
                                   disable_rollback=False)
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
         self.m.ReplayAll()
 
         self.stack.store()
