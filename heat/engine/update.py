@@ -31,6 +31,9 @@ class StackUpdate(object):
         self.existing_stack = existing_stack
         self.new_stack = new_stack
 
+        self.existing_snippets = dict((r.name, r.parsed_template())
+                                      for r in self.existing_stack)
+
     def __str__(self):
         return '%s Update' % str(self.existing_stack)
 
@@ -84,14 +87,13 @@ class StackUpdate(object):
     def _update_resource(self, new_res):
         res_name = new_res.name
 
-        if res_name not in self.existing_stack:
+        if res_name not in self.existing_snippets:
             return
 
         # Compare resolved pre/post update resource snippets,
         # note the new resource snippet is resolved in the context
         # of the existing stack (which is the stack being updated)
-        existing_snippet = self.existing_stack[res_name].\
-            parsed_template(cached=True)
+        existing_snippet = self.existing_snippets[res_name]
         new_snippet = self.existing_stack.resolve_runtime_data(new_res.t)
 
         if new_snippet != existing_snippet:
