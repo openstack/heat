@@ -55,7 +55,7 @@ class Volume(resource.Resource):
             if volume_backups is None:
                 raise exception.Error(
                     '%s not supported' % self._restore_property)
-            vol_id = cinder.restores.restore(backup_id)['volume_id']
+            vol_id = cinder.restores.restore(backup_id).volume_id
 
             vol = cinder.volumes.get(vol_id)
             vol.update(
@@ -76,6 +76,8 @@ class Volume(resource.Resource):
         if vol.status == 'available':
             return True
         elif vol.status == 'creating':
+            return False
+        elif vol.status == 'restoring-backup':
             return False
         else:
             raise exception.Error(vol.status)
