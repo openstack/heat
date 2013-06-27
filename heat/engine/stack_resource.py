@@ -103,6 +103,25 @@ class StackResource(resource.Resource):
             if stack is not None:
                 stack.delete()
 
+    def handle_suspend(self):
+        stack = self.nested()
+        if stack is None:
+            raise exception.Error(_('Cannot suspend %s, stack not created')
+                                  % self.name)
+
+        suspend_task = scheduler.TaskRunner(self._nested.suspend_task)
+        suspend_task.start(timeout=self._nested.timeout_secs())
+        return suspend_task
+
+    def check_suspend_complete(self, suspend_task):
+        done = suspend_task.step()
+        if done:
+            if self._nested.state != (self._nested.SUSPEND,
+                                      self._nested.COMPLETE):
+                raise exception.Error(self._nested.status_reason)
+
+        return done
+
     def get_output(self, op):
         '''
         Return the specified Output value from the nested stack.

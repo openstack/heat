@@ -18,6 +18,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.common import urlfetch
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -94,4 +95,18 @@ Outputs:
         rsrc.delete()
         self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
 
+        self.m.VerifyAll()
+
+    def test_nested_stack_suspend(self):
+        urlfetch.get('https://localhost/the.template').AndReturn(
+            self.nested_template)
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template)
+        rsrc = stack['the_nested']
+
+        scheduler.TaskRunner(rsrc.suspend)()
+        self.assertEqual(rsrc.state, (rsrc.SUSPEND, rsrc.COMPLETE))
+
+        rsrc.delete()
         self.m.VerifyAll()
