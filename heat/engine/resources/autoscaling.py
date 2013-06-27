@@ -132,14 +132,21 @@ class InstanceGroup(resource.Resource):
         instance_definition = self.stack.t['Resources'][conf]
         return GroupedInstance(name, instance_definition, self.stack)
 
-    def handle_delete(self):
+    def _instances(self):
+        '''
+        Convert the stored instance list into a list of GroupedInstance objects
+        '''
+        gi_list = []
         if self.resource_id is not None:
             inst_list = self.resource_id.split(',')
-            logger.debug('handle_delete %s' % str(inst_list))
-            for victim in inst_list:
-                logger.debug('handle_delete %s' % victim)
-                inst = self._make_instance(victim)
-                inst.destroy()
+            for i in inst_list:
+                gi_list.append(self._make_instance(i))
+        return gi_list
+
+    def handle_delete(self):
+        for inst in self._instances():
+            logger.debug('handle_delete %s' % inst.name)
+            inst.destroy()
 
     @scheduler.wrappertask
     def _scale(self, instance_task, indices):
