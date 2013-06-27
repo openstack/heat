@@ -95,6 +95,37 @@ class PropertyTest(testtools.TestCase):
         p = properties.Property(schema)
         self.assertRaises(ValueError, p.validate_data, 'blarg')
 
+    def test_string_maxlength_good(self):
+        schema = {'Type': 'String',
+                  'MaxLength': '5'}
+        p = properties.Property(schema)
+        self.assertEqual(p.validate_data('abcd'), 'abcd')
+
+    def test_string_exceeded_maxlength(self):
+        schema = {'Type': 'String',
+                  'MaxLength': '5'}
+        p = properties.Property(schema)
+        self.assertRaises(ValueError, p.validate_data, 'abcdef')
+
+    def test_string_length_in_range(self):
+        schema = {'Type': 'String',
+                  'MinLength': '5',
+                  'MaxLength': '10'}
+        p = properties.Property(schema)
+        self.assertEqual(p.validate_data('abcdef'), 'abcdef')
+
+    def test_string_minlength_good(self):
+        schema = {'Type': 'String',
+                  'MinLength': '5'}
+        p = properties.Property(schema)
+        self.assertEqual(p.validate_data('abcde'), 'abcde')
+
+    def test_string_smaller_than_minlength(self):
+        schema = {'Type': 'String',
+                  'MinLength': '5'}
+        p = properties.Property(schema)
+        self.assertRaises(ValueError, p.validate_data, 'abcd')
+
     def test_int_good(self):
         schema = {'Type': 'Integer',
                   'MinValue': 3,

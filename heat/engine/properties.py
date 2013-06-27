@@ -21,10 +21,11 @@ from heat.common import exception
 
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
-    PATTERN, MIN_VALUE, MAX_VALUE, VALUES,
+    PATTERN, MIN_VALUE, MAX_VALUE, VALUES, MIN_LENGTH, MAX_LENGTH,
 ) = (
     'Required', 'Implemented', 'Default', 'Type', 'Schema',
     'AllowedPattern', 'MinValue', 'MaxValue', 'AllowedValues',
+    'MinLength', 'MaxLength',
 )
 
 SCHEMA_TYPES = (
@@ -104,6 +105,17 @@ class Property(object):
                 raise ValueError('"%s" does not match pattern "%s"' %
                                  (value, pattern))
 
+        if MIN_LENGTH in self.schema:
+            min_length = int(self.schema[MIN_LENGTH])
+            if len(value) < min_length:
+                raise ValueError('Minimum string length is %d characters.' %
+                                 min_length)
+
+        if MAX_LENGTH in self.schema:
+            max_length = int(self.schema[MAX_LENGTH])
+            if len(value) > max_length:
+                raise ValueError('Maximum string length is %d characters.' %
+                                 max_length)
         return value
 
     def _validate_map(self, value):
