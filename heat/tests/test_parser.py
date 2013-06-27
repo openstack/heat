@@ -634,7 +634,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (self.stack.SUSPEND, self.stack.FAILED))
         self.assertEqual(self.stack.status_reason,
-                         'Resource failed: Exception: foo')
+                         'Resource suspend failed: Exception: foo')
         self.m.VerifyAll()
 
     @stack_delete_after
@@ -1398,7 +1398,7 @@ class StackTest(HeatTestCase):
 
         self.assertEqual(stack.state,
                          (parser.Stack.CREATE, parser.Stack.FAILED))
-        self.assertEqual(stack.status_reason, 'Timed out')
+        self.assertEqual(stack.status_reason, 'Create timed out')
 
         self.m.VerifyAll()
 

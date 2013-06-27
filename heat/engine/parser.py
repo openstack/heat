@@ -287,39 +287,58 @@ class Stack(object):
         '''
         Create the stack and all of the resources.
         '''
-        creator = scheduler.TaskRunner(self.create_task)
+        def rollback():
+            if not self.disable_rollback and self.state == (self.CREATE,
+                                                            self.FAILED):
+                self.delete(action=self.ROLLBACK)
+
+        creator = scheduler.TaskRunner(self.stack_task,
+                                       action=self.CREATE,
+                                       reverse=False,
+                                       post_func=rollback)
         creator(timeout=self.timeout_secs())
 
     @scheduler.wrappertask
-    def create_task(self):
+    def stack_task(self, action, reverse=False, post_func=None):
         '''
-        A task to create the stack and all of the resources.
+        A task to perform an action on the stack and all of the resources
+        in forward or reverse dependency order as specfifed by reverse
         '''
-        self.state_set(self.CREATE, self.IN_PROGRESS, 'Stack creation started')
+        self.state_set(action, self.IN_PROGRESS,
+                       'Stack %s started' % action)
 
         stack_status = self.COMPLETE
-        reason = 'Stack successfully created'
+        reason = 'Stack %s completed successfully' % action.lower()
         res = None
 
-        def resource_create(r):
-            return r.create()
+        def resource_action(r):
+            # Find e.g resource.create and call it
+            action_l = action.lower()
+            handle = getattr(r, '%s' % action_l, None)
+            if callable(handle):
+                return handle()
+            else:
+                raise exception.ResourceFailure(
+                    AttributeError(_('Resource action %s not found') %
+                                   action_l))
 
-        create_task = scheduler.DependencyTaskGroup(self.dependencies,
-                                                    resource_create)
+        action_task = scheduler.DependencyTaskGroup(self.dependencies,
+                                                    resource_action,
+                                                    reverse)
 
         try:
-            yield create_task()
+            yield action_task()
         except exception.ResourceFailure as ex:
             stack_status = self.FAILED
-            reason = 'Resource failed: %s' % str(ex)
+            reason = 'Resource %s failed: %s' % (action.lower(), str(ex))
         except scheduler.Timeout:
             stack_status = self.FAILED
-            reason = 'Timed out'
+            reason = '%s timed out' % action.title()
 
-        self.state_set(self.CREATE, stack_status, reason)
+        self.state_set(action, stack_status, reason)
 
-        if stack_status == self.FAILED and not self.disable_rollback:
-            self.delete(action=self.ROLLBACK)
+        if callable(post_func):
+            post_func()
 
     def update(self, newstack, action=UPDATE):
         '''
@@ -440,37 +459,10 @@ class Stack(object):
         other than move to SUSPEND_COMPLETE, so the resources must implement
         handle_suspend for this to have any effect.
         '''
-        sus_task = scheduler.TaskRunner(self.suspend_task)
+        sus_task = scheduler.TaskRunner(self.stack_task,
+                                        action=self.SUSPEND,
+                                        reverse=True)
         sus_task(timeout=self.timeout_secs())
-
-    @scheduler.wrappertask
-    def suspend_task(self):
-        '''
-        A task to suspend the stack, suspends each resource in reverse
-        dependency order
-        '''
-        logger.info("Stack %s suspend started" % self.name)
-        self.state_set(self.SUSPEND, self.IN_PROGRESS, 'Stack suspend started')
-
-        stack_status = self.COMPLETE
-        reason = 'Stack suspend complete'
-
-        def resource_suspend(r):
-            return r.suspend()
-
-        sus_task = scheduler.DependencyTaskGroup(self.dependencies,
-                                                 resource_suspend,
-                                                 reverse=True)
-        try:
-            yield sus_task()
-        except exception.ResourceFailure as ex:
-            stack_status = self.FAILED
-            reason = 'Resource failed: %s' % str(ex)
-        except scheduler.Timeout:
-            stack_status = self.FAILED
-            reason = 'Suspend timed out'
-
-        self.state_set(self.SUSPEND, stack_status, reason)
 
     def output(self, key):
         '''
