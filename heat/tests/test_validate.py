@@ -14,6 +14,7 @@
 
 from testtools import skipIf
 
+from heat.engine import clients
 from heat.engine import environment
 from heat.tests.v1_1 import fakes
 from heat.common import exception
@@ -430,6 +431,23 @@ test_template_invalid_secgroupids = '''
     }
     '''
 
+test_template_nova_client_exception = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Resources" : {
+    "Instance": {
+      "Type": "AWS::EC2::Instance",
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ImageId": "image_name",
+        "InstanceType": "m1.large"
+      }
+    }
+  }
+}
+'''
+
 
 class validateTest(HeatTestCase):
     def setUp(self):
@@ -617,3 +635,19 @@ class validateTest(HeatTestCase):
 
         resource = stack.resources['Instance']
         self.assertNotEqual(resource.validate(), None)
+
+    def test_client_exception_from_nova_client(self):
+        t = template_format.parse(test_template_nova_client_exception)
+        template = parser.Template(t)
+        stack = parser.Stack(None, 'test_stack', template)
+
+        self.m.StubOutWithMock(self.fc.images, 'list')
+        self.fc.images.list()\
+            .AndRaise(clients.novaclient.exceptions.ClientException(500))
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ServerError,
+                          stack.validate)
+        self.m.VerifyAll()
