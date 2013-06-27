@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import copy
 
 import mox
@@ -287,6 +286,84 @@ class instancesTest(HeatTestCase):
 
         scheduler.TaskRunner(instance.create)()
         self.assertEqual(instance.state, (instance.CREATE, instance.COMPLETE))
+
+    def test_instance_status_suspend_immediate(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_suspend')
+
+        instance.resource_id = 1234
+        self.m.ReplayAll()
+
+        # Override the get_servers_1234 handler status to SUSPENDED
+        d = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
+        d['server']['status'] = 'SUSPENDED'
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndReturn((200, d))
+        mox.Replay(get)
+
+        scheduler.TaskRunner(instance.suspend)()
+        self.assertEqual(instance.state, (instance.SUSPEND, instance.COMPLETE))
+
+        self.m.VerifyAll()
+
+    def test_instance_status_suspend_wait(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_suspend')
+
+        instance.resource_id = 1234
+        self.m.ReplayAll()
+
+        # Override the get_servers_1234 handler status to SUSPENDED, but
+        # return the ACTIVE state first (twice, so we sleep)
+        d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
+        d2 = copy.deepcopy(d1)
+        d1['server']['status'] = 'ACTIVE'
+        d2['server']['status'] = 'SUSPENDED'
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndReturn((200, d1))
+        get().AndReturn((200, d1))
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        get().AndReturn((200, d2))
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.suspend)()
+        self.assertEqual(instance.state, (instance.SUSPEND, instance.COMPLETE))
+
+        self.m.VerifyAll()
+
+    def test_instance_suspend_volumes_step(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_suspend')
+
+        instance.resource_id = 1234
+        self.m.ReplayAll()
+
+        # Override the get_servers_1234 handler status to SUSPENDED
+        d = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
+        d['server']['status'] = 'SUSPENDED'
+
+        # Return a dummy PollingTaskGroup to make check_suspend_complete step
+        def dummy_detach():
+            yield
+        dummy_tg = scheduler.PollingTaskGroup([dummy_detach, dummy_detach])
+        self.m.StubOutWithMock(instance, '_detach_volumes_task')
+        instance._detach_volumes_task().AndReturn(dummy_tg)
+
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndReturn((200, d))
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(instance.suspend)()
+        self.assertEqual(instance.state, (instance.SUSPEND, instance.COMPLETE))
+
+        self.m.VerifyAll()
 
     def test_instance_status_build_spawning(self):
         self._test_instance_status_not_build_active('BUILD(SPAWNING)')
