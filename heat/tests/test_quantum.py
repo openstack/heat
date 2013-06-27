@@ -281,6 +281,10 @@ class QuantumNetTest(HeatTestCase):
         stack = parse_stack(t)
         rsrc = self.create_net(t, stack, 'network')
 
+        # assert the implicit dependency between the gateway and the interface
+        deps = stack.dependencies[stack['router_interface']]
+        self.assertIn(stack['gateway'], deps)
+
         rsrc.validate()
 
         ref_id = rsrc.FnGetRefId()
