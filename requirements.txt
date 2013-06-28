@@ -1,17 +1,5 @@
-# this file lists all the dependencies needed for running heat
-
 d2to1>=0.2.10,<0.3
 pbr>=0.5.10,<0.6
-
-# The greenlet package must be compiled with gcc and needs
-# the Python.h headers. Make sure you install the python-dev
-# package to get the right headers...
-
-# lxml note: You will need gcc buildtools installed and must
-# have installed libxml headers for lxml to be successfully
-# installed using pip, therefore you will need to install the
-# libxml2-dev(el) and libxslt-dev(el) packages.
-
 PyCrypto>=2.1.0
 boto>=2.4.0
 eventlet>=0.12.0
