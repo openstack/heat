@@ -62,6 +62,10 @@ class API(wsgi.Router):
                                  "/stacks",
                                  action="create",
                                  conditions={'method': 'POST'})
+            stack_mapper.connect("stack_detail",
+                                 "/stacks/detail",
+                                 action="detail",
+                                 conditions={'method': 'GET'})
 
             # Stack data
             stack_mapper.connect("stack_lookup",

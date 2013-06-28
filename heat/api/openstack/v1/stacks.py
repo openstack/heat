@@ -206,6 +206,18 @@ class StackController(object):
         return {'stacks': [format_stack(req, s, summary_keys) for s in stacks]}
 
     @util.tenant_local
+    def detail(self, req):
+        """
+        Lists detailed information for all stacks
+        """
+        try:
+            stacks = self.engine.list_stacks(req.context)
+        except rpc_common.RemoteError as ex:
+            return util.remote_error(ex)
+
+        return {'stacks': [format_stack(req, s) for s in stacks]}
+
+    @util.tenant_local
     def create(self, req, body):
         """
         Create a new stack
