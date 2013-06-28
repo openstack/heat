@@ -42,8 +42,9 @@ logger = logging.getLogger(__name__)
 
 class Stack(object):
 
-    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND
-               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND')
+    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME
+               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND',
+                    'RESUME')
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
@@ -462,6 +463,20 @@ class Stack(object):
         sus_task = scheduler.TaskRunner(self.stack_task,
                                         action=self.SUSPEND,
                                         reverse=True)
+        sus_task(timeout=self.timeout_secs())
+
+    def resume(self):
+        '''
+        Resume the stack, which invokes handle_resume for all stack resources
+        waits for all resources to become RESUME_COMPLETE then declares the
+        stack RESUME_COMPLETE.
+        Note the default implementation for all resources is to do nothing
+        other than move to RESUME_COMPLETE, so the resources must implement
+        handle_resume for this to have any effect.
+        '''
+        sus_task = scheduler.TaskRunner(self.stack_task,
+                                        action=self.RESUME,
+                                        reverse=False)
         sus_task(timeout=self.timeout_secs())
 
     def output(self, key):

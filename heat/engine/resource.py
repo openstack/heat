@@ -113,8 +113,9 @@ class Metadata(object):
 
 
 class Resource(object):
-    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND
-               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND')
+    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME
+               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
+                    'SUSPEND', 'RESUME')
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
@@ -439,9 +440,7 @@ class Resource(object):
     def suspend(self):
         '''
         Suspend the resource.  Subclasses should provide a handle_suspend()
-        method to implement suspend, the base-class handle_update does nothing
-        Note this uses the same coroutine logic as create() since suspending
-        instances is a non-immediate operation and we want to paralellize
+        method to implement suspend
         '''
         # Don't try to suspend the resource unless it's in a stable state
         if (self.action == self.DELETE or self.status != self.COMPLETE):
@@ -451,6 +450,20 @@ class Resource(object):
 
         logger.info('suspending %s' % str(self))
         return self._do_action(self.SUSPEND)
+
+    def resume(self):
+        '''
+        Resume the resource.  Subclasses should provide a handle_resume()
+        method to implement resume
+        '''
+        # Can't resume a resource unless it's SUSPEND_COMPLETE
+        if self.state != (self.SUSPEND, self.COMPLETE):
+            exc = exception.Error('State %s invalid for resume'
+                                  % str(self.state))
+            raise exception.ResourceFailure(exc)
+
+        logger.info('resuming %s' % str(self))
+        return self._do_action(self.RESUME)
 
     def physical_resource_name(self):
         if self.id is None:

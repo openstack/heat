@@ -476,9 +476,7 @@ class EngineService(service.Service):
     @request_context
     def stack_suspend(self, cnxt, stack_identity):
         '''
-        Handle request to perform an action on an existing stack
-        actions are non-lifecycle operations which manipulate the
-        state of the stack but not the definition
+        Handle request to perform suspend action on a stack
         '''
         def _stack_suspend(stack):
             logger.debug("suspending stack %s" % stack.name)
@@ -488,6 +486,20 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(cnxt, stack=s)
         self._start_in_thread(stack.id, _stack_suspend, stack)
+
+    @request_context
+    def stack_resume(self, cnxt, stack_identity):
+        '''
+        Handle request to perform a resume action on a stack
+        '''
+        def _stack_resume(stack):
+            logger.debug("resuming stack %s" % stack.name)
+            stack.resume()
+
+        s = self._get_stack(cnxt, stack_identity)
+
+        stack = parser.Stack.load(cnxt, stack=s)
+        self._start_in_thread(stack.id, _stack_resume, stack)
 
     @request_context
     def metadata_update(self, cnxt, stack_identity,

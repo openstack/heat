@@ -465,10 +465,10 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class stackServiceSuspendTest(HeatTestCase):
+class stackServiceSuspendResumeTest(HeatTestCase):
 
     def setUp(self):
-        super(stackServiceSuspendTest, self).setUp()
+        super(stackServiceSuspendResumeTest, self).setUp()
         self.username = 'stack_service_suspend_test_user'
         self.tenant = 'stack_service_suspend_test_tenant'
         setup_dummy_db()
@@ -493,6 +493,23 @@ class stackServiceSuspendTest(HeatTestCase):
 
         result = self.man.stack_suspend(self.ctx, stack.identifier())
         self.assertEqual(result, None)
+
+        self.m.VerifyAll()
+
+    @stack_context('service_resume_test_stack', False)
+    def test_stack_resume(self):
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+
+        self.m.StubOutWithMock(service.EngineService, '_start_in_thread')
+        service.EngineService._start_in_thread(self.stack.id,
+                                               mox.IgnoreArg(),
+                                               self.stack).AndReturn(None)
+        self.m.ReplayAll()
+
+        result = self.man.stack_resume(self.ctx, self.stack.identifier())
+        self.assertEqual(result, None)
         self.m.VerifyAll()
 
     def test_stack_suspend_nonexist(self):
@@ -503,6 +520,16 @@ class stackServiceSuspendTest(HeatTestCase):
 
         self.assertRaises(exception.StackNotFound,
                           self.man.stack_suspend, self.ctx, stack.identifier())
+        self.m.VerifyAll()
+
+    def test_stack_resume_nonexist(self):
+        stack_name = 'service_resume_nonexist_test_stack'
+        stack = get_wordpress_stack(stack_name, self.ctx)
+
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.StackNotFound,
+                          self.man.stack_resume, self.ctx, stack.identifier())
         self.m.VerifyAll()
 
 
