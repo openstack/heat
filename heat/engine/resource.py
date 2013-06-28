@@ -444,9 +444,7 @@ class Resource(object):
         instances is a non-immediate operation and we want to paralellize
         '''
         # Don't try to suspend the resource unless it's in a stable state
-        if self.state not in ((self.CREATE, self.COMPLETE),
-                              (self.UPDATE, self.COMPLETE),
-                              (self.ROLLBACK, self.COMPLETE)):
+        if (self.action == self.DELETE or self.status != self.COMPLETE):
             exc = exception.Error('State %s invalid for suspend'
                                   % str(self.state))
             raise exception.ResourceFailure(exc)
