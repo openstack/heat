@@ -348,16 +348,20 @@ class Instance(resource.Resource):
             if server is not None:
                 self.resource_id_set(server.id)
 
+        return server, scheduler.TaskRunner(self._attach_volumes_task())
+
+    def _attach_volumes_task(self):
         attach_tasks = (volume.VolumeAttachTask(self.stack,
                                                 self.resource_id,
                                                 volume_id,
                                                 device)
                         for volume_id, device in self.volumes())
-        attach_volumes_task = scheduler.PollingTaskGroup(attach_tasks)
-
-        return server, scheduler.TaskRunner(attach_volumes_task)
+        return scheduler.PollingTaskGroup(attach_tasks)
 
     def check_create_complete(self, cookie):
+        return self._check_active(cookie)
+
+    def _check_active(self, cookie):
         server, volume_attach = cookie
 
         if not volume_attach.started():
@@ -562,6 +566,29 @@ class Instance(resource.Resource):
                 suspend_runner.step()
         else:
             return volumes_runner.step()
+
+    def handle_resume(self):
+        '''
+        Resume an instance - note we do not wait for the ACTIVE state,
+        this is polled for by check_resume_complete in a similar way to the
+        create logic so we can take advantage of coroutines
+        '''
+        if self.resource_id is None:
+            raise exception.Error(_('Cannot resume %s, resource_id not set') %
+                                  self.name)
+
+        try:
+            server = self.nova().servers.get(self.resource_id)
+        except clients.novaclient.exceptions.NotFound:
+            raise exception.NotFound(_('Failed to find instance %s') %
+                                     self.resource_id)
+        else:
+            logger.debug("resuming instance %s" % self.resource_id)
+            server.resume()
+            return server, scheduler.TaskRunner(self._attach_volumes_task())
+
+    def check_resume_complete(self, cookie):
+        return self._check_active(cookie)
 
 
 def resource_mapping():
