@@ -199,7 +199,8 @@ class InstanceGroup(resource.Resource):
                 inst = self._make_instance(victim)
                 inst.destroy()
                 inst_list.remove(victim)
-                self.resource_id_set(','.join(inst_list))
+                # If we shrink to zero, set resource_id back to None
+                self.resource_id_set(','.join(inst_list) or None)
 
             self._lb_reload()
 

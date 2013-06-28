@@ -153,6 +153,52 @@ class AutoScalingTest(HeatTestCase):
         for x in range(nmeta):
             Metadata.__set__(mox.IgnoreArg(), expected).AndReturn(None)
 
+    def test_scaling_delete_empty(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '0'
+        properties['MaxSize'] = '0'
+        stack = parse_stack(t)
+
+        now = timeutils.utcnow()
+        self.m.ReplayAll()
+        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
+        self.assertEqual(None, rsrc.resource_id)
+
+        rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_scaling_adjust_down_empty(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '1'
+        properties['MaxSize'] = '1'
+        stack = parse_stack(t)
+
+        self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
+        self.assertEqual('WebServerGroup-0', rsrc.resource_id)
+
+        # Reduce the min size to 0, should complete without adjusting
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        update_snippet['Properties']['MinSize'] = '0'
+        self.assertEqual(None, rsrc.update(update_snippet))
+        self.assertEqual('WebServerGroup-0', rsrc.resource_id)
+
+        # trigger adjustment to reduce to 0, resource_id should be None
+        self._stub_lb_reload([])
+        self._stub_meta_expected(now, 'ChangeInCapacity : -1')
+        self.m.ReplayAll()
+        rsrc.adjust(-1)
+        self.assertEqual(None, rsrc.resource_id)
+
+        rsrc.delete()
+        self.m.VerifyAll()
+
     def test_scaling_group_update_replace(self):
         t = template_format.parse(as_template)
         stack = parse_stack(t)
