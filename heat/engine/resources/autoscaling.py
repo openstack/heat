@@ -148,6 +148,20 @@ class InstanceGroup(resource.Resource):
             logger.debug('handle_delete %s' % inst.name)
             inst.destroy()
 
+    def handle_suspend(self):
+        cookie_list = []
+        for inst in self._instances():
+            logger.debug('handle_suspend %s' % inst.name)
+            inst_cookie = inst.handle_suspend()
+            cookie_list.append((inst, inst_cookie))
+        return cookie_list
+
+    def check_suspend_complete(self, cookie_list):
+        for inst, inst_cookie in cookie_list:
+            if not inst.check_suspend_complete(inst_cookie):
+                return False
+        return True
+
     @scheduler.wrappertask
     def _scale(self, instance_task, indices):
         group = scheduler.PollingTaskGroup.from_task_with_args(instance_task,
