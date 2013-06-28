@@ -335,6 +335,12 @@ class Resource(object):
         corresponding handle_* and check_*_complete functions
         Note pre_func is an optional function reference which will
         be called before the handle_<action> function
+
+        If the resource does not declare a check_$action_complete function,
+        we declare COMPLETE status as soon as the handle_$action call has
+        finished, and if no handle_$action function is declared, then we do
+        nothing, useful e.g if the resource requires no action for a given
+        state transition
         '''
         assert action in self.ACTIONS, 'Invalid action %s' % action
 
@@ -389,26 +395,6 @@ class Resource(object):
                                      self.stack.resolve_runtime_data,
                                      self.name)
         return self._do_action(self.CREATE, self.properties.validate)
-
-    def check_create_complete(self, create_data):
-        '''
-        Check if the resource is active (ready to move to the CREATE_COMPLETE
-        state). By default this happens as soon as the handle_create() method
-        has completed successfully, but subclasses may customise this by
-        overriding this function. The return value of handle_create() is
-        passed in to this function each time it is called.
-        '''
-        return True
-
-    def check_suspend_complete(self, suspend_data):
-        '''
-        Check if the resource is suspended
-        By default this happens as soon as the handle_suspend() method
-        has completed successfully, but subclasses may customise this by
-        overriding this function. The return value of handle_suspend() is
-        passed in to this function each time it is called.
-        '''
-        return True
 
     def update(self, json_snippet=None):
         '''
