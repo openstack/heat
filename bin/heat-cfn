@@ -20,7 +20,6 @@ belonging to a user.  It is a convenience application that talks to the heat
 API server.
 """
 
-import gettext
 import optparse
 import os
 import os.path
@@ -40,7 +39,9 @@ if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
 
 scriptname = os.path.basename(sys.argv[0])
 
-gettext.install('heat', unicode=1)
+from heat.openstack.common import gettextutils
+
+gettextutils.install('heat')
 
 if scriptname == 'heat-boto':
     from heat.cfn_client import boto_client as heat_client

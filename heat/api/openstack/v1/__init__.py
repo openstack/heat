@@ -14,9 +14,10 @@
 #    under the License.
 
 import routes
-import gettext
 
-gettext.install('heat', unicode=1)
+from heat.openstack.common import gettextutils
+
+gettextutils.install('heat')
 
 from heat.api.openstack.v1 import stacks
 from heat.api.openstack.v1 import resources

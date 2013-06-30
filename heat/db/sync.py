@@ -16,11 +16,11 @@
 
 from __future__ import print_function
 
-import gettext
-
 import sys
 
-gettext.install('heat', unicode=1)
+from heat.openstack.common import gettextutils
+
+gettextutils.install('heat')
 
 from oslo.config import cfg
 from heat.openstack.common import log as logging
