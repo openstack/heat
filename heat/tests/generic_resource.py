@@ -38,3 +38,6 @@ class GenericResource(resource.Resource):
 
     def handle_suspend(self):
         logger.warning('Suspending generic resource (Type "%s")' % self.type())
+
+    def handle_resume(self):
+        logger.warning('Resuming generic resource (Type "%s")' % self.type())
