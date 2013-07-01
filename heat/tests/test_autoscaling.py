@@ -561,6 +561,34 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.resource_id)
         self.m.VerifyAll()
 
+    def test_scaling_group_scale_up_failure(self):
+        t = template_format.parse(as_template)
+        stack = parse_stack(t)
+
+        # Create initial group
+        self._stub_lb_reload(['WebServerGroup-0'])
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
+        self.assertEqual('WebServerGroup-0', rsrc.resource_id)
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        # Scale up one 1 instance with resource failure
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
+        exc = exception.ResourceFailure(Exception())
+        instance.Instance.handle_create().AndRaise(exc)
+        self.m.StubOutWithMock(instance.Instance, 'destroy')
+        instance.Instance.destroy()
+        self.m.ReplayAll()
+
+        rsrc.adjust(1)
+        self.assertEqual('WebServerGroup-0', rsrc.resource_id)
+
+        self.m.VerifyAll()
+
     def test_scaling_group_nochange(self):
         t = template_format.parse(as_template)
         stack = parse_stack(t)

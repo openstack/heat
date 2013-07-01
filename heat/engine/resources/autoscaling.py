@@ -192,9 +192,15 @@ class InstanceGroup(resource.Resource):
 
             try:
                 yield inst.create()
-            except exception.ResourceFailure:
+            except exception.ResourceFailure as ex:
                 if raise_on_error:
                     raise
+                # Handle instance creation failure locally by destroying the
+                # failed instance to avoid orphaned instances costing user
+                # extra memory
+                logger.warn('Creating %s instance %d failed %s, destroying'
+                            % (str(self), index, str(ex)))
+                inst.destroy()
             else:
                 inst_list.append(name)
                 self.resource_id_set(','.join(inst_list))
