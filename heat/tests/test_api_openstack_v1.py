@@ -307,6 +307,67 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual(result, expected)
         self.m.VerifyAll()
 
+    def test_detail(self):
+        req = self._get('/stacks/detail')
+
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
+
+        engine_resp = [
+            {
+                u'stack_identity': dict(identity),
+                u'updated_time': u'2012-07-09T09:13:11Z',
+                u'template_description': u'blah',
+                u'description': u'blah',
+                u'stack_status_reason': u'Stack successfully created',
+                u'creation_time': u'2012-07-09T09:12:45Z',
+                u'stack_name': identity.stack_name,
+                u'stack_action': u'CREATE',
+                u'stack_status': u'COMPLETE',
+                u'parameters': {'foo': 'bar'},
+                u'outputs': ['key', 'value'],
+                u'notification_topics': [],
+                u'capabilities': [],
+                u'disable_rollback': True,
+                u'timeout_mins': 60,
+            }
+        ]
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'list_stacks',
+                  'args': {},
+                  'version': self.api_version},
+                 None).AndReturn(engine_resp)
+        self.m.ReplayAll()
+
+        result = self.controller.detail(req, tenant_id=identity.tenant)
+
+        expected = {
+            'stacks': [
+                {
+                    'links': [{"href": self._url(identity),
+                               "rel": "self"}],
+                    'id': '1',
+                    u'updated_time': u'2012-07-09T09:13:11Z',
+                    u'template_description': u'blah',
+                    u'description': u'blah',
+                    u'stack_status_reason': u'Stack successfully created',
+                    u'creation_time': u'2012-07-09T09:12:45Z',
+                    u'stack_name': identity.stack_name,
+                    u'stack_status': u'CREATE_COMPLETE',
+                    u'parameters': {'foo': 'bar'},
+                    u'outputs': ['key', 'value'],
+                    u'notification_topics': [],
+                    u'capabilities': [],
+                    u'disable_rollback': True,
+                    u'timeout_mins': 60,
+                }
+            ]
+        }
+
+        self.assertEqual(result, expected)
+        self.m.VerifyAll()
+
     def test_index_rmt_aterr(self):
         req = self._get('/stacks')
 
@@ -1815,6 +1876,15 @@ class RoutesTest(HeatTestCase):
             '/aaaa/stacks',
             'POST',
             'create',
+            'StackController',
+            {
+                'tenant_id': 'aaaa'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/stacks/detail',
+            'GET',
+            'detail',
             'StackController',
             {
                 'tenant_id': 'aaaa'
