@@ -14,9 +14,10 @@
 #    under the License.
 
 import routes
-import gettext
 
-gettext.install('heat', unicode=1)
+from heat.openstack.common import gettextutils
+
+gettextutils.install('heat')
 
 from heat.api.cloudwatch import watch
 from heat.common import wsgi

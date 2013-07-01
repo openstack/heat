@@ -22,7 +22,6 @@ calls the heat-engine via AMQP RPC to implement them.
 import eventlet
 eventlet.monkey_patch(os=False)
 
-import gettext
 import os
 import sys
 
@@ -34,7 +33,9 @@ possible_topdir = os.path.normpath(os.path.join(os.path.abspath(sys.argv[0]),
 if os.path.exists(os.path.join(possible_topdir, 'heat', '__init__.py')):
     sys.path.insert(0, possible_topdir)
 
-gettext.install('heat', unicode=1)
+from heat.openstack.common import gettextutils
+
+gettextutils.install('heat')
 
 from oslo.config import cfg
 

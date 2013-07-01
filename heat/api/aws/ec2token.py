@@ -15,10 +15,11 @@
 
 import urlparse
 import httplib
-import gettext
 import hashlib
 
-gettext.install('heat', unicode=1)
+from heat.openstack.common import gettextutils
+
+gettextutils.install('heat')
 
 from heat.common import wsgi
 from heat.openstack.common import jsonutils as json

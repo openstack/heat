@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import gettext
+from heat.openstack.common import gettextutils
 
-gettext.install('heat', unicode=1)
+gettextutils.install('heat')
+
 
 from heat.api.middleware.version_negotiation import VersionNegotiationFilter
 from heat.api.cfn import versions
