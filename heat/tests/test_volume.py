@@ -464,20 +464,22 @@ class VolumeTest(HeatTestCase):
     @skipIf(volume_backups is None, 'unable to import volume_backups')
     def test_create_from_snapshot(self):
         stack_name = 'test_volume_stack'
-        fv = FakeVolume('creating', 'available')
+        fv = FakeVolumeFromBackup('restoring-backup', 'available')
+        fvbr = FakeBackupRestore('vol-123')
 
         # create script
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
-        self.cinder_fc.restores.restore('backup-123').AndReturn(
-            {'volume_id': 'vol-123'})
+        self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.m.StubOutWithMock(fv, 'update')
         vol_name = utils.PhysName(stack_name, 'DataVolume')
         fv.update(
             display_description=vol_name,
             display_name=vol_name)
+        # sleep will be called since backup will not complete right away
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -487,6 +489,41 @@ class VolumeTest(HeatTestCase):
 
         self.create_volume(t, stack, 'DataVolume')
         self.assertEqual(fv.status, 'available')
+
+        self.m.VerifyAll()
+
+    @skipIf(volume_backups is None, 'unable to import volume_backups')
+    def test_create_from_snapshot_error(self):
+        stack_name = 'test_volume_stack'
+        fv = FakeVolumeFromBackup('restoring-backup', 'error')
+        fvbr = FakeBackupRestore('vol-123')
+
+        # create script
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
+        self.cinder_fc.restores.restore('backup-123').AndReturn(fvbr)
+        self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
+        self.m.StubOutWithMock(fv, 'update')
+        vol_name = utils.PhysName(stack_name, 'DataVolume')
+        fv.update(
+            display_description=vol_name,
+            display_name=vol_name)
+        # sleep will be called since backup will not complete right away
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties']['SnapshotId'] = 'backup-123'
+        t['Resources']['DataVolume']['Properties']['AvailabilityZone'] = 'nova'
+        stack = parse_stack(t, stack_name=stack_name)
+
+        rsrc = vol.Volume('DataVolume',
+                          t['Resources']['DataVolume'],
+                          stack)
+        create = scheduler.TaskRunner(rsrc.create)
+        self.assertRaises(exception.ResourceFailure, create)
 
         self.m.VerifyAll()
 
@@ -698,3 +735,24 @@ class FakeVolume:
 class FakeBackup(FakeVolume):
     status = 'creating'
     id = 'backup-123'
+
+
+class FakeBackupRestore(object):
+    volume_id = 'vol-123'
+
+    def __init__(self, volume_id):
+        self.volume_id = volume_id
+
+
+class FakeVolumeFromBackup(FakeVolume):
+    status = 'restoring-backup'
+    get_call_count = 0
+
+    def get(self):
+        # Allow get to be called once without changing the status
+        # This is to allow the check_create_complete method to
+        # check the inital status.
+        if self.get_call_count < 1:
+            self.get_call_count += 1
+        else:
+            self.status = self.final_status
