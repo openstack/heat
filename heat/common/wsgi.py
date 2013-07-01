@@ -427,6 +427,26 @@ class Request(webob.Request):
             return content_type
 
 
+def is_json_content_type(request):
+    if request.method == 'GET':
+        try:
+            aws_content_type = request.params.get("ContentType")
+        except Exception:
+            aws_content_type = None
+        #respect aws_content_type when both available
+        content_type = aws_content_type or request.content_type
+    else:
+        content_type = request.content_type
+    #bug #1887882
+    #for back compatible for null or plain content type
+    if not content_type or content_type.startswith('text/plain'):
+        content_type = 'application/json'
+    if content_type in ('JSON', 'application/json')\
+            and request.body.startswith('{'):
+        return True
+    return False
+
+
 class JSONRequestDeserializer(object):
     def has_body(self, request):
         """
@@ -434,9 +454,7 @@ class JSONRequestDeserializer(object):
 
         :param request:  Webob.Request object
         """
-        if 'transfer-encoding' in request.headers:
-            return True
-        elif request.content_length > 0:
+        if request.content_length > 0 and is_json_content_type(request):
             return True
 
         return False
