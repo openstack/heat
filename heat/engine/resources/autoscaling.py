@@ -392,7 +392,7 @@ class LaunchConfiguration(resource.Resource):
                          'Required': True},
         'KeyName': {'Type': 'String'},
         'UserData': {'Type': 'String'},
-        'SecurityGroups': {'Type': 'String'},
+        'SecurityGroups': {'Type': 'List'},
         'KernelId': {'Type': 'String',
                      'Implemented': False},
         'RamDiskId': {'Type': 'String',
