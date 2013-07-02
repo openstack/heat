@@ -566,7 +566,7 @@ class EngineService(service.Service):
             for action in actions:
                 action()
 
-            stk = parser.Stack.load(admin_context, stack=stack)
+            stk = parser.Stack.load(stack_context, stack=stack)
             for res in stk:
                 res.metadata_update()
 
