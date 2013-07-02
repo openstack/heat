@@ -162,6 +162,20 @@ class InstanceGroup(resource.Resource):
                 return False
         return True
 
+    def handle_resume(self):
+        cookie_list = []
+        for inst in self._instances():
+            logger.debug('handle_resume %s' % inst.name)
+            inst_cookie = inst.handle_resume()
+            cookie_list.append((inst, inst_cookie))
+        return cookie_list
+
+    def check_resume_complete(self, cookie_list):
+        for inst, inst_cookie in cookie_list:
+            if not inst.check_resume_complete(inst_cookie):
+                return False
+        return True
+
     @scheduler.wrappertask
     def _scale(self, instance_task, indices):
         group = scheduler.PollingTaskGroup.from_task_with_args(instance_task,
