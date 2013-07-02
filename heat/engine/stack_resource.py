@@ -126,6 +126,28 @@ class StackResource(resource.Resource):
 
         return done
 
+    def handle_resume(self):
+        stack = self.nested()
+        if stack is None:
+            raise exception.Error(_('Cannot resume %s, stack not created')
+                                  % self.name)
+
+        resume_task = scheduler.TaskRunner(self._nested.stack_task,
+                                           action=self.RESUME,
+                                           reverse=False)
+
+        resume_task.start(timeout=self._nested.timeout_secs())
+        return resume_task
+
+    def check_resume_complete(self, resume_task):
+        done = resume_task.step()
+        if done:
+            if self._nested.state != (self._nested.RESUME,
+                                      self._nested.COMPLETE):
+                raise exception.Error(self._nested.status_reason)
+
+        return done
+
     def get_output(self, op):
         '''
         Return the specified Output value from the nested stack.

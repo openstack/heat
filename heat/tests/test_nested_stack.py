@@ -97,7 +97,7 @@ Outputs:
 
         self.m.VerifyAll()
 
-    def test_nested_stack_suspend(self):
+    def test_nested_stack_suspend_resume(self):
         urlfetch.get('https://localhost/the.template').AndReturn(
             self.nested_template)
         self.m.ReplayAll()
@@ -107,6 +107,9 @@ Outputs:
 
         scheduler.TaskRunner(rsrc.suspend)()
         self.assertEqual(rsrc.state, (rsrc.SUSPEND, rsrc.COMPLETE))
+
+        scheduler.TaskRunner(rsrc.resume)()
+        self.assertEqual(rsrc.state, (rsrc.RESUME, rsrc.COMPLETE))
 
         rsrc.delete()
         self.m.VerifyAll()
