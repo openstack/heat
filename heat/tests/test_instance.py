@@ -308,6 +308,28 @@ class instancesTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_instance_status_resume_immediate(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_resume')
+
+        instance.resource_id = 1234
+        self.m.ReplayAll()
+
+        # Override the get_servers_1234 handler status to SUSPENDED
+        d = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
+        d['server']['status'] = 'ACTIVE'
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndReturn((200, d))
+        mox.Replay(get)
+        instance.state_set(instance.SUSPEND, instance.COMPLETE)
+
+        scheduler.TaskRunner(instance.resume)()
+        self.assertEqual(instance.state, (instance.RESUME, instance.COMPLETE))
+
+        self.m.VerifyAll()
+
     def test_instance_status_suspend_wait(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
@@ -333,6 +355,36 @@ class instancesTest(HeatTestCase):
 
         scheduler.TaskRunner(instance.suspend)()
         self.assertEqual(instance.state, (instance.SUSPEND, instance.COMPLETE))
+
+        self.m.VerifyAll()
+
+    def test_instance_status_resume_wait(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_resume')
+
+        instance.resource_id = 1234
+        self.m.ReplayAll()
+
+        # Override the get_servers_1234 handler status to ACTIVE, but
+        # return the SUSPENDED state first (twice, so we sleep)
+        d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
+        d2 = copy.deepcopy(d1)
+        d1['server']['status'] = 'SUSPENDED'
+        d2['server']['status'] = 'ACTIVE'
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndReturn((200, d1))
+        get().AndReturn((200, d1))
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        get().AndReturn((200, d2))
+        self.m.ReplayAll()
+
+        instance.state_set(instance.SUSPEND, instance.COMPLETE)
+
+        scheduler.TaskRunner(instance.resume)()
+        self.assertEqual(instance.state, (instance.RESUME, instance.COMPLETE))
 
         self.m.VerifyAll()
 
@@ -362,6 +414,40 @@ class instancesTest(HeatTestCase):
 
         scheduler.TaskRunner(instance.suspend)()
         self.assertEqual(instance.state, (instance.SUSPEND, instance.COMPLETE))
+
+        self.m.VerifyAll()
+
+    def test_instance_resume_volumes_step(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_resume')
+
+        instance.resource_id = 1234
+        self.m.ReplayAll()
+
+        # Override the get_servers_1234 handler status to ACTIVE
+        d = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
+        d['server']['status'] = 'ACTIVE'
+
+        # Return a dummy PollingTaskGroup to make check_resume_complete step
+        def dummy_attach():
+            yield
+        dummy_tg = scheduler.PollingTaskGroup([dummy_attach, dummy_attach])
+        self.m.StubOutWithMock(instance, '_attach_volumes_task')
+        instance._attach_volumes_task().AndReturn(dummy_tg)
+
+        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
+        get = self.fc.client.get_servers_1234
+        get().AndReturn((200, d))
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        self.m.ReplayAll()
+
+        instance.state_set(instance.SUSPEND, instance.COMPLETE)
+
+        scheduler.TaskRunner(instance.resume)()
+        self.assertEqual(instance.state, (instance.RESUME, instance.COMPLETE))
 
         self.m.VerifyAll()
 
