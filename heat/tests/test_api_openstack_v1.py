@@ -2139,6 +2139,30 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual(result, None)
         self.m.VerifyAll()
 
+    def test_action_resume(self):
+        res_name = 'WikiDatabase'
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '1')
+        body = {'resume': None}
+        req = self._post(stack_identity._tenant_path() + '/actions',
+                         data=json.dumps(body))
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'stack_resume',
+                  'args': {'stack_identity': stack_identity},
+                  'version': self.api_version},
+                 None).AndReturn(None)
+        self.m.ReplayAll()
+
+        result = self.controller.action(req, tenant_id=self.tenant,
+                                        stack_name=stack_identity.stack_name,
+                                        stack_id=stack_identity.stack_id,
+                                        body=body)
+        self.assertEqual(result, None)
+        self.m.VerifyAll()
+
     def test_action_badaction(self):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
