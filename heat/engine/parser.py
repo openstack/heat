@@ -371,10 +371,6 @@ class Stack(object):
         self.state_set(self.UPDATE, self.IN_PROGRESS,
                        'Stack %s started' % action)
 
-        # cache all the resources runtime data.
-        for r in self:
-            r.cache_template()
-
         try:
             update_task = update.StackUpdate(self, newstack)
             updater = scheduler.TaskRunner(update_task)
