@@ -44,6 +44,7 @@ import webob.exc
 
 from heat.common import exception
 from heat.openstack.common import importutils
+from heat.openstack.common.gettextutils import _
 
 
 URL_LENGTH_LIMIT = 50000

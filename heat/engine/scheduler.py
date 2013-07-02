@@ -22,6 +22,7 @@ from time import time as wallclock
 
 from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 

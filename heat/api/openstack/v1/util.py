@@ -18,6 +18,8 @@ from functools import wraps
 
 from heat.common import identifier
 
+from heat.openstack.common.gettextutils import _
+
 
 def tenant_local(handler):
     '''

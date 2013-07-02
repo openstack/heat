@@ -28,6 +28,7 @@ from heat.engine.attributes import Attributes
 from heat.engine.properties import Properties
 
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
