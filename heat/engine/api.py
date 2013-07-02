@@ -109,6 +109,7 @@ def format_stack_resource(resource, detail=True):
         api.RES_ID: dict(resource.identifier()),
         api.RES_STACK_ID: dict(resource.stack.identifier()),
         api.RES_STACK_NAME: resource.stack.name,
+        api.RES_REQUIRED_BY: resource.required_by(),
     }
 
     if detail:

@@ -1543,3 +1543,33 @@ class StackTest(HeatTestCase):
                 (rsrc.UPDATE, rsrc.FAILED)):
             rsrc.state_set(action, status)
             self.assertEqual(None, self.stack.output('TestOutput'))
+
+    @stack_delete_after
+    def test_resource_required_by(self):
+        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'},
+                              'BResource': {'Type': 'GenericResourceType',
+                                            'DependsOn': 'AResource'},
+                              'CResource': {'Type': 'GenericResourceType',
+                                            'DependsOn': 'BResource'},
+                              'DResource': {'Type': 'GenericResourceType',
+                                            'DependsOn': 'BResource'}}}
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
+        mox.Replay(scheduler.TaskRunner._sleep)
+
+        self.stack = parser.Stack(self.ctx, 'depends_test_stack',
+                                  template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+
+        self.assertEqual(['BResource'],
+                         self.stack['AResource'].required_by())
+        self.assertEqual([],
+                         self.stack['CResource'].required_by())
+        required_by = self.stack['BResource'].required_by()
+        self.assertEqual(2, len(required_by))
+        for r in ['CResource', 'DResource']:
+            self.assertIn(r, required_by)

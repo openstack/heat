@@ -301,6 +301,14 @@ class Resource(object):
         self._add_dependencies(deps, None, self.t)
         deps += (self, None)
 
+    def required_by(self):
+        '''
+        Returns a list of names of resources which directly require this
+        resource as a dependency.
+        '''
+        return list(
+            [r.name for r in self.stack.dependencies.required_by(self)])
+
     def keystone(self):
         return self.stack.clients.keystone()
 

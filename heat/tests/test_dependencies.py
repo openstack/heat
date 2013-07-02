@@ -194,3 +194,24 @@ class dependenciesTest(testtools.TestCase):
         for n in ('last', 'mid1', 'mid2', 'mid3'):
             self.assertTrue(n in order,
                             "'%s' not found in dependency order" % n)
+
+    def test_required_by(self):
+        d = Dependencies([('last', 'e1'), ('last', 'mid1'), ('last', 'mid2'),
+                          ('mid1', 'e2'), ('mid1', 'mid3'),
+                          ('mid2', 'mid3'),
+                          ('mid3', 'e3')])
+
+        self.assertEqual(0, len(list(d.required_by('last'))))
+
+        required_by = list(d.required_by('mid3'))
+        self.assertEqual(len(required_by), 2)
+        for n in ('mid1', 'mid2'):
+            self.assertTrue(n in required_by,
+                            "'%s' not found in required_by" % n)
+
+        required_by = list(d.required_by('e2'))
+        self.assertEqual(len(required_by), 1)
+        self.assertTrue('mid1' in required_by,
+                        "'%s' not found in required_by" % n)
+
+        self.assertRaises(KeyError, d.required_by, 'foo')
