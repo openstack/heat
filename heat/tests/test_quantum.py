@@ -77,6 +77,13 @@ quantum_template = '''
         }]
       }
     },
+    "port2": {
+      "Type": "OS::Quantum::Port",
+      "Properties": {
+        "name": "port2",
+        "network_id": { "Ref" : "network" }
+      }
+    },
     "router": {
       "Type": "OS::Quantum::Router"
     },
@@ -397,6 +404,11 @@ class QuantumSubnetTest(HeatTestCase):
         self.assertEqual('8.8.8.8', rsrc.FnGetAtt('dns_nameservers')[0])
         self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1',
                          rsrc.FnGetAtt('id'))
+
+        # assert the dependency (implicit or explicit) between the ports
+        # and the subnet
+        self.assertIn(stack['port'], stack.dependencies[stack['subnet']])
+        self.assertIn(stack['port2'], stack.dependencies[stack['subnet']])
 
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})

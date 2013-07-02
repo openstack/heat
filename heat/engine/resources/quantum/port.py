@@ -56,6 +56,19 @@ class Port(quantum.QuantumResource):
         "tenant_id": "tenant owning the port"
     }
 
+    def add_dependencies(self, deps):
+        super(Port, self).add_dependencies(deps)
+        # Depend on any Subnet in this template with the same
+        # network_id as this network_id.
+        # It is not known which subnet a port might be assigned
+        # to so all subnets in a network should be created before
+        # the ports in that network.
+        for resource in self.stack.resources.itervalues():
+            if (resource.type() == 'OS::Quantum::Subnet' and
+                resource.properties.get('network_id') ==
+                    self.properties.get('network_id')):
+                        deps += (self, resource)
+
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
