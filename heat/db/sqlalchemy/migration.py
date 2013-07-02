@@ -24,6 +24,7 @@ import migrate
 from migrate.versioning import util as migrate_util
 
 from heat.openstack.common import exception
+from heat.openstack.common.gettextutils import _
 
 _REPOSITORY = None
 

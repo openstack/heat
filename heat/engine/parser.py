@@ -32,6 +32,8 @@ from heat.engine.clients import Clients
 from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
+
 from heat.common.exception import ServerError
 from heat.common.exception import StackValidationFailed
 

@@ -24,8 +24,10 @@ import os.path
 from oslo.config import cfg
 
 from heat.common import exception
+
 import heat.openstack.common.log as logging
 from heat.openstack.common import policy
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 

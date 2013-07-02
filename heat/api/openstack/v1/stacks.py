@@ -30,6 +30,7 @@ from heat.common import urlfetch
 
 import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 

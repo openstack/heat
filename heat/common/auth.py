@@ -34,6 +34,8 @@ import urlparse
 
 from heat.common import exception
 
+from heat.openstack.common.gettextutils import _
+
 
 class BaseStrategy(object):
     def __init__(self):
@@ -117,7 +119,7 @@ class KeystoneStrategy(BaseStrategy):
 
         self.check_auth_params()
         auth_url = self.creds['auth_url']
-        for _ in range(self.MAX_REDIRECTS):
+        for x in range(self.MAX_REDIRECTS):
             try:
                 _authenticate(auth_url)
             except exception.AuthorizationRedirect as e:

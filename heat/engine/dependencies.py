@@ -18,6 +18,8 @@ import itertools
 
 from heat.common import exception
 
+from heat.openstack.common.gettextutils import _
+
 
 class CircularDependencyException(exception.OpenstackException):
     message = _("Circular Dependency Found: %(cycle)s")

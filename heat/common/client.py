@@ -35,6 +35,8 @@ from heat.common import auth
 from heat.common import exception
 from heat.common import utils
 
+from heat.openstack.common.gettextutils import _
+
 
 # common chunk size for get and put
 CHUNKSIZE = 65536
