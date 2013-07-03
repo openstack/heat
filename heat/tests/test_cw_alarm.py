@@ -18,10 +18,10 @@ import copy
 from heat.common import template_format
 from heat.engine.resources import cloud_watch
 from heat.engine import resource
+from heat.engine import watchrule
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
+from heat.tests import utils
 
 
 alarm_template = '''
@@ -53,7 +53,7 @@ alarm_template = '''
 class CloudWatchAlarmTest(HeatTestCase):
     def setUp(self):
         super(CloudWatchAlarmTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def create_alarm(self, t, stack, resource_name):
         rsrc = cloud_watch.CloudWatchAlarm(resource_name,
@@ -76,7 +76,7 @@ class CloudWatchAlarmTest(HeatTestCase):
         properties['AlarmActions'] = ['a']
         properties['Dimensions'] = [{'a': 'v'}]
 
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         # the watch rule needs a valid stack_id
         stack.store()
 
@@ -107,7 +107,7 @@ class CloudWatchAlarmTest(HeatTestCase):
         properties['AlarmActions'] = ['a']
         properties['Dimensions'] = [{'a': 'v'}]
 
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         # the watch rule needs a valid stack_id
         stack.store()
 
@@ -118,6 +118,33 @@ class CloudWatchAlarmTest(HeatTestCase):
 
         self.assertRaises(resource.UpdateReplace,
                           rsrc.update, snippet)
+
+        rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_suspend_resume(self):
+        t = template_format.parse(alarm_template)
+        stack = utils.parse_stack(t)
+        # the watch rule needs a valid stack_id
+        stack.store()
+
+        self.m.ReplayAll()
+        rsrc = self.create_alarm(t, stack, 'MEMAlarmHigh')
+        scheduler.TaskRunner(rsrc.suspend)()
+        self.assertEqual(rsrc.state, (rsrc.SUSPEND, rsrc.COMPLETE))
+
+        wr = watchrule.WatchRule.load(
+            None, watch_name="test_stack-MEMAlarmHigh")
+
+        self.assertEqual(wr.state, watchrule.WatchRule.SUSPENDED)
+
+        scheduler.TaskRunner(rsrc.resume)()
+        self.assertEqual(rsrc.state, (rsrc.RESUME, rsrc.COMPLETE))
+
+        wr = watchrule.WatchRule.load(
+            None, watch_name="test_stack-MEMAlarmHigh")
+
+        self.assertEqual(wr.state, watchrule.WatchRule.NODATA)
 
         rsrc.delete()
         self.m.VerifyAll()

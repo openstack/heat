@@ -30,11 +30,13 @@ class WatchRule(object):
     WATCH_STATES = (
         ALARM,
         NORMAL,
-        NODATA
+        NODATA,
+        SUSPENDED
     ) = (
         rpc_api.WATCH_STATE_ALARM,
         rpc_api.WATCH_STATE_OK,
-        rpc_api.WATCH_STATE_NODATA
+        rpc_api.WATCH_STATE_NODATA,
+        rpc_api.WATCH_STATE_SUSPENDED
     )
     ACTION_MAP = {ALARM: 'AlarmActions',
                   NORMAL: 'OKActions',
@@ -215,6 +217,8 @@ class WatchRule(object):
         return fn()
 
     def evaluate(self):
+        if self.state == self.SUSPENDED:
+            return []
         # has enough time progressed to run the rule
         self.now = timeutils.utcnow()
         if self.now < (self.last_evaluated + self.timeperiod):
@@ -250,6 +254,11 @@ class WatchRule(object):
         return actions
 
     def create_watch_data(self, data):
+        if self.state == self.SUSPENDED:
+            logger.debug('Ignoring metric data for %s, SUSPENDED state'
+                         % self.name)
+            return []
+
         if self.rule['MetricName'] not in data:
             # Our simplified cloudwatch implementation only expects a single
             # Metric associated with each alarm, but some cfn-push-stats
@@ -266,6 +275,16 @@ class WatchRule(object):
         }
         wd = db_api.watch_data_create(None, watch_data)
         logger.debug('new watch:%s data:%s' % (self.name, str(wd.data)))
+
+    def state_set(self, state):
+        '''
+        Persistently store the watch state
+        '''
+        if state not in self.WATCH_STATES:
+            raise ValueError("Invalid watch state %s" % state)
+
+        self.state = state
+        self.store()
 
     def set_watch_state(self, state):
         '''

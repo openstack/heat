@@ -112,6 +112,17 @@ class CloudWatchAlarm(resource.Resource):
         except exception.NotFound:
             pass
 
+    def handle_suspend(self):
+        wr = watchrule.WatchRule.load(self.context,
+                                      watch_name=self.physical_resource_name())
+        wr.state_set(wr.SUSPENDED)
+
+    def handle_resume(self):
+        wr = watchrule.WatchRule.load(self.context,
+                                      watch_name=self.physical_resource_name())
+        # Just set to NODATA, which will be re-evaluated next periodic task
+        wr.state_set(wr.NODATA)
+
     def FnGetRefId(self):
         return unicode(self.physical_resource_name())
 
