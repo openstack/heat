@@ -51,7 +51,8 @@ class StackResource(resource.Resource):
         '''
         if self._nested is None and self.resource_id is not None:
             self._nested = parser.Stack.load(self.context,
-                                             self.resource_id)
+                                             self.resource_id,
+                                             parent_resource=self)
 
             if self._nested is None:
                 raise exception.NotFound('Nested stack not found in DB')
@@ -73,7 +74,8 @@ class StackResource(resource.Resource):
                                     template,
                                     environment.Environment(user_params),
                                     timeout_mins=timeout_mins,
-                                    disable_rollback=True)
+                                    disable_rollback=True,
+                                    parent_resource=self)
 
         nested_id = self._nested.store(self.stack)
         self.resource_id_set(nested_id)

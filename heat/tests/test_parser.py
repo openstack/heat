@@ -18,6 +18,7 @@ import time
 import uuid
 
 from heat.common import context
+from heat.engine import environment
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import clients
@@ -457,6 +458,54 @@ Mappings:
             parser.Template.resolve_replace(snippet),
             '"foo" is "${var3}"')
 
+    def test_resource_facade(self):
+        metadata_snippet = {'Fn::ResourceFacade': 'Metadata'}
+        deletion_policy_snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
+        update_policy_snippet = {'Fn::ResourceFacade': 'UpdatePolicy'}
+
+        class DummyClass:
+            pass
+        parent_resource = DummyClass()
+        parent_resource.metadata = '{"foo": "bar"}'
+        parent_resource.t = {'DeletionPolicy': 'Retain',
+                             'UpdatePolicy': '{"foo": "bar"}'}
+        stack = parser.Stack(None, 'test_stack',
+                             parser.Template({}),
+                             parent_resource=parent_resource)
+        self.assertEqual(
+            parser.Template.resolve_resource_facade(metadata_snippet, stack),
+            '{"foo": "bar"}')
+        self.assertEqual(
+            parser.Template.resolve_resource_facade(deletion_policy_snippet,
+                                                    stack), 'Retain')
+        self.assertEqual(
+            parser.Template.resolve_resource_facade(update_policy_snippet,
+                                                    stack), '{"foo": "bar"}')
+
+    def test_resource_facade_invalid_arg(self):
+        snippet = {'Fn::ResourceFacade': 'wibble'}
+        stack = parser.Stack(None, 'test_stack', parser.Template({}))
+        self.assertRaises(ValueError,
+                          parser.Template.resolve_resource_facade,
+                          snippet,
+                          stack)
+
+    def test_resource_facade_missing_key(self):
+        snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
+
+        class DummyClass:
+            pass
+        parent_resource = DummyClass()
+        parent_resource.metadata = '{"foo": "bar"}'
+        parent_resource.t = {}
+        stack = parser.Stack(None, 'test_stack',
+                             parser.Template({}),
+                             parent_resource=parent_resource)
+        self.assertRaises(KeyError,
+                          parser.Template.resolve_resource_facade,
+                          snippet,
+                          stack)
+
 
 class StackTest(HeatTestCase):
     def setUp(self):
@@ -516,6 +565,33 @@ class StackTest(HeatTestCase):
     def test_load_nonexistant_id(self):
         self.assertRaises(exception.NotFound, parser.Stack.load,
                           None, -1)
+
+    @stack_delete_after
+    def test_load_parent_resource(self):
+        self.stack = parser.Stack(self.ctx, 'load_parent_resource',
+                                  parser.Template({}))
+        self.stack.store()
+        stack = db_api.stack_get(self.ctx, self.stack.id)
+
+        t = template.Template.load(self.ctx, stack.raw_template_id)
+        self.m.StubOutWithMock(template.Template, 'load')
+        template.Template.load(self.ctx, stack.raw_template_id).AndReturn(t)
+
+        env = environment.Environment(stack.parameters)
+        self.m.StubOutWithMock(environment, 'Environment')
+        environment.Environment(stack.parameters).AndReturn(env)
+
+        self.m.StubOutWithMock(parser.Stack, '__init__')
+        parser.Stack.__init__(self.ctx, stack.name, t, env, stack.id,
+                              stack.action, stack.status, stack.status_reason,
+                              stack.timeout, True, stack.disable_rollback,
+                              'parent')
+
+        self.m.ReplayAll()
+        parser.Stack.load(self.ctx, stack_id=self.stack.id,
+                          parent_resource='parent')
+
+        self.m.VerifyAll()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the self.stack is properly cleaned up

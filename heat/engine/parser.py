@@ -59,7 +59,7 @@ class Stack(object):
     def __init__(self, context, stack_name, tmpl, env=None,
                  stack_id=None, action=None, status=None,
                  status_reason='', timeout_mins=60, resolve_data=True,
-                 disable_rollback=True):
+                 disable_rollback=True, parent_resource=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -82,6 +82,7 @@ class Stack(object):
         self.status_reason = status_reason
         self.timeout_mins = timeout_mins
         self.disable_rollback = disable_rollback
+        self.parent_resource = parent_resource
 
         resources.initialise()
 
@@ -127,7 +128,8 @@ class Stack(object):
         return deps
 
     @classmethod
-    def load(cls, context, stack_id=None, stack=None, resolve_data=True):
+    def load(cls, context, stack_id=None, stack=None, resolve_data=True,
+             parent_resource=None):
         '''Retrieve a Stack from the database.'''
         if stack is None:
             stack = db_api.stack_get(context, stack_id)
@@ -139,7 +141,8 @@ class Stack(object):
         env = environment.Environment(stack.parameters)
         stack = cls(context, stack.name, template, env,
                     stack.id, stack.action, stack.status, stack.status_reason,
-                    stack.timeout, resolve_data, stack.disable_rollback)
+                    stack.timeout, resolve_data, stack.disable_rollback,
+                    parent_resource)
 
         return stack
 
@@ -543,6 +546,8 @@ def resolve_static_data(template, stack, parameters, snippet):
                      [functools.partial(template.resolve_param_refs,
                                         parameters=parameters),
                       functools.partial(template.resolve_availability_zones,
+                                        stack=stack),
+                      functools.partial(template.resolve_resource_facade,
                                         stack=stack),
                       template.resolve_find_in_map,
                       template.reduce_joins])

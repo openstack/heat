@@ -361,6 +361,30 @@ class Template(collections.Mapping):
 
         return _resolve(lambda k, v: k == 'Fn::Base64', handle_base64, s)
 
+    @staticmethod
+    def resolve_resource_facade(s, stack):
+        '''
+        Resolve constructs of the form {'Fn::ResourceFacade': 'Metadata'}
+        '''
+        resource_attributes = ('Metadata', 'DeletionPolicy', 'UpdatePolicy')
+
+        def handle_resource_facade(arg):
+            if arg not in resource_attributes:
+                raise ValueError(
+                    'Incorrect arguments to "Fn::ResourceFacade" %s: %s' %
+                    ('should be one of', str(resource_attributes)))
+            try:
+                if arg == 'Metadata':
+                    return stack.parent_resource.metadata
+                return stack.parent_resource.t[arg]
+            except KeyError:
+                raise KeyError('"%s" is not specified in parent resource' %
+                               arg)
+
+        return _resolve(lambda k, v: k == 'Fn::ResourceFacade',
+                        handle_resource_facade,
+                        s)
+
 
 def _resolve(match, handle, snippet):
     '''
