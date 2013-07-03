@@ -35,8 +35,13 @@ class InternetGateway(resource.Resource):
     }
 
     def handle_create(self):
-        client = self.quantum()
+        self.resource_id_set(self.physical_resource_name())
 
+    def handle_delete(self):
+        pass
+
+    @staticmethod
+    def get_external_network_id(client):
         ext_filter = {'router:external': True}
         ext_nets = client.list_networks(**ext_filter)['networks']
         if len(ext_nets) != 1:
@@ -45,15 +50,8 @@ class InternetGateway(resource.Resource):
             # the default one
             raise exception.Error(
                 'Expected 1 external network, found %d' % len(ext_nets))
-
         external_network_id = ext_nets[0]['id']
-        md = {
-            'external_network_id': external_network_id
-        }
-        self.metadata = md
-
-    def handle_delete(self):
-        pass
+        return external_network_id
 
 
 class VPCGatewayAttachment(resource.Resource):
@@ -68,24 +66,36 @@ class VPCGatewayAttachment(resource.Resource):
             'Implemented': False}
     }
 
+    def _vpc_route_tables(self):
+        for resource in self.stack.resources.itervalues():
+            if (resource.type() == 'AWS::EC2::RouteTable' and
+                resource.properties.get('VpcId') ==
+                    self.properties.get('VpcId')):
+                        yield resource
+
+    def add_dependencies(self, deps):
+        super(VPCGatewayAttachment, self).add_dependencies(deps)
+        # Depend on any route table in this template with the same
+        # VpcId as this VpcId.
+        # All route tables must exist before gateway attachment
+        # as attachment happens to routers (not VPCs)
+        for route_table in self._vpc_route_tables():
+            deps += (self, route_table)
+
     def handle_create(self):
         client = self.quantum()
-        gateway = self.stack[self.properties.get('InternetGatewayId')]
-        vpc = self.stack.resource_by_refid(self.properties.get('VpcId'))
-        external_network_id = gateway.metadata['external_network_id']
-
-        for router_id in vpc.metadata['all_router_ids']:
-            client.add_gateway_router(router_id, {
+        external_network_id = InternetGateway.get_external_network_id(client)
+        for router in self._vpc_route_tables():
+            client.add_gateway_router(router.resource_id, {
                 'network_id': external_network_id})
 
     def handle_delete(self):
         from quantumclient.common.exceptions import QuantumClientException
 
         client = self.quantum()
-        vpc = self.stack.resource_by_refid(self.properties.get('VpcId'))
-        for router_id in vpc.metadata['all_router_ids']:
+        for router in self._vpc_route_tables():
             try:
-                client.remove_gateway_router(router_id)
+                client.remove_gateway_router(router.resource_id)
             except QuantumClientException as ex:
                 if ex.status_code != 404:
                     raise ex

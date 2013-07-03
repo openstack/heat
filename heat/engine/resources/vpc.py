@@ -13,9 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine import resource
+from heat.engine.resources.quantum import quantum
 
 logger = logging.getLogger(__name__)
 
@@ -42,31 +44,53 @@ class VPC(resource.Resource):
 
     def handle_create(self):
         client = self.quantum()
-        props = {'name': self.physical_resource_name()}
-        # Creates a network with an implicit router
-        net = client.create_network({'network': props})['network']
-        router = client.create_router({'router': props})['router']
-        md = {
-            'router_id': router['id'],
-            'all_router_ids': [router['id']]
-        }
-        self.metadata = md
+        # The VPC's net and router are associated by having identical names.
+        net_props = {'name': self.physical_resource_name()}
+        router_props = {'name': self.physical_resource_name()}
+
+        net = client.create_network({'network': net_props})['network']
+        client.create_router({'router': router_props})['router']
+
         self.resource_id_set(net['id'])
+
+    @staticmethod
+    def network_for_vpc(client, network_id):
+        return client.show_network(network_id)['network']
+
+    @staticmethod
+    def router_for_vpc(client, network_id):
+        # first get the quantum net
+        net = VPC.network_for_vpc(client, network_id)
+        # then find a router with the same name
+        routers = client.list_routers(name=net['name'])['routers']
+        if len(routers) == 0:
+            # There may be no router if the net was created manually
+            # instead of in another stack.
+            return None
+        if len(routers) > 1:
+            raise exception.Error(
+                _('Multiple routers found with name %s') % net['name'])
+        return routers[0]
+
+    def check_create_complete(self, *args):
+        net = self.network_for_vpc(self.quantum(), self.resource_id)
+        if not quantum.QuantumResource.is_built(net):
+            return False
+        router = self.router_for_vpc(self.quantum(), self.resource_id)
+        return quantum.QuantumResource.is_built(router)
 
     def handle_delete(self):
         from quantumclient.common.exceptions import QuantumClientException
-
         client = self.quantum()
-        network_id = self.resource_id
-        router_id = self.metadata['router_id']
+        router = self.router_for_vpc(client, self.resource_id)
         try:
-            client.delete_router(router_id)
+            client.delete_router(router['id'])
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
         try:
-            client.delete_network(network_id)
+            client.delete_network(self.resource_id)
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex
