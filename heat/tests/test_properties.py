@@ -305,6 +305,82 @@ class PropertiesTest(unittest.TestCase):
     def test_bad_key(self):
         self.assertEqual(self.props.get('foo', 'wibble'), 'wibble')
 
+    def test_none_string(self):
+        schema = {'foo': {'Type': 'String'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual('', props['foo'])
+
+    def test_none_integer(self):
+        schema = {'foo': {'Type': 'Integer'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(0, props['foo'])
+
+    def test_none_number(self):
+        schema = {'foo': {'Type': 'Number'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(0, props['foo'])
+
+    def test_none_boolean(self):
+        schema = {'foo': {'Type': 'Boolean'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(False, props['foo'])
+
+    def test_none_map(self):
+        schema = {'foo': {'Type': 'Map'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual({}, props['foo'])
+
+    def test_none_list(self):
+        schema = {'foo': {'Type': 'List'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual([], props['foo'])
+
+    def test_none_default_string(self):
+        schema = {'foo': {'Type': 'String', 'Default': 'bar'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual('bar', props['foo'])
+
+    def test_none_default_integer(self):
+        schema = {'foo': {'Type': 'Integer', 'Default': 42}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(42, props['foo'])
+
+        schema = {'foo': {'Type': 'Integer', 'Default': 0}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(0, props['foo'])
+
+        schema = {'foo': {'Type': 'Integer', 'Default': -273}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(-273, props['foo'])
+
+    def test_none_default_number(self):
+        schema = {'foo': {'Type': 'Number', 'Default': 42.0}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(42.0, props['foo'])
+
+        schema = {'foo': {'Type': 'Number', 'Default': 0.0}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(0.0, props['foo'])
+
+        schema = {'foo': {'Type': 'Number', 'Default': -273.15}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(-273.15, props['foo'])
+
+    def test_none_default_boolean(self):
+        schema = {'foo': {'Type': 'Boolean', 'Default': True}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(True, props['foo'])
+
+    def test_none_default_map(self):
+        schema = {'foo': {'Type': 'Map', 'Default': {'bar': 'baz'}}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual({'bar': 'baz'}, props['foo'])
+
+    def test_none_default_list(self):
+        schema = {'foo': {'Type': 'List', 'Default': ['one', 'two']}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(['one', 'two'], props['foo'])
+
 
 @attr(tag=['unit', 'properties'])
 @attr(speed='fast')
@@ -343,3 +419,63 @@ class PropertiesValidationTest(unittest.TestCase):
         schema = {'foo': {'Type': 'String'}}
         props = properties.Properties(schema, {'food': 42})
         self.assertRaises(exception.StackValidationFailed, props.validate)
+
+    def test_none_string(self):
+        schema = {'foo': {'Type': 'String'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_integer(self):
+        schema = {'foo': {'Type': 'Integer'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_number(self):
+        schema = {'foo': {'Type': 'Number'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_boolean(self):
+        schema = {'foo': {'Type': 'Boolean'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_map(self):
+        schema = {'foo': {'Type': 'Map'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_list(self):
+        schema = {'foo': {'Type': 'List'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_default_string(self):
+        schema = {'foo': {'Type': 'String', 'Default': 'bar'}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_default_integer(self):
+        schema = {'foo': {'Type': 'Integer', 'Default': 42}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_default_number(self):
+        schema = {'foo': {'Type': 'Number', 'Default': 42.0}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_default_boolean(self):
+        schema = {'foo': {'Type': 'Boolean', 'Default': True}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_default_map(self):
+        schema = {'foo': {'Type': 'Map', 'Default': {'bar': 'baz'}}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
+
+    def test_none_default_list(self):
+        schema = {'foo': {'Type': 'List', 'Default': ['one', 'two']}}
+        props = properties.Properties(schema, {'foo': None})
+        self.assertEqual(props.validate(), None)
