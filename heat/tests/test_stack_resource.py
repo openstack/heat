@@ -12,12 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 from heat.common import template_format
 from heat.common import context
 from heat.common import exception
+from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.engine import stack_resource
 from heat.engine import template
 from heat.openstack.common import uuidutils
@@ -62,6 +63,17 @@ class MyStackResource(stack_resource.StackResource,
                       generic_rsrc.GenericResource):
     def physical_resource_name(self):
         return "cb2f2b28-a663-4683-802c-4b40c916e1ff"
+
+    def set_template(self, nested_tempalte, params):
+        self.nested_tempalte = nested_tempalte
+        self.nested_params = params
+
+    def handle_create(self):
+        return self.create_with_template(self.nested_tempalte,
+                                         self.nested_params)
+
+    def handle_delete(self):
+        self.delete_nested()
 
 
 class StackResourceTest(HeatTestCase):
@@ -159,3 +171,113 @@ class StackResourceTest(HeatTestCase):
                           "key")
 
         self.m.VerifyAll()
+
+    @stack_delete_after
+    def test_create_complete_state_err(self):
+        """
+        check_create_complete should raise error when create task is
+        done but the nested stack is not in (CREATE,COMPLETE) state
+        """
+        del self.templ['Resources']['WebServer']
+        self.parent_resource.set_template(self.templ, {"KeyName": "test"})
+
+        ctx = self.parent_resource.context
+        phy_id = "cb2f2b28-a663-4683-802c-4b40c916e1ff"
+        templ = parser.Template(self.templ)
+        env = environment.Environment({"KeyName": "test"})
+        self.stack = parser.Stack(ctx, phy_id, templ, env, timeout_mins=None,
+                                  disable_rollback=True,
+                                  parent_resource=self.parent_resource)
+
+        self.m.StubOutWithMock(parser, 'Template')
+        parser.Template(self.templ).AndReturn(templ)
+
+        self.m.StubOutWithMock(environment, 'Environment')
+        environment.Environment({"KeyName": "test"}).AndReturn(env)
+
+        self.m.StubOutWithMock(parser, 'Stack')
+        parser.Stack(ctx, phy_id, templ, env, timeout_mins=None,
+                     disable_rollback=True,
+                     parent_resource=self.parent_resource)\
+            .AndReturn(self.stack)
+
+        st_set = self.stack.state_set
+        self.m.StubOutWithMock(self.stack, 'state_set')
+        self.stack.state_set(parser.Stack.CREATE, parser.Stack.IN_PROGRESS,
+                             "Stack CREATE started").WithSideEffects(st_set)
+
+        self.stack.state_set(parser.Stack.CREATE, parser.Stack.COMPLETE,
+                             "Stack create completed successfully")
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(self.parent_resource.create))
+        self.assertEqual(('CREATE', 'FAILED'), self.parent_resource.state)
+        self.assertEqual(('Error: Stack CREATE started'),
+                         self.parent_resource.status_reason)
+
+        self.m.VerifyAll()
+        # Restore state_set to let clean up proceed
+        self.stack.state_set = st_set
+
+    @stack_delete_after
+    def test_suspend_complete_state_err(self):
+        """
+        check_suspend_complete should raise error when suspend task is
+        done but the nested stack is not in (SUSPEND,COMPLETE) state
+        """
+        del self.templ['Resources']['WebServer']
+        self.parent_resource.set_template(self.templ, {"KeyName": "test"})
+        scheduler.TaskRunner(self.parent_resource.create)()
+        self.stack = self.parent_resource.nested()
+
+        st_set = self.stack.state_set
+        self.m.StubOutWithMock(self.stack, 'state_set')
+        self.stack.state_set(parser.Stack.SUSPEND, parser.Stack.IN_PROGRESS,
+                             "Stack SUSPEND started").WithSideEffects(st_set)
+
+        self.stack.state_set(parser.Stack.SUSPEND, parser.Stack.COMPLETE,
+                             "Stack suspend completed successfully")
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(self.parent_resource.suspend))
+        self.assertEqual(('SUSPEND', 'FAILED'), self.parent_resource.state)
+        self.assertEqual(('Error: Stack SUSPEND started'),
+                         self.parent_resource.status_reason)
+
+        self.m.VerifyAll()
+        # Restore state_set to let clean up proceed
+        self.stack.state_set = st_set
+
+    @stack_delete_after
+    def test_resume_complete_state_err(self):
+        """
+        check_resume_complete should raise error when resume task is
+        done but the nested stack is not in (RESUME,COMPLETE) state
+        """
+        del self.templ['Resources']['WebServer']
+        self.parent_resource.set_template(self.templ, {"KeyName": "test"})
+        scheduler.TaskRunner(self.parent_resource.create)()
+        self.stack = self.parent_resource.nested()
+
+        scheduler.TaskRunner(self.parent_resource.suspend)()
+
+        st_set = self.stack.state_set
+        self.m.StubOutWithMock(self.stack, 'state_set')
+        self.stack.state_set(parser.Stack.RESUME, parser.Stack.IN_PROGRESS,
+                             "Stack RESUME started").WithSideEffects(st_set)
+
+        self.stack.state_set(parser.Stack.RESUME, parser.Stack.COMPLETE,
+                             "Stack resume completed successfully")
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(self.parent_resource.resume))
+        self.assertEqual(('RESUME', 'FAILED'), self.parent_resource.state)
+        self.assertEqual(('Error: Stack RESUME started'),
+                         self.parent_resource.status_reason)
+
+        self.m.VerifyAll()
+        # Restore state_set to let clean up proceed
+        self.stack.state_set = st_set
