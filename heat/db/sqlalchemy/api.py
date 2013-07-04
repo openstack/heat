@@ -302,13 +302,11 @@ def watch_rule_update(context, watch_id, values):
     wr.save(_session(context))
 
 
-def watch_rule_delete(context, watch_name):
-    wr = model_query(context, models.WatchRule).\
-        filter_by(name=watch_name).first()
-
+def watch_rule_delete(context, watch_id):
+    wr = watch_rule_get(context, watch_id)
     if not wr:
         raise exception.NotFound('Attempt to delete watch_rule: %s %s' %
-                                 (watch_name, 'that does not exist'))
+                                 (watch_id, 'that does not exist'))
 
     session = Session.object_session(wr)
 

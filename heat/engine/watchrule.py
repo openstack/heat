@@ -99,6 +99,13 @@ class WatchRule(object):
         else:
             db_api.watch_rule_update(self.context, self.id, wr_values)
 
+    def destroy(self):
+        '''
+        Delete the watchrule from the database.
+        '''
+        if self.id:
+            db_api.watch_rule_delete(self.context, self.id)
+
     def do_data_cmp(self, data, threshold):
         op = self.rule['ComparisonOperator']
         if op == 'GreaterThanThreshold':

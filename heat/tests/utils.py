@@ -16,6 +16,7 @@ import sys
 import functools
 
 from heat.common import context
+from heat.common import exception
 from heat.engine import environment
 from heat.engine import parser
 
@@ -45,6 +46,44 @@ def stack_delete_after(test_fn):
                 raise exc_class, exc_val, exc_tb
         else:
             delete_stack()
+
+    return wrapped_test
+
+
+def wr_delete_after(test_fn):
+    """
+    Decorator which calls test class self.wr.destroy()
+    to ensure tests clean up their watchrule regardless of test success/failure
+    Used by tests which create watchrule objects directly to cleanup correctly
+    self.wr can be either a single watchrule, or a list of several watchrules
+    """
+    @functools.wraps(test_fn)
+    def wrapped_test(test_case, *args, **kwargs):
+
+        def delete_wrs():
+            wr = getattr(test_case, 'wr', None)
+            try:
+                for w in wr:
+                    delete_wr(w)
+            except TypeError:
+                delete_wr(wr)
+
+        def delete_wr(w):
+            if w.id is not None:
+                try:
+                    w.destroy()
+                except exception.NotFound:
+                    pass
+        try:
+            test_fn(test_case, *args, **kwargs)
+        except:
+            exc_class, exc_val, exc_tb = sys.exc_info()
+            try:
+                delete_wrs()
+            finally:
+                raise exc_class, exc_val, exc_tb
+        else:
+            delete_wrs()
 
     return wrapped_test
 

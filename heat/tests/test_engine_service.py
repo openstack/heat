@@ -1026,25 +1026,34 @@ class stackServiceTest(HeatTestCase):
         self.m.VerifyAll()
 
     @stack_context('service_show_watch_test_stack', False)
+    @utils.wr_delete_after
     def test_show_watch(self):
         # Insert two dummy watch rules into the DB
-        values = {'stack_id': self.stack.id,
-                  'state': 'NORMAL',
-                  'name': u'HttpFailureAlarm',
-                  'rule': {u'EvaluationPeriods': u'1',
-                           u'AlarmActions': [u'WebServerRestartPolicy'],
-                           u'AlarmDescription': u'Restart the WikiDatabase',
-                           u'Namespace': u'system/linux',
-                           u'Period': u'300',
-                           u'ComparisonOperator': u'GreaterThanThreshold',
-                           u'Statistic': u'SampleCount',
-                           u'Threshold': u'2',
-                           u'MetricName': u'ServiceFailure'}}
-        db_ret = db_api.watch_rule_create(self.ctx, values)
-        self.assertNotEqual(db_ret, None)
-        values['name'] = "AnotherWatch"
-        db_ret = db_api.watch_rule_create(self.ctx, values)
-        self.assertNotEqual(db_ret, None)
+        rule = {u'EvaluationPeriods': u'1',
+                u'AlarmActions': [u'WebServerRestartPolicy'],
+                u'AlarmDescription': u'Restart the WikiDatabase',
+                u'Namespace': u'system/linux',
+                u'Period': u'300',
+                u'ComparisonOperator': u'GreaterThanThreshold',
+                u'Statistic': u'SampleCount',
+                u'Threshold': u'2',
+                u'MetricName': u'ServiceFailure'}
+        self.wr = []
+        self.wr.append(watchrule.WatchRule(context=self.ctx,
+                                           watch_name='HttpFailureAlarm',
+                                           rule=rule,
+                                           watch_data=[],
+                                           stack_id=self.stack.id,
+                                           state='NORMAL'))
+        self.wr[0].store()
+
+        self.wr.append(watchrule.WatchRule(context=self.ctx,
+                                           watch_name='AnotherWatch',
+                                           rule=rule,
+                                           watch_data=[],
+                                           stack_id=self.stack.id,
+                                           state='NORMAL'))
+        self.wr[1].store()
 
         # watch_name=None should return both watches
         result = self.eng.show_watch(self.ctx, watch_name=None)
@@ -1062,27 +1071,26 @@ class stackServiceTest(HeatTestCase):
         for key in engine_api.WATCH_KEYS:
             self.assertTrue(key in result[0])
 
-        # Cleanup, delete the dummy rules
-        db_api.watch_rule_delete(self.ctx, "HttpFailureAlarm")
-        db_api.watch_rule_delete(self.ctx, "AnotherWatch")
-
     @stack_context('service_show_watch_metric_test_stack', False)
+    @utils.wr_delete_after
     def test_show_watch_metric(self):
         # Insert dummy watch rule into the DB
-        values = {'stack_id': self.stack.id,
-                  'state': 'NORMAL',
-                  'name': u'HttpFailureAlarm',
-                  'rule': {u'EvaluationPeriods': u'1',
-                           u'AlarmActions': [u'WebServerRestartPolicy'],
-                           u'AlarmDescription': u'Restart the WikiDatabase',
-                           u'Namespace': u'system/linux',
-                           u'Period': u'300',
-                           u'ComparisonOperator': u'GreaterThanThreshold',
-                           u'Statistic': u'SampleCount',
-                           u'Threshold': u'2',
-                           u'MetricName': u'ServiceFailure'}}
-        db_ret = db_api.watch_rule_create(self.ctx, values)
-        self.assertNotEqual(db_ret, None)
+        rule = {u'EvaluationPeriods': u'1',
+                u'AlarmActions': [u'WebServerRestartPolicy'],
+                u'AlarmDescription': u'Restart the WikiDatabase',
+                u'Namespace': u'system/linux',
+                u'Period': u'300',
+                u'ComparisonOperator': u'GreaterThanThreshold',
+                u'Statistic': u'SampleCount',
+                u'Threshold': u'2',
+                u'MetricName': u'ServiceFailure'}
+        self.wr = watchrule.WatchRule(context=self.ctx,
+                                      watch_name='HttpFailureAlarm',
+                                      rule=rule,
+                                      watch_data=[],
+                                      stack_id=self.stack.id,
+                                      state='NORMAL')
+        self.wr.store()
 
         # And add a metric datapoint
         watch = db_api.watch_rule_get_by_name(self.ctx, "HttpFailureAlarm")
@@ -1106,30 +1114,30 @@ class stackServiceTest(HeatTestCase):
                                             metric_name=None)
         self.assertEqual(2, len(result))
 
-        # Cleanup, delete the dummy rule
-        db_api.watch_rule_delete(self.ctx, "HttpFailureAlarm")
-
         # Check the response has all keys defined in the engine API
         for key in engine_api.WATCH_DATA_KEYS:
             self.assertTrue(key in result[0])
 
     @stack_context('service_show_watch_state_test_stack')
+    @utils.wr_delete_after
     def test_set_watch_state(self):
         # Insert dummy watch rule into the DB
-        values = {'stack_id': self.stack.id,
-                  'state': 'NORMAL',
-                  'name': u'OverrideAlarm',
-                  'rule': {u'EvaluationPeriods': u'1',
-                           u'AlarmActions': [u'WebServerRestartPolicy'],
-                           u'AlarmDescription': u'Restart the WikiDatabase',
-                           u'Namespace': u'system/linux',
-                           u'Period': u'300',
-                           u'ComparisonOperator': u'GreaterThanThreshold',
-                           u'Statistic': u'SampleCount',
-                           u'Threshold': u'2',
-                           u'MetricName': u'ServiceFailure'}}
-        db_ret = db_api.watch_rule_create(self.ctx, values)
-        self.assertNotEqual(db_ret, None)
+        rule = {u'EvaluationPeriods': u'1',
+                u'AlarmActions': [u'WebServerRestartPolicy'],
+                u'AlarmDescription': u'Restart the WikiDatabase',
+                u'Namespace': u'system/linux',
+                u'Period': u'300',
+                u'ComparisonOperator': u'GreaterThanThreshold',
+                u'Statistic': u'SampleCount',
+                u'Threshold': u'2',
+                u'MetricName': u'ServiceFailure'}
+        self.wr = watchrule.WatchRule(context=self.ctx,
+                                      watch_name='OverrideAlarm',
+                                      rule=rule,
+                                      watch_data=[],
+                                      stack_id=self.stack.id,
+                                      state='NORMAL')
+        self.wr.store()
 
         class DummyAction:
             alarm = "dummyfoo"
@@ -1168,26 +1176,27 @@ class stackServiceTest(HeatTestCase):
                          [DummyAction.alarm])
 
         self.m.VerifyAll()
-        # Cleanup, delete the dummy rule
-        db_api.watch_rule_delete(self.ctx, "OverrideAlarm")
 
     @stack_context('service_show_watch_state_badstate_test_stack')
+    @utils.wr_delete_after
     def test_set_watch_state_badstate(self):
         # Insert dummy watch rule into the DB
-        values = {'stack_id': self.stack.id,
-                  'state': 'NORMAL',
-                  'name': u'OverrideAlarm2',
-                  'rule': {u'EvaluationPeriods': u'1',
-                           u'AlarmActions': [u'WebServerRestartPolicy'],
-                           u'AlarmDescription': u'Restart the WikiDatabase',
-                           u'Namespace': u'system/linux',
-                           u'Period': u'300',
-                           u'ComparisonOperator': u'GreaterThanThreshold',
-                           u'Statistic': u'SampleCount',
-                           u'Threshold': u'2',
-                           u'MetricName': u'ServiceFailure'}}
-        db_ret = db_api.watch_rule_create(self.ctx, values)
-        self.assertNotEqual(db_ret, None)
+        rule = {u'EvaluationPeriods': u'1',
+                u'AlarmActions': [u'WebServerRestartPolicy'],
+                u'AlarmDescription': u'Restart the WikiDatabase',
+                u'Namespace': u'system/linux',
+                u'Period': u'300',
+                u'ComparisonOperator': u'GreaterThanThreshold',
+                u'Statistic': u'SampleCount',
+                u'Threshold': u'2',
+                u'MetricName': u'ServiceFailure'}
+        self.wr = watchrule.WatchRule(context=self.ctx,
+                                      watch_name='OverrideAlarm2',
+                                      rule=rule,
+                                      watch_data=[],
+                                      stack_id=self.stack.id,
+                                      state='NORMAL')
+        self.wr.store()
 
         self.m.StubOutWithMock(watchrule.WatchRule, 'set_watch_state')
         for state in ["HGJHGJHG", "1234", "!\*(&%"]:
@@ -1202,9 +1211,6 @@ class stackServiceTest(HeatTestCase):
                               state=state)
 
         self.m.VerifyAll()
-
-        # Cleanup, delete the dummy rule
-        db_api.watch_rule_delete(self.ctx, "OverrideAlarm2")
 
     def test_set_watch_state_noexist(self):
         state = watchrule.WatchRule.ALARM   # State valid
