@@ -129,6 +129,9 @@ class UserTest(UserPolicyTestCase):
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
 
+        self.assertEqual(None, rsrc.handle_suspend())
+        self.assertEqual(None, rsrc.handle_resume())
+
         rsrc.resource_id = None
         self.assertEqual(None, rsrc.delete())
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)

@@ -90,6 +90,18 @@ class User(resource.Resource):
         except clients.hkc.kc.exceptions.NotFound:
             pass
 
+    def handle_suspend(self):
+        if self.resource_id is None:
+            logger.error("Cannot suspend User resource before user created!")
+            return
+        self.keystone().disable_stack_user(self.resource_id)
+
+    def handle_resume(self):
+        if self.resource_id is None:
+            logger.error("Cannot resume User resource before user created!")
+            return
+        self.keystone().enable_stack_user(self.resource_id)
+
     def FnGetRefId(self):
         return unicode(self.physical_resource_name())
 
