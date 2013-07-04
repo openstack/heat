@@ -93,6 +93,8 @@ as_template = '''
 
 
 class AutoScalingTest(HeatTestCase):
+    dummy_instance_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+
     def setUp(self):
         super(AutoScalingTest, self).setUp()
         setup_dummy_db()
@@ -129,15 +131,24 @@ class AutoScalingTest(HeatTestCase):
         instance.Instance.check_create_complete(
             cookie).MultipleTimes().AndReturn(True)
 
-    def _stub_lb_reload(self, expected_list, unset=True):
+    def _stub_lb_reload(self, num, unset=True, nochange=False):
+        expected_list = [self.dummy_instance_id] * num
         if unset:
             self.m.VerifyAll()
             self.m.UnsetStubs()
-        self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'handle_update')
+        if num > 0:
+            self.m.StubOutWithMock(instance.Instance, 'FnGetRefId')
+            instance.Instance.FnGetRefId().MultipleTimes().AndReturn(
+                self.dummy_instance_id)
 
-        loadbalancer.LoadBalancer.handle_update(
-            mox.IgnoreArg(), mox.IgnoreArg(), {'Instances': expected_list})\
-            .AndReturn(None)
+        self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'handle_update')
+        if nochange:
+            loadbalancer.LoadBalancer.handle_update(
+                mox.IgnoreArg(), mox.IgnoreArg(), {}).AndReturn(None)
+        else:
+            loadbalancer.LoadBalancer.handle_update(
+                mox.IgnoreArg(), mox.IgnoreArg(),
+                {'Instances': expected_list}).AndReturn(None)
 
     def _stub_meta_expected(self, now, data, nmeta=1):
         # Stop time at now
@@ -175,7 +186,7 @@ class AutoScalingTest(HeatTestCase):
         properties['MaxSize'] = '1'
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -190,7 +201,7 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual('WebServerGroup-0', rsrc.resource_id)
 
         # trigger adjustment to reduce to 0, resource_id should be None
-        self._stub_lb_reload([])
+        self._stub_lb_reload(0)
         self._stub_meta_expected(now, 'ChangeInCapacity : -1')
         self.m.ReplayAll()
         rsrc.adjust(-1)
@@ -203,7 +214,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -224,7 +235,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -257,7 +268,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -294,7 +305,7 @@ class AutoScalingTest(HeatTestCase):
         properties['DesiredCapacity'] = '2'
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_create(2)
@@ -329,7 +340,7 @@ class AutoScalingTest(HeatTestCase):
         properties['DesiredCapacity'] = '2'
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_create(2)
@@ -364,7 +375,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -395,7 +406,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -455,7 +466,7 @@ class AutoScalingTest(HeatTestCase):
         properties['MaxSize'] = '3'
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -481,7 +492,7 @@ class AutoScalingTest(HeatTestCase):
         properties['MaxSize'] = '3'
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -490,7 +501,7 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual('WebServerGroup-0', rsrc.resource_id)
 
         # Increase min size to 2, should trigger an ExactCapacity adjust
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_create(1)
         self.m.ReplayAll()
@@ -512,7 +523,7 @@ class AutoScalingTest(HeatTestCase):
         properties['MaxSize'] = '3'
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -521,7 +532,7 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual('WebServerGroup-0', rsrc.resource_id)
 
         # Increase min size to 2 via DesiredCapacity, should adjust
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_create(1)
         self.m.ReplayAll()
@@ -543,7 +554,7 @@ class AutoScalingTest(HeatTestCase):
         properties['DesiredCapacity'] = '2'
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_create(2)
@@ -571,7 +582,7 @@ class AutoScalingTest(HeatTestCase):
         properties['Cooldown'] = '60'
         stack = parse_stack(t)
 
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -630,8 +641,7 @@ class AutoScalingTest(HeatTestCase):
         # start with 3
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '3'
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
-                              'WebServerGroup-2'])
+        self._stub_lb_reload(3)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 3')
         self._stub_create(3)
@@ -641,15 +651,14 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.resource_id)
 
         # reduce to 1
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'ChangeInCapacity : -2')
         self.m.ReplayAll()
         rsrc.adjust(-2)
         self.assertEqual('WebServerGroup-0', rsrc.resource_id)
 
         # raise to 3
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
-                              'WebServerGroup-2'])
+        self._stub_lb_reload(3)
         self._stub_meta_expected(now, 'ChangeInCapacity : 2')
         self._stub_create(2)
         self.m.ReplayAll()
@@ -658,7 +667,7 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.resource_id)
 
         # set to 2
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self.m.ReplayAll()
         rsrc.adjust(2, 'ExactCapacity')
@@ -671,7 +680,7 @@ class AutoScalingTest(HeatTestCase):
         stack = parse_stack(t)
 
         # Create initial group
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -687,6 +696,7 @@ class AutoScalingTest(HeatTestCase):
         instance.Instance.handle_create().AndRaise(exc)
         self.m.StubOutWithMock(instance.Instance, 'destroy')
         instance.Instance.destroy()
+        self._stub_lb_reload(1, unset=False, nochange=True)
         self.m.ReplayAll()
 
         rsrc.adjust(1)
@@ -701,7 +711,7 @@ class AutoScalingTest(HeatTestCase):
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_create(2)
@@ -735,7 +745,7 @@ class AutoScalingTest(HeatTestCase):
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_create(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
@@ -746,7 +756,7 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.resource_id)
 
         # reduce by 50%
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
@@ -754,8 +764,7 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.resource_id)
 
         # raise by 200%
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
-                              'WebServerGroup-2'])
+        self._stub_lb_reload(3)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : 200')
         self._stub_create(2)
         self.m.ReplayAll()
@@ -773,7 +782,7 @@ class AutoScalingTest(HeatTestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
         properties['Cooldown'] = '60'
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_create(2)
@@ -784,7 +793,7 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.resource_id)
 
         # reduce by 50%
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
@@ -826,7 +835,7 @@ class AutoScalingTest(HeatTestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
         properties['Cooldown'] = '60'
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_create(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
@@ -837,7 +846,7 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.resource_id)
 
         # reduce by 50%
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
@@ -860,8 +869,7 @@ class AutoScalingTest(HeatTestCase):
                          ).AndReturn(previous_meta)
 
         # raise by 200%, should work
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
-                              'WebServerGroup-2'], unset=False)
+        self._stub_lb_reload(3, unset=False)
         self._stub_create(2)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : 200')
         self.m.ReplayAll()
@@ -879,7 +887,7 @@ class AutoScalingTest(HeatTestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
         properties['Cooldown'] = '0'
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_create(2)
@@ -890,7 +898,7 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.resource_id)
 
         # reduce by 50%
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
@@ -909,8 +917,7 @@ class AutoScalingTest(HeatTestCase):
                          ).AndReturn(previous_meta)
 
         # raise by 200%, should work
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
-                              'WebServerGroup-2'], unset=False)
+        self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : 200')
         self._stub_create(2)
         self.m.ReplayAll()
@@ -926,7 +933,7 @@ class AutoScalingTest(HeatTestCase):
         stack = parse_stack(t)
 
         # Create initial group
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -936,7 +943,7 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual('WebServerGroup-0', rsrc.resource_id)
 
         # Scale up one
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
         self.m.ReplayAll()
@@ -956,7 +963,7 @@ class AutoScalingTest(HeatTestCase):
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self._stub_create(2)
@@ -967,7 +974,7 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.resource_id)
 
         # Scale down one
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'ChangeInCapacity : -1', 2)
         self.m.ReplayAll()
         down_policy = self.create_scaling_policy(t, stack,
@@ -983,7 +990,7 @@ class AutoScalingTest(HeatTestCase):
         stack = parse_stack(t)
 
         # Create initial group
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -993,7 +1000,7 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual('WebServerGroup-0', rsrc.resource_id)
 
         # Scale up one
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
         self.m.ReplayAll()
@@ -1034,7 +1041,7 @@ class AutoScalingTest(HeatTestCase):
         stack = parse_stack(t)
 
         # Create initial group
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -1044,7 +1051,7 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual('WebServerGroup-0', rsrc.resource_id)
 
         # Scale up one
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
         self.m.ReplayAll()
@@ -1067,8 +1074,7 @@ class AutoScalingTest(HeatTestCase):
                          ).AndReturn(previous_meta)
 
         now = now + datetime.timedelta(seconds=61)
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
-                              'WebServerGroup-2'], unset=False)
+        self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
 
@@ -1085,7 +1091,7 @@ class AutoScalingTest(HeatTestCase):
         stack = parse_stack(t)
 
         # Create initial group
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -1097,7 +1103,7 @@ class AutoScalingTest(HeatTestCase):
         # Create the scaling policy (with Cooldown=0) and scale up one
         properties = t['Resources']['WebServerScaleUpPolicy']['Properties']
         properties['Cooldown'] = '0'
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
         self.m.ReplayAll()
@@ -1118,8 +1124,7 @@ class AutoScalingTest(HeatTestCase):
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
 
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
-                              'WebServerGroup-2'], unset=False)
+        self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
 
@@ -1136,7 +1141,7 @@ class AutoScalingTest(HeatTestCase):
         stack = parse_stack(t)
 
         # Create initial group
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -1149,7 +1154,7 @@ class AutoScalingTest(HeatTestCase):
         # same as when Cooldown==0
         properties = t['Resources']['WebServerScaleUpPolicy']['Properties']
         del(properties['Cooldown'])
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
@@ -1171,8 +1176,7 @@ class AutoScalingTest(HeatTestCase):
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
 
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
-                              'WebServerGroup-2'], unset=False)
+        self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
 
@@ -1189,7 +1193,7 @@ class AutoScalingTest(HeatTestCase):
         stack = parse_stack(t)
 
         # Create initial group
-        self._stub_lb_reload(['WebServerGroup-0'])
+        self._stub_lb_reload(1)
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
@@ -1203,7 +1207,7 @@ class AutoScalingTest(HeatTestCase):
                                                'WebServerScaleUpPolicy')
 
         # Scale up one
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1'])
+        self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
         self.m.ReplayAll()
@@ -1234,9 +1238,7 @@ class AutoScalingTest(HeatTestCase):
 
         now = now + datetime.timedelta(seconds=61)
 
-        self._stub_lb_reload(['WebServerGroup-0', 'WebServerGroup-1',
-                              'WebServerGroup-2', 'WebServerGroup-3'],
-                             unset=False)
+        self._stub_lb_reload(4, unset=False)
         self._stub_meta_expected(now, 'ChangeInCapacity : 2', 2)
         self._stub_create(2)
         self.m.ReplayAll()
