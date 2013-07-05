@@ -154,3 +154,7 @@ class KeystoneClient(object):
 
     def url_for(self, **kwargs):
         return self.client.service_catalog.url_for(**kwargs)
+
+    @property
+    def auth_token(self):
+        return self.client.auth_token

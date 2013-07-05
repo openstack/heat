@@ -26,6 +26,7 @@ from heat.engine import parameters
 from heat.engine import scheduler
 from heat.engine import template
 
+from heat.tests.fakes import FakeKeystoneClient
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
@@ -531,6 +532,18 @@ class StackTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
         self.assertEqual(stack.state, (None, None))
         self.assertEqual(stack.status_reason, '')
+
+    def test_no_auth_token(self):
+        ctx = dummy_context()
+        ctx.auth_token = None
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClient())
+
+        self.m.ReplayAll()
+        stack = parser.Stack(ctx, 'test_stack', parser.Template({}))
+        self.assertEqual('abcd1234', stack.clients.auth_token)
+
+        self.m.VerifyAll()
 
     def test_state(self):
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),

@@ -105,6 +105,7 @@ class FakeKeystoneClient():
         self.access = access
         self.secret = secret
         self.creds = None
+        self.auth_token = 'abcd1234'
 
     def create_stack_user(self, username, password=''):
         self.username = username
