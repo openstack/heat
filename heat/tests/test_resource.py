@@ -247,23 +247,15 @@ class ResourceTest(HeatTestCase):
                           update_snippet, tmpl)
 
     def test_resource(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
     def test_create_fail_missing_req_prop(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String', 'Required': True}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {}}
         rname = 'test_resource'
-        res = generic_rsrc.GenericResource(rname, tmpl, self.stack)
+        res = generic_rsrc.ResourceWithRequiredProps(rname, tmpl, self.stack)
 
         estr = 'Property error : test_resource: Property Foo not assigned'
         create = scheduler.TaskRunner(res.create)
@@ -271,13 +263,9 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
     def test_create_fail_prop_typo(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String', 'Required': True}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Food': 'abc'}}
         rname = 'test_resource'
-        res = generic_rsrc.GenericResource(rname, tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
 
         estr = 'Property error : test_resource: Property Foo not assigned'
         create = scheduler.TaskRunner(res.create)
@@ -285,12 +273,8 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
     def test_update_ok(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
@@ -309,12 +293,8 @@ class ResourceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_replace(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
@@ -332,12 +312,9 @@ class ResourceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_update_fail_missing_req_prop(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String', 'Required': True}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithRequiredProps('test_resource',
+                                                     tmpl, self.stack)
         res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
@@ -349,12 +326,8 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
 
     def test_update_fail_prop_typo(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
@@ -366,12 +339,8 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
 
     def test_update_not_implemented(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
@@ -389,12 +358,8 @@ class ResourceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_suspend_resume_ok(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
         scheduler.TaskRunner(res.create)()
@@ -405,12 +370,8 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.RESUME, res.COMPLETE), res.state)
 
     def test_suspend_fail_inprogress(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
@@ -427,12 +388,8 @@ class ResourceTest(HeatTestCase):
         self.assertRaises(exception.ResourceFailure, suspend)
 
     def test_resume_fail_not_suspend_complete(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
@@ -445,12 +402,8 @@ class ResourceTest(HeatTestCase):
             self.assertRaises(exception.ResourceFailure, resume)
 
     def test_suspend_fail_exit(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
@@ -464,12 +417,8 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.SUSPEND, res.FAILED), res.state)
 
     def test_resume_fail_exit(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
@@ -485,12 +434,8 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.RESUME, res.FAILED), res.state)
 
     def test_suspend_fail_exception(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
@@ -503,12 +448,8 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.SUSPEND, res.FAILED), res.state)
 
     def test_resume_fail_exception(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 

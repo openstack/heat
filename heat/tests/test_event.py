@@ -28,8 +28,8 @@ from heat.tests import generic_resource as generic_rsrc
 tmpl = {
     'Resources': {
         'EventTestResource': {
-            'Type': 'GenericResourceType',
-            'Properties': {'foo': True}
+            'Type': 'ResourceWithRequiredProps',
+            'Properties': {'Foo': 'goo'}
         }
     }
 }
@@ -48,12 +48,8 @@ class EventTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'foo': {'Type': 'Boolean', 'Required': True}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
-        resource._register_class('GenericResourceType',
-                                 generic_rsrc.GenericResource)
+        resource._register_class('ResourceWithRequiredProps',
+                                 generic_rsrc.ResourceWithRequiredProps)
 
         self.stack = parser.Stack(self.ctx, 'event_load_test_stack',
                                   template.Template(tmpl))
@@ -83,7 +79,7 @@ class EventTest(HeatTestCase):
         self.assertEqual(loaded_e.status, 'IN_PROGRESS')
         self.assertEqual(loaded_e.reason, 'Testing')
         self.assertNotEqual(loaded_e.timestamp, None)
-        self.assertEqual(loaded_e.resource_properties, {'foo': True})
+        self.assertEqual(loaded_e.resource_properties, {'Foo': 'goo'})
 
     def test_identifier(self):
         e = event.Event(self.ctx, self.stack, self.resource,
@@ -100,9 +96,10 @@ class EventTest(HeatTestCase):
         self.assertEqual(e.identifier(), expected_identifier)
 
     def test_badprop(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'foo': 'abc'}}
+        tmpl = {'Type': 'ResourceWithRequiredProps',
+                'Properties': {'Foo': False}}
         rname = 'bad_resource'
-        res = generic_rsrc.GenericResource(rname, tmpl, self.stack)
+        res = generic_rsrc.ResourceWithRequiredProps(rname, tmpl, self.stack)
         e = event.Event(self.ctx, self.stack, res,
                         'TEST', 'IN_PROGRESS', 'Testing',
                         'wibble', res.properties)
