@@ -85,7 +85,10 @@ class User(resource.Resource):
         if self.resource_id is None:
             logger.error("Cannot delete User resource before user created!")
             return
-        self.keystone().delete_stack_user(self.resource_id)
+        try:
+            self.keystone().delete_stack_user(self.resource_id)
+        except clients.hkc.kc.exceptions.NotFound:
+            pass
 
     def FnGetRefId(self):
         return unicode(self.physical_resource_name())
