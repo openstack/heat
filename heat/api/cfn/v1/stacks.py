@@ -289,10 +289,23 @@ class StackController(object):
             keymap = {'TimeoutInMinutes': engine_api.PARAM_TIMEOUT,
                       'DisableRollback': engine_api.PARAM_DISABLE_ROLLBACK}
 
+            if 'DisableRollback' in params and 'OnFailure' in params:
+                msg = _('DisableRollback and OnFailure '
+                        'may not be used together')
+                raise exception.HeatInvalidParameterCombinationError(
+                    detail=msg)
+
             result = {}
             for k in keymap:
-                if k in req.params:
+                if k in params:
                     result[keymap[k]] = params[k]
+
+            if 'OnFailure' in params:
+                value = params['OnFailure']
+                if value == 'DO_NOTHING':
+                    result[engine_api.PARAM_DISABLE_ROLLBACK] = 'true'
+                elif value in ('ROLLBACK', 'DELETE'):
+                    result[engine_api.PARAM_DISABLE_ROLLBACK] = 'false'
 
             return result
 
