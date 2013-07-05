@@ -17,7 +17,6 @@ from heat.common import exception
 from heat.engine import watchrule
 from heat.engine import resource
 from heat.engine.properties import Properties
-from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
 
@@ -107,8 +106,9 @@ class CloudWatchAlarm(resource.Resource):
 
     def handle_delete(self):
         try:
-            db_api.watch_rule_delete(self.context,
-                                     self.physical_resource_name())
+            wr = watchrule.WatchRule.load(
+                self.context, watch_name=self.physical_resource_name())
+            wr.destroy()
         except exception.NotFound:
             pass
 

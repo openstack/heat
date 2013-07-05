@@ -172,8 +172,8 @@ def watch_rule_update(context, watch_id, values):
     return IMPL.watch_rule_update(context, watch_id, values)
 
 
-def watch_rule_delete(context, watch_rule_name):
-    return IMPL.watch_rule_delete(context, watch_rule_name)
+def watch_rule_delete(context, watch_id):
+    return IMPL.watch_rule_delete(context, watch_id)
 
 
 def watch_data_create(context, values):
