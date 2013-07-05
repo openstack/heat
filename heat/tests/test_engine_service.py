@@ -1341,7 +1341,7 @@ class StackServiceTest(HeatTestCase):
         self.wr.store()
 
         class DummyAction(object):
-            alarm = "dummyfoo"
+            signal = "dummyfoo"
 
         dummy_action = DummyAction()
         self.m.StubOutWithMock(parser.Stack, '__getitem__')
@@ -1373,7 +1373,7 @@ class StackServiceTest(HeatTestCase):
                                           watch_name="OverrideAlarm",
                                           state=state)
         self.assertEqual(state, result[engine_api.WATCH_STATE_VALUE])
-        self.assertEqual([DummyAction.alarm],
+        self.assertEqual([DummyAction.signal],
                          self.eng.stg[self.stack.id].threads)
 
         self.m.VerifyAll()

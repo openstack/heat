@@ -942,7 +942,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
                          rsrc.resource_id)
 
@@ -972,7 +972,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         down_policy = self.create_scaling_policy(t, stack,
                                                  'WebServerScaleDownPolicy')
-        down_policy.alarm()
+        down_policy.signal()
         self.assertEqual('WebServerGroup-0', rsrc.resource_id)
 
         rsrc.delete()
@@ -999,7 +999,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
                          rsrc.resource_id)
 
@@ -1022,7 +1022,7 @@ class AutoScalingTest(HeatTestCase):
                          ).AndReturn(previous_meta)
 
         self.m.ReplayAll()
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
                          rsrc.resource_id)
 
@@ -1050,7 +1050,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
                          rsrc.resource_id)
 
@@ -1072,7 +1072,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
 
         self.m.ReplayAll()
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
                          rsrc.resource_id)
 
@@ -1102,7 +1102,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
                          rsrc.resource_id)
 
@@ -1122,7 +1122,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
 
         self.m.ReplayAll()
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
                          rsrc.resource_id)
 
@@ -1154,7 +1154,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
                          rsrc.resource_id)
 
@@ -1174,7 +1174,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
 
         self.m.ReplayAll()
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,WebServerGroup-2',
                          rsrc.resource_id)
 
@@ -1206,7 +1206,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
 
         # Trigger alarm
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
                          rsrc.resource_id)
 
@@ -1237,7 +1237,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
 
         # Trigger alarm
-        up_policy.alarm()
+        up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1,'
                          'WebServerGroup-2,WebServerGroup-3',
                          rsrc.resource_id)

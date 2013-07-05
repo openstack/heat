@@ -34,7 +34,7 @@ class WatchData(object):
 
 
 class DummyAction(object):
-    alarm = "DummyAction"
+    signal = "DummyAction"
 
 
 class WatchRuleTest(HeatTestCase):

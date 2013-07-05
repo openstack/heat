@@ -619,9 +619,9 @@ class EngineService(service.Service):
                         ('watch rule removed?', str(ex)))
             return
 
-        def run_alarm_action(actions):
+        def run_alarm_action(actions, details):
             for action in actions:
-                action()
+                action(details=details)
 
             stk = parser.Stack.load(stack_context, stack=stack)
             for res in stk:
@@ -631,7 +631,8 @@ class EngineService(service.Service):
             rule = watchrule.WatchRule.load(stack_context, watch=wr)
             actions = rule.evaluate()
             if actions:
-                self._start_in_thread(sid, run_alarm_action, actions)
+                self._start_in_thread(sid, run_alarm_action, actions,
+                                      rule.get_details())
 
     @request_context
     def create_watch_data(self, cnxt, watch_name, stats_data):
