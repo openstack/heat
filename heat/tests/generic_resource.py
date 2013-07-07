@@ -41,3 +41,12 @@ class GenericResource(resource.Resource):
 
     def handle_resume(self):
         logger.warning('Resuming generic resource (Type "%s")' % self.type())
+
+
+class ResourceWithProps(GenericResource):
+        properties_schema = {'Foo': {'Type': 'String'}}
+
+
+class ResourceWithRequiredProps(GenericResource):
+        properties_schema = {'Foo': {'Type': 'String',
+                                     'Required': True}}

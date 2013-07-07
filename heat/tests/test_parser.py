@@ -519,9 +519,10 @@ class StackTest(HeatTestCase):
         self.ctx.user = self.username
         self.ctx.tenant_id = 'test_tenant'
 
-        generic_rsrc.GenericResource.properties_schema = {}
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
+        resource._register_class('ResourceWithPropsType',
+                                 generic_rsrc.ResourceWithProps)
 
         self.m.ReplayAll()
 
@@ -946,11 +947,7 @@ class StackTest(HeatTestCase):
 
     @stack_delete_after
     def test_update_modify_ok_replace(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
-        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
@@ -964,7 +961,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
-        tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl2 = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                              'Properties': {'Foo': 'xyz'}}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
@@ -983,11 +980,7 @@ class StackTest(HeatTestCase):
 
     @stack_delete_after
     def test_update_modify_update_failed(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
-        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
@@ -1006,7 +999,7 @@ class StackTest(HeatTestCase):
         res.update_allowed_keys = ('Properties',)
         res.update_allowed_properties = ('Foo',)
 
-        tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl2 = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                              'Properties': {'Foo': 'xyz'}}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
@@ -1028,11 +1021,7 @@ class StackTest(HeatTestCase):
 
     @stack_delete_after
     def test_update_modify_replace_failed_delete(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
-        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
@@ -1047,7 +1036,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
-        tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl2 = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                              'Properties': {'Foo': 'xyz'}}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
@@ -1072,11 +1061,7 @@ class StackTest(HeatTestCase):
 
     @stack_delete_after
     def test_update_modify_replace_failed_create(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
-        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
@@ -1091,7 +1076,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
-        tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl2 = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                              'Properties': {'Foo': 'xyz'}}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
@@ -1149,11 +1134,7 @@ class StackTest(HeatTestCase):
 
     @stack_delete_after
     def test_update_rollback(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
-        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
@@ -1168,7 +1149,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
-        tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl2 = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                              'Properties': {'Foo': 'xyz'}}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
@@ -1193,11 +1174,7 @@ class StackTest(HeatTestCase):
 
     @stack_delete_after
     def test_update_rollback_fail(self):
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
-
-        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                             'Properties': {'Foo': 'abc'}}}}
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
@@ -1212,7 +1189,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
-        tmpl2 = {'Resources': {'AResource': {'Type': 'GenericResourceType',
+        tmpl2 = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
                                              'Properties': {'Foo': 'xyz'}}}}
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
@@ -1313,19 +1290,16 @@ class StackTest(HeatTestCase):
         changes in dynamic attributes, due to other resources been updated
         are not ignored and can cause dependant resources to be updated.
         '''
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
         tmpl = {'Resources': {
-                'AResource': {'Type': 'GenericResourceType',
+                'AResource': {'Type': 'ResourceWithPropsType',
                               'Properties': {'Foo': 'abc'}},
-                'BResource': {'Type': 'GenericResourceType',
+                'BResource': {'Type': 'ResourceWithPropsType',
                               'Properties': {
                               'Foo': {'Ref': 'AResource'}}}}}
         tmpl2 = {'Resources': {
-                 'AResource': {'Type': 'GenericResourceType',
+                 'AResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {'Foo': 'smelly'}},
-                 'BResource': {'Type': 'GenericResourceType',
+                 'BResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {
                                'Foo': {'Ref': 'AResource'}}}}}
 
@@ -1372,19 +1346,16 @@ class StackTest(HeatTestCase):
         check that rollback still works with dynamic metadata
         this test fails the first instance
         '''
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
         tmpl = {'Resources': {
-                'AResource': {'Type': 'GenericResourceType',
+                'AResource': {'Type': 'ResourceWithPropsType',
                               'Properties': {'Foo': 'abc'}},
-                'BResource': {'Type': 'GenericResourceType',
+                'BResource': {'Type': 'ResourceWithPropsType',
                               'Properties': {
                               'Foo': {'Ref': 'AResource'}}}}}
         tmpl2 = {'Resources': {
-                 'AResource': {'Type': 'GenericResourceType',
+                 'AResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {'Foo': 'smelly'}},
-                 'BResource': {'Type': 'GenericResourceType',
+                 'BResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {
                                'Foo': {'Ref': 'AResource'}}}}}
 
@@ -1443,7 +1414,7 @@ class StackTest(HeatTestCase):
         this test fails the second instance
         '''
 
-        class ResourceTypeA(generic_rsrc.GenericResource):
+        class ResourceTypeA(generic_rsrc.ResourceWithProps):
             count = 0
 
             def handle_create(self):
@@ -1452,19 +1423,16 @@ class StackTest(HeatTestCase):
 
         resource._register_class('ResourceTypeA', ResourceTypeA)
 
-        # patch in a dummy property schema for GenericResource
-        dummy_schema = {'Foo': {'Type': 'String'}}
-        generic_rsrc.GenericResource.properties_schema = dummy_schema
         tmpl = {'Resources': {
                 'AResource': {'Type': 'ResourceTypeA',
                               'Properties': {'Foo': 'abc'}},
-                'BResource': {'Type': 'GenericResourceType',
+                'BResource': {'Type': 'ResourceWithPropsType',
                               'Properties': {
                               'Foo': {'Ref': 'AResource'}}}}}
         tmpl2 = {'Resources': {
                  'AResource': {'Type': 'ResourceTypeA',
                                'Properties': {'Foo': 'smelly'}},
-                 'BResource': {'Type': 'GenericResourceType',
+                 'BResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {
                                'Foo': {'Ref': 'AResource'}}}}}
 
