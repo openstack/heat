@@ -48,25 +48,25 @@ class Event(object):
         self.id = id
 
     @classmethod
-    def load(cls, context, event_id):
+    def load(cls, context, event_id, event=None, stack=None):
         '''Retrieve an Event from the database.'''
         from heat.engine import parser
 
-        ev = db_api.event_get(context, event_id)
+        ev = event if event is not None else\
+            db_api.event_get(context, event_id)
         if ev is None:
             message = 'No event exists with id "%s"' % str(event_id)
             raise exception.NotFound(message)
 
-        stack = parser.Stack.load(context, ev.stack_id)
-        resource = stack[ev.logical_resource_id]
+        st = stack if stack is not None else\
+            parser.Stack.load(context, ev.stack_id)
+        resource = st[ev.logical_resource_id]
 
-        event = cls(context, stack, resource,
-                    ev.resource_action, ev.resource_status,
-                    ev.resource_status_reason,
-                    ev.physical_resource_id, ev.resource_properties,
-                    ev.created_at, ev.id)
-
-        return event
+        return cls(context, st, resource,
+                   ev.resource_action, ev.resource_status,
+                   ev.resource_status_reason,
+                   ev.physical_resource_id, ev.resource_properties,
+                   ev.created_at, ev.id)
 
     def store(self):
         '''Store the Event in the database.'''
