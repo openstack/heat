@@ -30,6 +30,11 @@ a VM image that Heat can launch::
 
 URLs for any of [http://fedorapeople.org/groups/heat/prebuilt-jeos-images/ these prebuilt JEOS images] can be specified.
 
+Also see the TripleO autobuilt images:
+
+    [http://jenkins.tripleo.org:8080/job/autobuilt-images/elements=fedora%20vm%20heat-cfntools/lastSuccessfulBuild/artifact/fedora-vm-heat-cfntools.qcow2 fedora-vm-heat-cfntools.qcow2]
+    [http://jenkins.tripleo.org:8080/job/autobuilt-images/elements=ubuntu%20vm%20heat-cfntools/lastSuccessfulBuild/artifact/ubuntu-vm-heat-cfntools.qcow2 ubuntu-vm-heat-cfntools.qcow2]
+
 That is all the configuration that is required. When you run `./stack.sh` the Heat processes will be launched in `screen` with the labels prefixed with `h-`.
 
 Confirming heat is responding
