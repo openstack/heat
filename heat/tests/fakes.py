@@ -127,3 +127,9 @@ class FakeKeystoneClient():
             self.creds = None
         else:
             raise Exception('Incorrect user_id or access')
+
+    def enable_stack_user(self, user_id):
+        pass
+
+    def disable_stack_user(self, user_id):
+        pass

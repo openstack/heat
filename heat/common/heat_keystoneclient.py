@@ -143,3 +143,11 @@ class KeystoneClient(object):
         else:
             logger.error("Unexpected number of ec2 credentials %s for %s" %
                          (len(cred), user_id))
+
+    def disable_stack_user(self, user_id):
+        # FIXME : This won't work with the v3 keystone API
+        self.client.users.update_enabled(user_id, False)
+
+    def enable_stack_user(self, user_id):
+        # FIXME : This won't work with the v3 keystone API
+        self.client.users.update_enabled(user_id, True)
