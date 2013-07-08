@@ -392,6 +392,36 @@ class WatchRuleTest(HeatTestCase):
         self.assertEqual(actions, [])
 
     @utils.wr_delete_after
+    def test_evaluate_suspend(self):
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'Period': '300',
+                'Statistic': 'Maximum',
+                'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
+                'Threshold': '30'}
+
+        now = timeutils.utcnow()
+        self.m.StubOutWithMock(timeutils, 'utcnow')
+        timeutils.utcnow().MultipleTimes().AndReturn(now)
+        self.m.ReplayAll()
+
+        # Now data breaches Threshold, but we're suspended
+        last = now - datetime.timedelta(seconds=300)
+        data = WatchData(35, now - datetime.timedelta(seconds=150))
+        self.wr = watchrule.WatchRule(context=self.ctx,
+                                      watch_name="testwatch",
+                                      rule=rule,
+                                      watch_data=[data],
+                                      stack_id=self.stack_id,
+                                      last_evaluated=last)
+
+        self.wr.state_set(self.wr.SUSPENDED)
+
+        actions = self.wr.evaluate()
+        self.assertEqual(self.wr.state, self.wr.SUSPENDED)
+        self.assertEqual(actions, [])
+
+    @utils.wr_delete_after
     def test_rule_actions_alarm_normal(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',
@@ -592,6 +622,30 @@ class WatchRuleTest(HeatTestCase):
         # correctly get a list of all datapoints where watch_rule_id ==
         # watch_rule.id, so leave it as a single-datapoint test for now.
 
+    @utils.wr_delete_after
+    def test_create_watch_data_suspended(self):
+        rule = {u'EvaluationPeriods': u'1',
+                u'AlarmDescription': u'test alarm',
+                u'Period': u'300',
+                u'ComparisonOperator': u'GreaterThanThreshold',
+                u'Statistic': u'SampleCount',
+                u'Threshold': u'2',
+                u'MetricName': u'CreateDataMetric'}
+        self.wr = watchrule.WatchRule(context=self.ctx,
+                                      watch_name='create_data_test',
+                                      stack_id=self.stack_id, rule=rule,
+                                      state=watchrule.WatchRule.SUSPENDED)
+
+        self.wr.store()
+
+        data = {u'CreateDataMetric': {"Unit": "Counter",
+                                      "Value": "1",
+                                      "Dimensions": []}}
+        self.wr.create_watch_data(data)
+
+        dbwr = db_api.watch_rule_get_by_name(self.ctx, 'create_data_test')
+        self.assertEqual(dbwr.watch_data, [])
+
     def test_destroy(self):
         rule = {'EvaluationPeriods': '1',
                 'MetricName': 'test_metric',
@@ -619,6 +673,30 @@ class WatchRuleTest(HeatTestCase):
         self.assertRaises(exception.WatchRuleNotFound,
                           watchrule.WatchRule.load, context=self.ctx,
                           watch_name="testwatch_destroy")
+
+    def test_state_set(self):
+        rule = {'EvaluationPeriods': '1',
+                'MetricName': 'test_metric',
+                'AlarmActions': ['DummyAction'],
+                'Period': '300',
+                'Statistic': 'Maximum',
+                'ComparisonOperator': 'GreaterThanOrEqualToThreshold',
+                'Threshold': '30'}
+
+        last = timeutils.utcnow()
+        watcher = watchrule.WatchRule(context=self.ctx,
+                                      watch_name="testwatch_set_state",
+                                      rule=rule,
+                                      watch_data=[],
+                                      stack_id=self.stack_id,
+                                      last_evaluated=last)
+
+        watcher.state_set(watcher.SUSPENDED)
+        self.assertEqual(watcher.state, watcher.SUSPENDED)
+
+        check = watchrule.WatchRule.load(context=self.ctx,
+                                         watch_name="testwatch_set_state")
+        self.assertEqual(check.state, watchrule.WatchRule.SUSPENDED)
 
     def test_set_watch_state(self):
         rule = {'EvaluationPeriods': '1',
