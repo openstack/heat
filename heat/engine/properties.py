@@ -79,7 +79,16 @@ class Property(object):
         except ValueError:
             return float(value)
 
+    def _validate_integer(self, value):
+        if value is None:
+            value = self.has_default() and self.default() or 0
+        if not isinstance(value, int):
+            raise TypeError('value is not an integer')
+        return self._validate_number(value)
+
     def _validate_number(self, value):
+        if value is None:
+            value = self.has_default() and self.default() or 0
         self._check_allowed(value)
 
         num = self.str_to_num(value)
@@ -93,6 +102,8 @@ class Property(object):
         return value
 
     def _validate_string(self, value):
+        if value is None:
+            value = self.has_default() and self.default() or ''
         if not isinstance(value, basestring):
             raise ValueError('Value must be a string')
 
@@ -119,6 +130,8 @@ class Property(object):
         return value
 
     def _validate_map(self, value):
+        if value is None:
+            value = self.has_default() and self.default() or {}
         if not isinstance(value, collections.Mapping):
             raise TypeError('"%s" is not a map' % value)
 
@@ -131,6 +144,8 @@ class Property(object):
         return children
 
     def _validate_list(self, value):
+        if value is None:
+            value = self.has_default() and self.default() or []
         if (not isinstance(value, collections.Sequence) or
                 isinstance(value, basestring)):
             raise TypeError('"%s" is not a list' % repr(value))
@@ -147,6 +162,8 @@ class Property(object):
         return children
 
     def _validate_bool(self, value):
+        if value is None:
+            value = self.has_default() and self.default() or False
         if isinstance(value, bool):
             return value
         normalised = value.lower()
@@ -160,9 +177,7 @@ class Property(object):
         if t == STRING:
             return self._validate_string(value)
         elif t == INTEGER:
-            if not isinstance(value, int):
-                raise TypeError('value is not an integer')
-            return self._validate_number(value)
+            return self._validate_integer(value)
         elif t == NUMBER:
             return self._validate_number(value)
         elif t == MAP:
