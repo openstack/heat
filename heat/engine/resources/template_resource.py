@@ -67,8 +67,5 @@ class TemplateResource(stack_resource.StackResource):
     def FnGetRefId(self):
         return self.nested().identifier().arn()
 
-    def FnGetAtt(self, key):
-        return unicode(self.get_output(key))
-
 
 resource.register_template_class(TemplateResource)
