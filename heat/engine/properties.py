@@ -116,18 +116,21 @@ class Property(object):
                 raise ValueError('"%s" does not match pattern "%s"' %
                                  (value, pattern))
 
+        self._validate_min_max_length(value, STRING)
+        return value
+
+    def _validate_min_max_length(self, value, value_type):
         if MIN_LENGTH in self.schema:
             min_length = int(self.schema[MIN_LENGTH])
             if len(value) < min_length:
-                raise ValueError('Minimum string length is %d characters.' %
-                                 min_length)
+                raise ValueError('Minimum %s length is %d' %
+                                 (value_type, min_length))
 
         if MAX_LENGTH in self.schema:
             max_length = int(self.schema[MAX_LENGTH])
             if len(value) > max_length:
-                raise ValueError('Maximum string length is %d characters.' %
-                                 max_length)
-        return value
+                raise ValueError('Maximum %s length is %d' %
+                                 (value_type, max_length))
 
     def _validate_map(self, value):
         if value is None:
@@ -141,6 +144,7 @@ class Property(object):
         else:
             children = value
 
+        self._validate_min_max_length(value, MAP)
         return children
 
     def _validate_list(self, value):
@@ -159,6 +163,7 @@ class Property(object):
         else:
             children = value
 
+        self._validate_min_max_length(value, LIST)
         return children
 
     def _validate_bool(self, value):
