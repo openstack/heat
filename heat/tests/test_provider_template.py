@@ -14,11 +14,15 @@
 
 
 from heat.engine import environment
+from heat.engine import parser
 from heat.engine import resource
 from heat.engine.resources import template_resource
 
+from heat.openstack.common import uuidutils
+
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import setup_dummy_db
 
 
 class MyCloudResource(generic_rsrc.GenericResource):
@@ -80,3 +84,58 @@ class ProviderTemplateTest(HeatTestCase):
         env = environment.Environment(env_str)
         cls = resource.get_class('OS::ResourceType', 'fred', env)
         self.assertEqual(cls, template_resource.TemplateResource)
+
+    def test_to_parameters(self):
+        """Tests property conversion to parameter values."""
+        setup_dummy_db()
+        stack = parser.Stack(None, 'test_stack', parser.Template({}),
+                             stack_id=uuidutils.generate_uuid())
+
+        class DummyResource(object):
+            attributes_schema = {"Foo": "A test attribute"}
+            properties_schema = {
+                "Foo": {"Type": "String"},
+                "AList": {"Type": "List"},
+                "ANum": {"Type": "Number"},
+                "AMap": {"Type": "Map"}
+            }
+
+        map_prop_val = {
+            "key1": "val1",
+            "key2": ["lval1", "lval2", "lval3"],
+            "key3": {
+                "key4": 4,
+                "key5": False
+            }
+        }
+        json_snippet = {
+            "Type": "test_resource.template",
+            "Properties": {
+                "Foo": "Bar",
+                "AList": ["one", "two", "three"],
+                "ANum": 5,
+                "AMap": map_prop_val
+            }
+        }
+        self.m.StubOutWithMock(template_resource.resource, "get_class")
+        (template_resource.resource.get_class("test_resource.template")
+         .AndReturn(DummyResource))
+        self.m.ReplayAll()
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      json_snippet, stack)
+        self.m.VerifyAll()
+        converted_params = temp_res._to_parameters()
+        self.assertTrue(converted_params)
+        for key in DummyResource.properties_schema:
+            self.assertIn(key, converted_params)
+        # verify String conversion
+        self.assertEqual("Bar", converted_params.get("Foo"))
+        # verify List conversion
+        self.assertEqual(",".join(json_snippet.get("Properties",
+                                                   {}).get("AList",
+                                                           [])),
+                         converted_params.get("AList"))
+        # verify Number conversion
+        self.assertEqual(5, converted_params.get("ANum"))
+        # verify Map conversion
+        self.assertEqual(map_prop_val, converted_params.get("AMap"))
