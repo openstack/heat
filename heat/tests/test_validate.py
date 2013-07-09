@@ -17,6 +17,7 @@ from testtools import skipIf
 from heat.engine import clients
 from heat.engine import environment
 from heat.tests.v1_1 import fakes
+from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resources
@@ -448,6 +449,42 @@ test_template_nova_client_exception = '''
 }
 '''
 
+test_template_unique_logical_name = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Parameters" : {
+
+    "KeyName" : {
+''' + \
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        },
+    "AName" : {
+''' + \
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        }
+      },
+
+      "Resources" : {
+        "AName": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" },
+            "NetworkInterfaces": [ "mgmt", "data" ]
+          }
+        }
+      }
+    }
+    '''
+
 
 class validateTest(HeatTestCase):
     def setUp(self):
@@ -456,6 +493,7 @@ class validateTest(HeatTestCase):
         self.fc = fakes.FakeClient()
         resources.initialise()
         setup_dummy_db()
+        self.ctx = context.get_admin_context()
 
     def test_validate_volumeattach_valid(self):
         t = template_format.parse(test_template_volumeattach % 'vdq')
@@ -639,7 +677,7 @@ class validateTest(HeatTestCase):
     def test_client_exception_from_nova_client(self):
         t = template_format.parse(test_template_nova_client_exception)
         template = parser.Template(t)
-        stack = parser.Stack(None, 'test_stack', template)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
 
         self.m.StubOutWithMock(self.fc.images, 'list')
         self.fc.images.list()\
@@ -651,3 +689,12 @@ class validateTest(HeatTestCase):
         self.assertRaises(exception.ServerError,
                           stack.validate)
         self.m.VerifyAll()
+
+    def test_validate_unique_logical_name(self):
+        t = template_format.parse(test_template_unique_logical_name)
+        template = parser.Template(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'AName': 'test',
+                                                      'KeyName': 'test'}))
+
+        self.assertRaises(exception.StackValidationFailed, stack.validate)

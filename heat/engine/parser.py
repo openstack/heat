@@ -242,6 +242,14 @@ class Stack(object):
         '''
         # TODO(sdake) Should return line number of invalid reference
 
+        # Check duplicate names between parameters and resources
+        dup_names = set(self.parameters.keys()) & set(self.resources.keys())
+
+        if dup_names:
+            logger.debug("Duplicate names %s" % dup_names)
+            raise StackValidationFailed(message="Duplicate names %s" %
+                                        dup_names)
+
         for res in self:
             try:
                 result = res.validate()
