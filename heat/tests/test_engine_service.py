@@ -67,12 +67,14 @@ wp_template = '''
 
 
 def create_context(mocks, user='stacks_test_user',
-                   tenant='test_admin', ctx=None):
-    ctx = ctx or context.get_admin_context()
+                   tenant='test_admin', password='stacks_test_password'):
+    ctx = context.get_admin_context()
     mocks.StubOutWithMock(ctx, 'username')
     mocks.StubOutWithMock(ctx, 'tenant_id')
+    mocks.StubOutWithMock(ctx, 'password')
     ctx.username = user
     ctx.tenant_id = tenant
+    ctx.password = password
     return ctx
 
 
@@ -318,6 +320,21 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
                           self.ctx, stack_name,
                           stack.t, {}, None, {})
 
+    def test_stack_create_no_credentials(self):
+        stack_name = 'service_create_test_stack'
+        params = {'foo': 'bar'}
+        template = '{ "Template": "data" }'
+
+        ctx = self.ctx = create_context(self.m, password=None)
+        self.assertRaises(exception.MissingCredentialError,
+                          self.man.create_stack, ctx, stack_name, template,
+                          params, None, {})
+
+        ctx = self.ctx = create_context(self.m, user=None)
+        self.assertRaises(exception.MissingCredentialError,
+                          self.man.create_stack, ctx, stack_name, template,
+                          params, None, {})
+
     def test_stack_validate(self):
         stack_name = 'service_create_test_validate'
         stack = get_wordpress_stack(stack_name, self.ctx)
@@ -463,6 +480,25 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
                           self.ctx, stack.identifier(), template, params,
                           None, {})
         self.m.VerifyAll()
+
+    def test_stack_update_no_credentials(self):
+        stack_name = 'service_update_nonexist_test_stack'
+        params = {'foo': 'bar'}
+        template = '{ "Template": "data" }'
+
+        stack = get_wordpress_stack(stack_name, self.ctx)
+
+        ctx = self.ctx = create_context(self.m, password=None)
+        self.assertRaises(exception.MissingCredentialError,
+                          self.man.update_stack,
+                          ctx, stack.identifier(), template, params,
+                          None, {})
+
+        ctx = self.ctx = create_context(self.m, user=None)
+        self.assertRaises(exception.MissingCredentialError,
+                          self.man.update_stack,
+                          ctx, stack.identifier(), template, params,
+                          None, {})
 
 
 class stackServiceSuspendResumeTest(HeatTestCase):

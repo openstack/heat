@@ -184,6 +184,12 @@ class EngineService(service.Service):
         stacks = db_api.stack_get_all_by_tenant(cnxt) or []
         return list(format_stack_details(stacks))
 
+    def _validate_mandatory_credentials(self, cnxt):
+        if cnxt.username is None:
+            raise exception.MissingCredentialError(required='X-Auth-User')
+        if cnxt.password is None:
+            raise exception.MissingCredentialError(required='X-Auth-Key')
+
     @request_context
     def create_stack(self, cnxt, stack_name, template, params, files, args):
         """
@@ -200,6 +206,8 @@ class EngineService(service.Service):
         :param args: Request parameters/args passed from API
         """
         logger.info('template is %s' % template)
+
+        self._validate_mandatory_credentials(cnxt)
 
         def _stack_create(stack):
             # Create the stack, and create the periodic task if successful
@@ -245,6 +253,8 @@ class EngineService(service.Service):
         arg4 -> Request parameters/args passed from API
         """
         logger.info('template is %s' % template)
+
+        self._validate_mandatory_credentials(cnxt)
 
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)

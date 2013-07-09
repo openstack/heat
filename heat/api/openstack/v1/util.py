@@ -85,6 +85,7 @@ def remote_error(ex):
         'StackValidationFailed': exc.HTTPBadRequest,
         'InvalidTemplateReference': exc.HTTPBadRequest,
         'UnknownUserParameter': exc.HTTPBadRequest,
+        'MissingCredentialError': exc.HTTPBadRequest,
     }
 
     Exc = error_map.get(ex.exc_type, exc.HTTPInternalServerError)
