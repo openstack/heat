@@ -20,7 +20,6 @@ import sys
 import mox
 from oslo.config import cfg
 
-from heat.common import config
 from heat.common import context
 from heat.engine import environment
 from heat.common import exception
@@ -574,7 +573,6 @@ class stackServiceTest(HeatTestCase):
     def setUp(self):
         super(stackServiceTest, self).setUp()
 
-        config.register_engine_opts()
         self.username = 'stack_service_test_user'
         self.tenant = 'stack_service_test_tenant'
 

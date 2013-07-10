@@ -15,7 +15,6 @@
 
 from oslo.config import cfg
 
-from heat.common import config
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resource
@@ -92,7 +91,6 @@ user_policy_template = '''
 class UserPolicyTestCase(HeatTestCase):
     def setUp(self):
         super(UserPolicyTestCase, self).setUp()
-        config.register_engine_opts()
         username = utils.PhysName('test_stack', 'CfnUser')
         self.fc = fakes.FakeKeystoneClient(username=username)
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
