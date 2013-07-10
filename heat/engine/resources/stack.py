@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import stack_resource
@@ -47,6 +48,12 @@ class NestedStack(stack_resource.StackResource):
 
     def handle_delete(self):
         self.delete_nested()
+
+    def FnGetAtt(self, key):
+        if key and not key.startswith('Outputs.'):
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
+        return self.get_output(key.partition('.')[-1])
 
     def FnGetRefId(self):
         return self.nested().identifier().arn()

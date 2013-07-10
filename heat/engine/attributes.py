@@ -112,8 +112,10 @@ class Attributes(collections.Mapping):
 
     @staticmethod
     def schema_from_outputs(json_snippet):
-        return dict(("Outputs.%s" % k, v.get("Description"))
-                    for k, v in json_snippet.items())
+        if json_snippet:
+            return dict((k, v.get("Description"))
+                        for k, v in json_snippet.items())
+        return {}
 
     def __getitem__(self, key):
         if key not in self:

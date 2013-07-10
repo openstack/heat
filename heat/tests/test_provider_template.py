@@ -12,6 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+import yaml
+
+from heat.common import urlfetch
 
 from heat.engine import environment
 from heat.engine import parser
@@ -33,6 +37,7 @@ class MyCloudResource(generic_rsrc.GenericResource):
 class ProviderTemplateTest(HeatTestCase):
     def setUp(self):
         super(ProviderTemplateTest, self).setUp()
+        setup_dummy_db()
         resource._register_class('OS::ResourceType',
                                  generic_rsrc.GenericResource)
         resource._register_class('myCloud::ResourceType',
@@ -76,15 +81,6 @@ class ProviderTemplateTest(HeatTestCase):
         env = environment.Environment(env_str)
         cls = resource.get_class('OS::ResourceType', 'fred', env)
         self.assertEqual(cls, generic_rsrc.GenericResource)
-
-    def test_get_template_resource(self):
-        # assertion: if the name matches {.yaml|.template} we get the
-        # TemplateResource class.
-        env_str = {'resource_registry': {'resources': {'fred': {
-            "OS::ResourceType": "some_magic.yaml"}}}}
-        env = environment.Environment(env_str)
-        cls = resource.get_class('OS::ResourceType', 'fred', env)
-        self.assertEqual(cls, template_resource.TemplateResource)
 
     def test_to_parameters(self):
         """Tests property conversion to parameter values."""
@@ -141,3 +137,58 @@ class ProviderTemplateTest(HeatTestCase):
         self.assertEqual(5, converted_params.get("ANum"))
         # verify Map conversion
         self.assertEqual(map_prop_val, converted_params.get("AMap"))
+
+    def test_get_template_resource(self):
+        # assertion: if the name matches {.yaml|.template} we get the
+        # TemplateResource class.
+        env_str = {'resource_registry': {'resources': {'fred': {
+            "OS::ResourceType": "some_magic.yaml"}}}}
+        env = environment.Environment(env_str)
+        cls = resource.get_class('OS::ResourceType', 'fred', env)
+        self.assertEqual(cls, template_resource.TemplateResource)
+
+    def test_template_as_resource(self):
+        """
+        Test that the resulting resource has the right prop and attrib schema.
+
+        Note that this test requires the Wordpress_Single_Instance.yaml
+        template in the templates directory since we want to test using a
+        non-trivial template.
+        """
+        test_templ_name = "WordPress_Single_Instance.yaml"
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'templates', test_templ_name)
+        # check if its in the directory list vs. exists to work around
+        # case-insensitive file systems
+        self.assertIn(test_templ_name, os.listdir(os.path.dirname(path)))
+        with open(path) as test_templ_file:
+            test_templ = test_templ_file.read()
+        self.assertTrue(test_templ, "Empty test template")
+        self.m.StubOutWithMock(urlfetch, "get")
+        urlfetch.get(test_templ_name).AndReturn(test_templ)
+        parsed_test_templ = yaml.safe_load(test_templ)
+        self.m.ReplayAll()
+        json_snippet = {
+            "Type": test_templ_name,
+            "Properties": {
+                "KeyName": "mykeyname",
+                "DBName": "wordpress1",
+                "DBUsername": "wpdbuser",
+                "DBPassword": "wpdbpass",
+                "DBRootPassword": "wpdbrootpass",
+                "LinuxDistribution": "U10"
+            }
+        }
+        stack = parser.Stack(None, 'test_stack', parser.Template({}),
+                             stack_id=uuidutils.generate_uuid())
+        templ_resource = resource.Resource("test_templ_resource", json_snippet,
+                                           stack)
+        self.m.VerifyAll()
+        self.assertIsInstance(templ_resource,
+                              template_resource.TemplateResource)
+        for prop in parsed_test_templ.get("Parameters", {}):
+            self.assertIn(prop, templ_resource.properties)
+        for attrib in parsed_test_templ.get("Outputs", {}):
+            self.assertIn(attrib, templ_resource.attributes)
+        for k, v in json_snippet.get("Properties").items():
+            self.assertEqual(v, templ_resource.properties[k])

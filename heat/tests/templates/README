@@ -1,6 +1,6 @@
-These templates are required by test_template_format, where we don't want to
-use a minimal template snippet (we want ideally to test the maximum possible
-syntax to prove the format conversion works)
+These templates are required by test_template_format and test_provider_template
+where we don't want to use a minimal template snippet (we want ideally to test
+the maximum possible syntax to prove the format conversion works)
 
 In general, tests should not depend on these templates, inline minimal
 template snippets are preferred.

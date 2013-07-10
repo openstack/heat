@@ -13,10 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from requests import exceptions
+
+from heat.common import template_format
+from heat.common import urlfetch
+from heat.engine import attributes
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine import stack_resource
-from heat.engine import properties
-from heat.common import template_format
 
 from heat.openstack.common import log as logging
 
@@ -24,20 +28,41 @@ logger = logging.getLogger(__name__)
 
 
 class TemplateResource(stack_resource.StackResource):
-    '''A Nested Stack Resource representing another Resource.'''
+    '''
+    A resource implemented by a nested stack.
+
+    This implementation passes resource properties as parameters to the nested
+    stack. Outputs of the nested stack are exposed as attributes of this
+    resource.
+    '''
+
     def __init__(self, name, json_snippet, stack):
         self.template_name = stack.env.get_resource_type(json_snippet['Type'],
                                                          name)
+        self._parsed_nested = None
+        self.stack = stack
         # on purpose don't pass in the environment so we get
-        # the official/facade class to copy it's schema.
+        # the official/facade class in case we need to copy it's schema.
         cls_facade = resource.get_class(json_snippet['Type'])
-        self.properties_schema = cls_facade.properties_schema
-        self.attributes_schema = cls_facade.attributes_schema
+        # if we're not overriding via the environment, mirror the template as
+        # a new resource
+        if cls_facade == self.__class__:
+            self.properties_schema = (properties.Properties
+                .schema_from_params(self.parsed_nested.get('Parameters')))
+            self.attributes_schema = (attributes.Attributes
+                .schema_from_outputs(self.parsed_nested.get('Outputs')))
+        # otherwise we are overriding a resource type via the environment
+        # and should mimic that type
+        else:
+            self.properties_schema = cls_facade.properties_schema
+            self.attributes_schema = cls_facade.attributes_schema
 
         super(TemplateResource, self).__init__(name, json_snippet, stack)
 
     def _to_parameters(self):
-        '''Convert CommaDelimitedList to List.'''
+        '''
+        :return: parameter values for our nested stack based on our properties
+        '''
         params = {}
         for n, v in iter(self.properties.props.items()):
             if not v.implemented():
@@ -54,17 +79,38 @@ class TemplateResource(stack_resource.StackResource):
 
         return params
 
-    def handle_create(self):
-        template_data = self.stack.t.files.get(self.template_name)
-        template = template_format.parse(template_data)
+    @property
+    def parsed_nested(self):
+        if not self._parsed_nested:
+            self._parsed_nested = template_format.parse(self.template_data)
+        return self._parsed_nested
 
-        return self.create_with_template(template,
+    @property
+    def template_data(self):
+        t_data = self.stack.t.files.get(self.template_name)
+        if not t_data and self.template_name.endswith((".yaml", ".template")):
+            try:
+                t_data = urlfetch.get(self.template_name)
+            except (exceptions.RequestException, IOError) as r_exc:
+                raise ValueError("Could not fetch remote template '%s': %s" %
+                                 (self.template_name, str(r_exc)))
+            else:
+                # TODO(Randall) Whoops, misunderstanding on my part; this
+                # doesn't actually persist to the db like I thought.
+                # Find a better way
+                self.stack.t.files[self.template_name] = t_data
+        return t_data
+
+    def handle_create(self):
+        return self.create_with_template(self.parsed_nested,
                                          self._to_parameters())
 
     def handle_delete(self):
         self.delete_nested()
 
     def FnGetRefId(self):
+        if not self.nested():
+            return unicode(self.name)
         return self.nested().identifier().arn()
 
 
