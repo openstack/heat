@@ -1,0 +1,491 @@
+[DEFAULT]
+
+#
+# Options defined in heat.common.config
+#
+
+# The SQLAlchemy connection string used to connect to the
+# database (string value)
+#sql_connection=mysql://heat:heat@localhost/heat
+
+# timeout before idle sql connections are reaped (integer
+# value)
+#sql_idle_timeout=3600
+
+# The default user for new instances (string value)
+#instance_user=ec2-user
+
+# Driver to use for controlling instances (string value)
+#instance_driver=heat.engine.nova
+
+# List of directories to search for Plugins (list value)
+#plugin_dirs=/usr/lib64/heat,/usr/lib/heat
+
+# Name of the engine node. This can be an opaque identifier.It
+# is not necessarily a hostname, FQDN, or IP address. (string
+# value)
+#host=heat
+
+# seconds between nodes reporting state to datastore (integer
+# value)
+#report_interval=10
+
+# seconds between running periodic tasks (integer value)
+#periodic_interval=60
+
+# IP address for EC2 API to listen (string value)
+#ec2_listen=0.0.0.0
+
+# port for ec2 api to listen (integer value)
+#ec2_listen_port=8773
+
+# IP address for OpenStack API to listen (string value)
+#osapi_compute_listen=0.0.0.0
+
+# list port for osapi compute (integer value)
+#osapi_compute_listen_port=8774
+
+# IP address for OpenStack Volume API to listen (string value)
+#osapi_volume_listen=0.0.0.0
+
+# port for os volume api to listen (integer value)
+#osapi_volume_listen_port=8776
+
+# URL of the Heat metadata server (string value)
+#heat_metadata_server_url=
+
+# URL of the Heat waitcondition server (string value)
+#heat_waitcondition_server_url=
+
+# URL of the Heat cloudwatch server (string value)
+#heat_watch_server_url=
+
+# Instance connection to cfn/cw API via https (string value)
+#instance_connection_is_secure=0
+
+# Instance connection to cfn/cw API validate certs if ssl
+# (string value)
+#instance_connection_https_validate_certificates=1
+
+# Keystone role for heat template-defined users (string value)
+#heat_stack_user_role=heat_stack_user
+
+
+#
+# Options defined in heat.common.crypt
+#
+
+# Encryption key used for authentication info in database
+# (string value)
+#auth_encryption_key=notgood but just long enough i think
+
+
+#
+# Options defined in heat.common.policy
+#
+
+#  (string value)
+#policy_file=policy.json
+
+#  (string value)
+#policy_default_rule=default
+
+
+#
+# Options defined in heat.common.wsgi
+#
+
+#  (string value)
+#bind_host=0.0.0.0
+
+#  (integer value)
+#bind_port=<None>
+
+#  (integer value)
+#backlog=4096
+
+#  (string value)
+#cert_file=<None>
+
+#  (string value)
+#key_file=<None>
+
+#  (integer value)
+#workers=0
+
+
+#
+# Options defined in heat.db.api
+#
+
+# The backend to use for db (string value)
+#db_backend=sqlalchemy
+
+
+#
+# Options defined in heat.engine.clients
+#
+
+# Cloud module to use as a backend. Defaults to OpenStack.
+# (string value)
+#cloud_backend=<None>
+
+
+#
+# Options defined in heat.openstack.common.eventlet_backdoor
+#
+
+# port for eventlet backdoor to listen (integer value)
+#backdoor_port=<None>
+
+
+#
+# Options defined in heat.openstack.common.log
+#
+
+# Print debugging output (set logging level to DEBUG instead
+# of default WARNING level). (boolean value)
+#debug=false
+
+# Print more verbose output (set logging level to INFO instead
+# of default WARNING level). (boolean value)
+#verbose=false
+
+# Log output to standard error (boolean value)
+#use_stderr=true
+
+# format string to use for log messages with context (string
+# value)
+#logging_context_format_string=%(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [%(request_id)s %(user)s %(tenant)s] %(instance)s%(message)s
+
+# format string to use for log messages without context
+# (string value)
+#logging_default_format_string=%(asctime)s.%(msecs)03d %(process)d %(levelname)s %(name)s [-] %(instance)s%(message)s
+
+# data to append to log format when level is DEBUG (string
+# value)
+#logging_debug_format_suffix=%(funcName)s %(pathname)s:%(lineno)d
+
+# prefix each line of exception output with this format
+# (string value)
+#logging_exception_prefix=%(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s
+
+# list of logger=LEVEL pairs (list value)
+#default_log_levels=amqplib=WARN,sqlalchemy=WARN,boto=WARN,suds=INFO,keystone=INFO,eventlet.wsgi.server=WARN
+
+# publish error events (boolean value)
+#publish_errors=false
+
+# make deprecations fatal (boolean value)
+#fatal_deprecations=false
+
+# If an instance is passed with the log message, format it
+# like this (string value)
+#instance_format="[instance: %(uuid)s] "
+
+# If an instance UUID is passed with the log message, format
+# it like this (string value)
+#instance_uuid_format="[instance: %(uuid)s] "
+
+# If this option is specified, the logging configuration file
+# specified is used and overrides any other logging options
+# specified. Please see the Python logging module
+# documentation for details on logging configuration files.
+# (string value)
+#log_config=<None>
+
+# A logging.Formatter log message format string which may use
+# any of the available logging.LogRecord attributes. This
+# option is deprecated.  Please use
+# logging_context_format_string and
+# logging_default_format_string instead. (string value)
+#log_format=<None>
+
+# Format string for %%(asctime)s in log records. Default:
+# %(default)s (string value)
+#log_date_format=%Y-%m-%d %H:%M:%S
+
+# (Optional) Name of log file to output to. If no default is
+# set, logging will go to stdout. (string value)
+#log_file=<None>
+
+# (Optional) The base directory used for relative --log-file
+# paths (string value)
+#log_dir=<None>
+
+# Use syslog for logging. (boolean value)
+#use_syslog=false
+
+# syslog facility to receive log lines (string value)
+#syslog_log_facility=LOG_USER
+
+
+#
+# Options defined in heat.openstack.common.notifier.api
+#
+
+# Driver or drivers to handle sending notifications (multi
+# valued)
+#notification_driver=
+
+# Default notification level for outgoing notifications
+# (string value)
+#default_notification_level=INFO
+
+# Default publisher_id for outgoing notifications (string
+# value)
+#default_publisher_id=<None>
+
+
+#
+# Options defined in heat.openstack.common.notifier.list_notifier
+#
+
+# List of drivers to send notifications (multi valued)
+#list_notifier_drivers=heat.openstack.common.notifier.no_op_notifier
+
+
+#
+# Options defined in heat.openstack.common.notifier.rpc_notifier
+#
+
+# AMQP topic used for openstack notifications (list value)
+#notification_topics=notifications
+
+
+#
+# Options defined in heat.openstack.common.rpc
+#
+
+# The messaging module to use, defaults to kombu. (string
+# value)
+#rpc_backend=heat.openstack.common.rpc.impl_kombu
+
+# Size of RPC thread pool (integer value)
+#rpc_thread_pool_size=64
+
+# Size of RPC connection pool (integer value)
+#rpc_conn_pool_size=30
+
+# Seconds to wait for a response from call or multicall
+# (integer value)
+#rpc_response_timeout=60
+
+# Seconds to wait before a cast expires (TTL). Only supported
+# by impl_zmq. (integer value)
+#rpc_cast_timeout=30
+
+# Modules of exceptions that are permitted to be recreatedupon
+# receiving exception data from an rpc call. (list value)
+#allowed_rpc_exception_modules=heat.openstack.common.exception,nova.exception,cinder.exception,exceptions
+
+# If passed, use a fake RabbitMQ provider (boolean value)
+#fake_rabbit=false
+
+# AMQP exchange to connect to if using RabbitMQ or Qpid
+# (string value)
+#control_exchange=openstack
+
+
+#
+# Options defined in heat.openstack.common.rpc.impl_kombu
+#
+
+# SSL version to use (valid only if SSL enabled) (string
+# value)
+#kombu_ssl_version=
+
+# SSL key file (valid only if SSL enabled) (string value)
+#kombu_ssl_keyfile=
+
+# SSL cert file (valid only if SSL enabled) (string value)
+#kombu_ssl_certfile=
+
+# SSL certification authority file (valid only if SSL enabled)
+# (string value)
+#kombu_ssl_ca_certs=
+
+# The RabbitMQ broker address where a single node is used
+# (string value)
+#rabbit_host=localhost
+
+# The RabbitMQ broker port where a single node is used
+# (integer value)
+#rabbit_port=5672
+
+# RabbitMQ HA cluster host:port pairs (list value)
+#rabbit_hosts=$rabbit_host:$rabbit_port
+
+# connect over SSL for RabbitMQ (boolean value)
+#rabbit_use_ssl=false
+
+# the RabbitMQ userid (string value)
+#rabbit_userid=guest
+
+# the RabbitMQ password (string value)
+#rabbit_password=guest
+
+# the RabbitMQ virtual host (string value)
+#rabbit_virtual_host=/
+
+# how frequently to retry connecting with RabbitMQ (integer
+# value)
+#rabbit_retry_interval=1
+
+# how long to backoff for between retries when connecting to
+# RabbitMQ (integer value)
+#rabbit_retry_backoff=2
+
+# maximum retries with trying to connect to RabbitMQ (the
+# default of 0 implies an infinite retry count) (integer
+# value)
+#rabbit_max_retries=0
+
+# use durable queues in RabbitMQ (boolean value)
+#rabbit_durable_queues=false
+
+# use H/A queues in RabbitMQ (x-ha-policy: all).You need to
+# wipe RabbitMQ database when changing this option. (boolean
+# value)
+#rabbit_ha_queues=false
+
+
+#
+# Options defined in heat.openstack.common.rpc.impl_qpid
+#
+
+# Qpid broker hostname (string value)
+#qpid_hostname=localhost
+
+# Qpid broker port (integer value)
+#qpid_port=5672
+
+# Qpid HA cluster host:port pairs (list value)
+#qpid_hosts=$qpid_hostname:$qpid_port
+
+# Username for qpid connection (string value)
+#qpid_username=
+
+# Password for qpid connection (string value)
+#qpid_password=
+
+# Space separated list of SASL mechanisms to use for auth
+# (string value)
+#qpid_sasl_mechanisms=
+
+# Seconds between connection keepalive heartbeats (integer
+# value)
+#qpid_heartbeat=60
+
+# Transport to use, either 'tcp' or 'ssl' (string value)
+#qpid_protocol=tcp
+
+# Disable Nagle algorithm (boolean value)
+#qpid_tcp_nodelay=true
+
+
+#
+# Options defined in heat.openstack.common.rpc.impl_zmq
+#
+
+# ZeroMQ bind address. Should be a wildcard (*), an ethernet
+# interface, or IP. The "host" option should point or resolve
+# to this address. (string value)
+#rpc_zmq_bind_address=*
+
+# MatchMaker driver (string value)
+#rpc_zmq_matchmaker=heat.openstack.common.rpc.matchmaker.MatchMakerLocalhost
+
+# ZeroMQ receiver listening port (integer value)
+#rpc_zmq_port=9501
+
+# Number of ZeroMQ contexts, defaults to 1 (integer value)
+#rpc_zmq_contexts=1
+
+# Maximum number of ingress messages to locally buffer per
+# topic. Default is unlimited. (integer value)
+#rpc_zmq_topic_backlog=<None>
+
+# Directory for holding IPC sockets (string value)
+#rpc_zmq_ipc_dir=/var/run/openstack
+
+# Name of this node. Must be a valid hostname, FQDN, or IP
+# address. Must match "host" option, if running Nova. (string
+# value)
+#rpc_zmq_host=heat
+
+
+#
+# Options defined in heat.openstack.common.rpc.matchmaker
+#
+
+# Heartbeat frequency (integer value)
+#matchmaker_heartbeat_freq=300
+
+# Heartbeat time-to-live. (integer value)
+#matchmaker_heartbeat_ttl=600
+
+
+[paste_deploy]
+
+#
+# Options defined in heat.common.config
+#
+
+#  (string value)
+#flavor=<None>
+
+# The API paste config file to use (string value)
+#api_paste_config=api-paste.ini
+
+
+[rpc_notifier2]
+
+#
+# Options defined in heat.openstack.common.notifier.rpc_notifier2
+#
+
+# AMQP topic(s) used for openstack notifications (list value)
+#topics=notifications
+
+
+[ec2authtoken]
+
+#
+# Options defined in heat.api.aws.ec2token
+#
+
+#  (string value)
+#auth_uri=<None>
+
+#  (string value)
+#keystone_ec2_uri=<None>
+
+
+[matchmaker_redis]
+
+#
+# Options defined in heat.openstack.common.rpc.matchmaker_redis
+#
+
+# Host to locate redis (string value)
+#host=127.0.0.1
+
+# Use this port to connect to redis host. (integer value)
+#port=6379
+
+# Password for Redis server. (optional) (string value)
+#password=<None>
+
+
+[matchmaker_ring]
+
+#
+# Options defined in heat.openstack.common.rpc.matchmaker_ring
+#
+
+# Matchmaker ring file (JSON) (string value)
+#ringfile=/etc/oslo/matchmaker_ring.json
+
+
+# Total option count: 107
