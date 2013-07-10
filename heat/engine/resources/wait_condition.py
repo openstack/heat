@@ -13,25 +13,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urllib
-import urlparse
 import json
-
-from oslo.config import cfg
-
-from keystoneclient.contrib.ec2.utils import Ec2Signer
 
 from heat.common import exception
 from heat.common import identifier
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import signal_responder
 
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 
 
-class WaitConditionHandle(resource.Resource):
+class WaitConditionHandle(signal_responder.SignalResponder):
     '''
     the main point of this class is to :
     have no dependancies (so the instance can reference it)
@@ -41,62 +36,13 @@ class WaitConditionHandle(resource.Resource):
     '''
     properties_schema = {}
 
-    def _sign_url(self, credentials, path):
-        """
-        Create properly formatted and pre-signed URL using supplied credentials
-        See http://docs.amazonwebservices.com/AWSECommerceService/latest/DG/
-            rest-signature.html
-        Also see boto/auth.py::QuerySignatureV2AuthHandler
-        """
-        host_url = urlparse.urlparse(cfg.CONF.heat_waitcondition_server_url)
-        # Note the WSGI spec apparently means that the webob request we end up
-        # prcessing in the CFN API (ec2token.py) has an unquoted path, so we
-        # need to calculate the signature with the path component unquoted, but
-        # ensure the actual URL contains the quoted version...
-        unquoted_path = urllib.unquote(host_url.path + path)
-        request = {'host': host_url.netloc.lower(),
-                   'verb': 'PUT',
-                   'path': unquoted_path,
-                   'params': {'SignatureMethod': 'HmacSHA256',
-                              'SignatureVersion': '2',
-                              'AWSAccessKeyId': credentials.access,
-                              'Timestamp':
-                              self.created_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-                              }}
-        # Sign the request
-        signer = Ec2Signer(credentials.secret)
-        request['params']['Signature'] = signer.generate(request)
-
-        qs = urllib.urlencode(request['params'])
-        url = "%s%s?%s" % (cfg.CONF.heat_waitcondition_server_url.lower(),
-                           path, qs)
-        return url
-
-    def handle_create(self):
-        # Create a keystone user so we can create a signed URL via FnGetRefId
-        user_id = self.keystone().create_stack_user(
-            self.physical_resource_name())
-        kp = self.keystone().get_ec2_keypair(user_id)
-        if not kp:
-            raise exception.Error("Error creating ec2 keypair for user %s" %
-                                  user_id)
-        else:
-            self.resource_id_set(user_id)
-
-    def handle_delete(self):
-        if self.resource_id is None:
-            return
-        self.keystone().delete_stack_user(self.resource_id)
-
     def FnGetRefId(self):
         '''
         Override the default resource FnGetRefId so we return the signed URL
         '''
         if self.resource_id:
-            urlpath = self.identifier().arn_url_path()
-            ec2_creds = self.keystone().get_ec2_keypair(self.resource_id)
-            signed_url = self._sign_url(ec2_creds, urlpath)
-            return unicode(signed_url)
+            wc = signal_responder.WAITCONDITION
+            return unicode(self._get_signed_url(signal_type=wc))
         else:
             return unicode(self.name)
 
