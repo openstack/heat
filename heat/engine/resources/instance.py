@@ -197,7 +197,7 @@ class Instance(resource.Resource):
             attachments = [(read_cloudinit_file('config'), 'cloud-config'),
                            (read_cloudinit_file('boothook.sh'), 'boothook.sh',
                             'cloud-boothook'),
-                           (read_cloudinit_file('part-handler.py'),
+                           (read_cloudinit_file('part_handler.py'),
                             'part-handler.py'),
                            (userdata, 'cfn-userdata', 'x-cfninitdata'),
                            (read_cloudinit_file('loguserdata.py'),
