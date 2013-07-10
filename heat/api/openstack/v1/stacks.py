@@ -125,7 +125,7 @@ class InstantiationData(object):
                     reason = _("%s not in valid in the environment") % field
                     raise exc.HTTPBadRequest(reason)
 
-        if self.PARAM_USER_PARAMS not in env:
+        if not env.get(self.PARAM_USER_PARAMS):
             env[self.PARAM_USER_PARAMS] = {}
 
         parameters = self.data.get(self.PARAM_USER_PARAMS, {})
