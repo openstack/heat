@@ -114,8 +114,8 @@ class Metadata(object):
 
 
 class Resource(object):
-    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME
-               ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
+    ACTIONS = (INIT, CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME
+               ) = ('INIT', 'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
                     'SUSPEND', 'RESUME')
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
@@ -182,8 +182,8 @@ class Resource(object):
             self.data = resource.data
         else:
             self.resource_id = None
-            self.action = None
-            self.status = None
+            self.action = self.INIT
+            self.status = self.COMPLETE
             self.status_reason = ''
             self.id = None
             self.data = []
@@ -381,7 +381,10 @@ class Resource(object):
         Create the resource. Subclasses should provide a handle_create() method
         to customise creation.
         '''
-        assert None in (self.action, self.status), 'invalid state for create'
+        if (self.action, self.status) != (self.INIT, self.COMPLETE):
+            exc = exception.Error('State %s invalid for create'
+                                  % str(self.state))
+            raise exception.ResourceFailure(exc)
 
         logger.info('creating %s' % str(self))
 
@@ -495,7 +498,7 @@ class Resource(object):
         if (self.action, self.status) == (self.DELETE, self.COMPLETE):
             return
         # No need to delete if the resource has never been created
-        if self.action is None:
+        if self.action == self.INIT:
             return
 
         initial_state = self.state

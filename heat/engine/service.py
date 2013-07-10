@@ -482,8 +482,7 @@ class EngineService(service.Service):
             name_match = lambda r: True
 
         return [api.format_stack_resource(resource)
-                for resource in stack
-                if resource.id is not None and name_match(resource)]
+                for resource in stack if name_match(resource)]
 
     @request_context
     def list_stack_resources(self, cnxt, stack_identity):
@@ -492,7 +491,7 @@ class EngineService(service.Service):
         stack = parser.Stack.load(cnxt, stack=s)
 
         return [api.format_stack_resource(resource, detail=False)
-                for resource in stack if resource.id is not None]
+                for resource in stack]
 
     @request_context
     def stack_suspend(self, cnxt, stack_identity):

@@ -58,7 +58,7 @@ class ResourceTest(HeatTestCase):
     def test_state_defaults(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_res_def', tmpl, self.stack)
-        self.assertEqual(res.state, (None, None))
+        self.assertEqual(res.state, (res.INIT, res.COMPLETE))
         self.assertEqual(res.status_reason, '')
 
     def test_state_set(self):
