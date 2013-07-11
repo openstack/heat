@@ -27,6 +27,10 @@ from heat.openstack.common.gettextutils import _
 logger = logging.getLogger(__name__)
 
 
+# Whether TaskRunner._sleep actually does an eventlet sleep when called.
+ENABLE_SLEEP = True
+
+
 def task_description(task):
     """
     Return a human-readable string description of a task suitable for logging
@@ -101,7 +105,7 @@ class TaskRunner(object):
 
     def _sleep(self, wait_time):
         """Sleep for the specified number of seconds."""
-        if wait_time is not None:
+        if ENABLE_SLEEP and wait_time is not None:
             logger.debug('%s sleeping' % str(self))
             eventlet.sleep(wait_time)
 

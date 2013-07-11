@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import mox
 from testtools import skipIf
 
 from heat.common import exception
@@ -212,7 +211,6 @@ class QuantumNetTest(HeatTestCase):
         self.m.StubOutWithMock(quantumclient.Client, 'create_network')
         self.m.StubOutWithMock(quantumclient.Client, 'delete_network')
         self.m.StubOutWithMock(quantumclient.Client, 'show_network')
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         setup_dummy_db()
 
     def create_net(self, t, stack, resource_name):
@@ -245,7 +243,6 @@ class QuantumNetTest(HeatTestCase):
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
 
         quantumclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -494,7 +491,6 @@ class QuantumRouterTest(HeatTestCase):
         self.m.StubOutWithMock(quantumclient.Client, 'remove_interface_router')
         self.m.StubOutWithMock(quantumclient.Client, 'add_gateway_router')
         self.m.StubOutWithMock(quantumclient.Client, 'remove_gateway_router')
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         setup_dummy_db()
 
     def create_router(self, t, stack, resource_name):
@@ -551,7 +547,6 @@ class QuantumRouterTest(HeatTestCase):
                     "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
                 }
             })
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         quantumclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
                 "router": {
@@ -679,7 +674,6 @@ class QuantumFloatingIPTest(HeatTestCase):
         self.m.StubOutWithMock(quantumclient.Client, 'create_port')
         self.m.StubOutWithMock(quantumclient.Client, 'delete_port')
         self.m.StubOutWithMock(quantumclient.Client, 'show_port')
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         setup_dummy_db()
 
     def test_floating_ip(self):
@@ -761,7 +755,6 @@ class QuantumFloatingIPTest(HeatTestCase):
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         quantumclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn({'port': {
