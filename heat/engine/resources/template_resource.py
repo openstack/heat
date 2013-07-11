@@ -38,20 +38,18 @@ class TemplateResource(stack_resource.StackResource):
 
     def _to_parameters(self):
         '''Convert CommaDelimitedList to List.'''
-        # TODO(asalkeld or randall)
         params = {}
         for n, v in iter(self.properties.props.items()):
             if not v.implemented():
                 continue
-            if v.type() == properties.MAP:
-                # totally ignore maps for now.
-                logger.warn('%s ignoring property %s' % (self.name, n))
             elif v.type() == properties.LIST:
                 # take a list and create a CommaDelimitedList
                 val = self.properties[n]
                 if val:
                     params[n] = ','.join(val)
             else:
+                # for MAP, the JSON param takes either a collection or string,
+                # so just pass it on and let the param validate as appropriate
                 params[n] = self.properties[n]
 
         return params
