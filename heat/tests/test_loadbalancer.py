@@ -98,8 +98,6 @@ class LoadBalancerTest(HeatTestCase):
         return rsrc
 
     def test_loadbalancer(self):
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes()
 
         self.m.StubOutWithMock(user.User, 'keystone')
         user.User.keystone().AndReturn(self.fkc)

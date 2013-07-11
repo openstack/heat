@@ -348,8 +348,6 @@ class instancesTest(HeatTestCase):
         get = self.fc.client.get_servers_1234
         get().AndReturn((200, d1))
         get().AndReturn((200, d1))
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         get().AndReturn((200, d2))
         self.m.ReplayAll()
 
@@ -376,8 +374,6 @@ class instancesTest(HeatTestCase):
         get = self.fc.client.get_servers_1234
         get().AndReturn((200, d1))
         get().AndReturn((200, d1))
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         get().AndReturn((200, d2))
         self.m.ReplayAll()
 
@@ -440,8 +436,6 @@ class instancesTest(HeatTestCase):
         get = self.fc.client.get_servers_1234
         get().AndReturn((200, d))
 
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.m.ReplayAll()
 
         instance.state_set(instance.SUSPEND, instance.COMPLETE)
@@ -498,9 +492,6 @@ class instancesTest(HeatTestCase):
             if server._test_check_iterations > 2:
                 server.status = 'ACTIVE'
         return_server.get = activate_status.__get__(return_server)
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(instance.create)()

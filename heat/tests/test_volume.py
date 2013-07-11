@@ -13,7 +13,6 @@
 #    under the License.
 
 
-import mox
 import json
 
 from testtools import skipIf
@@ -84,7 +83,6 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'delete')
         self.m.StubOutWithMock(self.fc.volumes, 'create_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         setup_dummy_db()
 
     def create_volume(self, t, stack, resource_name):
@@ -191,7 +189,6 @@ class VolumeTest(HeatTestCase):
         # create script
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
 
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',
             server_id=u'WikiDatabase',
@@ -231,7 +228,6 @@ class VolumeTest(HeatTestCase):
 
         # create script
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',
             server_id=u'WikiDatabase',
@@ -297,12 +293,10 @@ class VolumeTest(HeatTestCase):
             'WikiDatabase', 'vol-123').AndRaise(
                 clients.novaclient.exceptions.NotFound('Not found'))
 
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.fc.volumes.delete_server_volume(
             'WikiDatabase', 'vol-123').AndRaise(
                 clients.novaclient.exceptions.NotFound('Not found'))
 
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.fc.volumes.delete_server_volume(
             'WikiDatabase', 'vol-123').AndRaise(
                 clients.cinderclient.exceptions.NotFound('Not found'))
@@ -478,8 +472,6 @@ class VolumeTest(HeatTestCase):
         fv.update(
             display_description=vol_name,
             display_name=vol_name)
-        # sleep will be called since backup will not complete right away
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -509,8 +501,6 @@ class VolumeTest(HeatTestCase):
         fv.update(
             display_description=vol_name,
             display_name=vol_name)
-        # sleep will be called since backup will not complete right away
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -673,7 +663,6 @@ class VolumeTest(HeatTestCase):
 
         # create script
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.fc.volumes.create_server_volume(
             device=u'/dev/vdc',
             server_id=u'WikiDatabase',

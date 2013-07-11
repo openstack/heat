@@ -17,6 +17,7 @@ import fixtures
 import logging
 import mox
 import testtools
+import heat.engine.scheduler as scheduler
 
 
 class HeatTestCase(testtools.TestCase):
@@ -26,3 +27,9 @@ class HeatTestCase(testtools.TestCase):
         self.m = mox.Mox()
         self.addCleanup(self.m.UnsetStubs)
         self.useFixture(fixtures.FakeLogger(level=logging.DEBUG))
+        scheduler.ENABLE_SLEEP = False
+
+        def enable_sleep():
+            scheduler.ENABLE_SLEEP = True
+
+        self.addCleanup(enable_sleep)

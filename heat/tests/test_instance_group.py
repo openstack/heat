@@ -14,8 +14,6 @@
 
 import copy
 
-import mox
-
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
@@ -62,7 +60,6 @@ class InstanceGroupTest(HeatTestCase):
         setup_dummy_db()
 
     def _stub_create(self, num):
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
@@ -70,7 +67,6 @@ class InstanceGroupTest(HeatTestCase):
         for x in range(num):
             instance.Instance.handle_create().AndReturn(cookie)
         instance.Instance.check_create_complete(cookie).AndReturn(False)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         instance.Instance.check_create_complete(
             cookie).MultipleTimes().AndReturn(True)
 

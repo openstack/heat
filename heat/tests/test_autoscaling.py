@@ -119,7 +119,6 @@ class AutoScalingTest(HeatTestCase):
         return rsrc
 
     def _stub_create(self, num):
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
@@ -127,7 +126,6 @@ class AutoScalingTest(HeatTestCase):
         for x in range(num):
             instance.Instance.handle_create().AndReturn(cookie)
         instance.Instance.check_create_complete(cookie).AndReturn(False)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         instance.Instance.check_create_complete(
             cookie).MultipleTimes().AndReturn(True)
 
@@ -248,14 +246,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         self.m.StubOutWithMock(instance.Instance, 'handle_suspend')
         self.m.StubOutWithMock(instance.Instance, 'check_suspend_complete')
         inst_cookie = (object(), object(), object())
         instance.Instance.handle_suspend().AndReturn(inst_cookie)
         instance.Instance.check_suspend_complete(inst_cookie).AndReturn(False)
         instance.Instance.check_suspend_complete(inst_cookie).AndReturn(True)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(rsrc.suspend)()
@@ -281,14 +277,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         self.m.StubOutWithMock(instance.Instance, 'handle_resume')
         self.m.StubOutWithMock(instance.Instance, 'check_resume_complete')
         inst_cookie = (object(), object(), object())
         instance.Instance.handle_resume().AndReturn(inst_cookie)
         instance.Instance.check_resume_complete(inst_cookie).AndReturn(False)
         instance.Instance.check_resume_complete(inst_cookie).AndReturn(True)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         self.m.ReplayAll()
 
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
@@ -438,8 +432,6 @@ class AutoScalingTest(HeatTestCase):
     def test_scaling_group_create_error(self):
         t = template_format.parse(as_template)
         stack = parse_stack(t)
-
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')

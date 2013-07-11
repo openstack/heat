@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mox
-
 import datetime
 import time
 import json
@@ -100,7 +98,6 @@ class WaitConditionTest(HeatTestCase):
         setup_dummy_db()
         self.m.StubOutWithMock(wc.WaitConditionHandle,
                                'get_status')
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
@@ -126,8 +123,6 @@ class WaitConditionTest(HeatTestCase):
             stack.store()
 
         if stub:
-            scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
-
             self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
             wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(
                 self.fc)
@@ -143,9 +138,7 @@ class WaitConditionTest(HeatTestCase):
     def test_post_success_to_handle(self):
         self.stack = self.create_stack()
         wc.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
 
         self.m.ReplayAll()
@@ -165,9 +158,7 @@ class WaitConditionTest(HeatTestCase):
     def test_post_failure_to_handle(self):
         self.stack = self.create_stack()
         wc.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn(['FAILURE'])
 
         self.m.ReplayAll()
@@ -188,11 +179,8 @@ class WaitConditionTest(HeatTestCase):
     def test_post_success_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
         wc.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'SUCCESS'])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'SUCCESS',
                                                        'SUCCESS'])
 
@@ -213,9 +201,7 @@ class WaitConditionTest(HeatTestCase):
     def test_post_failure_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
         wc.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'FAILURE'])
 
         self.m.ReplayAll()
@@ -248,10 +234,8 @@ class WaitConditionTest(HeatTestCase):
         scheduler.wallclock().AndReturn(st + 0.001)
         scheduler.wallclock().AndReturn(st + 0.1)
         wc.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         scheduler.wallclock().AndReturn(st + 4.1)
         wc.WaitConditionHandle.get_status().AndReturn([])
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
         scheduler.wallclock().AndReturn(st + 5.1)
 
         self.m.ReplayAll()
@@ -408,9 +392,6 @@ class WaitConditionHandleTest(HeatTestCase):
         # Stub out the UUID for this test, so we can get an expected signature
         with UUIDStub('STACKABCD1234'):
             stack.store()
-
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
 
         # Stub waitcondition status so all goes CREATE_COMPLETE
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
