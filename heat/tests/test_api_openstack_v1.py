@@ -19,9 +19,11 @@ import webob.exc
 
 from heat.common import identifier
 from heat.openstack.common import rpc
-import heat.openstack.common.rpc.common as rpc_common
+
+from heat.common import exception as heat_exc
 from heat.common.wsgi import Request
 from heat.common import urlfetch
+from heat.openstack.common.rpc import common as rpc_common
 from heat.rpc import api as rpc_api
 from heat.tests.common import HeatTestCase
 
@@ -31,6 +33,33 @@ import heat.api.openstack.v1.resources as resources
 import heat.api.openstack.v1.events as events
 import heat.api.openstack.v1.actions as actions
 from heat.tests.utils import dummy_context
+
+import heat.api.middleware.fault as fault
+
+
+def request_with_middleware(middleware, func, req, *args, **kwargs):
+
+    @webob.dec.wsgify
+    def _app(req):
+        return func(req, *args, **kwargs)
+
+    resp = middleware(_app).process_request(req)
+    return resp
+
+
+def remote_error(ex_type, message=''):
+    """convert rpc original exception to the one with _Remote suffix."""
+
+    # NOTE(jianingy): this function helps simulate the real world exceptions
+
+    module = ex_type().__class__.__module__
+    str_override = lambda self: "%s\n<Traceback>" % message
+    new_ex_type = type(ex_type.__name__ + rpc_common._REMOTE_POSTFIX,
+                       (ex_type,),
+                       {'__str__': str_override, '__unicode__': str_override})
+
+    new_ex_type.__module__ = '%s%s' % (module, rpc_common._REMOTE_POSTFIX)
+    return new_ex_type()
 
 
 class InstantiationDataTest(HeatTestCase):
@@ -369,12 +398,15 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'list_stacks',
                   'args': {},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 None).AndRaise(remote_error(AttributeError))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPBadRequest,
-                          self.controller.index,
-                          req, tenant_id=self.tenant)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.index,
+                                       req, tenant_id=self.tenant)
+
+        self.assertEqual(resp.json['code'], 400)
+        self.assertEqual(resp.json['error']['type'], 'AttributeError')
         self.m.VerifyAll()
 
     def test_index_rmt_interr(self):
@@ -386,12 +418,15 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'list_stacks',
                   'args': {},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("Exception"))
+                 None).AndRaise(remote_error(Exception))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPInternalServerError,
-                          self.controller.index,
-                          req, tenant_id=self.tenant)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.index,
+                                       req, tenant_id=self.tenant)
+
+        self.assertEqual(resp.json['code'], 500)
+        self.assertEqual(resp.json['error']['type'], 'Exception')
         self.m.VerifyAll()
 
     def test_create(self):
@@ -488,7 +523,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 None).AndRaise(remote_error(AttributeError))
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'create_stack',
@@ -498,7 +533,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("UnknownUserParameter"))
+                 None).AndRaise(remote_error(heat_exc.UnknownUserParameter))
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'create_stack',
@@ -508,20 +543,28 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("UserParameterMissing"))
-
+                 None).AndRaise(remote_error(heat_exc.UserParameterMissing))
         self.m.ReplayAll()
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.create,
+                                       req, tenant_id=self.tenant, body=body)
 
-        self.assertRaises(webob.exc.HTTPBadRequest,
-                          self.controller.create,
-                          req, tenant_id=self.tenant, body=body)
-        self.assertRaises(webob.exc.HTTPBadRequest,
-                          self.controller.create,
-                          req, tenant_id=self.tenant, body=body)
-        self.assertRaises(webob.exc.HTTPBadRequest,
-                          self.controller.create,
-                          req, tenant_id=self.tenant, body=body)
+        self.assertEqual(resp.json['code'], 400)
+        self.assertEqual(resp.json['error']['type'], 'AttributeError')
 
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.create,
+                                       req, tenant_id=self.tenant, body=body)
+
+        self.assertEqual(resp.json['code'], 400)
+        self.assertEqual(resp.json['error']['type'], 'UnknownUserParameter')
+
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.create,
+                                       req, tenant_id=self.tenant, body=body)
+
+        self.assertEqual(resp.json['code'], 400)
+        self.assertEqual(resp.json['error']['type'], 'UserParameterMissing')
         self.m.VerifyAll()
 
     def test_create_err_existing(self):
@@ -546,12 +589,15 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackExists"))
+                 None).AndRaise(remote_error(heat_exc.StackExists))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPConflict,
-                          self.controller.create,
-                          req, tenant_id=self.tenant, body=body)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.create,
+                                       req, tenant_id=self.tenant, body=body)
+
+        self.assertEqual(resp.json['code'], 409)
+        self.assertEqual(resp.json['error']['type'], 'StackExists')
         self.m.VerifyAll()
 
     def test_create_err_engine(self):
@@ -576,14 +622,15 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError(
-                     'StackValidationFailed',
-                     'Something went wrong'))
+                 None).AndRaise(remote_error(heat_exc.StackValidationFailed))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPBadRequest,
-                          self.controller.create,
-                          req, tenant_id=self.tenant, body=body)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.create,
+                                       req, tenant_id=self.tenant, body=body)
+
+        self.assertEqual(resp.json['code'], 400)
+        self.assertEqual(resp.json['error']['type'], 'StackValidationFailed')
         self.m.VerifyAll()
 
     def test_lookup(self):
@@ -637,11 +684,16 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound, self.controller.lookup,
-                          req, tenant_id=self.tenant, stack_name=stack_name)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.lookup,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_name)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_lookup_resource(self):
@@ -681,12 +733,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound, self.controller.lookup,
-                          req, tenant_id=self.tenant, stack_name=stack_name,
-                          path='resources')
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.lookup,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_name,
+                                       path='resources')
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_show(self):
@@ -769,14 +826,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'show_stack',
                   'args': {'stack_identity': dict(identity)},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.show,
-                          req, tenant_id=identity.tenant,
-                          stack_name=identity.stack_name,
-                          stack_id=identity.stack_id)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.show,
+                                       req, tenant_id=identity.tenant,
+                                       stack_name=identity.stack_name,
+                                       stack_id=identity.stack_id)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_show_invalidtenant(self):
@@ -790,14 +850,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'show_stack',
                   'args': {'stack_identity': dict(identity)},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("InvalidTenant"))
+                 None).AndRaise(remote_error(heat_exc.InvalidTenant))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPForbidden,
-                          self.controller.show,
-                          req, tenant_id=identity.tenant,
-                          stack_name=identity.stack_name,
-                          stack_id=identity.stack_id)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.show,
+                                       req, tenant_id=identity.tenant,
+                                       stack_name=identity.stack_name,
+                                       stack_id=identity.stack_id)
+
+        self.assertEqual(resp.json['code'], 403)
+        self.assertEqual(resp.json['error']['type'], 'InvalidTenant')
         self.m.VerifyAll()
 
     def test_get_template(self):
@@ -832,15 +895,18 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'get_template',
                   'args': {'stack_identity': dict(identity)},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
 
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.template,
-                          req, tenant_id=identity.tenant,
-                          stack_name=identity.stack_name,
-                          stack_id=identity.stack_id)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.template,
+                                       req, tenant_id=identity.tenant,
+                                       stack_name=identity.stack_name,
+                                       stack_id=identity.stack_id)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_update(self):
@@ -902,15 +968,18 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.update,
-                          req, tenant_id=identity.tenant,
-                          stack_name=identity.stack_name,
-                          stack_id=identity.stack_id,
-                          body=body)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.update,
+                                       req, tenant_id=identity.tenant,
+                                       stack_name=identity.stack_name,
+                                       stack_id=identity.stack_id,
+                                       body=body)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_delete(self):
@@ -959,14 +1028,17 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'delete_stack',
                   'args': {'stack_identity': dict(identity)},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.delete,
-                          req, tenant_id=identity.tenant,
-                          stack_name=identity.stack_name,
-                          stack_id=identity.stack_id)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.delete,
+                                       req, tenant_id=identity.tenant,
+                                       stack_name=identity.stack_name,
+                                       stack_id=identity.stack_id)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_validate_template(self):
@@ -1056,12 +1128,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'list_resource_types',
                   'args': {},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("ValueError"))
+                 None).AndRaise(remote_error(heat_exc.ServerError))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPInternalServerError,
-                          self.controller.list_resource_types,
-                          req, tenant_id=self.tenant)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.list_resource_types,
+                                       req, tenant_id=self.tenant)
+        self.assertEqual(resp.json['code'], 500)
+        self.assertEqual(resp.json['error']['type'], 'ServerError')
         self.m.VerifyAll()
 
 
@@ -1163,14 +1237,17 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'method': 'list_stack_resources',
                   'args': {'stack_identity': stack_identity},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.index,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.index,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_show(self):
@@ -1248,15 +1325,18 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.show,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id,
-                          resource_name=res_name)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.show,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id,
+                                       resource_name=res_name)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_show_nonexist_resource(self):
@@ -1275,15 +1355,18 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("ResourceNotFound"))
+                 None).AndRaise(remote_error(heat_exc.ResourceNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.show,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id,
-                          resource_name=res_name)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.show,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id,
+                                       resource_name=res_name)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'ResourceNotFound')
         self.m.VerifyAll()
 
     def test_show_uncreated_resource(self):
@@ -1302,15 +1385,18 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("ResourceNotAvailable"))
+                 None).AndRaise(remote_error(heat_exc.ResourceNotAvailable))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.show,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id,
-                          resource_name=res_name)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.show,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id,
+                                       resource_name=res_name)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'ResourceNotAvailable')
         self.m.VerifyAll()
 
     def test_metadata_show(self):
@@ -1373,15 +1459,18 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.metadata,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id,
-                          resource_name=res_name)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.metadata,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id,
+                                       resource_name=res_name)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_metadata_show_nonexist_resource(self):
@@ -1400,15 +1489,18 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("ResourceNotFound"))
+                 None).AndRaise(remote_error(heat_exc.ResourceNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.metadata,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id,
-                          resource_name=res_name)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.metadata,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id,
+                                       resource_name=res_name)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'ResourceNotFound')
         self.m.VerifyAll()
 
 
@@ -1577,14 +1669,17 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                   'method': 'list_events',
                   'args': {'stack_identity': stack_identity},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.index,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.index,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
     def test_index_resource_nonexist(self):
@@ -1818,15 +1913,19 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                   'method': 'list_events',
                   'args': {'stack_identity': stack_identity},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(remote_error(heat_exc.StackNotFound))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPNotFound,
-                          self.controller.show,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id,
-                          resource_name=res_name, event_id=event_id)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.show,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id,
+                                       resource_name=res_name,
+                                       event_id=event_id)
+
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
         self.m.VerifyAll()
 
 
@@ -2233,15 +2332,18 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
                   'method': 'stack_suspend',
                   'args': {'stack_identity': stack_identity},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 None).AndRaise(remote_error(AttributeError))
         self.m.ReplayAll()
 
-        self.assertRaises(webob.exc.HTTPBadRequest, self.controller.action,
-                          req, tenant_id=self.tenant,
-                          stack_name=stack_identity.stack_name,
-                          stack_id=stack_identity.stack_id,
-                          body=body)
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.action,
+                                       req, tenant_id=self.tenant,
+                                       stack_name=stack_identity.stack_name,
+                                       stack_id=stack_identity.stack_id,
+                                       body=body)
 
+        self.assertEqual(resp.json['code'], 400)
+        self.assertEqual(resp.json['error']['type'], 'AttributeError')
         self.m.VerifyAll()
 
     def test_action_badaction_ise(self):

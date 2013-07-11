@@ -14,9 +14,14 @@
 #    under the License.
 
 from heat.api.middleware.version_negotiation import VersionNegotiationFilter
+from heat.api.middleware.fault import FaultWrapper
 from heat.api.openstack import versions
 
 
 def version_negotiation_filter(app, conf, **local_conf):
     return VersionNegotiationFilter(versions.Controller, app,
                                     conf, **local_conf)
+
+
+def faultwrap_filter(app, conf, **local_conf):
+    return FaultWrapper(app)

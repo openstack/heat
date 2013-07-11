@@ -67,31 +67,10 @@ def make_link(req, identity, relationship='self'):
 
 
 def remote_error(ex):
+    """The RemoteError mapping work has been moved to heat.api.middleware.fault
+    which handles error formating now. This function will be deprecated
+    in the future, so please raise exceptions directly.
     """
-    Map rpc_common.RemoteError exceptions returned by the engine
-    to webob exceptions which can be used to return
-    properly formatted error responses.
-    """
 
-    error_map = {
-        'AttributeError': exc.HTTPBadRequest,
-        'ValueError': exc.HTTPBadRequest,
-        'StackNotFound': exc.HTTPNotFound,
-        'ResourceNotFound': exc.HTTPNotFound,
-        'ResourceNotAvailable': exc.HTTPNotFound,
-        'PhysicalResourceNotFound': exc.HTTPNotFound,
-        'InvalidTenant': exc.HTTPForbidden,
-        'StackExists': exc.HTTPConflict,
-        'StackValidationFailed': exc.HTTPBadRequest,
-        'InvalidTemplateReference': exc.HTTPBadRequest,
-        'UnknownUserParameter': exc.HTTPBadRequest,
-        'RevertFailed': exc.HTTPInternalServerError,
-        'ServerBuildFailed': exc.HTTPInternalServerError,
-        'NotSupported': exc.HTTPBadRequest,
-        'MissingCredentialError': exc.HTTPBadRequest,
-        'UserParameterMissing': exc.HTTPBadRequest,
-    }
-
-    Exc = error_map.get(ex.exc_type, exc.HTTPInternalServerError)
-
-    raise Exc(str(ex))
+    # TODO(jianingy): add a deprecated warning here to inform others.
+    raise ex
