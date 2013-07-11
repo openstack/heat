@@ -1484,6 +1484,38 @@ class StackTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    @stack_delete_after
+    def test_update_replace_parameters(self):
+        '''
+        assertion:
+        changes in static environment parameters
+        are not ignored and can cause dependant resources to be updated.
+        '''
+        tmpl = {'Parameters': {'AParam': {'Type': 'String'}},
+                'Resources': {
+                    'AResource': {'Type': 'ResourceWithPropsType',
+                                  'Properties': {'Foo': {'Ref': 'AParam'}}}}}
+
+        env1 = {'parameters': {'AParam': 'abc'}}
+        env2 = {'parameters': {'AParam': 'smelly'}}
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl),
+                                  environment.Environment(env1))
+
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+        self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl),
+                                     environment.Environment(env2))
+        self.stack.update(updated_stack)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
+        self.assertEqual(self.stack['AResource'].properties['Foo'], 'smelly')
+
     def test_stack_create_timeout(self):
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
         self.m.StubOutWithMock(scheduler, 'wallclock')

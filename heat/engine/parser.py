@@ -381,6 +381,10 @@ class Stack(object):
                                'State invalid for %s' % action)
                 return
 
+        current_env = self.env
+        self.env = newstack.env
+        self.parameters = newstack.parameters
+
         self.state_set(self.UPDATE, self.IN_PROGRESS,
                        'Stack %s started' % action)
 
@@ -411,18 +415,17 @@ class Stack(object):
                 # existing template, so we roll back to the original state
                 if not self.disable_rollback:
                     oldstack = Stack(self.context, self.name, self.t,
-                                     self.env)
+                                     current_env)
                     self.update(oldstack, action=self.ROLLBACK)
                     return
 
         self.state_set(action, stack_status, reason)
 
-        # flip the template & environment to the newstack values
+        # flip the template to the newstack values
         # Note we do this on success and failure, so the current
         # stack resources are stored, even if one is in a failed
         # state (otherwise we won't remove them on delete)
         self.t = newstack.t
-        self.env = newstack.env
         template_outputs = self.t[template.OUTPUTS]
         self.outputs = self.resolve_static_data(template_outputs)
         self.store()
