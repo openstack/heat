@@ -214,12 +214,30 @@ class Event(BASE, HeatBase):
     resource_properties = sqlalchemy.Column(sqlalchemy.PickleType)
 
 
+class ResourceData(BASE, HeatBase):
+    """Key/value store of arbitrary, resource-specific data."""
+
+    __tablename__ = 'resource_data'
+
+    id = sqlalchemy.Column('id',
+                           sqlalchemy.Integer,
+                           primary_key=True,
+                           nullable=False)
+    key = sqlalchemy.Column('key', sqlalchemy.String)
+    value = sqlalchemy.Column('value', sqlalchemy.String)
+    redact = sqlalchemy.Column('redact', sqlalchemy.Boolean)
+    resource_id = sqlalchemy.Column('resource_id',
+                                    sqlalchemy.String,
+                                    sqlalchemy.ForeignKey('resource.id'),
+                                    nullable=False)
+
+
 class Resource(BASE, HeatBase):
     """Represents a resource created by the heat engine."""
 
     __tablename__ = 'resource'
 
-    id = sqlalchemy.Column(sqlalchemy.Integer,
+    id = sqlalchemy.Column(sqlalchemy.String,
                            primary_key=True,
                            default=uuidutils.generate_uuid)
     action = sqlalchemy.Column('action', sqlalchemy.String)
@@ -234,6 +252,8 @@ class Resource(BASE, HeatBase):
                                  sqlalchemy.ForeignKey('stack.id'),
                                  nullable=False)
     stack = relationship(Stack, backref=backref('resources'))
+    data = relationship(ResourceData, backref=backref('resources',
+                                                      lazy='joined'))
 
 
 class WatchRule(BASE, HeatBase):

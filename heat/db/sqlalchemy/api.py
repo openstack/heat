@@ -97,6 +97,54 @@ def resource_get_all(context):
     return results
 
 
+def resource_data_get(resource, key):
+    """Lookup value of resource's data by key."""
+    data_lst = filter(lambda x: x.key == key, resource.data)
+    if not data_lst:
+        return None
+    assert len(data_lst) == 1
+    data = data_lst[0]
+
+    if data.redact:
+        return crypt.decrypt(data.value)
+    else:
+        return data.value
+
+
+def resource_data_set(resource, key, value, redact=False):
+    """Save resource's key/value pair to database."""
+    if redact:
+        value = crypt.encrypt(value)
+    data_lst = filter(lambda x: x.key == key, resource.data)
+
+    if data_lst:  # Key exists in db, so check value & replace if necessary
+        assert len(data_lst) == 1
+        resource_data = data_lst[0]
+
+        # If the new value is the same, do nothing
+        if value == resource_data.value:
+            return None
+
+        # Otherwise, delete the old value
+        for i, d in enumerate(resource.data):
+            if d.key == key:
+                index = i
+        del(resource.data[index])
+
+    else:  # Build a new key/value
+        resource_data = models.ResourceData()
+        resource_data.key = key
+        resource_data.resource_id = resource.id
+        resource_data.redact = True
+
+    resource_data.value = value
+    resource.data.append(resource_data)
+
+    # Save to new key/value pair to database
+    rs = model_query(resource.context, models.Resource).get(resource.id)
+    rs.update_and_save({'data': resource.data})
+
+
 def resource_create(context, values):
     resource_ref = models.Resource()
     resource_ref.update(values)
