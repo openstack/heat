@@ -18,6 +18,8 @@ import json
 import sys
 
 import mox
+from testtools import matchers
+
 from oslo.config import cfg
 
 from heat.common import config
@@ -223,9 +225,9 @@ class stackCreateTest(HeatTestCase):
         rsrc = stack.resources['WebServer']
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual((stack.DELETE, stack.COMPLETE), rsrc.state)
-        self.assertEqual(db_api.stack_get(ctx, stack_id), None)
-        self.assertEqual(db_s.action, 'DELETE')
-        self.assertEqual(db_s.status, 'COMPLETE')
+        self.assertEqual(None, db_api.stack_get(ctx, stack_id))
+        self.assertEqual('DELETE', db_s.action)
+        self.assertEqual('COMPLETE', db_s.status, )
 
 
 class stackServiceCreateUpdateDeleteTest(HeatTestCase):
@@ -265,7 +267,7 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         result = self.man.create_stack(self.ctx, stack_name,
                                        template, params, None, {})
-        self.assertEqual(result, stack.identifier())
+        self.assertEqual(stack.identifier(), result)
         self.assertTrue(isinstance(result, dict))
         self.assertTrue(result['stack_id'])
         self.m.VerifyAll()
@@ -377,8 +379,8 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertEqual(self.man.delete_stack(self.ctx, stack.identifier()),
-                         None)
+        self.assertEqual(None,
+                         self.man.delete_stack(self.ctx, stack.identifier()))
         self.m.VerifyAll()
 
     def test_stack_delete_nonexist(self):
@@ -425,7 +427,7 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, None, {})
-        self.assertEqual(result, old_stack.identifier())
+        self.assertEqual(old_stack.identifier(), result)
         self.assertTrue(isinstance(result, dict))
         self.assertTrue(result['stack_id'])
         self.m.VerifyAll()
@@ -528,7 +530,7 @@ class stackServiceSuspendResumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.man.stack_suspend(self.ctx, stack.identifier())
-        self.assertEqual(result, None)
+        self.assertEqual(None, result)
 
         self.m.VerifyAll()
 
@@ -545,7 +547,7 @@ class stackServiceSuspendResumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.man.stack_resume(self.ctx, self.stack.identifier())
-        self.assertEqual(result, None)
+        self.assertEqual(None, result)
         self.m.VerifyAll()
 
     def test_stack_suspend_nonexist(self):
@@ -592,7 +594,7 @@ class stackServiceTest(HeatTestCase):
 
         self.m.ReplayAll()
         identity = self.eng.identify_stack(self.ctx, self.stack.name)
-        self.assertEqual(identity, self.stack.identifier())
+        self.assertEqual(self.stack.identifier(), identity)
 
         self.m.VerifyAll()
 
@@ -604,7 +606,7 @@ class stackServiceTest(HeatTestCase):
 
         self.m.ReplayAll()
         identity = self.eng.identify_stack(self.ctx, self.stack.id)
-        self.assertEqual(identity, self.stack.identifier())
+        self.assertEqual(self.stack.identifier(), identity)
 
         self.m.VerifyAll()
 
@@ -637,14 +639,14 @@ class stackServiceTest(HeatTestCase):
 
         events = self.eng.list_events(self.ctx, self.stack.identifier())
 
-        self.assertEqual(len(events), 2)
+        self.assertEqual(2, len(events))
         for ev in events:
             self.assertTrue('event_identity' in ev)
-            self.assertEqual(type(ev['event_identity']), dict)
+            self.assertEqual(dict, type(ev['event_identity']))
             self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
             self.assertTrue('logical_resource_id' in ev)
-            self.assertEqual(ev['logical_resource_id'], 'WebServer')
+            self.assertEqual('WebServer', ev['logical_resource_id'])
 
             self.assertTrue('physical_resource_id' in ev)
 
@@ -653,27 +655,70 @@ class stackServiceTest(HeatTestCase):
             # a few times so this should work.
             user_data = ev['resource_properties']['UserData']
             self.assertNotEqual(user_data.find('wordpress'), -1)
-            self.assertEqual(ev['resource_properties']['ImageId'],
-                             'F17-x86_64-gold')
-            self.assertEqual(ev['resource_properties']['InstanceType'],
-                             'm1.large')
+            self.assertEqual('F17-x86_64-gold',
+                             ev['resource_properties']['ImageId'])
+            self.assertEqual('m1.large',
+                             ev['resource_properties']['InstanceType'])
 
-            self.assertEqual(ev['resource_action'], 'CREATE')
+            self.assertEqual('CREATE', ev['resource_action'])
             self.assertTrue(ev['resource_status'] in ('IN_PROGRESS',
                                                       'COMPLETE'))
 
             self.assertTrue('resource_status_reason' in ev)
-            self.assertEqual(ev['resource_status_reason'], 'state changed')
+            self.assertEqual('state changed', ev['resource_status_reason'])
 
             self.assertTrue('resource_type' in ev)
-            self.assertEqual(ev['resource_type'], 'AWS::EC2::Instance')
+            self.assertEqual('AWS::EC2::Instance', ev['resource_type'])
 
             self.assertTrue('stack_identity' in ev)
 
             self.assertTrue('stack_name' in ev)
-            self.assertEqual(ev['stack_name'], self.stack.name)
+            self.assertEqual(self.stack.name, ev['stack_name'])
 
             self.assertTrue('event_time' in ev)
+
+        self.m.VerifyAll()
+
+    @stack_context('service_event_list_test_stack')
+    def test_stack_event_list_by_tenant(self):
+        events = self.eng.list_events(self.ctx, None)
+
+        self.assertEqual(2, len(events))
+        for ev in events:
+            self.assertIn('event_identity', ev)
+            self.assertThat(ev['event_identity'], matchers.IsInstance(dict))
+            self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
+
+            self.assertTrue('logical_resource_id' in ev)
+            self.assertEqual('WebServer', ev['logical_resource_id'])
+
+            self.assertTrue('physical_resource_id' in ev)
+
+            self.assertTrue('resource_properties' in ev)
+            # Big long user data field.. it mentions 'wordpress'
+            # a few times so this should work.
+            user_data = ev['resource_properties']['UserData']
+            self.assertIn('wordpress', user_data)
+            self.assertEqual('F17-x86_64-gold',
+                             ev['resource_properties']['ImageId'])
+            self.assertEqual('m1.large',
+                             ev['resource_properties']['InstanceType'])
+
+            self.assertEqual('CREATE', ev['resource_action'])
+            self.assertIn(ev['resource_status'], ('IN_PROGRESS', 'COMPLETE'))
+
+            self.assertIn('resource_status_reason', ev)
+            self.assertEqual('state changed', ev['resource_status_reason'])
+
+            self.assertIn('resource_type', ev)
+            self.assertEqual('AWS::EC2::Instance', ev['resource_type'])
+
+            self.assertIn('stack_identity', ev)
+
+            self.assertIn('stack_name', ev)
+            self.assertEqual(self.stack.name, ev['stack_name'])
+
+            self.assertIn('event_time', ev)
 
         self.m.VerifyAll()
 
@@ -686,14 +731,14 @@ class stackServiceTest(HeatTestCase):
         self.m.ReplayAll()
         sl = self.eng.list_stacks(self.ctx)
 
-        self.assertEqual(len(sl), 1)
+        self.assertEqual(1, len(sl))
         for s in sl:
             self.assertTrue('creation_time' in s)
             self.assertTrue('updated_time' in s)
             self.assertTrue('stack_identity' in s)
             self.assertNotEqual(s['stack_identity'], None)
             self.assertTrue('stack_name' in s)
-            self.assertEqual(s['stack_name'], self.stack.name)
+            self.assertEqual(self.stack.name, s['stack_name'])
             self.assertTrue('stack_status' in s)
             self.assertTrue('stack_status_reason' in s)
             self.assertTrue('description' in s)
@@ -742,7 +787,7 @@ class stackServiceTest(HeatTestCase):
 
         sl = self.eng.show_stack(self.ctx, self.stack.identifier())
 
-        self.assertEqual(len(sl), 1)
+        self.assertEqual(1, len(sl))
 
         s = sl[0]
         self.assertTrue('creation_time' in s)
@@ -750,7 +795,7 @@ class stackServiceTest(HeatTestCase):
         self.assertTrue('stack_identity' in s)
         self.assertNotEqual(s['stack_identity'], None)
         self.assertTrue('stack_name' in s)
-        self.assertEqual(s['stack_name'], self.stack.name)
+        self.assertEqual(self.stack.name, s['stack_name'])
         self.assertTrue('stack_status' in s)
         self.assertTrue('stack_status_reason' in s)
         self.assertTrue('description' in s)
@@ -763,7 +808,7 @@ class stackServiceTest(HeatTestCase):
     def test_stack_describe_all(self):
         sl = self.eng.show_stack(self.ctx, None)
 
-        self.assertEqual(len(sl), 1)
+        self.assertEqual(1, len(sl))
 
         s = sl[0]
         self.assertTrue('creation_time' in s)
@@ -771,7 +816,7 @@ class stackServiceTest(HeatTestCase):
         self.assertTrue('stack_identity' in s)
         self.assertNotEqual(s['stack_identity'], None)
         self.assertTrue('stack_name' in s)
-        self.assertEqual(s['stack_name'], self.stack.name)
+        self.assertEqual(self.stack.name, s['stack_name'])
         self.assertTrue('stack_status' in s)
         self.assertTrue('stack_status_reason' in s)
         self.assertTrue('description' in s)
@@ -800,14 +845,14 @@ class stackServiceTest(HeatTestCase):
         self.assertTrue('stack_identity' in r)
         self.assertNotEqual(r['stack_identity'], None)
         self.assertTrue('stack_name' in r)
-        self.assertEqual(r['stack_name'], self.stack.name)
+        self.assertEqual(self.stack.name, r['stack_name'])
         self.assertTrue('metadata' in r)
         self.assertTrue('resource_status' in r)
         self.assertTrue('resource_status_reason' in r)
         self.assertTrue('resource_type' in r)
         self.assertTrue('physical_resource_id' in r)
         self.assertTrue('logical_resource_id' in r)
-        self.assertEqual(r['logical_resource_id'], 'WebServer')
+        self.assertEqual('WebServer', r['logical_resource_id'])
 
         self.m.VerifyAll()
 
@@ -894,7 +939,7 @@ class stackServiceTest(HeatTestCase):
                                                       self.stack.identifier(),
                                                       'WebServer')
 
-        self.assertEqual(len(resources), 1)
+        self.assertEqual(1, len(resources))
         r = resources[0]
         self.assertTrue('resource_identity' in r)
         self.assertTrue('description' in r)
@@ -902,13 +947,13 @@ class stackServiceTest(HeatTestCase):
         self.assertTrue('stack_identity' in r)
         self.assertNotEqual(r['stack_identity'], None)
         self.assertTrue('stack_name' in r)
-        self.assertEqual(r['stack_name'], self.stack.name)
+        self.assertEqual(self.stack.name, r['stack_name'])
         self.assertTrue('resource_status' in r)
         self.assertTrue('resource_status_reason' in r)
         self.assertTrue('resource_type' in r)
         self.assertTrue('physical_resource_id' in r)
         self.assertTrue('logical_resource_id' in r)
-        self.assertEqual(r['logical_resource_id'], 'WebServer')
+        self.assertEqual('WebServer', r['logical_resource_id'])
 
         self.m.VerifyAll()
 
@@ -923,10 +968,10 @@ class stackServiceTest(HeatTestCase):
                                                       self.stack.identifier(),
                                                       None)
 
-        self.assertEqual(len(resources), 1)
+        self.assertEqual(1, len(resources))
         r = resources[0]
         self.assertTrue('logical_resource_id' in r)
-        self.assertEqual(r['logical_resource_id'], 'WebServer')
+        self.assertEqual('WebServer', r['logical_resource_id'])
 
         self.m.VerifyAll()
 
@@ -960,8 +1005,8 @@ class stackServiceTest(HeatTestCase):
         result = self.eng.find_physical_resource(self.ctx, phys_id)
         self.assertTrue(isinstance(result, dict))
         resource_identity = identifier.ResourceIdentifier(**result)
-        self.assertEqual(resource_identity.stack(), self.stack.identifier())
-        self.assertEqual(resource_identity.resource_name, 'WebServer')
+        self.assertEqual(self.stack.identifier(), resource_identity.stack())
+        self.assertEqual('WebServer', resource_identity.resource_name)
 
     def test_find_physical_resource_nonexist(self):
         self.assertRaises(exception.PhysicalResourceNotFound,
@@ -978,13 +1023,13 @@ class stackServiceTest(HeatTestCase):
         resources = self.eng.list_stack_resources(self.ctx,
                                                   self.stack.identifier())
 
-        self.assertEqual(len(resources), 1)
+        self.assertEqual(1, len(resources))
         r = resources[0]
         self.assertTrue('resource_identity' in r)
         self.assertTrue('updated_time' in r)
         self.assertTrue('physical_resource_id' in r)
         self.assertTrue('logical_resource_id' in r)
-        self.assertEqual(r['logical_resource_id'], 'WebServer')
+        self.assertEqual('WebServer', r['logical_resource_id'])
         self.assertTrue('resource_status' in r)
         self.assertTrue('resource_status_reason' in r)
         self.assertTrue('resource_type' in r)
@@ -1025,7 +1070,7 @@ class stackServiceTest(HeatTestCase):
                                           'WebServer', test_metadata)
         # metadata_update is a no-op for all resources except
         # WaitConditionHandle so we don't expect this to have changed
-        self.assertEqual(result, pre_update_meta)
+        self.assertEqual(pre_update_meta, result)
 
         self.m.VerifyAll()
 
@@ -1193,23 +1238,23 @@ class stackServiceTest(HeatTestCase):
         result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
-        self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
-        self.assertEqual(self.eng.stg[self.stack.id].threads, [])
+        self.assertEqual(state, result[engine_api.WATCH_STATE_VALUE])
+        self.assertEqual([], self.eng.stg[self.stack.id].threads)
 
         state = watchrule.WatchRule.NORMAL
         result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
-        self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
-        self.assertEqual(self.eng.stg[self.stack.id].threads, [])
+        self.assertEqual(state, result[engine_api.WATCH_STATE_VALUE])
+        self.assertEqual([], self.eng.stg[self.stack.id].threads)
 
         state = watchrule.WatchRule.ALARM
         result = self.eng.set_watch_state(self.ctx,
                                           watch_name="OverrideAlarm",
                                           state=state)
-        self.assertEqual(result[engine_api.WATCH_STATE_VALUE], state)
-        self.assertEqual(self.eng.stg[self.stack.id].threads,
-                         [DummyAction.alarm])
+        self.assertEqual(state, result[engine_api.WATCH_STATE_VALUE])
+        self.assertEqual([DummyAction.alarm],
+                         self.eng.stg[self.stack.id].threads)
 
         self.m.VerifyAll()
 
@@ -1264,9 +1309,9 @@ class stackServiceTest(HeatTestCase):
     def test_stack_list_all_empty(self):
         sl = self.eng.list_stacks(self.ctx)
 
-        self.assertEqual(len(sl), 0)
+        self.assertEqual(0, len(sl))
 
     def test_stack_describe_all_empty(self):
         sl = self.eng.show_stack(self.ctx, None)
 
-        self.assertEqual(len(sl), 0)
+        self.assertEqual(0, len(sl))

@@ -376,6 +376,7 @@ class EngineService(service.Service):
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to get events for.
         """
+
         if stack_identity is not None:
             st = self._get_stack(cnxt, stack_identity)
 
@@ -383,7 +384,17 @@ class EngineService(service.Service):
         else:
             events = db_api.event_get_all_by_tenant(cnxt)
 
-        return [api.format_event(Event.load(cnxt, e.id)) for e in events]
+        stacks = {}
+
+        def get_stack(stack_id):
+            if stack_id not in stacks:
+                stacks[stack_id] = parser.Stack.load(cnxt, stack_id)
+            return stacks[stack_id]
+
+        return [api.format_event(Event.load(cnxt,
+                                            e.id, e,
+                                            get_stack(e.stack_id)))
+                for e in events]
 
     def _authorize_stack_user(self, cnxt, stack, resource_name):
         '''
