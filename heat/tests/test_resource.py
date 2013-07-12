@@ -476,6 +476,84 @@ class ResourceTest(HeatTestCase):
         self.assertRaises(exception.ResourceFailure, resume)
         self.assertEqual((res.RESUME, res.FAILED), res.state)
 
+    def test_resource_class_to_template(self):
+
+        class TestResource(resource.Resource):
+            list_schema = {'wont_show_up': {'Type': 'Number'}}
+            map_schema = {'will_show_up': {'Type': 'Integer'}}
+
+            properties_schema = {
+                'name': {'Type': 'String'},
+                'bool': {'Type': 'Boolean'},
+                'implemented': {'Type': 'String',
+                                'Implemented': True,
+                                'AllowedPattern': '.*',
+                                'MaxLength': 7,
+                                'MinLength': 2,
+                                'Required': True},
+                'not_implemented': {'Type': 'String',
+                                    'Implemented': False},
+                'number': {'Type': 'Number',
+                           'MaxValue': 77,
+                           'MinValue': 41,
+                           'Default': 42},
+                'list': {'Type': 'List', 'Schema': {'Type': 'Map',
+                         'Schema': list_schema}},
+                'map': {'Type': 'Map', 'Schema': {'Type': 'Map',
+                        'Schema': map_schema}},
+            }
+
+            attributes_schema = {
+                'output1': 'output1_desc',
+                'output2': 'output2_desc'
+            }
+
+        expected_template = {
+            'Parameters': {
+                'name': {'Type': 'String'},
+                'bool': {'Type': 'Boolean'},
+                'implemented': {
+                    'Type': 'String',
+                    'AllowedPattern': '.*',
+                    'MaxLength': 7,
+                    'MinLength': 2
+                },
+                'number': {'Type': 'Number',
+                           'MaxValue': 77,
+                           'MinValue': 41,
+                           'Default': 42},
+                'list': {'Type': 'CommaDelimitedList'},
+                'map': {'Type': 'Json'}
+            },
+            'Resources': {
+                'TestResource': {
+                    'Type': 'Test::Resource::resource',
+                    'Properties': {
+                        'name': {'Ref': 'name'},
+                        'bool': {'Ref': 'bool'},
+                        'implemented': {'Ref': 'implemented'},
+                        'number': {'Ref': 'number'},
+                        'list': {'Fn::Split': {'Ref': 'list'}},
+                        'map': {'Ref': 'map'}
+                    }
+                }
+            },
+            'Outputs': {
+                'output1': {
+                    'Description': 'output1_desc',
+                    'Value': '{"Fn::GetAtt": ["TestResource", "output1"]}'
+                },
+                'output2': {
+                    'Description': 'output2_desc',
+                    'Value': '{"Fn::GetAtt": ["TestResource", "output2"]}'
+                }
+            }
+        }
+        self.assertEqual(expected_template,
+                         TestResource.resource_to_template(
+                         'Test::Resource::resource')
+                         )
+
 
 class MetadataTest(HeatTestCase):
     def setUp(self):
