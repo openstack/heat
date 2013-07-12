@@ -102,5 +102,15 @@ class QuantumResource(resource.Resource):
             return None
         return self.handle_get_attributes(self.name, name, attributes)
 
+    def _confirm_delete(self):
+        while True:
+            try:
+                yield
+                self._show_resource()
+            except QuantumClientException as ex:
+                if ex.status_code != 404:
+                    raise ex
+                return
+
     def FnGetRefId(self):
         return unicode(self.resource_id)

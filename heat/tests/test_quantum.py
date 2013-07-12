@@ -262,7 +262,19 @@ class QuantumNetTest(HeatTestCase):
 
         quantumclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).MultipleTimes().AndReturn({"network": {
+        ).AndReturn({"network": {
+            "status": "ACTIVE",
+            "subnets": [],
+            "name": "name",
+            "admin_state_up": False,
+            "shared": False,
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        quantumclient.Client.show_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({"network": {
             "status": "ACTIVE",
             "subnets": [],
             "name": "name",
@@ -275,6 +287,10 @@ class QuantumNetTest(HeatTestCase):
         quantumclient.Client.delete_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
+
+        quantumclient.Client.show_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
 
         quantumclient.Client.delete_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -308,9 +324,9 @@ class QuantumNetTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
 
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
 
@@ -361,26 +377,36 @@ class QuantumSubnetTest(HeatTestCase):
         quantumclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1').AndRaise(
                 qe.QuantumClientException(status_code=404))
+        sn = {
+            "subnet": {
+                "name": "name",
+                "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+                "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+                "allocation_pools": [
+                    {"start": "10.0.3.20", "end": "10.0.3.150"}],
+                "gateway_ip": "10.0.3.1",
+                "ip_version": 4,
+                "cidr": "10.0.3.0/24",
+                "dns_nameservers": ["8.8.8.8"],
+                "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
+                "enable_dhcp": True,
+            }
+        }
         quantumclient.Client.show_subnet(
-            '91e47a57-7508-46fe-afc9-fc454e8580e1').MultipleTimes().AndReturn({
-                "subnet": {
-                    "name": "name",
-                    "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-                    "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-                    "allocation_pools": [
-                        {"start": "10.0.3.20", "end": "10.0.3.150"}],
-                    "gateway_ip": "10.0.3.1",
-                    "ip_version": 4,
-                    "cidr": "10.0.3.0/24",
-                    "dns_nameservers": ["8.8.8.8"],
-                    "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
-                    "enable_dhcp": True,
-                }
-            })
+            '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(sn)
+        quantumclient.Client.show_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(sn)
+        quantumclient.Client.show_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(sn)
 
         quantumclient.Client.delete_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
         ).AndReturn(None)
+
+        quantumclient.Client.show_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+
         quantumclient.Client.delete_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
         ).AndRaise(qe.QuantumClientException(status_code=404))
@@ -410,9 +436,9 @@ class QuantumSubnetTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
 
-        self.assertEqual(rsrc.delete(), None)
+        self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        self.assertEqual(rsrc.delete(), None)
+        self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
         self.m.VerifyAll()
 
     def test_subnet_disable_dhcp(self):
@@ -464,6 +490,10 @@ class QuantumSubnetTest(HeatTestCase):
         quantumclient.Client.delete_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
         ).AndReturn(None)
+
+        quantumclient.Client.show_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
 
         self.m.ReplayAll()
         t = template_format.parse(quantum_template)
@@ -564,7 +594,19 @@ class QuantumRouterTest(HeatTestCase):
             '3e46229d-8fce-4733-819a-b5fe630550f8').AndRaise(
                 qe.QuantumClientException(status_code=404))
         quantumclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').MultipleTimes().AndReturn({
+            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
+                "router": {
+                    "status": "ACTIVE",
+                    "external_gateway_info": None,
+                    "name": utils.PhysName('test_stack', 'router'),
+                    "admin_state_up": True,
+                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                    "routes": [],
+                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
+                }
+            })
+        quantumclient.Client.show_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
                 "router": {
                     "status": "ACTIVE",
                     "external_gateway_info": None,
@@ -579,6 +621,11 @@ class QuantumRouterTest(HeatTestCase):
         quantumclient.Client.delete_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
         ).AndReturn(None)
+
+        quantumclient.Client.show_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+
         quantumclient.Client.delete_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
         ).AndRaise(qe.QuantumClientException(status_code=404))
@@ -602,9 +649,9 @@ class QuantumRouterTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
 
-        self.assertEqual(rsrc.delete(), None)
+        self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        self.assertEqual(rsrc.delete(), None)
+        self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
         self.m.VerifyAll()
 
     def test_router_interface(self):
@@ -846,6 +893,10 @@ class QuantumFloatingIPTest(HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
 
+        quantumclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndRaise(qe.QuantumClientException(status_code=404))
+
         quantumclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
@@ -891,7 +942,7 @@ class QuantumFloatingIPTest(HeatTestCase):
                           fipa.handle_update, {}, {}, {})
 
         self.assertEqual(fipa.delete(), None)
-        self.assertEqual(p.delete(), None)
+        self.assertEqual(scheduler.TaskRunner(p.delete)(), None)
         self.assertEqual(fip.delete(), None)
 
         fipa.state_set(fipa.CREATE, fipa.COMPLETE, 'to delete again')
@@ -899,7 +950,7 @@ class QuantumFloatingIPTest(HeatTestCase):
         p.state_set(p.CREATE, p.COMPLETE, 'to delete again')
 
         self.assertEqual(fipa.delete(), None)
-        self.assertEqual(p.delete(), None)
+        self.assertEqual(scheduler.TaskRunner(p.delete)(), None)
         self.assertEqual(fip.delete(), None)
 
         self.m.VerifyAll()

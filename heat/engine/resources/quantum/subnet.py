@@ -16,6 +16,7 @@
 from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine.resources.quantum import quantum
+from heat.engine import scheduler
 
 if clients.quantumclient is not None:
     from quantumclient.common.exceptions import QuantumClientException
@@ -77,6 +78,8 @@ class Subnet(quantum.QuantumResource):
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex
+        else:
+            return scheduler.TaskRunner(self._confirm_delete)()
 
     def _show_resource(self):
         return self.quantum().show_subnet(self.resource_id)['subnet']

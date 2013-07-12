@@ -15,6 +15,7 @@
 
 from heat.engine import clients
 from heat.engine.resources.quantum import quantum
+from heat.engine import scheduler
 
 if clients.quantumclient is not None:
     from quantumclient.common.exceptions import QuantumClientException
@@ -61,6 +62,8 @@ class Router(quantum.QuantumResource):
         except QuantumClientException as ex:
             if ex.status_code != 404:
                 raise ex
+        else:
+            return scheduler.TaskRunner(self._confirm_delete)()
 
 
 class RouterInterface(quantum.QuantumResource):
