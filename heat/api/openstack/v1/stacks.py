@@ -329,10 +329,14 @@ class StackController(object):
         """
         Returns a list of valid resource types that may be used in a template.
         """
+        return {'resource_types': self.engine.list_resource_types(req.context)}
 
-        types = self.engine.list_resource_types(req.context)
-
-        return {'resource_types': types}
+    @util.tenant_local
+    def generate_template(self, req, type_name):
+        """
+        Generates a template based on the specified type.
+        """
+        return self.engine.generate_template(req.context, type_name)
 
 
 class StackSerializer(wsgi.JSONResponseSerializer):

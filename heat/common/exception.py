@@ -248,6 +248,10 @@ class ResourceNotFound(OpenstackException):
                 "in Stack %(stack_name)s.")
 
 
+class ResourceTypeNotFound(OpenstackException):
+    message = _("The Resource Type (%(type_name)s) could not be found.")
+
+
 class ResourceNotAvailable(OpenstackException):
     message = _("The Resource (%(resource_name)s) is not available.")
 
