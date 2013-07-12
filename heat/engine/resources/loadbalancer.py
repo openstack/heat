@@ -341,8 +341,13 @@ class LoadBalancer(stack_resource.StackResource):
             cfg = self._haproxy_config(templ, self.properties['Instances'])
             files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
-        # total hack - probably need an admin key here.
-        param = self.stack.resolve_static_data({'KeyName': {'Ref': 'KeyName'}})
+        # If the owning stack defines KeyName, we use that key for the nested
+        # template, otherwise use no key
+        try:
+            param = {'KeyName': self.stack.parameters['KeyName']}
+        except KeyError:
+            del templ['Resources']['LB_instance']['Properties']['KeyName']
+            param = {}
 
         return self.create_with_template(templ, param)
 

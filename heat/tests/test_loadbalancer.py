@@ -72,6 +72,35 @@ lb_template = '''
 }
 '''
 
+lb_template_nokey = '''
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LB Template",
+  "Resources": {
+    "WikiServerOne": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "F17-x86_64-gold",
+        "InstanceType"   : "m1.large",
+        "UserData"       : "some data"
+      }
+    },
+    "LoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "AvailabilityZones" : ["nova"],
+        "Instances" : [{"Ref": "WikiServerOne"}],
+        "Listeners" : [ {
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "80",
+          "Protocol" : "HTTP"
+        }]
+      }
+    }
+  }
+}
+'''
+
 
 class LoadBalancerTest(HeatTestCase):
     def setUp(self):
@@ -97,7 +126,7 @@ class LoadBalancerTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def test_loadbalancer(self):
+    def _create_stubs(self, key_name='test', stub_meta=True):
 
         self.m.StubOutWithMock(user.User, 'keystone')
         user.User.keystone().AndReturn(self.fkc)
@@ -113,16 +142,21 @@ class LoadBalancerTest(HeatTestCase):
         clients.OpenStackClients.nova(
             "compute").MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
-            flavor=2, image=745, key_name='test',
+            flavor=2, image=745, key_name=key_name,
             meta=None, nics=None, name=server_name,
             scheduler_hints=None, userdata=mox.IgnoreArg(),
             security_groups=None, availability_zone=None).AndReturn(
                 self.fc.servers.list()[1])
-        Metadata.__set__(mox.IgnoreArg(),
-                         mox.IgnoreArg()).AndReturn(None)
+        if stub_meta:
+            Metadata.__set__(mox.IgnoreArg(),
+                             mox.IgnoreArg()).AndReturn(None)
 
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
         wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+
+    def test_loadbalancer(self):
+        self._create_stubs()
+
         self.m.ReplayAll()
 
         t = template_format.parse(lb_template)
@@ -175,6 +209,17 @@ class LoadBalancerTest(HeatTestCase):
 
         self.assertEqual(None, rsrc.handle_update({}, {}, {}))
 
+        self.m.VerifyAll()
+
+    def test_loadbalancer_nokey(self):
+        self._create_stubs(key_name=None, stub_meta=False)
+        self.m.ReplayAll()
+
+        t = template_format.parse(lb_template_nokey)
+        s = parse_stack(t)
+        s.store()
+
+        rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')
         self.m.VerifyAll()
 
     def assertRegexpMatches(self, text, expected_regexp, msg=None):
