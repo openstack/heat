@@ -1,0 +1,538 @@
+#    vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+
+import uuid
+import json
+import copy
+import random
+import string
+
+from heat.common import template_format
+from heat.engine import scheduler
+from heat.engine import resource
+from heat.engine.resources.rackspace import cloud_loadbalancer as lb
+from heat.tests.common import HeatTestCase
+from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import parse_stack
+
+# The following fakes are for pyrax
+
+
+class FakeClient(object):
+    user_agent = "Fake"
+    USER_AGENT = "Fake"
+
+
+class FakeManager(object):
+    api = FakeClient()
+
+    def list(self):
+        pass
+
+    def get(self, item):
+        pass
+
+    def delete(self, item):
+        pass
+
+    def create(self, *args, **kwargs):
+        pass
+
+    def find(self, *args, **kwargs):
+        pass
+
+    def action(self, item, action_type, body={}):
+        pass
+
+
+class FakeLoadBalancerManager(object):
+    def __init__(self, api=None, *args, **kwargs):
+        pass
+
+    def set_content_caching(self, *args, **kwargs):
+        pass
+
+
+class FakeNode(object):
+    def __init__(self, address="0.0.0.0", port=80, condition=None, weight=None,
+                 status=None, parent=None, type=None, id=None):
+        self.address = address
+        self.port = port
+        self.condition = condition
+        self.weight = weight
+        self.status = status
+        self.parent = parent
+        self.type = type
+        self.id = id
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+class FakeVirtualIP(object):
+    def __init__(self, address=None, port=None, condition=None,
+                 ipVersion=None, type=None):
+        self.address = address
+        self.port = port
+        self.condition = condition
+        self.ipVersion = ipVersion
+        self.type = type
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+class FakeLoadBalancerClient(object):
+    def __init__(self, *args, **kwargs):
+        self.Node = FakeNode
+        self.VirtualIP = FakeVirtualIP
+        pass
+
+    def get(*args, **kwargs):
+        pass
+
+    def create(*args, **kwargs):
+        pass
+
+
+class FakeLoadBalancer(object):
+    def __init__(self, name=None, info=None, *args, **kwargs):
+        name = name or uuid.uuid4()
+        info = info or {"fake": "fake"}
+        self.id = uuid.uuid4()
+        self.manager = FakeLoadBalancerManager()
+        self.Node = FakeNode
+        self.VirtualIP = FakeVirtualIP
+        self.nodes = []
+
+    def get(*args, **kwargs):
+        pass
+
+    def add_nodes(*args, **kwargs):
+        pass
+
+    def add_ssl_termination(*args, **kwargs):
+        pass
+
+    def set_error_page(*args, **kwargs):
+        pass
+
+    def add_access_list(*args, **kwargs):
+        pass
+
+
+class LoadBalancerWithFakeClient(lb.CloudLoadBalancer):
+    def cloud_lb(self):
+        return FakeLoadBalancerClient()
+
+
+def override_resource():
+    return {
+        'Rackspace::Cloud::LoadBalancer': LoadBalancerWithFakeClient
+    }
+
+
+class LoadBalancerTest(HeatTestCase):
+
+    def setUp(self):
+        super(LoadBalancerTest, self).setUp()
+
+        self.lb_template = {
+            "AWSTemplateFormatVersion": "2010-09-09",
+            "Description": "fawef",
+            "Resources": {
+                self._get_lb_resource_name(): {
+                    "Type": "Rackspace::Cloud::LoadBalancer",
+                    "Properties": {
+                        "name": "test-clb",
+                        "nodes": [{"address": "166.78.103.141", "port": 80,
+                                   "condition": "ENABLED"}],
+                        "protocol": "HTTP",
+                        "port": 80,
+                        "virtualIps": [
+                            {"type": "PUBLIC", "ipVersion": "IPV6"}],
+                        "algorithm": 'LEAST_CONNECTIONS',
+                        "connectionThrottle": {'maxConnectionRate': 1000},
+                        'timeout': 110,
+                        'contentCaching': 'DISABLED'
+                    }
+                }
+            }
+        }
+
+        self.lb_name = 'test-clb'
+        self.expected_body = {
+            "nodes": [FakeNode(address=u"166.78.103.141", port=80,
+                               condition=u"ENABLED")],
+            "protocol": u'HTTP',
+            "port": 80,
+            "virtual_ips": [FakeVirtualIP(type=u"PUBLIC", ipVersion=u"IPV6")],
+            "halfClosed": None,
+            "algorithm": u'LEAST_CONNECTIONS',
+            "connectionThrottle": {'maxConnectionRate': 1000,
+                                   'maxConnections': None,
+                                   'rateInterval': None,
+                                   'minConnections': None},
+            "connectionLogging": None,
+            "halfClosed": None,
+            "healthMonitor": None,
+            "metadata": None,
+            "sessionPersistence": None,
+            "timeout": 110
+        }
+
+        lb.resource_mapping = override_resource
+        setup_dummy_db()
+        resource._register_class("Rackspace::Cloud::LoadBalancer",
+                                 LoadBalancerWithFakeClient)
+
+    def _get_lb_resource_name(self):
+        return "lb-" + str(uuid.uuid4())
+
+    def __getattribute__(self, name):
+        if name == 'expected_body' or name == 'lb_template':
+            return copy.deepcopy(super(LoadBalancerTest, self)
+                                 .__getattribute__(name))
+        return super(LoadBalancerTest, self).__getattribute__(name)
+
+    def _mock_create(self, t, stack, resource_name, lb_name, lb_body):
+        rsrc = LoadBalancerWithFakeClient(resource_name,
+                                          t['Resources'][resource_name],
+                                          stack)
+        self.m.StubOutWithMock(rsrc.clb, 'create')
+        fake_loadbalancer = FakeLoadBalancer(name=lb_name)
+        rsrc.clb.create(lb_name, **lb_body).AndReturn(fake_loadbalancer)
+        return (rsrc, fake_loadbalancer)
+
+    def _get_first_resource_name(self, templ):
+        return next(k for k in templ['Resources'])
+
+    def _random_name(self):
+        return ''.join(random.choice(string.ascii_uppercase)
+                       for x in range(10))
+
+    def _mock_loadbalancer(self, lb_template, expected_name, expected_body):
+        t = template_format.parse(json.dumps(lb_template))
+        s = parse_stack(t, stack_name=self._random_name())
+
+        rsrc, fake_loadbalancer = self._mock_create(t, s,
+                                                    self.
+                                                    _get_first_resource_name(
+                                                        lb_template),
+                                                    expected_name,
+                                                    expected_body)
+        self.m.StubOutWithMock(fake_loadbalancer, 'get')
+        fake_loadbalancer.get().MultipleTimes().AndReturn(None)
+
+        fake_loadbalancer.status = 'ACTIVE'
+
+        return (rsrc, fake_loadbalancer)
+
+    def _set_template(self, templ, **kwargs):
+        for k, v in kwargs.iteritems():
+            templ['Resources'][self._get_first_resource_name(templ)][
+                'Properties'][k] = v
+        return templ
+
+    def _set_expected(self, expected, **kwargs):
+        for k, v in kwargs.iteritems():
+            expected[k] = v
+        return expected
+
+    def test_alter_properties(self):
+        #test alter properties functions
+        template = self._set_template(self.lb_template,
+                                      sessionPersistence='HTTP_COOKIE',
+                                      connectionLogging=True,
+                                      metadata={'yolo': 'heeyyy_gurl'})
+
+        expected = self._set_expected(self.expected_body,
+                                      sessionPersistence=
+                                      {'persistenceType': 'HTTP_COOKIE'},
+                                      connectionLogging={'enabled': True},
+                                      metadata=[
+                                          {'key': 'yolo',
+                                           'value': 'heeyyy_gurl'}])
+
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+    def test_validate_half_closed(self):
+        #test failure (invalid protocol)
+        template = self._set_template(self.lb_template, halfClosed=True)
+        expected = self._set_expected(self.expected_body, halfClosed=True)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+        self.assertEquals(rsrc.validate(), {
+            'Error':
+            'The halfClosed property is only available for the '
+            'TCP or TCP_CLIENT_FIRST protocols'})
+
+        #test TCP protocol
+        template = self._set_template(template, protocol='TCP')
+        expected = self._set_expected(expected, protocol='TCP')
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+        self.assertEquals(rsrc.validate(), None)
+
+        #test TCP_CLIENT_FIRST protocol
+        template = self._set_template(template,
+                                      protocol='TCP_CLIENT_FIRST')
+        expected = self._set_expected(expected,
+                                      protocol='TCP_CLIENT_FIRST')
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+        self.assertEquals(rsrc.validate(), None)
+
+    def test_validate_health_monitor(self):
+        #test connect success
+        health_monitor = {
+            'type': 'CONNECT',
+            'attemptsBeforeDeactivation': 1,
+            'delay': 1,
+            'timeout': 1
+        }
+        template = self._set_template(self.lb_template,
+                                      healthMonitor=health_monitor)
+        expected = self._set_expected(self.expected_body,
+                                      healthMonitor=health_monitor)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+
+        self.assertEquals(rsrc.validate(), None)
+
+        #test connect failure
+        #bodyRegex is only valid for type 'HTTP(S)'
+        health_monitor['bodyRegex'] = 'dfawefawe'
+        template = self._set_template(template,
+                                      healthMonitor=health_monitor)
+        expected = self._set_expected(expected,
+                                      healthMonitor=health_monitor)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+        self.assertEquals(rsrc.validate(),
+                          {'Error': 'Unknown Property bodyRegex'})
+
+        #test http fields
+        health_monitor['type'] = 'HTTP'
+        health_monitor['bodyRegex'] = 'bodyRegex'
+        health_monitor['statusRegex'] = 'statusRegex'
+        health_monitor['hostHeader'] = 'hostHeader'
+        health_monitor['path'] = 'path'
+
+        template = self._set_template(template,
+                                      healthMonitor=health_monitor)
+        expected = self._set_expected(expected,
+                                      healthMonitor=health_monitor)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+        self.assertEquals(rsrc.validate(), None)
+
+    def test_validate_ssl_termination(self):
+        ssl_termination = {
+            'enabled': True,
+            'privatekey': 'ewfawe',
+            'certificate': 'dfaewfwef',
+            'intermediateCertificate': 'fwaefawe',
+            'secureTrafficOnly': True
+        }
+
+        #test ssl termination enabled without required fields failure
+        template = self._set_template(self.lb_template,
+                                      sslTermination=ssl_termination)
+        expected = self._set_expected(self.expected_body,
+                                      sslTermination=ssl_termination)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+        self.assertEquals(rsrc.validate(),
+                          {'Error':
+                          'Property error : %s: Property securePort not '
+                          'assigned' % rsrc.name})
+
+        ssl_termination['securePort'] = 443
+        template = self._set_template(template,
+                                      sslTermination=ssl_termination)
+        expected = self._set_expected(expected,
+                                      sslTermination=ssl_termination)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          expected)
+        self.assertEquals(rsrc.validate(), None)
+
+    def test_post_creation_access_list(self):
+        access_list = [{"address": '192.168.1.1/0',
+                        'type': 'ALLOW'},
+                       {'address': '172.165.3.43',
+                        'type': 'DENY'}]
+
+        template = self._set_template(self.lb_template,
+                                      accessList=access_list)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.StubOutWithMock(fake_loadbalancer, 'add_access_list')
+        fake_loadbalancer.add_access_list(access_list)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+    def test_post_creation_error_page(self):
+        error_page = "REALLY BIG ERROR"
+
+        template = self._set_template(self.lb_template,
+                                      errorPage=error_page)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.StubOutWithMock(fake_loadbalancer, 'set_error_page')
+        fake_loadbalancer.set_error_page(error_page)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+    def test_post_creation_ssl_termination(self):
+        ssl_termination = {
+            'securePort': 443,
+            'privatekey': 'afwefawe',
+            'certificate': 'fawefwea',
+            'intermediateCertificate': "intermediate_certificate",
+            'enabled': True,
+            'secureTrafficOnly': False
+        }
+
+        template = self._set_template(self.lb_template,
+                                      sslTermination=ssl_termination)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.StubOutWithMock(fake_loadbalancer, 'add_ssl_termination')
+        fake_loadbalancer.add_ssl_termination(
+            ssl_termination['securePort'],
+            ssl_termination['privatekey'],
+            ssl_termination['certificate'],
+            intermediateCertificate=ssl_termination['intermediateCertificate'],
+            enabled=ssl_termination['enabled'],
+            secureTrafficOnly=ssl_termination['secureTrafficOnly'])
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+    def test_post_creation_content_caching(self):
+        template = self._set_template(self.lb_template,
+                                      contentCaching='ENABLED')
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+    def test_update_add_node_by_ref(self):
+        added_node = {'nodes': [
+            {"address": "166.78.103.141", "port": 80, "condition": "ENABLED"},
+            {"ref": "TEST_NODE_REF", "port": 80, "condition": "ENABLED"}]}
+        expected_ip = '172.168.1.4'
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        fake_loadbalancer.nodes = self.expected_body['nodes']
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(rsrc.stack, 'resource_by_refid')
+
+        class FakeFn(object):
+            def FnGetAtt(self, attr):
+                return expected_ip
+
+        rsrc.stack.resource_by_refid('TEST_NODE_REF').AndReturn(FakeFn())
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'add_nodes')
+        fake_loadbalancer.add_nodes([
+            fake_loadbalancer.Node(address=expected_ip,
+                                   port=80,
+                                   condition='ENABLED')])
+
+        self.m.ReplayAll()
+        rsrc.handle_update({}, {}, added_node)
+        self.m.VerifyAll()
+
+    def test_update_add_node_by_address(self):
+        expected_ip = '172.168.1.4'
+        added_node = {'nodes': [
+            {"address": "166.78.103.141", "port": 80, "condition": "ENABLED"},
+            {"address": expected_ip, "port": 80, "condition": "ENABLED"}]}
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        fake_loadbalancer.nodes = self.expected_body['nodes']
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.StubOutWithMock(fake_loadbalancer, 'add_nodes')
+        fake_loadbalancer.add_nodes([
+            fake_loadbalancer.Node(address=expected_ip,
+                                   port=80,
+                                   condition='ENABLED')])
+
+        self.m.ReplayAll()
+        rsrc.handle_update({}, {}, added_node)
+        self.m.VerifyAll()
+
+    def test_update_delete_node_failed(self):
+        deleted_node = {'nodes': []}
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        fake_loadbalancer.nodes = self.expected_body['nodes']
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+        self.m.StubOutWithMock(rsrc.clb, 'get')
+        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
+
+        self.m.ReplayAll()
+        self.assertRaises(ValueError, rsrc.handle_update, {}, {}, deleted_node)
+        self.m.VerifyAll()
