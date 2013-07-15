@@ -179,12 +179,14 @@ class Resource(object):
             self.status = resource.status
             self.status_reason = resource.status_reason
             self.id = resource.id
+            self.data = resource.data
         else:
             self.resource_id = None
             self.action = None
             self.status = None
             self.status_reason = ''
             self.id = None
+            self.data = []
 
     def __eq__(self, other):
         '''Allow == comparison of two resources.'''
