@@ -94,13 +94,20 @@ def setup_dummy_db():
     conn = engine.connect()
 
 
+def dummy_context(user='test_username', tenant_id='test_tenant_id',
+                  password='password', roles=[]):
+    return context.RequestContext.from_dict({
+        'tenant_id': tenant_id,
+        'tenant': 'test_tenant',
+        'username': user,
+        'password': password,
+        'roles': roles,
+        'auth_url': 'http://localhost:5000/v2.0'
+    })
+
+
 def parse_stack(t, params={}, stack_name='test_stack', stack_id=None):
-    ctx = context.RequestContext.from_dict({'tenant_id': 'test_tenant',
-                                            'tenant': 'test_tenant',
-                                            'username': 'test_username',
-                                            'password': 'password',
-                                            'auth_url':
-                                            'http://localhost:5000/v2.0'})
+    ctx = dummy_context()
     template = parser.Template(t)
     stack = parser.Stack(ctx, stack_name, template,
                          environment.Environment(params), stack_id)
