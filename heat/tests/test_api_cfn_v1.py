@@ -555,8 +555,23 @@ class CfnStackControllerTest(HeatTestCase):
                            'args': engine_args},
                   'version': self.api_version}, None
                  ).AndRaise(rpc_common.RemoteError("UnknownUserParameter"))
+        rpc.call(dummy_req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'create_stack',
+                  'args': {'stack_name': stack_name,
+                           'template': template,
+                           'params': engine_parms,
+                           'files': {},
+                           'args': engine_args},
+                  'version': self.api_version}, None
+                 ).AndRaise(rpc_common.RemoteError("UserParameterMissing"))
 
         self.m.ReplayAll()
+
+        result = self.controller.create(dummy_req)
+
+        self.assertEqual(type(result),
+                         exception.HeatInvalidParameterValueError)
 
         result = self.controller.create(dummy_req)
 

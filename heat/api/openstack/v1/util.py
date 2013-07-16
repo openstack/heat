@@ -86,6 +86,7 @@ def remote_error(ex):
         'InvalidTemplateReference': exc.HTTPBadRequest,
         'UnknownUserParameter': exc.HTTPBadRequest,
         'MissingCredentialError': exc.HTTPBadRequest,
+        'UserParameterMissing': exc.HTTPBadRequest,
     }
 
     Exc = error_map.get(ex.exc_type, exc.HTTPInternalServerError)

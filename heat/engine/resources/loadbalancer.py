@@ -346,6 +346,7 @@ class LoadBalancer(stack_resource.StackResource):
             param = {'KeyName': self.stack.parameters['KeyName']}
         except KeyError:
             del templ['Resources']['LB_instance']['Properties']['KeyName']
+            del templ['Parameters']['KeyName']
             param = {}
 
         return self.create_with_template(templ, param)

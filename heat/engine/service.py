@@ -310,7 +310,7 @@ class EngineService(service.Service):
             except Exception as ex:
                 return {'Error': str(ex)}
 
-        tmpl_params = parser.Parameters(None, tmpl)
+        tmpl_params = parser.Parameters(None, tmpl, validate_value=False)
         format_validate_parameter = lambda p: dict(p.schema)
         is_real_param = lambda p: p.name not in parameters.PSEUDO_PARAMETERS
         params = tmpl_params.map(format_validate_parameter, is_real_param)

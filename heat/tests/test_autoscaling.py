@@ -94,6 +94,7 @@ as_template = '''
 
 class AutoScalingTest(HeatTestCase):
     dummy_instance_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    params = {'KeyName': 'test'}
 
     def setUp(self):
         super(AutoScalingTest, self).setUp()
@@ -167,7 +168,7 @@ class AutoScalingTest(HeatTestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['MinSize'] = '0'
         properties['MaxSize'] = '0'
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         now = timeutils.utcnow()
         self.m.ReplayAll()
@@ -182,7 +183,7 @@ class AutoScalingTest(HeatTestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['MinSize'] = '1'
         properties['MaxSize'] = '1'
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -210,7 +211,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_update_replace(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -231,7 +232,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_suspend(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -262,7 +263,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_resume(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -297,7 +298,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(2)
         now = timeutils.utcnow()
@@ -332,7 +333,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(2)
         now = timeutils.utcnow()
@@ -367,7 +368,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_suspend_fail(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -398,7 +399,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_resume_fail(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -431,7 +432,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_create_error(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
@@ -456,7 +457,7 @@ class AutoScalingTest(HeatTestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['MinSize'] = '1'
         properties['MaxSize'] = '3'
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -482,7 +483,7 @@ class AutoScalingTest(HeatTestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['MinSize'] = '1'
         properties['MaxSize'] = '3'
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -513,7 +514,7 @@ class AutoScalingTest(HeatTestCase):
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['MinSize'] = '1'
         properties['MaxSize'] = '3'
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -544,7 +545,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['DesiredCapacity'] = '2'
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(2)
         now = timeutils.utcnow()
@@ -572,7 +573,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         properties = t['Resources']['WebServerGroup']['Properties']
         properties['Cooldown'] = '60'
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         self._stub_lb_reload(1)
         now = timeutils.utcnow()
@@ -614,7 +615,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
         self.m.ReplayAll()
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
 
         self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
@@ -628,7 +629,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_adjust(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # start with 3
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -669,7 +670,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_scale_up_failure(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group
         self._stub_lb_reload(1)
@@ -698,7 +699,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_nochange(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -732,7 +733,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_percent(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -768,7 +769,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_cooldown_toosoon(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group, 2 instances, Cooldown 60s
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -821,7 +822,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_cooldown_ok(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group, 2 instances, Cooldown 60s
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -873,7 +874,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_group_cooldown_zero(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group, 2 instances, Cooldown 0
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -922,7 +923,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_policy_up(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group
         self._stub_lb_reload(1)
@@ -950,7 +951,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_policy_down(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -979,7 +980,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_policy_cooldown_toosoon(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group
         self._stub_lb_reload(1)
@@ -1030,7 +1031,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_policy_cooldown_ok(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group
         self._stub_lb_reload(1)
@@ -1080,7 +1081,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_policy_cooldown_zero(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group
         self._stub_lb_reload(1)
@@ -1130,7 +1131,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_policy_cooldown_none(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group
         self._stub_lb_reload(1)
@@ -1182,7 +1183,7 @@ class AutoScalingTest(HeatTestCase):
 
     def test_scaling_policy_update(self):
         t = template_format.parse(as_template)
-        stack = parse_stack(t)
+        stack = parse_stack(t, params=self.params)
 
         # Create initial group
         self._stub_lb_reload(1)

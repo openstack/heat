@@ -507,9 +507,22 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
                  None).AndRaise(rpc_common.RemoteError("UnknownUserParameter"))
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'create_stack',
+                  'args': {'stack_name': stack_name,
+                           'template': template,
+                           'params': {'parameters': parameters},
+                           'files': {},
+                           'args': {'timeout_mins': 30}},
+                  'version': self.api_version},
+                 None).AndRaise(rpc_common.RemoteError("UserParameterMissing"))
 
         self.m.ReplayAll()
 
+        self.assertRaises(webob.exc.HTTPBadRequest,
+                          self.controller.create,
+                          req, tenant_id=self.tenant, body=body)
         self.assertRaises(webob.exc.HTTPBadRequest,
                           self.controller.create,
                           req, tenant_id=self.tenant, body=body)
