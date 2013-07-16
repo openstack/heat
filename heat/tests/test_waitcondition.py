@@ -21,8 +21,9 @@ from oslo.config import cfg
 
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
-from heat.tests.utils import stack_delete_after
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import stack_delete_after
 
 import heat.db.api as db_api
 from heat.common import template_format
@@ -32,7 +33,6 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources import wait_condition as wc
-from heat.common import context
 
 test_template_waitcondition = '''
 {
@@ -110,8 +110,7 @@ class WaitConditionTest(HeatTestCase):
                      stub=True):
         temp = template_format.parse(template)
         template = parser.Template(temp)
-        ctx = context.get_admin_context()
-        ctx.tenant_id = 'test_tenant'
+        ctx = dummy_context(tenant_id='test_tenant')
         stack = parser.Stack(ctx, stack_name, template,
                              environment.Environment(params),
                              disable_rollback=True)
@@ -381,8 +380,7 @@ class WaitConditionHandleTest(HeatTestCase):
     def create_stack(self, stack_name='test_stack2', params={}):
         temp = template_format.parse(test_template_waitcondition)
         template = parser.Template(temp)
-        ctx = context.get_admin_context()
-        ctx.tenant_id = 'test_tenant'
+        ctx = dummy_context(tenant_id='test_tenant')
         stack = parser.Stack(ctx, stack_name, template,
                              environment.Environment(params),
                              disable_rollback=True)

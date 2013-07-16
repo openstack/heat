@@ -16,7 +16,6 @@ import os
 
 from oslo.config import cfg
 
-from heat.common import context
 from heat.common import policy
 from heat.openstack.common import rpc
 from heat.common.wsgi import Request
@@ -24,6 +23,7 @@ from heat.api.aws import exception
 import heat.api.cloudwatch.watch as watches
 from heat.rpc import api as engine_api
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 
 
 class WatchControllerTest(HeatTestCase):
@@ -31,19 +31,13 @@ class WatchControllerTest(HeatTestCase):
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
     '''
-    # Utility functions
-    def _create_context(self, user='api_test_user'):
-        ctx = context.get_admin_context()
-        self.m.StubOutWithMock(ctx, 'username')
-        ctx.username = user
-        return ctx
 
     def _dummy_GET_request(self, params={}):
         # Mangle the params dict into a query string
         qs = "&".join(["=".join([k, str(params[k])]) for k in params])
         environ = {'REQUEST_METHOD': 'GET', 'QUERY_STRING': qs}
         req = Request(environ)
-        req.context = self._create_context()
+        req.context = dummy_context()
         return req
 
     # The tests

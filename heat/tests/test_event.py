@@ -13,7 +13,6 @@
 #    under the License.
 
 
-from heat.common import context
 import heat.db.api as db_api
 from heat.engine import parser
 from heat.engine import resource
@@ -21,6 +20,7 @@ from heat.engine import template
 from heat.engine import event
 
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 from heat.tests import generic_resource as generic_rsrc
 
@@ -42,9 +42,7 @@ class EventTest(HeatTestCase):
         self.username = 'event_test_user'
 
         setup_dummy_db()
-        self.ctx = context.get_admin_context()
-        self.m.StubOutWithMock(self.ctx, 'username')
-        self.ctx.username = self.username
+        self.ctx = dummy_context()
 
         self.m.ReplayAll()
 

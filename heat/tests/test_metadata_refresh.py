@@ -18,9 +18,11 @@ import mox
 from oslo.config import cfg
 from heat.tests import fakes
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import stack_delete_after
 
+from heat.db import api as db_api
 from heat.engine import environment
 from heat.common import identifier
 from heat.common import template_format
@@ -28,7 +30,6 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine import service
 from heat.engine.resources import instance
-from heat.common import context
 from heat.engine.resources import wait_condition as wc
 
 
@@ -142,8 +143,7 @@ class MetadataRefreshTest(HeatTestCase):
     def create_stack(self, stack_name='test_stack', params={}):
         temp = template_format.parse(test_template_metadata)
         template = parser.Template(temp)
-        ctx = context.get_admin_context()
-        ctx.tenant_id = 'test_tenant'
+        ctx = dummy_context()
         stack = parser.Stack(ctx, stack_name, template,
                              environment.Environment(params),
                              disable_rollback=True)
@@ -195,8 +195,6 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
     def setUp(self):
         super(WaitCondMetadataUpdateTest, self).setUp()
         setup_dummy_db()
-        self.ctx = context.get_admin_context()
-        self.ctx.tenant_id = 'test_tenant'
         self.fc = fakes.FakeKeystoneClient()
         self.man = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_waitcondition_server_url',
@@ -207,7 +205,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
     def create_stack(self, stack_name='test_stack'):
         temp = template_format.parse(test_template_waitcondition)
         template = parser.Template(temp)
-        stack = parser.Stack(self.ctx, stack_name, template,
+        stack = parser.Stack(dummy_context(), stack_name, template,
                              disable_rollback=True)
 
         self.stack_id = stack.store()
@@ -221,12 +219,13 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fc)
 
-        id = identifier.ResourceIdentifier('test_tenant', stack.name,
+        id = identifier.ResourceIdentifier('test_tenant_id', stack.name,
                                            stack.id, '', 'WH')
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'identifier')
         wc.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
 
         self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(db_api, 'user_creds_get')
 
         return stack
 
@@ -250,7 +249,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
             self.assertEqual(inst.metadata['test'], None)
 
         def update_metadata(id, data, reason):
-            self.man.metadata_update(self.ctx,
+            self.man.metadata_update(dummy_context(),
                                      dict(self.stack.identifier()),
                                      'WH',
                                      {'Data': data, 'Reason': reason,
@@ -261,6 +260,8 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
 
         scheduler.TaskRunner._sleep(mox.IsA(int)).WithSideEffects(check_empty)
         scheduler.TaskRunner._sleep(mox.IsA(int)).WithSideEffects(post_success)
+        db_api.user_creds_get(mox.IgnoreArg()).MultipleTimes().AndReturn(
+            self.stack.context.to_dict())
         scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
 
         self.m.ReplayAll()

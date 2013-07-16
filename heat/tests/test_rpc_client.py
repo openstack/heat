@@ -23,17 +23,17 @@ from oslo.config import cfg
 import stubout
 import testtools
 
-from heat.common import context
 from heat.common import identifier
 from heat.rpc import api as rpc_api
 from heat.rpc import client as rpc_client
 from heat.openstack.common import rpc
+from heat.tests.utils import dummy_context
 
 
 class EngineRpcAPITestCase(testtools.TestCase):
 
     def setUp(self):
-        self.context = context.get_admin_context()
+        self.context = dummy_context()
         cfg.CONF.set_default('rpc_backend',
                              'heat.openstack.common.rpc.impl_fake')
         cfg.CONF.set_default('verbose', True)
@@ -46,7 +46,7 @@ class EngineRpcAPITestCase(testtools.TestCase):
         super(EngineRpcAPITestCase, self).setUp()
 
     def _test_engine_api(self, method, rpc_method, **kwargs):
-        ctxt = context.RequestContext('fake_user', 'fake_project')
+        ctxt = dummy_context()
         if 'rpcapi_class' in kwargs:
             rpcapi_class = kwargs['rpcapi_class']
             del kwargs['rpcapi_class']

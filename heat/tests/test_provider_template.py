@@ -22,6 +22,7 @@ from heat.openstack.common import uuidutils
 
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 
 
@@ -88,7 +89,8 @@ class ProviderTemplateTest(HeatTestCase):
     def test_to_parameters(self):
         """Tests property conversion to parameter values."""
         setup_dummy_db()
-        stack = parser.Stack(None, 'test_stack', parser.Template({}),
+        stack = parser.Stack(dummy_context(), 'test_stack',
+                             parser.Template({}),
                              stack_id=uuidutils.generate_uuid())
 
         class DummyResource(object):

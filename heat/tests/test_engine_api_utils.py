@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import context
 import heat.engine.api as api
 from heat.engine import parser
 from heat.engine import resource
@@ -20,6 +19,7 @@ from heat.openstack.common import uuidutils
 from heat.rpc import api as rpc_api
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 
 
@@ -84,10 +84,6 @@ class FormatTest(HeatTestCase):
     def setUp(self):
         super(FormatTest, self).setUp()
         setup_dummy_db()
-        ctx = context.get_admin_context()
-        self.m.StubOutWithMock(ctx, 'user')
-        ctx.user = 'test_user'
-        ctx.tenant_id = 'test_tenant'
 
         template = parser.Template({
             'Resources': {
@@ -99,7 +95,7 @@ class FormatTest(HeatTestCase):
         })
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
-        self.stack = parser.Stack(ctx, 'test_stack', template,
+        self.stack = parser.Stack(dummy_context(), 'test_stack', template,
                                   stack_id=uuidutils.generate_uuid())
 
     def test_format_stack_resource(self):

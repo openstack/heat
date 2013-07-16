@@ -23,6 +23,7 @@ from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 
 
@@ -96,7 +97,7 @@ class ServerTagsTest(HeatTestCase):
         stack_name = 'tag_test'
         t = template_format.parse(instance_template)
         template = parser.Template(t)
-        stack = parser.Stack(None, stack_name, template,
+        stack = parser.Stack(dummy_context(), stack_name, template,
                              environment.Environment({'KeyName': 'test'}),
                              stack_id=uuidutils.generate_uuid())
 
@@ -138,7 +139,7 @@ class ServerTagsTest(HeatTestCase):
         stack_name = 'tag_test'
         t = template_format.parse(group_template)
         template = parser.Template(t)
-        stack = parser.Stack(None, stack_name, template,
+        stack = parser.Stack(dummy_context(), stack_name, template,
                              environment.Environment({'KeyName': 'test'}),
                              stack_id=uuidutils.generate_uuid())
 

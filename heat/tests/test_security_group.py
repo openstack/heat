@@ -15,11 +15,11 @@
 import collections
 
 from heat.engine import clients
-from heat.common import context
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 from heat.tests.v1_1 import fakes
 from heat.tests import utils
@@ -109,14 +109,9 @@ Resources:
         return self.stack
 
     def parse_stack(self, t):
-        ctx = context.RequestContext.from_dict({
-            'tenant': 'test_tenant',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
         stack_name = 'test_stack'
         tmpl = parser.Template(t)
-        stack = parser.Stack(ctx, stack_name, tmpl)
+        stack = parser.Stack(dummy_context(), stack_name, tmpl)
         stack.store()
         return stack
 

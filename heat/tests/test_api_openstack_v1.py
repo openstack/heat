@@ -17,7 +17,6 @@ import json
 from oslo.config import cfg
 import webob.exc
 
-from heat.common import context
 from heat.common import identifier
 from heat.openstack.common import rpc
 import heat.openstack.common.rpc.common as rpc_common
@@ -31,6 +30,7 @@ import heat.api.openstack.v1.stacks as stacks
 import heat.api.openstack.v1.resources as resources
 import heat.api.openstack.v1.events as events
 import heat.api.openstack.v1.actions as actions
+from heat.tests.utils import dummy_context
 
 
 class InstantiationDataTest(HeatTestCase):
@@ -185,14 +185,6 @@ class ControllerTest(object):
         self.api_version = '1.0'
         self.tenant = 't'
 
-    def _create_context(self, user='api_test_user'):
-        ctx = context.get_admin_context()
-        self.m.StubOutWithMock(ctx, 'username')
-        ctx.username = user
-        self.m.StubOutWithMock(ctx, 'tenant_id')
-        ctx.tenant_id = self.tenant
-        return ctx
-
     def _environ(self, path):
         return {
             'SERVER_NAME': 'heat.example.com',
@@ -207,7 +199,7 @@ class ControllerTest(object):
         environ['REQUEST_METHOD'] = method
 
         req = Request(environ)
-        req.context = self._create_context()
+        req.context = dummy_context('api_test_user', self.tenant)
         return req
 
     def _get(self, path):
@@ -222,7 +214,7 @@ class ControllerTest(object):
         environ['REQUEST_METHOD'] = method
 
         req = Request(environ)
-        req.context = self._create_context()
+        req.context = dummy_context('api_test_user', self.tenant)
         req.body = data
         return req
 

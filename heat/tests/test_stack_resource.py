@@ -13,7 +13,6 @@
 #    under the License.
 
 from heat.common import template_format
-from heat.common import context
 from heat.common import exception
 from heat.engine import environment
 from heat.engine import parser
@@ -24,6 +23,7 @@ from heat.engine import template
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import stack_delete_after
 
@@ -85,12 +85,11 @@ class StackResourceTest(HeatTestCase):
                                  MyStackResource)
         t = parser.Template({template.RESOURCES:
                              {"provider_resource": ws_res_snippet}})
-        self.parent_stack = parser.Stack(None, 'test_stack', t,
+        self.parent_stack = parser.Stack(dummy_context(), 'test_stack', t,
                                          stack_id=uuidutils.generate_uuid())
         self.parent_resource = MyStackResource('test',
                                                ws_res_snippet,
                                                self.parent_stack)
-        self.parent_resource.context = context.get_admin_context()
         self.templ = template_format.parse(wp_template)
 
     @stack_delete_after
