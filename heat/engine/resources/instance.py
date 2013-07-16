@@ -30,6 +30,7 @@ from heat.engine.resources import volume
 from heat.common import exception
 from heat.engine.resources.network_interface import NetworkInterface
 
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
 
@@ -121,9 +122,8 @@ class Instance(resource.Resource):
                          'PublicIp': ('Public IP address of the specified '
                                       'instance.')}
 
-    # template keys supported for handle_update, note trailing comma
-    # is required for a single item to get a tuple not a string
-    update_allowed_keys = ('Metadata',)
+    update_allowed_keys = ('Metadata', 'Properties')
+    update_allowed_properties = ('InstanceType',)
 
     _deferred_server_statuses = ['BUILD',
                                  'HARD_REBOOT',
@@ -286,6 +286,17 @@ class Instance(resource.Resource):
             security_groups = None
         return security_groups
 
+    def _get_flavor_id(self, flavor):
+        flavor_id = None
+        flavor_list = self.nova().flavors.list()
+        for o in flavor_list:
+            if o.name == flavor:
+                flavor_id = o.id
+                break
+        if flavor_id is None:
+            raise exception.FlavorMissing(flavor_id=flavor)
+        return flavor_id
+
     def handle_create(self):
         security_groups = self._get_security_groups()
 
@@ -302,14 +313,7 @@ class Instance(resource.Resource):
 
         image_id = self._get_image_id(image_name)
 
-        flavor_id = None
-        flavor_list = self.nova().flavors.list()
-        for o in flavor_list:
-            if o.name == flavor:
-                flavor_id = o.id
-                break
-        if flavor_id is None:
-            raise exception.FlavorMissing(flavor_id=flavor)
+        flavor_id = self._get_flavor_id(flavor)
 
         tags = {}
         if self.properties['Tags']:
@@ -396,7 +400,30 @@ class Instance(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
-            self.metadata = tmpl_diff.get('Metadata', {})
+            self.metadata = tmpl_diff['Metadata']
+        if 'InstanceType' in prop_diff:
+            flavor = prop_diff['InstanceType']
+            flavor_id = self._get_flavor_id(flavor)
+            server = self.nova().servers.get(self.resource_id)
+            server.resize(flavor_id)
+            scheduler.TaskRunner(self._check_resize, server, flavor)()
+
+    def _check_resize(self, server, flavor):
+        """
+        Verify that the server is properly resized. If that's the case, confirm
+        the resize, if not raise an error.
+        """
+        yield
+        server.get()
+        while server.status == 'RESIZE':
+            yield
+            server.get()
+        if server.status == 'VERIFY_RESIZE':
+            server.confirm_resize()
+        else:
+            raise exception.Error(
+                "Resizing to '%s' failed, status '%s'" % (
+                    flavor, server.status))
 
     def metadata_update(self, new_metadata=None):
         '''

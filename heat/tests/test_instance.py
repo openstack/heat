@@ -252,6 +252,70 @@ class InstancesTest(HeatTestCase):
         self.assertEqual(None, instance.update(update_template))
         self.assertEqual(instance.metadata, {'test': 123})
 
+    def test_instance_update_instance_type(self):
+        """
+        Instance.handle_update supports changing the InstanceType, and makes
+        the change making a resize API call against Nova.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_update')
+
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['InstanceType'] = 'm1.small'
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).AndReturn(return_server)
+
+        def activate_status(server):
+            server.status = 'VERIFY_RESIZE'
+        return_server.get = activate_status.__get__(return_server)
+
+        self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
+        self.fc.client.post_servers_1234_action(
+            body={'resize': {'flavorRef': 2}}).AndReturn((202, None))
+        self.fc.client.post_servers_1234_action(
+            body={'confirmResize': None}).AndReturn((202, None))
+        self.m.ReplayAll()
+
+        self.assertEqual(None, instance.update(update_template))
+        self.assertEqual(instance.state, (instance.UPDATE, instance.COMPLETE))
+        self.m.VerifyAll()
+
+    def test_instance_update_instance_type_failed(self):
+        """
+        If the status after a resize is not VERIFY_RESIZE, it means the resize
+        call failed, so we raise an explicit error.
+        """
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_update')
+
+        update_template = copy.deepcopy(instance.t)
+        update_template['Properties']['InstanceType'] = 'm1.small'
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).AndReturn(return_server)
+
+        def activate_status(server):
+            server.status = 'ACTIVE'
+        return_server.get = activate_status.__get__(return_server)
+
+        self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
+        self.fc.client.post_servers_1234_action(
+            body={'resize': {'flavorRef': 2}}).AndReturn((202, None))
+        self.m.ReplayAll()
+
+        error = self.assertRaises(exception.ResourceFailure,
+                                  instance.update, update_template)
+        self.assertEqual(
+            "Error: Resizing to 'm1.small' failed, status 'ACTIVE'",
+            str(error))
+        self.assertEqual(instance.state, (instance.UPDATE, instance.FAILED))
+        self.m.VerifyAll()
+
     def test_instance_update_replace(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
