@@ -56,9 +56,9 @@ wp_template = '''
 '''
 
 
-class instancesTest(HeatTestCase):
+class InstancesTest(HeatTestCase):
     def setUp(self):
-        super(instancesTest, self).setUp()
+        super(InstancesTest, self).setUp()
         self.fc = fakes.FakeClient()
         setup_dummy_db()
 
