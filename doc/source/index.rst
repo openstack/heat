@@ -21,31 +21,43 @@ both an OpenStack-native ReST API and a CloudFormation-compatible Query API.
 What is the purpose of the project and vision for it?
 =====================================================
 
-* Heat provides a template based orchestration for describing a cloud application
-  by executing appropriate :term:`OpenStack` API calls to generate running cloud applications.
-* The software integrates other core components of OpenStack into a one-file
-  template system. The templates allow creation of most OpenStack resource types
-  (such as instances, floating ips, volumes, security groups, users, etc), as well
-  as some more advanced functionality such as instance high availability, instance
-  autoscaling, and nested stacks. By providing very tight integration with other
-  OpenStack core projects, all OpenStack core projects could receive a larger user base.
+* Heat provides a template based orchestration for describing a cloud application by executing appropriate :term:`OpenStack` API calls to generate running cloud applications.
+* The software integrates other core components of OpenStack into a one-file template system. The templates allow creation of most OpenStack resource types (such as instances, floating ips, volumes, security groups, users, etc), as well as some more advanced functionality such as instance high availability, instance autoscaling, and nested stacks. By providing very tight integration with other OpenStack core projects, all OpenStack core projects could receive a larger user base.
 * Allow deployers to integrate with Heat directly or by adding custom plugins.
 
-This documentation offers information on how heat works and how to
-contribute to the project.
+This documentation offers information on how heat works and how to contribute to the project.
 
-Table of contents
-=================
+Getting Started
+===============
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 1
 
-   man/index
-   getting_started/index
-   troubleshooting/index
-   glossary
+    getting_started/index
+    troubleshooting/index
+    glossary
 
-.. update index
+Man Pages
+=========
+
+.. toctree::
+    :maxdepth: 2
+
+    man/index
+
+Developers Documentation
+========================
+.. toctree::
+   :maxdepth: 1
+
+   architecture
+
+Code Documentation
+==================
+.. toctree::
+   :maxdepth: 1
+
+   api/autoindex
 
 Indices and tables
 ==================
