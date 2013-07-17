@@ -44,7 +44,7 @@ PSEUDO_PARAMETERS = (
 class Parameter(object):
     '''A template parameter.'''
 
-    def __new__(cls, name, schema, value=None):
+    def __new__(cls, name, schema, value=None, validate_value=True):
         '''Create a new Parameter of the appropriate type.'''
         if cls is not Parameter:
             return super(Parameter, cls).__new__(cls)
@@ -61,9 +61,9 @@ class Parameter(object):
         else:
             raise ValueError('Invalid Parameter type "%s"' % param_type)
 
-        return ParamClass(name, schema, value)
+        return ParamClass(name, schema, value, validate_value)
 
-    def __init__(self, name, schema, value=None):
+    def __init__(self, name, schema, value=None, validate_value=True):
         '''
         Initialise the Parameter with a name, schema and optional user-supplied
         value.
@@ -76,8 +76,11 @@ class Parameter(object):
         if self.has_default():
             self._validate(self.default())
 
-        if self.user_value is not None:
-            self._validate(self.user_value)
+        if validate_value:
+            if self.user_value is not None:
+                self._validate(self.user_value)
+            elif not self.has_default():
+                raise exception.UserParameterMissing(key=self.name)
 
     def _error_msg(self, message):
         return '%s %s' % (self.name, self._constraint_error or message)
@@ -272,7 +275,8 @@ class Parameters(collections.Mapping):
     The parameters of a stack, with type checking, defaults &c. specified by
     the stack's template.
     '''
-    def __init__(self, stack_name, tmpl, user_params={}, stack_id=None):
+    def __init__(self, stack_name, tmpl, user_params={}, stack_id=None,
+                 validate_value=True):
         '''
         Create the parameter container for a stack from the stack name and
         template, optionally setting the user-supplied parameter values.
@@ -298,7 +302,8 @@ class Parameters(collections.Mapping):
                                           'ap-northeast-1']})
 
             for name, schema in tmpl[template.PARAMETERS].iteritems():
-                yield Parameter(name, schema, user_params.get(name))
+                yield Parameter(name, schema, user_params.get(name),
+                                validate_value)
 
         self.tmpl = tmpl
         self._validate(user_params)

@@ -22,19 +22,20 @@ from heat.engine import parameters
 
 class ParameterTest(testtools.TestCase):
     def test_new_string(self):
-        p = parameters.Parameter('p', {'Type': 'String'})
+        p = parameters.Parameter('p', {'Type': 'String'}, validate_value=False)
         self.assertTrue(isinstance(p, parameters.StringParam))
 
     def test_new_number(self):
-        p = parameters.Parameter('p', {'Type': 'Number'})
+        p = parameters.Parameter('p', {'Type': 'Number'}, validate_value=False)
         self.assertTrue(isinstance(p, parameters.NumberParam))
 
     def test_new_list(self):
-        p = parameters.Parameter('p', {'Type': 'CommaDelimitedList'})
+        p = parameters.Parameter('p', {'Type': 'CommaDelimitedList'},
+                                 validate_value=False)
         self.assertTrue(isinstance(p, parameters.CommaDelimitedListParam))
 
     def test_new_json(self):
-        p = parameters.Parameter('p', {'Type': 'Json'})
+        p = parameters.Parameter('p', {'Type': 'Json'}, validate_value=False)
         self.assertTrue(isinstance(p, parameters.JsonParam))
 
     def test_new_bad_type(self):
@@ -101,11 +102,12 @@ class ParameterTest(testtools.TestCase):
     def test_description(self):
         description = 'Description of the parameter'
         p = parameters.Parameter('p', {'Type': 'String',
-                                       'Description': description})
+                                       'Description': description},
+                                 validate_value=False)
         self.assertEqual(p.description(), description)
 
     def test_no_description(self):
-        p = parameters.Parameter('p', {'Type': 'String'})
+        p = parameters.Parameter('p', {'Type': 'String'}, validate_value=False)
         self.assertEqual(p.description(), '')
 
     def test_string_len_good(self):
@@ -349,6 +351,12 @@ class ParameterTest(testtools.TestCase):
         else:
             self.fail("Value error not raised")
 
+    def test_missing_param(self):
+        '''Test missing user parameter.'''
+        self.assertRaises(exception.UserParameterMissing,
+                          parameters.Parameter, 'p',
+                          {'Type': 'String'})
+
 
 params_schema = json.loads('''{
   "Parameters" : {
@@ -379,10 +387,12 @@ class ParametersTest(testtools.TestCase):
 
     def test_schema_invariance(self):
         params1 = parameters.Parameters('test', params_schema,
-                                        {'Defaulted': 'wibble'})
+                                        {'User': 'foo',
+                                         'Defaulted': 'wibble'})
         self.assertEqual(params1['Defaulted'], 'wibble')
 
-        params2 = parameters.Parameters('test', params_schema)
+        params2 = parameters.Parameters('test', params_schema,
+                                        {'User': 'foo'})
         self.assertEqual(params2['Defaulted'], 'foobar')
 
     def test_to_dict(self):
@@ -426,6 +436,14 @@ class ParametersTest(testtools.TestCase):
     def test_unknown_params(self):
         user_params = {'Foo': 'wibble'}
         self.assertRaises(exception.UnknownUserParameter,
+                          parameters.Parameters,
+                          'test',
+                          params_schema,
+                          user_params)
+
+    def test_missing_params(self):
+        user_params = {}
+        self.assertRaises(exception.UserParameterMissing,
                           parameters.Parameters,
                           'test',
                           params_schema,

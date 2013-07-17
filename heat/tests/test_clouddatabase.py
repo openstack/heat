@@ -48,9 +48,9 @@ wp_template = '''
     "MySqlCloudDB": {
       "Type": "Rackspace::Cloud::DBInstance",
       "Properties" : {
-        "InstanceName" : {"testsqlinstance"},
-        "FlavorRef" : {"test-flavor"},
-        "VolumeSize" : {"test-volume-size"},
+        "InstanceName" : {"Ref": "InstanceName"},
+        "FlavorRef" : {"Ref": "FlavorRef"},
+        "VolumeSize" : {"Ref": VolumeSize},
         "Users" : [{"name":"testuser", "password":"testpass123"}] ,
         "Databases" : [{"name":"testdbonetwo"}]
       }
@@ -87,12 +87,10 @@ class CloudDBInstanceTest(HeatTestCase):
         stack = parser.Stack(None,
                              stack_name,
                              template,
-                             environment.Environment({'InstanceName': 'test'}),
+                             environment.Environment({'InstanceName': 'Test',
+                                                      'FlavorRef': '1GB',
+                                                      'VolumeSize': '30'}),
                              stack_id=uuidutils.generate_uuid())
-
-        t['Resources']['MySqlCloudDB']['Properties']['InstanceName'] = 'Test'
-        t['Resources']['MySqlCloudDB']['Properties']['FlavorRef'] = '1GB'
-        t['Resources']['MySqlCloudDB']['Properties']['VolumeSize'] = '30'
 
         if inject_property_error:
             # database name given in users list is not a valid database
