@@ -19,6 +19,7 @@ from heat.common import template_format
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import instance
 from heat.engine import resource
+from heat.engine import resources
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
@@ -59,15 +60,21 @@ class InstanceGroupTest(HeatTestCase):
         super(InstanceGroupTest, self).setUp()
         setup_dummy_db()
 
-    def _stub_create(self, num):
+    def _stub_create(self, num, instance_class=instance.Instance):
+        """
+        Expect creation of C{num} number of Instances.
 
-        self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
+        :param instance_class: The resource class to expect to be created
+                               instead of instance.Instance.
+        """
+
+        self.m.StubOutWithMock(instance_class, 'handle_create')
+        self.m.StubOutWithMock(instance_class, 'check_create_complete')
         cookie = object()
         for x in range(num):
-            instance.Instance.handle_create().AndReturn(cookie)
-        instance.Instance.check_create_complete(cookie).AndReturn(False)
-        instance.Instance.check_create_complete(
+            instance_class.handle_create().AndReturn(cookie)
+        instance_class.check_create_complete(cookie).AndReturn(False)
+        instance_class.check_create_complete(
             cookie).MultipleTimes().AndReturn(True)
 
     def create_instance_group(self, t, stack, resource_name):
@@ -96,6 +103,33 @@ class InstanceGroupTest(HeatTestCase):
         self.assertEqual('1.2.3.4', rsrc.FnGetAtt('InstanceList'))
         self.assertEqual('JobServerGroup-0', rsrc.resource_id)
 
+        rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_instance_group_custom_resource(self):
+        """
+        If AWS::EC2::Instance is overridden, InstanceGroup will automatically
+        use that overridden resource type.
+        """
+        # resources may need to be initialised if this is the first test run.
+        resources.initialise()
+
+        class MyInstance(instance.Instance):
+            """A customized Instance resource."""
+
+        original_instance = resource.get_class("AWS::EC2::Instance")
+        resource._register_class("AWS::EC2::Instance", MyInstance)
+        self.addCleanup(resource._register_class, "AWS::EC2::Instance",
+                        original_instance)
+
+        t = template_format.parse(ig_template)
+        stack = parse_stack(t)
+        self._stub_create(1, instance_class=MyInstance)
+
+        self.m.ReplayAll()
+
+        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
+        self.assertEqual('JobServerGroup', rsrc.FnGetRefId())
         rsrc.delete()
         self.m.VerifyAll()
 

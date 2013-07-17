@@ -113,14 +113,16 @@ class InstanceGroup(resource.Resource):
                     self._wait_for_activation(creator)
 
     def _make_instance(self, name):
-
+        # We look up and subclass the class for AWS::EC2::Instance instead of
+        # just importing Instance, so that if someone overrides that resource
+        # we'll use the custom one.
         Instance = resource.get_class('AWS::EC2::Instance',
                                       resource_name=name,
                                       environment=self.stack.env)
 
         class GroupedInstance(Instance):
             '''
-            Subclass instance.Instance to supress event transitions, since the
+            Subclass Instance to suppress event transitions, since the
             scaling-group instances are not "real" resources, ie defined in the
             template, which causes problems for event handling since we can't
             look up the resources via parser.Stack
