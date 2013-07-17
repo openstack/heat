@@ -252,8 +252,9 @@ class Resource(BASE, HeatBase):
                                  sqlalchemy.ForeignKey('stack.id'),
                                  nullable=False)
     stack = relationship(Stack, backref=backref('resources'))
-    data = relationship(ResourceData, backref=backref('resources',
-                                                      lazy='joined'))
+    data = relationship(ResourceData,
+                        cascade="all,delete",
+                        backref=backref('resource', lazy='joined'))
 
 
 class WatchRule(BASE, HeatBase):
