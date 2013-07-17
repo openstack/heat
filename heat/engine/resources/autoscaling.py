@@ -132,6 +132,11 @@ class InstanceGroup(resource.Resource):
 
         conf = self.properties['LaunchConfigurationName']
         instance_definition = self.stack.t['Resources'][conf]
+
+        # honour the Tags property in the InstanceGroup and AutoScalingGroup
+        tags = self.properties.data.get('Tags', [])
+        instance_definition['Properties']['Tags'] = tags
+
         return GroupedInstance(name, instance_definition, self.stack)
 
     def _instances(self):

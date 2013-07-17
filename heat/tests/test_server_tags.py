@@ -11,10 +11,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import mox
 
 from heat.engine import environment
 from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
+from heat.engine.resources import autoscaling
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import scheduler
@@ -43,6 +45,40 @@ instance_template = '''
         "InstanceType" : "256 MB Server",
         "KeyName"      : "test",
         "UserData"     : "wordpress"
+      }
+    }
+  }
+}
+'''
+
+group_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "WordPress",
+  "Parameters" : {
+    "KeyName" : {
+      "Description" : "KeyName",
+      "Type" : "String",
+      "Default" : "test"
+    }
+  },
+  "Resources" : {
+    "Config": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId"      : "CentOS 5.2",
+        "InstanceType" : "256 MB Server",
+        "KeyName"      : "test",
+        "UserData"     : "wordpress"
+      }
+    },
+
+    "WebServer": {
+      "Type": "OS::Heat::InstanceGroup",
+      "Properties": {
+        "AvailabilityZones"      : ["nova"],
+        "LaunchConfigurationName": "Config",
+        "Size"                   : "1"
       }
     }
   }
@@ -94,6 +130,46 @@ class ServerTagsTest(HeatTestCase):
         instance = self._setup_test_instance(intags=tags, nova_tags=metadata)
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
+        # we are just using mock to verify that the tags get through to the
+        # nova call.
+        self.m.VerifyAll()
+
+    def _setup_test_group(self, intags=None, nova_tags=None):
+        stack_name = 'tag_test'
+        t = template_format.parse(group_template)
+        template = parser.Template(t)
+        stack = parser.Stack(None, stack_name, template,
+                             environment.Environment({'KeyName': 'test'}),
+                             stack_id=uuidutils.generate_uuid())
+
+        t['Resources']['WebServer']['Properties']['Tags'] = intags
+        group = autoscaling.InstanceGroup('WebServer',
+                                          t['Resources']['WebServer'],
+                                          stack)
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
+
+        group.t = group.stack.resolve_runtime_data(group.t)
+
+        # need to resolve the template functions
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=1, flavor=1, key_name='test',
+            name=mox.IgnoreArg(),
+            security_groups=None,
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=nova_tags, nics=None, availability_zone=None).AndReturn(
+                self.fc.servers.list()[1])
+
+        return group
+
+    def test_group_tags(self):
+        tags = [{'Key': 'Food', 'Value': 'yum'}]
+        metadata = dict((tm['Key'], tm['Value']) for tm in tags)
+        group = self._setup_test_group(intags=tags, nova_tags=metadata)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(group.create)()
         # we are just using mock to verify that the tags get through to the
         # nova call.
         self.m.VerifyAll()
