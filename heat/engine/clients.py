@@ -69,7 +69,7 @@ class OpenStackClients(object):
         return self._keystone
 
     def url_for(self, **kwargs):
-        return self.keystone().client.service_catalog.url_for(**kwargs)
+        return self.keystone().url_for(**kwargs)
 
     def nova(self, service_type='compute'):
         if service_type in self._nova:
