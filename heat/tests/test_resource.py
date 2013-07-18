@@ -272,6 +272,18 @@ class ResourceTest(HeatTestCase):
         self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
+    def test_create_resource_after_destroy(self):
+        tmpl = {'Type': 'GenericResourceType'}
+        rname = 'test_res_id_none'
+        res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
+        res.id = 'test_res_id'
+        (res.action, res.status) = (res.INIT, res.DELETE)
+        self.assertRaises(exception.ResourceFailure, res.create)
+        res.destroy()
+        res.state_reset()
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
     def test_update_ok(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)

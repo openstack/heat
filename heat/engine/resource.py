@@ -622,6 +622,13 @@ class Resource(object):
         # By default, no attributes resolve
         pass
 
+    def state_reset(self):
+        """
+        Reset state to (INIT, COMPLETE)
+        """
+        self.action = self.INIT
+        self.status = self.COMPLETE
+
     def state_set(self, action, status, reason="state changed"):
         if action not in self.ACTIONS:
             raise ValueError("Invalid action %s" % action)

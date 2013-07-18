@@ -516,6 +516,7 @@ class Stack(object):
         for res in deps:
             if not failed:
                 try:
+                    res.state_reset()
                     scheduler.TaskRunner(res.create)()
                 except exception.ResourceFailure as ex:
                     logger.exception('create')
