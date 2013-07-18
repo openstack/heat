@@ -221,7 +221,9 @@ class Ec2TokenTest(HeatTestCase):
                    'HTTP_AUTHORIZATION': auth_str}
         dummy_req = self._dummy_GET_request(environ=req_env)
 
-        ok_resp = json.dumps({'access': {'token': {'id': 123}}})
+        ok_resp = json.dumps({'access': {'token': {
+            'id': 123,
+            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=ok_resp)
         self.m.ReplayAll()
@@ -310,7 +312,9 @@ class Ec2TokenTest(HeatTestCase):
                    'PATH_INFO': '/v1'}
         dummy_req = self._dummy_GET_request(params, req_env)
 
-        ok_resp = json.dumps({'access': {'token': {'id': 123}}})
+        ok_resp = json.dumps({'access': {'token': {
+            'id': 123,
+            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
         self.m.ReplayAll()
