@@ -17,6 +17,7 @@
 
 
 import datetime
+import stubout
 import webob
 
 from heat.common import exception
@@ -25,6 +26,10 @@ from heat.tests.common import HeatTestCase
 
 
 class RequestTest(HeatTestCase):
+
+    def setUp(self):
+        self.stubs = stubout.StubOutForTesting()
+        super(RequestTest, self).setUp()
 
     def test_content_type_missing(self):
         request = wsgi.Request.blank('/tests/123')
@@ -74,8 +79,27 @@ class RequestTest(HeatTestCase):
         result = request.best_match_content_type()
         self.assertEqual(result, "application/json")
 
+    def test_best_match_language(self):
+        # Here we test that we are actually invoking language negotiation
+        # by webop and also that the default locale always available is en-US
+        request = wsgi.Request.blank('/')
+        accepted = 'unknown-lang'
+        request.headers = {'Accept-Language': accepted}
+
+        def fake_best_match(self, offers, default_match=None):
+            return default_match
+
+        self.stubs.SmartSet(request.accept_language,
+                            'best_match', fake_best_match)
+
+        self.assertEqual(request.best_match_language(), 'en_US')
+
 
 class ResourceTest(HeatTestCase):
+
+    def setUp(self):
+        self.stubs = stubout.StubOutForTesting()
+        super(ResourceTest, self).setUp()
 
     def test_get_action_args(self):
         env = {
@@ -159,6 +183,34 @@ class ResourceTest(HeatTestCase):
                                  wsgi.JSONRequestDeserializer(),
                                  None)
         self.assertRaises(webob.exc.HTTPBadRequest, resource, request)
+
+    def test_resource_call_error_handle_localized(self):
+        class Controller(object):
+            def delete(self, req, identity):
+                return (req, identity)
+
+        actions = {'action': 'delete', 'id': 12, 'body': 'data'}
+        env = {'wsgiorg.routing_args': [None, actions]}
+        request = wsgi.Request.blank('/tests/123', environ=env)
+        request.body = '{"foo" : "value"}'
+        message_es = "No Encontrado"
+        translated_ex = webob.exc.HTTPBadRequest(message_es)
+
+        resource = wsgi.Resource(Controller(),
+                                 wsgi.JSONRequestDeserializer(),
+                                 None)
+
+        def fake_translate_exception(ex, locale):
+            return translated_ex
+
+        self.stubs.SmartSet(wsgi,
+                            'translate_exception', fake_translate_exception)
+
+        try:
+            resource(request)
+        except webob.exc.HTTPBadRequest as e:
+            self.assertEquals(message_es, e.message)
+        self.m.VerifyAll()
 
 
 class JSONResponseSerializerTest(HeatTestCase):

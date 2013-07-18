@@ -41,7 +41,7 @@ scriptname = os.path.basename(sys.argv[0])
 
 from heat.openstack.common import gettextutils
 
-gettextutils.install('heat')
+gettextutils.install('heat', lazy=True)
 
 if scriptname == 'heat-boto':
     from heat.cfn_client import boto_client as heat_client

@@ -47,11 +47,15 @@ def request_with_middleware(middleware, func, req, *args, **kwargs):
     return resp
 
 
-def remote_error(ex_type, message=''):
-    """convert rpc original exception to the one with _Remote suffix."""
+def to_remote_error(error):
+    """Converts the given exception to the one with the _Remote suffix.
 
-    # NOTE(jianingy): this function helps simulate the real world exceptions
-
+    This is how RPC exceptions are recreated on the caller's side, so
+    this helps better simulate how the exception mechanism actually works.
+    """
+    ex_type = type(error)
+    kwargs = error.kwargs if hasattr(error, 'kwargs') else {}
+    message = error.message
     module = ex_type().__class__.__module__
     str_override = lambda self: "%s\n<Traceback>" % message
     new_ex_type = type(ex_type.__name__ + rpc_common._REMOTE_POSTFIX,
@@ -59,7 +63,7 @@ def remote_error(ex_type, message=''):
                        {'__str__': str_override, '__unicode__': str_override})
 
     new_ex_type.__module__ = '%s%s' % (module, rpc_common._REMOTE_POSTFIX)
-    return new_ex_type()
+    return new_ex_type(**kwargs)
 
 
 class InstantiationDataTest(HeatTestCase):
@@ -398,7 +402,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'list_stacks',
                   'args': {},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(AttributeError))
+                 None).AndRaise(to_remote_error(AttributeError()))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -418,7 +422,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'list_stacks',
                   'args': {},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(Exception))
+                 None).AndRaise(to_remote_error(Exception()))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -513,6 +517,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._post('/stacks', json.dumps(body))
 
+        unknown_parameter = heat_exc.UnknownUserParameter(key='a')
+        missing_parameter = heat_exc.UserParameterMissing(key='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -523,7 +529,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(AttributeError))
+                 None).AndRaise(to_remote_error(AttributeError()))
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'create_stack',
@@ -533,7 +539,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.UnknownUserParameter))
+                 None).AndRaise(to_remote_error(unknown_parameter))
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'create_stack',
@@ -543,7 +549,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.UserParameterMissing))
+                 None).AndRaise(to_remote_error(missing_parameter))
         self.m.ReplayAll()
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.create,
@@ -579,6 +585,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._post('/stacks', json.dumps(body))
 
+        error = heat_exc.StackExists(stack_name='s')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -589,7 +596,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackExists))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -612,6 +619,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._post('/stacks', json.dumps(body))
 
+        error = heat_exc.StackValidationFailed(message='')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -622,7 +630,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackValidationFailed))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -678,13 +686,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get('/stacks/%(stack_name)s' % locals())
 
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -727,13 +736,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get('/stacks/%(stack_name)s/resources' % locals())
 
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -820,13 +830,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'show_stack',
                   'args': {'stack_identity': dict(identity)},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -844,13 +855,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
+        error = heat_exc.InvalidTenant(target='a', actual='b')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'show_stack',
                   'args': {'stack_identity': dict(identity)},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.InvalidTenant))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -887,15 +899,15 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_get_template_err_notfound(self):
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
-        template = {u'Foo': u'bar'}
 
+        error = error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'get_template',
                   'args': {'stack_identity': dict(identity)},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
 
         self.m.ReplayAll()
 
@@ -958,6 +970,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._put('/stacks/%(stack_name)s/%(stack_id)s' % identity,
                         json.dumps(body))
 
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -968,7 +981,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1021,6 +1034,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._delete('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         # Engine returns None when delete successful
         rpc.call(req.context, self.topic,
@@ -1028,7 +1042,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'delete_stack',
                   'args': {'stack_identity': dict(identity)},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1122,13 +1136,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                            'AWS::EC2::EIP',
                            'AWS::EC2::EIPAssociation']
 
+        error = heat_exc.ServerError(body='')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'list_resource_types',
                   'args': {},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.ServerError))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1158,13 +1173,15 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
     def test_generate_template_not_found(self):
         req = self._get('/resource_types/NOT_FOUND/template')
+
+        error = heat_exc.ResourceTypeNotFound(type_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'generate_template',
                   'args': {'type_name': 'NOT_FOUND'},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.ResourceTypeNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.generate_template,
@@ -1267,13 +1284,14 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(stack_identity._tenant_path() + '/resources')
 
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'list_stack_resources',
                   'args': {'stack_identity': stack_identity},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1354,6 +1372,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(res_identity._tenant_path())
 
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -1361,7 +1380,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1384,6 +1403,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(res_identity._tenant_path())
 
+        error = heat_exc.ResourceNotFound(stack_name='a', resource_name='b')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -1391,7 +1411,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.ResourceNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1414,6 +1434,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(res_identity._tenant_path())
 
+        error = heat_exc.ResourceNotAvailable(resource_name='')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -1421,7 +1442,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.ResourceNotAvailable))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1488,6 +1509,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(res_identity._tenant_path() + '/metadata')
 
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -1495,7 +1517,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1518,6 +1540,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(res_identity._tenant_path() + '/metadata')
 
+        error = heat_exc.ResourceNotFound(stack_name='a', resource_name='b')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -1525,7 +1548,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                   'args': {'stack_identity': stack_identity,
                            'resource_name': res_name},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.ResourceNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1699,13 +1722,14 @@ class EventControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(stack_identity._tenant_path() + '/events')
 
+        error = error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'list_events',
                   'args': {'stack_identity': stack_identity},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1943,13 +1967,14 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
 
+        error = error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'list_events',
                   'args': {'stack_identity': stack_identity},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(heat_exc.StackNotFound))
+                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -2380,7 +2405,7 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
                   'method': 'stack_suspend',
                   'args': {'stack_identity': stack_identity},
                   'version': self.api_version},
-                 None).AndRaise(remote_error(AttributeError))
+                 None).AndRaise(to_remote_error(AttributeError()))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,

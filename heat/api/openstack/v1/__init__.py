@@ -15,10 +15,6 @@
 
 import routes
 
-from heat.openstack.common import gettextutils
-
-gettextutils.install('heat')
-
 from heat.api.openstack.v1 import stacks
 from heat.api.openstack.v1 import resources
 from heat.api.openstack.v1 import events

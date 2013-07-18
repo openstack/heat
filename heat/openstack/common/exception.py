@@ -21,8 +21,6 @@ Exceptions common to OpenStack projects
 
 import logging
 
-from heat.openstack.common.gettextutils import _
-
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
 
 
@@ -120,6 +118,7 @@ class OpenstackException(Exception):
 
     def __init__(self, **kwargs):
         try:
+            self.kwargs = kwargs
             self._error_string = self.message % kwargs
 
         except Exception as e:

@@ -23,6 +23,7 @@ Cinder's faultwrapper
 import traceback
 import webob
 
+from heat.common import exception
 from heat.openstack.common import log as logging
 import heat.openstack.common.rpc.common as rpc_common
 
@@ -79,11 +80,18 @@ class FaultWrapper(wsgi.Middleware):
         if ex_type.endswith(rpc_common._REMOTE_POSTFIX):
             ex_type = ex_type[:-len(rpc_common._REMOTE_POSTFIX)]
 
-        message = str(ex)
-        if message.find('\n') > -1:
-            message, trace = message.split('\n', 1)
+        if isinstance(ex, exception.OpenstackException):
+            # If the exception is an OpenstackException it is going to have a
+            # translated Message object as the message, let's recreate it here
+            message = (ex.message % ex.kwargs
+                       if hasattr(ex, 'kwargs') else ex.message)
         else:
-            message = str(ex)
+            message = ex.message
+
+        trace = str(ex)
+        if trace.find('\n') > -1:
+            unused, trace = trace.split('\n', 1)
+        else:
             trace = traceback.format_exc()
 
         webob_exc = self.error_map.get(ex_type,

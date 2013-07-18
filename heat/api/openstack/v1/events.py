@@ -21,7 +21,6 @@ from heat.common import wsgi
 from heat.rpc import api as engine_api
 from heat.common import identifier
 from heat.rpc import client as rpc_client
-from heat.openstack.common.gettextutils import _
 
 
 summary_keys = [

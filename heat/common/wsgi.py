@@ -2,6 +2,7 @@
 
 # Copyright 2010 United States Government as represented by the
 # Administrator of the National Aeronautics and Space Administration.
+# Copyright 2013 IBM Corp.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -43,8 +44,8 @@ import webob.dec
 import webob.exc
 
 from heat.common import exception
+from heat.openstack.common import gettextutils
 from heat.openstack.common import importutils
-from heat.openstack.common.gettextutils import _
 
 
 URL_LENGTH_LIMIT = 50000
@@ -431,6 +432,12 @@ class Request(webob.Request):
         else:
             return content_type
 
+    def best_match_language(self):
+        """Determine language for returned response."""
+        all_languages = gettextutils.get_available_languages('heat')
+        return self.accept_language.best_match(all_languages,
+                                               default_match='en_US')
+
 
 def is_json_content_type(request):
     if request.method == 'GET':
@@ -589,7 +596,17 @@ class Resource(object):
                                           request, **action_args)
         except TypeError as err:
             logging.error(_('Exception handling resource: %s') % str(err))
-            raise webob.exc.HTTPBadRequest()
+            msg = _('The server could not comply with the request since\r\n'
+                    'it is either malformed or otherwise incorrect.\r\n')
+            err = webob.exc.HTTPBadRequest(msg)
+            raise translate_exception(err, request.best_match_language())
+        except webob.exc.HTTPException as err:
+            logging.error(_("Returning %(code)s to user: %(explanation)s"),
+                          {'code': err.code, 'explanation': err.explanation})
+            raise translate_exception(err, request.best_match_language())
+        except Exception as err:
+            logging.error(_("Unexpected error occurred serving API: %s") % err)
+            raise translate_exception(err, request.best_match_language())
 
         # Here we support either passing in a serializer or detecting it
         # based on the content type.
@@ -651,6 +668,26 @@ class Resource(object):
             pass
 
         return args
+
+
+def translate_exception(exc, locale):
+    """Translates all translatable elements of the given exception."""
+    exc.message = gettextutils.get_localized_message(exc.message, locale)
+    if isinstance(exc, webob.exc.HTTPError):
+        # If the explanation is not a Message, that means that the
+        # explanation is the default, generic and not translatable explanation
+        # from webop.exc. Since the explanation is the error shown when the
+        # exception is converted to a response, let's actually swap it with
+        # message, since message is what gets passed in at construction time
+        # in the API
+        if not isinstance(exc.explanation, gettextutils.Message):
+            exc.explanation = exc.message
+            exc.detail = ''
+        else:
+            exc.explanation = \
+                gettextutils.get_localized_message(exc.explanation, locale)
+            exc.detail = gettextutils.get_localized_message(exc.detail, locale)
+    return exc
 
 
 class BasePasteFactory(object):

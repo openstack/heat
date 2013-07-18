@@ -29,7 +29,6 @@ from heat.rpc import client as rpc_client
 from heat.common import urlfetch
 
 from heat.openstack.common import log as logging
-from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
