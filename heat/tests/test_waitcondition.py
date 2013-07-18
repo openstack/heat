@@ -32,7 +32,6 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources import wait_condition as wc
-from heat.common import config
 from heat.common import context
 
 test_template_waitcondition = '''
@@ -94,7 +93,6 @@ class WaitConditionTest(HeatTestCase):
 
     def setUp(self):
         super(WaitConditionTest, self).setUp()
-        config.register_engine_opts()
         setup_dummy_db()
         self.m.StubOutWithMock(wc.WaitConditionHandle,
                                'get_status')
@@ -373,7 +371,6 @@ class WaitConditionTest(HeatTestCase):
 class WaitConditionHandleTest(HeatTestCase):
     def setUp(self):
         super(WaitConditionHandleTest, self).setUp()
-        config.register_engine_opts()
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
 

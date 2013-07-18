@@ -58,13 +58,19 @@ bind_opts = [
     cfg.IntOpt('bind_port'),
 ]
 
+cfg.CONF.register_opts(bind_opts)
+
 socket_opts = [
     cfg.IntOpt('backlog', default=4096),
     cfg.StrOpt('cert_file'),
     cfg.StrOpt('key_file'),
 ]
 
-workers_opt = cfg.IntOpt('workers', default=0)
+cfg.CONF.register_opts(socket_opts)
+
+workers_opts = cfg.IntOpt('workers', default=0)
+
+cfg.CONF.register_opt(workers_opts)
 
 
 class WritableLogger(object):
@@ -178,7 +184,6 @@ class Server(object):
 
         self.application = application
         self.sock = get_socket(conf, default_port)
-        conf.register_opt(workers_opt)
 
         self.logger = logging.getLogger('eventlet.wsgi.server')
 

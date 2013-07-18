@@ -14,7 +14,6 @@
 
 import mox
 
-from heat.common import config
 from heat.common import context
 from heat.common import heat_keystoneclient
 from heat.tests.common import HeatTestCase
@@ -26,7 +25,6 @@ class KeystoneClientTest(HeatTestCase):
     def setUp(self):
         super(KeystoneClientTest, self).setUp()
         # load config so role checking doesn't barf
-        config.register_engine_opts()
         # mock the internal keystone client and its authentication
         self.m.StubOutClassWithMocks(heat_keystoneclient.kc, "Client")
         self.mock_ks_client = heat_keystoneclient.kc.Client(

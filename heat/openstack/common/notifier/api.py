@@ -13,12 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import socket
 import uuid
 
 from oslo.config import cfg
 
 from heat.openstack.common import context
-from heat.openstack.common.gettextutils import _
+from heat.openstack.common.gettextutils import _  # noqa
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils
 from heat.openstack.common import log as logging
@@ -35,7 +36,7 @@ notifier_opts = [
                default='INFO',
                help='Default notification level for outgoing notifications'),
     cfg.StrOpt('default_publisher_id',
-               default='$host',
+               default=None,
                help='Default publisher_id for outgoing notifications'),
 ]
 
@@ -74,7 +75,7 @@ def notify_decorator(name, fn):
 
         ctxt = context.get_context_from_function_and_args(fn, args, kwarg)
         notify(ctxt,
-               CONF.default_publisher_id,
+               CONF.default_publisher_id or socket.gethostname(),
                name,
                CONF.default_notification_level,
                body)
@@ -84,7 +85,10 @@ def notify_decorator(name, fn):
 
 def publisher_id(service, host=None):
     if not host:
-        host = CONF.host
+        try:
+            host = CONF.host
+        except AttributeError:
+            host = CONF.default_publisher_id or socket.gethostname()
     return "%s.%s" % (service, host)
 
 

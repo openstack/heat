@@ -23,7 +23,6 @@ from oslo.config import cfg
 import stubout
 import testtools
 
-from heat.common import config
 from heat.common import context
 from heat.common import identifier
 from heat.rpc import api as rpc_api
@@ -34,7 +33,6 @@ from heat.openstack.common import rpc
 class EngineRpcAPITestCase(testtools.TestCase):
 
     def setUp(self):
-        config.register_engine_opts()
         self.context = context.get_admin_context()
         cfg.CONF.set_default('rpc_backend',
                              'heat.openstack.common.rpc.impl_fake')

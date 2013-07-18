@@ -18,7 +18,6 @@ import re
 
 from oslo.config import cfg
 from heat.common import exception
-from heat.common import config
 from heat.common import template_format
 from heat.engine import clients
 from heat.engine import scheduler
@@ -105,7 +104,6 @@ lb_template_nokey = '''
 class LoadBalancerTest(HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
-        config.register_engine_opts()
         self.fc = fakes.FakeClient()
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'create')

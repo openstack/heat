@@ -38,10 +38,6 @@ paste_deploy_opts = [
                help="The API paste config file to use")]
 
 
-bind_opts = [
-    cfg.IntOpt('bind_port', default=8000),
-    cfg.StrOpt('bind_host', default='127.0.0.1')]
-
 service_opts = [
     cfg.IntOpt('report_interval',
                default=10,
@@ -113,30 +109,16 @@ rpc_opts = [
                     'This can be an opaque identifier.'
                     'It is not necessarily a hostname, FQDN, or IP address.')]
 
+cfg.CONF.register_opts(db_opts)
+cfg.CONF.register_opts(engine_opts)
+cfg.CONF.register_opts(service_opts)
+cfg.CONF.register_opts(rpc_opts)
+cfg.CONF.register_group(paste_deploy_group)
+cfg.CONF.register_opts(paste_deploy_opts, group=paste_deploy_group)
 
-def register_api_opts():
-    cfg.CONF.register_opts(bind_opts)
-    cfg.CONF.register_opts(rpc_opts)
+
+def rpc_set_default():
     rpc.set_defaults(control_exchange='heat')
-
-
-def register_db_opts():
-    cfg.CONF.register_opts(db_opts)
-
-
-def register_engine_opts():
-    cfg.CONF.register_opts(engine_opts)
-    cfg.CONF.register_opts(service_opts)
-    cfg.CONF.register_opts(rpc_opts)
-    rpc.set_defaults(control_exchange='heat')
-
-
-def _register_paste_deploy_opts():
-    """
-    Idempotent registration of paste_deploy option group
-    """
-    cfg.CONF.register_group(paste_deploy_group)
-    cfg.CONF.register_opts(paste_deploy_opts, group=paste_deploy_group)
 
 
 def _get_deployment_flavor():
@@ -144,7 +126,6 @@ def _get_deployment_flavor():
     Retrieve the paste_deploy.flavor config item, formatted appropriately
     for appending to the application name.
     """
-    _register_paste_deploy_opts()
     flavor = cfg.CONF.paste_deploy.flavor
     return '' if not flavor else ('-' + flavor)
 
@@ -154,7 +135,6 @@ def _get_deployment_config_file():
     Retrieve the deployment_config_file config item, formatted as an
     absolute pathname.
     """
-    _register_paste_deploy_opts()
     config_path = cfg.CONF.find_file(
         cfg.CONF.paste_deploy['api_paste_config'])
     if config_path is None:

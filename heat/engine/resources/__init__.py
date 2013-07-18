@@ -51,14 +51,13 @@ def initialise():
     if _initialized:
         return
     import sys
-    from heat.common import config
     from heat.common import plugin_loader
-
-    config.register_engine_opts()
 
     _register_modules(plugin_loader.load_modules(sys.modules[__name__]))
 
     from oslo.config import cfg
+
+    cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
 
     plugin_pkg = plugin_loader.create_subpackage(cfg.CONF.plugin_dirs,
                                                  'heat.engine')
