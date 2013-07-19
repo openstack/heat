@@ -84,10 +84,10 @@
 # Options defined in heat.common.policy
 #
 
-#  (string value)
+# Policy file to use (string value)
 #policy_file=policy.json
 
-#  (string value)
+# Default Rule of Policy File (string value)
 #policy_default_rule=default
 
 
@@ -95,22 +95,26 @@
 # Options defined in heat.common.wsgi
 #
 
-#  (string value)
+# Address to bind the server.  Useful when selecting a
+# particular network interface. (string value)
 #bind_host=0.0.0.0
 
-#  (integer value)
+# The port on which the server will listen. (integer value)
 #bind_port=<None>
 
-#  (integer value)
+# Number of backlog requests to configure the socket with
+# (integer value)
 #backlog=4096
 
-#  (string value)
+# Location of the SSL Certificate File to use for SSL mode
+# (string value)
 #cert_file=<None>
 
-#  (string value)
+# Location of the SSL Key File to use for enabling SSL mode
+# (string value)
 #key_file=<None>
 
-#  (integer value)
+# Number of workers for Heat service (integer value)
 #workers=0
 
 
@@ -432,7 +436,7 @@
 # Options defined in heat.common.config
 #
 
-#  (string value)
+# The flavor to use (string value)
 #flavor=<None>
 
 # The API paste config file to use (string value)
@@ -455,10 +459,10 @@
 # Options defined in heat.api.aws.ec2token
 #
 
-#  (string value)
+# Authentication Endpoint URI (string value)
 #auth_uri=<None>
 
-#  (string value)
+# Keystone EC2 Service Endpoint URI (string value)
 #keystone_ec2_uri=<None>
 
 

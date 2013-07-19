@@ -33,9 +33,10 @@ DEFAULT_PORT = 8000
 
 paste_deploy_group = cfg.OptGroup('paste_deploy')
 paste_deploy_opts = [
-    cfg.StrOpt('flavor'),
+    cfg.StrOpt('flavor',
+               help=_("The flavor to use")),
     cfg.StrOpt('api_paste_config', default="api-paste.ini",
-               help="The API paste config file to use")]
+               help=_("The API paste config file to use"))]
 
 
 service_opts = [

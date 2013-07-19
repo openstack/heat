@@ -34,8 +34,12 @@ logger = logging.getLogger(__name__)
 
 
 opts = [
-    cfg.StrOpt('auth_uri', default=None),
-    cfg.StrOpt('keystone_ec2_uri', default=None)
+    cfg.StrOpt('auth_uri',
+               default=None,
+               help=_("Authentication Endpoint URI")),
+    cfg.StrOpt('keystone_ec2_uri',
+               default=None,
+               help=_("Keystone EC2 Service Endpoint URI"))
 ]
 cfg.CONF.register_opts(opts, group='ec2authtoken')
 
