@@ -18,7 +18,6 @@ from webob import exc
 from heat.api.openstack.v1 import util
 from heat.common import wsgi
 from heat.rpc import client as rpc_client
-import heat.openstack.common.rpc.common as rpc_common
 
 
 class ActionController(object):
@@ -51,15 +50,9 @@ class ActionController(object):
             raise exc.HTTPBadRequest(_("Invalid action %s specified") % ac)
 
         if ac == self.SUSPEND:
-            try:
-                res = self.engine.stack_suspend(req.context, identity)
-            except rpc_common.RemoteError as ex:
-                return util.remote_error(ex)
+            res = self.engine.stack_suspend(req.context, identity)
         elif ac == self.RESUME:
-            try:
-                res = self.engine.stack_resume(req.context, identity)
-            except rpc_common.RemoteError as ex:
-                return util.remote_error(ex)
+            res = self.engine.stack_resume(req.context, identity)
         else:
             raise exc.HTTPInternalServerError(_("Unexpected action %s") % ac)
 

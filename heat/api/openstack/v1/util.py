@@ -64,13 +64,3 @@ def make_url(req, identity):
 def make_link(req, identity, relationship='self'):
     '''Return a link structure for the supplied identity dictionary.'''
     return {'href': make_url(req, identity), 'rel': relationship}
-
-
-def remote_error(ex):
-    """The RemoteError mapping work has been moved to heat.api.middleware.fault
-    which handles error formating now. This function will be deprecated
-    in the future, so please raise exceptions directly.
-    """
-
-    # TODO(jianingy): add a deprecated warning here to inform others.
-    raise ex

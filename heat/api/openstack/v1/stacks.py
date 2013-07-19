@@ -28,7 +28,6 @@ from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
 from heat.common import urlfetch
 
-import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
 
@@ -190,10 +189,7 @@ class StackController(object):
         Lists summary information for all stacks
         """
 
-        try:
-            stacks = self.engine.list_stacks(req.context)
-        except rpc_common.RemoteError as ex:
-            return util.remote_error(ex)
+        stacks = self.engine.list_stacks(req.context)
 
         summary_keys = (engine_api.STACK_ID,
                         engine_api.STACK_NAME,
@@ -211,10 +207,7 @@ class StackController(object):
         """
         Lists detailed information for all stacks
         """
-        try:
-            stacks = self.engine.list_stacks(req.context)
-        except rpc_common.RemoteError as ex:
-            return util.remote_error(ex)
+        stacks = self.engine.list_stacks(req.context)
 
         return {'stacks': [format_stack(req, s) for s in stacks]}
 
@@ -226,15 +219,12 @@ class StackController(object):
 
         data = InstantiationData(body)
 
-        try:
-            result = self.engine.create_stack(req.context,
-                                              data.stack_name(),
-                                              data.template(),
-                                              data.environment(),
-                                              data.files(),
-                                              data.args())
-        except rpc_common.RemoteError as ex:
-            return util.remote_error(ex)
+        result = self.engine.create_stack(req.context,
+                                          data.stack_name(),
+                                          data.template(),
+                                          data.environment(),
+                                          data.files(),
+                                          data.args())
 
         return {'stack': format_stack(req, {engine_api.STACK_ID: result})}
 
@@ -246,11 +236,8 @@ class StackController(object):
         try:
             identity = dict(identifier.HeatIdentifier.from_arn(stack_name))
         except ValueError:
-            try:
-                identity = self.engine.identify_stack(req.context,
-                                                      stack_name)
-            except rpc_common.RemoteError as ex:
-                return util.remote_error(ex)
+            identity = self.engine.identify_stack(req.context,
+                                                  stack_name)
 
         location = util.make_url(req, identity)
         if path:
@@ -264,11 +251,8 @@ class StackController(object):
         Gets detailed information for a stack
         """
 
-        try:
-            stack_list = self.engine.show_stack(req.context,
-                                                identity)
-        except rpc_common.RemoteError as ex:
-            return util.remote_error(ex)
+        stack_list = self.engine.show_stack(req.context,
+                                            identity)
 
         if not stack_list:
             raise exc.HTTPInternalServerError()
@@ -283,11 +267,8 @@ class StackController(object):
         Get the template body for an existing stack
         """
 
-        try:
-            templ = self.engine.get_template(req.context,
-                                             identity)
-        except rpc_common.RemoteError as ex:
-            return util.remote_error(ex)
+        templ = self.engine.get_template(req.context,
+                                         identity)
 
         if templ is None:
             raise exc.HTTPNotFound()
@@ -302,15 +283,12 @@ class StackController(object):
         """
         data = InstantiationData(body)
 
-        try:
-            res = self.engine.update_stack(req.context,
-                                           identity,
-                                           data.template(),
-                                           data.environment(),
-                                           data.files(),
-                                           data.args())
-        except rpc_common.RemoteError as ex:
-            return util.remote_error(ex)
+        res = self.engine.update_stack(req.context,
+                                       identity,
+                                       data.template(),
+                                       data.environment(),
+                                       data.files(),
+                                       data.args())
 
         raise exc.HTTPAccepted()
 
@@ -320,13 +298,9 @@ class StackController(object):
         Delete the specified stack
         """
 
-        try:
-            res = self.engine.delete_stack(req.context,
-                                           identity,
-                                           cast=False)
-
-        except rpc_common.RemoteError as ex:
-            return util.remote_error(ex)
+        res = self.engine.delete_stack(req.context,
+                                       identity,
+                                       cast=False)
 
         if res is not None:
             raise exc.HTTPBadRequest(res['Error'])
@@ -342,11 +316,8 @@ class StackController(object):
 
         data = InstantiationData(body)
 
-        try:
-            result = self.engine.validate_template(req.context,
-                                                   data.template())
-        except rpc_common.RemoteError as ex:
-            return util.remote_error(ex)
+        result = self.engine.validate_template(req.context,
+                                               data.template())
 
         if 'Error' in result:
             raise exc.HTTPBadRequest(result['Error'])
@@ -359,10 +330,7 @@ class StackController(object):
         Returns a list of valid resource types that may be used in a template.
         """
 
-        try:
-            types = self.engine.list_resource_types(req.context)
-        except rpc_common.RemoteError as ex:
-            raise exc.HTTPInternalServerError(str(ex))
+        types = self.engine.list_resource_types(req.context)
 
         return {'resource_types': types}
 

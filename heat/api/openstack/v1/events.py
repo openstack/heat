@@ -21,7 +21,6 @@ from heat.common import wsgi
 from heat.rpc import api as engine_api
 from heat.common import identifier
 from heat.rpc import client as rpc_client
-import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common.gettextutils import _
 
 
@@ -79,11 +78,8 @@ class EventController(object):
 
     def _event_list(self, req, identity,
                     filter_func=lambda e: True, detail=False):
-        try:
-            events = self.engine.list_events(req.context,
-                                             identity)
-        except rpc_common.RemoteError as ex:
-            return util.remote_error(ex)
+        events = self.engine.list_events(req.context,
+                                         identity)
 
         keys = None if detail else summary_keys
 
