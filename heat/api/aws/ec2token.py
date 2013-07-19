@@ -187,6 +187,11 @@ class EC2Token(wsgi.Middleware):
         req.headers['X-Tenant-Id'] = tenant_id
         req.headers['X-Auth-URL'] = self._conf_get('auth_uri')
         req.headers['X-Auth-EC2_URL'] = keystone_ec2_uri
+
+        metadata = result['access'].get('metadata', {})
+        roles = metadata.get('roles', [])
+        req.headers['X-Roles'] = ','.join(roles)
+
         return self.application
 
 
