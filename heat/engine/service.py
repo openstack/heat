@@ -95,6 +95,10 @@ class EngineService(service.Service):
         """
         pass
 
+    def _start_watch_task(self, stack_id):
+        self._timer_in_thread(stack_id, self._periodic_watcher_task,
+                              sid=stack_id)
+
     def start(self):
         super(EngineService, self).start()
 
@@ -107,7 +111,7 @@ class EngineService(service.Service):
         admin_context = context.get_admin_context()
         stacks = db_api.stack_get_all(admin_context)
         for s in stacks:
-            self._timer_in_thread(s.id, self._periodic_watcher_task, sid=s.id)
+            self._start_watch_task(s.id)
 
     @request_context
     def identify_stack(self, cnxt, stack_name):
@@ -214,8 +218,7 @@ class EngineService(service.Service):
             stack.create()
             if stack.action == stack.CREATE and stack.status == stack.COMPLETE:
                 # Schedule a periodic watcher task for this stack
-                self._timer_in_thread(stack.id, self._periodic_watcher_task,
-                                      sid=stack.id)
+                self._start_watch_task(stack.id)
             else:
                 logger.warning("Stack create failed, status %s" % stack.status)
 
