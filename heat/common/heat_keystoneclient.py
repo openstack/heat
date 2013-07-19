@@ -151,3 +151,6 @@ class KeystoneClient(object):
     def enable_stack_user(self, user_id):
         # FIXME : This won't work with the v3 keystone API
         self.client.users.update_enabled(user_id, True)
+
+    def url_for(self, **kwargs):
+        return self.client.service_catalog.url_for(**kwargs)

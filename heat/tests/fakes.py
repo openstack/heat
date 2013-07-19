@@ -133,3 +133,6 @@ class FakeKeystoneClient():
 
     def disable_stack_user(self, user_id):
         pass
+
+    def url_for(self, **kwargs):
+        return 'http://example.com:1234/v1'
