@@ -11,9 +11,19 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Troubleshooting
-===============
+This page documents the templates at _https://github.com/openstack/heat-templates/
+HOT Templates
+=============
 
-If you encounter issues running heat, see if the solution to the issue is documented on the Troubleshooting_ wiki page. If not, let us know about the problem in the #heat IRC channel on freenode.
+.. toctree::
+  :maxdepth: 1
 
-.. _Troubleshooting: http://wiki.openstack.org/Heat/TroubleShooting
+  hot/hello_world
+
+CFN Templates
+=============
+
+.. toctree::
+  :maxdepth: 1
+
+  cfn/WordPress_Single_Instance
