@@ -19,6 +19,7 @@ import json
 from oslo.config import cfg
 import webob
 
+from heat.openstack.common import timeutils
 from heat.common import context
 from heat.db import api as db_api
 from heat.engine import api
@@ -98,6 +99,13 @@ class EngineService(service.Service):
     def _start_watch_task(self, stack_id, cnxt):
         wrs = db_api.watch_rule_get_all_by_stack(cnxt,
                                                  stack_id)
+
+        # reset the last_evaluated so we don't fire off alarms when
+        # the engine has not been running.
+        now = timeutils.utcnow()
+        for wr in wrs:
+            db_api.watch_rule_update(cnxt, wr.id, {'last_evaluated': now})
+
         if len(wrs) > 0:
             self._timer_in_thread(stack_id, self._periodic_watcher_task,
                                   sid=stack_id)
