@@ -229,6 +229,36 @@ class Ec2TokenTest(HeatTestCase):
         self.m.ReplayAll()
         self.assertEqual(ec2.__call__(dummy_req), 'woot')
 
+        self.assertEqual('tenant', dummy_req.headers['X-Tenant-Name'])
+        self.assertEqual('abcd1234', dummy_req.headers['X-Tenant-Id'])
+        self.m.VerifyAll()
+
+    def test_call_ok_roles(self):
+        dummy_conf = {'auth_uri': 'http://123:5000/foo',
+                      'keystone_ec2_uri': 'http://456:5000/foo'}
+        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
+
+        auth_str = ('Authorization: foo  Credential=foo/bar, '
+                    'SignedHeaders=content-type;host;x-amz-date, '
+                    'Signature=xyz')
+        req_env = {'SERVER_NAME': 'heat',
+                   'SERVER_PORT': '8000',
+                   'PATH_INFO': '/v1',
+                   'HTTP_AUTHORIZATION': auth_str}
+        dummy_req = self._dummy_GET_request(environ=req_env)
+
+        ok_resp = json.dumps({'access': {
+            'token': {
+                'id': 123,
+                'tenant': {'name': 'tenant', 'id': 'abcd1234'}
+            },
+            'metadata': {'roles': ['aa', 'bb', 'cc']}}})
+        self._stub_http_connection(headers={'Authorization': auth_str},
+                                   response=ok_resp)
+        self.m.ReplayAll()
+        self.assertEqual(ec2.__call__(dummy_req), 'woot')
+
+        self.assertEqual('aa,bb,cc', dummy_req.headers['X-Roles'])
         self.m.VerifyAll()
 
     def test_call_err_tokenid(self):
@@ -312,7 +342,7 @@ class Ec2TokenTest(HeatTestCase):
                    'PATH_INFO': '/v1'}
         dummy_req = self._dummy_GET_request(params, req_env)
 
-        ok_resp = json.dumps({'access': {'token': {
+        ok_resp = json.dumps({'access': {'metadata': {}, 'token': {
             'id': 123,
             'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
         self._stub_http_connection(response=ok_resp,
