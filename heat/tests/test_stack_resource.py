@@ -59,6 +59,21 @@ wp_template = '''
 '''
 
 
+generic_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "WordPress",
+  "Parameters" : {},
+  "Resources" : {
+    "WebServer": {
+      "Type": "GenericResource",
+      "Properties": {}
+    }
+  }
+}
+'''
+
+
 class MyStackResource(stack_resource.StackResource,
                       generic_rsrc.GenericResource):
     def physical_resource_name(self):
@@ -83,6 +98,8 @@ class StackResourceTest(HeatTestCase):
         setup_dummy_db()
         resource._register_class('some_magic_type',
                                  MyStackResource)
+        resource._register_class('GenericResource',
+                                 generic_rsrc.GenericResource)
         t = parser.Template({template.RESOURCES:
                              {"provider_resource": ws_res_snippet}})
         self.parent_stack = parser.Stack(dummy_context(), 'test_stack', t,
@@ -91,6 +108,7 @@ class StackResourceTest(HeatTestCase):
                                                ws_res_snippet,
                                                self.parent_stack)
         self.templ = template_format.parse(wp_template)
+        self.generic_template = template_format.parse(generic_template)
 
     @stack_delete_after
     def test_create_with_template_ok(self):
@@ -103,6 +121,27 @@ class StackResourceTest(HeatTestCase):
                          self.stack.name)
         self.assertEqual(self.templ, self.stack.t.t)
         self.assertEqual(self.stack.id, self.parent_resource.resource_id)
+
+    @stack_delete_after
+    def test_update_with_template_ok(self):
+        """
+        The update_with_template method updates the nested stack with the
+        given template and user parameters.
+        """
+        create_result = self.parent_resource.create_with_template(
+            self.generic_template, {})
+        while not create_result.step():
+            pass
+        self.stack = self.parent_resource.nested()
+
+        new_templ = self.generic_template.copy()
+        inst_snippet = new_templ["Resources"]["WebServer"].copy()
+        new_templ["Resources"]["WebServer2"] = inst_snippet
+        update_result = self.parent_resource.update_with_template(
+            new_templ, {})
+        self.assertEqual(self.stack.state, ('UPDATE', 'COMPLETE'))
+        self.assertEqual(set(self.stack.resources.keys()),
+                         set(["WebServer", "WebServer2"]))
 
     @stack_delete_after
     def test_load_nested_ok(self):
