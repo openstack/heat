@@ -124,13 +124,7 @@ class VolumeTest(HeatTestCase):
         stack_name = 'test_volume_stack'
 
         # create script
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
-            self.cinder_fc)
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
         # delete script
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
@@ -166,13 +160,7 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolume('creating', 'error')
         stack_name = 'test_volume_create_error_stack'
 
-        # create script
-        clients.OpenStackClients.cinder().AndReturn(self.cinder_fc)
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
         self.m.ReplayAll()
 
@@ -193,24 +181,9 @@ class VolumeTest(HeatTestCase):
         fva = FakeVolume('attaching', 'error')
         stack_name = 'test_volume_attach_error_stack'
 
-        # volume create
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
-            self.cinder_fc)
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
-        # create script
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-
-        self.fc.volumes.create_server_volume(
-            device=u'/dev/vdc',
-            server_id=u'WikiDatabase',
-            volume_id=u'vol-123').AndReturn(fva)
-
-        self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+        self._mock_create_server_volume_script(fva)
 
         self.m.ReplayAll()
 
@@ -233,23 +206,9 @@ class VolumeTest(HeatTestCase):
         fva = FakeVolume('attaching', 'in-use')
         stack_name = 'test_volume_attach_stack'
 
-        # volume create
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
-            self.cinder_fc)
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
-        # create script
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        self.fc.volumes.create_server_volume(
-            device=u'/dev/vdc',
-            server_id=u'WikiDatabase',
-            volume_id=u'vol-123').AndReturn(fva)
-
-        self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+        self._mock_create_server_volume_script(fva)
 
         # delete script
         fva = FakeVolume('in-use', 'available')
@@ -278,24 +237,10 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolume('creating', 'available')
         fva = FakeVolume('in-use', 'available')
         stack_name = 'test_volume_detach_stack'
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
 
-        # volume create
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
-            self.cinder_fc)
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
-        # create script
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        self.fc.volumes.create_server_volume(
-            device=u'/dev/vdc',
-            server_id=u'WikiDatabase',
-            volume_id=u'vol-123').AndReturn(fva)
-
-        self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+        self._mock_create_server_volume_script(fva)
 
         # delete script
         fva = FakeVolume('i-use', 'available')
@@ -338,24 +283,10 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolume('creating', 'available')
         fva = FakeVolume('in-use', 'available')
         stack_name = 'test_volume_detach_stack'
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
 
-        # volume create
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
-            self.cinder_fc)
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
-        # create script
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        self.fc.volumes.create_server_volume(
-            device=u'/dev/vdc',
-            server_id=u'WikiDatabase',
-            volume_id=u'vol-123').AndReturn(fva)
-
-        self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+        self._mock_create_server_volume_script(fva)
 
         # delete script
         self.cinder_fc.volumes.get('vol-123').AndRaise(
@@ -440,14 +371,7 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolume('creating', 'available')
         fb = FakeBackup('creating', 'available')
 
-        # create script
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
-            self.cinder_fc)
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
         # snapshot script
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
@@ -472,14 +396,7 @@ class VolumeTest(HeatTestCase):
         fv = FakeVolume('creating', 'available')
         fb = FakeBackup('creating', 'error')
 
-        # create script
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
-            self.cinder_fc)
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
         # snapshot script
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
@@ -502,14 +419,7 @@ class VolumeTest(HeatTestCase):
         stack_name = 'test_volume_stack'
         fv = FakeVolume('creating', 'error')
 
-        # create script
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
-            self.cinder_fc)
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
         self.cinder_fc.volumes.delete('vol-123').AndReturn(None)
@@ -728,23 +638,9 @@ class VolumeTest(HeatTestCase):
         fva = FakeVolume('attaching', 'in-use')
         stack_name = 'test_volume_attach_stack'
 
-        # volume create
-        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
-            self.cinder_fc)
-        vol_name = utils.PhysName(stack_name, 'DataVolume')
-        self.cinder_fc.volumes.create(
-            size=u'1', availability_zone='nova',
-            display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+        self._mock_create_volume(fv, stack_name)
 
-        # create script
-        clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
-        self.fc.volumes.create_server_volume(
-            device=u'/dev/vdc',
-            server_id=u'WikiDatabase',
-            volume_id=u'vol-123').AndReturn(fva)
-
-        self.cinder_fc.volumes.get('vol-123').AndReturn(fva)
+        self._mock_create_server_volume_script(fva)
 
         # delete script
         fva = FakeVolume('in-use', 'available')
