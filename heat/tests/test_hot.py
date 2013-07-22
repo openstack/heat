@@ -60,9 +60,12 @@ class HOTemplateTest(HeatTestCase):
           param1:
             description: foo
             type: string
+            default: boo
         ''')
 
-        expected = {'param1': {'Description': 'foo', 'Type': 'String'}}
+        expected = {'param1': {'Description': 'foo',
+                               'Type': 'String',
+                               'Default': 'boo'}}
 
         tmpl = parser.Template(hot_tpl)
         self.assertEqual(tmpl[hot.PARAMETERS], expected)

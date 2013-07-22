@@ -84,6 +84,7 @@ class HOTemplate(template.Template):
     def _translate_parameters(self, parameters):
         """Get the parameters of the template translated into CFN format."""
         HOT_TO_CFN_ATTRS = {'type': 'Type',
+                            'default': 'Default',
                             'description': 'Description'}
 
         HOT_TO_CFN_TYPES = {'string': 'String'}
