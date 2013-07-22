@@ -211,7 +211,7 @@ class VolumeDetachTask(object):
 
         try:
             vol.get()
-            while vol.status == 'in-use':
+            while vol.status in ('in-use', 'detaching'):
                 logger.debug('%s - volume still in use' % str(self))
                 yield
 
@@ -223,6 +223,8 @@ class VolumeDetachTask(object):
                 vol.get()
 
             logger.info('%s - status: %s' % (str(self), vol.status))
+            if vol.status != 'available':
+                raise exception.Error(vol.status)
 
         except clients.cinderclient.exceptions.NotFound:
             logger.warning('%s - volume not found' % str(self))
