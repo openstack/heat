@@ -159,6 +159,8 @@ class EC2Token(wsgi.Middleware):
         result = json.loads(response)
         try:
             token_id = result['access']['token']['id']
+            tenant = result['access']['token']['tenant']['name']
+            tenant_id = result['access']['token']['tenant']['id']
             logger.info("AWS authentication successful.")
         except (AttributeError, KeyError):
             logger.info("AWS authentication failure.")
@@ -181,6 +183,8 @@ class EC2Token(wsgi.Middleware):
                                         'signature': signature}}
         req.headers['X-Auth-EC2-Creds'] = json.dumps(ec2_creds)
         req.headers['X-Auth-Token'] = token_id
+        req.headers['X-Tenant-Name'] = tenant
+        req.headers['X-Tenant-Id'] = tenant_id
         req.headers['X-Auth-URL'] = self._conf_get('auth_uri')
         req.headers['X-Auth-EC2_URL'] = keystone_ec2_uri
         return self.application
