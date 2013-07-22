@@ -1136,9 +1136,8 @@ class StackServiceTest(HeatTestCase):
     @stack_context('periodic_watch_task_not_created')
     def test_periodic_watch_task_not_created(self):
         self.eng.stg[self.stack.id] = DummyThreadGroup()
-        self.eng._start_watch_task(self.stack.id)
-        self.assertEqual([self.eng._periodic_watcher_task],
-                         self.eng.stg[self.stack.id].threads)
+        self.eng._start_watch_task(self.stack.id, self.ctx)
+        self.assertEqual([], self.eng.stg[self.stack.id].threads)
 
     def test_periodic_watch_task_created(self):
         stack = get_alarm_stack('period_watch_task_created',
@@ -1148,7 +1147,7 @@ class StackServiceTest(HeatTestCase):
         stack.store()
         stack.create()
         self.eng.stg[stack.id] = DummyThreadGroup()
-        self.eng._start_watch_task(stack.id)
+        self.eng._start_watch_task(stack.id, self.ctx)
         self.assertEqual([self.eng._periodic_watcher_task],
                          self.eng.stg[stack.id].threads)
         self.stack.delete()
