@@ -66,6 +66,29 @@ wp_template = '''
 }
 '''
 
+alarm_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "alarming",
+  "Resources" : {
+    "service_alarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "1",
+        "AlarmActions": [],
+        "AlarmDescription": "do the thing",
+        "Namespace": "dev/null",
+        "Period": "300",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Statistic": "SampleCount",
+        "Threshold": "2",
+        "MetricName": "ServiceFailure"
+      }
+    }
+  }
+}
+'''
+
 
 def create_context(mocks, user='stacks_test_user',
                    tenant='test_admin', password='stacks_test_password'):
@@ -84,6 +107,13 @@ def get_wordpress_stack(stack_name, ctx):
     template = parser.Template(t)
     stack = parser.Stack(ctx, stack_name, template,
                          environment.Environment({'KeyName': 'test'}))
+    return stack
+
+
+def get_alarm_stack(stack_name, ctx):
+    t = template_format.parse(alarm_template)
+    template = parser.Template(t)
+    stack = parser.Stack(ctx, stack_name, template)
     return stack
 
 
@@ -172,11 +202,10 @@ class DummyThreadGroup(object):
 
     def add_timer(self, interval, callback, initial_delay=None,
                   *args, **kwargs):
-        pass
+        self.threads.append(callback)
 
     def add_thread(self, callback, *args, **kwargs):
         self.threads.append(callback)
-        pass
 
     def stop(self):
         pass
@@ -185,9 +214,9 @@ class DummyThreadGroup(object):
         pass
 
 
-class stackCreateTest(HeatTestCase):
+class StackCreateTest(HeatTestCase):
     def setUp(self):
-        super(stackCreateTest, self).setUp()
+        super(StackCreateTest, self).setUp()
         setup_dummy_db()
 
     def test_wordpress_single_instance_stack_create(self):
@@ -229,10 +258,10 @@ class stackCreateTest(HeatTestCase):
         self.assertEqual('COMPLETE', db_s.status, )
 
 
-class stackServiceCreateUpdateDeleteTest(HeatTestCase):
+class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
     def setUp(self):
-        super(stackServiceCreateUpdateDeleteTest, self).setUp()
+        super(StackServiceCreateUpdateDeleteTest, self).setUp()
         self.username = 'stack_service_create_test_user'
         self.tenant = 'stack_service_create_test_tenant'
         setup_dummy_db()
@@ -502,10 +531,10 @@ class stackServiceCreateUpdateDeleteTest(HeatTestCase):
                           None, {})
 
 
-class stackServiceSuspendResumeTest(HeatTestCase):
+class StackServiceSuspendResumeTest(HeatTestCase):
 
     def setUp(self):
-        super(stackServiceSuspendResumeTest, self).setUp()
+        super(StackServiceSuspendResumeTest, self).setUp()
         self.username = 'stack_service_suspend_test_user'
         self.tenant = 'stack_service_suspend_test_tenant'
         setup_dummy_db()
@@ -570,10 +599,10 @@ class stackServiceSuspendResumeTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class stackServiceTest(HeatTestCase):
+class StackServiceTest(HeatTestCase):
 
     def setUp(self):
-        super(stackServiceTest, self).setUp()
+        super(StackServiceTest, self).setUp()
 
         self.username = 'stack_service_test_user'
         self.tenant = 'stack_service_test_tenant'
@@ -1103,6 +1132,26 @@ class stackServiceTest(HeatTestCase):
                           'NooServer', test_metadata)
 
         self.m.VerifyAll()
+
+    @stack_context('periodic_watch_task_not_created')
+    def test_periodic_watch_task_not_created(self):
+        self.eng.stg[self.stack.id] = DummyThreadGroup()
+        self.eng._start_watch_task(self.stack.id)
+        self.assertEqual([self.eng._periodic_watcher_task],
+                         self.eng.stg[self.stack.id].threads)
+
+    def test_periodic_watch_task_created(self):
+        stack = get_alarm_stack('period_watch_task_created',
+                                create_context(self.m))
+        self.stack = stack
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+        self.eng.stg[stack.id] = DummyThreadGroup()
+        self.eng._start_watch_task(stack.id)
+        self.assertEqual([self.eng._periodic_watcher_task],
+                         self.eng.stg[stack.id].threads)
+        self.stack.delete()
 
     @stack_context('service_show_watch_test_stack', False)
     @utils.wr_delete_after
