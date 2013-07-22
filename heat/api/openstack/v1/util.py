@@ -85,6 +85,9 @@ def remote_error(ex):
         'StackValidationFailed': exc.HTTPBadRequest,
         'InvalidTemplateReference': exc.HTTPBadRequest,
         'UnknownUserParameter': exc.HTTPBadRequest,
+        'RevertFailed': exc.HTTPInternalServerError,
+        'ServerBuildFailed': exc.HTTPInternalServerError,
+        'NotSupported': exc.HTTPBadRequest,
         'MissingCredentialError': exc.HTTPBadRequest,
         'UserParameterMissing': exc.HTTPBadRequest,
     }
