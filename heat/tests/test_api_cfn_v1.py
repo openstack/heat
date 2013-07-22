@@ -17,7 +17,6 @@ import os
 
 from oslo.config import cfg
 
-from heat.common import context
 from heat.common import identifier
 from heat.common import policy
 from heat.openstack.common import rpc
@@ -27,6 +26,7 @@ from heat.rpc import api as rpc_api
 from heat.api.aws import exception
 import heat.api.cfn.v1.stacks as stacks
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 
@@ -36,21 +36,13 @@ class CfnStackControllerTest(HeatTestCase):
     Tests the API class which acts as the WSGI controller,
     the endpoint processing API requests after they are routed
     '''
-    # Utility functions
-    def _create_context(self, user='api_test_user'):
-        ctx = context.get_admin_context()
-        self.m.StubOutWithMock(ctx, 'username')
-        ctx.username = user
-        self.m.StubOutWithMock(ctx, 'tenant_id')
-        ctx.tenant_id = 't'
-        return ctx
 
     def _dummy_GET_request(self, params={}):
         # Mangle the params dict into a query string
         qs = "&".join(["=".join([k, str(params[k])]) for k in params])
         environ = {'REQUEST_METHOD': 'GET', 'QUERY_STRING': qs}
         req = Request(environ)
-        req.context = self._create_context()
+        req.context = dummy_context()
         return req
 
     # The tests

@@ -19,6 +19,7 @@ from heat.engine import parser
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
+from heat.tests.utils import dummy_context
 
 
 wp_template = '''
@@ -74,7 +75,8 @@ class SqlAlchemyTest(HeatTestCase):
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
         template = parser.Template(t)
-        stack = parser.Stack(None, stack_name, template,
+        ctx = dummy_context()
+        stack = parser.Stack(ctx, stack_name, template,
                              environment.Environment({'KeyName': 'test'}),
                              stack_id=uuidutils.generate_uuid())
         return (t, stack)

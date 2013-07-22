@@ -13,7 +13,6 @@
 #    under the License.
 
 
-from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
@@ -24,6 +23,7 @@ from heat.engine import scheduler
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 
 
@@ -62,12 +62,7 @@ Outputs:
         return stack
 
     def parse_stack(self, t):
-        ctx = context.RequestContext.from_dict({
-            'tenant': 'test_tenant',
-            'tenant_id': 'aaaa',
-            'username': 'test_username',
-            'password': 'password',
-            'auth_url': 'http://localhost:5000/v2.0'})
+        ctx = dummy_context('test_username', 'aaaa', 'password')
         stack_name = 'test_stack'
         tmpl = parser.Template(t)
         stack = parser.Stack(ctx, stack_name, tmpl)

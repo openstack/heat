@@ -17,7 +17,6 @@ from testtools import skipIf
 from heat.engine import clients
 from heat.engine import environment
 from heat.tests.v1_1 import fakes
-from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import resources
@@ -27,6 +26,7 @@ from heat.openstack.common.importutils import try_import
 import heat.db.api as db_api
 from heat.engine import parser
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 
 test_template_volumeattach = '''
@@ -493,11 +493,11 @@ class validateTest(HeatTestCase):
         self.fc = fakes.FakeClient()
         resources.initialise()
         setup_dummy_db()
-        self.ctx = context.get_admin_context()
+        self.ctx = dummy_context()
 
     def test_validate_volumeattach_valid(self):
         t = template_format.parse(test_template_volumeattach % 'vdq')
-        stack = parser.Stack(None, 'test_stack', parser.Template(t))
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
@@ -509,7 +509,7 @@ class validateTest(HeatTestCase):
 
     def test_validate_volumeattach_invalid(self):
         t = template_format.parse(test_template_volumeattach % 'sda')
-        stack = parser.Stack(None, 'test_stack', parser.Template(t))
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
 
         self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
         db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
@@ -637,7 +637,7 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_unregistered_key)
         template = parser.Template(t)
         params = {'KeyName': 'not_registered'}
-        stack = parser.Stack(None, 'test_stack', template,
+        stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment(params))
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
@@ -651,7 +651,7 @@ class validateTest(HeatTestCase):
     def test_invalid_security_groups_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroups)
         template = parser.Template(t)
-        stack = parser.Stack(None, 'test_stack', template,
+        stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
@@ -664,7 +664,7 @@ class validateTest(HeatTestCase):
     def test_invalid_security_group_ids_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroupids)
         template = parser.Template(t)
-        stack = parser.Stack(None, 'test_stack', template,
+        stack = parser.Stack(self.ctx, 'test_stack', template,
                              environment.Environment({'KeyName': 'test'}))
 
         self.m.StubOutWithMock(instances.Instance, 'nova')

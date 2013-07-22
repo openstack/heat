@@ -16,7 +16,6 @@ import json
 import time
 import uuid
 
-from heat.common import context
 from heat.engine import environment
 from heat.common import exception
 from heat.common import template_format
@@ -28,6 +27,7 @@ from heat.engine import scheduler
 from heat.engine import template
 
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 from heat.tests.v1_1 import fakes
 from heat.tests.utils import stack_delete_after
@@ -121,6 +121,11 @@ mapping_template = template_format.parse('''{
 
 
 class TemplateTest(HeatTestCase):
+
+    def setUp(self):
+        super(TemplateTest, self).setUp()
+        self.ctx = dummy_context()
+
     def test_defaults(self):
         empty = parser.Template({})
         try:
@@ -390,7 +395,7 @@ Mappings:
 
     def test_get_azs_with_stack(self):
         snippet = {"Fn::GetAZs": ""}
-        stack = parser.Stack(None, 'test_stack', parser.Template({}))
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         fc = fakes.FakeClient()
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(fc)
@@ -468,7 +473,7 @@ Mappings:
         parent_resource.metadata = '{"foo": "bar"}'
         parent_resource.t = {'DeletionPolicy': 'Retain',
                              'UpdatePolicy': '{"foo": "bar"}'}
-        stack = parser.Stack(None, 'test_stack',
+        stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template({}),
                              parent_resource=parent_resource)
         self.assertEqual(
@@ -483,7 +488,7 @@ Mappings:
 
     def test_resource_facade_invalid_arg(self):
         snippet = {'Fn::ResourceFacade': 'wibble'}
-        stack = parser.Stack(None, 'test_stack', parser.Template({}))
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
         self.assertRaises(ValueError,
                           parser.Template.resolve_resource_facade,
                           snippet,
@@ -497,7 +502,7 @@ Mappings:
         parent_resource = DummyClass()
         parent_resource.metadata = '{"foo": "bar"}'
         parent_resource.t = {}
-        stack = parser.Stack(None, 'test_stack',
+        stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template({}),
                              parent_resource=parent_resource)
         self.assertRaises(KeyError,
@@ -513,10 +518,7 @@ class StackTest(HeatTestCase):
         self.username = 'parser_stack_test_user'
 
         setup_dummy_db()
-        self.ctx = context.get_admin_context()
-        self.m.StubOutWithMock(self.ctx, 'user')
-        self.ctx.user = self.username
-        self.ctx.tenant_id = 'test_tenant'
+        self.ctx = dummy_context()
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
@@ -526,12 +528,12 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
 
     def test_state_defaults(self):
-        stack = parser.Stack(None, 'test_stack', parser.Template({}))
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
         self.assertEqual(stack.state, (None, None))
         self.assertEqual(stack.status_reason, '')
 
     def test_state(self):
-        stack = parser.Stack(None, 'test_stack', parser.Template({}),
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
                              action=parser.Stack.CREATE,
                              status=parser.Stack.IN_PROGRESS)
         self.assertEqual(stack.state,
@@ -544,7 +546,7 @@ class StackTest(HeatTestCase):
                          (parser.Stack.DELETE, parser.Stack.COMPLETE))
 
     def test_state_bad(self):
-        stack = parser.Stack(None, 'test_stack', parser.Template({}),
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
                              action=parser.Stack.CREATE,
                              status=parser.Stack.IN_PROGRESS)
         self.assertEqual(stack.state,
@@ -555,7 +557,7 @@ class StackTest(HeatTestCase):
                           parser.Stack.CREATE, 'oops', 'test')
 
     def test_status_reason(self):
-        stack = parser.Stack(None, 'test_stack', parser.Template({}),
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
                              status_reason='quux')
         self.assertEqual(stack.status_reason, 'quux')
         stack.state_set(parser.Stack.CREATE, parser.Stack.IN_PROGRESS,
@@ -614,7 +616,8 @@ class StackTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack = parser.Stack(self.ctx, 'param_arn_test',
                                   parser.Template({}))
-        exp_prefix = 'arn:openstack:heat::test_tenant:stacks/param_arn_test/'
+        exp_prefix = ('arn:openstack:heat::test_tenant_id'
+                      ':stacks/param_arn_test/')
         self.assertEqual(self.stack.parameters['AWS::StackId'],
                          exp_prefix + 'None')
         self.stack.store()
@@ -1466,7 +1469,7 @@ class StackTest(HeatTestCase):
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
         self.m.StubOutWithMock(scheduler, 'wallclock')
 
-        stack = parser.Stack(None, 's', parser.Template({}))
+        stack = parser.Stack(self.ctx, 's', parser.Template({}))
 
         def dummy_task():
             while True:
@@ -1489,45 +1492,45 @@ class StackTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_name_valid(self):
-        stack = parser.Stack(None, 's', parser.Template({}))
-        stack = parser.Stack(None, 'stack123', parser.Template({}))
-        stack = parser.Stack(None, 'test.stack', parser.Template({}))
-        stack = parser.Stack(None, 'test_stack', parser.Template({}))
-        stack = parser.Stack(None, 'TEST', parser.Template({}))
-        stack = parser.Stack(None, 'test-stack', parser.Template({}))
+        stack = parser.Stack(self.ctx, 's', parser.Template({}))
+        stack = parser.Stack(self.ctx, 'stack123', parser.Template({}))
+        stack = parser.Stack(self.ctx, 'test.stack', parser.Template({}))
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
+        stack = parser.Stack(self.ctx, 'TEST', parser.Template({}))
+        stack = parser.Stack(self.ctx, 'test-stack', parser.Template({}))
 
     def test_stack_name_invalid(self):
-        self.assertRaises(ValueError, parser.Stack, None, '_foo',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, '_foo',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, '1bad',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, '1bad',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, '.kcats',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, '.kcats',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, 'test stack',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test stack',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, ' teststack',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, ' teststack',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, '^-^',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, '^-^',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, '\"stack\"',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, '\"stack\"',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, '1234',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, '1234',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, 'cat|dog',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, 'cat|dog',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, '$(foo)',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, '$(foo)',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, 'test/stack',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test/stack',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, 'test\stack',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test\stack',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, 'test::stack',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test::stack',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, 'test;stack',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test;stack',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, 'test~stack',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, 'test~stack',
                           parser.Template({}))
-        self.assertRaises(ValueError, parser.Stack, None, '#test',
+        self.assertRaises(ValueError, parser.Stack, self.ctx, '#test',
                           parser.Template({}))
 
     @stack_delete_after

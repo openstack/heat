@@ -14,9 +14,9 @@
 
 import mox
 
-from heat.common import context
 from heat.common import heat_keystoneclient
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 
 
 class KeystoneClientTest(HeatTestCase):
@@ -36,20 +36,6 @@ class KeystoneClientTest(HeatTestCase):
         self.mock_ks_client.authenticate().AndReturn(True)
         # verify all the things
         self.addCleanup(self.m.VerifyAll)
-
-    def _create_context(self, user='stacks_test_user',
-                        tenant='test_admin', password='test_password',
-                        auth_url="auth_url", tenant_id='tenant_id', ctx=None):
-        """
-        :returns: A test context
-        """
-        ctx = ctx or context.get_admin_context()
-        ctx.auth_url = auth_url
-        ctx.username = user
-        ctx.password = password
-        ctx.tenant_id = tenant_id
-        ctx.tenant = tenant
-        return ctx
 
     def test_username_length(self):
         """Test that user names >64 characters are properly truncated."""
@@ -76,5 +62,5 @@ class KeystoneClientTest(HeatTestCase):
         # long_user_name, keystone was actually called with a truncated
         # user name
         heat_ks_client = heat_keystoneclient.KeystoneClient(
-            self._create_context())
+            dummy_context())
         heat_ks_client.create_stack_user(long_user_name, password='password')

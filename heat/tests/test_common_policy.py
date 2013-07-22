@@ -17,10 +17,10 @@ import os.path
 
 from oslo.config import cfg
 
-from heat.common import context
 from heat.common import policy
 from heat.common import exception
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 
@@ -49,7 +49,7 @@ class TestPolicyEnforcer(HeatTestCase):
     def test_policy_cfn_default(self):
         enforcer = policy.Enforcer(scope='cloudformation')
 
-        ctx = context.RequestContext(roles=[])
+        ctx = dummy_context(roles=[])
         for action in self.cfn_actions:
             # Everything should be allowed
             enforcer.enforce(ctx, action, {})
@@ -62,7 +62,7 @@ class TestPolicyEnforcer(HeatTestCase):
 
         enforcer = policy.Enforcer(scope='cloudformation')
 
-        ctx = context.RequestContext(roles=[])
+        ctx = dummy_context(roles=[])
         for action in self.cfn_actions:
             # Everything should raise the default exception.Forbidden
             self.assertRaises(exception.Forbidden, enforcer.enforce, ctx,
@@ -77,7 +77,7 @@ class TestPolicyEnforcer(HeatTestCase):
 
         enforcer = policy.Enforcer(scope='cloudformation')
 
-        ctx = context.RequestContext(roles=['heat_stack_user'])
+        ctx = dummy_context(roles=['heat_stack_user'])
         for action in self.cfn_actions:
             # Everything apart from DescribeStackResource should be Forbidden
             if action == "DescribeStackResource":
@@ -95,7 +95,7 @@ class TestPolicyEnforcer(HeatTestCase):
 
         enforcer = policy.Enforcer(scope='cloudformation')
 
-        ctx = context.RequestContext(roles=['not_a_stack_user'])
+        ctx = dummy_context(roles=['not_a_stack_user'])
         for action in self.cfn_actions:
             # Everything should be allowed
             enforcer.enforce(ctx, action, {})
@@ -109,7 +109,7 @@ class TestPolicyEnforcer(HeatTestCase):
 
         enforcer = policy.Enforcer(scope='cloudwatch')
 
-        ctx = context.RequestContext(roles=['heat_stack_user'])
+        ctx = dummy_context(roles=['heat_stack_user'])
         for action in self.cw_actions:
             # Everything apart from PutMetricData should be Forbidden
             if action == "PutMetricData":
@@ -127,7 +127,7 @@ class TestPolicyEnforcer(HeatTestCase):
 
         enforcer = policy.Enforcer(scope='cloudwatch')
 
-        ctx = context.RequestContext(roles=['not_a_stack_user'])
+        ctx = dummy_context(roles=['not_a_stack_user'])
         for action in self.cw_actions:
             # Everything should be allowed
             enforcer.enforce(ctx, action, {})

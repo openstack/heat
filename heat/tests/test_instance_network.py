@@ -23,6 +23,7 @@ from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 
 
@@ -157,7 +158,7 @@ class instancesTest(HeatTestCase):
         kwargs = {'KeyName': 'test',
                   'InstanceType': 'm1.large',
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
-        stack = parser.Stack(None, stack_name, template,
+        stack = parser.Stack(dummy_context(), stack_name, template,
                              environment.Environment(kwargs),
                              stack_id=uuidutils.generate_uuid())
 
@@ -198,7 +199,7 @@ class instancesTest(HeatTestCase):
         kwargs = {'KeyName': 'test',
                   'InstanceType': 'm1.large',
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
-        stack = parser.Stack(None, stack_name, template,
+        stack = parser.Stack(dummy_context(), stack_name, template,
                              environment.Environment(kwargs),
                              stack_id=uuidutils.generate_uuid())
 

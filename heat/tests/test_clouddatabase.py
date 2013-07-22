@@ -21,6 +21,7 @@ from heat.engine import resource
 from heat.engine.resources.rackspace import clouddatabase
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
+from heat.tests.utils import dummy_context
 from heat.tests.utils import setup_dummy_db
 
 
@@ -84,7 +85,7 @@ class CloudDBInstanceTest(HeatTestCase):
         stack_name = '%s_stack' % name
         t = template_format.parse(wp_template)
         template = parser.Template(t)
-        stack = parser.Stack(None,
+        stack = parser.Stack(dummy_context(),
                              stack_name,
                              template,
                              environment.Environment({'InstanceName': 'Test',
