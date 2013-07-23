@@ -57,6 +57,7 @@ rpc_opts = [
                     'Only supported by impl_zmq.'),
     cfg.ListOpt('allowed_rpc_exception_modules',
                 default=['heat.openstack.common.exception',
+                         'heat.common.exception',
                          'nova.exception',
                          'cinder.exception',
                          'exceptions',

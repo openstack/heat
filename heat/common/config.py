@@ -116,14 +116,6 @@ cfg.CONF.register_opts(rpc_opts)
 cfg.CONF.register_group(paste_deploy_group)
 cfg.CONF.register_opts(paste_deploy_opts, group=paste_deploy_group)
 
-# TODO(jianingy): I'll set allowed_rpc_exception_modules here for now.
-#                 after figure out why rpc_set_default was not called,
-#                 I'll move these settings into rpc_set_default()
-allowed_rpc_exception_modules = cfg.CONF.allowed_rpc_exception_modules
-allowed_rpc_exception_modules.append('heat.common.exception')
-cfg.CONF.set_default(name='allowed_rpc_exception_modules',
-                     default=allowed_rpc_exception_modules)
-
 
 def rpc_set_default():
     rpc.set_defaults(control_exchange='heat')
