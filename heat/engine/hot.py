@@ -81,35 +81,64 @@ class HOTemplate(template.Template):
 
         return default
 
+    @staticmethod
+    def _snake_to_camel(name):
+        tokens = []
+        if name:
+            tokens = name.split('_')
+            for i in xrange(len(tokens)):
+                tokens[i] = tokens[i].capitalize()
+        return "".join(tokens)
+
+    def _translate_constraints(self, constraints):
+        param = {}
+
+        def add_constraint(key, val, desc):
+            cons = param.get(key, [])
+            cons.append((val, desc))
+            param[key] = cons
+
+        def add_min_max(key, val, desc):
+            minv = val.get('min')
+            maxv = val.get('max')
+            if minv:
+                add_constraint('Min%s' % key, minv, desc)
+            if maxv:
+                add_constraint('Max%s' % key, maxv, desc)
+
+        for constraint in constraints:
+            desc = constraint.get('description')
+            for key, val in constraint.iteritems():
+                key = self._snake_to_camel(key)
+                if key == 'Description':
+                    continue
+                elif key == 'Range':
+                    add_min_max('Value', val, desc)
+                elif key == 'Length':
+                    add_min_max(key, val, desc)
+                else:
+                    add_constraint(key, val, desc)
+
+        return param
+
     def _translate_parameters(self, parameters):
         """Get the parameters of the template translated into CFN format."""
-        HOT_TO_CFN_ATTRS = {'type': 'Type',
-                            'default': 'Default',
-                            'description': 'Description'}
-
-        HOT_TO_CFN_TYPES = {'string': 'String'}
-
-        cfn_params = {}
-
-        for param_name, attrs in parameters.iteritems():
-            cfn_param = {}
-
-            for attr, attr_value in attrs.iteritems():
-                cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS, attr)
-
-                if attr == 'type':
-                    # try to translate type; if no translation found, keep
-                    # original value and let engine throw an error for an
-                    # unsupported type
-                    attr_value = self._translate(attr_value, HOT_TO_CFN_TYPES,
-                                                 attr_value)
-
-                cfn_param[cfn_attr] = attr_value
-
-            if len(cfn_param) > 0:
-                cfn_params[param_name] = cfn_param
-
-        return cfn_params
+        params = {}
+        for name, attrs in parameters.iteritems():
+            param = {}
+            for key, val in attrs.iteritems():
+                key = self._snake_to_camel(key)
+                if key == 'Type':
+                    val = self._snake_to_camel(val)
+                elif key == 'Constraints':
+                    param.update(self._translate_constraints(val))
+                    continue
+                elif key == 'Hidden':
+                    key = 'NoEcho'
+                param[key] = val
+            if len(param) > 0:
+                params[name] = param
+        return params
 
     def _translate_resources(self, resources):
         """Get the resources of the template translated into CFN format."""
