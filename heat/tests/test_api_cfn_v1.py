@@ -488,6 +488,213 @@ class CfnStackControllerTest(HeatTestCase):
         self.assertEqual(response, expected)
         self.m.VerifyAll()
 
+    def test_create_rollback(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        template = {u'Foo': u'bar'}
+        json_template = json.dumps(template)
+        params = {'Action': 'CreateStack', 'StackName': stack_name,
+                  'TemplateBody': '%s' % json_template,
+                  'TimeoutInMinutes': 30,
+                  'DisableRollback': 'false',
+                  'Parameters.member.1.ParameterKey': 'InstanceType',
+                  'Parameters.member.1.ParameterValue': 'm1.xlarge'}
+        engine_parms = {u'InstanceType': u'm1.xlarge'}
+        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        engine_resp = {u'tenant': u't',
+                       u'stack_name': u'wordpress',
+                       u'stack_id': u'1',
+                       u'path': u''}
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'create_stack',
+                  'args': {'stack_name': stack_name,
+                           'template': template,
+                           'params': engine_parms,
+                           'files': {},
+                           'args': engine_args},
+                  'version': self.api_version}, None).AndReturn(engine_resp)
+
+        self.m.ReplayAll()
+
+        response = self.controller.create(dummy_req)
+
+        expected = {
+            'CreateStackResponse': {
+                'CreateStackResult': {
+                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                }
+            }
+        }
+
+        self.assertEqual(response, expected)
+        self.m.VerifyAll()
+
+    def test_create_onfailure_true(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        template = {u'Foo': u'bar'}
+        json_template = json.dumps(template)
+        params = {'Action': 'CreateStack', 'StackName': stack_name,
+                  'TemplateBody': '%s' % json_template,
+                  'TimeoutInMinutes': 30,
+                  'OnFailure': 'DO_NOTHING',
+                  'Parameters.member.1.ParameterKey': 'InstanceType',
+                  'Parameters.member.1.ParameterValue': 'm1.xlarge'}
+        engine_parms = {u'InstanceType': u'm1.xlarge'}
+        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'true'}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        engine_resp = {u'tenant': u't',
+                       u'stack_name': u'wordpress',
+                       u'stack_id': u'1',
+                       u'path': u''}
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'create_stack',
+                  'args': {'stack_name': stack_name,
+                           'template': template,
+                           'params': engine_parms,
+                           'files': {},
+                           'args': engine_args},
+                  'version': self.api_version}, None).AndReturn(engine_resp)
+
+        self.m.ReplayAll()
+
+        response = self.controller.create(dummy_req)
+
+        expected = {
+            'CreateStackResponse': {
+                'CreateStackResult': {
+                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                }
+            }
+        }
+
+        self.assertEqual(response, expected)
+        self.m.VerifyAll()
+
+    def test_create_onfailure_false_delete(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        template = {u'Foo': u'bar'}
+        json_template = json.dumps(template)
+        params = {'Action': 'CreateStack', 'StackName': stack_name,
+                  'TemplateBody': '%s' % json_template,
+                  'TimeoutInMinutes': 30,
+                  'OnFailure': 'DELETE',
+                  'Parameters.member.1.ParameterKey': 'InstanceType',
+                  'Parameters.member.1.ParameterValue': 'm1.xlarge'}
+        engine_parms = {u'InstanceType': u'm1.xlarge'}
+        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        engine_resp = {u'tenant': u't',
+                       u'stack_name': u'wordpress',
+                       u'stack_id': u'1',
+                       u'path': u''}
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'create_stack',
+                  'args': {'stack_name': stack_name,
+                           'template': template,
+                           'params': engine_parms,
+                           'files': {},
+                           'args': engine_args},
+                  'version': self.api_version}, None).AndReturn(engine_resp)
+
+        self.m.ReplayAll()
+
+        response = self.controller.create(dummy_req)
+
+        expected = {
+            'CreateStackResponse': {
+                'CreateStackResult': {
+                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                }
+            }
+        }
+
+        self.assertEqual(response, expected)
+        self.m.VerifyAll()
+
+    def test_create_onfailure_false_rollback(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        template = {u'Foo': u'bar'}
+        json_template = json.dumps(template)
+        params = {'Action': 'CreateStack', 'StackName': stack_name,
+                  'TemplateBody': '%s' % json_template,
+                  'TimeoutInMinutes': 30,
+                  'OnFailure': 'ROLLBACK',
+                  'Parameters.member.1.ParameterKey': 'InstanceType',
+                  'Parameters.member.1.ParameterValue': 'm1.xlarge'}
+        engine_parms = {u'InstanceType': u'm1.xlarge'}
+        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        engine_resp = {u'tenant': u't',
+                       u'stack_name': u'wordpress',
+                       u'stack_id': u'1',
+                       u'path': u''}
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'create_stack',
+                  'args': {'stack_name': stack_name,
+                           'template': template,
+                           'params': engine_parms,
+                           'files': {},
+                           'args': engine_args},
+                  'version': self.api_version}, None).AndReturn(engine_resp)
+
+        self.m.ReplayAll()
+
+        response = self.controller.create(dummy_req)
+
+        expected = {
+            'CreateStackResponse': {
+                'CreateStackResult': {
+                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                }
+            }
+        }
+
+        self.assertEqual(response, expected)
+        self.m.VerifyAll()
+
+    def test_create_onfailure_err(self):
+        # Format a dummy request
+        stack_name = "wordpress"
+        template = {u'Foo': u'bar'}
+        json_template = json.dumps(template)
+        params = {'Action': 'CreateStack', 'StackName': stack_name,
+                  'TemplateBody': '%s' % json_template,
+                  'TimeoutInMinutes': 30,
+                  'DisableRollback': 'true',
+                  'OnFailure': 'DO_NOTHING',
+                  'Parameters.member.1.ParameterKey': 'InstanceType',
+                  'Parameters.member.1.ParameterValue': 'm1.xlarge'}
+        engine_parms = {u'InstanceType': u'm1.xlarge'}
+        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
+        dummy_req = self._dummy_GET_request(params)
+
+        self.assertRaises(exception.HeatInvalidParameterCombinationError,
+                          self.controller.create, dummy_req)
+
     def test_create_err_no_template(self):
         # Format a dummy request with a missing template field
         stack_name = "wordpress"
