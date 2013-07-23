@@ -139,7 +139,7 @@ class InstancesTest(HeatTestCase):
         expected_ip = return_server.networks['public'][0]
         self.assertEqual(instance.FnGetAtt('PublicIp'), expected_ip)
         self.assertEqual(instance.FnGetAtt('PrivateIp'), expected_ip)
-        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
+        self.assertEqual(instance.FnGetAtt('PublicDnsName'), expected_ip)
         self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
 
         self.m.VerifyAll()

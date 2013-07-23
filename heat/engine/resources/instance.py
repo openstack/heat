@@ -380,10 +380,17 @@ class Instance(resource.Resource):
                 self._set_ipaddress(server.networks)
                 volume_attach.start()
                 return volume_attach.done()
+            elif server.status == 'ERROR':
+                delete = scheduler.TaskRunner(self._delete_server, server)
+                delete(wait_time=0.2)
+                exc = exception.Error("Build of server %s failed." %
+                                      server.name)
+                raise exception.ResourceFailure(exc)
             else:
-                raise exception.Error('%s instance[%s] status[%s]' %
+                exc = exception.Error('%s instance[%s] status[%s]' %
                                       ('nova reported unexpected',
                                        self.name, server.status))
+                raise exception.ResourceFailure(exc)
         else:
             return volume_attach.step()
 
