@@ -22,12 +22,12 @@ from heat.cloudinit import loguserdata
 from heat.tests.common import HeatTestCase
 
 
-class FakeCiVersion():
+class FakeCiVersion(object):
     def __init__(self, version=None):
         self.version = version
 
 
-class FakePOpen():
+class FakePOpen(object):
     def __init__(self, returncode=0):
         self.returncode = returncode
 

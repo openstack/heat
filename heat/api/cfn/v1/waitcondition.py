@@ -20,7 +20,7 @@ from heat.api.aws import exception
 import heat.openstack.common.rpc.common as rpc_common
 
 
-class WaitConditionController:
+class WaitConditionController(object):
     def __init__(self, options):
         self.options = options
         self.engine = rpc_client.EngineClient()

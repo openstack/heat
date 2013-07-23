@@ -467,7 +467,7 @@ Mappings:
         deletion_policy_snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
         update_policy_snippet = {'Fn::ResourceFacade': 'UpdatePolicy'}
 
-        class DummyClass:
+        class DummyClass(object):
             pass
         parent_resource = DummyClass()
         parent_resource.metadata = '{"foo": "bar"}'
@@ -497,7 +497,7 @@ Mappings:
     def test_resource_facade_missing_key(self):
         snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
 
-        class DummyClass:
+        class DummyClass(object):
             pass
         parent_resource = DummyClass()
         parent_resource.metadata = '{"foo": "bar"}'

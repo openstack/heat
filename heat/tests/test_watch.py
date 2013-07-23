@@ -26,14 +26,14 @@ from heat.tests import utils
 from heat.tests.utils import dummy_context
 
 
-class WatchData:
+class WatchData(object):
     def __init__(self, data, created_at):
         self.created_at = created_at
         self.data = {'test_metric': {'Value': data,
                                      'Unit': 'Count'}}
 
 
-class DummyAction:
+class DummyAction(object):
     alarm = "DummyAction"
 
 

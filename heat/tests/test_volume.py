@@ -676,7 +676,7 @@ class VolumeTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class FakeVolume:
+class FakeVolume(object):
     status = 'attaching'
     id = 'vol-123'
 

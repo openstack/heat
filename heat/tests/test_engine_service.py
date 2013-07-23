@@ -1262,7 +1262,7 @@ class StackServiceTest(HeatTestCase):
                                       state='NORMAL')
         self.wr.store()
 
-        class DummyAction:
+        class DummyAction(object):
             alarm = "dummyfoo"
 
         dummy_action = DummyAction()
