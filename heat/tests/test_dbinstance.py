@@ -72,11 +72,11 @@ class DBInstanceTest(HeatTestCase):
 
     def test_dbinstance(self):
 
-        class FakeDatabaseInstance:
+        class FakeDatabaseInstance(object):
             def _ipaddress(self):
                 return '10.0.0.1'
 
-        class FakeNested:
+        class FakeNested(object):
             resources = {'DatabaseInstance': FakeDatabaseInstance()}
 
         params = {'DBSecurityGroups': '',

@@ -97,7 +97,7 @@ class FakeClient(object):
         pass
 
 
-class FakeKeystoneClient():
+class FakeKeystoneClient(object):
     def __init__(self, username='test_user', user_id='1234', access='4567',
                  secret='8901'):
         self.username = username
@@ -116,7 +116,7 @@ class FakeKeystoneClient():
     def get_ec2_keypair(self, user_id):
         if user_id == self.user_id:
             if not self.creds:
-                class FakeCred:
+                class FakeCred(object):
                     access = self.access
                     secret = self.secret
                 self.creds = FakeCred()

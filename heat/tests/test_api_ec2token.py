@@ -174,7 +174,7 @@ class Ec2TokenTest(HeatTestCase):
 
     def _stub_http_connection(self, headers={}, params={}, response=None):
 
-        class DummyHTTPResponse:
+        class DummyHTTPResponse(object):
             resp = response
 
             def read(self):

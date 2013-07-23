@@ -42,7 +42,7 @@ def init_logging():
 
 def call(args):
 
-    class LogStream:
+    class LogStream(object):
 
         def write(self, data):
             LOG.info(data)
