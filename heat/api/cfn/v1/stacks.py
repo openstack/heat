@@ -438,6 +438,10 @@ class StackController(object):
 
         try:
             res = self.engine_rpcapi.validate_template(con, template)
+            if 'Error' in res:
+                return api_utils.format_response('ValidateTemplate',
+                                                 res['Error'])
+
             res['Parameters'] = [format_validate_parameter(k, v)
                                  for k, v in res['Parameters'].items()]
             return api_utils.format_response('ValidateTemplate', res)

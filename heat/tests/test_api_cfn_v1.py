@@ -1076,6 +1076,40 @@ class CfnStackControllerTest(HeatTestCase):
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
 
+    def test_bad_resources_in_template(self):
+        # Format a dummy request
+        json_template = {
+            'template': {
+                'AWSTemplateFormatVersion': '2010-09-09',
+                'Resources': {
+                    'Type': 'AWS: : EC2: : Instance',
+                },
+            }
+        }
+        params = {'Action': 'ValidateTemplate',
+                  'TemplateBody': '%s' % json.dumps(json_template)}
+        response = {'Error': 'Resources must contain Resource. '
+                    'Found a [string] instead'}
+        dummy_req = self._dummy_GET_request(params)
+
+        # Stub out the RPC call to the engine with a pre-canned response
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(dummy_req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'validate_template',
+                  'args': {'template': json_template},
+                  'version': self.api_version}, None).AndReturn(response)
+        self.m.ReplayAll()
+
+        response = self.controller.validate_template(dummy_req)
+
+        expected = {'ValidateTemplateResponse':
+                    {'ValidateTemplateResult':
+                     'Resources must contain Resource. '
+                     'Found a [string] instead'}}
+        self.assertEqual(expected, response)
+        self.m.VerifyAll()
+
     def test_delete(self):
         # Format a dummy request
         stack_name = "wordpress"
