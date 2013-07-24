@@ -215,12 +215,22 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         except exception.ResourceFailure as ex:
             logger.info(ex.message)
 
+    @property
+    def has_userdata(self):
+        if self.properties['UserData'] or self.metadata != {}:
+            return True
+        else:
+            return False
+
     def validate(self):
         """Validate user parameters."""
         if self.properties['Flavor'] not in self.flavors:
             return {'Error': "Flavor not found."}
-        if not self.script:
-            return {'Error': "Image %s not supported." %
+
+        # It's okay if there's no script, as long as UserData and
+        # MetaData are empty
+        if not self.script and self.has_userdata:
+            return {'Error': "UserData/MetaData are not supported with %s." %
                     self.properties['ImageName']}
 
     def _run_ssh_command(self, command):
@@ -320,16 +330,18 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         if not self._check_active(cookie):
             return False
 
-        # Create heat-script and userdata files on server
-        raw_userdata = self.properties['UserData'] or ''
-        userdata = self._build_userdata(raw_userdata)
-        files = [{'path': "/tmp/userdata", 'data': userdata},
-                 {'path': "/root/heat-script.sh", 'data': self.script}]
-        self._sftp_files(files)
+        if self.has_userdata:
+            # Create heat-script and userdata files on server
+            raw_userdata = self.properties['UserData'] or ''
+            userdata = self._build_userdata(raw_userdata)
 
-        # Connect via SSH and run script
-        command = "bash -ex /root/heat-script.sh > /root/heat-script.log 2>&1"
-        self._run_ssh_command(command)
+            files = [{'path': "/tmp/userdata", 'data': userdata},
+                     {'path': "/root/heat-script.sh", 'data': self.script}]
+            self._sftp_files(files)
+
+            # Connect via SSH and run script
+            cmd = "bash -ex /root/heat-script.sh > /root/heat-script.log 2>&1"
+            self._run_ssh_command(cmd)
 
         return True
 

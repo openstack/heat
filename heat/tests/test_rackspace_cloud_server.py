@@ -227,9 +227,29 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs = cloud_server.CloudServer('cs_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.assertEqual({'Error': "Image %s not supported." % 'Slackware'},
+        self.assertEqual({'Error': "UserData/MetaData are not supported with "
+                          "Slackware."},
                          cs.validate())
+        self.m.VerifyAll()
 
+    def test_cs_create_image_name_okay(self):
+        stack_name = 'test_cs_create_image_name_err_stack'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        # create a cloud server with non exist image name
+        t['Resources']['WebServer']['Properties']['ImageName'] = 'Slackware'
+        t['Resources']['WebServer']['Properties']['UserData'] = ''
+
+        # Mock flavors
+        self.m.StubOutWithMock(cloud_server.CloudServer, "flavors")
+        cloud_server.CloudServer.flavors.__contains__('2').AndReturn(True)
+        cloud_server.CloudServer.script = None
+        self.m.ReplayAll()
+
+        cs = cloud_server.CloudServer('cs_create_image_err',
+                                      t['Resources']['WebServer'], stack)
+
+        self.assertEqual(None, cs.validate())
         self.m.VerifyAll()
 
     def test_cs_create_flavor_err(self):
