@@ -102,7 +102,8 @@ def dummy_context(user='test_username', tenant_id='test_tenant_id',
         'username': user,
         'password': password,
         'roles': roles,
-        'auth_url': 'http://localhost:5000/v2.0'
+        'auth_url': 'http://localhost:5000/v2.0',
+        'auth_token': 'abcd1234'
     })
 
 

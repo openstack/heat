@@ -61,6 +61,12 @@ class OpenStackClients(object):
         self._quantum = None
         self._cinder = None
 
+    @property
+    def auth_token(self):
+        # if there is no auth token in the context
+        # attempt to get one using the context username and password
+        return self.context.auth_token or self.keystone().auth_token
+
     def keystone(self):
         if self._keystone:
             return self._keystone
@@ -76,28 +82,23 @@ class OpenStackClients(object):
             return self._nova[service_type]
 
         con = self.context
+        if self.auth_token is None:
+            logger.error("Nova connection failed, no auth_token!")
+            return None
+
         args = {
             'project_id': con.tenant,
             'auth_url': con.auth_url,
             'service_type': service_type,
+            'username': None,
+            'api_key': None
         }
-
-        if con.password is not None:
-            args['username'] = con.username
-            args['api_key'] = con.password
-        elif con.auth_token is not None:
-            args['username'] = None
-            args['api_key'] = None
-        else:
-            logger.error("Nova connection failed, no password or auth_token!")
-            return None
 
         client = novaclient.Client(1.1, **args)
 
-        if con.password is None and con.auth_token is not None:
-            management_url = self.url_for(service_type=service_type)
-            client.client.auth_token = con.auth_token
-            client.client.management_url = management_url
+        management_url = self.url_for(service_type=service_type)
+        client.client.auth_token = self.auth_token
+        client.client.management_url = management_url
 
         self._nova[service_type] = client
         return client
@@ -109,24 +110,19 @@ class OpenStackClients(object):
             return self._swift
 
         con = self.context
+        if self.auth_token is None:
+            logger.error("Swift connection failed, no auth_token!")
+            return None
+
         args = {
             'auth_version': '2.0',
             'tenant_name': con.tenant,
-            'user': con.username
+            'user': con.username,
+            'key': None,
+            'authurl': None,
+            'preauthtoken': self.auth_token,
+            'preauthurl': self.url_for(service_type='object-store')
         }
-
-        if con.password is not None:
-            args['key'] = con.password
-            args['authurl'] = con.auth_url
-        elif con.auth_token is not None:
-            args['key'] = None
-            args['authurl'] = None
-            args['preauthtoken'] = con.auth_token
-            args['preauthurl'] = self.url_for(service_type='object-store')
-        else:
-            logger.error("Swift connection failed, no password or " +
-                         "auth_token!")
-            return None
         self._swift = swiftclient.Connection(**args)
         return self._swift
 
@@ -134,27 +130,19 @@ class OpenStackClients(object):
         if quantumclient is None:
             return None
         if self._quantum:
-            logger.debug('using existing _quantum')
             return self._quantum
 
         con = self.context
+        if self.auth_token is None:
+            logger.error("Quantum connection failed, no auth_token!")
+            return None
+
         args = {
             'auth_url': con.auth_url,
             'service_type': 'network',
+            'token': self.auth_token,
+            'endpoint_url': self.url_for(service_type='network')
         }
-
-        if con.password is not None:
-            args['username'] = con.username
-            args['password'] = con.password
-            args['tenant_name'] = con.tenant
-        elif con.auth_token is not None:
-            args['token'] = con.auth_token
-            args['endpoint_url'] = self.url_for(service_type='network')
-        else:
-            logger.error("Quantum connection failed, "
-                         "no password or auth_token!")
-            return None
-        logger.debug('quantum args %s', args)
 
         self._quantum = quantumclient.Client(**args)
 
@@ -167,29 +155,22 @@ class OpenStackClients(object):
             return self._cinder
 
         con = self.context
+        if self.auth_token is None:
+            logger.error("Cinder connection failed, no auth_token!")
+            return None
+
         args = {
             'service_type': 'volume',
             'auth_url': con.auth_url,
-            'project_id': con.tenant
+            'project_id': con.tenant,
+            'username': None,
+            'api_key': None
         }
 
-        if con.password is not None:
-            args['username'] = con.username
-            args['api_key'] = con.password
-        elif con.auth_token is not None:
-            args['username'] = None
-            args['api_key'] = None
-        else:
-            logger.error("Cinder connection failed, "
-                         "no password or auth_token!")
-            return None
-        logger.debug('cinder args %s', args)
-
         self._cinder = cinderclient.Client('1', **args)
-        if con.password is None and con.auth_token is not None:
-            management_url = self.url_for(service_type='volume')
-            self._cinder.client.auth_token = con.auth_token
-            self._cinder.client.management_url = management_url
+        management_url = self.url_for(service_type='volume')
+        self._cinder.client.auth_token = self.auth_token
+        self._cinder.client.management_url = management_url
 
         return self._cinder
 

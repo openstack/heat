@@ -15,6 +15,7 @@
 
 from testtools import skipIf
 
+from heat.engine import clients
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import properties
@@ -26,6 +27,7 @@ from heat.engine.resources.quantum import router
 from heat.engine.resources.quantum.quantum import QuantumResource as qr
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
+from heat.tests import fakes
 from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
@@ -211,6 +213,7 @@ class QuantumNetTest(HeatTestCase):
         self.m.StubOutWithMock(quantumclient.Client, 'create_network')
         self.m.StubOutWithMock(quantumclient.Client, 'delete_network')
         self.m.StubOutWithMock(quantumclient.Client, 'show_network')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         setup_dummy_db()
 
     def create_net(self, t, stack, resource_name):
@@ -220,6 +223,8 @@ class QuantumNetTest(HeatTestCase):
         return rsrc
 
     def test_net(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
         quantumclient.Client.create_network({
             'network': {'name': u'the_network', 'admin_state_up': True}
         }).AndReturn({"network": {
@@ -342,6 +347,7 @@ class QuantumSubnetTest(HeatTestCase):
         self.m.StubOutWithMock(quantumclient.Client, 'create_subnet')
         self.m.StubOutWithMock(quantumclient.Client, 'delete_subnet')
         self.m.StubOutWithMock(quantumclient.Client, 'show_subnet')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         setup_dummy_db()
 
     def create_subnet(self, t, stack, resource_name):
@@ -353,6 +359,8 @@ class QuantumSubnetTest(HeatTestCase):
 
     def test_subnet(self):
 
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
         quantumclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
@@ -447,6 +455,8 @@ class QuantumSubnetTest(HeatTestCase):
 
     def test_subnet_disable_dhcp(self):
 
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
         quantumclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
@@ -525,6 +535,7 @@ class QuantumRouterTest(HeatTestCase):
         self.m.StubOutWithMock(quantumclient.Client, 'remove_interface_router')
         self.m.StubOutWithMock(quantumclient.Client, 'add_gateway_router')
         self.m.StubOutWithMock(quantumclient.Client, 'remove_gateway_router')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         setup_dummy_db()
 
     def create_router(self, t, stack, resource_name):
@@ -554,6 +565,8 @@ class QuantumRouterTest(HeatTestCase):
         return rsrc
 
     def test_router(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
         quantumclient.Client.create_router({
             'router': {
                 'name': utils.PhysName('test_stack', 'router'),
@@ -659,6 +672,8 @@ class QuantumRouterTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_router_interface(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
         quantumclient.Client.add_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
@@ -687,6 +702,8 @@ class QuantumRouterTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_gateway_router(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
         quantumclient.Client.add_gateway_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
@@ -725,10 +742,13 @@ class QuantumFloatingIPTest(HeatTestCase):
         self.m.StubOutWithMock(quantumclient.Client, 'create_port')
         self.m.StubOutWithMock(quantumclient.Client, 'delete_port')
         self.m.StubOutWithMock(quantumclient.Client, 'show_port')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         setup_dummy_db()
 
     def test_floating_ip(self):
 
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
         quantumclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
         }).AndReturn({'floatingip': {
@@ -789,6 +809,8 @@ class QuantumFloatingIPTest(HeatTestCase):
 
     def test_port(self):
 
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
         quantumclient.Client.create_port({'port': {
             'network_id': u'xyz1234',
             'fixed_ips': [
@@ -853,6 +875,8 @@ class QuantumFloatingIPTest(HeatTestCase):
 
     def test_floatip_port(self):
 
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
         quantumclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
         }).AndReturn({'floatingip': {
