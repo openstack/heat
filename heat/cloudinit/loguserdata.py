@@ -47,14 +47,15 @@ def call(args):
         def write(self, data):
             LOG.info(data)
 
-        def __getattr__(self, attr):
-            return getattr(sys.stdout, attr)
-
     LOG.info('%s\n' % ' '.join(args))
     try:
         ls = LogStream()
-        p = subprocess.Popen(args, stdout=ls, stderr=ls)
-        p.wait()
+        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        data = p.communicate()
+        if data:
+            for x in data:
+                ls.write(x)
     except OSError as ex:
         if ex.errno == errno.ENOEXEC:
             LOG.error('Userdata empty or not executable: %s\n' % str(ex))

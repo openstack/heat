@@ -34,6 +34,9 @@ class FakePOpen(object):
     def wait(self):
         pass
 
+    def communicate(self, input=None):
+        pass
+
 
 class LoguserdataTest(HeatTestCase):
 
