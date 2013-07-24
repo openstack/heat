@@ -17,7 +17,7 @@
 Utility for fetching a resource (e.g. a template) from a URL.
 '''
 
-import urllib2
+import requests
 import urlparse
 
 from heat.openstack.common import log as logging
@@ -38,7 +38,6 @@ def get(url):
     components = urlparse.urlparse(url)
 
     if components.scheme not in ('http', 'https'):
-        raise urllib2.URLError('Invalid URL scheme %s' % components.scheme)
+        raise IOError('Invalid URL scheme %s' % components.scheme)
 
-    response = urllib2.urlopen(url)
-    return response.read()
+    return requests.get(url).text
