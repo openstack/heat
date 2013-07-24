@@ -531,6 +531,23 @@ class validateTest(HeatTestCase):
         res = dict(engine.validate_template(None, t))
         self.assertEqual(res['Description'], 'test.')
 
+    def test_validate_hot_valid(self):
+        t = template_format.parse(
+            """
+            heat_template_version: 2013-05-23
+            description: test.
+            resources:
+              my_instance:
+                type: AWS::EC2::Instance
+            """)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t))
+        self.assertEqual(res['Description'], 'test.')
+
     def test_validate_ref_invalid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabasez')
 
