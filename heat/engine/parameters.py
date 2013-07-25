@@ -87,7 +87,7 @@ class Parameter(object):
 
     def _validate(self, value):
         if VALUES in self.schema:
-            allowed = self.schema[VALUES]
+            allowed = list(self.schema[VALUES])
             if value not in allowed:
                 message = '%s not in %s %s' % (value, VALUES, allowed)
                 raise ValueError(self._error_msg(message))
@@ -253,7 +253,7 @@ class JsonParam(Parameter, collections.Mapping):
                 raise ValueError(self._error_msg(message))
         # check valid keys
         if VALUES in self.schema:
-            allowed = self.schema[VALUES]
+            allowed = list(self.schema[VALUES])
             bad_keys = [k for k in self.parsed if k not in allowed]
             if bad_keys:
                 message = ('keys %s are not in %s %s'
