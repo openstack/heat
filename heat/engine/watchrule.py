@@ -225,6 +225,10 @@ class WatchRule(object):
             return []
         return self.run_rule()
 
+    def get_details(self):
+        return {'alarm': self.name,
+                'state': self.state}
+
     def run_rule(self):
         new_state = self.get_alarm_state()
         actions = self.rule_actions(new_state)
@@ -247,7 +251,7 @@ class WatchRule(object):
             if (stack.action != stack.DELETE
                     and stack.status == stack.COMPLETE):
                 for a in self.rule[self.ACTION_MAP[new_state]]:
-                    actions.append(stack[a].alarm)
+                    actions.append(stack[a].signal)
             else:
                 logger.warning("Could not process watch state %s for stack" %
                                new_state)

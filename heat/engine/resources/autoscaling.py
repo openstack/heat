@@ -461,7 +461,7 @@ class ScalingPolicy(resource.Resource, CooldownMixin):
                                          self.stack.resolve_runtime_data,
                                          self.name)
 
-    def alarm(self):
+    def handle_signal(self, details=None):
         if self._cooldown_inprogress():
             logger.info("%s NOT performing scaling action, cooldown %s" %
                         (self.name, self.properties['Cooldown']))
