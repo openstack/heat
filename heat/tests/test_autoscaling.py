@@ -17,6 +17,8 @@ import copy
 
 import mox
 
+from oslo.config import cfg
+
 from heat.common import template_format
 from heat.common import exception
 from heat.engine.resources import autoscaling as asc
@@ -28,6 +30,7 @@ from heat.engine import scheduler
 from heat.engine.resource import Metadata
 from heat.openstack.common import timeutils
 from heat.tests.common import HeatTestCase
+from heat.tests import fakes
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
 
@@ -99,6 +102,9 @@ class AutoScalingTest(HeatTestCase):
     def setUp(self):
         super(AutoScalingTest, self).setUp()
         setup_dummy_db()
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://127.0.0.1:8000/v1/waitcondition')
+        self.fc = fakes.FakeKeystoneClient()
 
     def create_scaling_group(self, t, stack, resource_name):
         rsrc = asc.AutoScalingGroup(resource_name,
@@ -113,7 +119,6 @@ class AutoScalingTest(HeatTestCase):
         rsrc = asc.ScalingPolicy(resource_name,
                                  t['Resources'][resource_name],
                                  stack)
-
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -930,6 +935,7 @@ class AutoScalingTest(HeatTestCase):
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
+
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = rsrc
@@ -939,9 +945,17 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
+
+        self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
+        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(
+            self.fc)
+
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
+
+        alarm_url = up_policy.FnGetAtt('AlarmUrl')
+        self.assertNotEqual(None, alarm_url)
         up_policy.signal()
         self.assertEqual('WebServerGroup-0,WebServerGroup-1',
                          rsrc.resource_id)
@@ -969,6 +983,11 @@ class AutoScalingTest(HeatTestCase):
         # Scale down one
         self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'ChangeInCapacity : -1', 2)
+
+        self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
+        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(
+            self.fc)
+
         self.m.ReplayAll()
         down_policy = self.create_scaling_policy(t, stack,
                                                  'WebServerScaleDownPolicy')
@@ -996,6 +1015,11 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
+
+        self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
+        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(
+            self.fc)
+
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
@@ -1047,6 +1071,11 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
+
+        self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
+        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(
+            self.fc)
+
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
@@ -1099,6 +1128,11 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
+
+        self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
+        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(
+            self.fc)
+
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
@@ -1151,6 +1185,11 @@ class AutoScalingTest(HeatTestCase):
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
+
+        self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
+        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(
+            self.fc)
+
         self.m.ReplayAll()
         up_policy = self.create_scaling_policy(t, stack,
                                                'WebServerScaleUpPolicy')
@@ -1190,6 +1229,11 @@ class AutoScalingTest(HeatTestCase):
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
+
+        self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
+        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(
+            self.fc)
+
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = rsrc

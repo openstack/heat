@@ -22,6 +22,7 @@ from urlparse import urlparse
 
 from oslo.config import cfg
 
+from heat.engine import signal_responder
 from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
@@ -37,9 +38,13 @@ from heat.openstack.common import uuidutils
 logger = logging.getLogger(__name__)
 
 
-class Restarter(resource.Resource):
+class Restarter(signal_responder.SignalResponder):
     properties_schema = {'InstanceId': {'Type': 'String',
                                         'Required': True}}
+    attributes_schema = {
+        "AlarmUrl": ("A signed url to handle the alarm. "
+                     "(Heat extension)")
+    }
 
     def _find_resource(self, resource_id):
         '''
@@ -62,6 +67,14 @@ class Restarter(resource.Resource):
         logger.info('%s Alarm, restarting resource: %s' %
                     (self.name, victim.name))
         self.stack.restart_resource(victim.name)
+
+    def _resolve_attribute(self, name):
+        '''
+        heat extension: "AlarmUrl" returns the url to post to the policy
+        when there is an alarm.
+        '''
+        if name == 'AlarmUrl' and self.resource_id is not None:
+            return unicode(self._get_signed_url())
 
 
 class Instance(resource.Resource):

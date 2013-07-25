@@ -15,6 +15,7 @@
 
 from heat.common import exception
 from heat.engine import resource
+from heat.engine import signal_responder
 from heat.engine import scheduler
 
 from heat.openstack.common import log as logging
@@ -434,7 +435,7 @@ class LaunchConfiguration(resource.Resource):
     }
 
 
-class ScalingPolicy(resource.Resource, CooldownMixin):
+class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
     properties_schema = {
         'AutoScalingGroupName': {'Type': 'String',
                                  'Required': True},
@@ -451,6 +452,10 @@ class ScalingPolicy(resource.Resource, CooldownMixin):
     update_allowed_keys = ('Properties',)
     update_allowed_properties = ('ScalingAdjustment', 'AdjustmentType',
                                  'Cooldown',)
+    attributes_schema = {
+        "AlarmUrl": ("A signed url to handle the alarm. "
+                     "(Heat extension)")
+    }
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         # If Properties has changed, update self.properties, so we
@@ -467,7 +472,7 @@ class ScalingPolicy(resource.Resource, CooldownMixin):
                         (self.name, self.properties['Cooldown']))
             return
 
-        group = self.stack.resources[self.properties['AutoScalingGroupName']]
+        group = self.stack[self.properties['AutoScalingGroupName']]
 
         logger.info('%s Alarm, adjusting Group %s by %s' %
                     (self.name, group.name,
@@ -478,6 +483,17 @@ class ScalingPolicy(resource.Resource, CooldownMixin):
         self._cooldown_timestamp("%s : %s" %
                                  (self.properties['AdjustmentType'],
                                   self.properties['ScalingAdjustment']))
+
+    def _resolve_attribute(self, name):
+        '''
+        heat extension: "AlarmUrl" returns the url to post to the policy
+        when there is an alarm.
+        '''
+        if name == 'AlarmUrl' and self.resource_id is not None:
+            return unicode(self._get_signed_url())
+
+    def FnGetRefId(self):
+        return unicode(self.name)
 
 
 def resource_mapping():
