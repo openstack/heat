@@ -709,3 +709,29 @@ class Resource(object):
         if new_metadata:
             logger.warning("Resource %s does not implement metadata update" %
                            self.name)
+
+    @classmethod
+    def resource_to_template(cls, resource_type):
+        '''
+        :param resource_type: The resource type to be displayed in the template
+        :param explode_nested: True if a resource's nested properties schema
+            should be resolved.
+        :returns: A template where the resource's properties_schema is mapped
+            as parameters, and the resource's attributes_schema is mapped as
+            outputs
+        '''
+        (parameters, properties) = (Properties.
+                                    schema_to_parameters_and_properties(
+                                        cls.properties_schema))
+
+        resource_name = cls.__name__
+        return {
+            'Parameters': parameters,
+            'Resources': {
+                resource_name: {
+                    'Type': resource_type,
+                    'Properties': properties
+                }
+            },
+            'Outputs': Attributes.as_outputs(resource_name, cls)
+        }

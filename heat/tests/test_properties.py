@@ -573,3 +573,48 @@ class PropertiesValidationTest(testtools.TestCase):
         schema = {'foo': {'Type': 'List', 'Default': ['one', 'two']}}
         props = properties.Properties(schema, {'foo': None})
         self.assertEqual(props.validate(), None)
+
+    def test_schema_to_template_nested_map_map_schema(self):
+        nested_schema = {'Key': {'Type': 'String',
+                         'Required': True},
+                         'Value': {'Type': 'String',
+                         'Required': True,
+                         'Default': 'fewaf'}}
+        schema = {'foo': {'Type': 'Map', 'Schema': {'Type': 'Map',
+                  'Schema': nested_schema}}}
+
+        prop_expected = {'foo': {'Ref': 'foo'}}
+        param_expected = {'foo': {'Type': 'Json'}}
+        (parameters, props) = \
+            properties.Properties.schema_to_parameters_and_properties(schema)
+        self.assertEquals(param_expected, parameters)
+        self.assertEquals(prop_expected, props)
+
+    def test_schema_to_template_nested_map_list_map_schema(self):
+        key_schema = {'bar': {'Type': 'Number'}}
+        nested_schema = {'Key': {'Type': 'Map', 'Schema': {'Type': 'Map',
+                         'Schema': key_schema}},
+                         'Value': {'Type': 'String',
+                         'Required': True}}
+        schema = {'foo': {'Type': 'List', 'Schema': {'Type': 'Map',
+                  'Schema': nested_schema}}}
+
+        prop_expected = {'foo': {'Fn::Split': {'Ref': 'foo'}}}
+        param_expected = {'foo': {'Type': 'CommaDelimitedList'}}
+        (parameters, props) = \
+            properties.Properties.schema_to_parameters_and_properties(schema)
+        self.assertEquals(param_expected, parameters)
+        self.assertEquals(prop_expected, props)
+
+    def test_schema_invalid_parameters_stripped(self):
+        schema = {'foo': {'Type': 'String',
+                          'Required': True,
+                          'Implemented': True}}
+
+        prop_expected = {'foo': {'Ref': 'foo'}}
+        param_expected = {'foo': {'Type': 'String'}}
+
+        (parameters, props) = \
+            properties.Properties.schema_to_parameters_and_properties(schema)
+        self.assertEquals(param_expected, parameters)
+        self.assertEquals(prop_expected, props)
