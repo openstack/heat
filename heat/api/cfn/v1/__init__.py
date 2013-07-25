@@ -18,7 +18,7 @@ import routes
 from webob import Request
 
 from heat.api.cfn.v1 import stacks
-from heat.api.cfn.v1 import waitcondition
+from heat.api.cfn.v1 import signal
 from heat.common import wsgi
 from heat.openstack.common import log as logging
 
@@ -71,13 +71,18 @@ class API(wsgi.Router):
 
         mapper.connect("/", controller=stacks_resource, action="index")
 
-        # Add controller which handles waitcondition notifications
+        # Add controller which handles signals on resources like:
+        # waitconditions and alarms.
         # This is not part of the main CFN API spec, hence handle it
         # separately via a different path
-        waitcondition_controller = waitcondition.create_resource(conf)
+        signal_controller = signal.create_resource(conf)
         mapper.connect('/waitcondition/{arn:.*}',
-                       controller=waitcondition_controller,
+                       controller=signal_controller,
                        action='update_waitcondition',
                        conditions=dict(method=['PUT']))
+        mapper.connect('/signal/{arn:.*}',
+                       controller=signal_controller,
+                       action='signal',
+                       conditions=dict(method=['POST']))
 
         super(API, self).__init__(mapper)

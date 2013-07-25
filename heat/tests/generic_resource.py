@@ -13,6 +13,7 @@
 #    under the License.
 
 from heat.engine import resource
+from heat.engine import signal_responder
 
 from heat.openstack.common import log as logging
 
@@ -50,3 +51,16 @@ class ResourceWithProps(GenericResource):
 class ResourceWithRequiredProps(GenericResource):
         properties_schema = {'Foo': {'Type': 'String',
                                      'Required': True}}
+
+
+class SignalResource(signal_responder.SignalResponder):
+    properties_schema = {}
+    attributes_schema = {'AlarmUrl': 'Get a signed webhook'}
+
+    def handle_signal(self, details=None):
+        logger.warning('Signaled resource (Type "%s") %s' % (self.type(),
+                                                             details))
+
+    def _resolve_attribute(self, name):
+        if name == 'AlarmUrl' and self.resource_id is not None:
+            return unicode(self._get_signed_url())

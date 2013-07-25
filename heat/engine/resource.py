@@ -676,6 +676,29 @@ class Resource(object):
         '''
         return base64.b64encode(data)
 
+    def signal(self, details=None):
+        '''
+        signal the resource. Subclasses should provide a handle_signal() method
+        to implement the signal, the base-class raise an exception if no
+        handler is implemented.
+        '''
+        if self.action in (self.SUSPEND, self.DELETE):
+            raise exception.ResourceFailure(Exception(
+                'Can not send a signal to a Resource whilst actioning a %s' %
+                self.action))
+
+        if not callable(getattr(self, 'handle_signal', None)):
+            raise exception.ResourceFailure(Exception(
+                'Resource %s is not able to receive a signal' % str(self)))
+
+        try:
+            self._add_event('signal', self.status, details)
+            self.handle_signal(details)
+        except Exception as ex:
+            logger.exception('signal %s : %s' % (str(self), str(ex)))
+            failure = exception.ResourceFailure(ex)
+            raise failure
+
     def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
         raise UpdateReplace(self.name)
 

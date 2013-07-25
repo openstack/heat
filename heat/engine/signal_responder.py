@@ -31,6 +31,8 @@ SIGNAL_TYPES = (
 ) = (
     '/waitcondition', '/signal'
 )
+SIGNAL_VERB = {WAITCONDITION: 'PUT',
+               SIGNAL: 'POST'}
 
 
 class SignalResponder(resource.Resource):
@@ -75,7 +77,7 @@ class SignalResponder(resource.Resource):
         # ensure the actual URL contains the quoted version...
         unquoted_path = urllib.unquote(host_url.path + path)
         request = {'host': host_url.netloc.lower(),
-                   'verb': 'PUT',
+                   'verb': SIGNAL_VERB[signal_type],
                    'path': unquoted_path,
                    'params': {'SignatureMethod': 'HmacSHA256',
                               'SignatureVersion': '2',
