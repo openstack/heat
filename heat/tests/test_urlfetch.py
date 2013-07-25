@@ -13,17 +13,25 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import StringIO
-import urllib2
+import requests
 
 from heat.common import urlfetch
 from heat.tests.common import HeatTestCase
 
 
+class Response:
+    def __init__(self, buf=''):
+        self._text = buf
+
+    @property
+    def text(self):
+        return self._text
+
+
 class UrlFetchTest(HeatTestCase):
     def setUp(self):
         super(UrlFetchTest, self).setUp()
-        self.m.StubOutWithMock(urllib2, 'urlopen')
+        self.m.StubOutWithMock(requests, 'get')
 
     def test_file_scheme(self):
         self.m.ReplayAll()
@@ -34,7 +42,7 @@ class UrlFetchTest(HeatTestCase):
         url = 'http://example.com/template'
         data = '{ "foo": "bar" }'
 
-        urllib2.urlopen(url).AndReturn(StringIO.StringIO(data))
+        requests.get(url).AndReturn(Response(data))
         self.m.ReplayAll()
 
         self.assertEqual(urlfetch.get(url), data)
@@ -44,7 +52,7 @@ class UrlFetchTest(HeatTestCase):
         url = 'https://example.com/template'
         data = '{ "foo": "bar" }'
 
-        urllib2.urlopen(url).AndReturn(StringIO.StringIO(data))
+        requests.get(url).AndReturn(Response(data))
         self.m.ReplayAll()
 
         self.assertEqual(urlfetch.get(url), data)
@@ -53,7 +61,7 @@ class UrlFetchTest(HeatTestCase):
     def test_http_error(self):
         url = 'http://example.com/template'
 
-        urllib2.urlopen(url).AndRaise(urllib2.URLError('fubar'))
+        requests.get(url).AndRaise(IOError('fubar'))
         self.m.ReplayAll()
 
         self.assertRaises(IOError, urlfetch.get, url)
