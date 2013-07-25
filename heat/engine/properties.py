@@ -21,7 +21,8 @@ from heat.common import exception
 
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
-    PATTERN, MIN_VALUE, MAX_VALUE, VALUES, MIN_LENGTH, MAX_LENGTH,
+    PATTERN, MIN_VALUE, MAX_VALUE, VALUES,
+    MIN_LENGTH, MAX_LENGTH,
 ) = (
     'Required', 'Implemented', 'Default', 'Type', 'Schema',
     'AllowedPattern', 'MinValue', 'MaxValue', 'AllowedValues',
@@ -67,7 +68,7 @@ class Property(object):
 
     def _check_allowed(self, value):
         if VALUES in self.schema:
-            allowed = self.schema[VALUES]
+            allowed = list(self.schema[VALUES])
             if value not in allowed:
                 raise ValueError('"%s" is not an allowed value %s' %
                                  (value, str(allowed)))
