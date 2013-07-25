@@ -109,7 +109,7 @@ class CloudWatchAlarm(resource.Resource):
             wr = watchrule.WatchRule.load(
                 self.context, watch_name=self.physical_resource_name())
             wr.destroy()
-        except exception.NotFound:
+        except exception.WatchRuleNotFound:
             pass
 
     def handle_suspend(self):
