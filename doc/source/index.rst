@@ -35,6 +35,7 @@ Getting Started
 
     getting_started/index
     troubleshooting/index
+    template_guide/index
     glossary
 
 Man Pages

@@ -1,0 +1,273 @@
+..
+      Licensed under the Apache License, Version 2.0 (the "License"); you may
+      not use this file except in compliance with the License. You may obtain
+      a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+      WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+      License for the specific language governing permissions and limitations
+      under the License.
+
+Built in functions
+==================
+
+There are a number of functions that you can use to help you write templates.
+
+All of these functions (except *Ref*) start with *Fn::*.
+
+
+Ref
+---
+Return the value of the named parameter or Resource.
+
+Parameters
+~~~~~~~~~~
+**Name**: the name of the Resource or Parameter.
+
+Usage
+~~~~~
+::
+
+  {Ref: my_server}
+
+Returns
+~~~~~~~
+::
+
+  instance-0003
+
+Fn::Base64
+----------
+This returns the Base64 representation of the input string.
+
+Parameters
+~~~~~~~~~~
+**String**: the string to convert.
+
+Usage
+~~~~~
+
+::
+
+  {Base64: "convert this string please."}
+
+Returns
+~~~~~~~
+Base64 of the input string.
+
+Fn::FindInMap
+-------------
+returns the value corresponding to keys into a two-level map declared in the Mappings section.
+
+Parameters
+~~~~~~~~~~
+**MapName**: The logical name of a mapping declared in the Mappings section that contains the keys and values.
+
+**TopLevelKey**: The top-level key name. It's value is a list of key-value pairs.
+
+**SecondLevelKey**: The second-level key name, which is set to one of the keys from the list assigned to TopLevelKey.
+
+Usage
+~~~~~
+
+::
+  Mapping:
+    MyContacts:
+      jone: {phone: 337, email: a@b.com}
+      jim: {phone: 908, email: g@b.com}
+
+  {"Fn::FindInMap": ["MyContacts", "jim", "phone" ] }
+
+Returns
+~~~~~~~
+
+In the case above it will return **908**
+
+Fn::GetAtt
+----------
+Returns an attribute of a Resource within the template.
+
+Parameters
+~~~~~~~~~~
+**Resource**: the name of the Resource.
+
+**Attribute**: the name of the attribute.
+
+Usage
+~~~~~
+
+::
+
+  {Fn::GetAtt: [my_server, PublicIp]}
+
+Returns
+~~~~~~~
+In the case above it would return an Ipaddress like **10.0.0.2**
+
+Fn::GetAZs
+----------
+Return the Availablity Zones within the given region.
+
+*Note: AZ's and regions are not fully implemented in Heat.*
+
+Parameters
+~~~~~~~~~~
+region: the name of the region.
+
+Usage
+~~~~~
+::
+
+  {Fn::GetAZs: ""}
+
+Returns
+~~~~~~~
+This returns what nova returns from availablity_zones.list()
+
+Fn::Join
+--------
+Like python join, it joins a list of strings with the given delimiter.
+
+Parameters
+~~~~~~~~~~
+**delimiter**: a string to join the list with.
+
+**list**: a list of strings
+
+Usage
+~~~~~
+
+::
+
+  {Fn::Join: [",", ["beer", "wine", "more beer"]]}
+
+Returns
+~~~~~~~
+
+The above example would return "beer, wine, more beer".
+
+Fn::Select
+----------
+Select an item from a list.
+
+*Heat extension: Select an item from a dict*
+
+Parameters
+~~~~~~~~~~
+Selector: the number of item in the list or the name of the item in
+the dict.
+
+Usage
+~~~~~
+
+::
+  (for a list lookup)
+  { "Fn::Select" : [ "2", [ "apples", "grapes", "mangoes" ] ] }
+  returns "mangoes"
+
+  (for a dict lookup)
+  { "Fn::Select" : [ "red", {"red": "a", "flu": "b"} ] }
+  returns "a"
+
+Fn::Split
+---------
+This is the reverse of Join. Convert a string into a list based on the
+delimiter.
+
+Parameters
+~~~~~~~~~~
+**delimiter**: a string.
+
+**string**: the string to split.
+
+Usage
+~~~~~
+::
+
+  { "Fn::Split" : [ ",", "str1,str2,str3,str4"]}
+  returns
+  {["str1", "str2", "str3", "str4"]}
+
+Fn::Replace
+-----------
+Find an replace one string with another.
+
+Parameters
+~~~~~~~~~~
+**subsitutions**: a map of subsitutions.
+
+**string**: the string to do the substitutions in.
+
+Usage
+~~~~~
+::
+  {"Fn::Replace": [
+   {'$var1': 'foo', '%var2%': 'bar'},
+    '$var1 is %var2%'
+  ]}
+  returns
+  "foo is bar"
+
+
+Fn::ResourceFacade
+------------------
+When writing a Template Resource:
+ - user writes a template that will fill in for a resource (the resource is the facade).
+ - when they are writing their template they need to access the metadata from
+   the facade.
+
+
+Parameters
+~~~~~~~~~~
+Attribute Name: one of Metadata, DeletionPolicy or UpdatePolicy.
+
+Usage
+~~~~~
+
+::
+  {'Fn::ResourceFacade': 'Metadata'}
+  {'Fn::ResourceFacade': 'DeletionPolicy'}
+  {'Fn::ResourceFacade': 'UpdatePolicy'}
+
+
+Example
+~~~~~~~
+Here is a top level template (top.yaml)
+
+::
+  resources:
+    my_server:
+      type: OS::Compute::Server
+      metadata:
+        key: value
+        some: more stuff
+
+
+Here is a resource template (my_actual_server.yaml)
+
+::
+  resources:
+    _actual_server_:
+      type: OS::Compute::Server
+      metadata: {Fn:ResourceFacade metadata}
+
+my environment (env.yaml)
+
+::
+  resource_registry:
+    resources:
+      my_server:
+        "OS::Compute::Server": my_actual_server.yaml
+
+To use it
+
+::
+  heat stack-create -f top.yaml -e env.yaml
+
+
+What happened is the metadata in top.yaml (key: value, some: more
+stuff) gets passed into the resource template via the **Fn::ResourceFacade**
+function.
