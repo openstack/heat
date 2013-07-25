@@ -137,6 +137,15 @@ class HeatBase(object):
         return local.iteritems()
 
 
+class SoftDelete(object):
+    deleted_at = sqlalchemy.Column(sqlalchemy.DateTime)
+
+    def soft_delete(self, session=None):
+        """Mark this object as deleted."""
+        self.update_and_save({'deleted_at': timeutils.utcnow()},
+                             session=session)
+
+
 class RawTemplate(BASE, HeatBase):
     """Represents an unparsed template which should be in JSON format."""
 
@@ -145,7 +154,7 @@ class RawTemplate(BASE, HeatBase):
     template = sqlalchemy.Column(Json)
 
 
-class Stack(BASE, HeatBase):
+class Stack(BASE, HeatBase, SoftDelete):
     """Represents a stack created by the heat engine."""
 
     __tablename__ = 'stack'
