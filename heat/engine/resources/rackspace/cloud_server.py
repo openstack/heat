@@ -263,7 +263,10 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         user_public_key = self.properties['PublicKey'] or ''
 
         # Generate SSH public/private keypair
-        rsa = RSA.generate(1024)
+        if self._private_key is not None:
+            rsa = RSA.importKey(self._private_key)
+        else:
+            rsa = RSA.generate(1024)
         self.private_key = rsa.exportKey()
         public_key = rsa.publickey().exportKey('OpenSSH')
         public_keys = public_key + "\n" + user_public_key
