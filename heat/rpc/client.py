@@ -230,6 +230,19 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                                              resource_name=resource_name,
                                              metadata=metadata))
 
+    def resource_signal(self, ctxt, stack_identity, resource_name, details):
+        """
+        Generate an alarm on the resource.
+        :param ctxt: RPC context.
+        :param stack_identity: Name of the stack.
+        :param resource_name: the Resource.
+        :param details: the details of the signal.
+        """
+        return self.call(ctxt, self.make_msg('resource_signal',
+                                             stack_identity=stack_identity,
+                                             resource_name=resource_name,
+                                             details=details))
+
     def create_watch_data(self, ctxt, watch_name, stats_data):
         '''
         This could be used by CloudWatch and WaitConditions

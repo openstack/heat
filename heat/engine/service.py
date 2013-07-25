@@ -466,6 +466,29 @@ class EngineService(service.Service):
         return api.format_stack_resource(stack[resource_name])
 
     @request_context
+    def resource_signal(self, cnxt, stack_identity, resource_name, details):
+        s = self._get_stack(cnxt, stack_identity)
+
+        # This is not "nice" converting to the stored context here,
+        # but this happens because the keystone user associated with the
+        # signal doesn't have permission to read the secret key of
+        # the user associated with the cfn-credentials file
+        user_creds = db_api.user_creds_get(s.user_creds_id)
+        stack_context = context.RequestContext.from_dict(user_creds)
+        stack = parser.Stack.load(stack_context, stack=s)
+
+        if resource_name not in stack:
+            raise exception.ResourceNotFound(resource_name=resource_name,
+                                             stack_name=stack.name)
+
+        resource = stack[resource_name]
+        if resource.id is None:
+            raise exception.ResourceNotAvailable(resource_name=resource_name)
+
+        if callable(stack[resource_name].signal):
+            stack[resource_name].signal(details)
+
+    @request_context
     def find_physical_resource(self, cnxt, physical_resource_id):
         """
         Return an identifier for the resource with the specified physical

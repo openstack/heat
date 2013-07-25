@@ -33,6 +33,7 @@ from heat.engine import parser
 from heat.engine import service
 from heat.engine.properties import Properties
 from heat.engine.resources import instance as instances
+from heat.engine import resource as rsrs
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
 from heat.tests.common import HeatTestCase
@@ -89,6 +90,24 @@ alarm_template = '''
 }
 '''
 
+policy_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "alarming",
+  "Resources" : {
+    "WebServerScaleDownPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : "",
+        "Cooldown" : "60",
+        "ScalingAdjustment" : "-1"
+      }
+    }
+  }
+}
+'''
+
 
 def create_context(mocks, user='stacks_test_user',
                    tenant_id='test_admin', password='stacks_test_password'):
@@ -110,8 +129,8 @@ def get_wordpress_stack(stack_name, ctx):
     return stack
 
 
-def get_alarm_stack(stack_name, ctx):
-    t = template_format.parse(alarm_template)
+def get_stack(stack_name, ctx, template):
+    t = template_format.parse(template)
     template = parser.Template(t)
     stack = parser.Stack(ctx, stack_name, template)
     return stack
@@ -1072,6 +1091,64 @@ class StackServiceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_signal_reception(self):
+        stack = get_stack('signal_reception',
+                          self.ctx,
+                          policy_template)
+        self.stack = stack
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+        test_data = {'food': 'yum'}
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        s = db_api.stack_get(self.ctx, self.stack.id)
+        service.EngineService._get_stack(self.ctx,
+                                         self.stack.identifier()).AndReturn(s)
+
+        self.m.StubOutWithMock(db_api, 'user_creds_get')
+        db_api.user_creds_get(mox.IgnoreArg()).MultipleTimes().AndReturn(
+            self.ctx.to_dict())
+
+        self.m.StubOutWithMock(rsrs.Resource, 'signal')
+        rsrs.Resource.signal(mox.IgnoreArg()).AndReturn(None)
+        self.m.ReplayAll()
+
+        result = self.eng.resource_signal(self.ctx,
+                                          dict(self.stack.identifier()),
+                                          'WebServerScaleDownPolicy',
+                                          test_data)
+        self.m.VerifyAll()
+        self.stack.delete()
+
+    def test_signal_reception_no_resource(self):
+        stack = get_stack('signal_reception_no_resource',
+                          self.ctx,
+                          policy_template)
+        self.stack = stack
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+        test_data = {'food': 'yum'}
+
+        self.m.StubOutWithMock(service.EngineService, '_get_stack')
+        s = db_api.stack_get(self.ctx, self.stack.id)
+        service.EngineService._get_stack(self.ctx,
+                                         self.stack.identifier()).AndReturn(s)
+
+        self.m.StubOutWithMock(db_api, 'user_creds_get')
+        db_api.user_creds_get(mox.IgnoreArg()).MultipleTimes().AndReturn(
+            self.ctx.to_dict())
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ResourceNotFound,
+                          self.eng.resource_signal, self.ctx,
+                          dict(self.stack.identifier()),
+                          'resource_does_not_exist',
+                          test_data)
+        self.m.VerifyAll()
+        self.stack.delete()
+
     @stack_context('service_metadata_test_stack')
     def test_metadata(self):
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
@@ -1136,8 +1213,9 @@ class StackServiceTest(HeatTestCase):
         self.assertEqual([], self.eng.stg[self.stack.id].threads)
 
     def test_periodic_watch_task_created(self):
-        stack = get_alarm_stack('period_watch_task_created',
-                                create_context(self.m))
+        stack = get_stack('period_watch_task_created',
+                          create_context(self.m),
+                          alarm_template)
         self.stack = stack
         self.m.ReplayAll()
         stack.store()

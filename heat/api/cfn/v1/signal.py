@@ -20,7 +20,7 @@ from heat.api.aws import exception
 import heat.openstack.common.rpc.common as rpc_common
 
 
-class WaitConditionController(object):
+class SignalController(object):
     def __init__(self, options):
         self.options = options
         self.engine = rpc_client.EngineClient()
@@ -39,10 +39,22 @@ class WaitConditionController(object):
 
         return {'resource': identity.resource_name, 'metadata': md}
 
+    def signal(self, req, body, arn):
+        con = req.context
+        identity = identifier.ResourceIdentifier.from_arn(arn)
+        try:
+            md = self.engine.resource_signal(
+                con,
+                stack_identity=dict(identity.stack()),
+                resource_name=identity.resource_name,
+                details=body)
+        except rpc_common.RemoteError as ex:
+            return exception.map_remote_error(ex)
+
 
 def create_resource(options):
     """
-    Stacks resource factory method.
+    Signal resource factory method.
     """
     deserializer = wsgi.JSONRequestDeserializer()
-    return wsgi.Resource(WaitConditionController(options), deserializer)
+    return wsgi.Resource(SignalController(options), deserializer)
