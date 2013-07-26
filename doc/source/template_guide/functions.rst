@@ -10,7 +10,7 @@
       WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
       License for the specific language governing permissions and limitations
       under the License.
-
+==================
 Built in functions
 ==================
 
@@ -18,14 +18,15 @@ There are a number of functions that you can use to help you write templates.
 
 All of these functions (except *Ref*) start with *Fn::*.
 
-
+---
 Ref
 ---
 Return the value of the named parameter or Resource.
 
 Parameters
 ~~~~~~~~~~
-**Name**: the name of the Resource or Parameter.
+name : String
+    The name of the Resource or Parameter.
 
 Usage
 ~~~~~
@@ -33,19 +34,17 @@ Usage
 
   {Ref: my_server}
 
-Returns
-~~~~~~~
-::
+Returns ``instance-0003``
 
-  instance-0003
-
+----------
 Fn::Base64
 ----------
 This returns the Base64 representation of the input string.
 
 Parameters
 ~~~~~~~~~~
-**String**: the string to convert.
+value : String
+    The string to convert.
 
 Usage
 ~~~~~
@@ -54,26 +53,32 @@ Usage
 
   {Base64: "convert this string please."}
 
-Returns
-~~~~~~~
-Base64 of the input string.
+Returns the Base64 of the input string.
 
+-------------
 Fn::FindInMap
 -------------
-returns the value corresponding to keys into a two-level map declared in the Mappings section.
+Returns the value corresponding to keys into a two-level map declared in the
+Mappings section.
 
 Parameters
 ~~~~~~~~~~
-**MapName**: The logical name of a mapping declared in the Mappings section that contains the keys and values.
+map_name : String
+    The logical name of a mapping declared in the Mappings section that 
+    contains the keys and values.
 
-**TopLevelKey**: The top-level key name. It's value is a list of key-value pairs.
+top_level_key : String
+    The top-level key name. It's value is a list of key-value pairs.
 
-**SecondLevelKey**: The second-level key name, which is set to one of the keys from the list assigned to TopLevelKey.
+second_level_key : String 
+    The second-level key name, which is set to one of the keys from the list
+    assigned to top_level_key.
 
 Usage
 ~~~~~
 
 ::
+
   Mapping:
     MyContacts:
       jone: {phone: 337, email: a@b.com}
@@ -81,20 +86,20 @@ Usage
 
   {"Fn::FindInMap": ["MyContacts", "jim", "phone" ] }
 
-Returns
-~~~~~~~
+Returns ``908``
 
-In the case above it will return **908**
-
+----------
 Fn::GetAtt
 ----------
 Returns an attribute of a Resource within the template.
 
 Parameters
 ~~~~~~~~~~
-**Resource**: the name of the Resource.
+resource : String
+    The name of the Resource.
 
-**Attribute**: the name of the attribute.
+attribute : String
+    The name of the attribute.
 
 Usage
 ~~~~~
@@ -103,10 +108,9 @@ Usage
 
   {Fn::GetAtt: [my_server, PublicIp]}
 
-Returns
-~~~~~~~
-In the case above it would return an Ipaddress like **10.0.0.2**
+Returns an IP address such as ``10.0.0.2``
 
+----------
 Fn::GetAZs
 ----------
 Return the Availablity Zones within the given region.
@@ -115,7 +119,8 @@ Return the Availablity Zones within the given region.
 
 Parameters
 ~~~~~~~~~~
-region: the name of the region.
+region : String
+    The name of the region.
 
 Usage
 ~~~~~
@@ -123,19 +128,20 @@ Usage
 
   {Fn::GetAZs: ""}
 
-Returns
-~~~~~~~
-This returns what nova returns from availablity_zones.list()
+Returns the list provided by ``nova availability-zone-list``
 
+--------
 Fn::Join
 --------
 Like python join, it joins a list of strings with the given delimiter.
 
 Parameters
 ~~~~~~~~~~
-**delimiter**: a string to join the list with.
+delimiter : String
+    The string to join the list with.
 
-**list**: a list of strings
+list : list
+    The list to join.
 
 Usage
 ~~~~~
@@ -144,34 +150,39 @@ Usage
 
   {Fn::Join: [",", ["beer", "wine", "more beer"]]}
 
-Returns
-~~~~~~~
+Returns ``beer, wine, more beer``
 
-The above example would return "beer, wine, more beer".
-
+----------
 Fn::Select
 ----------
 Select an item from a list.
 
-*Heat extension: Select an item from a dict*
+*Heat extension: Select an item from a map*
 
 Parameters
 ~~~~~~~~~~
-Selector: the number of item in the list or the name of the item in
-the dict.
+selector : string or integer
+    The number of item in the list or the name of the item in
+the map.
+collection : map or list
+    The collection to select the item from.
 
 Usage
 ~~~~~
 
+For a list lookup:
 ::
-  (for a list lookup)
+
   { "Fn::Select" : [ "2", [ "apples", "grapes", "mangoes" ] ] }
-  returns "mangoes"
+Returns ``mangoes``
 
-  (for a dict lookup)
+For a map lookup:
+::
+
   { "Fn::Select" : [ "red", {"red": "a", "flu": "b"} ] }
-  returns "a"
+Returns ``a``
 
+---------
 Fn::Split
 ---------
 This is the reverse of Join. Convert a string into a list based on the
@@ -179,27 +190,31 @@ delimiter.
 
 Parameters
 ~~~~~~~~~~
-**delimiter**: a string.
+delimiter : string
+    Matching string to split on.
 
-**string**: the string to split.
+string : String
+    The string to split.
 
 Usage
 ~~~~~
 ::
 
   { "Fn::Split" : [ ",", "str1,str2,str3,str4"]}
-  returns
-  {["str1", "str2", "str3", "str4"]}
 
+Returns ``{["str1", "str2", "str3", "str4"]}``
+
+-----------
 Fn::Replace
 -----------
 Find an replace one string with another.
 
 Parameters
 ~~~~~~~~~~
-**subsitutions**: a map of subsitutions.
-
-**string**: the string to do the substitutions in.
+subsitutions : map
+    A map of subsitutions.
+string: String
+    The string to do the substitutions in.
 
 Usage
 ~~~~~
@@ -211,7 +226,7 @@ Usage
   returns
   "foo is bar"
 
-
+------------------
 Fn::ResourceFacade
 ------------------
 When writing a Template Resource:
@@ -222,12 +237,14 @@ When writing a Template Resource:
 
 Parameters
 ~~~~~~~~~~
-Attribute Name: one of Metadata, DeletionPolicy or UpdatePolicy.
+attribute_name : String
+    One of ``Metadata``, ``DeletionPolicy`` or ``UpdatePolicy``.
 
 Usage
 ~~~~~
 
 ::
+
   {'Fn::ResourceFacade': 'Metadata'}
   {'Fn::ResourceFacade': 'DeletionPolicy'}
   {'Fn::ResourceFacade': 'UpdatePolicy'}
@@ -235,9 +252,10 @@ Usage
 
 Example
 ~~~~~~~
-Here is a top level template (top.yaml)
+Here is a top level template ``top.yaml``
 
 ::
+
   resources:
     my_server:
       type: OS::Compute::Server
@@ -246,17 +264,17 @@ Here is a top level template (top.yaml)
         some: more stuff
 
 
-Here is a resource template (my_actual_server.yaml)
-
+Here is a resource template ``my_actual_server.yaml``
 ::
+
   resources:
     _actual_server_:
       type: OS::Compute::Server
-      metadata: {Fn:ResourceFacade metadata}
+      metadata: {'Fn::ResourceFacade': Metadata}
 
-my environment (env.yaml)
-
+The environment file ``env.yaml``
 ::
+
   resource_registry:
     resources:
       my_server:
@@ -265,9 +283,10 @@ my environment (env.yaml)
 To use it
 
 ::
+
   heat stack-create -f top.yaml -e env.yaml
 
 
-What happened is the metadata in top.yaml (key: value, some: more
-stuff) gets passed into the resource template via the **Fn::ResourceFacade**
+What happened is the metadata in ``top.yaml`` (key: value, some: more
+stuff) gets passed into the resource template via the `Fn::ResourceFacade`_
 function.
