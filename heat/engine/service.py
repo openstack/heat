@@ -306,7 +306,7 @@ class EngineService(service.Service):
             return webob.exc.HTTPBadRequest(explanation=msg)
 
         tmpl = parser.Template(template)
-        tmpl_resources = template.get('Resources', [])
+        tmpl_resources = tmpl.get('Resources', [])
 
         if not tmpl_resources:
             return {'Error': 'At least one Resources member must be defined.'}
@@ -330,7 +330,7 @@ class EngineService(service.Service):
         params = tmpl_params.map(format_validate_parameter, is_real_param)
 
         result = {
-            'Description': template.get('Description', ''),
+            'Description': tmpl.get('Description', ''),
             'Parameters': params,
         }
         return result
