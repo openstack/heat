@@ -57,8 +57,17 @@ class Restarter(signal_responder.SignalResponder):
         return None
 
     def handle_signal(self, details=None):
-        victim = self._find_resource(self.properties['InstanceId'])
+        if details is None:
+            alarm_state = 'alarm'
+        else:
+            alarm_state = details.get('state', 'alarm').lower()
 
+        logger.info('%s Alarm, new state %s' % (self.name, alarm_state))
+
+        if alarm_state != 'alarm':
+            return
+
+        victim = self._find_resource(self.properties['InstanceId'])
         if victim is None:
             logger.info('%s Alarm, can not find instance %s' %
                        (self.name, self.properties['InstanceId']))

@@ -39,6 +39,12 @@ except ImportError:
     cinderclient = None
     logger.info('cinderclient not available')
 
+try:
+    from ceilometerclient.v2 import client as ceilometerclient
+except ImportError:
+    ceilometerclient = None
+    logger.info('ceilometerclient not available')
+
 
 cloud_opts = [
     cfg.StrOpt('cloud_backend',
@@ -60,6 +66,7 @@ class OpenStackClients(object):
         self._swift = None
         self._quantum = None
         self._cinder = None
+        self._ceilometer = None
 
     @property
     def auth_token(self):
@@ -173,6 +180,30 @@ class OpenStackClients(object):
         self._cinder.client.management_url = management_url
 
         return self._cinder
+
+    def ceilometer(self):
+        if ceilometerclient is None:
+            return None
+        if self._ceilometer:
+            return self._ceilometer
+
+        if self.auth_token is None:
+            logger.error("Ceilometer connection failed, no auth_token!")
+            return None
+        con = self.context
+        args = {
+            'auth_url': con.auth_url,
+            'service_type': 'metering',
+            'project_id': con.tenant,
+            'token': self.auth_token,
+            'endpoint': self.url_for(service_type='metering'),
+        }
+
+        client = ceilometerclient.Client(**args)
+
+        self._ceilometer = client
+        return self._ceilometer
+
 
 if cfg.CONF.cloud_backend:
     cloud_backend_module = importutils.import_module(cfg.CONF.cloud_backend)
