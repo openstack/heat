@@ -78,6 +78,14 @@ class ResourceTest(HeatTestCase):
         self.assertRaises(ValueError, res.state_set, 'foo', res.COMPLETE)
         self.assertRaises(ValueError, res.state_set, res.CREATE, 'bla')
 
+    def test_state_del_stack(self):
+        tmpl = {'Type': 'Foo'}
+        self.stack.action = self.stack.DELETE
+        self.stack.status = self.stack.IN_PROGRESS
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        self.assertEqual(res.DELETE, res.action)
+        self.assertEqual(res.COMPLETE, res.status)
+
     def test_type(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
