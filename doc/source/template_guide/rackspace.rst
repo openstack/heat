@@ -11,13 +11,6 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-Template Guide
-==============
-
-.. toctree::
-   :maxdepth: 2
-
-   functions
-   openstack
-   cfn
-   rackspace
+Rackspace Cloud Resource Types
+------------------------------
+.. resourcepages:: Rackspace::
