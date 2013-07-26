@@ -39,3 +39,11 @@ class LazyPluggable(object):
     def __getattr__(self, key):
         backend = self.__get_backend()
         return getattr(backend, key)
+
+
+IMPL = LazyPluggable('db_backend',
+                     sqlalchemy='heat.db.sqlalchemy.api')
+
+
+def purge_deleted(age):
+    IMPL.purge_deleted(age)
