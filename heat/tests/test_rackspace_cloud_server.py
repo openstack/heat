@@ -28,6 +28,7 @@ from heat.engine.resources.rackspace import cloud_server
 from heat.engine.resources.rackspace import rackspace_resource
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 
 
@@ -49,7 +50,6 @@ wp_template = '''
       "Type": "Rackspace::Cloud::Server",
       "Properties": {
         "ImageName"      : "Fedora 17 (Beefy Miracle)",
-        "ServerName"     : "Heat test",
         "Flavor"         : "2",
         "UserData"       : "wordpress"
       }
@@ -150,8 +150,6 @@ class RackspaceCloudServerTest(HeatTestCase):
         stack_name = '%s_stack' % name
         (t, stack) = self._setup_test_stack(stack_name)
 
-        server_name = "Heat test"
-        t['Resources']['WebServer']['Properties']['ServerName'] = server_name
         cs_name = 'Fedora 17 (Beefy Miracle)'
         t['Resources']['WebServer']['Properties']['ImageName'] = cs_name
         t['Resources']['WebServer']['Properties']['Flavor'] = '2'
@@ -164,7 +162,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         flavor = t['Resources']['WebServer']['Properties']['Flavor']
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(server_name, "1", flavor,
+        self.fc.servers.create(utils.PhysName(stack_name, cs.name),
+                               "1", flavor,
                                files=mox.IgnoreArg()).AndReturn(return_server)
         return_server.adminPass = "foobar"
 
