@@ -66,6 +66,7 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1
 apt-get update
 apt-get install -y cloud-init python-boto python-pip gcc python-dev
 pip install heat-cfntools
+cfn-create-aws-symlinks --source /usr/local/bin
 """
 
     # - Fedora 17: Verified working
@@ -77,6 +78,7 @@ pip install heat-cfntools
     fedora_script = base_script % """\
 yum install -y cloud-init python-boto python-pip gcc python-devel
 pip-python install heat-cfntools
+cfn-create-aws-symlinks
 """
 
     # - Centos 6.4: Verified working
@@ -95,6 +97,7 @@ while fuser /var/lib/rpm/*; do sleep 1; done
 yum install -y cloud-init python-boto python-pip gcc python-devel \
   python-argparse
 pip-python install heat-cfntools
+cfn-create-aws-symlinks
 """
 
     # - Debian 7: Not working (heat-cfntools patch submitted)
