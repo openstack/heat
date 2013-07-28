@@ -38,7 +38,7 @@ wp_template = '''
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "WordPress",
   "Parameters" : {
-    "Flavor" : {
+    "flavor" : {
       "Description" : "Rackspace Cloud Server flavor",
       "Type" : "String",
       "Default" : "2",
@@ -50,9 +50,9 @@ wp_template = '''
     "WebServer": {
       "Type": "Rackspace::Cloud::Server",
       "Properties": {
-        "ImageName"      : "Fedora 17 (Beefy Miracle)",
-        "Flavor"         : "2",
-        "UserData"       : "wordpress"
+        "image"      : "Fedora 17 (Beefy Miracle)",
+        "flavor"         : "2",
+        "user_data"       : "wordpress"
       }
     }
   }
@@ -108,7 +108,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         t = template_format.parse(wp_template)
         template = parser.Template(t)
         stack = parser.Stack(dummy_context(), stack_name, template,
-                             environment.Environment({'Flavor': '2'}),
+                             environment.Environment({'flavor': '2'}),
                              stack_id=uuidutils.generate_uuid())
         return (t, stack)
 
@@ -152,15 +152,15 @@ class RackspaceCloudServerTest(HeatTestCase):
         (t, stack) = self._setup_test_stack(stack_name)
 
         cs_name = 'Fedora 17 (Beefy Miracle)'
-        t['Resources']['WebServer']['Properties']['ImageName'] = cs_name
-        t['Resources']['WebServer']['Properties']['Flavor'] = '2'
+        t['Resources']['WebServer']['Properties']['image'] = cs_name
+        t['Resources']['WebServer']['Properties']['flavor'] = '2'
 
         cs = cloud_server.CloudServer('%s_name' % name,
                                       t['Resources']['WebServer'], stack)
         cs._private_key = rsa_key
         cs.t = cs.stack.resolve_runtime_data(cs.t)
 
-        flavor = t['Resources']['WebServer']['Properties']['Flavor']
+        flavor = t['Resources']['WebServer']['Properties']['flavor']
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(utils.PhysName(stack_name, cs.name),
@@ -234,7 +234,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create a cloud server with non exist image name
-        t['Resources']['WebServer']['Properties']['ImageName'] = 'Slackware'
+        t['Resources']['WebServer']['Properties']['image'] = 'Slackware'
 
         # Mock flavors
         self.m.StubOutWithMock(cloud_server.CloudServer, "flavors")
@@ -245,7 +245,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs = cloud_server.CloudServer('cs_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.assertEqual({'Error': "UserData/MetaData are not supported with "
+        self.assertEqual({'Error': "user_data/metadata are not supported with "
                           "Slackware."},
                          cs.validate())
         self.m.VerifyAll()
@@ -255,8 +255,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create a cloud server with non exist image name
-        t['Resources']['WebServer']['Properties']['ImageName'] = 'Slackware'
-        t['Resources']['WebServer']['Properties']['UserData'] = ''
+        t['Resources']['WebServer']['Properties']['image'] = 'Slackware'
+        t['Resources']['WebServer']['Properties']['user_data'] = ''
 
         # Mock flavors
         self.m.StubOutWithMock(cloud_server.CloudServer, "flavors")
@@ -271,12 +271,12 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_cs_create_flavor_err(self):
-        """validate() should throw an if the Flavor is invalid."""
+        """validate() should throw an if the flavor is invalid."""
         stack_name = 'test_cs_create_flavor_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create a cloud server with non exist image name
-        t['Resources']['WebServer']['Properties']['Flavor'] = '1'
+        t['Resources']['WebServer']['Properties']['flavor'] = '1'
 
         # Mock flavors
         self.m.StubOutWithMock(cloud_server.CloudServer, "flavors")
@@ -287,7 +287,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs = cloud_server.CloudServer('cs_create_flavor_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.assertEqual({'Error': "Flavor not found."}, cs.validate())
+        self.assertEqual({'Error': "flavor not found."}, cs.validate())
 
         self.m.VerifyAll()
 
@@ -334,7 +334,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs = self._create_test_cs(return_server, 'test_cs_update')
 
         update_template = copy.deepcopy(cs.t)
-        update_template['Properties']['UserData'] = 'mustreplace'
+        update_template['Properties']['user_data'] = 'mustreplace'
         self.assertRaises(resource.UpdateReplace,
                           cs.update, update_template)
 

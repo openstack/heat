@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 class CloudServer(instance.Instance):
     """Resource for Rackspace Cloud Servers."""
 
-    properties_schema = {'Flavor': {'Type': 'String', 'Required': True},
-                         'ImageName': {'Type': 'String', 'Required': True},
-                         'UserData': {'Type': 'String'},
+    properties_schema = {'flavor': {'Type': 'String', 'Required': True},
+                         'image': {'Type': 'String', 'Required': True},
+                         'user_data': {'Type': 'String'},
                          'key_name': {'Type': 'String'},
                          'Volumes': {'Type': 'List'},
                          'name': {'Type': 'String'}}
@@ -149,7 +149,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     # Template keys supported for handle_update.  Properties not
     # listed here trigger an UpdateReplace
     update_allowed_keys = ('Metadata', 'Properties')
-    update_allowed_properties = ('Flavor', 'name')
+    update_allowed_properties = ('flavor', 'name')
 
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)
@@ -183,8 +183,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
     @property
     def image_id(self):
-        """Get the image ID corresponding to the ImageName property."""
-        image_name = self.properties['ImageName']
+        """Get the image ID corresponding to the image property."""
+        image_name = self.properties['image']
         if image_name in self.__class__._image_id_map:
             return self.__class__._image_id_map[image_name]
         else:
@@ -236,7 +236,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         """Return the IP of the Cloud Server."""
         def ip_not_found():
             exc = exception.Error("Could not determine the %s IP of %s." %
-                                  (ip_type, self.properties['ImageName']))
+                                  (ip_type, self.properties['image']))
             raise exception.ResourceFailure(exc)
 
         if ip_type not in self.server.addresses:
@@ -261,21 +261,21 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
     @property
     def has_userdata(self):
-        if self.properties['UserData'] or self.metadata != {}:
+        if self.properties['user_data'] or self.metadata != {}:
             return True
         else:
             return False
 
     def validate(self):
         """Validate user parameters."""
-        if self.properties['Flavor'] not in self.flavors:
-            return {'Error': "Flavor not found."}
+        if self.properties['flavor'] not in self.flavors:
+            return {'Error': "flavor not found."}
 
-        # It's okay if there's no script, as long as UserData and
-        # MetaData are empty
+        # It's okay if there's no script, as long as user_data and
+        # metadata are empty
         if not self.script and self.has_userdata:
-            return {'Error': "UserData/MetaData are not supported with %s." %
-                    self.properties['ImageName']}
+            return {'Error': "user_data/metadata are not supported with %s." %
+                    self.properties['image']}
 
     def _run_ssh_command(self, command):
         """Run a shell command on the Cloud Server via SSH."""
@@ -313,7 +313,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         server and then trigger cloud-init.
         """
         # Retrieve server creation parameters from properties
-        flavor = self.properties['Flavor']
+        flavor = self.properties['flavor']
 
         # Generate SSH public/private keypair
         if self._private_key is not None:
@@ -381,7 +381,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
         if self.has_userdata:
             # Create heat-script and userdata files on server
-            raw_userdata = self.properties['UserData'] or ''
+            raw_userdata = self.properties['user_data'] or ''
             userdata = self._build_userdata(raw_userdata)
 
             files = [{'path': "/tmp/userdata", 'data': userdata},
@@ -414,7 +414,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Try to update a Cloud Server's parameters.
 
-        If the Cloud Server's Metadata or Flavor changed, update the
+        If the Cloud Server's Metadata or flavor changed, update the
         Cloud Server.  If any other parameters changed, re-create the
         Cloud Server with the new parameters.
         """
@@ -430,8 +430,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                       "/root/cfn-userdata.log 2>&1"
             self._run_ssh_command(command)
 
-        if 'Flavor' in prop_diff:
-            self.flavor = json_snippet['Properties']['Flavor']
+        if 'flavor' in prop_diff:
+            self.flavor = json_snippet['Properties']['flavor']
             self.server.resize(self.flavor)
             resize = scheduler.TaskRunner(self._check_resize,
                                           self.server,
