@@ -399,7 +399,9 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
             yield
             try:
                 server.get()
-                if server.status == "ERROR":
+                if server.status == "DELETED":
+                    break
+                elif server.status == "ERROR":
                     exc = exception.Error("Deletion of server %s failed." %
                                           server.name)
                     raise exception.ResourceFailure(exc)
