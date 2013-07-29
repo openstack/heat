@@ -57,37 +57,71 @@ touch /var/lib/cloud/seed/nocloud-net/meta-data
 chmod 600 /var/lib/cloud/seed/nocloud-net/*
 
 # Run cloud-init & cfn-init
-cloud-init start
+cloud-init start || cloud-init init
 bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1
 """
 
+    # - Ubuntu 12.04: Verified working
     ubuntu_script = base_script % """\
 apt-get update
 apt-get install -y cloud-init python-boto python-pip gcc python-dev
 pip install heat-cfntools
 """
 
+    # - Fedora 17: Verified working
+    # - Fedora 18: Not working.  selinux needs to be in "Permissive"
+    #   mode for cloud-init to work.  It's disabled by default in the
+    #   Rackspace Cloud Servers image.  To enable selinux, a reboot is
+    #   required.
+    # - Fedora 19: Verified working
     fedora_script = base_script % """\
 yum install -y cloud-init python-boto python-pip gcc python-devel
 pip-python install heat-cfntools
 """
 
-    # TODO(jason): Install cloud-init & other deps from third-party repos
+    # - Centos 6.4: Verified working
     centos_script = base_script % """\
-yum install -y cloud-init python-boto python-pip gcc python-devel
+rpm -ivh http://mirror.rackspace.com/epel/6/i386/epel-release-6-8.noarch.rpm
+yum install -y cloud-init python-boto python-pip gcc python-devel \
+  python-argparse
 pip-python install heat-cfntools
 """
 
+    # - RHEL 6.4: Verified working
+    rhel_script = base_script % """\
+rpm -ivh http://mirror.rackspace.com/epel/6/i386/epel-release-6-8.noarch.rpm
+# The RPM DB stays locked for a few secs
+while fuser /var/lib/rpm/*; do sleep 1; done
+yum install -y cloud-init python-boto python-pip gcc python-devel \
+  python-argparse
+pip-python install heat-cfntools
+"""
+
+    # - Debian 7: Not working (heat-cfntools patch submitted)
+    # TODO(jason): Test with Debian 7 as soon as heat-cfntools patch
+    # is in https://review.openstack.org/#/c/38822/
+    debian_script = base_script % """\
+echo "deb http://mirror.rackspace.com/debian wheezy-backports main" >> \
+  /etc/apt/sources.list
+apt-get update
+apt-get -t wheezy-backports install -y cloud-init
+apt-get install -y python-pip gcc python-dev
+pip install heat-cfntools
+"""
+
+    # - Arch 2013.6: Not working (deps not in default package repos)
     # TODO(jason): Install cloud-init & other deps from third-party repos
     arch_script = base_script % """\
 pacman -S --noconfirm python-pip gcc
 """
 
+    # - Gentoo 13.2: Not working (deps not in default package repos)
     # TODO(jason): Install cloud-init & other deps from third-party repos
     gentoo_script = base_script % """\
 emerge cloud-init python-boto python-pip gcc python-devel
 """
 
+    # - OpenSUSE 12.3: Not working (deps not in default package repos)
     # TODO(jason): Install cloud-init & other deps from third-party repos
     opensuse_script = base_script % """\
 zypper --non-interactive rm patterns-openSUSE-minimal_base-conflicts
@@ -96,12 +130,12 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
     # List of supported Linux distros and their corresponding config scripts
     image_scripts = {'arch': None,
-                     'centos': None,
+                     'centos': centos_script,
                      'debian': None,
                      'fedora': fedora_script,
                      'gentoo': None,
                      'opensuse': None,
-                     'rhel': None,
+                     'rhel': rhel_script,
                      'ubuntu': ubuntu_script}
 
     # Cache data retrieved from APIs in class attributes
