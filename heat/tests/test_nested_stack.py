@@ -88,6 +88,10 @@ Outputs:
         self.assertEqual('bar', rsrc.FnGetAtt('Outputs.Foo'))
         self.assertRaises(
             exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
+        self.assertRaises(
+            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Outputs.Bar')
+        self.assertRaises(
+            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Bar')
 
         rsrc.delete()
         self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
