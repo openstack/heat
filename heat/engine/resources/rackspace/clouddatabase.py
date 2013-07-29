@@ -215,11 +215,35 @@ class CloudDBInstance(rackspace_resource.RackspaceResource):
                         'databases.' % missing_db}
         return
 
+    def _hostname(self):
+        if self.hostname is None and self.resource_id is not None:
+            dbinstance = self.cloud_db().get(self.resource_id)
+            self.hostname = dbinstance.hostname
+
+        return self.hostname
+
+    def _href(self):
+        if self.href is None and self.resource_id is not None:
+            dbinstance = self.cloud_db().get(self.resource_id)
+            self.href = self._gethref(dbinstance)
+
+        return self.href
+
+    def _gethref(self, dbinstance):
+        if dbinstance is None or dbinstance.links is None:
+            return None
+
+        for link in dbinstance.links:
+            if link['rel'] == 'self':
+                return dbinstance.links[0]['href']
+
     def _resolve_attribute(self, name):
         if name == 'hostname':
-            return self.hostname
+            return self._hostname()
         elif name == 'href':
-            return self.href
+            return self._href()
+        else:
+            return None
 
 
 # pyrax module is required to work with Rackspace cloud database provider.

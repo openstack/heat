@@ -146,6 +146,19 @@ class CloudDBInstanceTest(HeatTestCase):
         self.assertRaises(exception.ResourceNotFound, instance.handle_delete)
         self.m.VerifyAll()
 
+    def test_attribute_not_found(self):
+        instance = self._setup_test_clouddbinstance('dbinstance_create')
+        fake_client = self.m.CreateMockAnything()
+        instance.cloud_db().AndReturn(fake_client)
+        fakedbinstance = FakeDBInstance()
+        fake_client.create('Test',
+                           flavor='1GB',
+                           volume='30').AndReturn(fakedbinstance)
+        self.m.ReplayAll()
+        instance.handle_create()
+        self.assertEqual(instance._resolve_attribute('invalid-attrib'), None)
+        self.m.VerifyAll()
+
     def test_clouddbinstance_delete(self):
         instance = self._setup_test_clouddbinstance('dbinstance_delete')
         fake_client = self.m.CreateMockAnything()
