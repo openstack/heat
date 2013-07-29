@@ -383,6 +383,18 @@ class EngineService(service.Service):
         """
         return list(resource.get_types())
 
+    def generate_template(self, cnxt, type_name):
+        """
+        Generate a template based on the specified type.
+        arg1 -> RPC context.
+        arg2 -> Name of the resource type to generate a template for.
+        """
+        try:
+            return \
+                resource.get_class(type_name).resource_to_template(type_name)
+        except exception.StackValidationFailed:
+            raise exception.ResourceTypeNotFound(type_name=type_name)
+
     @request_context
     def list_events(self, cnxt, stack_identity):
         """

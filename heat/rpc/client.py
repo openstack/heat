@@ -160,6 +160,16 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         """
         return self.call(ctxt, self.make_msg('list_resource_types'))
 
+    def generate_template(self, ctxt, type_name):
+        """
+        Generate a template based on the specified type.
+
+        :param ctxt: RPC context.
+        :param type_name: The resource type name to generate a template for.
+        """
+        return self.call(ctxt, self.make_msg('generate_template',
+                                             type_name=type_name))
+
     def list_events(self, ctxt, stack_identity):
         """
         The list_events method lists all events associated with a given stack.

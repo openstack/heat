@@ -1138,6 +1138,42 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual(resp.json['error']['type'], 'ServerError')
         self.m.VerifyAll()
 
+    def test_generate_template(self):
+
+        req = self._get('/resource_types/TEST_TYPE/template')
+
+        engine_response = {'Type': 'TEST_TYPE'}
+
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'generate_template',
+                  'args': {'type_name': 'TEST_TYPE'},
+                  'version': self.api_version},
+                 None).AndReturn(engine_response)
+        self.m.ReplayAll()
+        self.controller.generate_template(req, tenant_id=self.tenant,
+                                          type_name='TEST_TYPE')
+        self.m.VerifyAll()
+
+    def test_generate_template_not_found(self):
+        req = self._get('/resource_types/NOT_FOUND/template')
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'generate_template',
+                  'args': {'type_name': 'NOT_FOUND'},
+                  'version': self.api_version},
+                 None).AndRaise(remote_error(heat_exc.ResourceTypeNotFound))
+        self.m.ReplayAll()
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.generate_template,
+                                       req, tenant_id=self.tenant,
+                                       type_name='NOT_FOUND')
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'ResourceTypeNotFound')
+        self.m.VerifyAll()
+
 
 class StackSerializerTest(HeatTestCase):
 
@@ -1953,8 +1989,20 @@ class RoutesTest(HeatTestCase):
             'list_resource_types',
             'StackController',
             {
-                'tenant_id': 'aaaa'
+                'tenant_id': 'aaaa',
             })
+
+        self.assertRoute(
+            self.m,
+            '/aaaa/resource_types/test_type/template',
+            'GET',
+            'generate_template',
+            'StackController',
+            {
+                'tenant_id': 'aaaa',
+                'type_name': 'test_type'
+            })
+
         self.assertRoute(
             self.m,
             '/aaaa/validate',
