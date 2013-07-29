@@ -467,6 +467,22 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
                                          self.name)
 
     def handle_signal(self, details=None):
+        # ceilometer sends details like this:
+        # {u'state': u'alarm', u'reason': u'...'})
+        # in this policy we currently assume that this gets called
+        # only when there is an alarm. But the template writer can
+        # put the policy in all the alarm notifiers (nodata, and ok).
+        #
+        # our watchrule has upper case states so lower() them all.
+        if details is None:
+            alarm_state = 'alarm'
+        else:
+            alarm_state = details.get('state', 'alarm').lower()
+
+        logger.info('%s Alarm, new state %s' % (self.name, alarm_state))
+
+        if alarm_state != 'alarm':
+            return
         if self._cooldown_inprogress():
             logger.info("%s NOT performing scaling action, cooldown %s" %
                         (self.name, self.properties['Cooldown']))

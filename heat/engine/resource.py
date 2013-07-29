@@ -327,6 +327,9 @@ class Resource(object):
     def cinder(self):
         return self.stack.clients.cinder()
 
+    def ceilometer(self):
+        return self.stack.clients.ceilometer()
+
     def _do_action(self, action, pre_func=None):
         '''
         Perform a transition to a new state via a specified action
