@@ -182,7 +182,11 @@ class Resource(object):
             self.data = resource.data
         else:
             self.resource_id = None
-            self.action = self.INIT
+            # if the stack is being deleted, assume we've already been deleted
+            if stack.action == stack.DELETE:
+                self.action = self.DELETE
+            else:
+                self.action = self.INIT
             self.status = self.COMPLETE
             self.status_reason = ''
             self.id = None
