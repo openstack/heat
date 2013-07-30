@@ -235,7 +235,7 @@ class CloudDBInstance(rackspace_resource.RackspaceResource):
 
         for link in dbinstance.links:
             if link['rel'] == 'self':
-                return dbinstance.links[0]['href']
+                return link['href']
 
     def _resolve_attribute(self, name):
         if name == 'hostname':
