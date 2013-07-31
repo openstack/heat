@@ -12,8 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sys
 import functools
+import random
+import string
+import sys
 
 from heat.common import context
 from heat.common import exception
@@ -22,6 +24,11 @@ from heat.engine import parser
 
 from heat.db.sqlalchemy.session import get_engine
 from heat.db import migration
+
+
+def random_name():
+    return ''.join(random.choice(string.ascii_uppercase)
+                   for x in range(10))
 
 
 def stack_delete_after(test_fn):

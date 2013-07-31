@@ -16,16 +16,13 @@
 import uuid
 import json
 import copy
-import random
-import string
 
 from heat.common import template_format
 from heat.engine import scheduler
 from heat.engine import resource
 from heat.engine.resources.rackspace import cloud_loadbalancer as lb
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
+from heat.tests import utils
 
 # The following fakes are for pyrax
 
@@ -200,7 +197,7 @@ class LoadBalancerTest(HeatTestCase):
         }
 
         lb.resource_mapping = override_resource
-        setup_dummy_db()
+        utils.setup_dummy_db()
         resource._register_class("Rackspace::Cloud::LoadBalancer",
                                  LoadBalancerWithFakeClient)
 
@@ -225,13 +222,9 @@ class LoadBalancerTest(HeatTestCase):
     def _get_first_resource_name(self, templ):
         return next(k for k in templ['Resources'])
 
-    def _random_name(self):
-        return ''.join(random.choice(string.ascii_uppercase)
-                       for x in range(10))
-
     def _mock_loadbalancer(self, lb_template, expected_name, expected_body):
         t = template_format.parse(json.dumps(lb_template))
-        s = parse_stack(t, stack_name=self._random_name())
+        s = utils.parse_stack(t, stack_name=utils.random_name())
 
         rsrc, fake_loadbalancer = self._mock_create(t, s,
                                                     self.
