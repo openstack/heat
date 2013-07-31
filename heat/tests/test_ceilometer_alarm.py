@@ -17,15 +17,13 @@ import copy
 import json
 import mox
 import testtools
-import uuid
 
 from oslo.config import cfg
 
 from heat.tests import fakes
 from heat.tests import generic_resource
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import stack_delete_after
+from heat.tests import utils
 
 from heat.common import context
 from heat.common import template_format
@@ -86,23 +84,10 @@ class FakeCeilometerClient(object):
     alarms = FakeCeilometerAlarms()
 
 
-class UUIDStub(object):
-    def __init__(self, value):
-        self.value = value
-
-    def __enter__(self):
-        self.uuid4 = uuid.uuid4
-        uuid_stub = lambda: self.value
-        uuid.uuid4 = uuid_stub
-
-    def __exit__(self, *exc_info):
-        uuid.uuid4 = self.uuid4
-
-
 class CeilometerAlarmTest(HeatTestCase):
     def setUp(self):
         super(CeilometerAlarmTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
         resource._register_class('SignalResourceType',
                                  generic_resource.SignalResource)
@@ -110,26 +95,21 @@ class CeilometerAlarmTest(HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
 
-        self.stack_id = 'STACKABCD1234'
         self.fc = fakes.FakeKeystoneClient()
         self.fa = FakeCeilometerClient()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
-    def create_stack(self, stack_name='test_stack',
-                     template=None):
+    def create_stack(self, template=None):
         if template is None:
             template = alarm_template
         temp = template_format.parse(template)
         template = parser.Template(temp)
         ctx = context.get_admin_context()
         ctx.tenant_id = 'test_tenant'
-        stack = parser.Stack(ctx, stack_name, template,
+        stack = parser.Stack(ctx, utils.random_name(), template,
                              disable_rollback=True)
-
-        # Stub out the stack ID so we have a known value
-        with UUIDStub(self.stack_id):
-            stack.store()
+        stack.store()
 
         self.m.StubOutWithMock(resource.Resource, 'keystone')
         resource.Resource.keystone().MultipleTimes().AndReturn(
@@ -149,7 +129,7 @@ class CeilometerAlarmTest(HeatTestCase):
         return stack
 
     @testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_mem_alarm_high_update_no_replace(self):
         '''
         Make sure that we can change the update-able properties
@@ -189,7 +169,7 @@ class CeilometerAlarmTest(HeatTestCase):
         self.m.VerifyAll()
 
     @testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_mem_alarm_high_update_replace(self):
         '''
         Make sure that the Alarm resource IS replaced when non-update-able
@@ -215,7 +195,7 @@ class CeilometerAlarmTest(HeatTestCase):
         self.m.VerifyAll()
 
     @testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_mem_alarm_suspend_resume(self):
         """
         Make sure that the Alarm resource gets disabled on suspend
