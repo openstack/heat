@@ -211,6 +211,31 @@ test_template_findinmap_invalid = '''
 }
 '''
 
+test_template_invalid_resources = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "AWS CloudFormation Sample Template for xyz.",
+   "Parameters" : {
+        "InstanceType" : {
+            "Description" : "Defined instance type",
+            "Type" : "String",
+            "Default" : "node.ee",
+            "AllowedValues" : ["node.ee", "node.apache", "node.api"],
+            "ConstraintDescription" : "must be a valid instance type."
+        }
+    },
+    "Resources" : {
+        "Type" : "AWS::EC2::Instance",
+        "Metadata" : {
+        },
+        "Properties" : {
+            "ImageId" : { "Ref" : "centos-6.4-20130701-0" },
+            "InstanceType" : { "Ref" : "InstanceType" }
+         }
+    }
+}
+'''
+
 test_template_invalid_property = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -604,6 +629,18 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
         self.assertEqual(res, {'Error': 'Unknown Property UnknownProperty'})
+
+    def test_invalid_resources(self):
+        t = template_format.parse(test_template_invalid_resources)
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        engine = service.EngineService('a', 't')
+        res = dict(engine.validate_template(None, t))
+        self.assertEqual({'Error': 'Resources must contain Resource. '
+                          'Found a [string] instead'},
+                         res)
 
     def test_unimplemented_property(self):
         t = template_format.parse(test_template_unimplemented_property)

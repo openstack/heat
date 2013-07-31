@@ -312,9 +312,19 @@ class EngineService(service.Service):
             return {'Error': 'At least one Resources member must be defined.'}
 
         for res in tmpl_resources.values():
-            if not res.get('Type'):
+            try:
+                if not res.get('Type'):
+                    return {'Error':
+                            'Every Resource object must '
+                            'contain a Type member.'}
+            except AttributeError:
+                type_res = type(res)
+                if isinstance(res, unicode):
+                    type_res = "string"
                 return {'Error':
-                        'Every Resources object must contain a Type member.'}
+                        'Resources must contain Resource. '
+                        'Found a [%s] instead' % type_res}
+
             ResourceClass = resource.get_class(res['Type'])
             props = properties.Properties(ResourceClass.properties_schema,
                                           res.get('Properties', {}))
