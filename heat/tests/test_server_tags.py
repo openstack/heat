@@ -168,6 +168,7 @@ class ServerTagsTest(HeatTestCase):
     def test_group_tags(self):
         tags = [{'Key': 'Food', 'Value': 'yum'}]
         metadata = dict((tm['Key'], tm['Value']) for tm in tags)
+        metadata['metering.groupname'] = 'WebServer'
         group = self._setup_test_group(intags=tags, nova_tags=metadata)
         self.m.ReplayAll()
         scheduler.TaskRunner(group.create)()

@@ -135,10 +135,21 @@ class InstanceGroup(resource.Resource):
         instance_definition = self.stack.t['Resources'][conf]
 
         # honour the Tags property in the InstanceGroup and AutoScalingGroup
-        tags = self.properties.data.get('Tags', [])
-        instance_definition['Properties']['Tags'] = tags
-
+        instance_definition['Properties']['Tags'] = self._tags()
         return GroupedInstance(name, instance_definition, self.stack)
+
+    def _tags(self):
+        """
+        Make sure that we add a tag that Ceilometer can pick up.
+        These need to be prepended with 'metering.'.
+        """
+        tags = self.properties.get('Tags') or []
+        for t in tags:
+            if t['Key'].startswith('metering.'):
+                # the user has added one, don't add another.
+                return tags
+        return tags + [{'Key': 'metering.groupname',
+                        'Value': self.FnGetRefId()}]
 
     def _instances(self):
         '''
@@ -323,7 +334,6 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                                  'Cooldown', 'DesiredCapacity',)
 
     def handle_create(self):
-
         if self.properties['DesiredCapacity']:
             num_to_create = int(self.properties['DesiredCapacity'])
         else:
@@ -405,6 +415,17 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         self._cooldown_timestamp("%s : %s" % (adjustment_type, adjustment))
 
         return result
+
+    def _tags(self):
+        """Add Identifing Tags to all servers in the group.
+
+        This is so the Dimensions received from cfn-push-stats all include
+        the groupname and stack id.
+        Note: the group name must match what is returned from FnGetRefId
+        """
+        autoscaling_tag = [{'Key': 'AutoScalingGroupName',
+                            'Value': self.FnGetRefId()}]
+        return super(AutoScalingGroup, self)._tags() + autoscaling_tag
 
     def FnGetRefId(self):
         return unicode(self.name)

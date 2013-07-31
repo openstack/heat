@@ -309,3 +309,32 @@ class WatchRule(object):
                 logger.warning("Unable to override state %s for watch %s" %
                               (self.state, self.name))
         return actions
+
+
+def rule_can_use_sample(wr, stats_data):
+    def match_dimesions(rule, data):
+        for k, v in iter(rule.items()):
+            if k not in data:
+                return False
+            elif v != data[k]:
+                return False
+        return True
+
+    if wr.state == WatchRule.SUSPENDED:
+        return False
+    if wr.rule['MetricName'] not in stats_data:
+        return False
+
+    rule_dims = dict((d['Name'], d['Value'])
+                     for d in wr.rule.get('Dimensions', []))
+
+    for k, v in iter(stats_data.items()):
+        if k == 'Namespace':
+            continue
+        if k == wr.rule['MetricName']:
+            data_dims = v.get('Dimensions', {})
+            if isinstance(data_dims, list):
+                data_dims = data_dims[0]
+            if match_dimesions(rule_dims, data_dims):
+                return True
+    return False

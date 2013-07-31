@@ -662,9 +662,24 @@ class EngineService(service.Service):
         This could be used by CloudWatch and WaitConditions
         and treat HA service events like any other CloudWatch.
         '''
-        rule = watchrule.WatchRule.load(cnxt, watch_name)
-        rule.create_watch_data(stats_data)
-        logger.debug('new watch:%s data:%s' % (watch_name, str(stats_data)))
+        def get_matching_watches():
+            if watch_name:
+                yield watchrule.WatchRule.load(cnxt, watch_name)
+            else:
+                for wr in db_api.watch_rule_get_all(cnxt):
+                    if watchrule.rule_can_use_sample(wr, stats_data):
+                        yield watchrule.WatchRule.load(cnxt, watch=wr)
+
+        rule_run = False
+        for rule in get_matching_watches():
+            rule.create_watch_data(stats_data)
+            rule_run = True
+
+        if not rule_run:
+            if watch_name is None:
+                watch_name = 'Unknown'
+            raise exception.WatchRuleNotFound(watch_name=watch_name)
+
         return stats_data
 
     @request_context
