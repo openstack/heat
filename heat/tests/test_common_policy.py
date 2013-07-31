@@ -19,6 +19,7 @@ from oslo.config import cfg
 
 from heat.common import policy
 from heat.common import exception
+from heat.openstack.common import policy as base_policy
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -47,6 +48,11 @@ class TestPolicyEnforcer(HeatTestCase):
         cfg.CONF.register_opts(opts)
 
     def test_policy_cfn_default(self):
+        pf = policy_path + 'deny_stack_user.json'
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
         enforcer = policy.Enforcer(scope='cloudformation')
 
         ctx = utils.dummy_context(roles=[])
@@ -56,8 +62,8 @@ class TestPolicyEnforcer(HeatTestCase):
 
     def test_policy_cfn_notallowed(self):
         pf = policy_path + 'notallowed.json'
-        self.m.StubOutWithMock(policy.Enforcer, '_find_policy_file')
-        policy.Enforcer._find_policy_file().MultipleTimes().AndReturn(pf)
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
         self.m.ReplayAll()
 
         enforcer = policy.Enforcer(scope='cloudformation')
@@ -71,8 +77,8 @@ class TestPolicyEnforcer(HeatTestCase):
 
     def test_policy_cfn_deny_stack_user(self):
         pf = policy_path + 'deny_stack_user.json'
-        self.m.StubOutWithMock(policy.Enforcer, '_find_policy_file')
-        policy.Enforcer._find_policy_file().MultipleTimes().AndReturn(pf)
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
         self.m.ReplayAll()
 
         enforcer = policy.Enforcer(scope='cloudformation')
@@ -89,8 +95,8 @@ class TestPolicyEnforcer(HeatTestCase):
 
     def test_policy_cfn_allow_non_stack_user(self):
         pf = policy_path + 'deny_stack_user.json'
-        self.m.StubOutWithMock(policy.Enforcer, '_find_policy_file')
-        policy.Enforcer._find_policy_file().MultipleTimes().AndReturn(pf)
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
         self.m.ReplayAll()
 
         enforcer = policy.Enforcer(scope='cloudformation')
@@ -103,8 +109,8 @@ class TestPolicyEnforcer(HeatTestCase):
 
     def test_policy_cw_deny_stack_user(self):
         pf = policy_path + 'deny_stack_user.json'
-        self.m.StubOutWithMock(policy.Enforcer, '_find_policy_file')
-        policy.Enforcer._find_policy_file().MultipleTimes().AndReturn(pf)
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
         self.m.ReplayAll()
 
         enforcer = policy.Enforcer(scope='cloudwatch')
@@ -121,8 +127,8 @@ class TestPolicyEnforcer(HeatTestCase):
 
     def test_policy_cw_allow_non_stack_user(self):
         pf = policy_path + 'deny_stack_user.json'
-        self.m.StubOutWithMock(policy.Enforcer, '_find_policy_file')
-        policy.Enforcer._find_policy_file().MultipleTimes().AndReturn(pf)
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
         self.m.ReplayAll()
 
         enforcer = policy.Enforcer(scope='cloudwatch')
@@ -131,4 +137,75 @@ class TestPolicyEnforcer(HeatTestCase):
         for action in self.cw_actions:
             # Everything should be allowed
             enforcer.enforce(ctx, action, {})
+        self.m.VerifyAll()
+
+    def test_clear(self):
+        pf = policy_path + 'deny_stack_user.json'
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
+        enforcer = policy.Enforcer()
+        enforcer.load_rules(force_reload=True)
+        enforcer.clear()
+        self.assertEqual(enforcer.enforcer.rules, {})
+        self.m.VerifyAll()
+
+    def test_set_rules_overwrite_true(self):
+        pf = policy_path + 'deny_stack_user.json'
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
+        enforcer = policy.Enforcer()
+        enforcer.load_rules(True)
+        enforcer.set_rules({'test_heat_rule': 1}, True)
+        self.assertEqual(enforcer.enforcer.rules, {'test_heat_rule': 1})
+
+    def test_set_rules_overwrite_false(self):
+        pf = policy_path + 'deny_stack_user.json'
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
+        enforcer = policy.Enforcer()
+        enforcer.load_rules(True)
+        enforcer.set_rules({'test_heat_rule': 1}, False)
+        self.assertIn('test_heat_rule', enforcer.enforcer.rules)
+
+    def test_load_rules_force_reload_true(self):
+        pf = policy_path + 'deny_stack_user.json'
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
+        enforcer = policy.Enforcer()
+        enforcer.set_rules({'test_heat_rule': 'test'})
+        enforcer.load_rules(True)
+        self.assertNotIn({'test_heat_rule': 'test'}, enforcer.enforcer.rules)
+
+    def test_load_rules_force_reload_false(self):
+        pf = policy_path + 'deny_stack_user.json'
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
+        enforcer = policy.Enforcer()
+        enforcer.load_rules(True)
+        enforcer.set_rules({'test_heat_rule': 'test'})
+        enforcer.load_rules(False)
+        self.assertIn('test_heat_rule', enforcer.enforcer.rules)
+
+    def test_default_rule(self):
+        pf = policy_path + 'deny_stack_user.json'
+        self.m.StubOutWithMock(base_policy.Enforcer, '_get_policy_path')
+        base_policy.Enforcer._get_policy_path().MultipleTimes().AndReturn(pf)
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context(roles=['not_a_stack_user'])
+        default_rule = base_policy.FalseCheck()
+        enforcer = policy.Enforcer(scope='cloudformation',
+                                   exc=None, default_rule=default_rule)
+        action = 'no_such_action'
+        self.assertEqual(enforcer.enforce(ctx, action, {}), False)
         self.m.VerifyAll()

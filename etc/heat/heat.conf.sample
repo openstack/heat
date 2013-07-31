@@ -81,17 +81,6 @@
 
 
 #
-# Options defined in heat.common.policy
-#
-
-# Policy file to use (string value)
-#policy_file=policy.json
-
-# Default Rule of Policy File (string value)
-#policy_default_rule=default
-
-
-#
 # Options defined in heat.common.wsgi
 #
 
@@ -198,9 +187,9 @@
 # (string value)
 #log_config=<None>
 
-# A logging.Formatter log message format string which may use
-# any of the available logging.LogRecord attributes. This
-# option is deprecated.  Please use
+# DEPRECATED. A logging.Formatter log message format string
+# which may use any of the available logging.LogRecord
+# attributes. This option is deprecated.  Please use
 # logging_context_format_string and
 # logging_default_format_string instead. (string value)
 #log_format=<None>
@@ -255,6 +244,18 @@
 
 # AMQP topic used for openstack notifications (list value)
 #notification_topics=notifications
+
+
+#
+# Options defined in heat.openstack.common.policy
+#
+
+# JSON file containing policy (string value)
+#policy_file=policy.json
+
+# Rule enforced when requested rule is not found (string
+# value)
+#policy_default_rule=default
 
 
 #

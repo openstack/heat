@@ -8,6 +8,7 @@ iso8601>=0.1.4
 kombu>=2.4.8
 argparse
 lxml>=2.3
+netaddr
 six
 sqlalchemy-migrate>=0.7.2
 python-novaclient>=2.12.0
