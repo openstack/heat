@@ -30,12 +30,12 @@ logger = logging.getLogger(__name__)
 class CloudServer(instance.Instance):
     """Resource for Rackspace Cloud Servers."""
 
-    properties_schema = {'ServerName': {'Type': 'String', 'Required': True},
-                         'Flavor': {'Type': 'String', 'Required': True},
+    properties_schema = {'Flavor': {'Type': 'String', 'Required': True},
                          'ImageName': {'Type': 'String', 'Required': True},
                          'UserData': {'Type': 'String'},
                          'key_name': {'Type': 'String'},
-                         'Volumes': {'Type': 'List'}}
+                         'Volumes': {'Type': 'List'},
+                         'name': {'Type': 'String'}}
 
     attributes_schema = {'PrivateDnsName': ('Private DNS name of the specified'
                                             ' instance.'),
@@ -146,7 +146,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     # Template keys supported for handle_update.  Properties not
     # listed here trigger an UpdateReplace
     update_allowed_keys = ('Metadata', 'Properties')
-    update_allowed_properties = ('Flavor', 'ServerName')
+    update_allowed_properties = ('Flavor', 'name')
 
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)
@@ -154,6 +154,13 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         self.rs = rackspace_resource.RackspaceResource(name,
                                                        json_snippet,
                                                        stack)
+
+    def physical_resource_name(self):
+        name = self.properties.get('name')
+        if name:
+            return name
+
+        return super(CloudServer, self).physical_resource_name()
 
     def nova(self):
         return self.rs.nova()  # Override the Instance method
@@ -320,7 +327,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
         # Create server
         client = self.nova().servers
-        server = client.create(self.properties['ServerName'],
+        server = client.create(self.physical_resource_name(),
                                self.image_id,
                                flavor,
                                files=personality_files)
@@ -426,12 +433,12 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                                           self.flavor)
             resize(wait_time=1.0)
 
-        # If ServerName is the only update, fail update
-        if prop_diff.keys() == ['ServerName'] and \
+        # If name is the only update, fail update
+        if prop_diff.keys() == ['name'] and \
            tmpl_diff.keys() == ['Properties']:
             raise exception.NotSupported(feature="Cloud Server rename")
         # Other updates were successful, so don't cause update to fail
-        elif 'ServerName' in prop_diff:
+        elif 'name' in prop_diff:
             logger.info("Cloud Server rename not supported.")
 
         return True
