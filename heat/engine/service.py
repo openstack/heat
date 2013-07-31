@@ -100,13 +100,17 @@ class EngineService(service.Service):
         wrs = db_api.watch_rule_get_all_by_stack(cnxt,
                                                  stack_id)
 
-        # reset the last_evaluated so we don't fire off alarms when
-        # the engine has not been running.
         now = timeutils.utcnow()
+        start_watch_thread = False
         for wr in wrs:
+            # reset the last_evaluated so we don't fire off alarms when
+            # the engine has not been running.
             db_api.watch_rule_update(cnxt, wr.id, {'last_evaluated': now})
 
-        if len(wrs) > 0:
+            if wr.state != rpc_api.WATCH_STATE_CEILOMETER_CONTROLLED:
+                start_watch_thread = True
+
+        if start_watch_thread:
             self._timer_in_thread(stack_id, self._periodic_watcher_task,
                                   sid=stack_id)
 
@@ -736,6 +740,8 @@ class EngineService(service.Service):
         arg3 -> State (must be one defined in WatchRule class
         '''
         wr = watchrule.WatchRule.load(cnxt, watch_name)
+        if wr.state == rpc_api.WATCH_STATE_CEILOMETER_CONTROLLED:
+            return
         actions = wr.set_watch_state(state)
         for action in actions:
             self._start_in_thread(wr.stack_id, action)
