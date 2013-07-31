@@ -18,62 +18,32 @@ import collections
 
 class Attribute(object):
     """
-    An attribute description and resolved value.
-
-    :param resource_name: the logical name of the resource having this
-                          attribute
-    :param attr_name: the name of the attribute
-    :param description: attribute description
-    :param resolver: a function that will resolve the value of this attribute
+    An Attribute schema.
     """
 
-    def __init__(self, attr_name, description, resolver):
-        self._name = attr_name
-        self._description = description
-        self._resolve = resolver
+    def __init__(self, attr_name, description):
+        """
+        Initialise with a name and description.
 
-    @property
-    def name(self):
-        """
-        :returns: The attribute name
-        """
-        return self._name
-
-    @property
-    def value(self):
-        """
-        :returns: The resolved attribute value
-        """
-        return self._resolve(self._name)
-
-    @property
-    def description(self):
-        """
-        :returns: A description of the attribute
-        """
-        return self._description
-
-    @staticmethod
-    def as_output(resource_name, attr_name, description):
-        """
-        :param resource_name: the logical name of a resource
         :param attr_name: the name of the attribute
-        :description: the description of the attribute
+        :param description: attribute description
+        """
+        self.name = attr_name
+        self.description = description
+
+    def as_output(self, resource_name):
+        """
+        Return an Output schema entry for a provider template with the given
+        resource name.
+
+        :param resource_name: the logical name of the provider resource
         :returns: This attribute as a template 'Output' entry
         """
         return {
-            attr_name: {
-                "Value": '{"Fn::GetAtt": ["%s", "%s"]}' % (resource_name,
-                                                           attr_name),
-                "Description": description
-            }
+            "Value": '{"Fn::GetAtt": ["%s", "%s"]}' % (resource_name,
+                                                       self.name),
+            "Description": self.description
         }
-
-    def __call__(self):
-        return self.value
-
-    def __str__(self):
-        return ("Attribute %s: %s" % (self.name, self.value))
 
 
 class Attributes(collections.Mapping):
@@ -81,21 +51,12 @@ class Attributes(collections.Mapping):
 
     def __init__(self, res_name, schema, resolver):
         self._resource_name = res_name
-        self._attributes = dict((k, Attribute(k, v, resolver))
-                                for k, v in schema.items())
+        self._resolver = resolver
+        self._attributes = Attributes._make_attributes(schema)
 
-    @property
-    def attributes(self):
-        """
-        Get a copy of the attribute definitions in this collection
-        (as opposed to attribute values); useful for doc and
-        template format generation
-
-        :returns: attribute definitions
-        """
-        # return a deep copy to avoid modification
-        return dict((k, Attribute(k, v.description, v._resolve)) for k, v
-                    in self._attributes.items())
+    @staticmethod
+    def _make_attributes(schema):
+        return dict((n, Attribute(n, d)) for n, d in schema.items())
 
     @staticmethod
     def as_outputs(resource_name, resource_class):
@@ -105,10 +66,10 @@ class Attributes(collections.Mapping):
         :returns: The attributes of the specified resource_class as a template
                   Output map
         """
-        outputs = {}
-        for name, descr in resource_class.attributes_schema.items():
-            outputs.update(Attribute.as_output(resource_name, name, descr))
-        return outputs
+        schema = resource_class.attributes_schema
+        attribs = Attributes._make_attributes(schema).items()
+
+        return dict((n, att.as_output(resource_name)) for n, att in attribs)
 
     @staticmethod
     def schema_from_outputs(json_snippet):
@@ -121,7 +82,7 @@ class Attributes(collections.Mapping):
         if key not in self:
             raise KeyError('%s: Invalid attribute %s' %
                            (self._resource_name, key))
-        return self._attributes[key]()
+        return self._resolver(key)
 
     def __len__(self):
         return len(self._attributes)
