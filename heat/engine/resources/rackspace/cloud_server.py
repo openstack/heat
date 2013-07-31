@@ -34,7 +34,7 @@ class CloudServer(instance.Instance):
                          'Flavor': {'Type': 'String', 'Required': True},
                          'ImageName': {'Type': 'String', 'Required': True},
                          'UserData': {'Type': 'String'},
-                         'PublicKey': {'Type': 'String'},
+                         'key_name': {'Type': 'String'},
                          'Volumes': {'Type': 'List'}}
 
     attributes_schema = {'PrivateDnsName': ('Private DNS name of the specified'
@@ -294,7 +294,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         """
         # Retrieve server creation parameters from properties
         flavor = self.properties['Flavor']
-        user_public_key = self.properties['PublicKey'] or ''
 
         # Generate SSH public/private keypair
         if self._private_key is not None:
@@ -302,9 +301,12 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         else:
             rsa = RSA.generate(1024)
         self.private_key = rsa.exportKey()
-        public_key = rsa.publickey().exportKey('OpenSSH')
-        public_keys = public_key + "\n" + user_public_key
-        personality_files = {"/root/.ssh/authorized_keys": public_keys}
+        public_keys = [rsa.publickey().exportKey('OpenSSH')]
+        if self.properties.get('key_name'):
+            key_name = self.properties['key_name']
+            public_keys.append(self._get_keypair(key_name).public_key)
+        personality_files = {
+            "/root/.ssh/authorized_keys": '\n'.join(public_keys)}
 
         # Create server
         client = self.nova().servers

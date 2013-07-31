@@ -344,17 +344,23 @@ class Instance(resource.Resource):
             raise exception.FlavorMissing(flavor_id=flavor)
         return flavor_id
 
+    def _get_keypair(self, key_name):
+        for keypair in self.nova().keypairs.list():
+            if keypair.name == key_name:
+                return keypair
+        raise exception.UserKeyPairMissing(key_name=key_name)
+
     def handle_create(self):
         security_groups = self._get_security_groups()
 
         userdata = self.properties['UserData'] or ''
         flavor = self.properties['InstanceType']
-        key_name = self.properties['KeyName']
         availability_zone = self.properties['AvailabilityZone']
 
-        keypairs = [k.name for k in self.nova().keypairs.list()]
-        if key_name not in keypairs and key_name is not None:
-            raise exception.UserKeyPairMissing(key_name=key_name)
+        key_name = self.properties['KeyName']
+        if key_name:
+            # confirm keypair exists
+            self._get_keypair(key_name)
 
         image_name = self.properties['ImageId']
 
