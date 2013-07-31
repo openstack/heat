@@ -107,7 +107,7 @@ class Parameter(object):
         Return whether the parameter should be sanitised in any output to
         the user.
         '''
-        return self.schema.get(NO_ECHO, 'false').lower() == 'true'
+        return str(self.schema.get(NO_ECHO, 'false')).lower() == 'true'
 
     def description(self):
         '''Return the description of the parameter.'''
