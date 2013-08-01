@@ -14,7 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from eventlet import greenlet
+import eventlet
 from eventlet import greenpool
 from eventlet import greenthread
 
@@ -105,7 +105,7 @@ class ThreadGroup(object):
         for x in self.timers:
             try:
                 x.wait()
-            except greenlet.GreenletExit:
+            except eventlet.greenlet.GreenletExit:
                 pass
             except Exception as ex:
                 LOG.exception(ex)
@@ -115,7 +115,7 @@ class ThreadGroup(object):
                 continue
             try:
                 x.wait()
-            except greenlet.GreenletExit:
+            except eventlet.greenlet.GreenletExit:
                 pass
             except Exception as ex:
                 LOG.exception(ex)

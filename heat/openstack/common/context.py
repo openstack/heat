@@ -61,7 +61,7 @@ class RequestContext(object):
                 'request_id': self.request_id}
 
 
-def get_admin_context(show_deleted="no"):
+def get_admin_context(show_deleted=False):
     context = RequestContext(None,
                              tenant=None,
                              is_admin=True,

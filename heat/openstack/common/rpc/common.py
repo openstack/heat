@@ -24,6 +24,7 @@ import traceback
 from oslo.config import cfg
 import six
 
+from heat.openstack.common.gettextutils import _  # noqa
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils
 from heat.openstack.common import local
@@ -73,14 +74,14 @@ _REMOTE_POSTFIX = '_Remote'
 
 
 class RPCException(Exception):
-    message = _("An unknown RPC related exception occurred.")
+    msg_fmt = _("An unknown RPC related exception occurred.")
 
     def __init__(self, message=None, **kwargs):
         self.kwargs = kwargs
 
         if not message:
             try:
-                message = self.message % kwargs
+                message = self.msg_fmt % kwargs
 
             except Exception:
                 # kwargs doesn't match a variable in the message
@@ -89,7 +90,7 @@ class RPCException(Exception):
                 for name, value in kwargs.iteritems():
                     LOG.error("%s: %s" % (name, value))
                 # at least get the core message out if something happened
-                message = self.message
+                message = self.msg_fmt
 
         super(RPCException, self).__init__(message)
 
@@ -103,7 +104,7 @@ class RemoteError(RPCException):
     contains all of the relevant info.
 
     """
-    message = _("Remote error: %(exc_type)s %(value)s\n%(traceback)s.")
+    msg_fmt = _("Remote error: %(exc_type)s %(value)s\n%(traceback)s.")
 
     def __init__(self, exc_type=None, value=None, traceback=None):
         self.exc_type = exc_type
@@ -120,7 +121,7 @@ class Timeout(RPCException):
     This exception is raised if the rpc_response_timeout is reached while
     waiting for a response from the remote side.
     """
-    message = _('Timeout while waiting on RPC response - '
+    msg_fmt = _('Timeout while waiting on RPC response - '
                 'topic: "%(topic)s", RPC method: "%(method)s" '
                 'info: "%(info)s"')
 
@@ -143,25 +144,25 @@ class Timeout(RPCException):
 
 
 class DuplicateMessageError(RPCException):
-    message = _("Found duplicate message(%(msg_id)s). Skipping it.")
+    msg_fmt = _("Found duplicate message(%(msg_id)s). Skipping it.")
 
 
 class InvalidRPCConnectionReuse(RPCException):
-    message = _("Invalid reuse of an RPC connection.")
+    msg_fmt = _("Invalid reuse of an RPC connection.")
 
 
 class UnsupportedRpcVersion(RPCException):
-    message = _("Specified RPC version, %(version)s, not supported by "
+    msg_fmt = _("Specified RPC version, %(version)s, not supported by "
                 "this endpoint.")
 
 
 class UnsupportedRpcEnvelopeVersion(RPCException):
-    message = _("Specified RPC envelope version, %(version)s, "
+    msg_fmt = _("Specified RPC envelope version, %(version)s, "
                 "not supported by this endpoint.")
 
 
 class RpcVersionCapError(RPCException):
-    message = _("Specified RPC version cap, %(version_cap)s, is too low")
+    msg_fmt = _("Specified RPC version cap, %(version_cap)s, is too low")
 
 
 class Connection(object):
@@ -260,41 +261,20 @@ class Connection(object):
 
 def _safe_log(log_func, msg, msg_data):
     """Sanitizes the msg_data field before logging."""
-    SANITIZE = {'set_admin_password': [('args', 'new_pass')],
-                'run_instance': [('args', 'admin_password')],
-                'route_message': [('args', 'message', 'args', 'method_info',
-                                   'method_kwargs', 'password'),
-                                  ('args', 'message', 'args', 'method_info',
-                                   'method_kwargs', 'admin_password')]}
+    SANITIZE = ['_context_auth_token', 'auth_token', 'new_pass']
 
-    has_method = 'method' in msg_data and msg_data['method'] in SANITIZE
-    has_context_token = '_context_auth_token' in msg_data
-    has_token = 'auth_token' in msg_data
+    def _fix_passwords(d):
+        """Sanitizes the password fields in the dictionary."""
+        for k in d.iterkeys():
+            if k.lower().find('password') != -1:
+                d[k] = '<SANITIZED>'
+            elif k.lower() in SANITIZE:
+                d[k] = '<SANITIZED>'
+            elif isinstance(d[k], dict):
+                _fix_passwords(d[k])
+        return d
 
-    if not any([has_method, has_context_token, has_token]):
-        return log_func(msg, msg_data)
-
-    msg_data = copy.deepcopy(msg_data)
-
-    if has_method:
-        for arg in SANITIZE.get(msg_data['method'], []):
-            try:
-                d = msg_data
-                for elem in arg[:-1]:
-                    d = d[elem]
-                d[arg[-1]] = '<SANITIZED>'
-            except KeyError as e:
-                LOG.info(_('Failed to sanitize %(item)s. Key error %(err)s'),
-                         {'item': arg,
-                          'err': e})
-
-    if has_context_token:
-        msg_data['_context_auth_token'] = '<SANITIZED>'
-
-    if has_token:
-        msg_data['auth_token'] = '<SANITIZED>'
-
-    return log_func(msg, msg_data)
+    return log_func(msg, _fix_passwords(copy.deepcopy(msg_data)))
 
 
 def serialize_remote_exception(failure_info, log_failure=True):

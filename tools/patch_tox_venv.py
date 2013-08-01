@@ -17,7 +17,7 @@
 import os
 import sys
 
-import install_venv_common as install_venv
+import install_venv_common as install_venv  # noqa
 
 
 def first_file(file_list):
