@@ -39,25 +39,29 @@ class ResourcePages(Directive):
         for resource_type, resource_class in _all_resources(prefix):
             self.resource_type = resource_type
             self.resource_class = resource_class
-            resourceid = 'resource-%s' % resource_type
-            section = nodes.section(ids=[resourceid])
-            content.append(section)
-
-            title = nodes.title('', resource_type)
-            section.append(title)
+            section = self._section(content, resource_type, '%s')
 
             cls_doc = resource_class.__doc__
             if cls_doc:
                 para = nodes.paragraph('', cls_doc)
                 section.append(para)
 
-            self.contribute_hot_syntax(section)
-            self.contribute_yaml_syntax(section)
-            self.contribute_json_syntax(section)
             self.contribute_properties(section)
             self.contribute_attributes(section)
 
+            self.contribute_hot_syntax(section)
+            self.contribute_yaml_syntax(section)
+            self.contribute_json_syntax(section)
+
         return content
+
+    def _section(self, parent, title, id_pattern):
+        id = id_pattern % self.resource_type
+        section = nodes.section(ids=[id])
+        parent.append(section)
+        title = nodes.title('', title)
+        section.append(title)
+        return section
 
     def _prop_syntax_example(self, prop):
         if not prop or not prop.get('Type'):
@@ -78,8 +82,8 @@ class ResourcePages(Directive):
         else:
             return prop_type
 
-    def contribute_hot_syntax(self, section):
-        section.append(nodes.strong('', _('HOT Syntax')))
+    def contribute_hot_syntax(self, parent):
+        section = self._section(parent, _('HOT Syntax'), '%s-hot')
         schema = self.resource_class.properties_schema
         props = []
         for prop_key in sorted(schema.keys()):
@@ -99,8 +103,8 @@ resources:
         block = nodes.literal_block('', template)
         section.append(block)
 
-    def contribute_yaml_syntax(self, section):
-        section.append(nodes.strong('', _('YAML Syntax')))
+    def contribute_yaml_syntax(self, parent):
+        section = self._section(parent, _('YAML Syntax'), '%s-yaml')
         schema = self.resource_class.properties_schema
         props = []
         for prop_key in sorted(schema.keys()):
@@ -120,8 +124,8 @@ Resources:
         block = nodes.literal_block('', template)
         section.append(block)
 
-    def contribute_json_syntax(self, section):
-        section.append(nodes.strong('', _('JSON Syntax')))
+    def contribute_json_syntax(self, parent):
+        section = self._section(parent, _('JSON Syntax'), '%s-json')
         schema = self.resource_class.properties_schema
 
         props = []
@@ -216,11 +220,11 @@ Resources:
                 sub_prop = sub_schema[sub_prop_key]
                 self.contribute_property(sub_prop_list, sub_prop_key, sub_prop)
 
-    def contribute_properties(self, section):
+    def contribute_properties(self, parent):
         schema = self.resource_class.properties_schema
         if not schema:
             return
-        section.append(nodes.strong('', _('Properties')))
+        section = self._section(parent, _('Properties'), '%s-props')
         prop_list = nodes.definition_list()
         section.append(prop_list)
         for prop_key in sorted(schema.keys()):
@@ -228,12 +232,11 @@ Resources:
             self.contribute_property(prop_list, prop_key, prop)
 
 
-    def contribute_attributes(self, section):
+    def contribute_attributes(self, parent):
         schema = self.resource_class.attributes_schema
         if not schema:
             return
-
-        section.append(nodes.strong('', _('Attributes')))
+        section = self._section(parent, _('Attributes'), '%s-attrs')
         prop_list = nodes.definition_list()
         section.append(prop_list)
         for prop_key in sorted(schema.keys()):
