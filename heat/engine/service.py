@@ -277,6 +277,10 @@ class EngineService(service.Service):
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
 
+        if db_stack.status != parser.Stack.COMPLETE:
+            raise exception.ActionInProgress(stack_name=db_stack.name,
+                                             action=db_stack.action)
+
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
 
         # Now parse the template and any parameters for the updated
@@ -378,8 +382,11 @@ class EngineService(service.Service):
         """
         st = self._get_stack(cnxt, stack_identity)
 
-        logger.info('deleting stack %s' % st.name)
+        if st.status not in (parser.Stack.COMPLETE, parser.Stack.FAILED):
+            raise exception.ActionInProgress(stack_name=st.name,
+                                             action=st.action)
 
+        logger.info('deleting stack %s' % st.name)
         stack = parser.Stack.load(cnxt, stack=st)
 
         # Kill any pending threads by calling ThreadGroup.stop()
