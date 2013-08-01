@@ -385,6 +385,9 @@ class Template(collections.Mapping):
                         handle_resource_facade,
                         s)
 
+    def param_schemata(self):
+        return self[PARAMETERS]
+
 
 def _resolve(match, handle, snippet):
     '''
