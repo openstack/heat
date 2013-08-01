@@ -20,6 +20,7 @@ from testtools import skipIf
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import scheduler
+from heat.engine.resources import instance
 from heat.engine.resources import volume as vol
 from heat.engine import clients
 from heat.engine import resource
@@ -54,7 +55,8 @@ volume_template = '''
       "Type" : "AWS::EC2::Volume",
       "Properties" : {
         "Size" : "1",
-        "AvailabilityZone" : "nova",
+        "AvailabilityZone" : {"Fn::GetAtt": ["WikiDatabase",
+                                             "AvailabilityZone"]},
         "Tags" : [{ "Key" : "Usage", "Value" : "Wiki Data Volume" }]
       }
     },
@@ -153,6 +155,48 @@ class VolumeTest(HeatTestCase):
         # Test when volume already deleted
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
         self.assertEqual(rsrc.destroy(), None)
+
+        self.m.VerifyAll()
+
+    def test_volume_default_az(self):
+        fv = FakeVolume('creating', 'available')
+        stack_name = 'test_volume_stack'
+
+        # create script
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
+        self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
+        self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_create')
+        self.m.StubOutWithMock(vol.VolumeAttachment, 'check_create_complete')
+        instance.Instance.handle_create().AndReturn(None)
+        instance.Instance.check_create_complete(None).AndReturn(True)
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        vol_name = utils.PhysName(stack_name, 'DataVolume')
+        self.cinder_fc.volumes.create(
+            size=u'1', availability_zone=None,
+            display_description=vol_name,
+            display_name=vol_name).AndReturn(fv)
+        vol.VolumeAttachment.handle_create().AndReturn(None)
+        vol.VolumeAttachment.check_create_complete(None).AndReturn(True)
+
+        # delete script
+        self.m.StubOutWithMock(instance.Instance, 'handle_delete')
+        self.m.StubOutWithMock(vol.VolumeAttachment, 'handle_delete')
+        instance.Instance.handle_delete().AndReturn(None)
+        self.cinder_fc.volumes.get('vol-123').AndRaise(
+            clients.cinderclient.exceptions.NotFound('Not found'))
+        vol.VolumeAttachment.handle_delete().AndReturn(None)
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        stack = parse_stack(t, stack_name=stack_name)
+
+        rsrc = stack['DataVolume']
+        self.assertEqual(rsrc.validate(), None)
+        scheduler.TaskRunner(stack.create)()
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+        self.assertEqual(stack.delete(), None)
 
         self.m.VerifyAll()
 

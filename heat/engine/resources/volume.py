@@ -45,8 +45,10 @@ class Volume(resource.Resource):
         return self.physical_resource_name()
 
     def _create_arguments(self):
-        return {'size': self.properties['Size'],
-                'availability_zone': self.properties['AvailabilityZone']}
+        return {
+            'size': self.properties['Size'],
+            'availability_zone': self.properties['AvailabilityZone'] or None,
+        }
 
     def handle_create(self):
         backup_id = self.properties.get(self._restore_property)
