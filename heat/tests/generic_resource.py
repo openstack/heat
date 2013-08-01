@@ -34,6 +34,9 @@ class GenericResource(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         logger.warning('Updating generic resource (Type "%s")' % self.type())
 
+    def handle_delete(self):
+        logger.warning('Deleting generic resource (Type "%s")' % self.type())
+
     def _resolve_attribute(self, name):
         return self.name
 
