@@ -21,7 +21,7 @@ from heat.engine import parameters
 
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
-    PATTERN, MIN_VALUE, MAX_VALUE, VALUES,
+    ALLOWED_PATTERN, MIN_VALUE, MAX_VALUE, ALLOWED_VALUES,
     MIN_LENGTH, MAX_LENGTH,
 ) = (
     'Required', 'Implemented', 'Default', 'Type', 'Schema',
@@ -75,8 +75,8 @@ class Property(object):
         return self.schema[TYPE]
 
     def _check_allowed(self, value):
-        if VALUES in self.schema:
-            allowed = list(self.schema[VALUES])
+        if ALLOWED_VALUES in self.schema:
+            allowed = list(self.schema[ALLOWED_VALUES])
             if value not in allowed:
                 raise ValueError('"%s" is not an allowed value %s' %
                                  (value, str(allowed)))
@@ -105,10 +105,10 @@ class Property(object):
             ret.update({DEFAULT: param[parameters.DEFAULT]})
         else:
             ret.update({REQUIRED: "true"})
-        if parameters.VALUES in param:
-            ret.update({VALUES: param[parameters.VALUES]})
-        if parameters.PATTERN in param:
-            ret.update({PATTERN: param[parameters.PATTERN]})
+        if parameters.ALLOWED_VALUES in param:
+            ret.update({ALLOWED_VALUES: param[parameters.ALLOWED_VALUES]})
+        if parameters.ALLOWED_PATTERN in param:
+            ret.update({ALLOWED_PATTERN: param[parameters.ALLOWED_PATTERN]})
         if parameters.MAX_LENGTH in param:
             ret.update({MAX_LENGTH: param[parameters.MAX_LENGTH]})
         if parameters.MIN_LENGTH in param:
@@ -149,8 +149,8 @@ class Property(object):
 
         self._check_allowed(value)
 
-        if PATTERN in self.schema:
-            pattern = self.schema[PATTERN]
+        if ALLOWED_PATTERN in self.schema:
+            pattern = self.schema[ALLOWED_PATTERN]
             match = re.match(pattern, value)
             if match is None or match.end() != len(value):
                 raise ValueError('"%s" does not match pattern "%s"' %
