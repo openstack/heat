@@ -689,16 +689,15 @@ class Resource(object):
         to implement the signal, the base-class raise an exception if no
         handler is implemented.
         '''
-        if self.action in (self.SUSPEND, self.DELETE):
-            raise exception.ResourceFailure(Exception(
-                'Can not send a signal to a Resource whilst actioning a %s' %
-                self.action))
-
-        if not callable(getattr(self, 'handle_signal', None)):
-            raise exception.ResourceFailure(Exception(
-                'Resource %s is not able to receive a signal' % str(self)))
-
         try:
+            if self.action in (self.SUSPEND, self.DELETE):
+                msg = 'Cannot signal resource during %s' % self.action
+                raise Exception(msg)
+
+            if not callable(getattr(self, 'handle_signal', None)):
+                msg = 'Resource %s is not able to receive a signal' % str(self)
+                raise Exception(msg)
+
             self._add_event('signal', self.status, details)
             self.handle_signal(details)
         except Exception as ex:
