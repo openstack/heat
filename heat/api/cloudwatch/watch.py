@@ -283,15 +283,6 @@ class WatchController(object):
             else:
                 dimensions.append(dimension)
 
-        # We expect an AlarmName dimension as currently the engine
-        # implementation requires metric data to be associated
-        # with an alarm.  When this is fixed, we can simply
-        # parse the user-defined dimensions and add the list to
-        # the metric data
-        if not watch_name:
-            logger.error("Request does not contain AlarmName dimension!")
-            return exception.HeatMissingParameterError("AlarmName dimension")
-
         # Extract the required data from the metric_data
         # and format dict to pass to engine
         data = {'Namespace': namespace,
