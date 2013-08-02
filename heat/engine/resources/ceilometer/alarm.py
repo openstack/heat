@@ -13,7 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.engine import resource
+from heat.engine import watchrule
 
 
 class CeilometerAlarm(resource.Resource):
@@ -85,6 +87,17 @@ class CeilometerAlarm(resource.Resource):
         alarm = self.ceilometer().alarms.create(**props)
         self.resource_id_set(alarm.alarm_id)
 
+        # the watchrule below is for backwards compatibility.
+        # 1) so we don't create watch tasks unneccessarly
+        # 2) to support CW stats post, we will redirect the request
+        #    to ceilometer.
+        wr = watchrule.WatchRule(context=self.context,
+                                 watch_name=self.physical_resource_name(),
+                                 rule=self.parsed_template('Properties'),
+                                 stack_id=self.stack.id)
+        wr.state = wr.CEILOMETER_CONTROLLED
+        wr.store()
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             kwargs = {'alarm_id': self.resource_id}
@@ -102,6 +115,13 @@ class CeilometerAlarm(resource.Resource):
                                             enabled=True)
 
     def handle_delete(self):
+        try:
+            wr = watchrule.WatchRule.load(
+                self.context, watch_name=self.physical_resource_name())
+            wr.destroy()
+        except exception.WatchRuleNotFound:
+            pass
+
         if self.resource_id is not None:
             self.ceilometer().alarms.delete(self.resource_id)
 

@@ -31,12 +31,14 @@ class WatchRule(object):
         ALARM,
         NORMAL,
         NODATA,
-        SUSPENDED
+        SUSPENDED,
+        CEILOMETER_CONTROLLED,
     ) = (
         rpc_api.WATCH_STATE_ALARM,
         rpc_api.WATCH_STATE_OK,
         rpc_api.WATCH_STATE_NODATA,
-        rpc_api.WATCH_STATE_SUSPENDED
+        rpc_api.WATCH_STATE_SUSPENDED,
+        rpc_api.WATCH_STATE_CEILOMETER_CONTROLLED,
     )
     ACTION_MAP = {ALARM: 'AlarmActions',
                   NORMAL: 'OKActions',
@@ -54,7 +56,12 @@ class WatchRule(object):
         self.state = state
         self.rule = rule
         self.stack_id = stack_id
-        self.timeperiod = datetime.timedelta(seconds=int(rule['Period']))
+        period = 0
+        if 'Period' in rule:
+            period = int(rule['Period'])
+        elif 'period' in rule:
+            period = int(rule['period'])
+        self.timeperiod = datetime.timedelta(seconds=period)
         self.id = wid
         self.watch_data = watch_data
         self.last_evaluated = last_evaluated
@@ -257,7 +264,34 @@ class WatchRule(object):
                                new_state)
         return actions
 
+    def _to_ceilometer(self, data):
+        from heat.engine import clients
+        clients = clients.Clients(self.context)
+        sample = {}
+        sample['counter_type'] = 'gauge'
+
+        for k, d in iter(data.items()):
+            if k == 'Namespace':
+                continue
+            sample['counter_name'] = k
+            sample['counter_volume'] = d['Value']
+            sample['counter_unit'] = d['Unit']
+            dims = d.get('Dimensions', {})
+            if isinstance(dims, list):
+                dims = dims[0]
+            sample['resource_metadata'] = dims
+            sample['resource_id'] = dims.get('InstanceId')
+            logger.debug('new sample:%s data:%s' % (k, sample))
+            clients.ceilometer().samples.create(**sample)
+
     def create_watch_data(self, data):
+        if self.state == self.CEILOMETER_CONTROLLED:
+            # this is a short term measure for those that have cfn-push-stats
+            # within their templates, but want to use Ceilometer alarms.
+
+            self._to_ceilometer(data)
+            return
+
         if self.state == self.SUSPENDED:
             logger.debug('Ignoring metric data for %s, SUSPENDED state'
                          % self.name)
@@ -322,16 +356,24 @@ def rule_can_use_sample(wr, stats_data):
 
     if wr.state == WatchRule.SUSPENDED:
         return False
-    if wr.rule['MetricName'] not in stats_data:
-        return False
+    if wr.state == WatchRule.CEILOMETER_CONTROLLED:
+        metric = wr.rule['counter_name']
+        rule_dims = {}
+        for k, v in iter(wr.rule.get('matching_metadata', {}).items()):
+            name = k.split('.')[-1]
+            rule_dims[name] = v
+    else:
+        metric = wr.rule['MetricName']
+        rule_dims = dict((d['Name'], d['Value'])
+                         for d in wr.rule.get('Dimensions', []))
 
-    rule_dims = dict((d['Name'], d['Value'])
-                     for d in wr.rule.get('Dimensions', []))
+    if metric not in stats_data:
+        return False
 
     for k, v in iter(stats_data.items()):
         if k == 'Namespace':
             continue
-        if k == wr.rule['MetricName']:
+        if k == metric:
             data_dims = v.get('Dimensions', {})
             if isinstance(data_dims, list):
                 data_dims = data_dims[0]
