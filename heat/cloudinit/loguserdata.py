@@ -78,6 +78,7 @@ def main():
         return -1
 
     userdata_path = os.path.join(VAR_PATH, 'cfn-userdata')
+    os.chmod(userdata_path, 0o700)
 
     LOG.info('Provision began: %s\n' % datetime.datetime.now())
     returncode = call([userdata_path])

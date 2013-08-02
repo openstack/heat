@@ -19,7 +19,6 @@ import json
 import os
 import pkgutil
 from urlparse import urlparse
-import yaml
 
 from oslo.config import cfg
 
@@ -211,33 +210,30 @@ class Instance(resource.Resource):
                                filename=filename)
                 return msg
 
-            def read_cfg_file():
-                rd = pkgutil.get_data('heat', 'cloudinit/config')
-                rd = rd.replace('@INSTANCE_USER@',
-                                cfg.CONF.instance_user)
-                rd = yaml.safe_load(rd)
-                return rd
-
-            def add_data_file(fn, data):
-                rd = [{'owner': 'root:root',
-                      'path': '/var/lib/heat-cfntools/%s' % fn,
-                      'permissions': '0700',
-                      'content': '%s' % data}]
-                return rd
-
-            def yaml_add(yd, fn, data):
-                rd = '%s%s' % (yd, yaml.safe_dump(add_data_file(fn, data)))
-                return rd
-
-            def read_data_file(fn):
-                data = pkgutil.get_data('heat', 'cloudinit/%s' % fn)
-                rd = add_data_file(fn, data)
-                return rd
-
             def read_cloudinit_file(fn):
-                rd = pkgutil.get_data('heat', 'cloudinit/%s' % fn)
-                rd = rd.replace('@INSTANCE_USER@', cfg.CONF.instance_user)
-                return rd
+                data = pkgutil.get_data('heat', 'cloudinit/%s' % fn)
+                data = data.replace('@INSTANCE_USER@',
+                                    cfg.CONF.instance_user)
+                return data
+
+            attachments = [(read_cloudinit_file('config'), 'cloud-config'),
+                           (read_cloudinit_file('boothook.sh'), 'boothook.sh',
+                            'cloud-boothook'),
+                           (read_cloudinit_file('part_handler.py'),
+                            'part-handler.py'),
+                           (userdata, 'cfn-userdata', 'x-cfninitdata'),
+                           (read_cloudinit_file('loguserdata.py'),
+                            'loguserdata.py', 'x-shellscript')]
+
+            if 'Metadata' in self.t:
+                attachments.append((json.dumps(self.metadata),
+                                    'cfn-init-data', 'x-cfninitdata'))
+
+            attachments.append((cfg.CONF.heat_watch_server_url,
+                                'cfn-watch-server', 'x-cfninitdata'))
+
+            attachments.append((cfg.CONF.heat_metadata_server_url,
+                                'cfn-metadata-server', 'x-cfninitdata'))
 
             # Create a boto config which the cfntools on the host use to know
             # where the cfn and cw API's are to be accessed
@@ -255,30 +251,9 @@ class Instance(resource.Resource):
                                   "cloudwatch_region_name = heat",
                                   "cloudwatch_region_endpoint = %s" %
                                   cw_url.hostname])
+            attachments.append((boto_cfg,
+                                'cfn-boto-cfg', 'x-cfninitdata'))
 
-            # Build yaml write_files section
-            yamld = ''
-            yamld = yaml_add(yamld, 'cfn-watch-server',
-                             cfg.CONF.heat_watch_server_url)
-            yamld = yaml_add(yamld, 'cfn-metadata-server',
-                             cfg.CONF.heat_metadata_server_url)
-            yamld = yaml_add(yamld, 'cfn-boto-cfg',
-                             boto_cfg)
-            yamld = yaml_add(yamld, 'cfn-userdata',
-                             userdata)
-
-            if 'Metadata' in self.t:
-                yamld = yaml_add(yamld, 'cfn-init-data',
-                                 json.dumps(self.metadata))
-
-            yamld = "%swrite_files:\n%s" % (yaml.safe_dump(read_cfg_file()),
-                    yamld)
-
-            attachments = [(yamld, 'cloud-config'),
-                           (read_cloudinit_file('boothook.sh'), 'boothook.sh',
-                           'cloud-boothook'),
-                           (read_cloudinit_file('loguserdata.py'),
-                           'x-shellscript')]
             subparts = [make_subpart(*args) for args in attachments]
             mime_blob = MIMEMultipart(_subparts=subparts)
 
