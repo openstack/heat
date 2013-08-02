@@ -141,11 +141,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                      'rhel': rhel_script,
                      'ubuntu': ubuntu_script}
 
-    # Cache data retrieved from APIs in class attributes
-    _image_id_map = {}
-    _distro_map = {}
-    _server_map = {}
-
     # Template keys supported for handle_update.  Properties not
     # listed here trigger an UpdateReplace
     update_allowed_keys = ('Metadata', 'Properties')
@@ -154,6 +149,10 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)
         self._private_key = None
+        self._server = None
+        self._distro = None
+        self._public_ip = None
+        self._private_ip = None
         self.rs = rackspace_resource.RackspaceResource(name,
                                                        json_snippet,
                                                        stack)
@@ -174,34 +173,19 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     @property
     def server(self):
         """Get the Cloud Server object."""
-        if self.resource_id in self.__class__._server_map:
-            return self.__class__._server_map[self.resource_id]
-        else:
-            server = self.nova().servers.get(self.resource_id)
-            self.__class__._server_map[self.resource_id] = server
-            return server
-
-    @property
-    def image_id(self):
-        """Get the image ID corresponding to the image property."""
-        image_name = self.properties['image']
-        if image_name in self.__class__._image_id_map:
-            return self.__class__._image_id_map[image_name]
-        else:
-            image_id = self._get_image_id(image_name)
-            self.__class__._image_id_map[image_name] = image_id
-            return image_id
+        if not self._server:
+            logger.debug("Calling nova().servers.get()")
+            self._server = self.nova().servers.get(self.resource_id)
+        return self._server
 
     @property
     def distro(self):
         """Get the Linux distribution for this server."""
-        if self.image_id in self.__class__._distro_map:
-            return self.__class__._distro_map[self.image_id]
-        else:
-            image = self.nova().images.get(self.image_id)
-            distro = image.metadata['os_distro']
-            self.__class__._distro_map[self.image_id] = distro
-            return distro
+        if not self._distro:
+            logger.debug("Calling nova().images.get()")
+            image = self.nova().images.get(self.properties['image'])
+            self._distro = image.metadata['os_distro']
+        return self._distro
 
     @property
     def script(self):
@@ -210,7 +194,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
     @property
     def flavors(self):
-        """Get the flavors from the API or cache (updated every 6 hours)."""
+        """Get the flavors from the API."""
+        logger.debug("Calling nova().flavors.list()")
         return [flavor.id for flavor in self.nova().flavors.list()]
 
     @property
@@ -245,15 +230,16 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     @property
     def public_ip(self):
         """Return the public IP of the Cloud Server."""
-        return self._get_ip('public')
+        if not self._public_ip:
+            self._public_ip = self._get_ip('public')
+        return self._public_ip
 
     @property
     def private_ip(self):
         """Return the private IP of the Cloud Server."""
-        try:
-            return self._get_ip('private')
-        except exception.Error as ex:
-            logger.info(ex.message)
+        if not self._private_ip:
+            self._private_ip = self._get_ip('private')
+        return self._private_ip
 
     @property
     def has_userdata(self):
@@ -326,8 +312,9 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
         # Create server
         client = self.nova().servers
+        logger.debug("Calling nova().servers.create()")
         server = client.create(self.physical_resource_name(),
-                               self.image_id,
+                               self.properties['image'],
                                flavor,
                                files=personality_files)
 
@@ -342,6 +329,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         return scheduler.PollingTaskGroup(tasks)
 
     def _attach_volume(self, volume_id, device):
+        logger.debug("Calling nova().volumes.create_server_volume()")
         self.nova().volumes.create_server_volume(self.server.id,
                                                  volume_id,
                                                  device or None)

@@ -152,7 +152,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         (t, stack) = self._setup_test_stack(stack_name)
 
         cs_name = 'Fedora 17 (Beefy Miracle)'
-        t['Resources']['WebServer']['Properties']['image'] = cs_name
+        t['Resources']['WebServer']['Properties']['image'] = '1'
         t['Resources']['WebServer']['Properties']['flavor'] = '2'
 
         cs = cloud_server.CloudServer('%s_name' % name,
@@ -167,9 +167,6 @@ class RackspaceCloudServerTest(HeatTestCase):
                                "1", flavor,
                                files=mox.IgnoreArg()).AndReturn(return_server)
         return_server.adminPass = "foobar"
-
-        self.m.StubOutWithMock(cloud_server.CloudServer, 'image_id')
-        cloud_server.CloudServer.image_id = "1"
 
         self.m.StubOutWithMock(cloud_server.CloudServer, 'script')
         cloud_server.CloudServer.script = "foobar"
