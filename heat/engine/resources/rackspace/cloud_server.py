@@ -234,17 +234,13 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
     def _get_ip(self, ip_type):
         """Return the IP of the Cloud Server."""
-        def ip_not_found():
-            exc = exception.Error("Could not determine the %s IP of %s." %
-                                  (ip_type, self.properties['image']))
-            raise exception.ResourceFailure(exc)
+        if ip_type in self.server.addresses:
+            for ip in self.server.addresses[ip_type]:
+                if ip['version'] == 4:
+                    return ip['addr']
 
-        if ip_type not in self.server.addresses:
-            ip_not_found()
-        for ip in self.server.addresses[ip_type]:
-            if ip['version'] == 4:
-                return ip['addr']
-        ip_not_found()
+        raise exception.Error("Could not determine the %s IP of %s." %
+                              (ip_type, self.properties['image']))
 
     @property
     def public_ip(self):
@@ -256,7 +252,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         """Return the private IP of the Cloud Server."""
         try:
             return self._get_ip('private')
-        except exception.ResourceFailure as ex:
+        except exception.Error as ex:
             logger.info(ex.message)
 
     @property
@@ -405,9 +401,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                 if server.status == "DELETED":
                     break
                 elif server.status == "ERROR":
-                    exc = exception.Error("Deletion of server %s failed." %
+                    raise exception.Error("Deletion of server %s failed." %
                                           server.name)
-                    raise exception.ResourceFailure(exc)
             except novaexception.NotFound:
                 break
 

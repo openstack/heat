@@ -425,7 +425,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs.addresses = {'public': [],
                         'private': []}
         self.mock_get_ip(cs)
-        self.assertRaises(exception.ResourceFailure, cs._get_ip, 'public')
+        self.assertRaises(exception.Error, cs._get_ip, 'public')
 
     def test_private_key(self):
         stack_name = 'test_private_key'
