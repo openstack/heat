@@ -715,7 +715,7 @@ class StackTest(HeatTestCase):
     def test_suspend_fail(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
-        exc = exception.ResourceFailure(Exception('foo'))
+        exc = Exception('foo')
         generic_rsrc.GenericResource.handle_suspend().AndRaise(exc)
         self.m.ReplayAll()
 
@@ -739,8 +739,7 @@ class StackTest(HeatTestCase):
     def test_resume_fail(self):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_resume')
-        exc = exception.ResourceFailure(Exception('foo'))
-        generic_rsrc.GenericResource.handle_resume().AndRaise(exc)
+        generic_rsrc.GenericResource.handle_resume().AndRaise(Exception('foo'))
         self.m.ReplayAll()
 
         self.stack = parser.Stack(self.ctx, 'resume_test_fail',
@@ -1038,9 +1037,8 @@ class StackTest(HeatTestCase):
         # key/property in update_allowed_keys/update_allowed_properties
 
         # make the update fail deleting the existing resource
-        self.m.StubOutWithMock(resource.Resource, 'destroy')
-        exc = exception.ResourceFailure(Exception())
-        resource.Resource.destroy().AndRaise(exc)
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
+        generic_rsrc.GenericResource.handle_delete().AndRaise(Exception)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -1238,9 +1236,8 @@ class StackTest(HeatTestCase):
                                      template.Template(tmpl2))
 
         # patch in a dummy delete making the destroy fail
-        self.m.StubOutWithMock(resource.Resource, 'delete')
-        exc = exception.ResourceFailure(Exception())
-        resource.Resource.delete().AndRaise(exc)
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
+        generic_rsrc.GenericResource.handle_delete().AndRaise(Exception)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
