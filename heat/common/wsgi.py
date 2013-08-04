@@ -49,10 +49,6 @@ from heat.openstack.common.gettextutils import _
 
 URL_LENGTH_LIMIT = 50000
 
-# TODO(shadower) remove this once eventlet 0.9.17 is in distros Heat
-# supports (notably Fedora 17 and Ubuntu 12.04 and newer)
-eventlet.wsgi.MAX_REQUEST_LINE = URL_LENGTH_LIMIT
-
 bind_opts = [
     cfg.StrOpt('bind_host', default='0.0.0.0'),
     cfg.IntOpt('bind_port'),
@@ -246,7 +242,7 @@ class Server(object):
         eventlet.patcher.monkey_patch(all=False, socket=True)
         self.pool = eventlet.GreenPool(size=self.threads)
         try:
-            eventlet_wsgi_server(self.sock,
+            eventlet.wsgi.server(self.sock,
                                  self.application,
                                  custom_pool=self.pool,
                                  url_length_limit=URL_LENGTH_LIMIT,
@@ -259,23 +255,10 @@ class Server(object):
     def _single_run(self, application, sock):
         """Start a WSGI server in a new green thread."""
         self.logger.info(_("Starting single process server"))
-        eventlet_wsgi_server(sock, application,
+        eventlet.wsgi.server(sock, application,
                              custom_pool=self.pool,
                              url_length_limit=URL_LENGTH_LIMIT,
                              log=WritableLogger(self.logger))
-
-
-def eventlet_wsgi_server(sock, application, **kwargs):
-    '''
-    Return a new instance of the eventlet wsgi server with the proper url limit
-    in a way that's compatible with eventlet 0.9.16 and 0.9.17.
-    '''
-    try:
-        return eventlet.wsgi.server(sock, application, **kwargs)
-    # TODO(shadower) remove this when we don't support eventlet 0.9.16 anymore
-    except TypeError:
-        kwargs.pop('url_length_limit', None)
-        return eventlet.wsgi.server(sock, application, **kwargs)
 
 
 class Middleware(object):
