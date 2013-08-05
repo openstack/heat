@@ -16,6 +16,7 @@
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import eip
+from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -123,6 +124,24 @@ class EIPTest(HeatTestCase):
         finally:
             rsrc.destroy()
 
+        self.m.VerifyAll()
+
+    def test_eip_with_exception(self):
+        self.m.StubOutWithMock(self.fc.floating_ips, 'create')
+        eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
+        self.fc.floating_ips.create().AndRaise(
+            clients.novaclient.exceptions.NotFound('fake_falure'))
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template)
+        stack = utils.parse_stack(t)
+        resource_name = 'IPAddress'
+        rsrc = eip.ElasticIp(resource_name,
+                             t['Resources'][resource_name],
+                             stack)
+
+        self.assertRaises(clients.novaclient.exceptions.NotFound,
+                          rsrc.handle_create)
         self.m.VerifyAll()
 
     def test_association(self):
