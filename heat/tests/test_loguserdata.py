@@ -44,6 +44,7 @@ class LoguserdataTest(HeatTestCase):
         super(LoguserdataTest, self).setUp()
         self.m.StubOutWithMock(pkg_resources, 'get_distribution')
         self.m.StubOutWithMock(subprocess, 'Popen')
+        self.m.StubOutWithMock(os, 'chmod')
 
     def test_ci_version(self):
         # too old versions
@@ -89,6 +90,7 @@ class LoguserdataTest(HeatTestCase):
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
 
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
             stderr=mox.IgnoreArg(),
@@ -103,6 +105,7 @@ class LoguserdataTest(HeatTestCase):
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
 
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
             stderr=mox.IgnoreArg(),
@@ -119,6 +122,7 @@ class LoguserdataTest(HeatTestCase):
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
 
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
             stderr=mox.IgnoreArg(),
@@ -133,6 +137,7 @@ class LoguserdataTest(HeatTestCase):
     def test_main_error_other(self):
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
             stderr=mox.IgnoreArg(),
@@ -151,6 +156,7 @@ class LoguserdataTest(HeatTestCase):
         pkg_resources.get_distribution('cloud-init').AndReturn(
             FakeCiVersion('0.7.0'))
 
+        os.chmod('/var/lib/heat-cfntools/cfn-userdata', 0o700).AndReturn(None)
         subprocess.Popen(
             ['/var/lib/heat-cfntools/cfn-userdata'],
             stderr=mox.IgnoreArg(),
