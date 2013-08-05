@@ -205,6 +205,7 @@ Mappings:
 
     def test_param_ref_missing(self):
         tmpl = {'Parameters': {'foo': {'Type': 'String', 'Required': True}}}
+        tmpl = parser.Template(tmpl)
         params = parameters.Parameters('test', tmpl, validate_value=False)
         snippet = {"Ref": "foo"}
         self.assertRaises(exception.UserParameterMissing,
