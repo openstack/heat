@@ -441,8 +441,7 @@ class AutoScalingTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
-        exc = exception.ResourceFailure(Exception())
-        instance.Instance.handle_create().AndRaise(exc)
+        instance.Instance.handle_create().AndRaise(Exception)
 
         self.m.ReplayAll()
         rsrc = asc.AutoScalingGroup('WebServerGroup',
@@ -690,8 +689,7 @@ class AutoScalingTest(HeatTestCase):
 
         # Scale up one 1 instance with resource failure
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        exc = exception.ResourceFailure(Exception())
-        instance.Instance.handle_create().AndRaise(exc)
+        instance.Instance.handle_create().AndRaise(Exception)
         self.m.StubOutWithMock(instance.Instance, 'destroy')
         instance.Instance.destroy()
         self._stub_lb_reload(1, unset=False, nochange=True)
