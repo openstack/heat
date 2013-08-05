@@ -266,10 +266,12 @@ class WatchRuleNotFound(OpenstackException):
 class ResourceFailure(OpenstackException):
     message = _("%(exc_type)s: %(message)s")
 
-    def __init__(self, exception):
+    def __init__(self, exception, resource, action=None):
         if isinstance(exception, ResourceFailure):
             exception = getattr(exception, 'exc', exception)
         self.exc = exception
+        self.resource = resource
+        self.action = action
         exc_type = type(exception).__name__
         super(ResourceFailure, self).__init__(exc_type=exc_type,
                                               message=str(exception))

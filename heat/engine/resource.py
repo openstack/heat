@@ -370,7 +370,7 @@ class Resource(object):
                         yield
         except Exception as ex:
             logger.exception('%s : %s' % (action, str(self)))
-            failure = exception.ResourceFailure(ex)
+            failure = exception.ResourceFailure(ex, self, action)
             self.state_set(action, self.FAILED, str(failure))
             raise failure
         except:
@@ -388,10 +388,11 @@ class Resource(object):
         Create the resource. Subclasses should provide a handle_create() method
         to customise creation.
         '''
+        action = self.CREATE
         if (self.action, self.status) != (self.INIT, self.COMPLETE):
             exc = exception.Error('State %s invalid for create'
                                   % str(self.state))
-            raise exception.ResourceFailure(exc)
+            raise exception.ResourceFailure(exc, self, action)
 
         logger.info('creating %s' % str(self))
 
@@ -404,25 +405,27 @@ class Resource(object):
                                      self.t.get('Properties', {}),
                                      self.stack.resolve_runtime_data,
                                      self.name)
-        return self._do_action(self.CREATE, self.properties.validate)
+        return self._do_action(action, self.properties.validate)
 
     def update(self, after, before=None):
         '''
         update the resource. Subclasses should provide a handle_update() method
         to customise update, the base-class handle_update will fail by default.
         '''
+        action = self.UPDATE
+
         if before is None:
             before = self.parsed_template()
 
         if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
-                                         (self.UPDATE, self.IN_PROGRESS)):
-            raise exception.ResourceFailure(Exception(
-                'Resource update already requested'))
+                                          (self.UPDATE, self.IN_PROGRESS)):
+            exc = Exception('Resource update already requested')
+            raise exception.ResourceFailure(exc, self, action)
 
         logger.info('updating %s' % str(self))
 
         try:
-            self.state_set(self.UPDATE, self.IN_PROGRESS)
+            self.state_set(action, self.IN_PROGRESS)
             properties = Properties(self.properties_schema,
                                     after.get('Properties', {}),
                                     self.stack.resolve_runtime_data,
@@ -437,40 +440,44 @@ class Resource(object):
             raise
         except Exception as ex:
             logger.exception('update %s : %s' % (str(self), str(ex)))
-            failure = exception.ResourceFailure(ex)
-            self.state_set(self.UPDATE, self.FAILED, str(failure))
+            failure = exception.ResourceFailure(ex, self, action)
+            self.state_set(action, self.FAILED, str(failure))
             raise failure
         else:
             self.t = self.stack.resolve_static_data(after)
-            self.state_set(self.UPDATE, self.COMPLETE)
+            self.state_set(action, self.COMPLETE)
 
     def suspend(self):
         '''
         Suspend the resource.  Subclasses should provide a handle_suspend()
         method to implement suspend
         '''
+        action = self.SUSPEND
+
         # Don't try to suspend the resource unless it's in a stable state
         if (self.action == self.DELETE or self.status != self.COMPLETE):
             exc = exception.Error('State %s invalid for suspend'
                                   % str(self.state))
-            raise exception.ResourceFailure(exc)
+            raise exception.ResourceFailure(exc, self, action)
 
         logger.info('suspending %s' % str(self))
-        return self._do_action(self.SUSPEND)
+        return self._do_action(action)
 
     def resume(self):
         '''
         Resume the resource.  Subclasses should provide a handle_resume()
         method to implement resume
         '''
+        action = self.RESUME
+
         # Can't resume a resource unless it's SUSPEND_COMPLETE
         if self.state != (self.SUSPEND, self.COMPLETE):
             exc = exception.Error('State %s invalid for resume'
                                   % str(self.state))
-            raise exception.ResourceFailure(exc)
+            raise exception.ResourceFailure(exc, self, action)
 
         logger.info('resuming %s' % str(self))
-        return self._do_action(self.RESUME)
+        return self._do_action(action)
 
     def physical_resource_name(self):
         if self.id is None:
@@ -502,6 +509,8 @@ class Resource(object):
         Delete the resource. Subclasses should provide a handle_delete() method
         to customise deletion.
         '''
+        action = self.DELETE
+
         if (self.action, self.status) == (self.DELETE, self.COMPLETE):
             return
         # No need to delete if the resource has never been created
@@ -513,7 +522,7 @@ class Resource(object):
         logger.info('deleting %s' % str(self))
 
         try:
-            self.state_set(self.DELETE, self.IN_PROGRESS)
+            self.state_set(action, self.IN_PROGRESS)
 
             deletion_policy = self.t.get('DeletionPolicy', 'Delete')
             if deletion_policy == 'Delete':
@@ -524,18 +533,18 @@ class Resource(object):
                     self.handle_snapshot_delete(initial_state)
         except Exception as ex:
             logger.exception('Delete %s', str(self))
-            failure = exception.ResourceFailure(ex)
-            self.state_set(self.DELETE, self.FAILED, str(failure))
+            failure = exception.ResourceFailure(ex, self, self.action)
+            self.state_set(action, self.FAILED, str(failure))
             raise failure
         except:
             with excutils.save_and_reraise_exception():
                 try:
-                    self.state_set(self.DELETE, self.FAILED,
+                    self.state_set(action, self.FAILED,
                                    'Deletion aborted')
                 except Exception:
                     logger.exception('Error marking resource deletion failed')
         else:
-            self.state_set(self.DELETE, self.COMPLETE)
+            self.state_set(action, self.COMPLETE)
 
     def destroy(self):
         '''
@@ -702,7 +711,7 @@ class Resource(object):
             self.handle_signal(details)
         except Exception as ex:
             logger.exception('signal %s : %s' % (str(self), str(ex)))
-            failure = exception.ResourceFailure(ex)
+            failure = exception.ResourceFailure(ex, self)
             raise failure
 
     def handle_update(self, json_snippet=None, tmpl_diff=None, prop_diff=None):
