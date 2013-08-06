@@ -100,7 +100,7 @@ class RackspaceResource(resource.Resource):
             pyrax.set_setting("tenant_id", self.context.tenant)
             logger.info("Authenticating with username:%s" %
                         self.context.username)
-            pyrax.auth_with_token(self.context.token,
+            pyrax.auth_with_token(self.context.auth_token,
                                   tenant_id=self.context.tenant_id,
                                   tenant_name=self.context.tenant)
             logger.info("User %s authenticated successfully."
