@@ -21,7 +21,7 @@ from heat.common import exception
 from heat.engine import template
 
 PARAMETER_KEYS = (
-    TYPE, DEFAULT, NO_ECHO, VALUES, PATTERN,
+    TYPE, DEFAULT, NO_ECHO, ALLOWED_VALUES, ALLOWED_PATTERN,
     MAX_LENGTH, MIN_LENGTH, MAX_VALUE, MIN_VALUE,
     DESCRIPTION, CONSTRAINT_DESCRIPTION
 ) = (
@@ -86,10 +86,10 @@ class Parameter(object):
         return '%s %s' % (self.name, self._constraint_error or message)
 
     def _validate(self, value):
-        if VALUES in self.schema:
-            allowed = list(self.schema[VALUES])
+        if ALLOWED_VALUES in self.schema:
+            allowed = list(self.schema[ALLOWED_VALUES])
             if value not in allowed:
-                message = '%s not in %s %s' % (value, VALUES, allowed)
+                message = '%s not in %s %s' % (value, ALLOWED_VALUES, allowed)
                 raise ValueError(self._error_msg(message))
 
     def value(self):
@@ -186,12 +186,12 @@ class StringParam(Parameter):
                                                             min_length)
                 raise ValueError(self._error_msg(message))
 
-        if PATTERN in self.schema:
-            pattern = self.schema[PATTERN]
+        if ALLOWED_PATTERN in self.schema:
+            pattern = self.schema[ALLOWED_PATTERN]
             match = re.match(pattern, value)
             if match is None or match.end() != length:
                 message = '"%s" does not match %s "%s"' % (value,
-                                                           PATTERN,
+                                                           ALLOWED_PATTERN,
                                                            pattern)
                 raise ValueError(self._error_msg(message))
 
@@ -252,12 +252,12 @@ class JsonParam(Parameter, collections.Mapping):
                            % (my_len, MIN_LENGTH, min_length))
                 raise ValueError(self._error_msg(message))
         # check valid keys
-        if VALUES in self.schema:
-            allowed = list(self.schema[VALUES])
+        if ALLOWED_VALUES in self.schema:
+            allowed = list(self.schema[ALLOWED_VALUES])
             bad_keys = [k for k in self.parsed if k not in allowed]
             if bad_keys:
                 message = ('keys %s are not in %s %s'
-                           % (bad_keys, VALUES, allowed))
+                           % (bad_keys, ALLOWED_VALUES, allowed))
                 raise ValueError(self._error_msg(message))
 
     def __getitem__(self, key):
@@ -294,12 +294,12 @@ class Parameters(collections.Mapping):
                 yield Parameter(PARAM_REGION,
                                 {TYPE: STRING,
                                  DEFAULT: 'ap-southeast-1',
-                                 VALUES: ['us-east-1',
-                                          'us-west-1', 'us-west-2',
-                                          'sa-east-1',
-                                          'eu-west-1',
-                                          'ap-southeast-1',
-                                          'ap-northeast-1']})
+                                 ALLOWED_VALUES: ['us-east-1',
+                                                  'us-west-1', 'us-west-2',
+                                                  'sa-east-1',
+                                                  'eu-west-1',
+                                                  'ap-southeast-1',
+                                                  'ap-northeast-1']})
 
             for name, schema in tmpl[template.PARAMETERS].iteritems():
                 yield Parameter(name, schema, user_params.get(name),
