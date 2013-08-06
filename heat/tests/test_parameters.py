@@ -18,6 +18,7 @@ import json
 
 from heat.common import exception
 from heat.engine import parameters
+from heat.engine import template
 
 
 class ParameterTest(testtools.TestCase):
@@ -370,35 +371,40 @@ params_schema = json.loads('''{
 
 
 class ParametersTest(testtools.TestCase):
+    def new_parameters(self, stack_name, tmpl, user_params={}, stack_id=None,
+                       validate_value=True):
+        tmpl = template.Template(tmpl)
+        return parameters.Parameters(stack_name, tmpl, user_params, stack_id,
+                                     validate_value)
+
     def test_pseudo_params(self):
-        params = parameters.Parameters('test_stack', {"Parameters": {}})
+        params = self.new_parameters('test_stack', {"Parameters": {}})
 
         self.assertEqual(params['AWS::StackName'], 'test_stack')
         self.assertEqual(params['AWS::StackId'], 'None')
         self.assertTrue('AWS::Region' in params)
 
     def test_pseudo_param_stackid(self):
-        params = parameters.Parameters('test_stack', {'Parameters': {}},
-                                       stack_id='123::foo')
+        params = self.new_parameters('test_stack', {'Parameters': {}},
+                                     stack_id='123::foo')
 
         self.assertEqual(params['AWS::StackId'], '123::foo')
         params.set_stack_id('456::bar')
         self.assertEqual(params['AWS::StackId'], '456::bar')
 
     def test_schema_invariance(self):
-        params1 = parameters.Parameters('test', params_schema,
-                                        {'User': 'foo',
-                                         'Defaulted': 'wibble'})
+        params1 = self.new_parameters('test', params_schema,
+                                      {'User': 'foo',
+                                       'Defaulted': 'wibble'})
         self.assertEqual(params1['Defaulted'], 'wibble')
 
-        params2 = parameters.Parameters('test', params_schema,
-                                        {'User': 'foo'})
+        params2 = self.new_parameters('test', params_schema, {'User': 'foo'})
         self.assertEqual(params2['Defaulted'], 'foobar')
 
     def test_to_dict(self):
         template = {'Parameters': {'Foo': {'Type': 'String'},
                                    'Bar': {'Type': 'Number', 'Default': '42'}}}
-        params = parameters.Parameters('test_params', template, {'Foo': 'foo'})
+        params = self.new_parameters('test_params', template, {'Foo': 'foo'})
 
         as_dict = dict(params)
         self.assertEqual(as_dict['Foo'], 'foo')
@@ -409,7 +415,7 @@ class ParametersTest(testtools.TestCase):
     def test_map(self):
         template = {'Parameters': {'Foo': {'Type': 'String'},
                                    'Bar': {'Type': 'Number', 'Default': '42'}}}
-        params = parameters.Parameters('test_params', template, {'Foo': 'foo'})
+        params = self.new_parameters('test_params', template, {'Foo': 'foo'})
 
         expected = {'Foo': False,
                     'Bar': True,
@@ -422,8 +428,8 @@ class ParametersTest(testtools.TestCase):
     def test_map_str(self):
         template = {'Parameters': {'Foo': {'Type': 'String'},
                                    'Bar': {'Type': 'Number'}}}
-        params = parameters.Parameters('test_params', template, {
-            'Foo': 'foo', 'Bar': 42})
+        params = self.new_parameters('test_params', template,
+                                     {'Foo': 'foo', 'Bar': 42})
 
         expected = {'Foo': 'foo',
                     'Bar': '42',
@@ -436,7 +442,7 @@ class ParametersTest(testtools.TestCase):
     def test_unknown_params(self):
         user_params = {'Foo': 'wibble'}
         self.assertRaises(exception.UnknownUserParameter,
-                          parameters.Parameters,
+                          self.new_parameters,
                           'test',
                           params_schema,
                           user_params)
@@ -444,7 +450,7 @@ class ParametersTest(testtools.TestCase):
     def test_missing_params(self):
         user_params = {}
         self.assertRaises(exception.UserParameterMissing,
-                          parameters.Parameters,
+                          self.new_parameters,
                           'test',
                           params_schema,
                           user_params)
