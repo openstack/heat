@@ -293,3 +293,13 @@ class ResourcePropertyConflict(OpenstackException):
     def __init__(self, *args):
         self.message = self.message % ", ".join(args)
         super(ResourcePropertyConflict, self).__init__()
+
+
+class HTTPExceptionDisguise(Exception):
+    """Disguises HTTP exceptions so they can be handled by the webob fault
+    application in the wsgi pipeline.
+    """
+
+    def __init__(self, exception):
+        self.exc = exception
+        self.tb = sys.exc_info()[2]

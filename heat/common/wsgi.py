@@ -593,11 +593,21 @@ class Resource(object):
             msg = _('The server could not comply with the request since\r\n'
                     'it is either malformed or otherwise incorrect.\r\n')
             err = webob.exc.HTTPBadRequest(msg)
-            raise translate_exception(err, request.best_match_language())
+            http_exc = translate_exception(err, request.best_match_language())
+            # NOTE(luisg): We disguise HTTP exceptions, otherwise they will be
+            # treated by wsgi as responses ready to be sent back and they
+            # won't make it into the pipeline app that serializes errors
+            raise exception.HTTPExceptionDisguise(http_exc)
         except webob.exc.HTTPException as err:
+            if isinstance(err, (webob.exc.HTTPOk, webob.exc.HTTPRedirection)):
+                # Some HTTPException are actually not errors, they are
+                # responses ready to be sent back to the users, so we don't
+                # error log, disguise or translate those
+                raise
             logging.error(_("Returning %(code)s to user: %(explanation)s"),
                           {'code': err.code, 'explanation': err.explanation})
-            raise translate_exception(err, request.best_match_language())
+            http_exc = translate_exception(err, request.best_match_language())
+            raise exception.HTTPExceptionDisguise(http_exc)
         except Exception as err:
             logging.error(_("Unexpected error occurred serving API: %s") % err)
             raise translate_exception(err, request.best_match_language())
