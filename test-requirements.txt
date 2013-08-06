@@ -12,4 +12,3 @@ testtools>=0.9.29
 testrepository>=0.0.13
 python-glanceclient
 sphinx>=1.1.2
-Babel
