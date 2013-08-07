@@ -15,15 +15,15 @@
 
 from heat.engine import clients
 from heat.openstack.common import log as logging
-from heat.engine.resources.quantum import quantum
+from heat.engine.resources.neutron import neutron
 
-if clients.quantumclient is not None:
-    from quantumclient.common.exceptions import QuantumClientException
+if clients.neutronclient is not None:
+    from neutronclient.common.exceptions import NeutronClientException
 
 logger = logging.getLogger(__name__)
 
 
-class FloatingIP(quantum.QuantumResource):
+class FloatingIP(neutron.NeutronResource):
     properties_schema = {'floating_network_id': {'Type': 'String',
                                                  'Required': True},
                          'value_specs': {'Type': 'Map',
@@ -36,7 +36,8 @@ class FloatingIP(quantum.QuantumResource):
         # depend on any RouterGateway in this template with the same
         # network_id as this floating_network_id
         for resource in self.stack.resources.itervalues():
-            if (resource.type() == 'OS::Quantum::RouterGateway' and
+            if ((resource.type() == 'OS::Neutron::RouterGateway' or
+                resource.type() == 'OS::Quantum::RouterGateway') and
                 resource.properties.get('network_id') ==
                     self.properties.get('floating_network_id')):
                         deps += (self, resource)
@@ -45,29 +46,29 @@ class FloatingIP(quantum.QuantumResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        fip = self.quantum().create_floatingip({
+        fip = self.neutron().create_floatingip({
             'floatingip': props})['floatingip']
         self.resource_id_set(fip['id'])
 
     def handle_delete(self):
-        client = self.quantum()
+        client = self.neutron()
         try:
             client.delete_floatingip(self.resource_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
     def FnGetAtt(self, key):
         try:
-            attributes = self.quantum().show_floatingip(
+            attributes = self.neutron().show_floatingip(
                 self.resource_id)['floatingip']
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             logger.warn("failed to fetch resource attributes: %s" % str(ex))
             return None
         return self.handle_get_attributes(self.name, key, attributes)
 
 
-class FloatingIPAssociation(quantum.QuantumResource):
+class FloatingIPAssociation(neutron.NeutronResource):
     properties_schema = {'floatingip_id': {'Type': 'String',
                                            'Required': True},
                          'port_id': {'Type': 'String',
@@ -79,29 +80,31 @@ class FloatingIPAssociation(quantum.QuantumResource):
 
         floatingip_id = props.pop('floatingip_id')
 
-        self.quantum().update_floatingip(floatingip_id, {
+        self.neutron().update_floatingip(floatingip_id, {
             'floatingip': props})['floatingip']
         self.resource_id_set('%s:%s' % (floatingip_id, props['port_id']))
 
     def handle_delete(self):
         if not self.resource_id:
             return
-        client = self.quantum()
+        client = self.neutron()
         (floatingip_id, port_id) = self.resource_id.split(':')
         try:
             client.update_floatingip(
                 floatingip_id,
                 {'floatingip': {'port_id': None}})
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {
+        'OS::Neutron::FloatingIP': FloatingIP,
+        'OS::Neutron::FloatingIPAssociation': FloatingIPAssociation,
         'OS::Quantum::FloatingIP': FloatingIP,
         'OS::Quantum::FloatingIPAssociation': FloatingIPAssociation,
     }

@@ -325,8 +325,8 @@ class Resource(object):
     def swift(self):
         return self.stack.clients.swift()
 
-    def quantum(self):
-        return self.stack.clients.quantum()
+    def neutron(self):
+        return self.stack.clients.neutron()
 
     def cinder(self):
         return self.stack.clients.cinder()

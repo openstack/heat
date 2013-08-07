@@ -36,4 +36,4 @@ We have integration with
 * https://github.com/openstack/python-novaclient (instance)
 * https://github.com/openstack/python-keystoneclient (auth)
 * https://github.com/openstack/python-swiftclient (s3)
-* https://github.com/openstack/python-quantumclient (networking)
+* https://github.com/openstack/python-neutronclient (networking)

@@ -29,10 +29,10 @@ except ImportError:
     swiftclient = None
     logger.info('swiftclient not available')
 try:
-    from quantumclient.v2_0 import client as quantumclient
+    from neutronclient.v2_0 import client as neutronclient
 except ImportError:
-    quantumclient = None
-    logger.info('quantumclient not available')
+    neutronclient = None
+    logger.info('neutronclient not available')
 try:
     from cinderclient import client as cinderclient
 except ImportError:
@@ -64,7 +64,7 @@ class OpenStackClients(object):
         self._nova = {}
         self._keystone = None
         self._swift = None
-        self._quantum = None
+        self._neutron = None
         self._cinder = None
         self._ceilometer = None
 
@@ -133,15 +133,15 @@ class OpenStackClients(object):
         self._swift = swiftclient.Connection(**args)
         return self._swift
 
-    def quantum(self):
-        if quantumclient is None:
+    def neutron(self):
+        if neutronclient is None:
             return None
-        if self._quantum:
-            return self._quantum
+        if self._neutron:
+            return self._neutron
 
         con = self.context
         if self.auth_token is None:
-            logger.error("Quantum connection failed, no auth_token!")
+            logger.error("Neutron connection failed, no auth_token!")
             return None
 
         args = {
@@ -151,9 +151,9 @@ class OpenStackClients(object):
             'endpoint_url': self.url_for(service_type='network')
         }
 
-        self._quantum = quantumclient.Client(**args)
+        self._neutron = neutronclient.Client(**args)
 
-        return self._quantum
+        return self._neutron
 
     def cinder(self):
         if cinderclient is None:

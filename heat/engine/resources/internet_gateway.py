@@ -83,26 +83,26 @@ class VPCGatewayAttachment(resource.Resource):
             deps += (self, route_table)
 
     def handle_create(self):
-        client = self.quantum()
+        client = self.neutron()
         external_network_id = InternetGateway.get_external_network_id(client)
         for router in self._vpc_route_tables():
             client.add_gateway_router(router.resource_id, {
                 'network_id': external_network_id})
 
     def handle_delete(self):
-        from quantumclient.common.exceptions import QuantumClientException
+        from neutronclient.common.exceptions import NeutronClientException
 
-        client = self.quantum()
+        client = self.neutron()
         for router in self._vpc_route_tables():
             try:
                 client.remove_gateway_router(router.resource_id)
-            except QuantumClientException as ex:
+            except NeutronClientException as ex:
                 if ex.status_code != 404:
                     raise ex
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {

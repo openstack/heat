@@ -83,8 +83,8 @@ class RackspaceResource(resource.Resource):
 
         return self._cloud_blockstore
 
-    def quantum(self):
-        '''Rackspace quantum client.'''
+    def neutron(self):
+        '''Rackspace neutron client.'''
         if not self._cloud_nw:
             self.__authenticate()
             self._cloud_nw = self.pyrax.cloud_networks

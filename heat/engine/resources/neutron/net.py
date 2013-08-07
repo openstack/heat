@@ -15,16 +15,16 @@
 
 from heat.engine import clients
 from heat.openstack.common import log as logging
-from heat.engine.resources.quantum import quantum
+from heat.engine.resources.neutron import neutron
 from heat.engine import scheduler
 
-if clients.quantumclient is not None:
-    from quantumclient.common.exceptions import QuantumClientException
+if clients.neutronclient is not None:
+    from neutronclient.common.exceptions import NeutronClientException
 
 logger = logging.getLogger(__name__)
 
 
-class Net(quantum.QuantumResource):
+class Net(neutron.NeutronResource):
     properties_schema = {'name': {'Type': 'String'},
                          'value_specs': {'Type': 'Map',
                                          'Default': {}},
@@ -43,11 +43,11 @@ class Net(quantum.QuantumResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        net = self.quantum().create_network({'network': props})['network']
+        net = self.neutron().create_network({'network': props})['network']
         self.resource_id_set(net['id'])
 
     def _show_resource(self):
-        return self.quantum().show_network(
+        return self.neutron().show_network(
             self.resource_id)['network']
 
     def check_create_complete(self, *args):
@@ -55,10 +55,10 @@ class Net(quantum.QuantumResource):
         return self.is_built(attributes)
 
     def handle_delete(self):
-        client = self.quantum()
+        client = self.neutron()
         try:
             client.delete_network(self.resource_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
         else:
@@ -66,9 +66,10 @@ class Net(quantum.QuantumResource):
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {
+        'OS::Neutron::Net': Net,
         'OS::Quantum::Net': Net,
     }

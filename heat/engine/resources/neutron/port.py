@@ -15,16 +15,16 @@
 
 from heat.engine import clients
 from heat.openstack.common import log as logging
-from heat.engine.resources.quantum import quantum
+from heat.engine.resources.neutron import neutron
 from heat.engine import scheduler
 
-if clients.quantumclient is not None:
-    from quantumclient.common.exceptions import QuantumClientException
+if clients.neutronclient is not None:
+    from neutronclient.common.exceptions import NeutronClientException
 
 logger = logging.getLogger(__name__)
 
 
-class Port(quantum.QuantumResource):
+class Port(neutron.NeutronResource):
 
     fixed_ip_schema = {'subnet_id': {'Type': 'String',
                                      'Required': True},
@@ -65,7 +65,8 @@ class Port(quantum.QuantumResource):
         # to so all subnets in a network should be created before
         # the ports in that network.
         for resource in self.stack.resources.itervalues():
-            if (resource.type() == 'OS::Quantum::Subnet' and
+            if ((resource.type() == 'OS::Neutron::Subnet' or
+                resource.type() == 'OS::Quantum::Subnet') and
                 resource.properties.get('network_id') ==
                     self.properties.get('network_id')):
                         deps += (self, resource)
@@ -74,11 +75,11 @@ class Port(quantum.QuantumResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        port = self.quantum().create_port({'port': props})['port']
+        port = self.neutron().create_port({'port': props})['port']
         self.resource_id_set(port['id'])
 
     def _show_resource(self):
-        return self.quantum().show_port(
+        return self.neutron().show_port(
             self.resource_id)['port']
 
     def check_create_complete(self, *args):
@@ -86,10 +87,10 @@ class Port(quantum.QuantumResource):
         return self.is_built(attributes)
 
     def handle_delete(self):
-        client = self.quantum()
+        client = self.neutron()
         try:
             client.delete_port(self.resource_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
         else:
@@ -97,9 +98,10 @@ class Port(quantum.QuantumResource):
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {
+        'OS::Neutron::Port': Port,
         'OS::Quantum::Port': Port,
     }

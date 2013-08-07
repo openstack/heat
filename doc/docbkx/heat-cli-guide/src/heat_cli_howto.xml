@@ -5,7 +5,7 @@
     xmlns:svg="http://www.w3.org/2000/svg"
     xmlns:html="http://www.w3.org/1999/xhtml"
     version="5.0"
-    xml:id="quantum-cli-reference">
+    xml:id="neutron-cli-reference">
     <?dbhtml stop-chunking?>
     <title>OpenStack Heat CLI Guide</title>
     <para>This section describes heat commands</para>

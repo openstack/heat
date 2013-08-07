@@ -44,12 +44,12 @@ class NetworkInterface(resource.Resource):
     }
 
     @staticmethod
-    def network_id_from_subnet_id(quantumclient, subnet_id):
-        subnet_info = quantumclient.show_subnet(subnet_id)
+    def network_id_from_subnet_id(neutronclient, subnet_id):
+        subnet_info = neutronclient.show_subnet(subnet_id)
         return subnet_info['subnet']['network_id']
 
     def handle_create(self):
-        client = self.quantum()
+        client = self.neutron()
 
         subnet_id = self.properties['SubnetId']
         network_id = self.network_id_from_subnet_id(client, subnet_id)
@@ -80,18 +80,18 @@ class NetworkInterface(resource.Resource):
         self.resource_id_set(port['id'])
 
     def handle_delete(self):
-        from quantumclient.common.exceptions import QuantumClientException
+        from neutronclient.common.exceptions import NeutronClientException
 
-        client = self.quantum()
+        client = self.neutron()
         try:
             client.delete_port(self.resource_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {

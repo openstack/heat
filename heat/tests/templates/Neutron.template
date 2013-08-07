@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "Template to test Quantum resources",
+  "Description" : "Template to test Neutron resources",
 
   "Parameters" : {
 
@@ -9,23 +9,23 @@
 
   "Resources" : {
     "network": {
-      "Type": "OS::Quantum::Net",
+      "Type": "OS::Neutron::Net",
       "Properties": {
         "name": "the_network"
       }
     },
     "unnamed_network": {
-      "Type": "OS::Quantum::Net"
+      "Type": "OS::Neutron::Net"
     },
     "admin_down_network": {
-      "Type": "OS::Quantum::Net",
+      "Type": "OS::Neutron::Net",
       "Properties": {
         "admin_state_up": false
       }
     },
 
     "subnet": {
-      "Type": "OS::Quantum::Subnet",
+      "Type": "OS::Neutron::Subnet",
       "Properties": {
         "network_id": { "Ref" : "network" },
         "ip_version": 4,
@@ -35,7 +35,7 @@
     },
 
     "port": {
-      "Type": "OS::Quantum::Port",
+      "Type": "OS::Neutron::Port",
       "Properties": {
         "device_id": "d6b4d3a5-c700-476f-b609-1493dd9dadc0",
         "name": "port1",
@@ -48,11 +48,11 @@
     },
 
     "router": {
-      "Type": "OS::Quantum::Router"
+      "Type": "OS::Neutron::Router"
     },
 
     "router_interface": {
-      "Type": "OS::Quantum::RouterInterface",
+      "Type": "OS::Neutron::RouterInterface",
       "Properties": {
         "router_id": { "Ref" : "router" },
         "subnet_id": { "Ref" : "subnet" }

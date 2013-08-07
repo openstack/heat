@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from quantumclient.common.exceptions import QuantumClientException
+from neutronclient.common.exceptions import NeutronClientException
 
 from heat.common import exception
 from heat.engine import resource
@@ -23,13 +23,13 @@ from heat.openstack.common import log as logging
 logger = logging.getLogger(__name__)
 
 
-class QuantumResource(resource.Resource):
+class NeutronResource(resource.Resource):
 
     def validate(self):
         '''
         Validate any of the provided params
         '''
-        res = super(QuantumResource, self).validate()
+        res = super(NeutronResource, self).validate()
         if res:
             return res
         return self.validate_properties(self.properties)
@@ -54,7 +54,7 @@ class QuantumResource(resource.Resource):
     def prepare_properties(properties, name):
         '''
         Prepares the property values so that they can be passed directly to
-        the Quantum call.
+        the Neutron call.
 
         Removes None values and value_specs, merges value_specs with the main
         values.
@@ -91,13 +91,13 @@ class QuantumResource(resource.Resource):
             return True
         else:
             raise exception.Error('%s resource[%s] status[%s]' %
-                                  ('quantum reported unexpected',
+                                  ('neutron reported unexpected',
                                    attributes['name'], attributes['status']))
 
     def _resolve_attribute(self, name):
         try:
             attributes = self._show_resource()
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             logger.warn("failed to fetch resource attributes: %s" % str(ex))
             return None
         return self.handle_get_attributes(self.name, name, attributes)
@@ -107,7 +107,7 @@ class QuantumResource(resource.Resource):
             try:
                 yield
                 self._show_resource()
-            except QuantumClientException as ex:
+            except NeutronClientException as ex:
                 if ex.status_code != 404:
                     raise ex
                 return

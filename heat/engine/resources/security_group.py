@@ -29,14 +29,14 @@ class SecurityGroup(resource.Resource):
                          'SecurityGroupEgress': {'Type': 'List'}}
 
     def handle_create(self):
-        if self.properties['VpcId'] and clients.quantumclient is not None:
-            self._handle_create_quantum()
+        if self.properties['VpcId'] and clients.neutronclient is not None:
+            self._handle_create_neutron()
         else:
             self._handle_create_nova()
 
-    def _handle_create_quantum(self):
-        from quantumclient.common.exceptions import QuantumClientException
-        client = self.quantum()
+    def _handle_create_neutron(self):
+        from neutronclient.common.exceptions import NeutronClientException
+        client = self.neutron()
 
         sec = client.create_security_group({'security_group': {
             'name': self.physical_resource_name(),
@@ -46,7 +46,7 @@ class SecurityGroup(resource.Resource):
         self.resource_id_set(sec['id'])
         if self.properties['SecurityGroupIngress']:
             for i in self.properties['SecurityGroupIngress']:
-                # Quantum only accepts positive ints
+                # Neutron only accepts positive ints
                 if int(i['FromPort']) < 0:
                     i['FromPort'] = None
                 if int(i['ToPort']) < 0:
@@ -66,7 +66,7 @@ class SecurityGroup(resource.Resource):
                             'security_group_id': sec['id']
                         }
                     })
-                except QuantumClientException as ex:
+                except NeutronClientException as ex:
                     if ex.status_code == 409:
                         # no worries, the rule is already there
                         pass
@@ -87,7 +87,7 @@ class SecurityGroup(resource.Resource):
                             'security_group_id': sec['id']
                         }
                     })
-                except QuantumClientException as ex:
+                except NeutronClientException as ex:
                     if ex.status_code == 409:
                         # no worries, the rule is already there
                         pass
@@ -128,8 +128,8 @@ class SecurityGroup(resource.Resource):
                         raise
 
     def handle_delete(self):
-        if self.properties['VpcId'] and clients.quantumclient is not None:
-            self._handle_delete_quantum()
+        if self.properties['VpcId'] and clients.neutronclient is not None:
+            self._handle_delete_neutron()
         else:
             self._handle_delete_nova()
 
@@ -149,28 +149,28 @@ class SecurityGroup(resource.Resource):
                 self.nova().security_groups.delete(self.resource_id)
             self.resource_id = None
 
-    def _handle_delete_quantum(self):
-        from quantumclient.common.exceptions import QuantumClientException
-        client = self.quantum()
+    def _handle_delete_neutron(self):
+        from neutronclient.common.exceptions import NeutronClientException
+        client = self.neutron()
 
         if self.resource_id is not None:
             try:
                 sec = client.show_security_group(
                     self.resource_id)['security_group']
-            except QuantumClientException as ex:
+            except NeutronClientException as ex:
                 if ex.status_code != 404:
                     raise
             else:
                 for rule in sec['security_group_rules']:
                     try:
                         client.delete_security_group_rule(rule['id'])
-                    except QuantumClientException as ex:
+                    except NeutronClientException as ex:
                         if ex.status_code != 404:
                             raise
 
                 try:
                     client.delete_security_group(self.resource_id)
-                except QuantumClientException as ex:
+                except NeutronClientException as ex:
                     if ex.status_code != 404:
                         raise
             self.resource_id = None

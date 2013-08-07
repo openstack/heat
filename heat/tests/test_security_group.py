@@ -28,8 +28,8 @@ from heat.tests.utils import stack_delete_after
 
 from novaclient.v1_1 import security_groups as nova_sg
 from novaclient.v1_1 import security_group_rules as nova_sgr
-from quantumclient.common.exceptions import QuantumClientException
-from quantumclient.v2_0 import client as quantumclient
+from neutronclient.common.exceptions import NeutronClientException
+from neutronclient.v2_0 import client as neutronclient
 
 NovaSG = collections.namedtuple('NovaSG',
                                 ' '.join([
@@ -60,7 +60,7 @@ Resources:
           CidrIp : 0.0.0.0/0
 '''
 
-    test_template_quantum = '''
+    test_template_neutron = '''
 HeatTemplateFormatVersion: '2012-12-12'
 Resources:
   the_sg:
@@ -96,13 +96,13 @@ Resources:
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'get')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'list')
         setup_dummy_db()
-        self.m.StubOutWithMock(quantumclient.Client, 'create_security_group')
+        self.m.StubOutWithMock(neutronclient.Client, 'create_security_group')
         self.m.StubOutWithMock(
-            quantumclient.Client, 'create_security_group_rule')
-        self.m.StubOutWithMock(quantumclient.Client, 'show_security_group')
+            neutronclient.Client, 'create_security_group_rule')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_security_group')
         self.m.StubOutWithMock(
-            quantumclient.Client, 'delete_security_group_rule')
-        self.m.StubOutWithMock(quantumclient.Client, 'delete_security_group')
+            neutronclient.Client, 'delete_security_group_rule')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_security_group')
 
     def create_stack(self, template):
         t = template_format.parse(template)
@@ -275,12 +275,12 @@ Resources:
         self.m.VerifyAll()
 
     @stack_delete_after
-    def test_security_group_quantum(self):
+    def test_security_group_neutron(self):
         #create script
         clients.OpenStackClients.keystone().AndReturn(
             FakeKeystoneClient())
         sg_name = utils.PhysName('test_stack', 'the_sg')
-        quantumclient.Client.create_security_group({
+        neutronclient.Client.create_security_group({
             'security_group': {
                 'name': sg_name,
                 'description': 'HTTP and SSH access'
@@ -295,7 +295,7 @@ Resources:
             }
         })
 
-        quantumclient.Client.create_security_group_rule({
+        neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
                 'remote_ip_prefix': '0.0.0.0/0',
@@ -317,7 +317,7 @@ Resources:
                 'id': 'bbbb'
             }
         })
-        quantumclient.Client.create_security_group_rule({
+        neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
                 'remote_ip_prefix': '0.0.0.0/0',
@@ -339,7 +339,7 @@ Resources:
                 'id': 'cccc'
             }
         })
-        quantumclient.Client.create_security_group_rule({
+        neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'egress',
                 'remote_ip_prefix': '10.0.1.0/24',
@@ -363,7 +363,7 @@ Resources:
         })
 
         # delete script
-        quantumclient.Client.show_security_group('aaaa').AndReturn({
+        neutronclient.Client.show_security_group('aaaa').AndReturn({
             'security_group': {
                 'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                 'name': 'sc1',
@@ -400,13 +400,13 @@ Resources:
                     'port_range_min': 22
                 }],
                 'id': 'aaaa'}})
-        quantumclient.Client.delete_security_group_rule('bbbb').AndReturn(None)
-        quantumclient.Client.delete_security_group_rule('cccc').AndReturn(None)
-        quantumclient.Client.delete_security_group_rule('dddd').AndReturn(None)
-        quantumclient.Client.delete_security_group('aaaa').AndReturn(None)
+        neutronclient.Client.delete_security_group_rule('bbbb').AndReturn(None)
+        neutronclient.Client.delete_security_group_rule('cccc').AndReturn(None)
+        neutronclient.Client.delete_security_group_rule('dddd').AndReturn(None)
+        neutronclient.Client.delete_security_group('aaaa').AndReturn(None)
 
         self.m.ReplayAll()
-        stack = self.create_stack(self.test_template_quantum)
+        stack = self.create_stack(self.test_template_neutron)
 
         sg = stack['the_sg']
         self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
@@ -417,12 +417,12 @@ Resources:
         self.m.VerifyAll()
 
     @stack_delete_after
-    def test_security_group_quantum_exception(self):
+    def test_security_group_neutron_exception(self):
         #create script
         clients.OpenStackClients.keystone().AndReturn(
             FakeKeystoneClient())
         sg_name = utils.PhysName('test_stack', 'the_sg')
-        quantumclient.Client.create_security_group({
+        neutronclient.Client.create_security_group({
             'security_group': {
                 'name': sg_name,
                 'description': 'HTTP and SSH access'
@@ -437,7 +437,7 @@ Resources:
             }
         })
 
-        quantumclient.Client.create_security_group_rule({
+        neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
                 'remote_ip_prefix': '0.0.0.0/0',
@@ -448,8 +448,8 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            QuantumClientException(status_code=409))
-        quantumclient.Client.create_security_group_rule({
+            NeutronClientException(status_code=409))
+        neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
                 'remote_ip_prefix': '0.0.0.0/0',
@@ -460,8 +460,8 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            QuantumClientException(status_code=409))
-        quantumclient.Client.create_security_group_rule({
+            NeutronClientException(status_code=409))
+        neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'egress',
                 'remote_ip_prefix': '10.0.1.0/24',
@@ -472,10 +472,10 @@ Resources:
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
-            QuantumClientException(status_code=409))
+            NeutronClientException(status_code=409))
 
         # delete script
-        quantumclient.Client.show_security_group('aaaa').AndReturn({
+        neutronclient.Client.show_security_group('aaaa').AndReturn({
             'security_group': {
                 'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                 'name': 'sc1',
@@ -512,20 +512,20 @@ Resources:
                     'port_range_min': 22
                 }],
                 'id': 'aaaa'}})
-        quantumclient.Client.delete_security_group_rule('bbbb').AndRaise(
-            QuantumClientException(status_code=404))
-        quantumclient.Client.delete_security_group_rule('cccc').AndRaise(
-            QuantumClientException(status_code=404))
-        quantumclient.Client.delete_security_group_rule('dddd').AndRaise(
-            QuantumClientException(status_code=404))
-        quantumclient.Client.delete_security_group('aaaa').AndRaise(
-            QuantumClientException(status_code=404))
+        neutronclient.Client.delete_security_group_rule('bbbb').AndRaise(
+            NeutronClientException(status_code=404))
+        neutronclient.Client.delete_security_group_rule('cccc').AndRaise(
+            NeutronClientException(status_code=404))
+        neutronclient.Client.delete_security_group_rule('dddd').AndRaise(
+            NeutronClientException(status_code=404))
+        neutronclient.Client.delete_security_group('aaaa').AndRaise(
+            NeutronClientException(status_code=404))
 
-        quantumclient.Client.show_security_group('aaaa').AndRaise(
-            QuantumClientException(status_code=404))
+        neutronclient.Client.show_security_group('aaaa').AndRaise(
+            NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
-        stack = self.create_stack(self.test_template_quantum)
+        stack = self.create_stack(self.test_template_neutron)
 
         sg = stack['the_sg']
         self.assertRaises(resource.UpdateReplace, sg.handle_update, {}, {}, {})
