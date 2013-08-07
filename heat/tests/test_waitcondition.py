@@ -21,6 +21,7 @@ from oslo.config import cfg
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
+from heat.tests.utils import reset_dummy_db
 
 import heat.db.api as db_api
 from heat.common import template_format
@@ -86,6 +87,10 @@ class WaitConditionTest(HeatTestCase):
 
         self.stack_id = 'STACKABCD1234'
         self.fc = fakes.FakeKeystoneClient()
+
+    def tearDown(self):
+        super(WaitConditionTest, self).tearDown()
+        reset_dummy_db()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
@@ -360,6 +365,10 @@ class WaitConditionHandleTest(HeatTestCase):
         self.fc = fakes.FakeKeystoneClient()
         utils.setup_dummy_db()
         self.stack = self.create_stack()
+
+    def tearDown(self):
+        super(WaitConditionHandleTest, self).tearDown()
+        reset_dummy_db()
 
     def create_stack(self, stack_name='test_stack2', params={}):
         temp = template_format.parse(test_template_waitcondition)

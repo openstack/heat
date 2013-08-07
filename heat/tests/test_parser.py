@@ -14,7 +14,6 @@
 
 import json
 import time
-import uuid
 
 from heat.engine import environment
 from heat.common import exception
@@ -624,10 +623,6 @@ class StackTest(HeatTestCase):
 
     @stack_delete_after
     def test_set_param_id(self):
-        dummy_stackid = 'STACKABCD1234'
-        self.m.StubOutWithMock(uuid, 'uuid4')
-        uuid.uuid4().AndReturn(dummy_stackid)
-        self.m.ReplayAll()
         self.stack = parser.Stack(self.ctx, 'param_arn_test',
                                   parser.Template({}))
         exp_prefix = ('arn:openstack:heat::test_tenant_id'
@@ -637,7 +632,7 @@ class StackTest(HeatTestCase):
         self.stack.store()
         identifier = self.stack.identifier()
         self.assertEqual(self.stack.parameters['AWS::StackId'],
-                         exp_prefix + dummy_stackid)
+                         exp_prefix + self.stack.id)
         self.assertEqual(self.stack.parameters['AWS::StackId'],
                          identifier.arn())
         self.m.VerifyAll()
