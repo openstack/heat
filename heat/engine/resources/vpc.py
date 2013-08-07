@@ -17,7 +17,7 @@ from heat.common import exception
 from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine import resource
-from heat.engine.resources.quantum import quantum
+from heat.engine.resources.neutron import neutron
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class VPC(resource.Resource):
     }
 
     def handle_create(self):
-        client = self.quantum()
+        client = self.neutron()
         # The VPC's net and router are associated by having identical names.
         net_props = {'name': self.physical_resource_name()}
         router_props = {'name': self.physical_resource_name()}
@@ -59,7 +59,7 @@ class VPC(resource.Resource):
 
     @staticmethod
     def router_for_vpc(client, network_id):
-        # first get the quantum net
+        # first get the neutron net
         net = VPC.network_for_vpc(client, network_id)
         # then find a router with the same name
         routers = client.list_routers(name=net['name'])['routers']
@@ -73,31 +73,31 @@ class VPC(resource.Resource):
         return routers[0]
 
     def check_create_complete(self, *args):
-        net = self.network_for_vpc(self.quantum(), self.resource_id)
-        if not quantum.QuantumResource.is_built(net):
+        net = self.network_for_vpc(self.neutron(), self.resource_id)
+        if not neutron.NeutronResource.is_built(net):
             return False
-        router = self.router_for_vpc(self.quantum(), self.resource_id)
-        return quantum.QuantumResource.is_built(router)
+        router = self.router_for_vpc(self.neutron(), self.resource_id)
+        return neutron.NeutronResource.is_built(router)
 
     def handle_delete(self):
-        from quantumclient.common.exceptions import QuantumClientException
-        client = self.quantum()
+        from neutronclient.common.exceptions import NeutronClientException
+        client = self.neutron()
         router = self.router_for_vpc(client, self.resource_id)
         try:
             client.delete_router(router['id'])
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
         try:
             client.delete_network(self.resource_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {

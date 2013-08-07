@@ -280,9 +280,9 @@ class Instance(resource.Resource):
         else:
             # if SubnetId property in Instance, ensure subnet exists
             if subnet_id:
-                quantumclient = self.quantum()
+                neutronclient = self.neutron()
                 network_id = NetworkInterface.network_id_from_subnet_id(
-                    quantumclient, subnet_id)
+                    neutronclient, subnet_id)
                 # if subnet verified, create a port to use this subnet
                 # if port is not created explicitly, nova will choose
                 # the first subnet in the given network.
@@ -293,7 +293,7 @@ class Instance(resource.Resource):
                         'network_id': network_id,
                         'fixed_ips': [fixed_ip]
                     }
-                    port = quantumclient.create_port({'port': props})['port']
+                    port = neutronclient.create_port({'port': props})['port']
                     nics = [{'port-id': port['id']}]
 
         return nics

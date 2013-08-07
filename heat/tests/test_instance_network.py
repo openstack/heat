@@ -110,7 +110,7 @@ wp_template_with_nic = '''
 '''
 
 
-class FakeQuantum(object):
+class FakeNeutron(object):
 
     def show_subnet(self, subnet, **_params):
         return {
@@ -169,8 +169,8 @@ class instancesTest(HeatTestCase):
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
 
-        self.m.StubOutWithMock(instance, 'quantum')
-        instance.quantum().MultipleTimes().AndReturn(FakeQuantum())
+        self.m.StubOutWithMock(instance, 'neutron')
+        instance.neutron().MultipleTimes().AndReturn(FakeNeutron())
 
         instance.t = instance.stack.resolve_runtime_data(instance.t)
 
@@ -212,8 +212,8 @@ class instancesTest(HeatTestCase):
         instance = instances.Instance('%s_name' % name,
                                       t['Resources']['WebServer'], stack)
 
-        self.m.StubOutWithMock(nic, 'quantum')
-        nic.quantum().MultipleTimes().AndReturn(FakeQuantum())
+        self.m.StubOutWithMock(nic, 'neutron')
+        nic.neutron().MultipleTimes().AndReturn(FakeNeutron())
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)

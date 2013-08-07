@@ -151,9 +151,9 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
         for key in stack1.resources:
             self.assertEqual(stack1.resources[key].t, stack2.resources[key].t)
 
-    @skipIf(clients.quantumclient is None, 'quantumclient unavailable')
-    def test_quantum_resolved(self):
-        self.compare_stacks('Quantum.template', 'Quantum.yaml', {})
+    @skipIf(clients.neutronclient is None, 'neutronclient unavailable')
+    def test_neutron_resolved(self):
+        self.compare_stacks('Neutron.template', 'Neutron.yaml', {})
 
     def test_wordpress_resolved(self):
         self.compare_stacks('WordPress_Single_Instance.template',

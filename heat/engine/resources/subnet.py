@@ -43,7 +43,7 @@ class Subnet(resource.Resource):
     }
 
     def handle_create(self):
-        client = self.quantum()
+        client = self.neutron()
         # TODO(sbaker) Verify that this CidrBlock is within the vpc CidrBlock
         network_id = self.properties.get('VpcId')
 
@@ -55,7 +55,7 @@ class Subnet(resource.Resource):
         }
         subnet = client.create_subnet({'subnet': props})['subnet']
 
-        router = VPC.router_for_vpc(self.quantum(), network_id)
+        router = VPC.router_for_vpc(self.neutron(), network_id)
         if router:
             client.add_interface_router(
                 router['id'],
@@ -63,25 +63,25 @@ class Subnet(resource.Resource):
         self.resource_id_set(subnet['id'])
 
     def handle_delete(self):
-        from quantumclient.common.exceptions import QuantumClientException
+        from neutronclient.common.exceptions import NeutronClientException
 
-        client = self.quantum()
+        client = self.neutron()
         network_id = self.properties.get('VpcId')
         subnet_id = self.resource_id
 
         try:
-            router = VPC.router_for_vpc(self.quantum(), network_id)
+            router = VPC.router_for_vpc(self.neutron(), network_id)
             if router:
                 client.remove_interface_router(
                     router['id'],
                     {'subnet_id': subnet_id})
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
         try:
             client.delete_subnet(subnet_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
@@ -92,7 +92,7 @@ class Subnet(resource.Resource):
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {

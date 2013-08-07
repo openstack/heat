@@ -16,11 +16,11 @@
 from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine import resource
-from heat.engine.resources.quantum import quantum
+from heat.engine.resources.neutron import neutron
 from heat.engine.resources.vpc import VPC
 
-if clients.quantumclient is not None:
-    from quantumclient.common.exceptions import QuantumClientException
+if clients.neutronclient is not None:
+    from neutronclient.common.exceptions import NeutronClientException
 
 logger = logging.getLogger(__name__)
 
@@ -42,16 +42,16 @@ class RouteTable(resource.Resource):
     }
 
     def handle_create(self):
-        client = self.quantum()
+        client = self.neutron()
         props = {'name': self.physical_resource_name()}
         router = client.create_router({'router': props})['router']
         self.resource_id_set(router['id'])
 
     def check_create_complete(self, *args):
-        client = self.quantum()
+        client = self.neutron()
         attributes = client.show_router(
             self.resource_id)['router']
-        if not quantum.QuantumResource.is_built(attributes):
+        if not neutron.NeutronResource.is_built(attributes):
             return False
 
         network_id = self.properties.get('VpcId')
@@ -66,19 +66,19 @@ class RouteTable(resource.Resource):
         return True
 
     def handle_delete(self):
-        client = self.quantum()
+        client = self.neutron()
 
         router_id = self.resource_id
         try:
             client.delete_router(router_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
         # just in case this router has been added to a gateway, remove it
         try:
             client.remove_gateway_router(router_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
@@ -95,7 +95,7 @@ class SubnetRouteTableAssocation(resource.Resource):
     }
 
     def handle_create(self):
-        client = self.quantum()
+        client = self.neutron()
         subnet_id = self.properties.get('SubnetId')
 
         router_id = self.properties.get('RouteTableId')
@@ -107,7 +107,7 @@ class SubnetRouteTableAssocation(resource.Resource):
                 client.remove_interface_router(
                     previous_router['id'],
                     {'subnet_id': subnet_id})
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
@@ -115,14 +115,14 @@ class SubnetRouteTableAssocation(resource.Resource):
             router_id, {'subnet_id': subnet_id})
 
     def _router_for_subnet(self, subnet_id):
-        client = self.quantum()
+        client = self.neutron()
         subnet = client.show_subnet(
             subnet_id)['subnet']
         network_id = subnet['network_id']
         return VPC.router_for_vpc(client, network_id)
 
     def handle_delete(self):
-        client = self.quantum()
+        client = self.neutron()
         subnet_id = self.properties.get('SubnetId')
 
         router_id = self.properties.get('RouteTableId')
@@ -130,7 +130,7 @@ class SubnetRouteTableAssocation(resource.Resource):
         try:
             client.remove_interface_router(router_id, {
                 'subnet_id': subnet_id})
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
@@ -140,13 +140,13 @@ class SubnetRouteTableAssocation(resource.Resource):
             if default_router:
                 client.add_interface_router(
                     default_router['id'], {'subnet_id': subnet_id})
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {

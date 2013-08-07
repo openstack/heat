@@ -21,10 +21,10 @@ from heat.common import template_format
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.engine.resources.quantum import net
-from heat.engine.resources.quantum import subnet
-from heat.engine.resources.quantum import router
-from heat.engine.resources.quantum.quantum import QuantumResource as qr
+from heat.engine.resources.neutron import net
+from heat.engine.resources.neutron import subnet
+from heat.engine.resources.neutron import router
+from heat.engine.resources.neutron.neutron import NeutronResource as qr
 from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
@@ -32,32 +32,32 @@ from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
 
-quantumclient = try_import('quantumclient.v2_0.client')
-qe = try_import('quantumclient.common.exceptions')
+neutronclient = try_import('neutronclient.v2_0.client')
+qe = try_import('neutronclient.common.exceptions')
 
-quantum_template = '''
+neutron_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to test Quantum resources",
+  "Description" : "Template to test Neutron resources",
   "Parameters" : {},
   "Resources" : {
     "network": {
-      "Type": "OS::Quantum::Net",
+      "Type": "OS::Neutron::Net",
       "Properties": {
         "name": "the_network"
       }
     },
     "unnamed_network": {
-      "Type": "OS::Quantum::Net"
+      "Type": "OS::Neutron::Net"
     },
     "admin_down_network": {
-      "Type": "OS::Quantum::Net",
+      "Type": "OS::Neutron::Net",
       "Properties": {
         "admin_state_up": false
       }
     },
     "subnet": {
-      "Type": "OS::Quantum::Subnet",
+      "Type": "OS::Neutron::Subnet",
       "Properties": {
         "network_id": { "Ref" : "network" },
         "ip_version": 4,
@@ -67,7 +67,7 @@ quantum_template = '''
       }
     },
     "port": {
-      "Type": "OS::Quantum::Port",
+      "Type": "OS::Neutron::Port",
       "Properties": {
         "device_id": "d6b4d3a5-c700-476f-b609-1493dd9dadc0",
         "name": "port1",
@@ -79,24 +79,24 @@ quantum_template = '''
       }
     },
     "port2": {
-      "Type": "OS::Quantum::Port",
+      "Type": "OS::Neutron::Port",
       "Properties": {
         "name": "port2",
         "network_id": { "Ref" : "network" }
       }
     },
     "router": {
-      "Type": "OS::Quantum::Router"
+      "Type": "OS::Neutron::Router"
     },
     "router_interface": {
-      "Type": "OS::Quantum::RouterInterface",
+      "Type": "OS::Neutron::RouterInterface",
       "Properties": {
         "router_id": { "Ref" : "router" },
         "subnet_id": { "Ref" : "subnet" }
       }
     },
     "gateway": {
-      "Type": "OS::Quantum::RouterGateway",
+      "Type": "OS::Neutron::RouterGateway",
       "Properties": {
         "router_id": { "Ref" : "router" },
         "network_id": { "Ref" : "network" }
@@ -106,14 +106,14 @@ quantum_template = '''
 }
 '''
 
-quantum_floating_template = '''
+neutron_floating_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to test Quantum resources",
+  "Description" : "Template to test Neutron resources",
   "Parameters" : {},
   "Resources" : {
     "port_floating": {
-      "Type": "OS::Quantum::Port",
+      "Type": "OS::Neutron::Port",
       "Properties": {
         "network_id": "xyz1234",
         "fixed_ips": [{
@@ -123,23 +123,23 @@ quantum_floating_template = '''
       }
     },
     "floating_ip": {
-      "Type": "OS::Quantum::FloatingIP",
+      "Type": "OS::Neutron::FloatingIP",
       "Properties": {
         "floating_network_id": "abcd1234",
       }
     },
     "floating_ip_assoc": {
-      "Type": "OS::Quantum::FloatingIPAssociation",
+      "Type": "OS::Neutron::FloatingIPAssociation",
       "Properties": {
         "floatingip_id": { "Ref" : "floating_ip" },
         "port_id": { "Ref" : "port_floating" }
       }
     },
     "router": {
-      "Type": "OS::Quantum::Router"
+      "Type": "OS::Neutron::Router"
     },
     "gateway": {
-      "Type": "OS::Quantum::RouterGateway",
+      "Type": "OS::Neutron::RouterGateway",
       "Properties": {
         "router_id": { "Ref" : "router" },
         "network_id": "abcd1234"
@@ -150,7 +150,7 @@ quantum_floating_template = '''
 '''
 
 
-class QuantumTest(HeatTestCase):
+class NeutronTest(HeatTestCase):
 
     def test_validate_properties(self):
         vs = {'router:external': True}
@@ -205,14 +205,14 @@ class QuantumTest(HeatTestCase):
         })
 
 
-@skipIf(quantumclient is None, 'quantumclient unavailable')
-class QuantumNetTest(HeatTestCase):
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class NeutronNetTest(HeatTestCase):
 
     def setUp(self):
-        super(QuantumNetTest, self).setUp()
-        self.m.StubOutWithMock(quantumclient.Client, 'create_network')
-        self.m.StubOutWithMock(quantumclient.Client, 'delete_network')
-        self.m.StubOutWithMock(quantumclient.Client, 'show_network')
+        super(NeutronNetTest, self).setUp()
+        self.m.StubOutWithMock(neutronclient.Client, 'create_network')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_network')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         setup_dummy_db()
 
@@ -225,7 +225,7 @@ class QuantumNetTest(HeatTestCase):
     def test_net(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        quantumclient.Client.create_network({
+        neutronclient.Client.create_network({
             'network': {'name': u'the_network', 'admin_state_up': True}
         }).AndReturn({"network": {
             "status": "BUILD",
@@ -237,7 +237,7 @@ class QuantumNetTest(HeatTestCase):
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
-        quantumclient.Client.show_network(
+        neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn({"network": {
             "status": "BUILD",
@@ -249,7 +249,7 @@ class QuantumNetTest(HeatTestCase):
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
-        quantumclient.Client.show_network(
+        neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn({"network": {
             "status": "ACTIVE",
@@ -261,23 +261,11 @@ class QuantumNetTest(HeatTestCase):
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
-        quantumclient.Client.show_network(
+        neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
-        quantumclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": False,
-            "shared": False,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
-        }})
-
-        quantumclient.Client.show_network(
+        neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn({"network": {
             "status": "ACTIVE",
@@ -289,20 +277,32 @@ class QuantumNetTest(HeatTestCase):
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
-        quantumclient.Client.delete_network(
+        neutronclient.Client.show_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({"network": {
+            "status": "ACTIVE",
+            "subnets": [],
+            "name": "name",
+            "admin_state_up": False,
+            "shared": False,
+            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        neutronclient.Client.delete_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
 
-        quantumclient.Client.show_network(
+        neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
-        quantumclient.Client.delete_network(
+        neutronclient.Client.delete_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
-        t = template_format.parse(quantum_template)
+        t = template_format.parse(neutron_template)
         stack = parse_stack(t)
         rsrc = self.create_net(t, stack, 'network')
 
@@ -339,14 +339,14 @@ class QuantumNetTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(quantumclient is None, 'quantumclient unavailable')
-class QuantumSubnetTest(HeatTestCase):
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class NeutronSubnetTest(HeatTestCase):
 
     def setUp(self):
-        super(QuantumSubnetTest, self).setUp()
-        self.m.StubOutWithMock(quantumclient.Client, 'create_subnet')
-        self.m.StubOutWithMock(quantumclient.Client, 'delete_subnet')
-        self.m.StubOutWithMock(quantumclient.Client, 'show_subnet')
+        super(NeutronSubnetTest, self).setUp()
+        self.m.StubOutWithMock(neutronclient.Client, 'create_subnet')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_subnet')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         setup_dummy_db()
 
@@ -361,7 +361,7 @@ class QuantumSubnetTest(HeatTestCase):
 
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        quantumclient.Client.create_subnet({
+        neutronclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
                 'network_id': u'None',
@@ -386,9 +386,9 @@ class QuantumSubnetTest(HeatTestCase):
                 "tenant_id": "c1210485b2424d48804aad5d39c61b8f"
             }
         })
-        quantumclient.Client.show_subnet(
+        neutronclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1').AndRaise(
-                qe.QuantumClientException(status_code=404))
+                qe.NeutronClientException(status_code=404))
         sn = {
             "subnet": {
                 "name": "name",
@@ -404,27 +404,27 @@ class QuantumSubnetTest(HeatTestCase):
                 "enable_dhcp": True,
             }
         }
-        quantumclient.Client.show_subnet(
+        neutronclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(sn)
-        quantumclient.Client.show_subnet(
+        neutronclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(sn)
-        quantumclient.Client.show_subnet(
+        neutronclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(sn)
 
-        quantumclient.Client.delete_subnet(
+        neutronclient.Client.delete_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
         ).AndReturn(None)
 
-        quantumclient.Client.show_subnet(
+        neutronclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
-        quantumclient.Client.delete_subnet(
+        neutronclient.Client.delete_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
-        t = template_format.parse(quantum_template)
+        t = template_format.parse(neutron_template)
         stack = parse_stack(t)
         rsrc = self.create_subnet(t, stack, 'subnet')
 
@@ -457,7 +457,7 @@ class QuantumSubnetTest(HeatTestCase):
 
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        quantumclient.Client.create_subnet({
+        neutronclient.Client.create_subnet({
             'subnet': {
                 'name': utils.PhysName('test_stack', 'test_subnet'),
                 'network_id': u'None',
@@ -484,7 +484,7 @@ class QuantumSubnetTest(HeatTestCase):
             }
         })
 
-        quantumclient.Client.show_subnet(
+        neutronclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn({
                 "subnet": {
                     "name": "name",
@@ -501,16 +501,16 @@ class QuantumSubnetTest(HeatTestCase):
                 }
             })
 
-        quantumclient.Client.delete_subnet(
+        neutronclient.Client.delete_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
         ).AndReturn(None)
 
-        quantumclient.Client.show_subnet(
+        neutronclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
-        t = template_format.parse(quantum_template)
+        t = template_format.parse(neutron_template)
         t['Resources']['subnet']['Properties']['enable_dhcp'] = 'False'
         stack = parse_stack(t)
         rsrc = self.create_subnet(t, stack, 'subnet')
@@ -524,17 +524,17 @@ class QuantumSubnetTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(quantumclient is None, 'quantumclient unavailable')
-class QuantumRouterTest(HeatTestCase):
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class NeutronRouterTest(HeatTestCase):
     def setUp(self):
-        super(QuantumRouterTest, self).setUp()
-        self.m.StubOutWithMock(quantumclient.Client, 'create_router')
-        self.m.StubOutWithMock(quantumclient.Client, 'delete_router')
-        self.m.StubOutWithMock(quantumclient.Client, 'show_router')
-        self.m.StubOutWithMock(quantumclient.Client, 'add_interface_router')
-        self.m.StubOutWithMock(quantumclient.Client, 'remove_interface_router')
-        self.m.StubOutWithMock(quantumclient.Client, 'add_gateway_router')
-        self.m.StubOutWithMock(quantumclient.Client, 'remove_gateway_router')
+        super(NeutronRouterTest, self).setUp()
+        self.m.StubOutWithMock(neutronclient.Client, 'create_router')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_router')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_router')
+        self.m.StubOutWithMock(neutronclient.Client, 'add_interface_router')
+        self.m.StubOutWithMock(neutronclient.Client, 'remove_interface_router')
+        self.m.StubOutWithMock(neutronclient.Client, 'add_gateway_router')
+        self.m.StubOutWithMock(neutronclient.Client, 'remove_gateway_router')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         setup_dummy_db()
 
@@ -567,7 +567,7 @@ class QuantumRouterTest(HeatTestCase):
     def test_router(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        quantumclient.Client.create_router({
+        neutronclient.Client.create_router({
             'router': {
                 'name': utils.PhysName('test_stack', 'router'),
                 'admin_state_up': True,
@@ -582,7 +582,7 @@ class QuantumRouterTest(HeatTestCase):
                 "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
             }
         })
-        quantumclient.Client.show_router(
+        neutronclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
                 "router": {
                     "status": "BUILD",
@@ -594,7 +594,7 @@ class QuantumRouterTest(HeatTestCase):
                     "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
                 }
             })
-        quantumclient.Client.show_router(
+        neutronclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
                 "router": {
                     "status": "ACTIVE",
@@ -607,10 +607,10 @@ class QuantumRouterTest(HeatTestCase):
                 }
             })
 
-        quantumclient.Client.show_router(
+        neutronclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8').AndRaise(
-                qe.QuantumClientException(status_code=404))
-        quantumclient.Client.show_router(
+                qe.NeutronClientException(status_code=404))
+        neutronclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
                 "router": {
                     "status": "ACTIVE",
@@ -622,7 +622,7 @@ class QuantumRouterTest(HeatTestCase):
                     "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
                 }
             })
-        quantumclient.Client.show_router(
+        neutronclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
                 "router": {
                     "status": "ACTIVE",
@@ -635,20 +635,20 @@ class QuantumRouterTest(HeatTestCase):
                 }
             })
 
-        quantumclient.Client.delete_router(
+        neutronclient.Client.delete_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
         ).AndReturn(None)
 
-        quantumclient.Client.show_router(
+        neutronclient.Client.show_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
-        quantumclient.Client.delete_router(
+        neutronclient.Client.delete_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
-        t = template_format.parse(quantum_template)
+        t = template_format.parse(neutron_template)
         stack = parse_stack(t)
         rsrc = self.create_router(t, stack, 'router')
 
@@ -674,20 +674,20 @@ class QuantumRouterTest(HeatTestCase):
     def test_router_interface(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        quantumclient.Client.add_interface_router(
+        neutronclient.Client.add_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
         ).AndReturn(None)
-        quantumclient.Client.remove_interface_router(
+        neutronclient.Client.remove_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
         ).AndReturn(None)
-        quantumclient.Client.remove_interface_router(
+        neutronclient.Client.remove_interface_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
         self.m.ReplayAll()
-        t = template_format.parse(quantum_template)
+        t = template_format.parse(neutron_template)
         stack = parse_stack(t)
 
         rsrc = self.create_router_interface(
@@ -704,18 +704,18 @@ class QuantumRouterTest(HeatTestCase):
     def test_gateway_router(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        quantumclient.Client.add_gateway_router(
+        neutronclient.Client.add_gateway_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
         ).AndReturn(None)
-        quantumclient.Client.remove_gateway_router(
+        neutronclient.Client.remove_gateway_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
         ).AndReturn(None)
-        quantumclient.Client.remove_gateway_router(
+        neutronclient.Client.remove_gateway_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
         self.m.ReplayAll()
-        t = template_format.parse(quantum_template)
+        t = template_format.parse(neutron_template)
         stack = parse_stack(t)
 
         rsrc = self.create_gateway_router(
@@ -730,18 +730,18 @@ class QuantumRouterTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-@skipIf(quantumclient is None, 'quantumclient unavailable')
-class QuantumFloatingIPTest(HeatTestCase):
-    @skipIf(net.clients.quantumclient is None, "Missing Quantum Client")
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class NeutronFloatingIPTest(HeatTestCase):
+    @skipIf(net.clients.neutronclient is None, "Missing Neutron Client")
     def setUp(self):
-        super(QuantumFloatingIPTest, self).setUp()
-        self.m.StubOutWithMock(quantumclient.Client, 'create_floatingip')
-        self.m.StubOutWithMock(quantumclient.Client, 'delete_floatingip')
-        self.m.StubOutWithMock(quantumclient.Client, 'show_floatingip')
-        self.m.StubOutWithMock(quantumclient.Client, 'update_floatingip')
-        self.m.StubOutWithMock(quantumclient.Client, 'create_port')
-        self.m.StubOutWithMock(quantumclient.Client, 'delete_port')
-        self.m.StubOutWithMock(quantumclient.Client, 'show_port')
+        super(NeutronFloatingIPTest, self).setUp()
+        self.m.StubOutWithMock(neutronclient.Client, 'create_floatingip')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_floatingip')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_floatingip')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_floatingip')
+        self.m.StubOutWithMock(neutronclient.Client, 'create_port')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_port')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         setup_dummy_db()
 
@@ -749,31 +749,31 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        quantumclient.Client.create_floatingip({
+        neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
         }).AndReturn({'floatingip': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
-        quantumclient.Client.show_floatingip(
+        neutronclient.Client.show_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
-        quantumclient.Client.show_floatingip(
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+        neutronclient.Client.show_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({'floatingip': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
-        quantumclient.Client.delete_floatingip(
+        neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndReturn(None)
-        quantumclient.Client.delete_floatingip(
+        neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766').AndRaise(
-                qe.QuantumClientException(status_code=404))
+                qe.NeutronClientException(status_code=404))
         self.m.ReplayAll()
 
-        t = template_format.parse(quantum_floating_template)
+        t = template_format.parse(neutron_floating_template)
         stack = parse_stack(t)
 
         # assert the implicit dependency between the floating_ip
@@ -811,7 +811,7 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        quantumclient.Client.create_port({'port': {
+        neutronclient.Client.create_port({'port': {
             'network_id': u'xyz1234',
             'fixed_ips': [
                 {'subnet_id': u'12.12.12.0', 'ip_address': u'10.0.0.10'}
@@ -822,22 +822,22 @@ class QuantumFloatingIPTest(HeatTestCase):
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-        quantumclient.Client.show_port(
+        neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-        quantumclient.Client.show_port(
+        neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn({'port': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-        quantumclient.Client.show_port(
+        neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
-        quantumclient.Client.show_port(
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+        neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({'port': {
             "status": "ACTIVE",
@@ -846,7 +846,7 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        t = template_format.parse(quantum_floating_template)
+        t = template_format.parse(neutron_floating_template)
         stack = parse_stack(t)
 
         p = stack['port_floating']
@@ -877,14 +877,14 @@ class QuantumFloatingIPTest(HeatTestCase):
 
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
-        quantumclient.Client.create_floatingip({
+        neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
         }).AndReturn({'floatingip': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
-        quantumclient.Client.create_port({'port': {
+        neutronclient.Client.create_port({'port': {
             'network_id': u'xyz1234',
             'fixed_ips': [
                 {'subnet_id': u'12.12.12.0', 'ip_address': u'10.0.0.10'}
@@ -895,13 +895,13 @@ class QuantumFloatingIPTest(HeatTestCase):
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-        quantumclient.Client.show_port(
+        neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn({'port': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
-        quantumclient.Client.update_floatingip(
+        neutronclient.Client.update_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {
                 'floatingip': {
@@ -911,41 +911,41 @@ class QuantumFloatingIPTest(HeatTestCase):
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
-        quantumclient.Client.update_floatingip(
+        neutronclient.Client.update_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'floatingip': {
                 'port_id': None
             }}).AndReturn(None)
 
-        quantumclient.Client.delete_port(
+        neutronclient.Client.delete_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
 
-        quantumclient.Client.show_port(
+        neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
-        quantumclient.Client.delete_floatingip(
+        neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
 
-        quantumclient.Client.update_floatingip(
+        neutronclient.Client.update_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'floatingip': {
                 'port_id': None
-            }}).AndRaise(qe.QuantumClientException(status_code=404))
+            }}).AndRaise(qe.NeutronClientException(status_code=404))
 
-        quantumclient.Client.delete_port(
+        neutronclient.Client.delete_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
-        quantumclient.Client.delete_floatingip(
+        neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.QuantumClientException(status_code=404))
+        ).AndRaise(qe.NeutronClientException(status_code=404))
 
         self.m.ReplayAll()
 
-        t = template_format.parse(quantum_floating_template)
+        t = template_format.parse(neutron_floating_template)
         stack = parse_stack(t)
 
         fip = stack['floating_ip']

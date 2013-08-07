@@ -14,18 +14,18 @@
 #    under the License.
 
 from heat.engine import clients
-from heat.engine.resources.quantum import quantum
+from heat.engine.resources.neutron import neutron
 from heat.engine import scheduler
 
-if clients.quantumclient is not None:
-    from quantumclient.common.exceptions import QuantumClientException
+if clients.neutronclient is not None:
+    from neutronclient.common.exceptions import NeutronClientException
 
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 
 
-class Router(quantum.QuantumResource):
+class Router(neutron.NeutronResource):
     properties_schema = {'name': {'Type': 'String'},
                          'value_specs': {'Type': 'Map',
                                          'Default': {}},
@@ -44,11 +44,11 @@ class Router(quantum.QuantumResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        router = self.quantum().create_router({'router': props})['router']
+        router = self.neutron().create_router({'router': props})['router']
         self.resource_id_set(router['id'])
 
     def _show_resource(self):
-        return self.quantum().show_router(
+        return self.neutron().show_router(
             self.resource_id)['router']
 
     def check_create_complete(self, *args):
@@ -56,17 +56,17 @@ class Router(quantum.QuantumResource):
         return self.is_built(attributes)
 
     def handle_delete(self):
-        client = self.quantum()
+        client = self.neutron()
         try:
             client.delete_router(self.resource_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
         else:
             return scheduler.TaskRunner(self._confirm_delete)()
 
 
-class RouterInterface(quantum.QuantumResource):
+class RouterInterface(neutron.NeutronResource):
     properties_schema = {'router_id': {'Type': 'String',
                                        'Required': True},
                          'subnet_id': {'Type': 'String',
@@ -75,24 +75,24 @@ class RouterInterface(quantum.QuantumResource):
     def handle_create(self):
         router_id = self.properties.get('router_id')
         subnet_id = self.properties.get('subnet_id')
-        self.quantum().add_interface_router(
+        self.neutron().add_interface_router(
             router_id,
             {'subnet_id': subnet_id})
         self.resource_id_set('%s:%s' % (router_id, subnet_id))
 
     def handle_delete(self):
-        client = self.quantum()
+        client = self.neutron()
         (router_id, subnet_id) = self.resource_id.split(':')
         try:
             client.remove_interface_router(
                 router_id,
                 {'subnet_id': subnet_id})
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
 
-class RouterGateway(quantum.QuantumResource):
+class RouterGateway(neutron.NeutronResource):
     properties_schema = {'router_id': {'Type': 'String',
                                        'Required': True},
                          'network_id': {'Type': 'String',
@@ -103,14 +103,16 @@ class RouterGateway(quantum.QuantumResource):
         for resource in self.stack.resources.itervalues():
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
-            if (resource.type() == 'OS::Quantum::RouterInterface' and
+            if ((resource.type() == 'OS::Neutron::RouterInterface' or
+                resource.type() == 'OS::Quantum::RouterInterface') and
                 resource.properties.get('router_id') ==
                     self.properties.get('router_id')):
                         deps += (self, resource)
             # depend on any subnet in this template with the same network_id
             # as this network_id, as the gateway implicitly creates a port
             # on that subnet
-            elif (resource.type() == 'OS::Quantum::Subnet' and
+            elif ((resource.type() == 'OS::Neutron::Subnet' or
+                  resource.type() == 'OS::Quantum::Subnet') and
                   resource.properties.get('network_id') ==
                     self.properties.get('network_id')):
                         deps += (self, resource)
@@ -118,26 +120,29 @@ class RouterGateway(quantum.QuantumResource):
     def handle_create(self):
         router_id = self.properties.get('router_id')
         network_id = self.properties.get('network_id')
-        self.quantum().add_gateway_router(
+        self.neutron().add_gateway_router(
             router_id,
             {'network_id': network_id})
         self.resource_id_set('%s:%s' % (router_id, network_id))
 
     def handle_delete(self):
-        client = self.quantum()
+        client = self.neutron()
         (router_id, network_id) = self.resource_id.split(':')
         try:
             client.remove_gateway_router(router_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {
+        'OS::Neutron::Router': Router,
+        'OS::Neutron::RouterInterface': RouterInterface,
+        'OS::Neutron::RouterGateway': RouterGateway,
         'OS::Quantum::Router': Router,
         'OS::Quantum::RouterInterface': RouterInterface,
         'OS::Quantum::RouterGateway': RouterGateway,

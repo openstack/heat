@@ -15,16 +15,16 @@
 
 from heat.engine import clients
 from heat.openstack.common import log as logging
-from heat.engine.resources.quantum import quantum
+from heat.engine.resources.neutron import neutron
 from heat.engine import scheduler
 
-if clients.quantumclient is not None:
-    from quantumclient.common.exceptions import QuantumClientException
+if clients.neutronclient is not None:
+    from neutronclient.common.exceptions import NeutronClientException
 
 logger = logging.getLogger(__name__)
 
 
-class Subnet(quantum.QuantumResource):
+class Subnet(neutron.NeutronResource):
 
     allocation_schema = {'start': {'Type': 'String',
                                    'Required': True},
@@ -68,27 +68,28 @@ class Subnet(quantum.QuantumResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        subnet = self.quantum().create_subnet({'subnet': props})['subnet']
+        subnet = self.neutron().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])
 
     def handle_delete(self):
-        client = self.quantum()
+        client = self.neutron()
         try:
             client.delete_subnet(self.resource_id)
-        except QuantumClientException as ex:
+        except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
         else:
             return scheduler.TaskRunner(self._confirm_delete)()
 
     def _show_resource(self):
-        return self.quantum().show_subnet(self.resource_id)['subnet']
+        return self.neutron().show_subnet(self.resource_id)['subnet']
 
 
 def resource_mapping():
-    if clients.quantumclient is None:
+    if clients.neutronclient is None:
         return {}
 
     return {
+        'OS::Neutron::Subnet': Subnet,
         'OS::Quantum::Subnet': Subnet,
     }
