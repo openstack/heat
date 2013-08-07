@@ -13,19 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import json
-import os
-import pkgutil
-from urlparse import urlparse
-
-from oslo.config import cfg
-
 from heat.engine import signal_responder
 from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine.resources import nova_utils
 from heat.engine.resources import volume
 
 from heat.common import exception
@@ -33,7 +25,6 @@ from heat.engine.resources.network_interface import NetworkInterface
 
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-from heat.openstack.common import uuidutils
 
 logger = logging.getLogger(__name__)
 
@@ -198,69 +189,6 @@ class Instance(resource.Resource):
         logger.info('%s._resolve_attribute(%s) == %s' % (self.name, name, res))
         return unicode(res) if res else None
 
-    def _build_userdata(self, userdata):
-        if not self.mime_string:
-            # Build mime multipart data blob for cloudinit userdata
-
-            def make_subpart(content, filename, subtype=None):
-                if subtype is None:
-                    subtype = os.path.splitext(filename)[0]
-                msg = MIMEText(content, _subtype=subtype)
-                msg.add_header('Content-Disposition', 'attachment',
-                               filename=filename)
-                return msg
-
-            def read_cloudinit_file(fn):
-                data = pkgutil.get_data('heat', 'cloudinit/%s' % fn)
-                data = data.replace('@INSTANCE_USER@',
-                                    cfg.CONF.instance_user)
-                return data
-
-            attachments = [(read_cloudinit_file('config'), 'cloud-config'),
-                           (read_cloudinit_file('boothook.sh'), 'boothook.sh',
-                            'cloud-boothook'),
-                           (read_cloudinit_file('part_handler.py'),
-                            'part-handler.py'),
-                           (userdata, 'cfn-userdata', 'x-cfninitdata'),
-                           (read_cloudinit_file('loguserdata.py'),
-                            'loguserdata.py', 'x-shellscript')]
-
-            if 'Metadata' in self.t:
-                attachments.append((json.dumps(self.metadata),
-                                    'cfn-init-data', 'x-cfninitdata'))
-
-            attachments.append((cfg.CONF.heat_watch_server_url,
-                                'cfn-watch-server', 'x-cfninitdata'))
-
-            attachments.append((cfg.CONF.heat_metadata_server_url,
-                                'cfn-metadata-server', 'x-cfninitdata'))
-
-            # Create a boto config which the cfntools on the host use to know
-            # where the cfn and cw API's are to be accessed
-            cfn_url = urlparse(cfg.CONF.heat_metadata_server_url)
-            cw_url = urlparse(cfg.CONF.heat_watch_server_url)
-            is_secure = cfg.CONF.instance_connection_is_secure
-            vcerts = cfg.CONF.instance_connection_https_validate_certificates
-            boto_cfg = "\n".join(["[Boto]",
-                                  "debug = 0",
-                                  "is_secure = %s" % is_secure,
-                                  "https_validate_certificates = %s" % vcerts,
-                                  "cfn_region_name = heat",
-                                  "cfn_region_endpoint = %s" %
-                                  cfn_url.hostname,
-                                  "cloudwatch_region_name = heat",
-                                  "cloudwatch_region_endpoint = %s" %
-                                  cw_url.hostname])
-            attachments.append((boto_cfg,
-                                'cfn-boto-cfg', 'x-cfninitdata'))
-
-            subparts = [make_subpart(*args) for args in attachments]
-            mime_blob = MIMEMultipart(_subparts=subparts)
-
-            self.mime_string = mime_blob.as_string()
-
-        return self.mime_string
-
     def _build_nics(self, network_interfaces, subnet_id=None):
 
         nics = None
@@ -308,22 +236,10 @@ class Instance(resource.Resource):
             security_groups = None
         return security_groups
 
-    def _get_flavor_id(self, flavor):
-        flavor_id = None
-        flavor_list = self.nova().flavors.list()
-        for o in flavor_list:
-            if o.name == flavor:
-                flavor_id = o.id
-                break
-        if flavor_id is None:
-            raise exception.FlavorMissing(flavor_id=flavor)
-        return flavor_id
-
-    def _get_keypair(self, key_name):
-        for keypair in self.nova().keypairs.list():
-            if keypair.name == key_name:
-                return keypair
-        raise exception.UserKeyPairMissing(key_name=key_name)
+    def get_mime_string(self, userdata):
+        if not self.mime_string:
+            self.mime_string = nova_utils.build_userdata(self, userdata)
+        return self.mime_string
 
     def handle_create(self):
         security_groups = self._get_security_groups()
@@ -335,13 +251,13 @@ class Instance(resource.Resource):
         key_name = self.properties['KeyName']
         if key_name:
             # confirm keypair exists
-            self._get_keypair(key_name)
+            nova_utils.get_keypair(self.nova(), key_name)
 
         image_name = self.properties['ImageId']
 
-        image_id = self._get_image_id(image_name)
+        image_id = nova_utils.get_image_id(self.nova(), image_name)
 
-        flavor_id = self._get_flavor_id(flavor)
+        flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
 
         tags = {}
         if self.properties['Tags']:
@@ -359,8 +275,6 @@ class Instance(resource.Resource):
 
         nics = self._build_nics(self.properties['NetworkInterfaces'],
                                 subnet_id=self.properties['SubnetId'])
-
-        server_userdata = self._build_userdata(userdata)
         server = None
         try:
             server = self.nova().servers.create(
@@ -369,7 +283,7 @@ class Instance(resource.Resource):
                 flavor=flavor_id,
                 key_name=key_name,
                 security_groups=security_groups,
-                userdata=server_userdata,
+                userdata=self.get_mime_string(userdata),
                 meta=tags,
                 scheduler_hints=scheduler_hints,
                 nics=nics,
@@ -438,7 +352,7 @@ class Instance(resource.Resource):
             self.metadata = tmpl_diff['Metadata']
         if 'InstanceType' in prop_diff:
             flavor = prop_diff['InstanceType']
-            flavor_id = self._get_flavor_id(flavor)
+            flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
             server = self.nova().servers.get(self.resource_id)
             server.resize(flavor_id)
             scheduler.TaskRunner(self._check_resize, server, flavor)()
@@ -490,10 +404,7 @@ class Instance(resource.Resource):
                 'NetworkInterfaces')
 
         # make sure the image exists.
-        image_identifier = self.properties['ImageId']
-        self._get_image_id(image_identifier)
-
-        return
+        nova_utils.get_image_id(self.nova(), self.properties['ImageId'])
 
     def _delete_server(self, server):
         '''
@@ -538,34 +449,6 @@ class Instance(resource.Resource):
             delete(wait_time=0.2)
 
         self.resource_id = None
-
-    def _get_image_id(self, image_identifier):
-        image_id = None
-        if uuidutils.is_uuid_like(image_identifier):
-            try:
-                image_id = self.nova().images.get(image_identifier).id
-            except clients.novaclient.exceptions.NotFound:
-                logger.info("Image %s was not found in glance"
-                            % image_identifier)
-                raise exception.ImageNotFound(image_name=image_identifier)
-        else:
-            try:
-                image_list = self.nova().images.list()
-            except clients.novaclient.exceptions.ClientException as ex:
-                raise exception.ServerError(message=str(ex))
-            image_names = dict(
-                (o.id, o.name)
-                for o in image_list if o.name == image_identifier)
-            if len(image_names) == 0:
-                logger.info("Image %s was not found in glance" %
-                            image_identifier)
-                raise exception.ImageNotFound(image_name=image_identifier)
-            elif len(image_names) > 1:
-                logger.info("Mulitple images %s were found in glance with name"
-                            % image_identifier)
-                raise exception.NoUniqueImageFound(image_name=image_identifier)
-            image_id = image_names.popitem()[0]
-        return image_id
 
     def handle_suspend(self):
         '''

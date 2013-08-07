@@ -14,6 +14,7 @@
 
 from heat.tests.v1_1 import fakes
 from heat.engine.resources import instance as instances
+from heat.engine.resources import nova_utils
 from heat.common import template_format
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
@@ -65,8 +66,10 @@ class nokeyTest(HeatTestCase):
         instance.t = instance.stack.resolve_runtime_data(instance.t)
 
         # need to resolve the template functions
-        server_userdata = instance._build_userdata(
+        server_userdata = nova_utils.build_userdata(
+            instance,
             instance.t['Properties']['UserData'])
+        instance.mime_string = server_userdata
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=1, flavor=1, key_name=None,
