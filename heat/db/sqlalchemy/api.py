@@ -29,6 +29,21 @@ def model_query(context, *args):
     return query
 
 
+def soft_delete_aware_query(context, *args, **kwargs):
+    """Stack query helper that accounts for context's `show_deleted` field.
+
+    :param show_deleted: if present, overrides context's show_deleted field.
+    """
+
+    query = model_query(context, *args)
+    show_deleted = kwargs.get('show_deleted')
+
+    if not show_deleted:
+        query = query.filter_by(deleted_at=None)
+
+    return query
+
+
 def _session(context):
     return (context and context.session) or get_session()
 
@@ -150,7 +165,7 @@ def resource_get_all_by_stack(context, stack_id):
 
 
 def stack_get_by_name(context, stack_name, owner_id=None):
-    query = model_query(context, models.Stack).\
+    query = soft_delete_aware_query(context, models.Stack).\
         filter_by(tenant=context.tenant_id).\
         filter_by(name=stack_name).\
         filter_by(owner_id=owner_id)
@@ -158,8 +173,11 @@ def stack_get_by_name(context, stack_name, owner_id=None):
     return query.first()
 
 
-def stack_get(context, stack_id, admin=False):
-    result = model_query(context, models.Stack).get(stack_id)
+def stack_get(context, stack_id, admin=False, show_deleted=False):
+    result = soft_delete_aware_query(context,
+                                     models.Stack,
+                                     show_deleted=show_deleted).\
+        filter_by(id=stack_id).first()
 
     # If the admin flag is True, we allow retrieval of a specific
     # stack without the tenant scoping
@@ -174,13 +192,13 @@ def stack_get(context, stack_id, admin=False):
 
 
 def stack_get_all(context):
-    results = model_query(context, models.Stack).\
+    results = soft_delete_aware_query(context, models.Stack).\
         filter_by(owner_id=None).all()
     return results
 
 
 def stack_get_all_by_tenant(context):
-    results = model_query(context, models.Stack).\
+    results = soft_delete_aware_query(context, models.Stack).\
         filter_by(owner_id=None).\
         filter_by(tenant=context.tenant_id).all()
     return results
@@ -222,18 +240,10 @@ def stack_delete(context, stack_id):
 
     session = Session.object_session(s)
 
-    for e in s.events:
-        session.delete(e)
-
     for r in s.resources:
         session.delete(r)
 
-    rt = s.raw_template
-    uc = s.user_creds
-
-    session.delete(s)
-    session.delete(rt)
-    session.delete(uc)
+    s.soft_delete(session=session)
 
     session.flush()
 
@@ -265,13 +275,16 @@ def event_get(context, event_id):
 
 
 def event_get_all(context):
-    results = model_query(context, models.Event).all()
+    stacks = soft_delete_aware_query(context, models.Stack)
+    stack_ids = [stack.id for stack in stacks]
+    results = model_query(context, models.Event).\
+        filter(models.Event.stack_id.in_(stack_ids)).all()
 
     return results
 
 
 def event_get_all_by_tenant(context):
-    stacks = model_query(context, models.Stack).\
+    stacks = soft_delete_aware_query(context, models.Stack).\
         filter_by(tenant=context.tenant_id).all()
     results = []
     for stack in stacks:

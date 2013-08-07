@@ -108,8 +108,8 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
                                                      physical_resource_id)
 
 
-def stack_get(context, stack_id, admin=False):
-    return IMPL.stack_get(context, stack_id, admin)
+def stack_get(context, stack_id, admin=False, show_deleted=False):
+    return IMPL.stack_get(context, stack_id, admin, show_deleted=show_deleted)
 
 
 def stack_get_by_name(context, stack_name):

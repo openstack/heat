@@ -10,17 +10,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mox
+
 from heat.db.sqlalchemy import api as db_api
 from heat.engine import environment
 from heat.tests.v1_1 import fakes
 from heat.engine.resource import Resource
 from heat.common import template_format
+from heat.engine.resources import instance as instances
 from heat.engine import parser
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
+from heat.tests import utils
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import dummy_context
+from heat.tests.utils import reset_dummy_db
 
+from heat.engine.clients import novaclient
 
 wp_template = '''
 {
@@ -47,6 +53,8 @@ wp_template = '''
 }
 '''
 
+UUIDs = (UUID1, UUID2) = sorted([uuidutils.generate_uuid() for x in range(2)])
+
 
 class MyResource(Resource):
     properties_schema = {
@@ -71,15 +79,45 @@ class SqlAlchemyTest(HeatTestCase):
         super(SqlAlchemyTest, self).setUp()
         self.fc = fakes.FakeClient()
         setup_dummy_db()
+        reset_dummy_db()
+        self.ctx = dummy_context()
 
-    def _setup_test_stack(self, stack_name):
+    def tearDown(self):
+        super(SqlAlchemyTest, self).tearDown()
+
+    def _setup_test_stack(self, stack_name, stack_id=None):
         t = template_format.parse(wp_template)
         template = parser.Template(t)
-        ctx = dummy_context()
-        stack = parser.Stack(ctx, stack_name, template,
-                             environment.Environment({'KeyName': 'test'}),
-                             stack_id=uuidutils.generate_uuid())
+        stack_id = stack_id or uuidutils.generate_uuid()
+        stack = parser.Stack(self.ctx, stack_name, template,
+                             environment.Environment({'KeyName': 'test'}))
+        with utils.UUIDStub(stack_id):
+            stack.store()
         return (t, stack)
+
+    def _mock_create(self, mocks):
+        fc = fakes.FakeClient()
+        mocks.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().MultipleTimes().AndReturn(fc)
+
+        mocks.StubOutWithMock(fc.servers, 'create')
+        fc.servers.create(image=744, flavor=3, key_name='test',
+                          name=mox.IgnoreArg(),
+                          security_groups=None,
+                          userdata=mox.IgnoreArg(), scheduler_hints=None,
+                          meta=None, nics=None,
+                          availability_zone=None).MultipleTimes().AndReturn(
+                              fc.servers.list()[-1])
+        return fc
+
+    def _mock_delete(self, mocks):
+        fc = fakes.FakeClient()
+        mocks.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().MultipleTimes().AndReturn(fc)
+
+        mocks.StubOutWithMock(fc.client, 'get_servers_9999')
+        get = fc.client.get_servers_9999
+        get().MultipleTimes().AndRaise(novaclient.exceptions.NotFound(404))
 
     def test_encryption(self):
         stack_name = 'test_encryption'
@@ -99,3 +137,116 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertNotEqual(encrypted_key, "fake secret")
         decrypted_key = cs.my_secret
         self.assertEqual(decrypted_key, "fake secret")
+        cs.destroy()
+
+    def test_stack_get_by_name(self):
+        stack = self._setup_test_stack('stack', UUID1)[1]
+
+        st = db_api.stack_get_by_name(self.ctx, 'stack')
+        self.assertEqual(UUID1, st.id)
+
+        stack.delete()
+
+        st = db_api.stack_get_by_name(self.ctx, 'stack')
+        self.assertIsNone(st)
+
+    def test_stack_get(self):
+        stack = self._setup_test_stack('stack', UUID1)[1]
+
+        st = db_api.stack_get(self.ctx, UUID1, show_deleted=False)
+        self.assertEqual(UUID1, st.id)
+
+        stack.delete()
+        st = db_api.stack_get(self.ctx, UUID1, show_deleted=False)
+        self.assertIsNone(st)
+
+        st = db_api.stack_get(self.ctx, UUID1, show_deleted=True)
+        self.assertEqual(UUID1, st.id)
+
+    def test_stack_get_all(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        st_db = db_api.stack_get_all(self.ctx)
+        self.assertEqual(2, len(st_db))
+
+        stacks[0].delete()
+        st_db = db_api.stack_get_all(self.ctx)
+        self.assertEqual(1, len(st_db))
+
+        stacks[1].delete()
+        st_db = db_api.stack_get_all(self.ctx)
+        self.assertEqual(0, len(st_db))
+
+    def test_stack_get_all_by_tenant(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        st_db = db_api.stack_get_all_by_tenant(self.ctx)
+        self.assertEqual(2, len(st_db))
+
+        stacks[0].delete()
+        st_db = db_api.stack_get_all_by_tenant(self.ctx)
+        self.assertEqual(1, len(st_db))
+
+        stacks[1].delete()
+        st_db = db_api.stack_get_all_by_tenant(self.ctx)
+        self.assertEqual(0, len(st_db))
+
+    def test_event_get_all_by_stack(self):
+        stack = self._setup_test_stack('stack', UUID1)[1]
+
+        self._mock_create(self.m)
+        self.m.ReplayAll()
+        stack.create()
+        self.m.UnsetStubs()
+
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1)
+        self.assertEqual(2, len(events))
+
+        self._mock_delete(self.m)
+        self.m.ReplayAll()
+        stack.delete()
+
+        events = db_api.event_get_all_by_stack(self.ctx, UUID1)
+        self.assertEqual(4, len(events))
+
+        self.m.VerifyAll()
+
+    def test_event_get_all_by_tenant(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        self._mock_create(self.m)
+        self.m.ReplayAll()
+        [s.create() for s in stacks]
+        self.m.UnsetStubs()
+
+        events = db_api.event_get_all_by_tenant(self.ctx)
+        self.assertEqual(4, len(events))
+
+        self._mock_delete(self.m)
+        self.m.ReplayAll()
+        [s.delete() for s in stacks]
+
+        events = db_api.event_get_all_by_tenant(self.ctx)
+        self.assertEqual(0, len(events))
+
+        self.m.VerifyAll()
+
+    def test_event_get_all(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        self._mock_create(self.m)
+        self.m.ReplayAll()
+        [s.create() for s in stacks]
+        self.m.UnsetStubs()
+
+        events = db_api.event_get_all(self.ctx)
+        self.assertEqual(4, len(events))
+
+        self._mock_delete(self.m)
+        self.m.ReplayAll()
+        stacks[0].delete()
+
+        events = db_api.event_get_all(self.ctx)
+        self.assertEqual(2, len(events))
+
+        self.m.VerifyAll()
