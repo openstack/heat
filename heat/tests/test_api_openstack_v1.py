@@ -900,7 +900,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
-        error = error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -1722,7 +1722,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get(stack_identity._tenant_path() + '/events')
 
-        error = error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -1967,7 +1967,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         req = self._get(stack_identity._tenant_path() +
                         '/resources/' + res_name + '/events/' + event_id)
 
-        error = error = heat_exc.StackNotFound(stack_name='a')
+        error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
