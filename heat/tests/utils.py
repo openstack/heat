@@ -16,6 +16,7 @@ import functools
 import random
 import string
 import sys
+import uuid
 
 from heat.common import context
 from heat.common import exception
@@ -24,6 +25,19 @@ from heat.engine import parser
 
 from heat.db.sqlalchemy.session import get_engine
 from heat.db import migration
+
+
+class UUIDStub(object):
+    def __init__(self, value):
+        self.value = value
+
+    def __enter__(self):
+        self.uuid4 = uuid.uuid4
+        uuid_stub = lambda: self.value
+        uuid.uuid4 = uuid_stub
+
+    def __exit__(self, *exc_info):
+        uuid.uuid4 = self.uuid4
 
 
 def random_name():
