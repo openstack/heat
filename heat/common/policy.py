@@ -32,8 +32,12 @@ from heat.openstack.common.gettextutils import _
 logger = logging.getLogger(__name__)
 
 policy_opts = [
-    cfg.StrOpt('policy_file', default='policy.json'),
-    cfg.StrOpt('policy_default_rule', default='default'),
+    cfg.StrOpt('policy_file',
+               default='policy.json',
+               help=_("Policy file to use")),
+    cfg.StrOpt('policy_default_rule',
+               default='default',
+               help=_("Default Rule of Policy File"))
 ]
 
 CONF = cfg.CONF
