@@ -21,6 +21,7 @@ import functools
 import urlparse
 import sys
 from heat.openstack.common import exception
+from heat.openstack.common.gettextutils import _
 
 
 OpenstackException = exception.OpenstackException
