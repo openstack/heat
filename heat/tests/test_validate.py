@@ -397,6 +397,34 @@ test_unregistered_key = '''
     }
     '''
 
+test_template_image = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "test.",
+  "Parameters" : {
+
+    "KeyName" : {
+''' + \
+    '"Description" : "Name of an existing EC2' + \
+    'KeyPair to enable SSH access to the instances",' + \
+    '''
+          "Type" : "String"
+        }
+      },
+
+      "Resources" : {
+        "Instance": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+            "ImageId": "image_name",
+            "InstanceType": "m1.large",
+            "KeyName": { "Ref" : "KeyName" }
+          }
+        }
+      }
+    }
+    '''
+
 test_template_invalid_secgroups = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -700,7 +728,55 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         resource = stack.resources['Instance']
-        self.assertNotEqual(resource.validate(), None)
+        self.assertRaises(exception.UserKeyPairMissing, resource.validate)
+
+    def test_unregistered_image(self):
+        t = template_format.parse(test_template_image)
+        template = parser.Template(t)
+
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'KeyName': 'test'}))
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        resource = stack.resources['Instance']
+        self.assertRaises(exception.ImageNotFound, resource.validate)
+
+        self.m.VerifyAll()
+
+    def test_duplicated_image(self):
+        t = template_format.parse(test_template_image)
+        template = parser.Template(t)
+
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({'KeyName': 'test'}))
+
+        class image_type(object):
+
+            def __init__(self, id, name):
+                self.id = id
+                self.name = name
+
+        image_list = [image_type(id='768b5464-3df5-4abf-be33-63b60f8b99d0',
+                                 name='image_name'),
+                      image_type(id='a57384f5-690f-48e1-bf46-c4291e6c887e',
+                                 name='image_name')]
+
+        self.m.StubOutWithMock(self.fc.images, 'list')
+        self.fc.images.list().AndReturn(image_list)
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().AndReturn(self.fc)
+        instances.Instance.nova().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        resource = stack.resources['Instance']
+        self.assertRaises(exception.NoUniqueImageFound, resource.validate)
+
+        self.m.VerifyAll()
 
     def test_invalid_security_groups_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroups)
@@ -713,7 +789,8 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         resource = stack.resources['Instance']
-        self.assertNotEqual(resource.validate(), None)
+        self.assertRaises(exception.ResourcePropertyConflict,
+                          resource.validate)
 
     def test_invalid_security_group_ids_with_nics(self):
         t = template_format.parse(test_template_invalid_secgroupids)
@@ -726,7 +803,8 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         resource = stack.resources['Instance']
-        self.assertNotEqual(resource.validate(), None)
+        self.assertRaises(exception.ResourcePropertyConflict,
+                          resource.validate)
 
     def test_client_exception_from_nova_client(self):
         t = template_format.parse(test_template_nova_client_exception)

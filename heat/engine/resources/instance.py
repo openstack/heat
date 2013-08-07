@@ -480,26 +480,18 @@ class Instance(resource.Resource):
         if key_name:
             keypairs = self.nova().keypairs.list()
             if not any(k.name == key_name for k in keypairs):
-                return {'Error':
-                        'Provided KeyName is not registered with nova'}
+                raise exception.UserKeyPairMissing(key_name=key_name)
 
         # check validity of security groups vs. network interfaces
         security_groups = self._get_security_groups()
         if security_groups and self.properties.get('NetworkInterfaces'):
-            return {'Error':
-                    'Cannot define both SecurityGroups/SecurityGroupIds and '
-                    'NetworkInterfaces properties.'}
+            raise exception.ResourcePropertyConflict(
+                'SecurityGroups/SecurityGroupIds',
+                'NetworkInterfaces')
 
         # make sure the image exists.
         image_identifier = self.properties['ImageId']
-        try:
-            self._get_image_id(image_identifier)
-        except exception.ImageNotFound:
-            return {'Error': 'Image %s was not found in glance' %
-                    image_identifier}
-        except exception.NoUniqueImageFound:
-            return {'Error': 'Multiple images were found with name %s' %
-                    image_identifier}
+        self._get_image_id(image_identifier)
 
         return
 

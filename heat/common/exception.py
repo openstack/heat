@@ -279,3 +279,11 @@ class ResourceFailure(OpenstackException):
 
 class NotSupported(OpenstackException):
     message = _("%(feature)s is not supported.")
+
+
+class ResourcePropertyConflict(OpenstackException):
+    message = _('Cannot define the following properties at the same time: %s.')
+
+    def __init__(self, *args):
+        self.message = self.message % ", ".join(args)
+        super(ResourcePropertyConflict, self).__init__()
