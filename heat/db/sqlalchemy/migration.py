@@ -22,7 +22,7 @@ import sqlalchemy
 import migrate
 from migrate.versioning import util as migrate_util
 
-from heat.openstack.common import exception
+from heat.common import exception
 from heat.openstack.common.db.sqlalchemy.session import get_engine
 from heat.openstack.common.gettextutils import _
 
