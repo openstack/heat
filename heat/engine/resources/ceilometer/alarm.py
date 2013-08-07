@@ -48,6 +48,8 @@ class CeilometerAlarm(resource.Resource):
                          'insufficient_data_actions': {'Type': 'List'},
                          'description': {'Type': 'String'},
                          'source': {'Type': 'String'},
+                         'enabled': {'Type': 'Boolean',
+                                     'Default': 'true'},
                          'matching_metadata': {'Type': 'Map'}}
 
     update_allowed_keys = ('Properties',)
@@ -57,7 +59,8 @@ class CeilometerAlarm(resource.Resource):
     update_allowed_properties = ('comparison_operator', 'description',
                                  'evaluation_periods', 'period', 'statistic',
                                  'alarm_actions', 'ok_actions',
-                                 'insufficient_data_actions', 'threshold')
+                                 'insufficient_data_actions', 'threshold',
+                                 'enabled')
 
     def _actions_to_urls(self, props):
         kwargs = {}
@@ -82,7 +85,6 @@ class CeilometerAlarm(resource.Resource):
     def handle_create(self):
         props = self._actions_to_urls(self.parsed_template('Properties'))
         props['name'] = self.physical_resource_name()
-        props['enabled'] = True
 
         alarm = self.ceilometer().alarms.create(**props)
         self.resource_id_set(alarm.alarm_id)

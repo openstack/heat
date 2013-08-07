@@ -121,7 +121,6 @@ class CeilometerAlarmTest(HeatTestCase):
 
         al = copy.deepcopy(temp['Resources']['MEMAlarmHigh']['Properties'])
         al['description'] = mox.IgnoreArg()
-        al['enabled'] = mox.IgnoreArg()
         al['name'] = mox.IgnoreArg()
         al['alarm_actions'] = mox.IgnoreArg()
         self.m.StubOutWithMock(self.fa.alarms, 'create')
@@ -158,6 +157,7 @@ class CeilometerAlarmTest(HeatTestCase):
         snippet['Properties']['description'] = 'fruity'
         snippet['Properties']['evaluation_periods'] = '2'
         snippet['Properties']['period'] = '90'
+        snippet['Properties']['enabled'] = 'true'
         snippet['Properties']['statistic'] = 'max'
         snippet['Properties']['threshold'] = '39'
         snippet['Properties']['insufficient_data_actions'] = []
