@@ -93,6 +93,27 @@ class StackResource(resource.Resource):
 
         return done
 
+    def update_with_template(self, child_template, user_params,
+                             timeout_mins=None):
+        """Update the nested stack with the new template."""
+        template = parser.Template(child_template)
+        # Note that there is no call to self._outputs_to_attribs here.
+        # If we have a use case for updating attributes of the resource based
+        # on updated templates we should make sure it's optional because not
+        # all subclasses want that behavior, since they may offer custom
+        # attributes.
+
+        # Note we disable rollback for nested stacks, since they
+        # should be rolled back by the parent stack on failure
+        stack = parser.Stack(self.context,
+                             self.physical_resource_name(),
+                             template,
+                             environment.Environment(user_params),
+                             timeout_mins=timeout_mins,
+                             disable_rollback=True,
+                             parent_resource=self)
+        return self._nested.update(stack)
+
     def delete_nested(self):
         '''
         Delete the nested stack.

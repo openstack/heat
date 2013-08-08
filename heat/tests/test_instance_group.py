@@ -25,6 +25,7 @@ from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 from heat.tests.utils import parse_stack
 
+
 ig_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -101,7 +102,9 @@ class InstanceGroupTest(HeatTestCase):
 
         self.assertEqual('JobServerGroup', rsrc.FnGetRefId())
         self.assertEqual('1.2.3.4', rsrc.FnGetAtt('InstanceList'))
-        self.assertEqual('JobServerGroup-0', rsrc.resource_id)
+
+        nested = rsrc.nested()
+        self.assertEqual(nested.id, rsrc.resource_id)
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -163,8 +166,6 @@ class InstanceGroupTest(HeatTestCase):
         self._stub_create(2)
         self.m.ReplayAll()
         rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
-        self.assertEqual('JobServerGroup-0,JobServerGroup-1',
-                         rsrc.resource_id)
 
         self.m.VerifyAll()
         self.m.UnsetStubs()
@@ -186,9 +187,6 @@ class InstanceGroupTest(HeatTestCase):
         prop_diff = {'Size': '5'}
         self.assertEqual(None, rsrc.handle_update(update_snippet, tmpl_diff,
                          prop_diff))
-        assert_str = ','.join(['JobServerGroup-%s' % x for x in range(5)])
-        self.assertEqual(assert_str,
-                         rsrc.resource_id)
         self.assertEqual('10.0.0.2,10.0.0.3,10.0.0.4,10.0.0.5,10.0.0.6',
                          rsrc.FnGetAtt('InstanceList'))
 
@@ -204,8 +202,6 @@ class InstanceGroupTest(HeatTestCase):
         self._stub_create(2)
         self.m.ReplayAll()
         rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
-        self.assertEqual('JobServerGroup-0,JobServerGroup-1',
-                         rsrc.resource_id)
 
         self.m.ReplayAll()
 
@@ -226,8 +222,6 @@ class InstanceGroupTest(HeatTestCase):
         self._stub_create(2)
         self.m.ReplayAll()
         rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
-        self.assertEqual('JobServerGroup-0,JobServerGroup-1',
-                         rsrc.resource_id)
 
         self.m.ReplayAll()
 
