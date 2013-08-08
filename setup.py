@@ -24,7 +24,7 @@ project = 'heat'
 
 setuptools.setup(
     name=project,
-    version=setup.get_version(project, '2013.1.3'),
+    version=setup.get_version(project, '2013.1.4'),
     description='The heat project provides services for provisioning '
                 'virtual machines',
     license='Apache License (2.0)',
