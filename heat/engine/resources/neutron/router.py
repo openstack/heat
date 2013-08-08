@@ -141,7 +141,4 @@ def resource_mapping():
         'OS::Neutron::Router': Router,
         'OS::Neutron::RouterInterface': RouterInterface,
         'OS::Neutron::RouterGateway': RouterGateway,
-        'OS::Quantum::Router': Router,
-        'OS::Quantum::RouterInterface': RouterInterface,
-        'OS::Quantum::RouterGateway': RouterGateway,
     }

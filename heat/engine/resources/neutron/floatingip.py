@@ -104,6 +104,4 @@ def resource_mapping():
     return {
         'OS::Neutron::FloatingIP': FloatingIP,
         'OS::Neutron::FloatingIPAssociation': FloatingIPAssociation,
-        'OS::Quantum::FloatingIP': FloatingIP,
-        'OS::Quantum::FloatingIPAssociation': FloatingIPAssociation,
     }
