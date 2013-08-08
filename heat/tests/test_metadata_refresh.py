@@ -18,9 +18,7 @@ import mox
 from oslo.config import cfg
 from heat.tests import fakes
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import stack_delete_after
+from heat.tests import utils
 
 from heat.db import api as db_api
 from heat.engine import environment
@@ -136,14 +134,14 @@ class MetadataRefreshTest(HeatTestCase):
     def setUp(self):
         super(MetadataRefreshTest, self).setUp()
         self.fc = fakes.FakeKeystoneClient()
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
     def create_stack(self, stack_name='test_stack', params={}):
         temp = template_format.parse(test_template_metadata)
         template = parser.Template(temp)
-        ctx = dummy_context()
+        ctx = utils.dummy_context()
         stack = parser.Stack(ctx, stack_name, template,
                              environment.Environment(params),
                              disable_rollback=True)
@@ -160,7 +158,7 @@ class MetadataRefreshTest(HeatTestCase):
 
         return stack
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_FnGetAtt(self):
         self.stack = self.create_stack()
 
@@ -194,7 +192,7 @@ class MetadataRefreshTest(HeatTestCase):
 class WaitCondMetadataUpdateTest(HeatTestCase):
     def setUp(self):
         super(WaitCondMetadataUpdateTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
         self.fc = fakes.FakeKeystoneClient()
         self.man = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_waitcondition_server_url',
@@ -205,7 +203,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
     def create_stack(self, stack_name='test_stack'):
         temp = template_format.parse(test_template_waitcondition)
         template = parser.Template(temp)
-        stack = parser.Stack(dummy_context(), stack_name, template,
+        stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              disable_rollback=True)
 
         self.stack_id = stack.store()
@@ -229,7 +227,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
 
         return stack
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_wait_meta(self):
         '''
         1 create stack
@@ -249,7 +247,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
             self.assertEqual(inst.metadata['test'], None)
 
         def update_metadata(id, data, reason):
-            self.man.metadata_update(dummy_context(),
+            self.man.metadata_update(utils.dummy_context(),
                                      dict(self.stack.identifier()),
                                      'WH',
                                      {'Data': data, 'Reason': reason,

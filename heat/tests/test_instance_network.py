@@ -24,8 +24,6 @@ from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
 
 
 wp_template = '''
@@ -150,7 +148,7 @@ class instancesTest(HeatTestCase):
     def setUp(self):
         super(instancesTest, self).setUp()
         self.fc = fakes.FakeClient()
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def _create_test_instance(self, return_server, name):
         stack_name = '%s_stack' % name
@@ -159,7 +157,7 @@ class instancesTest(HeatTestCase):
         kwargs = {'KeyName': 'test',
                   'InstanceType': 'm1.large',
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
-        stack = parser.Stack(dummy_context(), stack_name, template,
+        stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              environment.Environment(kwargs),
                              stack_id=uuidutils.generate_uuid())
 
@@ -201,7 +199,7 @@ class instancesTest(HeatTestCase):
         kwargs = {'KeyName': 'test',
                   'InstanceType': 'm1.large',
                   'SubnetId': '4156c7a5-e8c4-4aff-a6e1-8f3c7bc83861'}
-        stack = parser.Stack(dummy_context(), stack_name, template,
+        stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              environment.Environment(kwargs),
                              stack_id=uuidutils.generate_uuid())
 

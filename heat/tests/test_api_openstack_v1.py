@@ -32,7 +32,7 @@ import heat.api.openstack.v1.stacks as stacks
 import heat.api.openstack.v1.resources as resources
 import heat.api.openstack.v1.events as events
 import heat.api.openstack.v1.actions as actions
-from heat.tests.utils import dummy_context
+from heat.tests import utils
 
 import heat.api.middleware.fault as fault
 
@@ -232,7 +232,7 @@ class ControllerTest(object):
         environ['REQUEST_METHOD'] = method
 
         req = Request(environ)
-        req.context = dummy_context('api_test_user', self.tenant)
+        req.context = utils.dummy_context('api_test_user', self.tenant)
         return req
 
     def _get(self, path):
@@ -247,7 +247,7 @@ class ControllerTest(object):
         environ['REQUEST_METHOD'] = method
 
         req = Request(environ)
-        req.context = dummy_context('api_test_user', self.tenant)
+        req.context = utils.dummy_context('api_test_user', self.tenant)
         req.body = data
         return req
 

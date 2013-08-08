@@ -22,8 +22,7 @@ from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
+from heat.tests import utils
 
 
 ig_template = '''
@@ -59,7 +58,7 @@ ig_template = '''
 class InstanceGroupTest(HeatTestCase):
     def setUp(self):
         super(InstanceGroupTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def _stub_create(self, num, instance_class=instance.Instance):
         """
@@ -90,7 +89,7 @@ class InstanceGroupTest(HeatTestCase):
     def test_instance_group(self):
 
         t = template_format.parse(ig_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         # start with min then delete
         self._stub_create(1)
@@ -126,7 +125,7 @@ class InstanceGroupTest(HeatTestCase):
                         original_instance)
 
         t = template_format.parse(ig_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         self._stub_create(1, instance_class=MyInstance)
 
         self.m.ReplayAll()
@@ -139,7 +138,7 @@ class InstanceGroupTest(HeatTestCase):
     def test_missing_image(self):
 
         t = template_format.parse(ig_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         rsrc = asc.InstanceGroup('JobServerGroup',
                                  t['Resources']['JobServerGroup'],
@@ -161,7 +160,7 @@ class InstanceGroupTest(HeatTestCase):
         t = template_format.parse(ig_template)
         properties = t['Resources']['JobServerGroup']['Properties']
         properties['Size'] = '2'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         self._stub_create(2)
         self.m.ReplayAll()
@@ -197,7 +196,7 @@ class InstanceGroupTest(HeatTestCase):
         t = template_format.parse(ig_template)
         properties = t['Resources']['JobServerGroup']['Properties']
         properties['Size'] = '2'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         self._stub_create(2)
         self.m.ReplayAll()
@@ -217,7 +216,7 @@ class InstanceGroupTest(HeatTestCase):
         t = template_format.parse(ig_template)
         properties = t['Resources']['JobServerGroup']['Properties']
         properties['Size'] = '2'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         self._stub_create(2)
         self.m.ReplayAll()

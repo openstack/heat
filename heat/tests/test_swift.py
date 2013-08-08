@@ -26,8 +26,6 @@ from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
 
 swiftclient = try_import('swiftclient.client')
 
@@ -68,7 +66,7 @@ class swiftTest(HeatTestCase):
         self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
 
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def create_resource(self, t, stack, resource_name):
         rsrc = swift.SwiftContainer(
@@ -83,7 +81,7 @@ class swiftTest(HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
         t['Resources']['SwiftContainer']['Properties']['name'] = 'the_name'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = swift.SwiftContainer(
             'test_resource',
             t['Resources']['SwiftContainer'],
@@ -133,7 +131,7 @@ class swiftTest(HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
 
         ref_id = rsrc.FnGetRefId()
@@ -173,7 +171,7 @@ class swiftTest(HeatTestCase):
         t = template_format.parse(swift_template)
         properties = t['Resources']['SwiftContainer']['Properties']
         properties['X-Container-Read'] = '.r:*'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
         rsrc.delete()
         self.m.VerifyAll()
@@ -193,7 +191,7 @@ class swiftTest(HeatTestCase):
         properties = t['Resources']['SwiftContainer']['Properties']
         properties['X-Container-Read'] = '.r:*'
         properties['X-Container-Write'] = '.r:*'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
         rsrc.delete()
         self.m.VerifyAll()
@@ -212,7 +210,7 @@ class swiftTest(HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainerWebsite')
         rsrc.delete()
         self.m.VerifyAll()
@@ -230,7 +228,7 @@ class swiftTest(HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
         rsrc.delete()
 
@@ -251,7 +249,7 @@ class swiftTest(HeatTestCase):
 
         container = t['Resources']['SwiftContainer']
         container['DeletionPolicy'] = 'Retain'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
         rsrc.delete()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)

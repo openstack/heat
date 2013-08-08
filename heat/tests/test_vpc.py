@@ -22,8 +22,6 @@ from heat.engine import resource
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
 
 try:
     from neutronclient.common.exceptions import NeutronClientException
@@ -37,7 +35,7 @@ class VPCTestBase(HeatTestCase):
     @skipIf(neutronclient is None, 'neutronclient unavaialble')
     def setUp(self):
         super(VPCTestBase, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
         self.m.StubOutWithMock(neutronclient.Client, 'add_interface_router')
         self.m.StubOutWithMock(neutronclient.Client, 'add_gateway_router')
         self.m.StubOutWithMock(neutronclient.Client, 'create_network')
@@ -73,7 +71,7 @@ class VPCTestBase(HeatTestCase):
     def parse_stack(self, t):
         stack_name = 'test_stack'
         tmpl = parser.Template(t)
-        stack = parser.Stack(dummy_context(), stack_name, tmpl)
+        stack = parser.Stack(utils.dummy_context(), stack_name, tmpl)
         stack.store()
         return stack
 

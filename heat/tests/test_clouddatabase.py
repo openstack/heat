@@ -21,8 +21,7 @@ from heat.engine import resource
 from heat.engine.resources.rackspace import clouddatabase
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
+from heat.tests import utils
 
 
 wp_template = '''
@@ -74,7 +73,7 @@ class FakeDBInstance(object):
 class CloudDBInstanceTest(HeatTestCase):
     def setUp(self):
         super(CloudDBInstanceTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
         # Test environment may not have pyrax client library installed and if
         # pyrax is not installed resource class would not be registered.
         # So register resource provider class explicitly for unit testing.
@@ -85,7 +84,7 @@ class CloudDBInstanceTest(HeatTestCase):
         stack_name = '%s_stack' % name
         t = template_format.parse(wp_template)
         template = parser.Template(t)
-        stack = parser.Stack(dummy_context(),
+        stack = parser.Stack(utils.dummy_context(),
                              stack_name,
                              template,
                              environment.Environment({'InstanceName': 'Test',

@@ -28,8 +28,6 @@ from heat.engine.resources import wait_condition as wc
 from heat.engine.resource import Metadata
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
 from heat.tests.v1_1 import fakes
 from heat.tests import fakes as test_fakes
 
@@ -113,7 +111,7 @@ class LoadBalancerTest(HeatTestCase):
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def create_loadbalancer(self, t, stack, resource_name):
         rsrc = lb.LoadBalancer(resource_name,
@@ -158,7 +156,7 @@ class LoadBalancerTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(lb_template)
-        s = parse_stack(t)
+        s = utils.parse_stack(t)
         s.store()
 
         rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')
@@ -214,7 +212,7 @@ class LoadBalancerTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(lb_template_nokey)
-        s = parse_stack(t)
+        s = utils.parse_stack(t)
         s.store()
 
         rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')

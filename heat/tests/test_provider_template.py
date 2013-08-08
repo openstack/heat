@@ -26,8 +26,7 @@ from heat.openstack.common import uuidutils
 
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
+from heat.tests import utils
 
 
 class MyCloudResource(generic_rsrc.GenericResource):
@@ -37,7 +36,7 @@ class MyCloudResource(generic_rsrc.GenericResource):
 class ProviderTemplateTest(HeatTestCase):
     def setUp(self):
         super(ProviderTemplateTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
         resource._register_class('OS::ResourceType',
                                  generic_rsrc.GenericResource)
         resource._register_class('myCloud::ResourceType',
@@ -84,8 +83,8 @@ class ProviderTemplateTest(HeatTestCase):
 
     def test_to_parameters(self):
         """Tests property conversion to parameter values."""
-        setup_dummy_db()
-        stack = parser.Stack(dummy_context(), 'test_stack',
+        utils.setup_dummy_db()
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}),
                              stack_id=uuidutils.generate_uuid())
 

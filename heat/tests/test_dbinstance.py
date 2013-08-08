@@ -20,8 +20,7 @@ from heat.common import template_format
 from heat.engine import scheduler
 from heat.engine.resources import dbinstance as dbi
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
+from heat.tests import utils
 
 
 rds_template = '''
@@ -56,7 +55,7 @@ rds_template = '''
 class DBInstanceTest(HeatTestCase):
     def setUp(self):
         super(DBInstanceTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
         self.m.StubOutWithMock(dbi.DBInstance, 'create_with_template')
         self.m.StubOutWithMock(dbi.DBInstance, 'check_create_complete')
         self.m.StubOutWithMock(dbi.DBInstance, 'nested')
@@ -99,7 +98,7 @@ class DBInstanceTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(rds_template)
-        s = parse_stack(t)
+        s = utils.parse_stack(t)
         resource = self.create_dbinstance(t, s, 'DatabaseServer')
 
         self.assertEqual('0.0.0.0', resource.FnGetAtt('Endpoint.Address'))

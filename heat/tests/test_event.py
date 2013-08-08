@@ -20,9 +20,8 @@ from heat.engine import template
 from heat.engine import event
 
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
 from heat.tests import generic_resource as generic_rsrc
+from heat.tests import utils
 
 
 tmpl = {
@@ -41,8 +40,8 @@ class EventTest(HeatTestCase):
         super(EventTest, self).setUp()
         self.username = 'event_test_user'
 
-        setup_dummy_db()
-        self.ctx = dummy_context()
+        utils.setup_dummy_db()
+        self.ctx = utils.dummy_context()
 
         self.m.ReplayAll()
 

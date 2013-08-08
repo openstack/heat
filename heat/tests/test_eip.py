@@ -20,8 +20,7 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.v1_1 import fakes
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
+from heat.tests import utils
 
 
 eip_template = '''
@@ -74,7 +73,7 @@ class EIPTest(HeatTestCase):
         self.m.StubOutWithMock(eip.ElasticIp, 'nova')
         self.m.StubOutWithMock(eip.ElasticIpAssociation, 'nova')
         self.m.StubOutWithMock(self.fc.servers, 'get')
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def create_eip(self, t, stack, resource_name):
         rsrc = eip.ElasticIp(resource_name,
@@ -103,7 +102,7 @@ class EIPTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(eip_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         rsrc = self.create_eip(t, stack, 'IPAddress')
 
@@ -136,7 +135,7 @@ class EIPTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(eip_template_ipassoc)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         rsrc = self.create_eip(t, stack, 'IPAddress')
         association = self.create_association(t, stack, 'IPAssoc')

@@ -23,9 +23,7 @@ from heat.engine import template
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import stack_delete_after
+from heat.tests import utils
 
 ws_res_snippet = {"Type": "some_magic_type",
                   "metadata": {
@@ -95,22 +93,22 @@ class StackResourceTest(HeatTestCase):
 
     def setUp(self):
         super(StackResourceTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
         resource._register_class('some_magic_type',
                                  MyStackResource)
         resource._register_class('GenericResource',
                                  generic_rsrc.GenericResource)
         t = parser.Template({template.RESOURCES:
                              {"provider_resource": ws_res_snippet}})
-        self.parent_stack = parser.Stack(dummy_context(), 'test_stack', t,
-                                         stack_id=uuidutils.generate_uuid())
+        self.parent_stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                         t, stack_id=uuidutils.generate_uuid())
         self.parent_resource = MyStackResource('test',
                                                ws_res_snippet,
                                                self.parent_stack)
         self.templ = template_format.parse(wp_template)
         self.generic_template = template_format.parse(generic_template)
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_create_with_template_ok(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
@@ -122,7 +120,7 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(self.templ, self.stack.t.t)
         self.assertEqual(self.stack.id, self.parent_resource.resource_id)
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_update_with_template_ok(self):
         """
         The update_with_template method updates the nested stack with the
@@ -143,7 +141,7 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(set(self.stack.resources.keys()),
                          set(["WebServer", "WebServer2"]))
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_load_nested_ok(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
@@ -159,7 +157,7 @@ class StackResourceTest(HeatTestCase):
         self.parent_resource.nested()
         self.m.VerifyAll()
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_load_nested_non_exist(self):
         self.parent_resource.create_with_template(self.templ,
                                                   {"KeyName": "key"})
@@ -210,7 +208,7 @@ class StackResourceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_create_complete_state_err(self):
         """
         check_create_complete should raise error when create task is
@@ -258,7 +256,7 @@ class StackResourceTest(HeatTestCase):
         # Restore state_set to let clean up proceed
         self.stack.state_set = st_set
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_suspend_complete_state_err(self):
         """
         check_suspend_complete should raise error when suspend task is
@@ -288,7 +286,7 @@ class StackResourceTest(HeatTestCase):
         # Restore state_set to let clean up proceed
         self.stack.state_set = st_set
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_resume_complete_state_err(self):
         """
         check_resume_complete should raise error when resume task is

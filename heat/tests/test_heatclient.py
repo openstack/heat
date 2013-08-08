@@ -16,7 +16,7 @@ import mox
 
 from heat.common import heat_keystoneclient
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import dummy_context
+from heat.tests import utils
 
 
 class KeystoneClientTest(HeatTestCase):
@@ -62,5 +62,5 @@ class KeystoneClientTest(HeatTestCase):
         # long_user_name, keystone was actually called with a truncated
         # user name
         heat_ks_client = heat_keystoneclient.KeystoneClient(
-            dummy_context())
+            utils.dummy_context())
         heat_ks_client.create_stack_user(long_user_name, password='password')
