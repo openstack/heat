@@ -124,8 +124,12 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
-    def _stub_create(self, num):
+    def _stub_validate(self):
+        self.m.StubOutWithMock(parser.Stack, 'validate')
+        parser.Stack.validate().MultipleTimes()
 
+    def _stub_create(self, num):
+        self._stub_validate()
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         cookie = object()
@@ -450,6 +454,7 @@ class AutoScalingTest(HeatTestCase):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=self.params)
 
+        self._stub_validate()
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
         instance.Instance.handle_create().AndRaise(Exception)
@@ -661,6 +666,7 @@ class AutoScalingTest(HeatTestCase):
 
         # reduce to 1
         self._stub_lb_reload(1)
+        self._stub_validate()
         self._stub_meta_expected(now, 'ChangeInCapacity : -2')
         self.m.ReplayAll()
         rsrc.adjust(-2)
@@ -678,6 +684,7 @@ class AutoScalingTest(HeatTestCase):
 
         # set to 2
         self._stub_lb_reload(2)
+        self._stub_validate()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
         self.m.ReplayAll()
         rsrc.adjust(2, 'ExactCapacity')
@@ -704,6 +711,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         instance.Instance.handle_create().AndRaise(Exception)
         self._stub_lb_reload(1, unset=False, nochange=True)
+        self._stub_validate()
         self.m.ReplayAll()
 
         rsrc.adjust(1)
@@ -765,6 +773,7 @@ class AutoScalingTest(HeatTestCase):
         # reduce by 50%
         self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
+        self._stub_validate()
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
         self.assertEqual(['WebServerGroup-0'],
@@ -802,6 +811,7 @@ class AutoScalingTest(HeatTestCase):
 
         # reduce by 50%
         self._stub_lb_reload(1)
+        self._stub_validate()
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
@@ -855,6 +865,7 @@ class AutoScalingTest(HeatTestCase):
 
         # reduce by 50%
         self._stub_lb_reload(1)
+        self._stub_validate()
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
@@ -909,6 +920,7 @@ class AutoScalingTest(HeatTestCase):
         # reduce by 50%
         self._stub_lb_reload(1)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
+        self._stub_validate()
         self.m.ReplayAll()
         rsrc.adjust(-50, 'PercentChangeInCapacity')
         self.assertEqual(['WebServerGroup-0'],
@@ -994,6 +1006,7 @@ class AutoScalingTest(HeatTestCase):
 
         # Scale down one
         self._stub_lb_reload(1)
+        self._stub_validate()
         self._stub_meta_expected(now, 'ChangeInCapacity : -1', 2)
 
         self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')

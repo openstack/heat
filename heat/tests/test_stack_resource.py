@@ -25,15 +25,14 @@ from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
+
 ws_res_snippet = {"Type": "some_magic_type",
                   "metadata": {
                       "key": "value",
                       "some": "more stuff"}}
 
-wp_template = '''
+param_template = '''
 {
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "WordPress",
   "Parameters" : {
     "KeyName" : {
       "Description" : "KeyName",
@@ -43,24 +42,16 @@ wp_template = '''
   },
   "Resources" : {
     "WebServer": {
-      "Type": "AWS::EC2::Instance",
-      "metadata": {"Fn::ResourceFacade": "Metadata"},
-      "Properties": {
-        "ImageId" : "F17-x86_64-gold",
-        "InstanceType"   : "m1.large",
-        "KeyName"        : "test",
-        "UserData"       : "wordpress"
-      }
+      "Type": "GenericResource",
+      "Properties": {}
     }
   }
 }
 '''
 
 
-generic_template = '''
+simple_template = '''
 {
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "WordPress",
   "Parameters" : {},
   "Resources" : {
     "WebServer": {
@@ -105,8 +96,8 @@ class StackResourceTest(HeatTestCase):
         self.parent_resource = MyStackResource('test',
                                                ws_res_snippet,
                                                self.parent_stack)
-        self.templ = template_format.parse(wp_template)
-        self.generic_template = template_format.parse(generic_template)
+        self.templ = template_format.parse(param_template)
+        self.simple_template = template_format.parse(simple_template)
 
     @utils.stack_delete_after
     def test_create_with_template_ok(self):
@@ -121,18 +112,48 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(self.stack.id, self.parent_resource.resource_id)
 
     @utils.stack_delete_after
+    def test_create_with_template_validates(self):
+        """
+        Creating a stack with a template validates the created stack, so that
+        an invalid template will cause an error to be raised.
+        """
+        # Make a parameter key with the same name as the resource to cause a
+        # simple validation error
+        template = self.simple_template.copy()
+        template['Parameters']['WebServer'] = {'Type': 'String'}
+        self.assertRaises(
+            exception.StackValidationFailed,
+            self.parent_resource.create_with_template,
+            template, {'WebServer': 'foo'})
+
+    @utils.stack_delete_after
+    def test_update_with_template_validates(self):
+        """Updating a stack with a template validates the created stack."""
+        create_result = self.parent_resource.create_with_template(
+            self.simple_template, {})
+        while not create_result.step():
+            pass
+
+        template = self.simple_template.copy()
+        template['Parameters']['WebServer'] = {'Type': 'String'}
+        self.assertRaises(
+            exception.StackValidationFailed,
+            self.parent_resource.update_with_template,
+            template, {'WebServer': 'foo'})
+
+    @utils.stack_delete_after
     def test_update_with_template_ok(self):
         """
         The update_with_template method updates the nested stack with the
         given template and user parameters.
         """
         create_result = self.parent_resource.create_with_template(
-            self.generic_template, {})
+            self.simple_template, {})
         while not create_result.step():
             pass
         self.stack = self.parent_resource.nested()
 
-        new_templ = self.generic_template.copy()
+        new_templ = self.simple_template.copy()
         inst_snippet = new_templ["Resources"]["WebServer"].copy()
         new_templ["Resources"]["WebServer2"] = inst_snippet
         update_result = self.parent_resource.update_with_template(
