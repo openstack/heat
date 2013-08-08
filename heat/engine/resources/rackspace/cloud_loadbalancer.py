@@ -20,7 +20,6 @@ except ImportError:
         pass
 
 from heat.openstack.common import log as logging
-from heat.openstack.common.exception import OpenstackException
 from heat.openstack.common.gettextutils import _
 from heat.engine import scheduler
 from heat.engine.properties import Properties
@@ -30,7 +29,7 @@ from heat.common import exception
 logger = logging.getLogger(__name__)
 
 
-class LoadbalancerBuildError(OpenstackException):
+class LoadbalancerBuildError(exception.HeatException):
     message = _("There was an error building the loadbalancer:%(lb_name)s.")
 
 

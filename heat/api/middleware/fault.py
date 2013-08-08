@@ -89,13 +89,7 @@ class FaultWrapper(wsgi.Middleware):
         if ex_type.endswith(rpc_common._REMOTE_POSTFIX):
             ex_type = ex_type[:-len(rpc_common._REMOTE_POSTFIX)]
 
-        if isinstance(ex, exception.OpenstackException):
-            # If the exception is an OpenstackException it is going to have a
-            # translated Message object as the message, let's recreate it here
-            message = (ex.message % ex.kwargs
-                       if hasattr(ex, 'kwargs') else ex.message)
-        else:
-            message = ex.message
+        message = str(ex.message)
 
         if not trace:
             trace = str(ex)

@@ -21,7 +21,7 @@ from heat.common import exception
 from heat.openstack.common.gettextutils import _
 
 
-class CircularDependencyException(exception.OpenstackException):
+class CircularDependencyException(exception.HeatException):
     message = _("Circular Dependency Found: %(cycle)s")
 
 
