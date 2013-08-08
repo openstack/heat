@@ -684,7 +684,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_lookup_nonexistant(self):
         stack_name = 'wibble'
 
-        req = self._get('/stacks/%(stack_name)s' % locals())
+        req = self._get('/stacks/%(stack_name)s' % {
+            'stack_name': stack_name})
 
         error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
@@ -734,7 +735,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_lookup_resource_nonexistant(self):
         stack_name = 'wibble'
 
-        req = self._get('/stacks/%(stack_name)s/resources' % locals())
+        req = self._get('/stacks/%(stack_name)s/resources' % {
+            'stack_name': stack_name})
 
         error = heat_exc.StackNotFound(stack_name='a')
         self.m.StubOutWithMock(rpc, 'call')
