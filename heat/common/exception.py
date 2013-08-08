@@ -263,6 +263,11 @@ class WatchRuleNotFound(OpenstackException):
     message = _("The Watch Rule (%(watch_name)s) could not be found.")
 
 
+class ActionInProgress(OpenstackException):
+    message = _("Stack %(stack_name)s already has an action (%(action)s) "
+                "in progress")
+
+
 class ResourceFailure(OpenstackException):
     message = _("%(exc_type)s: %(message)s")
 
