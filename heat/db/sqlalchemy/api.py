@@ -65,15 +65,6 @@ def raw_template_get(context, template_id):
     return result
 
 
-def raw_template_get_all(context):
-    results = model_query(context, models.RawTemplate).all()
-
-    if not results:
-        raise exception.NotFound('no raw templates were found')
-
-    return results
-
-
 def raw_template_create(context, values):
     raw_template_ref = models.RawTemplate()
     raw_template_ref.update(values)
