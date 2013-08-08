@@ -18,6 +18,8 @@ import string
 import sys
 import uuid
 
+import sqlalchemy
+
 from heat.common import context
 from heat.common import exception
 from heat.engine import environment
@@ -112,7 +114,18 @@ def wr_delete_after(test_fn):
 def setup_dummy_db():
     migration.db_sync()
     engine = get_engine()
-    conn = engine.connect()
+    engine.connect()
+
+
+def reset_dummy_db():
+    engine = get_engine()
+    meta = sqlalchemy.MetaData()
+    meta.reflect(bind=engine)
+
+    for table in reversed(meta.sorted_tables):
+        if table.name == 'migrate_version':
+            continue
+        engine.execute(table.delete())
 
 
 def dummy_context(user='test_username', tenant_id='test_tenant_id',
