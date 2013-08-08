@@ -21,6 +21,7 @@ from heat.common import exception
 from heat.openstack.common import log as logging
 from heat.engine import scheduler
 from heat.engine.resources import instance
+from heat.engine.resources import nova_utils
 from heat.engine.resources.rackspace import rackspace_resource
 from heat.db.sqlalchemy import api as db_api
 
@@ -306,7 +307,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         public_keys = [rsa.publickey().exportKey('OpenSSH')]
         if self.properties.get('key_name'):
             key_name = self.properties['key_name']
-            public_keys.append(self._get_keypair(key_name).public_key)
+            public_keys.append(nova_utils.get_keypair(self.nova(),
+                                                      key_name).public_key)
         personality_files = {
             "/root/.ssh/authorized_keys": '\n'.join(public_keys)}
 
@@ -366,7 +368,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         if self.has_userdata:
             # Create heat-script and userdata files on server
             raw_userdata = self.properties['user_data'] or ''
-            userdata = self._build_userdata(raw_userdata)
+            userdata = nova_utils.build_userdata(self, raw_userdata)
 
             files = [{'path': "/tmp/userdata", 'data': userdata},
                      {'path': "/root/heat-script.sh", 'data': self.script}]

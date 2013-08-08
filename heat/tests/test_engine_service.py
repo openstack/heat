@@ -33,6 +33,7 @@ from heat.engine import parser
 from heat.engine import service
 from heat.engine.properties import Properties
 from heat.engine.resources import instance as instances
+from heat.engine.resources import nova_utils
 from heat.engine import resource as rsrs
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
@@ -142,7 +143,9 @@ def setup_mocks(mocks, stack):
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
 
     instance = stack.resources['WebServer']
-    server_userdata = instance._build_userdata(instance.properties['UserData'])
+    user_data = instance.properties['UserData']
+    server_userdata = nova_utils.build_userdata(instance, user_data)
+    instance.mime_string = server_userdata
     mocks.StubOutWithMock(fc.servers, 'create')
     fc.servers.create(image=744, flavor=3, key_name='test',
                       name=utils.PhysName(stack.name, 'WebServer'),
