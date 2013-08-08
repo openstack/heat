@@ -137,7 +137,7 @@ class EngineService(service.Service):
         arg2 -> Name or UUID of the stack to look up.
         """
         if uuidutils.is_uuid_like(stack_name):
-            s = db_api.stack_get(cnxt, stack_name)
+            s = db_api.stack_get(cnxt, stack_name, show_deleted=True)
         else:
             s = db_api.stack_get_by_name(cnxt, stack_name)
         if s:
@@ -146,14 +146,15 @@ class EngineService(service.Service):
         else:
             raise exception.StackNotFound(stack_name=stack_name)
 
-    def _get_stack(self, cnxt, stack_identity):
+    def _get_stack(self, cnxt, stack_identity, show_deleted=False):
         identity = identifier.HeatIdentifier(**stack_identity)
 
         if identity.tenant != cnxt.tenant_id:
             raise exception.InvalidTenant(target=identity.tenant,
                                           actual=cnxt.tenant_id)
 
-        s = db_api.stack_get(cnxt, identity.stack_id)
+        s = db_api.stack_get(cnxt, identity.stack_id,
+                             show_deleted=show_deleted)
 
         if s is None:
             raise exception.StackNotFound(stack_name=identity.stack_name)
@@ -171,7 +172,7 @@ class EngineService(service.Service):
         arg2 -> Name of the stack you want to show, or None to show all
         """
         if stack_identity is not None:
-            stacks = [self._get_stack(cnxt, stack_identity)]
+            stacks = [self._get_stack(cnxt, stack_identity, show_deleted=True)]
         else:
             stacks = db_api.stack_get_all_by_tenant(cnxt) or []
 
@@ -368,7 +369,7 @@ class EngineService(service.Service):
         arg1 -> RPC context.
         arg2 -> Name of the stack you want to see.
         """
-        s = self._get_stack(cnxt, stack_identity)
+        s = self._get_stack(cnxt, stack_identity, show_deleted=True)
         if s:
             return s.raw_template.template
         return None
@@ -425,7 +426,7 @@ class EngineService(service.Service):
         """
 
         if stack_identity is not None:
-            st = self._get_stack(cnxt, stack_identity)
+            st = self._get_stack(cnxt, stack_identity, show_deleted=True)
 
             events = db_api.event_get_all_by_stack(cnxt, st.id)
         else:

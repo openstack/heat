@@ -51,8 +51,12 @@ class Stack(object):
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
 
-    created_time = timestamp.Timestamp(db_api.stack_get, 'created_at')
-    updated_time = timestamp.Timestamp(db_api.stack_get, 'updated_at')
+    created_time = timestamp.Timestamp(functools.partial(db_api.stack_get,
+                                                         show_deleted=True),
+                                       'created_at')
+    updated_time = timestamp.Timestamp(functools.partial(db_api.stack_get,
+                                                         show_deleted=True),
+                                       'updated_at')
 
     _zones = None
 
@@ -129,10 +133,11 @@ class Stack(object):
 
     @classmethod
     def load(cls, context, stack_id=None, stack=None, resolve_data=True,
-             parent_resource=None):
+             parent_resource=None, show_deleted=True):
         '''Retrieve a Stack from the database.'''
         if stack is None:
-            stack = db_api.stack_get(context, stack_id)
+            stack = db_api.stack_get(context, stack_id,
+                                     show_deleted=show_deleted)
         if stack is None:
             message = 'No stack exists with id "%s"' % str(stack_id)
             raise exception.NotFound(message)

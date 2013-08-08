@@ -704,7 +704,8 @@ class StackServiceTest(HeatTestCase):
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         s = db_api.stack_get(self.ctx, self.stack.id)
         service.EngineService._get_stack(self.ctx,
-                                         self.stack.identifier()).AndReturn(s)
+                                         self.stack.identifier(),
+                                         show_deleted=True).AndReturn(s)
         self.m.ReplayAll()
 
         events = self.eng.list_events(self.ctx, self.stack.identifier())
@@ -823,7 +824,8 @@ class StackServiceTest(HeatTestCase):
 
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         service.EngineService._get_stack(
-            self.ctx, non_exist_identifier).AndRaise(exception.StackNotFound)
+            self.ctx, non_exist_identifier,
+            show_deleted=True).AndRaise(exception.StackNotFound)
         self.m.ReplayAll()
 
         self.assertRaises(exception.StackNotFound,
@@ -838,7 +840,8 @@ class StackServiceTest(HeatTestCase):
 
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         service.EngineService._get_stack(
-            self.ctx, non_exist_identifier).AndRaise(exception.InvalidTenant)
+            self.ctx, non_exist_identifier,
+            show_deleted=True).AndRaise(exception.InvalidTenant)
         self.m.ReplayAll()
 
         self.assertRaises(exception.InvalidTenant,
@@ -852,7 +855,8 @@ class StackServiceTest(HeatTestCase):
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         s = db_api.stack_get(self.ctx, self.stack.id)
         service.EngineService._get_stack(self.ctx,
-                                         self.stack.identifier()).AndReturn(s)
+                                         self.stack.identifier(),
+                                         show_deleted=True).AndReturn(s)
         self.m.ReplayAll()
 
         sl = self.eng.show_stack(self.ctx, self.stack.identifier())
