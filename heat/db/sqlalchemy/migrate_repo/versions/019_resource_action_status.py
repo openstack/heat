@@ -22,11 +22,7 @@ def upgrade(migrate_engine):
     # Align the current state/state_description with the
     # action/status now used in the event table
     action = sqlalchemy.Column('action',
-                               sqlalchemy.String(length=255,
-                                                 convert_unicode=False,
-                                                 assert_unicode=None,
-                                                 unicode_error=None,
-                                                 _warn_on_bytestring=False))
+                               sqlalchemy.String(length=255))
     action.create(resource)
     resource.c.state.alter(name='status')
     resource.c.state_description.alter(name='status_reason')
