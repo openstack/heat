@@ -14,11 +14,18 @@
 #    under the License.
 
 '''Implementation of SQLAlchemy backend.'''
+from datetime import datetime
+from datetime import timedelta
+
+import sqlalchemy
 from sqlalchemy.orm.session import Session
+
+from heat.openstack.common.gettextutils import _
 
 from heat.common import crypt
 from heat.common import exception
 from heat.db.sqlalchemy import models
+from heat.db.sqlalchemy.session import get_engine
 from heat.db.sqlalchemy.session import get_session
 
 
@@ -388,3 +395,42 @@ def watch_data_delete(context, watch_name):
     for d in ds:
         session.delete(d)
     session.flush()
+
+
+def purge_deleted(age):
+    if age is not None:
+        try:
+            age = int(age)
+        except ValueError:
+            raise exception.Error(_("age should be an integer"))
+        if age < 0:
+            raise exception.Error(_("age should be a positive integer"))
+    else:
+        age = 90
+
+    time_line = datetime.now() - timedelta(days=age)
+    engine = get_engine()
+    meta = sqlalchemy.MetaData()
+    meta.bind = engine
+
+    stack = sqlalchemy.Table('stack', meta, autoload=True)
+    event = sqlalchemy.Table('event', meta, autoload=True)
+    raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
+    user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
+
+    stmt = sqlalchemy.select([stack.c.id,
+                              stack.c.raw_template_id,
+                              stack.c.user_creds_id]).\
+        where(stack.c.deleted_at < time_line)
+    deleted_stacks = engine.execute(stmt)
+
+    for s in deleted_stacks:
+        event_del = event.delete().where(event.c.stack_id == s[0])
+        engine.execute(event_del)
+        stack_del = stack.delete().where(stack.c.id == s[0])
+        engine.execute(stack_del)
+        raw_template_del = raw_template.delete().\
+            where(raw_template.c.id == s[1])
+        engine.execute(raw_template_del)
+        user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
+        engine.execute(user_creds_del)

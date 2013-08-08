@@ -24,6 +24,7 @@ from oslo.config import cfg
 
 from heat.db import api as db_api
 from heat.db import migration
+from heat.db import utils
 from heat.openstack.common import log
 from heat import version
 
@@ -44,6 +45,13 @@ def do_db_sync():
     migration.db_sync(CONF.command.version)
 
 
+def purge_deleted():
+    """
+    Remove database records that have been previously soft deleted
+    """
+    utils.purge_deleted(CONF.command.age)
+
+
 def add_command_parsers(subparsers):
     parser = subparsers.add_parser('db_version')
     parser.set_defaults(func=do_db_version)
@@ -53,6 +61,9 @@ def add_command_parsers(subparsers):
     parser.add_argument('version', nargs='?')
     parser.add_argument('current_version', nargs='?')
 
+    parser = subparsers.add_parser('purge_deleted')
+    parser.set_defaults(func=purge_deleted)
+    parser.add_argument('age', nargs='?')
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
