@@ -396,7 +396,8 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
 
     def handle_signal(self, details=None):
         # ceilometer sends details like this:
-        # {u'state': u'alarm', u'reason': u'...'})
+        # {u'alarm_id': ID, u'previous': u'ok', u'current': u'alarm',
+        #  u'reason': u'...'})
         # in this policy we currently assume that this gets called
         # only when there is an alarm. But the template writer can
         # put the policy in all the alarm notifiers (nodata, and ok).
@@ -405,7 +406,8 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
         if details is None:
             alarm_state = 'alarm'
         else:
-            alarm_state = details.get('state', 'alarm').lower()
+            alarm_state = details.get('current',
+                                      details.get('state', 'alarm')).lower()
 
         logger.info('%s Alarm, new state %s' % (self.name, alarm_state))
 
