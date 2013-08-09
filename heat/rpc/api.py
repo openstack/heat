@@ -35,7 +35,7 @@ STACK_KEYS = (
     'description', 'template_description',
     'parameters', 'outputs', 'stack_action',
     'stack_status', 'stack_status_reason', 'capabilities',
-    'disable_rollback', 'timeout_mins'
+    'disable_rollback', 'timeout_mins',
 )
 
 STACK_OUTPUT_KEYS = (
@@ -48,14 +48,16 @@ STACK_OUTPUT_KEYS = (
 
 RES_KEYS = (
     RES_DESCRIPTION, RES_UPDATED_TIME,
-    RES_NAME, RES_PHYSICAL_ID, RES_METADATA, RES_ACTION,
-    RES_STATUS, RES_STATUS_DATA, RES_TYPE,
-    RES_ID, RES_STACK_ID, RES_STACK_NAME, RES_REQUIRED_BY,
+    RES_NAME, RES_PHYSICAL_ID, RES_METADATA,
+    RES_ACTION, RES_STATUS, RES_STATUS_DATA,
+    RES_TYPE, RES_ID, RES_STACK_ID, RES_STACK_NAME,
+    RES_REQUIRED_BY,
 ) = (
     'description', 'updated_time',
     'logical_resource_id', 'physical_resource_id', 'metadata',
     'resource_action', 'resource_status', 'resource_status_reason',
-    'resource_type', 'resource_identity', STACK_ID, STACK_NAME, 'required_by',
+    'resource_type', 'resource_identity', STACK_ID, STACK_NAME,
+    'required_by',
 )
 
 EVENT_KEYS = (
@@ -82,7 +84,7 @@ WATCH_KEYS = (
     WATCH_INSUFFICIENT_ACTIONS, WATCH_METRIC_NAME, WATCH_NAMESPACE,
     WATCH_OK_ACTIONS, WATCH_PERIOD, WATCH_STATE_REASON,
     WATCH_STATE_REASON_DATA, WATCH_STATE_UPDATED_TIME, WATCH_STATE_VALUE,
-    WATCH_STATISTIC, WATCH_THRESHOLD, WATCH_UNIT, WATCH_STACK_ID
+    WATCH_STATISTIC, WATCH_THRESHOLD, WATCH_UNIT, WATCH_STACK_ID,
 ) = (
     'actions_enabled', 'actions', 'topic',
     'updated_time', 'description', 'name',
@@ -90,7 +92,8 @@ WATCH_KEYS = (
     'insufficient_actions', 'metric_name', 'namespace',
     'ok_actions', 'period', 'state_reason',
     'state_reason_data', 'state_updated_time', 'state_value',
-    'statistic', 'threshold', 'unit', 'stack_id')
+    'statistic', 'threshold', 'unit', 'stack_id',
+)
 
 # Alternate representation of a watch rule to align with DB format
 # FIXME : These align with AWS naming for compatibility with the
@@ -106,7 +109,7 @@ WATCH_RULE_KEYS = (
     RULE_INSUFFICIENT_ACTIONS, RULE_METRIC_NAME, RULE_NAMESPACE,
     RULE_OK_ACTIONS, RULE_PERIOD, RULE_STATE_REASON,
     RULE_STATE_REASON_DATA, RULE_STATE_UPDATED_TIME, RULE_STATE_VALUE,
-    RULE_STATISTIC, RULE_THRESHOLD, RULE_UNIT, RULE_STACK_NAME
+    RULE_STATISTIC, RULE_THRESHOLD, RULE_UNIT, RULE_STACK_NAME,
 ) = (
     'ActionsEnabled', 'AlarmActions', 'AlarmArn',
     'AlarmConfigurationUpdatedTimestamp', 'AlarmDescription', 'AlarmName',
@@ -114,13 +117,15 @@ WATCH_RULE_KEYS = (
     'InsufficientDataActions', 'MetricName', 'Namespace',
     'OKActions', 'Period', 'StateReason',
     'StateReasonData', 'StateUpdatedTimestamp', 'StateValue',
-    'Statistic', 'Threshold', 'Unit', 'StackName')
+    'Statistic', 'Threshold', 'Unit', 'StackName',
+)
 
 WATCH_STATES = (
     WATCH_STATE_OK, WATCH_STATE_ALARM, WATCH_STATE_NODATA,
     WATCH_STATE_SUSPENDED, WATCH_STATE_CEILOMETER_CONTROLLED
 ) = (
-    'NORMAL', 'ALARM', 'NODATA', 'SUSPENDED', 'CEILOMETER_CONTROLLED'
+    'NORMAL', 'ALARM', 'NODATA',
+    'SUSPENDED', 'CEILOMETER_CONTROLLED'
 )
 
 WATCH_DATA_KEYS = (
