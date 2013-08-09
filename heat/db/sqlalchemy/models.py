@@ -84,8 +84,6 @@ class HeatBase(object):
 
     def delete(self, session=None):
         """Delete this object."""
-        self.deleted = True
-        self.deleted_at = timeutils.utcnow()
         if not session:
             session = Session.object_session(self)
             if not session:
