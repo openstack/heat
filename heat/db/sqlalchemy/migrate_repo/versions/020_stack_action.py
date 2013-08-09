@@ -21,11 +21,7 @@ def upgrade(migrate_engine):
     stack = sqlalchemy.Table('stack', meta, autoload=True)
     # Align with action/status now used in the event/resource tables
     action = sqlalchemy.Column('action',
-                               sqlalchemy.String(length=255,
-                                                 convert_unicode=False,
-                                                 assert_unicode=None,
-                                                 unicode_error=None,
-                                                 _warn_on_bytestring=False))
+                               sqlalchemy.String(length=255))
     action.create(stack)
 
 
