@@ -49,21 +49,12 @@ def request_with_middleware(middleware, func, req, *args, **kwargs):
 
 def to_remote_error(error):
     """Converts the given exception to the one with the _Remote suffix.
-
-    This is how RPC exceptions are recreated on the caller's side, so
-    this helps better simulate how the exception mechanism actually works.
     """
-    ex_type = type(error)
-    kwargs = error.kwargs if hasattr(error, 'kwargs') else {}
-    message = error.message
-    module = ex_type().__class__.__module__
-    str_override = lambda self: "%s\n<Traceback>" % message
-    new_ex_type = type(ex_type.__name__ + rpc_common._REMOTE_POSTFIX,
-                       (ex_type,),
-                       {'__str__': str_override, '__unicode__': str_override})
-
-    new_ex_type.__module__ = '%s%s' % (module, rpc_common._REMOTE_POSTFIX)
-    return new_ex_type(**kwargs)
+    exc_info = (type(error), error, None)
+    serialized = rpc_common.serialize_remote_exception(exc_info)
+    remote_error = rpc_common.deserialize_remote_exception(cfg.CONF,
+                                                           serialized)
+    return remote_error
 
 
 class InstantiationDataTest(HeatTestCase):
