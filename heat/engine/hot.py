@@ -14,6 +14,7 @@
 
 from heat.common import exception
 from heat.engine import template
+from heat.engine.parameters import ParamSchema
 from heat.openstack.common import log as logging
 
 
@@ -30,6 +31,10 @@ _CFN_TO_HOT_SECTIONS = {template.VERSION: VERSION,
                         template.MAPPINGS: UNDEFINED,
                         template.RESOURCES: RESOURCES,
                         template.OUTPUTS: OUTPUTS}
+
+
+def snake_to_camel(name):
+    return ''.join([t.capitalize() for t in name.split('_')])
 
 
 class HOTemplate(template.Template):
@@ -81,15 +86,6 @@ class HOTemplate(template.Template):
 
         return default
 
-    @staticmethod
-    def _snake_to_camel(name):
-        tokens = []
-        if name:
-            tokens = name.split('_')
-            for i in xrange(len(tokens)):
-                tokens[i] = tokens[i].capitalize()
-        return "".join(tokens)
-
     def _translate_constraints(self, constraints):
         param = {}
 
@@ -109,7 +105,7 @@ class HOTemplate(template.Template):
         for constraint in constraints:
             desc = constraint.get('description')
             for key, val in constraint.iteritems():
-                key = self._snake_to_camel(key)
+                key = snake_to_camel(key)
                 if key == 'Description':
                     continue
                 elif key == 'Range':
@@ -127,9 +123,9 @@ class HOTemplate(template.Template):
         for name, attrs in parameters.iteritems():
             param = {}
             for key, val in attrs.iteritems():
-                key = self._snake_to_camel(key)
+                key = snake_to_camel(key)
                 if key == 'Type':
-                    val = self._snake_to_camel(val)
+                    val = snake_to_camel(val)
                 elif key == 'Constraints':
                     param.update(self._translate_constraints(val))
                     continue
@@ -221,3 +217,18 @@ class HOTemplate(template.Template):
                                                          key=att)
 
         return template._resolve(match_get_attr, handle_get_attr, s)
+
+    def param_schemata(self):
+        params = self[PARAMETERS].iteritems()
+        return dict((name, HOTParamSchema(schema)) for name, schema in params)
+
+
+class HOTParamSchema(ParamSchema):
+    def do_check(self, name, val, keys):
+        for key in keys:
+            consts = self.get(key)
+            check = self.check(key)
+            if consts is None or check is None:
+                continue
+            for (const, desc) in consts:
+                check(name, val, const, desc)

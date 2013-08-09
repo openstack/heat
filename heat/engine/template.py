@@ -18,7 +18,7 @@ import json
 
 from heat.db import api as db_api
 from heat.common import exception
-
+from heat.engine.parameters import ParamSchema
 
 SECTIONS = (VERSION, DESCRIPTION, MAPPINGS,
             PARAMETERS, RESOURCES, OUTPUTS) = \
@@ -386,7 +386,8 @@ class Template(collections.Mapping):
                         s)
 
     def param_schemata(self):
-        return self[PARAMETERS]
+        parameters = self[PARAMETERS].iteritems()
+        return dict((name, ParamSchema(schema)) for name, schema in parameters)
 
 
 def _resolve(match, handle, snippet):

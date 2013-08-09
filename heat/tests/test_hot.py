@@ -15,6 +15,7 @@ from heat.common import template_format
 from heat.common import exception
 from heat.engine import parser
 from heat.engine import hot
+from heat.engine import parameters
 from heat.engine import template
 
 from heat.tests.common import HeatTestCase
@@ -290,3 +291,102 @@ class StackTest(test_parser.StackTest):
                           hot.HOTemplate.resolve_attributes,
                           {'Value': {'get_attr': ['resource1', 'NotThere']}},
                           self.stack)
+
+
+class HOTParamValidatorTest(HeatTestCase):
+    "Test HOTParamValidator"
+
+    def test_multiple_constraint_descriptions(self):
+        len_desc = 'string length should between 8 and 16'
+        pattern_desc1 = 'Value must consist of characters only'
+        pattern_desc2 = 'Value must start with a lowercase character'
+        param = {
+            'db_name': {
+                'Description': 'The WordPress database name',
+                'Type': 'String',
+                'Default': 'wordpress',
+                'MinLength': [(8, len_desc)],
+                'MaxLength': [(16, len_desc)],
+                'AllowedPattern': [
+                    ('[a-zA-Z]+', pattern_desc1),
+                    ('[a-z]+[a-zA-Z]*', pattern_desc2)]}}
+
+        name = 'db_name'
+        schema = param['db_name']
+
+        def v(value):
+            hot.HOTParamSchema(schema).do_check(name, value,
+                                                [parameters.ALLOWED_VALUES,
+                                                 parameters.ALLOWED_PATTERN,
+                                                 parameters.MAX_LENGTH,
+                                                 parameters.MIN_LENGTH])
+            return True
+
+        value = 'wp'
+        err = self.assertRaises(ValueError, v, value)
+        self.assertIn(len_desc, str(err))
+
+        value = 'abcdefghijklmnopq'
+        err = self.assertRaises(ValueError, v, value)
+        self.assertIn(len_desc, str(err))
+
+        value = 'abcdefgh1'
+        err = self.assertRaises(ValueError, v, value)
+        self.assertIn(pattern_desc1, str(err))
+
+        value = 'Abcdefghi'
+        err = self.assertRaises(ValueError, v, value)
+        self.assertIn(pattern_desc2, str(err))
+
+        value = 'abcdefghi'
+        self.assertTrue(v(value))
+
+        value = 'abcdefghI'
+        self.assertTrue(v(value))
+
+    def test_hot_template_validate_param(self):
+        len_desc = 'string length should between 8 and 16'
+        pattern_desc1 = 'Value must consist of characters only'
+        pattern_desc2 = 'Value must start with a lowercase character'
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+          db_name:
+            description: The WordPress database name
+            type: string
+            default: wordpress
+            constraints:
+              - length: { min: 8, max: 16 }
+                description: %s
+              - allowed_pattern: "[a-zA-Z]+"
+                description: %s
+              - allowed_pattern: "[a-z]+[a-zA-Z]*"
+                description: %s
+        ''' % (len_desc, pattern_desc1, pattern_desc2))
+        tmpl = parser.Template(hot_tpl)
+
+        def run_parameters(value):
+            parameters.Parameters("stack_testit", tmpl, {'db_name': value})
+            return True
+
+        value = 'wp'
+        err = self.assertRaises(ValueError, run_parameters, value)
+        self.assertIn(len_desc, str(err))
+
+        value = 'abcdefghijklmnopq'
+        err = self.assertRaises(ValueError, run_parameters, value)
+        self.assertIn(len_desc, str(err))
+
+        value = 'abcdefgh1'
+        err = self.assertRaises(ValueError, run_parameters, value)
+        self.assertIn(pattern_desc1, str(err))
+
+        value = 'Abcdefghi'
+        err = self.assertRaises(ValueError, run_parameters, value)
+        self.assertIn(pattern_desc2, str(err))
+
+        value = 'abcdefghi'
+        self.assertTrue(run_parameters(value))
+
+        value = 'abcdefghI'
+        self.assertTrue(run_parameters(value))
