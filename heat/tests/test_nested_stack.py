@@ -23,8 +23,6 @@ from heat.engine import scheduler
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
 
 
 class NestedStackTest(HeatTestCase):
@@ -52,7 +50,7 @@ Outputs:
     def setUp(self):
         super(NestedStackTest, self).setUp()
         self.m.StubOutWithMock(urlfetch, 'get')
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def create_stack(self, template):
         t = template_format.parse(template)
@@ -62,7 +60,7 @@ Outputs:
         return stack
 
     def parse_stack(self, t):
-        ctx = dummy_context('test_username', 'aaaa', 'password')
+        ctx = utils.dummy_context('test_username', 'aaaa', 'password')
         stack_name = 'test_stack'
         tmpl = parser.Template(t)
         stack = parser.Stack(ctx, stack_name, tmpl)

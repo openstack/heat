@@ -29,8 +29,6 @@ from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
 
 neutronclient = try_import('neutronclient.v2_0.client')
 qe = try_import('neutronclient.common.exceptions')
@@ -214,7 +212,7 @@ class NeutronNetTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
         self.m.StubOutWithMock(neutronclient.Client, 'show_network')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def create_net(self, t, stack, resource_name):
         rsrc = net.Net('test_net', t['Resources'][resource_name], stack)
@@ -303,7 +301,7 @@ class NeutronNetTest(HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_net(t, stack, 'network')
 
         # assert the implicit dependency between the gateway and the interface
@@ -348,7 +346,7 @@ class NeutronSubnetTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_subnet')
         self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def create_subnet(self, t, stack, resource_name):
         rsrc = subnet.Subnet('test_subnet', t['Resources'][resource_name],
@@ -425,7 +423,7 @@ class NeutronSubnetTest(HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_subnet(t, stack, 'subnet')
 
         rsrc.validate()
@@ -512,7 +510,7 @@ class NeutronSubnetTest(HeatTestCase):
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
         t['Resources']['subnet']['Properties']['enable_dhcp'] = 'False'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_subnet(t, stack, 'subnet')
 
         rsrc.validate()
@@ -536,7 +534,7 @@ class NeutronRouterTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'add_gateway_router')
         self.m.StubOutWithMock(neutronclient.Client, 'remove_gateway_router')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def create_router(self, t, stack, resource_name):
         rsrc = router.Router('router', t['Resources'][resource_name], stack)
@@ -649,7 +647,7 @@ class NeutronRouterTest(HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_router(t, stack, 'router')
 
         rsrc.validate()
@@ -688,7 +686,7 @@ class NeutronRouterTest(HeatTestCase):
         ).AndRaise(qe.NeutronClientException(status_code=404))
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         rsrc = self.create_router_interface(
             t, stack, 'router_interface', properties={
@@ -716,7 +714,7 @@ class NeutronRouterTest(HeatTestCase):
         ).AndRaise(qe.NeutronClientException(status_code=404))
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         rsrc = self.create_gateway_router(
             t, stack, 'gateway', properties={
@@ -743,7 +741,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_port')
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def test_floating_ip(self):
 
@@ -774,7 +772,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(neutron_floating_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         # assert the implicit dependency between the floating_ip
         # and the gateway
@@ -847,7 +845,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(neutron_floating_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         p = stack['port_floating']
         scheduler.TaskRunner(p.create)()
@@ -946,7 +944,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(neutron_floating_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
 
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()

@@ -19,7 +19,7 @@ from heat.engine import template
 
 from heat.tests.common import HeatTestCase
 from heat.tests import test_parser
-from heat.tests.utils import stack_delete_after
+from heat.tests import utils
 
 
 hot_tpl_empty = template_format.parse('''
@@ -262,7 +262,7 @@ class HOTemplateTest(HeatTestCase):
 class StackTest(test_parser.StackTest):
     """Test stack function when stack was created from HOT template."""
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_get_attr(self):
         """Test resolution of get_attr occurrences in HOT template."""
 

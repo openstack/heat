@@ -18,8 +18,7 @@ import os
 from heat.engine import clients
 from heat.common import template_format
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
+from heat.tests import utils
 
 
 class JsonToYamlTest(HeatTestCase):
@@ -115,7 +114,7 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
         super(JsonYamlResolvedCompareTest, self).setUp()
         self.longMessage = True
         self.maxDiff = None
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def load_template(self, file_name):
         filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -134,8 +133,8 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
         t2 = self.load_template(yaml_file)
         del(t2[u'HeatTemplateFormatVersion'])
 
-        stack1 = parse_stack(t1, parameters)
-        stack2 = parse_stack(t2, parameters)
+        stack1 = utils.parse_stack(t1, parameters)
+        stack2 = utils.parse_stack(t2, parameters)
 
         # compare resources separately so that resolved static data
         # is compared

@@ -22,9 +22,7 @@ from heat.engine import parser
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import dummy_context
-from heat.tests.utils import reset_dummy_db
+
 
 from heat.engine.clients import novaclient
 
@@ -78,9 +76,9 @@ class SqlAlchemyTest(HeatTestCase):
     def setUp(self):
         super(SqlAlchemyTest, self).setUp()
         self.fc = fakes.FakeClient()
-        setup_dummy_db()
-        reset_dummy_db()
-        self.ctx = dummy_context()
+        utils.setup_dummy_db()
+        utils.reset_dummy_db()
+        self.ctx = utils.dummy_context()
 
     def tearDown(self):
         super(SqlAlchemyTest, self).tearDown()

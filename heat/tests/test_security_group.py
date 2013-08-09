@@ -20,11 +20,8 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.tests.common import HeatTestCase
 from heat.tests.fakes import FakeKeystoneClient
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
 from heat.tests.v1_1 import fakes
 from heat.tests import utils
-from heat.tests.utils import stack_delete_after
 
 from novaclient.v1_1 import security_groups as nova_sg
 from novaclient.v1_1 import security_group_rules as nova_sgr
@@ -95,7 +92,7 @@ Resources:
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'delete')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'get')
         self.m.StubOutWithMock(nova_sg.SecurityGroupManager, 'list')
-        setup_dummy_db()
+        utils.setup_dummy_db()
         self.m.StubOutWithMock(neutronclient.Client, 'create_security_group')
         self.m.StubOutWithMock(
             neutronclient.Client, 'create_security_group_rule')
@@ -113,7 +110,7 @@ Resources:
     def parse_stack(self, t):
         stack_name = 'test_stack'
         tmpl = parser.Template(t)
-        stack = parser.Stack(dummy_context(), stack_name, tmpl)
+        stack = parser.Stack(utils.dummy_context(), stack_name, tmpl)
         stack.store()
         return stack
 
@@ -123,7 +120,7 @@ Resources:
         self.assertEqual(ref_id, rsrc.FnGetRefId())
         self.assertEqual(metadata, dict(rsrc.metadata))
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_security_group_nova(self):
         #create script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
@@ -195,7 +192,7 @@ Resources:
         stack.delete()
         self.m.VerifyAll()
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_security_group_nova_exception(self):
         #create script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
@@ -274,7 +271,7 @@ Resources:
 
         self.m.VerifyAll()
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_security_group_neutron(self):
         #create script
         clients.OpenStackClients.keystone().AndReturn(
@@ -416,7 +413,7 @@ Resources:
         stack.delete()
         self.m.VerifyAll()
 
-    @stack_delete_after
+    @utils.stack_delete_after
     def test_security_group_neutron_exception(self):
         #create script
         clients.OpenStackClients.keystone().AndReturn(

@@ -39,8 +39,6 @@ from heat.engine import watchrule
 from heat.openstack.common import threadgroup
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
 
 
 wp_template = '''
@@ -112,7 +110,7 @@ policy_template = '''
 
 def create_context(mocks, user='stacks_test_user',
                    tenant_id='test_admin', password='stacks_test_password'):
-    ctx = dummy_context()
+    ctx = utils.dummy_context()
     mocks.StubOutWithMock(ctx, 'username')
     mocks.StubOutWithMock(ctx, 'tenant_id')
     mocks.StubOutWithMock(ctx, 'password')
@@ -239,7 +237,7 @@ class DummyThreadGroup(object):
 class StackCreateTest(HeatTestCase):
     def setUp(self):
         super(StackCreateTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def test_wordpress_single_instance_stack_create(self):
         stack = get_wordpress_stack('test_stack', create_context(self.m))
@@ -284,7 +282,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
     def setUp(self):
         super(StackServiceCreateUpdateDeleteTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
         self.ctx = create_context(self.m)
 
         self.man = service.EngineService('a-host', 'a-topic')
@@ -586,7 +584,7 @@ class StackServiceSuspendResumeTest(HeatTestCase):
 
     def setUp(self):
         super(StackServiceSuspendResumeTest, self).setUp()
-        setup_dummy_db()
+        utils.setup_dummy_db()
         self.ctx = create_context(self.m)
 
         self.man = service.EngineService('a-host', 'a-topic')
@@ -658,7 +656,7 @@ class StackServiceTest(HeatTestCase):
         self.eng = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     @stack_context('service_identify_test_stack', False)
     def test_stack_identify(self):

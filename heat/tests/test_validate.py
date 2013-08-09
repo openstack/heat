@@ -26,8 +26,7 @@ from heat.openstack.common.importutils import try_import
 import heat.db.api as db_api
 from heat.engine import parser
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
+from heat.tests import utils
 
 test_template_volumeattach = '''
 {
@@ -545,8 +544,8 @@ class validateTest(HeatTestCase):
         resources.initialise()
         self.fc = fakes.FakeClient()
         resources.initialise()
-        setup_dummy_db()
-        self.ctx = dummy_context()
+        utils.setup_dummy_db()
+        self.ctx = utils.dummy_context()
 
     def test_validate_volumeattach_valid(self):
         t = template_format.parse(test_template_volumeattach % 'vdq')

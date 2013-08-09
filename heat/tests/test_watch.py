@@ -23,7 +23,6 @@ from heat.engine import watchrule
 from heat.engine import parser
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-from heat.tests.utils import dummy_context
 
 
 class WatchData(object):
@@ -47,7 +46,7 @@ class WatchRuleTest(HeatTestCase):
         # Create a dummy stack in the DB as WatchRule instances
         # must be associated with a stack
         utils.setup_dummy_db()
-        ctx = dummy_context()
+        ctx = utils.dummy_context()
         ctx.auth_token = 'abcd1234'
         empty_tmpl = {"template": {}}
         tmpl = parser.Template(empty_tmpl)
@@ -64,7 +63,7 @@ class WatchRuleTest(HeatTestCase):
         self.setUpDatabase()
         self.username = 'watchrule_test_user'
 
-        self.ctx = dummy_context()
+        self.ctx = utils.dummy_context()
         self.ctx.auth_token = 'abcd1234'
 
         self.m.ReplayAll()

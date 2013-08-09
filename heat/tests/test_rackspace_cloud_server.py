@@ -29,8 +29,6 @@ from heat.engine.resources.rackspace import rackspace_resource
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
 
 
 wp_template = '''
@@ -81,7 +79,7 @@ class RackspaceCloudServerTest(HeatTestCase):
     def setUp(self):
         super(RackspaceCloudServerTest, self).setUp()
         self.fc = fakes.FakeClient()
-        setup_dummy_db()
+        utils.setup_dummy_db()
         # Test environment may not have pyrax client library installed and if
         # pyrax is not installed resource class would not be registered.
         # So register resource provider class explicitly for unit testing.
@@ -107,7 +105,7 @@ class RackspaceCloudServerTest(HeatTestCase):
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
         template = parser.Template(t)
-        stack = parser.Stack(dummy_context(), stack_name, template,
+        stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              environment.Environment({'flavor': '2'}),
                              stack_id=uuidutils.generate_uuid())
         return (t, stack)

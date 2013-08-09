@@ -24,15 +24,14 @@ import heat.db.api as db_api
 
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import dummy_context
-from heat.tests.utils import setup_dummy_db
+from heat.tests import utils
 
 
 class ResourceTest(HeatTestCase):
     def setUp(self):
         super(ResourceTest, self).setUp()
-        setup_dummy_db()
-        self.stack = parser.Stack(dummy_context(), 'test_stack',
+        utils.setup_dummy_db()
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   parser.Template({}),
                                   stack_id=uuidutils.generate_uuid())
 
@@ -158,7 +157,7 @@ class ResourceTest(HeatTestCase):
         tmpl1 = {'Type': 'Foo'}
         tmpl2 = {'Type': 'Foo'}
         tmpl3 = {'Type': 'Bar'}
-        stack2 = parser.Stack(dummy_context(), 'test_stack',
+        stack2 = parser.Stack(utils.dummy_context(), 'test_stack',
                               parser.Template({}), stack_id=-1)
         res1 = generic_rsrc.GenericResource('test_resource', tmpl1, self.stack)
         res2 = generic_rsrc.GenericResource('test_resource', tmpl2, stack2)
@@ -570,8 +569,8 @@ class MetadataTest(HeatTestCase):
             'Type': 'Foo',
             'Metadata': {'Test': 'Initial metadata'}
         }
-        setup_dummy_db()
-        self.stack = parser.Stack(dummy_context(),
+        utils.setup_dummy_db()
+        self.stack = parser.Stack(utils.dummy_context(),
                                   'test_stack', parser.Template({}))
         self.stack.store()
         self.res = generic_rsrc.GenericResource('metadata_resource',

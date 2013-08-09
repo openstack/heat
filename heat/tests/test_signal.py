@@ -20,7 +20,6 @@ from heat.tests import generic_resource
 from heat.tests import fakes
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-from heat.tests.utils import reset_dummy_db
 
 from heat.common import context
 from heat.common import exception
@@ -66,7 +65,7 @@ class SignalTest(HeatTestCase):
 
     def tearDown(self):
         super(SignalTest, self).tearDown()
-        reset_dummy_db()
+        utils.reset_dummy_db()
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up

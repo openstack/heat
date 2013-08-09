@@ -25,8 +25,6 @@ from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 from heat.tests import fakes
-from heat.tests.utils import setup_dummy_db
-from heat.tests.utils import parse_stack
 
 swiftclient = try_import('swiftclient.client')
 
@@ -67,7 +65,7 @@ class s3Test(HeatTestCase):
         self.m.StubOutWithMock(swiftclient.Connection, 'get_auth')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
 
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def create_resource(self, t, stack, resource_name):
         rsrc = s3.S3Bucket('test_resource',
@@ -92,7 +90,7 @@ class s3Test(HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
 
         ref_id = rsrc.FnGetRefId()
@@ -130,7 +128,7 @@ class s3Test(HeatTestCase):
         t = template_format.parse(swift_template)
         properties = t['Resources']['S3Bucket']['Properties']
         properties['AccessControl'] = 'PublicRead'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         rsrc.delete()
         self.m.VerifyAll()
@@ -150,7 +148,7 @@ class s3Test(HeatTestCase):
         t = template_format.parse(swift_template)
         properties = t['Resources']['S3Bucket']['Properties']
         properties['AccessControl'] = 'PublicReadWrite'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         rsrc.delete()
         self.m.VerifyAll()
@@ -169,7 +167,7 @@ class s3Test(HeatTestCase):
         t = template_format.parse(swift_template)
         properties = t['Resources']['S3Bucket']['Properties']
         properties['AccessControl'] = 'AuthenticatedRead'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         rsrc.delete()
         self.m.VerifyAll()
@@ -188,7 +186,7 @@ class s3Test(HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3BucketWebsite')
         rsrc.delete()
         self.m.VerifyAll()
@@ -206,7 +204,7 @@ class s3Test(HeatTestCase):
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         rsrc.delete()
 
@@ -227,7 +225,7 @@ class s3Test(HeatTestCase):
 
         bucket = t['Resources']['S3Bucket']
         bucket['DeletionPolicy'] = 'Retain'
-        stack = parse_stack(t)
+        stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         rsrc.delete()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
