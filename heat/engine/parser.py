@@ -339,7 +339,7 @@ class Stack(object):
             else:
                 raise exception.ResourceFailure(
                     AttributeError(_('Resource action %s not found') %
-                                   action_l))
+                                   action_l), r)
 
         action_task = scheduler.DependencyTaskGroup(self.dependencies,
                                                     resource_action,

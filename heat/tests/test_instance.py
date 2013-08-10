@@ -16,6 +16,7 @@ import copy
 
 import mox
 
+from heat.engine import clients
 from heat.engine import environment
 from heat.tests.v1_1 import fakes
 from heat.common import exception
@@ -202,6 +203,37 @@ class InstancesTest(HeatTestCase):
         self.m.ReplayAll()
 
         self.assertRaises(exception.ImageNotFound, instance.handle_create)
+
+        self.m.VerifyAll()
+
+    class FakeVolumeAttach:
+        def started(self):
+            return False
+
+    def test_instance_create_unexpected_status(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_create')
+        return_server.get = lambda: None
+        return_server.status = 'BOGUS'
+        self.assertRaises(exception.ResourceFailure,
+                          instance.check_create_complete,
+                          (return_server, self.FakeVolumeAttach()))
+
+    def test_instance_create_error_status(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_create')
+        return_server.status = 'ERROR'
+        self.m.StubOutWithMock(return_server, 'get')
+        return_server.get()
+        return_server.get().AndRaise(
+            clients.novaclient.exceptions.NotFound('test'))
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ResourceFailure,
+                          instance.check_create_complete,
+                          (return_server, self.FakeVolumeAttach()))
 
         self.m.VerifyAll()
 
