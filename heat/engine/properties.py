@@ -40,6 +40,339 @@ SCHEMA_TYPES = (
 )
 
 
+class InvalidPropertySchemaError(Exception):
+    pass
+
+
+class Schema(collections.Mapping):
+    """
+    A Schema for a resource Property.
+
+    Schema objects are serialisable to dictionaries following a superset of
+    the HOT input Parameter schema using dict().
+
+    Serialises to JSON in the form:
+        {
+            'type': 'list',
+            'required': False
+            'constraints': [
+                {
+                    'length': {'min': 1},
+                    'description': 'List must not be empty'
+                }
+            ],
+            'schema': {
+                '*': {
+                    'type': 'string'
+                }
+            },
+            'description': 'An example list property.'
+        }
+    """
+
+    KEYS = (
+        TYPE, DESCRIPTION, DEFAULT, SCHEMA, REQUIRED, CONSTRAINTS,
+    ) = (
+        'type', 'description', 'default', 'schema', 'required', 'constraints',
+    )
+
+    def __init__(self, data_type, description=None,
+                 default=None, schema=None,
+                 required=False, constraints=[],
+                 implemented=True):
+        self._len = None
+        self.type = data_type
+        if self.type not in SCHEMA_TYPES:
+            raise InvalidPropertySchemaError('Invalid type (%s)' % self.type)
+
+        self.description = description
+        self.required = required
+        self.implemented = implemented
+
+        if isinstance(schema, type(self)):
+            if self.type != LIST:
+                msg = 'Single schema valid only for %s, not %s' % (LIST,
+                                                                   self.type)
+                raise InvalidPropertySchemaError(msg)
+
+            self.schema = AnyIndexDict(schema)
+        else:
+            self.schema = schema
+        if self.schema is not None and self.type not in (LIST, MAP):
+            msg = 'Schema valid only for %s or %s, not %s' % (LIST, MAP,
+                                                              self.type)
+            raise InvalidPropertySchemaError(msg)
+
+        self.constraints = constraints
+        for c in constraints:
+            if self.type not in c.valid_types:
+                err_msg = '%s constraint invalid for %s' % (type(c).__name__,
+                                                            self.type)
+                raise InvalidPropertySchemaError(err_msg)
+
+        self.default = default
+
+    @classmethod
+    def from_legacy(cls, schema_dict):
+        """
+        Return a new Schema object from a legacy schema dictionary.
+        """
+
+        # Check for fully-fledged Schema objects
+        if isinstance(schema_dict, cls):
+            return schema_dict
+
+        unknown = [k for k in schema_dict if k not in SCHEMA_KEYS]
+        if unknown:
+            raise InvalidPropertySchemaError('Unknown key(s) %s' % unknown)
+
+        def constraints():
+            def get_num(key):
+                val = schema_dict.get(key)
+                if val is not None:
+                    val = Property.str_to_num(val)
+                return val
+
+            if MIN_VALUE in schema_dict or MAX_VALUE in schema_dict:
+                yield Range(get_num(MIN_VALUE),
+                            get_num(MAX_VALUE))
+            if MIN_LENGTH in schema_dict or MAX_LENGTH in schema_dict:
+                yield Length(get_num(MIN_LENGTH),
+                             get_num(MAX_LENGTH))
+            if ALLOWED_VALUES in schema_dict:
+                yield AllowedValues(schema_dict[ALLOWED_VALUES])
+            if ALLOWED_PATTERN in schema_dict:
+                yield AllowedPattern(schema_dict[ALLOWED_PATTERN])
+
+        try:
+            data_type = schema_dict[TYPE]
+        except KeyError:
+            raise InvalidPropertySchemaError('No %s specified' % TYPE)
+
+        if SCHEMA in schema_dict:
+            if data_type == LIST:
+                ss = cls.from_legacy(schema_dict[SCHEMA])
+            elif data_type == MAP:
+                schema_dicts = schema_dict[SCHEMA].items()
+                ss = dict((n, cls.from_legacy(sd)) for n, sd in schema_dicts)
+            else:
+                raise InvalidPropertySchemaError('%s supplied for %s %s' %
+                                                 (SCHEMA, TYPE, data_type))
+        else:
+            ss = None
+
+        return cls(data_type,
+                   default=schema_dict.get(DEFAULT),
+                   schema=ss,
+                   required=schema_dict.get(REQUIRED, False),
+                   constraints=list(constraints()),
+                   implemented=schema_dict.get(IMPLEMENTED, True))
+
+    def __getitem__(self, key):
+        if key == self.TYPE:
+            return self.type.lower()
+        elif key == self.DESCRIPTION:
+            if self.description is not None:
+                return self.description
+        elif key == self.DEFAULT:
+            if self.default is not None:
+                return self.default
+        elif key == self.SCHEMA:
+            if self.schema is not None:
+                return dict((n, dict(s)) for n, s in self.schema.items())
+        elif key == self.REQUIRED:
+            return self.required
+        elif key == self.CONSTRAINTS:
+            if self.constraints:
+                return [dict(c) for c in self.constraints]
+
+        raise KeyError(key)
+
+    def __iter__(self):
+        for k in self.KEYS:
+            try:
+                self[k]
+            except KeyError:
+                pass
+            else:
+                yield k
+
+    def __len__(self):
+        if self._len is None:
+            self._len = len(list(iter(self)))
+        return self._len
+
+
+class AnyIndexDict(collections.Mapping):
+    """
+    A Mapping that returns the same value for any integer index.
+
+    Used for storing the schema for a list. When converted to a dictionary,
+    it contains a single item with the key '*'.
+    """
+
+    ANYTHING = '*'
+
+    def __init__(self, value):
+        self.value = value
+
+    def __getitem__(self, key):
+        if key != self.ANYTHING and not isinstance(key, (int, long)):
+            raise KeyError('Invalid key %s' % str(key))
+
+        return self.value
+
+    def __iter__(self):
+        yield self.ANYTHING
+
+    def __len__(self):
+        return 1
+
+
+class Constraint(collections.Mapping):
+    """
+    Parent class for constraints on allowable values for a Property.
+
+    Constraints are serialisable to dictionaries following the HOT input
+    Parameter constraints schema using dict().
+    """
+
+    (DESCRIPTION,) = ('description',)
+
+    def __init__(self, description=None):
+        self.description = description
+
+    @classmethod
+    def _name(cls):
+        return '_'.join(w.lower() for w in re.findall('[A-Z]?[a-z]+',
+                                                      cls.__name__))
+
+    def __getitem__(self, key):
+        if key == self.DESCRIPTION:
+            if self.description is None:
+                raise KeyError(key)
+            return self.description
+
+        if key == self._name():
+            return self._constraint()
+
+        raise KeyError(key)
+
+    def __iter__(self):
+        if self.description is not None:
+            yield self.DESCRIPTION
+
+        yield self._name()
+
+    def __len__(self):
+        return 2 if self.description is not None else 1
+
+
+class Range(Constraint):
+    """
+    Constrain values within a range.
+
+    Serialises to JSON as:
+
+        {
+            'range': {'min': <min>, 'max': <max>},
+            'description': <description>
+        }
+    """
+
+    (MIN, MAX) = ('min', 'max')
+
+    valid_types = (INTEGER, NUMBER)
+
+    def __init__(self, min=None, max=None, description=None):
+        super(Range, self).__init__(description)
+        self.min = min
+        self.max = max
+
+        for param in (min, max):
+            if not isinstance(param, (float, int, long, type(None))):
+                raise InvalidPropertySchemaError('min/max must be numeric')
+
+    def _constraint(self):
+        def constraints():
+            if self.min is not None:
+                yield self.MIN, self.min
+            if self.max is not None:
+                yield self.MAX, self.max
+
+        return dict(constraints())
+
+
+class Length(Range):
+    """
+    Constrain the length of values within a range.
+
+    Serialises to JSON as:
+
+        {
+            'length': {'min': <min>, 'max': <max>},
+            'description': <description>
+        }
+    """
+
+    valid_types = (STRING, LIST)
+
+    def __init__(self, min=None, max=None, description=None):
+        super(Length, self).__init__(min, max, description)
+
+        for param in (min, max):
+            if not isinstance(param, (int, long, type(None))):
+                msg = 'min/max length must be integral'
+                raise InvalidPropertySchemaError(msg)
+
+
+class AllowedValues(Constraint):
+    """
+    Constrain values to a predefined set.
+
+    Serialises to JSON as:
+
+        {
+            'allowed_values': [<allowed1>, <allowed2>, ...],
+            'description': <description>
+        }
+    """
+
+    valid_types = (STRING, INTEGER, NUMBER, BOOLEAN)
+
+    def __init__(self, allowed, description=None):
+        super(AllowedValues, self).__init__(description)
+        if (not isinstance(allowed, collections.Sequence) or
+                isinstance(allowed, basestring)):
+            raise InvalidPropertySchemaError('AllowedValues must be a list')
+        self.allowed = tuple(allowed)
+
+    def _constraint(self):
+        return list(self.allowed)
+
+
+class AllowedPattern(Constraint):
+    """
+    Constrain values to a predefined regular expression pattern.
+
+    Serialises to JSON as:
+
+        {
+            'allowed_pattern': <pattern>,
+            'description': <description>
+        }
+    """
+
+    valid_types = (STRING,)
+
+    def __init__(self, pattern, description=None):
+        super(AllowedPattern, self).__init__(description)
+        self.pattern = pattern
+
+    def _constraint(self):
+        return self.pattern
+
+
 class Property(object):
 
     __param_type_map = {

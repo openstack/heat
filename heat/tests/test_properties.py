@@ -16,7 +16,368 @@
 import testtools
 
 from heat.engine import properties
+from heat.engine import resource
 from heat.common import exception
+
+
+class SchemaTest(testtools.TestCase):
+    def test_range_schema(self):
+        d = {'range': {'min': 5, 'max': 10}, 'description': 'a range'}
+        r = properties.Range(5, 10, description='a range')
+        self.assertEqual(d, dict(r))
+
+    def test_range_min_schema(self):
+        d = {'range': {'min': 5}, 'description': 'a range'}
+        r = properties.Range(min=5, description='a range')
+        self.assertEqual(d, dict(r))
+
+    def test_range_max_schema(self):
+        d = {'range': {'max': 10}, 'description': 'a range'}
+        r = properties.Range(max=10, description='a range')
+        self.assertEqual(d, dict(r))
+
+    def test_length_schema(self):
+        d = {'length': {'min': 5, 'max': 10}, 'description': 'a length range'}
+        r = properties.Length(5, 10, description='a length range')
+        self.assertEqual(d, dict(r))
+
+    def test_length_min_schema(self):
+        d = {'length': {'min': 5}, 'description': 'a length range'}
+        r = properties.Length(min=5, description='a length range')
+        self.assertEqual(d, dict(r))
+
+    def test_length_max_schema(self):
+        d = {'length': {'max': 10}, 'description': 'a length range'}
+        r = properties.Length(max=10, description='a length range')
+        self.assertEqual(d, dict(r))
+
+    def test_allowed_values_schema(self):
+        d = {'allowed_values': ['foo', 'bar'], 'description': 'allowed values'}
+        r = properties.AllowedValues(['foo', 'bar'],
+                                     description='allowed values')
+        self.assertEqual(d, dict(r))
+
+    def test_allowed_pattern_schema(self):
+        d = {'allowed_pattern': '[A-Za-z0-9]', 'description': 'alphanumeric'}
+        r = properties.AllowedPattern('[A-Za-z0-9]',
+                                      description='alphanumeric')
+        self.assertEqual(d, dict(r))
+
+    def test_schema_all(self):
+        d = {
+            'type': 'string',
+            'description': 'A string',
+            'default': 'wibble',
+            'required': True,
+            'constraints': [
+                {'length': {'min': 4, 'max': 8}},
+            ]
+        }
+        s = properties.Schema(properties.STRING, 'A string',
+                              default='wibble', required=True,
+                              constraints=[properties.Length(4, 8)])
+        self.assertEqual(d, dict(s))
+
+    def test_schema_list_schema(self):
+        d = {
+            'type': 'list',
+            'description': 'A list',
+            'schema': {
+                '*': {
+                    'type': 'string',
+                    'description': 'A string',
+                    'default': 'wibble',
+                    'required': True,
+                    'constraints': [
+                        {'length': {'min': 4, 'max': 8}},
+                    ]
+                }
+            },
+            'required': False,
+        }
+        s = properties.Schema(properties.STRING, 'A string',
+                              default='wibble', required=True,
+                              constraints=[properties.Length(4, 8)])
+        l = properties.Schema(properties.LIST, 'A list',
+                              schema=s)
+        self.assertEqual(d, dict(l))
+
+    def test_schema_map_schema(self):
+        d = {
+            'type': 'map',
+            'description': 'A map',
+            'schema': {
+                'Foo': {
+                    'type': 'string',
+                    'description': 'A string',
+                    'default': 'wibble',
+                    'required': True,
+                    'constraints': [
+                        {'length': {'min': 4, 'max': 8}},
+                    ]
+                }
+            },
+            'required': False,
+        }
+        s = properties.Schema(properties.STRING, 'A string',
+                              default='wibble', required=True,
+                              constraints=[properties.Length(4, 8)])
+        m = properties.Schema(properties.MAP, 'A map',
+                              schema={'Foo': s})
+        self.assertEqual(d, dict(m))
+
+    def test_schema_nested_schema(self):
+        d = {
+            'type': 'list',
+            'description': 'A list',
+            'schema': {
+                '*': {
+                    'type': 'map',
+                    'description': 'A map',
+                    'schema': {
+                        'Foo': {
+                            'type': 'string',
+                            'description': 'A string',
+                            'default': 'wibble',
+                            'required': True,
+                            'constraints': [
+                                {'length': {'min': 4, 'max': 8}},
+                            ]
+                        }
+                    },
+                    'required': False,
+                }
+            },
+            'required': False,
+        }
+        s = properties.Schema(properties.STRING, 'A string',
+                              default='wibble', required=True,
+                              constraints=[properties.Length(4, 8)])
+        m = properties.Schema(properties.MAP, 'A map',
+                              schema={'Foo': s})
+        l = properties.Schema(properties.LIST, 'A list',
+                              schema=m)
+        self.assertEqual(d, dict(l))
+
+    def test_all_resource_schemata(self):
+        for resource_type in resource._resource_classes.itervalues():
+            for schema in getattr(resource_type,
+                                  'properties_schema',
+                                  {}).itervalues():
+                properties.Schema.from_legacy(schema)
+
+    def test_invalid_type(self):
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Schema,
+                          'Fish')
+
+    def test_schema_invalid_type(self):
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Schema,
+                          'String',
+                          schema=properties.Schema('String'))
+
+    def test_range_invalid_type(self):
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Schema,
+                          'String',
+                          constraints=[properties.Range(1, 10)])
+
+    def test_length_invalid_type(self):
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Schema,
+                          'Integer',
+                          constraints=[properties.Length(1, 10)])
+
+    def test_allowed_pattern_invalid_type(self):
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Schema,
+                          'Integer',
+                          constraints=[properties.AllowedPattern('[0-9]*')])
+
+    def test_range_vals_invalid_type(self):
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Range, '1', 10)
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Range, 1, '10')
+
+    def test_length_vals_invalid_type(self):
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Length, '1', 10)
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Length, 1, '10')
+
+    def test_from_legacy_idempotency(self):
+        s = properties.Schema(properties.STRING)
+        self.assertTrue(properties.Schema.from_legacy(s) is s)
+
+    def test_from_legacy_string(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'String',
+            'Default': 'wibble',
+            'Required': True,
+            'Implemented': False,
+            'MinLength': 4,
+            'MaxLength': 8,
+            'AllowedValues': ['blarg', 'wibble'],
+            'AllowedPattern': '[a-z]*',
+        })
+        self.assertEqual(properties.STRING, s.type)
+        self.assertEqual(None, s.description)
+        self.assertEqual('wibble', s.default)
+        self.assertTrue(s.required)
+        self.assertEqual(3, len(s.constraints))
+        self.assertFalse(s.implemented)
+
+    def test_from_legacy_min_length(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'String',
+            'MinLength': 4,
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.Length, type(c))
+        self.assertEqual(4, c.min)
+        self.assertEqual(None, c.max)
+
+    def test_from_legacy_max_length(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'String',
+            'MaxLength': 8,
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.Length, type(c))
+        self.assertEqual(None, c.min)
+        self.assertEqual(8, c.max)
+
+    def test_from_legacy_minmax_length(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'String',
+            'MinLength': 4,
+            'MaxLength': 8,
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.Length, type(c))
+        self.assertEqual(4, c.min)
+        self.assertEqual(8, c.max)
+
+    def test_from_legacy_minmax_string_length(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'String',
+            'MinLength': '4',
+            'MaxLength': '8',
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.Length, type(c))
+        self.assertEqual(4, c.min)
+        self.assertEqual(8, c.max)
+
+    def test_from_legacy_min_value(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'Integer',
+            'MinValue': 4,
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.Range, type(c))
+        self.assertEqual(4, c.min)
+        self.assertEqual(None, c.max)
+
+    def test_from_legacy_max_value(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'Integer',
+            'MaxValue': 8,
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.Range, type(c))
+        self.assertEqual(None, c.min)
+        self.assertEqual(8, c.max)
+
+    def test_from_legacy_minmax_value(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'Integer',
+            'MinValue': 4,
+            'MaxValue': 8,
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.Range, type(c))
+        self.assertEqual(4, c.min)
+        self.assertEqual(8, c.max)
+
+    def test_from_legacy_minmax_string_value(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'Integer',
+            'MinValue': '4',
+            'MaxValue': '8',
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.Range, type(c))
+        self.assertEqual(4, c.min)
+        self.assertEqual(8, c.max)
+
+    def test_from_legacy_allowed_values(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'String',
+            'AllowedValues': ['blarg', 'wibble'],
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.AllowedValues, type(c))
+        self.assertEqual(('blarg', 'wibble'), c.allowed)
+
+    def test_from_legacy_allowed_pattern(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'String',
+            'AllowedPattern': '[a-z]*',
+        })
+        self.assertEqual(1, len(s.constraints))
+        c = s.constraints[0]
+        self.assertEqual(properties.AllowedPattern, type(c))
+        self.assertEqual('[a-z]*', c.pattern)
+
+    def test_from_legacy_list(self):
+        l = properties.Schema.from_legacy({
+            'Type': 'List',
+            'Default': ['wibble'],
+            'Schema': {
+                'Type': 'String',
+                'Default': 'wibble',
+                'MaxLength': 8,
+            }
+        })
+        self.assertEqual(properties.LIST, l.type)
+        self.assertEqual(['wibble'], l.default)
+
+        ss = l.schema[0]
+        self.assertEqual(properties.STRING, ss.type)
+        self.assertEqual('wibble', ss.default)
+
+    def test_from_legacy_map(self):
+        l = properties.Schema.from_legacy({
+            'Type': 'Map',
+            'Schema': {
+                'foo': {
+                    'Type': 'String',
+                    'Default': 'wibble',
+                }
+            }
+        })
+        self.assertEqual(properties.MAP, l.type)
+
+        ss = l.schema['foo']
+        self.assertEqual(properties.STRING, ss.type)
+        self.assertEqual('wibble', ss.default)
+
+    def test_from_legacy_invalid_key(self):
+        self.assertRaises(properties.InvalidPropertySchemaError,
+                          properties.Schema.from_legacy,
+                          {'Type': 'String', 'Foo': 'Bar'})
 
 
 class PropertyTest(testtools.TestCase):
