@@ -482,6 +482,20 @@
 #password=<None>
 
 
+[auth_password]
+
+#
+# Options defined in heat.common.config
+#
+
+# Allow orchestration of multiple clouds (boolean value)
+#multi_cloud=false
+
+# Allowed targets for auth_uri when multi_cloud is enabled.
+# If empty, all targets will be allowed. (list value)
+#allowed_auth_uris=
+
+
 [matchmaker_ring]
 
 #
@@ -492,4 +506,4 @@
 #ringfile=/etc/oslo/matchmaker_ring.json
 
 
-# Total option count: 107
+# Total option count: 109
