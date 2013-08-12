@@ -174,7 +174,6 @@ class AutoScalingTest(HeatTestCase):
         properties['MaxSize'] = '0'
         stack = utils.parse_stack(t, params=self.params)
 
-        now = timeutils.utcnow()
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
         self.assertEqual(None, rsrc.FnGetAtt("InstanceList"))
@@ -325,10 +324,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'check_suspend_complete')
         inst_cookie1 = ('foo1', 'foo2', 'foo3')
         inst_cookie2 = ('bar1', 'bar2', 'bar3')
-        instance.Instance.handle_suspend().AndReturn(inst_cookie1)
-        instance.Instance.handle_suspend().AndReturn(inst_cookie2)
-        instance.Instance.check_suspend_complete(inst_cookie1).AndReturn(True)
-        instance.Instance.check_suspend_complete(inst_cookie2).AndReturn(True)
+        instance.Instance.handle_suspend().InAnyOrder().AndReturn(inst_cookie1)
+        instance.Instance.handle_suspend().InAnyOrder().AndReturn(inst_cookie2)
+        instance.Instance.check_suspend_complete(inst_cookie1).InAnyOrder(
+        ).AndReturn(True)
+        instance.Instance.check_suspend_complete(inst_cookie2).InAnyOrder(
+        ).AndReturn(True)
         self.m.ReplayAll()
 
         scheduler.TaskRunner(rsrc.suspend)()
@@ -361,10 +362,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'check_resume_complete')
         inst_cookie1 = ('foo1', 'foo2', 'foo3')
         inst_cookie2 = ('bar1', 'bar2', 'bar3')
-        instance.Instance.handle_resume().AndReturn(inst_cookie1)
-        instance.Instance.handle_resume().AndReturn(inst_cookie2)
-        instance.Instance.check_resume_complete(inst_cookie1).AndReturn(True)
-        instance.Instance.check_resume_complete(inst_cookie2).AndReturn(True)
+        instance.Instance.handle_resume().InAnyOrder().AndReturn(inst_cookie1)
+        instance.Instance.handle_resume().InAnyOrder().AndReturn(inst_cookie2)
+        instance.Instance.check_resume_complete(inst_cookie1).InAnyOrder(
+        ).AndReturn(True)
+        instance.Instance.check_resume_complete(inst_cookie2).InAnyOrder(
+        ).AndReturn(True)
         self.m.ReplayAll()
 
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
@@ -396,7 +399,6 @@ class AutoScalingTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance.Instance, 'handle_suspend')
         self.m.StubOutWithMock(instance.Instance, 'check_suspend_complete')
-        inst_cookie = (object(), object(), object())
         instance.Instance.handle_suspend().AndRaise(Exception('oops'))
         self.m.ReplayAll()
 
@@ -428,7 +430,6 @@ class AutoScalingTest(HeatTestCase):
 
         self.m.StubOutWithMock(instance.Instance, 'handle_resume')
         self.m.StubOutWithMock(instance.Instance, 'check_resume_complete')
-        inst_cookie = (object(), object(), object())
         instance.Instance.handle_resume().AndRaise(Exception('oops'))
         self.m.ReplayAll()
 
