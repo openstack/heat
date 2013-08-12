@@ -45,7 +45,6 @@ import webob.exc
 
 from heat.common import exception
 from heat.openstack.common import gettextutils
-from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 
 
