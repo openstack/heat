@@ -327,12 +327,12 @@ class Instance(resource.Resource):
                 delete(wait_time=0.2)
                 exc = exception.Error("Build of server %s failed." %
                                       server.name)
-                raise exception.ResourceFailure(exc, self)
+                raise exc
             else:
                 exc = exception.Error('%s instance[%s] status[%s]' %
                                       ('nova reported unexpected',
                                        self.name, server.status))
-                raise exception.ResourceFailure(exc, self)
+                raise exc
         else:
             return volume_attach.step()
 

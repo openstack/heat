@@ -216,7 +216,7 @@ class InstancesTest(HeatTestCase):
                                               'test_instance_create')
         return_server.get = lambda: None
         return_server.status = 'BOGUS'
-        self.assertRaises(exception.ResourceFailure,
+        self.assertRaises(exception.Error,
                           instance.check_create_complete,
                           (return_server, self.FakeVolumeAttach()))
 
@@ -231,7 +231,7 @@ class InstancesTest(HeatTestCase):
             clients.novaclient.exceptions.NotFound('test'))
         self.m.ReplayAll()
 
-        self.assertRaises(exception.ResourceFailure,
+        self.assertRaises(exception.Error,
                           instance.check_create_complete,
                           (return_server, self.FakeVolumeAttach()))
 
