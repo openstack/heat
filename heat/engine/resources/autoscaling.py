@@ -157,9 +157,13 @@ class InstanceGroup(stack_resource.StackResource):
         instance_definition = self.stack.t['Resources'][conf_name].copy()
         instance_definition['Type'] = 'AWS::EC2::Instance'
         instance_definition['Properties']['Tags'] = self._tags()
+        # resolve references within the context of this stack.
+        static_parsed = self.stack.resolve_static_data(instance_definition)
+        fully_parsed = self.stack.resolve_runtime_data(static_parsed)
+
         resources = {}
         for i in range(num_instances):
-            resources["%s-%d" % (self.name, i)] = instance_definition
+            resources["%s-%d" % (self.name, i)] = fully_parsed
         return {"Resources": resources}
 
     def resize(self, new_capacity):

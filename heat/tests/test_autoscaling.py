@@ -39,9 +39,8 @@ as_template = '''
   "AWSTemplateFormatVersion" : "2010-09-09",
   "Description" : "AutoScaling Test",
   "Parameters" : {
-  "KeyName": {
-    "Type": "String"
-  }
+  "ImageId": {"Type": "String"},
+  "KeyName": {"Type": "String"}
   },
   "Resources" : {
     "WebServerGroup" : {
@@ -86,7 +85,7 @@ as_template = '''
     "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
-        "ImageId" : "foo",
+        "ImageId" : {"Ref": "ImageId"},
         "InstanceType"   : "bar",
       }
     }
@@ -97,7 +96,7 @@ as_template = '''
 
 class AutoScalingTest(HeatTestCase):
     dummy_instance_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-    params = {'KeyName': 'test'}
+    params = {'KeyName': 'test', 'ImageId': 'foo'}
 
     def setUp(self):
         super(AutoScalingTest, self).setUp()
