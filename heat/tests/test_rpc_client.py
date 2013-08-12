@@ -83,6 +83,16 @@ class EngineRpcAPITestCase(testtools.TestCase):
         for arg, expected_arg in zip(self.fake_args, expected_args):
             self.assertEqual(arg, expected_arg)
 
+    def test_authenticated_to_backend(self):
+        self._test_engine_api('authenticated_to_backend', 'call')
+
+    def test_list_stacks(self):
+        self._test_engine_api('list_stacks', 'call')
+
+    def test_identify_stack(self):
+        self._test_engine_api('identify_stack', 'call',
+                              stack_name='wordpress')
+
     def test_show_stack(self):
         self._test_engine_api('show_stack', 'call', stack_identity='wordpress')
 
@@ -101,10 +111,6 @@ class EngineRpcAPITestCase(testtools.TestCase):
                               files={},
                               args={})
 
-    def test_validate_template(self):
-        self._test_engine_api('validate_template', 'call',
-                              template={u'Foo': u'bar'})
-
     def test_get_template(self):
         self._test_engine_api('get_template', 'call',
                               stack_identity=self.identity)
@@ -116,6 +122,16 @@ class EngineRpcAPITestCase(testtools.TestCase):
     def test_delete_stack_call(self):
         self._test_engine_api('delete_stack', 'call',
                               stack_identity=self.identity)
+
+    def test_validate_template(self):
+        self._test_engine_api('validate_template', 'call',
+                              template={u'Foo': u'bar'})
+
+    def test_list_resource_types(self):
+        self._test_engine_api('list_resource_types', 'call')
+
+    def test_generate_template(self):
+        self._test_engine_api('generate_template', 'call', type_name="TYPE")
 
     def test_list_events(self):
         self._test_engine_api('list_events', 'call',
@@ -138,9 +154,6 @@ class EngineRpcAPITestCase(testtools.TestCase):
     def test_list_stack_resources(self):
         self._test_engine_api('list_stack_resources', 'call',
                               stack_identity=self.identity)
-
-    def test_generate_template(self):
-        self._test_engine_api('generate_template', 'call', type_name="TYPE")
 
     def test_stack_suspend(self):
         self._test_engine_api('stack_suspend', 'call',
