@@ -13,7 +13,6 @@
 #    under the License.
 
 import itertools
-from eventlet.support import greenlets as greenlet
 
 from heat.common import exception
 from heat.engine import parser
@@ -420,38 +419,6 @@ class ResourceTest(HeatTestCase):
             res.state_set(*state)
             resume = scheduler.TaskRunner(res.resume)
             self.assertRaises(exception.ResourceFailure, resume)
-
-    def test_suspend_fail_exit(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
-        scheduler.TaskRunner(res.create)()
-        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
-
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
-        generic_rsrc.GenericResource.handle_suspend().AndRaise(
-            greenlet.GreenletExit())
-        self.m.ReplayAll()
-
-        suspend = scheduler.TaskRunner(res.suspend)
-        self.assertRaises(greenlet.GreenletExit, suspend)
-        self.assertEqual((res.SUSPEND, res.FAILED), res.state)
-
-    def test_resume_fail_exit(self):
-        tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
-        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
-        scheduler.TaskRunner(res.create)()
-        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
-
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_resume')
-        generic_rsrc.GenericResource.handle_resume().AndRaise(
-            greenlet.GreenletExit())
-        self.m.ReplayAll()
-
-        res.state_set(res.SUSPEND, res.COMPLETE)
-
-        resume = scheduler.TaskRunner(res.resume)
-        self.assertRaises(greenlet.GreenletExit, resume)
-        self.assertEqual((res.RESUME, res.FAILED), res.state)
 
     def test_suspend_fail_exception(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
