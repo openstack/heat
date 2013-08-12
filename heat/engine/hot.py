@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from string import Template
+
 from heat.common import exception
 from heat.engine import template
 from heat.engine.parameters import ParamSchema
@@ -191,6 +193,19 @@ class HOTemplate(template.Template):
         return template._resolve(match_param_ref, handle_param_ref, s)
 
     @staticmethod
+    def resolve_resource_refs(s, resources):
+        '''
+        Resolve constructs of the form { "get_resource" : "resource" }
+        '''
+        def match_resource_ref(key, value):
+            return key == 'get_resource' and value in resources
+
+        def handle_resource_ref(arg):
+            return resources[arg].FnGetRefId()
+
+        return template._resolve(match_resource_ref, handle_resource_ref, s)
+
+    @staticmethod
     def resolve_attributes(s, resources):
         """
         Resolve constructs of the form { get_attr: [my_resource, my_attr] }
@@ -217,6 +232,46 @@ class HOTemplate(template.Template):
                                                          key=att)
 
         return template._resolve(match_get_attr, handle_get_attr, s)
+
+    @staticmethod
+    def resolve_replace(s):
+        """
+        Resolve template string substitution via function str_replace
+
+        Resolves the str_replace function of the form
+
+          str_replace:
+            template: <string template>
+            params:
+              <param dictionary>
+        """
+        def handle_str_replace(args):
+            if not isinstance(args, dict):
+                raise TypeError('Arguments to "str_replace" must be a'
+                                'dictionary')
+
+            try:
+                template = args['template']
+                params = args['params']
+            except KeyError:
+                example = ('''str_replace:
+                  template: This is $var1 template $var2
+                  params:
+                    - var1: a
+                    - var2: string''')
+                raise KeyError('"str_replace" syntax should be %s' %
+                               example)
+
+            if not isinstance(template, basestring):
+                raise TypeError('"template" parameter must be a string')
+            if not isinstance(params, dict):
+                raise TypeError(
+                    '"params" parameter must be a dictionary')
+
+            return Template(template).substitute(params)
+
+        return template._resolve(lambda k, v: k == 'str_replace',
+                                 handle_str_replace, s)
 
     def param_schemata(self):
         params = self[PARAMETERS].iteritems()

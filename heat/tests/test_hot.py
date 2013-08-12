@@ -259,6 +259,72 @@ class HOTemplateTest(HeatTestCase):
         self.assertEqual(tmpl.resolve_param_refs(snippet, params),
                          snippet_resolved)
 
+    def test_str_replace(self):
+        """Test str_replace function."""
+
+        snippet = {'str_replace': {'template': 'Template $var1 string $var2',
+                                   'params': {'var1': 'foo', 'var2': 'bar'}}}
+        snippet_resolved = 'Template foo string bar'
+
+        tmpl = parser.Template(hot_tpl_empty)
+
+        self.assertEqual(tmpl.resolve_replace(snippet), snippet_resolved)
+
+    def test_str_replace_syntax(self):
+        """
+        Test str_replace function syntax.
+
+        Pass wrong syntax (array instead of dictionary) to function and
+        validate that we get a TypeError.
+        """
+
+        snippet = {'str_replace': [{'template': 'Template $var1 string $var2'},
+                                   {'params': {'var1': 'foo', 'var2': 'bar'}}]}
+
+        tmpl = parser.Template(hot_tpl_empty)
+
+        self.assertRaises(TypeError, tmpl.resolve_replace, snippet)
+
+    def test_str_replace_invalid_param_keys(self):
+        """
+        Test str_replace function parameter keys.
+
+        Pass wrong parameters to function and verify that we get
+        a KeyError.
+        """
+
+        snippet = {'str_replace': {'tmpl': 'Template $var1 string $var2',
+                                   'params': {'var1': 'foo', 'var2': 'bar'}}}
+
+        tmpl = parser.Template(hot_tpl_empty)
+
+        self.assertRaises(KeyError, tmpl.resolve_replace, snippet)
+
+        snippet = {'str_replace': {'tmpl': 'Template $var1 string $var2',
+                                   'parms': {'var1': 'foo', 'var2': 'bar'}}}
+
+        self.assertRaises(KeyError, tmpl.resolve_replace, snippet)
+
+    def test_str_replace_invalid_param_types(self):
+        """
+        Test str_replace function parameter values.
+
+        Pass parameter values of wrong type to function and verify that we get
+        a TypeError.
+        """
+
+        snippet = {'str_replace': {'template': 12345,
+                                   'params': {'var1': 'foo', 'var2': 'bar'}}}
+
+        tmpl = parser.Template(hot_tpl_empty)
+
+        self.assertRaises(TypeError, tmpl.resolve_replace, snippet)
+
+        snippet = {'str_replace': {'template': 'Template $var1 string $var2',
+                                   'params': ['var1', 'foo', 'var2', 'bar']}}
+
+        self.assertRaises(TypeError, tmpl.resolve_replace, snippet)
+
 
 class StackTest(test_parser.StackTest):
     """Test stack function when stack was created from HOT template."""
@@ -291,6 +357,28 @@ class StackTest(test_parser.StackTest):
                           hot.HOTemplate.resolve_attributes,
                           {'Value': {'get_attr': ['resource1', 'NotThere']}},
                           self.stack)
+
+    @utils.stack_delete_after
+    def test_get_resource(self):
+        """Test resolution of get_resource occurrences in HOT template."""
+
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        resources:
+          resource1:
+            type: GenericResourceType
+        ''')
+
+        self.stack = parser.Stack(self.ctx, 'test_get_resource',
+                                  template.Template(hot_tpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+
+        snippet = {'value': {'get_resource': 'resource1'}}
+        resolved = hot.HOTemplate.resolve_resource_refs(snippet, self.stack)
+        self.assertEqual(resolved, {'value': 'resource1'})
 
 
 class HOTParamValidatorTest(HeatTestCase):

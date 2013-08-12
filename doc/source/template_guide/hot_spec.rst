@@ -442,3 +442,95 @@ An example of using the get_attr function is shown below:
 
   outputs:
     instance_ip: { get_attr: [my_instance, PublicIp] }
+
+
+get_resource
+------------
+The *get_resource* function allows for referencing another resource within the
+same template. At runtime, it will be resolved to reference ID of the resource,
+which is resource type specific. For example, a reference to a floating IP
+resource will return the respective IP address at runtime.
+The syntax of the get_resource function is as follows:
+
+::
+
+  get_resource: <resource ID>
+
+The *resource ID* of the referenced resources as used in the current template is
+given as single parameter to the get_resource function.
+
+
+str_replace
+-----------
+The *str_replace* function allows for dynamically constructing strings by
+providing a template string with placeholders and a list of mappings to assign
+values to those placeholders at runtime. The functionality of this function is
+similar to that of Python Template strings.
+The syntax of the str_replace function is as follows:
+
+::
+
+  str_replace:
+    template: <template string>
+    params: <parameter mappings>
+
+template
+    The *template* argument defines the template string that contains
+    placeholders which will be substituted at runtime.
+params
+    The *params* argument provides parameter mappings in the form of a
+    dictionary, which will be used for placeholder substitution in the template
+    string at runtime. Within parameter mappings one can make use of other
+    functions (e.g. get_attr to use resource attribute values) for template
+    substitution.
+
+The example below shows a simple use of the str_replace function in the outputs
+section of a template to build a URL for logging into a deployed application.
+
+::
+
+  resources:
+    my_instance:
+      type: OS::Nova::Compute
+      # general metadata and properties ...
+
+  outputs:
+    Login_URL:
+      description: The URL to log into the deployed application
+      value:
+        str_replace:
+          template: http://$host/MyApplication
+          params:
+            host: { get_attr: [ my_instance, PublicIp ] }
+
+The str_replace function can also be used for constructing bigger chunks of text
+like scripts for initializing compute instances as shown in the example below:
+
+::
+
+  parameters:
+    DBRootPassword:
+      type: string
+      description: Root password for MySQL
+      hidden: true
+
+  resources:
+    my_instance:
+      type: OS::Nova::Compute
+      properties:
+        # general properties ...
+        userdata:
+          str_replace:
+            template: |
+              #!/bin/bash
+              echo "Hello world"
+              echo "Setting MySQL root password"
+              mysqladmin -u root password $db_rootpassword
+              # do more things ...
+            params:
+              db_rootpassword: { get_param: DBRootPassword }
+
+In the example above, one can imagine that MySQL is being configured on a
+compute instance and the root password is going to be set based on a user
+provided parameter. The script for doing this is provided as userdata to the
+compute instance, leveraging the str_replace function.
