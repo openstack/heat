@@ -24,6 +24,7 @@ from heat.common import context
 from heat.db import api as db_api
 from heat.engine import api
 from heat.rpc import api as rpc_api
+from heat.engine import attributes
 from heat.engine import clients
 from heat.engine.event import Event
 from heat.engine import environment
@@ -404,6 +405,34 @@ class EngineService(service.Service):
         arg1 -> RPC context.
         """
         return list(resource.get_types())
+
+    def resource_schema(self, cnxt, type_name):
+        """
+        Return the schema of the specified type.
+        arg1 -> RPC context.
+        arg2 -> Name of the resource type to obtain the schema of.
+        """
+        try:
+            resource_class = resource.get_class(type_name)
+        except exception.StackValidationFailed:
+            raise exception.ResourceTypeNotFound(type_name=type_name)
+
+        def properties_schema():
+            for name, schema_dict in resource_class.properties_schema.items():
+                schema = properties.Schema.from_legacy(schema_dict)
+                if schema.implemented:
+                    yield name, dict(schema)
+
+        def attributes_schema():
+            for schema_item in resource_class.attributes_schema.items():
+                schema = attributes.Attribute(*schema_item)
+                yield schema.name, {schema.DESCRIPTION: schema.description}
+
+        return {
+            rpc_api.RES_SCHEMA_RES_TYPE: type_name,
+            rpc_api.RES_SCHEMA_PROPERTIES: dict(properties_schema()),
+            rpc_api.RES_SCHEMA_ATTRIBUTES: dict(attributes_schema()),
+        }
 
     def generate_template(self, cnxt, type_name):
         """

@@ -60,6 +60,12 @@ RES_KEYS = (
     'required_by',
 )
 
+RES_SCHEMA_KEYS = (
+    RES_SCHEMA_RES_TYPE, RES_SCHEMA_PROPERTIES, RES_SCHEMA_ATTRIBUTES,
+) = (
+    RES_TYPE, 'properties', 'attributes',
+)
+
 EVENT_KEYS = (
     EVENT_ID,
     EVENT_STACK_ID, EVENT_STACK_NAME,

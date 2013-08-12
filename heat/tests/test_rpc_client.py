@@ -130,6 +130,9 @@ class EngineRpcAPITestCase(testtools.TestCase):
     def test_list_resource_types(self):
         self._test_engine_api('list_resource_types', 'call')
 
+    def test_resource_schema(self):
+        self._test_engine_api('resource_schema', 'call', type_name="TYPE")
+
     def test_generate_template(self):
         self._test_engine_api('generate_template', 'call', type_name="TYPE")
 

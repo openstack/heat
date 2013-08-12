@@ -30,6 +30,7 @@ import heat.db.api as db_api
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine.resource import _register_class
 from heat.engine import service
 from heat.engine.properties import Properties
 from heat.engine.resources import instance as instances
@@ -38,6 +39,7 @@ from heat.engine import resource as rsrs
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
 from heat.tests.common import HeatTestCase
+from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 
@@ -655,6 +657,8 @@ class StackServiceTest(HeatTestCase):
                                   tenant_id='stack_service_test_tenant')
         self.eng = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
+        _register_class('ResourceWithPropsType',
+                        generic_rsrc.ResourceWithProps)
 
         utils.setup_dummy_db()
 
@@ -898,11 +902,34 @@ class StackServiceTest(HeatTestCase):
         self.assertNotEqual(s['description'].find('WordPress'), -1)
         self.assertTrue('parameters' in s)
 
-    @stack_context('service_list_resource_types_test_stack', False)
     def test_list_resource_types(self):
         resources = self.eng.list_resource_types(self.ctx)
         self.assertTrue(isinstance(resources, list))
         self.assertTrue('AWS::EC2::Instance' in resources)
+
+    def test_resource_schema(self):
+        type_name = 'ResourceWithPropsType'
+        expected = {
+            'resource_type': type_name,
+            'properties': {
+                'Foo': {
+                    'type': 'string',
+                    'required': False,
+                },
+            },
+            'attributes': {
+                'foo': {'description': 'A generic attribute'},
+                'Foo': {'description': 'Another generic attribute'},
+            },
+        }
+
+        schema = self.eng.resource_schema(self.ctx, type_name=type_name)
+        self.assertEqual(expected, schema)
+
+    def test_resource_schema_nonexist(self):
+        self.assertRaises(exception.ResourceTypeNotFound,
+                          self.eng.resource_schema,
+                          self.ctx, type_name='Bogus')
 
     @stack_context('service_stack_resource_describe__test_stack')
     def test_stack_resource_describe(self):

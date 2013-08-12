@@ -160,6 +160,15 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         """
         return self.call(ctxt, self.make_msg('list_resource_types'))
 
+    def resource_schema(self, ctxt, type_name):
+        """
+        Get the schema for a resource type.
+
+        :param ctxt: RPC context.
+        """
+        return self.call(ctxt, self.make_msg('resource_schema',
+                                             type_name=type_name))
+
     def generate_template(self, ctxt, type_name):
         """
         Generate a template based on the specified type.

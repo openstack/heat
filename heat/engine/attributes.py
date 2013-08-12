@@ -21,6 +21,8 @@ class Attribute(object):
     An Attribute schema.
     """
 
+    (DESCRIPTION,) = ('description',)
+
     def __init__(self, attr_name, description):
         """
         Initialise with a name and description.
