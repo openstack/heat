@@ -1167,10 +1167,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_list_resource_types_error(self):
         req = self._get('/resource_types')
 
-        engine_response = ['AWS::EC2::Instance',
-                           'AWS::EC2::EIP',
-                           'AWS::EC2::EIPAssociation']
-
         error = heat_exc.ServerError(body='')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
@@ -1186,6 +1182,56 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        req, tenant_id=self.tenant)
         self.assertEqual(resp.json['code'], 500)
         self.assertEqual(resp.json['error']['type'], 'ServerError')
+        self.m.VerifyAll()
+
+    def test_resource_schema(self):
+        req = self._get('/resource_types/ResourceWithProps')
+        type_name = 'ResourceWithProps'
+
+        engine_response = {
+            'resource_type': type_name,
+            'properties': {
+                'Foo': {'type': 'string', 'required': False},
+            },
+            'attributes': {
+                'foo': {'description': 'A generic attribute'},
+                'Foo': {'description': 'Another generic attribute'},
+            },
+        }
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'resource_schema',
+                  'args': {'type_name': type_name},
+                  'version': self.api_version},
+                 None).AndReturn(engine_response)
+        self.m.ReplayAll()
+        response = self.controller.resource_schema(req,
+                                                   tenant_id=self.tenant,
+                                                   type_name=type_name)
+        self.assertEqual(response, engine_response)
+        self.m.VerifyAll()
+
+    def test_resource_schema_nonexist(self):
+        req = self._get('/resource_types/BogusResourceType')
+        type_name = 'BogusResourceType'
+
+        error = heat_exc.ResourceTypeNotFound(type_name='BogusResourceType')
+        self.m.StubOutWithMock(rpc, 'call')
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'resource_schema',
+                  'args': {'type_name': type_name},
+                  'version': self.api_version},
+                 None).AndRaise(to_remote_error(error))
+        self.m.ReplayAll()
+
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.resource_schema,
+                                       req, tenant_id=self.tenant,
+                                       type_name=type_name)
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'ResourceTypeNotFound')
         self.m.VerifyAll()
 
     def test_generate_template(self):
@@ -2050,6 +2096,17 @@ class RoutesTest(HeatTestCase):
             'StackController',
             {
                 'tenant_id': 'aaaa',
+            })
+
+        self.assertRoute(
+            self.m,
+            '/aaaa/resource_types/test_type',
+            'GET',
+            'resource_schema',
+            'StackController',
+            {
+                'tenant_id': 'aaaa',
+                'type_name': 'test_type'
             })
 
         self.assertRoute(

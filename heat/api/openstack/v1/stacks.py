@@ -331,6 +331,13 @@ class StackController(object):
         return {'resource_types': self.engine.list_resource_types(req.context)}
 
     @util.tenant_local
+    def resource_schema(self, req, type_name):
+        """
+        Returns the schema of the given resource type.
+        """
+        return self.engine.resource_schema(req.context, type_name)
+
+    @util.tenant_local
     def generate_template(self, req, type_name):
         """
         Generates a template based on the specified type.
