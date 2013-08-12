@@ -111,12 +111,24 @@ rpc_opts = [
                     'This can be an opaque identifier.'
                     'It is not necessarily a hostname, FQDN, or IP address.')]
 
+auth_password_group = cfg.OptGroup('auth_password')
+auth_password_opts = [
+    cfg.BoolOpt('multi_cloud',
+                default=False,
+                help=_('Allow orchestration of multiple clouds')),
+    cfg.ListOpt('allowed_auth_uris',
+                default=[],
+                help=_('Allowed targets for auth_uri when multi_cloud is '
+                       'enabled.  If empty, all targets will be allowed.'))]
+
 cfg.CONF.register_opts(db_opts)
 cfg.CONF.register_opts(engine_opts)
 cfg.CONF.register_opts(service_opts)
 cfg.CONF.register_opts(rpc_opts)
 cfg.CONF.register_group(paste_deploy_group)
 cfg.CONF.register_opts(paste_deploy_opts, group=paste_deploy_group)
+cfg.CONF.register_group(auth_password_group)
+cfg.CONF.register_opts(auth_password_opts, group=auth_password_group)
 
 
 def rpc_set_default():
