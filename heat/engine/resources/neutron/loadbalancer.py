@@ -14,8 +14,11 @@
 #    under the License.
 
 from heat.common import exception
+from heat.db.sqlalchemy import api as db_api
 from heat.engine import clients
+from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine.resources import nova_utils
 from heat.engine.resources.neutron import neutron
 
 if clients.neutronclient is not None:
@@ -186,7 +189,7 @@ class Pool(neutron.NeutronResource):
             client = self.neutron()
             monitors = set(prop_diff.pop('monitors', []))
             if monitors:
-                old_monitors = set(self.t['Properties'].get('monitors', []))
+                old_monitors = set(self.t['Properties']['monitors'])
                 for monitor in old_monitors - monitors:
                     client.disassociate_health_monitor(
                         self.resource_id, {'health_monitor': {'id': monitor}})
@@ -237,6 +240,79 @@ class Pool(neutron.NeutronResource):
             self._delete_pool()
 
 
+class LoadBalancer(resource.Resource):
+    """
+    A resource to link a neutron pool with servers.
+    """
+
+    properties_schema = {
+        'pool_id': {
+            'Type': 'String', 'Required': True,
+            'Description': _('The ID of the load balancing pool')},
+        'protocol_port': {
+            'Type': 'Integer', 'Required': True,
+            'Description': _('Port number on which the servers are '
+                             'running on the members')},
+        'members': {
+            'Type': 'List',
+            'Description': _('The list of Nova server IDs load balanced')},
+    }
+
+    update_allowed_keys = ('Properties',)
+
+    update_allowed_properties = ('members',)
+
+    def handle_create(self):
+        pool = self.properties['pool_id']
+        client = self.neutron()
+        nova_client = self.nova()
+        protocol_port = self.properties['protocol_port']
+        for member in self.properties['members']:
+            address = nova_utils.server_to_ipaddress(nova_client, member)
+            lb_member = client.create_member({
+                'member': {
+                    'pool_id': pool,
+                    'address': address,
+                    'protocol_port': protocol_port}})['member']
+            db_api.resource_data_set(self, member, lb_member['id'])
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if 'members' in prop_diff:
+            members = set(prop_diff['members'])
+            old_members = set(self.t['Properties']['members'])
+            client = self.neutron()
+            for member in old_members - members:
+                member_id = db_api.resource_data_get(self, member)
+                try:
+                    client.delete_member(member_id)
+                except NeutronClientException as ex:
+                    if ex.status_code != 404:
+                        raise ex
+                db_api.resource_data_delete(self, member)
+            pool = self.properties['pool_id']
+            nova_client = self.nova()
+            protocol_port = self.properties['protocol_port']
+            for member in members - old_members:
+                address = nova_utils.server_to_ipaddress(nova_client, member)
+                lb_member = client.create_member({
+                    'member': {
+                        'pool_id': pool,
+                        'address': address,
+                        'protocol_port': protocol_port}})['member']
+                db_api.resource_data_set(self, member, lb_member['id'])
+
+    def handle_delete(self):
+        client = self.neutron()
+        for member in self.properties['members']:
+            member_id = db_api.resource_data_get(self, member)
+            try:
+                client.delete_member(member_id)
+            except NeutronClientException as ex:
+                if ex.status_code != 404:
+                    raise ex
+            db_api.resource_data_delete(self, member)
+
+
 def resource_mapping():
     if clients.neutronclient is None:
         return {}
@@ -244,4 +320,5 @@ def resource_mapping():
     return {
         'OS::Neutron::HealthMonitor': HealthMonitor,
         'OS::Neutron::Pool': Pool,
+        'OS::Neutron::LoadBalancer': LoadBalancer,
     }

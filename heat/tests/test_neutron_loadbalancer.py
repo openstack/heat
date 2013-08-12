@@ -25,6 +25,7 @@ from heat.openstack.common.importutils import try_import
 from heat.tests import fakes
 from heat.tests import utils
 from heat.tests.common import HeatTestCase
+from heat.tests.v1_1 import fakes as nova_fakes
 
 neutronclient = try_import('neutronclient.v2_0.client')
 
@@ -62,6 +63,24 @@ pool_template = '''
         "vip": {
             "protocol_port": 80
         }
+      }
+    }
+  }
+}
+'''
+
+lb_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test load balancer resources",
+  "Parameters" : {},
+  "Resources" : {
+    "lb": {
+      "Type": "OS::Neutron::LoadBalancer",
+      "Properties": {
+        "protocol_port": 8080,
+        "pool_id": "pool123",
+        "members": ["1234"]
       }
     }
   }
@@ -516,4 +535,94 @@ class PoolTest(HeatTestCase):
         update_template['Properties']['monitors'] = ['mon123', 'mon789']
         self.assertEqual(None, rsrc.update(update_template))
 
+        self.m.VerifyAll()
+
+
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class LoadBalancerTest(HeatTestCase):
+
+    def setUp(self):
+        super(LoadBalancerTest, self).setUp()
+        self.fc = nova_fakes.FakeClient()
+        self.m.StubOutWithMock(neutronclient.Client, 'create_member')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
+        utils.setup_dummy_db()
+
+    def create_load_balancer(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        clients.OpenStackClients.nova("compute").MultipleTimes().AndReturn(
+            self.fc)
+        neutronclient.Client.create_member({
+            'member': {
+                'pool_id': 'pool123', 'protocol_port': 8080,
+                'address': '1.2.3.4'}}
+        ).AndReturn({'member': {'id': 'member5678'}})
+        snippet = template_format.parse(lb_template)
+        stack = utils.parse_stack(snippet)
+        return loadbalancer.LoadBalancer(
+            'lb', snippet['Resources']['lb'], stack)
+
+    def test_create(self):
+        rsrc = self.create_load_balancer()
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_update(self):
+        rsrc = self.create_load_balancer()
+        neutronclient.Client.delete_member(u'member5678')
+        neutronclient.Client.create_member({
+            'member': {
+                'pool_id': 'pool123', 'protocol_port': 8080,
+                'address': '4.5.6.7'}}
+        ).AndReturn({'member': {'id': 'memberxyz'}})
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['members'] = ['5678']
+
+        self.assertEqual(None, rsrc.update(update_template))
+        self.m.VerifyAll()
+
+    def test_update_missing_member(self):
+        rsrc = self.create_load_balancer()
+        neutronclient.Client.delete_member(u'member5678').AndRaise(
+            loadbalancer.NeutronClientException(status_code=404))
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['members'] = []
+
+        self.assertEqual(None, rsrc.update(update_template))
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_delete(self):
+        rsrc = self.create_load_balancer()
+        neutronclient.Client.delete_member(u'member5678')
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_delete_missing_member(self):
+        rsrc = self.create_load_balancer()
+        neutronclient.Client.delete_member(u'member5678').AndRaise(
+            loadbalancer.NeutronClientException(status_code=404))
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
