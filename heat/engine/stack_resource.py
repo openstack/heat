@@ -80,7 +80,7 @@ class StackResource(resource.Resource):
         self.resource_id_set(nested_id)
 
         stack_creator = scheduler.TaskRunner(self._nested.stack_task,
-                                             action=self.CREATE)
+                                             action=self._nested.CREATE)
         stack_creator.start(timeout=self._nested.timeout_secs())
         return stack_creator
 
@@ -133,7 +133,7 @@ class StackResource(resource.Resource):
                                   % self.name)
 
         suspend_task = scheduler.TaskRunner(self._nested.stack_task,
-                                            action=self.SUSPEND,
+                                            action=self._nested.SUSPEND,
                                             reverse=True)
 
         suspend_task.start(timeout=self._nested.timeout_secs())
@@ -155,7 +155,7 @@ class StackResource(resource.Resource):
                                   % self.name)
 
         resume_task = scheduler.TaskRunner(self._nested.stack_task,
-                                           action=self.RESUME,
+                                           action=self._nested.RESUME,
                                            reverse=False)
 
         resume_task.start(timeout=self._nested.timeout_secs())
