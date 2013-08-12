@@ -333,13 +333,9 @@ class Stack(object):
         def resource_action(r):
             # Find e.g resource.create and call it
             action_l = action.lower()
-            handle = getattr(r, '%s' % action_l, None)
-            if callable(handle):
-                return handle()
-            else:
-                raise exception.ResourceFailure(
-                    AttributeError(_('Resource action %s not found') %
-                                   action_l), r)
+            handle = getattr(r, '%s' % action_l)
+
+            return handle()
 
         action_task = scheduler.DependencyTaskGroup(self.dependencies,
                                                     resource_action,
