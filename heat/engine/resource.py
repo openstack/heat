@@ -575,6 +575,7 @@ class Resource(object):
 
     def _store(self):
         '''Create the resource in the database.'''
+        metadata = self.metadata
         try:
             rs = {'action': self.action,
                   'status': self.status,
@@ -582,7 +583,7 @@ class Resource(object):
                   'stack_id': self.stack.id,
                   'nova_instance': self.resource_id,
                   'name': self.name,
-                  'rsrc_metadata': self.metadata,
+                  'rsrc_metadata': metadata,
                   'stack_name': self.stack.name}
 
             new_rs = db_api.resource_create(self.context, rs)
