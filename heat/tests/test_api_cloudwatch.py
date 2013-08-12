@@ -524,5 +524,6 @@ class WatchControllerTest(HeatTestCase):
             bind_port = 8003
         cfgopts = DummyConfig()
         self.controller = watches.WatchController(options=cfgopts)
-        self.controller.policy.policy_path = None
+        self.controller.policy.enforcer.policy_path = (self.policy_path +
+                                                       'deny_stack_user.json')
         self.addCleanup(self.m.VerifyAll)

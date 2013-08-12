@@ -29,8 +29,6 @@ It also allows setting of formatting information through conf.
 
 """
 
-import ConfigParser
-import cStringIO
 import inspect
 import itertools
 import logging
@@ -41,8 +39,9 @@ import sys
 import traceback
 
 from oslo.config import cfg
+from six import moves
 
-from heat.openstack.common.gettextutils import _
+from heat.openstack.common.gettextutils import _  # noqa
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils
 from heat.openstack.common import local
@@ -74,7 +73,8 @@ logging_cli_opts = [
     cfg.StrOpt('log-format',
                default=None,
                metavar='FORMAT',
-               help='A logging.Formatter log message format string which may '
+               help='DEPRECATED. '
+                    'A logging.Formatter log message format string which may '
                     'use any of the available logging.LogRecord attributes. '
                     'This option is deprecated.  Please use '
                     'logging_context_format_string and '
@@ -347,7 +347,7 @@ class LogConfigError(Exception):
 def _load_log_config(log_config):
     try:
         logging.config.fileConfig(log_config)
-    except ConfigParser.Error as exc:
+    except moves.configparser.Error as exc:
         raise LogConfigError(log_config, str(exc))
 
 
@@ -520,7 +520,7 @@ class ContextFormatter(logging.Formatter):
         if not record:
             return logging.Formatter.formatException(self, exc_info)
 
-        stringbuffer = cStringIO.StringIO()
+        stringbuffer = moves.StringIO()
         traceback.print_exception(exc_info[0], exc_info[1], exc_info[2],
                                   None, stringbuffer)
         lines = stringbuffer.getvalue().split('\n')

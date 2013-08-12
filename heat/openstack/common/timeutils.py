@@ -23,6 +23,7 @@ import calendar
 import datetime
 
 import iso8601
+import six
 
 
 # ISO 8601 extended time format with microseconds
@@ -75,14 +76,14 @@ def normalize_time(timestamp):
 
 def is_older_than(before, seconds):
     """Return True if before is older than seconds."""
-    if isinstance(before, basestring):
+    if isinstance(before, six.string_types):
         before = parse_strtime(before).replace(tzinfo=None)
     return utcnow() - before > datetime.timedelta(seconds=seconds)
 
 
 def is_newer_than(after, seconds):
     """Return True if after is newer than seconds."""
-    if isinstance(after, basestring):
+    if isinstance(after, six.string_types):
         after = parse_strtime(after).replace(tzinfo=None)
     return after - utcnow() > datetime.timedelta(seconds=seconds)
 

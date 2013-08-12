@@ -18,94 +18,43 @@
 # Based on glance/api/policy.py
 """Policy Engine For Heat"""
 
-import json
-import os.path
-
 from oslo.config import cfg
 
 from heat.common import exception
 
 import heat.openstack.common.log as logging
 from heat.openstack.common import policy
-from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
-policy_opts = [
-    cfg.StrOpt('policy_file',
-               default='policy.json',
-               help=_("Policy file to use")),
-    cfg.StrOpt('policy_default_rule',
-               default='default',
-               help=_("Default Rule of Policy File"))
-]
 
 CONF = cfg.CONF
-CONF.register_opts(policy_opts)
-
 
 DEFAULT_RULES = {
-    'default': policy.TrueCheck(),
+    'default': policy.FalseCheck(),
 }
 
 
 class Enforcer(object):
     """Responsible for loading and enforcing rules."""
 
-    def __init__(self, scope='heat', exc=exception.Forbidden):
+    def __init__(self, scope='heat', exc=exception.Forbidden,
+                 default_rule=DEFAULT_RULES['default']):
         self.scope = scope
         self.exc = exc
-        self.default_rule = CONF.policy_default_rule
-        self.policy_path = self._find_policy_file()
-        self.policy_file_mtime = None
-        self.policy_file_contents = None
+        self.default_rule = default_rule
+        self.enforcer = policy.Enforcer(default_rule=default_rule)
 
-    def set_rules(self, rules):
+    def set_rules(self, rules, overwrite=True):
         """Create a new Rules object based on the provided dict of rules."""
         rules_obj = policy.Rules(rules, self.default_rule)
-        policy.set_rules(rules_obj)
+        self.enforcer.set_rules(rules_obj, overwrite)
 
-    def load_rules(self):
+    def load_rules(self, force_reload=False):
         """Set the rules found in the json file on disk."""
-        if self.policy_path:
-            rules = self._read_policy_file()
-            rule_type = ""
-        else:
-            rules = DEFAULT_RULES
-            rule_type = "default "
+        self.enforcer.load_rules(force_reload)
 
-        text_rules = dict((k, str(v)) for k, v in rules.items())
-
-        self.set_rules(rules)
-
-    @staticmethod
-    def _find_policy_file():
-        """Locate the policy json data file."""
-        policy_file = CONF.find_file(CONF.policy_file)
-        if policy_file:
-            return policy_file
-        else:
-            logger.warn(_('Unable to find policy file'))
-            return None
-
-    def _read_policy_file(self):
-        """Read contents of the policy file
-
-        This re-caches policy data if the file has been changed.
-        """
-        mtime = os.path.getmtime(self.policy_path)
-        if not self.policy_file_contents or mtime != self.policy_file_mtime:
-            logger.debug(_("Loading policy from %s") % self.policy_path)
-            with open(self.policy_path) as fap:
-                raw_contents = fap.read()
-                rules_dict = json.loads(raw_contents)
-                self.policy_file_contents = dict(
-                    (k, policy.parse_rule(v))
-                    for k, v in rules_dict.items())
-            self.policy_file_mtime = mtime
-        return self.policy_file_contents
-
-    def _check(self, context, rule, target, *args, **kwargs):
+    def _check(self, context, rule, target, exc, *args, **kwargs):
         """Verifies that the action is valid on the target in this context.
 
            :param context: Heat request context
@@ -114,15 +63,14 @@ class Enforcer(object):
            :raises: self.exc (defaults to heat.common.exception.Forbidden)
            :returns: A non-False value if access is allowed.
         """
-        self.load_rules()
-
+        do_raise = False if not exc else True
         credentials = {
             'roles': context.roles,
             'user': context.username,
             'tenant': context.tenant,
         }
-
-        return policy.check(rule, target, credentials, *args, **kwargs)
+        return self.enforcer.enforce(rule, target, credentials,
+                                     do_raise, exc=exc, *args, **kwargs)
 
     def enforce(self, context, action, target):
         """Verifies that the action is valid on the target in this context.
@@ -145,3 +93,6 @@ class Enforcer(object):
            :returns: A non-False value if access is allowed.
         """
         return self._check(context, action, target)
+
+    def clear(self):
+        self.enforcer.clear()

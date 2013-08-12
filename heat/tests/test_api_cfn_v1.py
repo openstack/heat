@@ -1778,3 +1778,5 @@ class CfnStackControllerTest(HeatTestCase):
             bind_port = 8000
         cfgopts = DummyConfig()
         self.controller = stacks.StackController(options=cfgopts)
+        self.controller.policy.enforcer.policy_path = (policy_path +
+                                                       'deny_stack_user.json')
