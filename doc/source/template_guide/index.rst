@@ -21,3 +21,5 @@ Template Guide
    openstack
    cfn
    rackspace
+   hot_guide
+   hot_spec
