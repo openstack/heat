@@ -49,6 +49,10 @@ class API(wsgi.Router):
                                  "/resource_types",
                                  action="list_resource_types",
                                  conditions={'method': 'GET'})
+            stack_mapper.connect("resource_schema",
+                                 "/resource_types/{type_name}",
+                                 action="resource_schema",
+                                 conditions={'method': 'GET'})
             stack_mapper.connect("generate_template",
                                  "/resource_types/{type_name}/template",
                                  action="generate_template",
