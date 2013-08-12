@@ -498,9 +498,6 @@
 # Authentication Endpoint URI (string value)
 #auth_uri=<None>
 
-# Keystone EC2 Service Endpoint URI (string value)
-#keystone_ec2_uri=<None>
-
 
 [matchmaker_redis]
 

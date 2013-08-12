@@ -35,7 +35,7 @@ class RequestContext(context.RequestContext):
     """
 
     def __init__(self, auth_token=None, username=None, password=None,
-                 aws_creds=None, aws_auth_uri=None, tenant=None,
+                 aws_creds=None, tenant=None,
                  tenant_id=None, auth_url=None, roles=None, is_admin=False,
                  read_only=False, show_deleted=False,
                  owner_is_tenant=True, overwrite=True, **kwargs):
@@ -56,7 +56,6 @@ class RequestContext(context.RequestContext):
         self.username = username
         self.password = password
         self.aws_creds = aws_creds
-        self.aws_auth_uri = aws_auth_uri
         self.tenant_id = tenant_id
         self.auth_url = auth_url
         self.roles = roles or []
@@ -79,7 +78,6 @@ class RequestContext(context.RequestContext):
                 'username': self.user,
                 'password': self.password,
                 'aws_creds': self.aws_creds,
-                'aws_auth_uri': self.aws_auth_uri,
                 'tenant': self.tenant,
                 'tenant_id': self.tenant_id,
                 'auth_url': self.auth_url,
@@ -157,14 +155,12 @@ class ContextMiddleware(wsgi.Middleware):
             username = None
             password = None
             aws_creds = None
-            aws_auth_uri = None
 
             if headers.get('X-Auth-User') is not None:
                 username = headers.get('X-Auth-User')
                 password = headers.get('X-Auth-Key')
             elif headers.get('X-Auth-EC2-Creds') is not None:
                 aws_creds = headers.get('X-Auth-EC2-Creds')
-                aws_auth_uri = headers.get('X-Auth-EC2-Url')
 
             token = headers.get('X-Auth-Token')
             tenant = headers.get('X-Tenant-Name')
@@ -180,7 +176,6 @@ class ContextMiddleware(wsgi.Middleware):
         req.context = self.make_context(auth_token=token,
                                         tenant=tenant, tenant_id=tenant_id,
                                         aws_creds=aws_creds,
-                                        aws_auth_uri=aws_auth_uri,
                                         username=username,
                                         password=password,
                                         auth_url=auth_url, roles=roles,
