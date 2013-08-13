@@ -422,7 +422,7 @@ The syntax of the get_attr function is as follows:
 
 ::
 
-  get_attr: [ <resource ID>: <attribute name> ]
+  get_attr: [ <resource ID>, <attribute name> ]
 
 resource ID
     This parameter specifies the resource the attribute of which shall be
