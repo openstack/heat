@@ -606,18 +606,6 @@ class PropertyTest(testtools.TestCase):
         p = properties.Property({'Type': 'List'})
         self.assertRaises(TypeError, p.validate_data, {'foo': 'bar'})
 
-    def test_list_value_list_bad(self):
-        schema = {'Type': 'List',
-                  'AllowedValues': ['foo', 'bar', 'baz']}
-        p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, ['foo', 'wibble'])
-
-    def test_list_value_list_good(self):
-        schema = {'Type': 'List',
-                  'AllowedValues': ['foo', 'bar', 'baz']}
-        p = properties.Property(schema)
-        self.assertEqual(p.validate_data(['bar', 'foo']), ['bar', 'foo'])
-
     def test_list_maxlength_good(self):
         schema = {'Type': 'List',
                   'MaxLength': '3'}
@@ -656,44 +644,6 @@ class PropertyTest(testtools.TestCase):
     def test_map_list(self):
         p = properties.Property({'Type': 'Map'})
         self.assertRaises(TypeError, p.validate_data, ['foo'])
-
-    def test_map_maxlength_good(self):
-        schema = {'Type': 'Map',
-                  'MaxLength': '4'}
-        p = properties.Property(schema)
-        self.assertEqual(
-            p.validate_data({'1': 'one', '2': 'two', '3': 'three'}),
-            {'1': 'one', '2': 'two', '3': 'three'})
-
-    def test_map_exceeded_maxlength(self):
-        schema = {'Type': 'Map',
-                  'MaxLength': '2'}
-        p = properties.Property(schema)
-        self.assertRaises(ValueError,
-                          p.validate_data,
-                          {'1': 'one', '2': 'two', '3': 'three'})
-
-    def test_map_length_in_range(self):
-        schema = {'Type': 'Map',
-                  'MinLength': '2',
-                  'MaxLength': '4'}
-        p = properties.Property(schema)
-        self.assertEqual(
-            p.validate_data({'1': 'one', '2': 'two', '3': 'three'}),
-            {'1': 'one', '2': 'two', '3': 'three'})
-
-    def test_map_minlength_good(self):
-        schema = {'Type': 'Map',
-                  'MinLength': '2'}
-        p = properties.Property(schema)
-        self.assertEqual(p.validate_data({'1': 'one', '2': 'two'}),
-                         {'1': 'one', '2': 'two'})
-
-    def test_map_smaller_than_minlength(self):
-        schema = {'Type': 'Map',
-                  'MinLength': '3'}
-        p = properties.Property(schema)
-        self.assertRaises(ValueError, p.validate_data, {'1': 'one'})
 
     def test_map_schema_good(self):
         map_schema = {'valid': {'Type': 'Boolean'}}
