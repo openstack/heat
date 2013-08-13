@@ -442,36 +442,23 @@ class Property(object):
     }
 
     def __init__(self, schema, name=None):
-        self.schema = schema
+        self.schema = Schema.from_legacy(schema)
         self.name = name
 
-        for key in self.schema:
-            assert key in SCHEMA_KEYS, 'Unknown schema key "%s"' % key
-
-        assert self.type() in SCHEMA_TYPES,\
-            'Unknown property type "%s"' % self.type()
-
     def required(self):
-        return self.schema.get(REQUIRED, False)
+        return self.schema.required
 
     def implemented(self):
-        return self.schema.get(IMPLEMENTED, True)
+        return self.schema.implemented
 
     def has_default(self):
-        return DEFAULT in self.schema
+        return self.schema.default is not None
 
     def default(self):
-        return self.schema[DEFAULT]
+        return self.schema.default
 
     def type(self):
-        return self.schema[TYPE]
-
-    def _check_allowed(self, value):
-        if ALLOWED_VALUES in self.schema:
-            allowed = list(self.schema[ALLOWED_VALUES])
-            if value not in allowed:
-                raise ValueError('"%s" is not an allowed value %s' %
-                                 (value, str(allowed)))
+        return self.schema.type
 
     @staticmethod
     def str_to_num(value):
@@ -514,23 +501,16 @@ class Property(object):
     def _validate_integer(self, value):
         if value is None:
             value = self.has_default() and self.default() or 0
-        if not isinstance(value, int):
+        if not isinstance(value, (int, long)):
             raise TypeError('value is not an integer')
         return self._validate_number(value)
 
     def _validate_number(self, value):
         if value is None:
             value = self.has_default() and self.default() or 0
-        self._check_allowed(value)
 
         num = self.str_to_num(value)
 
-        minn = self.str_to_num(self.schema.get(MIN_VALUE, value))
-        maxn = self.str_to_num(self.schema.get(MAX_VALUE, value))
-
-        if num > maxn or num < minn:
-            format = '%d' if isinstance(num, int) else '%f'
-            raise ValueError('%s is out of range' % (format % num))
         return value
 
     def _validate_string(self, value):
@@ -538,31 +518,18 @@ class Property(object):
             value = self.has_default() and self.default() or ''
         if not isinstance(value, basestring):
             raise ValueError('Value must be a string')
-
-        self._check_allowed(value)
-
-        if ALLOWED_PATTERN in self.schema:
-            pattern = self.schema[ALLOWED_PATTERN]
-            match = re.match(pattern, value)
-            if match is None or match.end() != len(value):
-                raise ValueError('"%s" does not match pattern "%s"' %
-                                 (value, pattern))
-
-        self._validate_min_max_length(value, STRING)
         return value
 
-    def _validate_min_max_length(self, value, value_type):
-        if MIN_LENGTH in self.schema:
-            min_length = int(self.schema[MIN_LENGTH])
-            if len(value) < min_length:
-                raise ValueError('Minimum %s length is %d' %
-                                 (value_type, min_length))
-
-        if MAX_LENGTH in self.schema:
-            max_length = int(self.schema[MAX_LENGTH])
-            if len(value) > max_length:
-                raise ValueError('Maximum %s length is %d' %
-                                 (value_type, max_length))
+    def _validate_children(self, child_values, keys=None):
+        if self.schema.schema is not None:
+            if keys is None:
+                keys = list(self.schema.schema)
+            schemata = dict((k, self.schema.schema[k]) for k in keys)
+            properties = Properties(schemata, dict(child_values),
+                                    parent_name=self.name)
+            return ((k, properties[k]) for k in keys)
+        else:
+            return child_values
 
     def _validate_map(self, value):
         if value is None:
@@ -570,14 +537,7 @@ class Property(object):
         if not isinstance(value, collections.Mapping):
             raise TypeError('"%s" is not a map' % value)
 
-        if SCHEMA in self.schema:
-            children = dict(Properties(self.schema[SCHEMA], value,
-                                       parent_name=self.name))
-        else:
-            children = value
-
-        self._validate_min_max_length(value, MAP)
-        return children
+        return dict(self._validate_children(value.iteritems()))
 
     def _validate_list(self, value):
         if value is None:
@@ -586,17 +546,8 @@ class Property(object):
                 isinstance(value, basestring)):
             raise TypeError('"%s" is not a list' % repr(value))
 
-        for v in value:
-            self._check_allowed(v)
-
-        if SCHEMA in self.schema:
-            prop = Property(self.schema[SCHEMA])
-            children = [prop.validate_data(d) for d in value]
-        else:
-            children = value
-
-        self._validate_min_max_length(value, LIST)
-        return children
+        return [v for i, v in self._validate_children(enumerate(value),
+                                                      range(len(value)))]
 
     def _validate_bool(self, value):
         if value is None:
@@ -609,7 +560,7 @@ class Property(object):
 
         return normalised == 'true'
 
-    def validate_data(self, value):
+    def _validate_data_type(self, value):
         t = self.type()
         if t == STRING:
             return self._validate_string(value)
@@ -624,6 +575,11 @@ class Property(object):
         elif t == BOOLEAN:
             return self._validate_bool(value)
 
+    def validate_data(self, value):
+        value = self._validate_data_type(value)
+        self.schema.validate_constraints(value)
+        return value
+
 
 class Properties(collections.Mapping):
 
@@ -634,7 +590,7 @@ class Properties(collections.Mapping):
         if parent_name is None:
             self.error_prefix = ''
         else:
-            self.error_prefix = parent_name + ': '
+            self.error_prefix = '%s: ' % parent_name
 
     @staticmethod
     def schema_from_params(params_snippet):

@@ -442,11 +442,11 @@ class PropertyTest(testtools.TestCase):
         self.assertEqual(p.type(), 'String')
 
     def test_bad_type(self):
-        self.assertRaises(AssertionError,
+        self.assertRaises(properties.InvalidPropertySchemaError,
                           properties.Property, {'Type': 'Fish'})
 
     def test_bad_key(self):
-        self.assertRaises(AssertionError,
+        self.assertRaises(properties.InvalidPropertySchemaError,
                           properties.Property,
                           {'Type': 'String', 'Foo': 'Bar'})
 
