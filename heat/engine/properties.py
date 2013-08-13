@@ -111,6 +111,12 @@ class Schema(collections.Mapping):
                 raise InvalidPropertySchemaError(err_msg)
 
         self.default = default
+        if self.default is not None:
+            try:
+                self.validate_constraints(self.default)
+            except (ValueError, TypeError) as exc:
+                raise InvalidPropertySchemaError('Invalid default %s (%s)' %
+                                                 (self.default, exc))
 
     @classmethod
     def from_legacy(cls, schema_dict):
@@ -167,6 +173,10 @@ class Schema(collections.Mapping):
                    required=schema_dict.get(REQUIRED, False),
                    constraints=list(constraints()),
                    implemented=schema_dict.get(IMPLEMENTED, True))
+
+    def validate_constraints(self, value):
+        for constraint in self.constraints:
+            constraint.validate(value)
 
     def __getitem__(self, key):
         if key == self.TYPE:
@@ -242,6 +252,14 @@ class Constraint(collections.Mapping):
     def __init__(self, description=None):
         self.description = description
 
+    def validate(self, value):
+        if not self._is_valid(value):
+            if self.description:
+                err_msg = self.description
+            else:
+                err_msg = self._err_msg(value)
+            raise ValueError(err_msg)
+
     @classmethod
     def _name(cls):
         return '_'.join(w.lower() for w in re.findall('[A-Z]?[a-z]+',
@@ -293,6 +311,24 @@ class Range(Constraint):
             if not isinstance(param, (float, int, long, type(None))):
                 raise InvalidPropertySchemaError('min/max must be numeric')
 
+    def _err_msg(self, value):
+        return '%s is out of range (min: %s, max: %s)' % (value,
+                                                          self.min,
+                                                          self.max)
+
+    def _is_valid(self, value):
+        value = Property.str_to_num(value)
+
+        if self.min is not None:
+            if value < self.min:
+                return False
+
+        if self.max is not None:
+            if value > self.max:
+                return False
+
+        return True
+
     def _constraint(self):
         def constraints():
             if self.min is not None:
@@ -325,6 +361,14 @@ class Length(Range):
                 msg = 'min/max length must be integral'
                 raise InvalidPropertySchemaError(msg)
 
+    def _err_msg(self, value):
+        return 'length (%d) is out of range (min: %s, max: %s)' % (len(value),
+                                                                   self.min,
+                                                                   self.max)
+
+    def _is_valid(self, value):
+        return super(Length, self)._is_valid(len(value))
+
 
 class AllowedValues(Constraint):
     """
@@ -347,6 +391,13 @@ class AllowedValues(Constraint):
             raise InvalidPropertySchemaError('AllowedValues must be a list')
         self.allowed = tuple(allowed)
 
+    def _err_msg(self, value):
+        allowed = '[%s]' % ', '.join(str(a) for a in self.allowed)
+        return '"%s" is not an allowed value %s' % (value, allowed)
+
+    def _is_valid(self, value):
+        return value in self.allowed
+
     def _constraint(self):
         return list(self.allowed)
 
@@ -368,6 +419,14 @@ class AllowedPattern(Constraint):
     def __init__(self, pattern, description=None):
         super(AllowedPattern, self).__init__(description)
         self.pattern = pattern
+        self.match = re.compile(pattern).match
+
+    def _err_msg(self, value):
+        return '"%s" does not match pattern "%s"' % (value, self.pattern)
+
+    def _is_valid(self, value):
+        match = self.match(value)
+        return match is not None and match.end() == len(value)
 
     def _constraint(self):
         return self.pattern

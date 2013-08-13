@@ -63,6 +63,30 @@ class SchemaTest(testtools.TestCase):
                                       description='alphanumeric')
         self.assertEqual(d, dict(r))
 
+    def test_range_validate(self):
+        r = properties.Range(min=5, max=5, description='a range')
+        r.validate(5)
+
+    def test_range_min_fail(self):
+        r = properties.Range(min=5, description='a range')
+        self.assertRaises(ValueError, r.validate, 4)
+
+    def test_range_max_fail(self):
+        r = properties.Range(max=5, description='a range')
+        self.assertRaises(ValueError, r.validate, 6)
+
+    def test_length_validate(self):
+        l = properties.Length(min=5, max=5, description='a range')
+        l.validate('abcde')
+
+    def test_length_min_fail(self):
+        l = properties.Length(min=5, description='a range')
+        self.assertRaises(ValueError, l.validate, 'abcd')
+
+    def test_length_max_fail(self):
+        l = properties.Length(max=5, description='a range')
+        self.assertRaises(ValueError, l.validate, 'abcdef')
+
     def test_schema_all(self):
         d = {
             'type': 'string',
