@@ -110,18 +110,6 @@ policy_template = '''
 '''
 
 
-def create_context(mocks, user='stacks_test_user',
-                   tenant_id='test_admin', password='stacks_test_password'):
-    ctx = utils.dummy_context()
-    mocks.StubOutWithMock(ctx, 'username')
-    mocks.StubOutWithMock(ctx, 'tenant_id')
-    mocks.StubOutWithMock(ctx, 'password')
-    ctx.username = user
-    ctx.tenant_id = tenant_id
-    ctx.password = password
-    return ctx
-
-
 def get_wordpress_stack(stack_name, ctx):
     t = template_format.parse(wp_template)
     template = parser.Template(t)
@@ -172,7 +160,9 @@ def setup_stack(stack_name, ctx, create_res=True):
 def clean_up_stack(stack, delete_res=True):
     if delete_res:
         m = mox.Mox()
-        fc = setup_mocks(m, stack)
+        fc = fakes.FakeClient()
+        m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().MultipleTimes().AndReturn(fc)
         m.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
         get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
@@ -242,7 +232,7 @@ class StackCreateTest(HeatTestCase):
         utils.setup_dummy_db()
 
     def test_wordpress_single_instance_stack_create(self):
-        stack = get_wordpress_stack('test_stack', create_context(self.m))
+        stack = get_wordpress_stack('test_stack', utils.dummy_context())
         setup_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
@@ -253,7 +243,7 @@ class StackCreateTest(HeatTestCase):
         self.assertNotEqual(stack.resources['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_delete(self):
-        ctx = create_context(self.m)
+        ctx = utils.dummy_context()
         stack = get_wordpress_stack('test_stack', ctx)
         fc = setup_mocks(self.m, stack)
         self.m.ReplayAll()
@@ -285,7 +275,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
     def setUp(self):
         super(StackServiceCreateUpdateDeleteTest, self).setUp()
         utils.setup_dummy_db()
-        self.ctx = create_context(self.m)
+        self.ctx = utils.dummy_context()
 
         self.man = service.EngineService('a-host', 'a-topic')
 
@@ -375,12 +365,12 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        ctx = self.ctx = create_context(self.m, password=None)
+        ctx = self.ctx = utils.dummy_context(password=None)
         self.assertRaises(exception.MissingCredentialError,
                           self.man.create_stack, ctx, stack_name, template,
                           params, None, {})
 
-        ctx = self.ctx = create_context(self.m, user=None)
+        ctx = self.ctx = utils.dummy_context(user=None)
         self.assertRaises(exception.MissingCredentialError,
                           self.man.create_stack, ctx, stack_name, template,
                           params, None, {})
@@ -569,13 +559,13 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         stack = get_wordpress_stack(stack_name, self.ctx)
 
-        ctx = self.ctx = create_context(self.m, password=None)
+        ctx = self.ctx = utils.dummy_context(password=None)
         self.assertRaises(exception.MissingCredentialError,
                           self.man.update_stack,
                           ctx, stack.identifier(), template, params,
                           None, {})
 
-        ctx = self.ctx = create_context(self.m, user=None)
+        ctx = self.ctx = utils.dummy_context(user=None)
         self.assertRaises(exception.MissingCredentialError,
                           self.man.update_stack,
                           ctx, stack.identifier(), template, params,
@@ -587,7 +577,7 @@ class StackServiceSuspendResumeTest(HeatTestCase):
     def setUp(self):
         super(StackServiceSuspendResumeTest, self).setUp()
         utils.setup_dummy_db()
-        self.ctx = create_context(self.m)
+        self.ctx = utils.dummy_context()
 
         self.man = service.EngineService('a-host', 'a-topic')
 
@@ -653,8 +643,7 @@ class StackServiceTest(HeatTestCase):
     def setUp(self):
         super(StackServiceTest, self).setUp()
 
-        self.ctx = create_context(self.m,
-                                  tenant_id='stack_service_test_tenant')
+        self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
         self.eng = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
         _register_class('ResourceWithPropsType',
@@ -701,7 +690,7 @@ class StackServiceTest(HeatTestCase):
         self.assertEqual(self.stack.id,
                          db_api.stack_get_by_name(self.ctx,
                                                   self.stack.name).id)
-        ctx2 = create_context(self.m, tenant_id='stack_service_test_tenant2')
+        ctx2 = utils.dummy_context(tenant_id='stack_service_test_tenant2')
         self.assertEqual(None, db_api.stack_get_by_name(ctx2, self.stack.name))
 
     @stack_context('service_event_list_test_stack')
@@ -1277,7 +1266,7 @@ class StackServiceTest(HeatTestCase):
 
     def test_periodic_watch_task_created(self):
         stack = get_stack('period_watch_task_created',
-                          create_context(self.m),
+                          utils.dummy_context(),
                           alarm_template)
         self.stack = stack
         self.m.ReplayAll()
