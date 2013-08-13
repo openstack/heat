@@ -302,8 +302,8 @@ class ResourceTest(HeatTestCase):
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
         tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
+        generic_rsrc.ResourceWithProps.handle_update(
             utmpl, tmpl_diff, prop_diff).AndReturn(None)
         self.m.ReplayAll()
 
@@ -320,10 +320,10 @@ class ResourceTest(HeatTestCase):
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
         tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
-        generic_rsrc.GenericResource.handle_update(
+        generic_rsrc.ResourceWithProps.handle_update(
             utmpl, tmpl_diff, prop_diff).AndRaise(resource.UpdateReplace())
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
@@ -368,9 +368,9 @@ class ResourceTest(HeatTestCase):
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'xyz'}}
         tmpl_diff = {'Properties': {'Foo': 'xyz'}}
         prop_diff = {'Foo': 'xyz'}
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_update')
-        generic_rsrc.GenericResource.handle_update(utmpl, tmpl_diff, prop_diff
-                                                   ).AndRaise(NotImplemented)
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_update')
+        generic_rsrc.ResourceWithProps.handle_update(
+            utmpl, tmpl_diff, prop_diff).AndRaise(NotImplemented)
         self.m.ReplayAll()
         self.assertRaises(exception.ResourceFailure, res.update, utmpl)
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
@@ -426,8 +426,9 @@ class ResourceTest(HeatTestCase):
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
-        generic_rsrc.GenericResource.handle_suspend().AndRaise(Exception())
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps,
+                               'handle_suspend')
+        generic_rsrc.ResourceWithProps.handle_suspend().AndRaise(Exception())
         self.m.ReplayAll()
 
         suspend = scheduler.TaskRunner(res.suspend)
@@ -440,8 +441,8 @@ class ResourceTest(HeatTestCase):
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_resume')
-        generic_rsrc.GenericResource.handle_resume().AndRaise(Exception())
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_resume')
+        generic_rsrc.ResourceWithProps.handle_resume().AndRaise(Exception())
         self.m.ReplayAll()
 
         res.state_set(res.SUSPEND, res.COMPLETE)
