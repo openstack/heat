@@ -16,7 +16,6 @@ import copy
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import instance
 from heat.engine import resource
 from heat.engine import resources
@@ -81,10 +80,10 @@ class InstanceGroupTest(HeatTestCase):
         instance_class.check_create_complete(
             cookie).MultipleTimes().AndReturn(True)
 
-    def create_instance_group(self, t, stack, resource_name):
-        rsrc = asc.InstanceGroup(resource_name,
-                                 t['Resources'][resource_name],
-                                 stack)
+    def create_resource(self, t, stack, resource_name):
+        # subsequent resources may need to reference previous created resources
+        # use the stack's resource objects instead of instantiating new ones
+        rsrc = stack.resources[resource_name]
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -101,8 +100,8 @@ class InstanceGroupTest(HeatTestCase):
         instance.Instance.FnGetAtt('PublicIp').AndReturn('1.2.3.4')
 
         self.m.ReplayAll()
-        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
-
+        conf = self.create_resource(t, stack, 'JobServerConfig')
+        rsrc = self.create_resource(t, stack, 'JobServerGroup')
         self.assertEqual('JobServerGroup', rsrc.FnGetRefId())
         self.assertEqual('1.2.3.4', rsrc.FnGetAtt('InstanceList'))
 
@@ -133,8 +132,8 @@ class InstanceGroupTest(HeatTestCase):
         self._stub_create(1, instance_class=MyInstance)
 
         self.m.ReplayAll()
-
-        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
+        conf = self.create_resource(t, stack, 'JobServerConfig')
+        rsrc = self.create_resource(t, stack, 'JobServerGroup')
         self.assertEqual('JobServerGroup', rsrc.FnGetRefId())
         rsrc.delete()
         self.m.VerifyAll()
@@ -144,9 +143,8 @@ class InstanceGroupTest(HeatTestCase):
         t = template_format.parse(ig_template)
         stack = utils.parse_stack(t)
 
-        rsrc = asc.InstanceGroup('JobServerGroup',
-                                 t['Resources']['JobServerGroup'],
-                                 stack)
+        conf = self.create_resource(t, stack, 'JobServerConfig')
+        rsrc = stack.resources['JobServerGroup']
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         not_found = exception.ImageNotFound(image_name='bla')
@@ -170,7 +168,8 @@ class InstanceGroupTest(HeatTestCase):
 
         self._stub_create(2)
         self.m.ReplayAll()
-        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
+        conf = self.create_resource(t, stack, 'JobServerConfig')
+        rsrc = self.create_resource(t, stack, 'JobServerGroup')
 
         self.m.VerifyAll()
         self.m.UnsetStubs()
@@ -206,7 +205,8 @@ class InstanceGroupTest(HeatTestCase):
 
         self._stub_create(2)
         self.m.ReplayAll()
-        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
+        conf = self.create_resource(t, stack, 'JobServerConfig')
+        rsrc = self.create_resource(t, stack, 'JobServerGroup')
 
         self.m.ReplayAll()
 
@@ -226,12 +226,13 @@ class InstanceGroupTest(HeatTestCase):
 
         self._stub_create(2)
         self.m.ReplayAll()
-        rsrc = self.create_instance_group(t, stack, 'JobServerGroup')
+        conf = self.create_resource(t, stack, 'JobServerConfig')
+        rsrc = self.create_resource(t, stack, 'JobServerGroup')
 
         self.m.ReplayAll()
 
         update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['LaunchConfigurationName'] = 'wibble'
+        update_snippet['Properties']['AvailabilityZones'] = ['wibble']
         self.assertRaises(resource.UpdateReplace,
                           rsrc.update, update_snippet)
 

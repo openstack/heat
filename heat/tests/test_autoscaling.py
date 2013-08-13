@@ -106,18 +106,21 @@ class AutoScalingTest(HeatTestCase):
         self.fc = fakes.FakeKeystoneClient()
 
     def create_scaling_group(self, t, stack, resource_name):
-        rsrc = asc.AutoScalingGroup(resource_name,
-                                    t['Resources'][resource_name],
-                                    stack)
+        # create the launch configuration resource
+        conf = stack.resources['LaunchConfig']
+        self.assertEqual(None, conf.validate())
+        scheduler.TaskRunner(conf.create)()
+        self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
+
+        # create the group resource
+        rsrc = stack.resources[resource_name]
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def create_scaling_policy(self, t, stack, resource_name):
-        rsrc = asc.ScalingPolicy(resource_name,
-                                 t['Resources'][resource_name],
-                                 stack)
+        rsrc = stack.resources[resource_name]
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -231,7 +234,7 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
         update_snippet = copy.deepcopy(rsrc.parsed_template())
-        update_snippet['Properties']['LaunchConfigurationName'] = 'foo'
+        update_snippet['Properties']['AvailabilityZones'] = ['foo']
         self.assertRaises(resource.UpdateReplace,
                           rsrc.update, update_snippet)
 
@@ -460,9 +463,13 @@ class AutoScalingTest(HeatTestCase):
         instance.Instance.handle_create().AndRaise(Exception)
 
         self.m.ReplayAll()
-        rsrc = asc.AutoScalingGroup('WebServerGroup',
-                                    t['Resources']['WebServerGroup'],
-                                    stack)
+
+        conf = stack.resources['LaunchConfig']
+        self.assertEqual(None, conf.validate())
+        scheduler.TaskRunner(conf.create)()
+        self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
+
+        rsrc = stack.resources['WebServerGroup']
         self.assertEqual(None, rsrc.validate())
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(rsrc.create))

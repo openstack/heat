@@ -15,7 +15,6 @@ import mox
 
 from heat.engine import environment
 from heat.tests.v1_1 import fakes
-from heat.engine.resources import autoscaling
 from heat.engine.resources import instance as instances
 from heat.engine.resources import nova_utils
 from heat.common import template_format
@@ -77,7 +76,7 @@ group_template = '''
       "Type": "OS::Heat::InstanceGroup",
       "Properties": {
         "AvailabilityZones"      : ["nova"],
-        "LaunchConfigurationName": "Config",
+        "LaunchConfigurationName": { "Ref": "Config" },
         "Size"                   : "1"
       }
     }
@@ -145,9 +144,14 @@ class ServerTagsTest(HeatTestCase):
                              stack_id=uuidutils.generate_uuid())
 
         t['Resources']['WebServer']['Properties']['Tags'] = intags
-        group = autoscaling.InstanceGroup('WebServer',
-                                          t['Resources']['WebServer'],
-                                          stack)
+
+        # create the launch configuration
+        conf = stack.resources['Config']
+        self.assertEqual(None, conf.validate())
+        scheduler.TaskRunner(conf.create)()
+        self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
+
+        group = stack.resources['WebServer']
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
