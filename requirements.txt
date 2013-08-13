@@ -1,6 +1,5 @@
 pbr>=0.5.21,<1.0
 pycrypto>=2.6
-boto>=2.4.0
 eventlet>=0.13.0
 greenlet>=0.3.2
 httplib2

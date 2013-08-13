@@ -222,12 +222,6 @@ man_pages = [
     ('man/heat-api-cloudwatch', 'heat-api-cloudwatch',
     u'CloudWatch alike API service to the heat project',
     [u'Heat Developers'], 1),
-    ('man/heat-boto', 'heat-boto',
-    u'Command line utility to run heat actions over the CloudFormation API',
-    [u'Heat Developers'], 1),
-    ('man/heat-cfn', 'heat-cfn',
-    u'Command line utility to run heat actions over the CloudFormation API',
-    [u'Heat Developers'], 1),
     ('man/heat-db-setup', 'heat-db-setup',
     u'Command line utility to setup the Heat database',
     [u'Heat Developers'], 1),
@@ -236,9 +230,6 @@ man_pages = [
     [u'Heat Developers'], 1),
     ('man/heat-keystone-setup', 'heat-keystone-setup',
     u'Script which sets up keystone for usage by Heat',
-    [u'Heat Developers'], 1),
-    ('man/heat-watch', 'heat-watch',
-    u'Command line utility to run heat watch actions over the CloudWatch API',
     [u'Heat Developers'], 1),
 ]
 

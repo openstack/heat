@@ -21,8 +21,5 @@ Heat utilities
 .. toctree::
    :maxdepth: 2
 
-   heat-cfn
-   heat-boto
-   heat-watch
    heat-db-setup
    heat-keystone-setup
