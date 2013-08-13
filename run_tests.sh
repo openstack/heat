@@ -14,6 +14,7 @@ function usage {
     echo "  -p, --pep8               Run pep8 tests"
     echo "  --all                    Run pep8 and unit tests"
     echo "  -c, --coverage           Generate coverage report"
+    echo "  -d, --debug              Run tests with testtools instead of testr. This allows you to use the debugger."
     echo "  -h, --help               Print this usage message"
     exit
 }
@@ -29,6 +30,7 @@ function process_option {
         -p|--pep8) test_pep8=1;;
         --all) test_unit=1; test_pep8=1;;
         -c|--coverage) coverage=1;;
+        -d|--debug) debug=1;;
         -h|--help) usage;;
         *) args="$args $1"; test_unit=1;;
     esac
@@ -37,11 +39,28 @@ function process_option {
 venv=.venv
 with_venv=tools/with_venv.sh
 wrapper=""
+debug=0
 
 function run_tests {
     echo 'Running tests'
     # Remove any extraneous DB migrations
     find heat/db/sqlalchemy/migrate_repo/versions/ -name '*.pyc' -delete
+
+    if [ $debug -eq 1 ]; then
+      echo "Debugging..."
+      if [ "$args" = "" ]; then
+        # Default to running all tests if specific test is not
+        # provided.
+        testrargs="discover ./heat/tests"
+      fi
+      ${wrapper} python -m testtools.run $args $testrargs
+
+      # Short circuit because all of the testr and coverage stuff
+      # below does not make sense when running testtools.run for
+      # debugging purposes.
+      return $?
+    fi
+
     # Just run the test suites in current environment
     if [ -n "$args" ] ; then
         args="-t $args"
@@ -84,7 +103,7 @@ fi
 result=0
 
 # If functional or unit tests have been selected, run them
-if [ "$test_unit" == 1 ] ; then
+if [ "$test_unit" == 1 ] || [ "$debug" == 1 ] ; then
     run_tests
     result=$?
 fi
