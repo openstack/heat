@@ -24,22 +24,22 @@ logger = logging.getLogger(__name__)
 class Event(object):
     '''Class representing a Resource state change.'''
 
-    def __init__(self, context, stack, resource,
-                 action, status, reason,
-                 physical_resource_id, resource_properties,
-                 timestamp=None, id=None):
+    def __init__(self, context, stack, action, status, reason,
+                 physical_resource_id, resource_properties, resource_name,
+                 resource_type, timestamp=None, id=None):
         '''
-        Initialise from a context, stack, resource, event information and
-        current resource data. The timestamp and database ID may also be
-        initialised if the event is already in the database.
+        Initialise from a context, stack, and event information. The timestamp
+        and database ID may also be initialised if the event is already in the
+        database.
         '''
         self.context = context
-        self.resource = resource
         self.stack = stack
         self.action = action
         self.status = status
         self.reason = reason
         self.physical_resource_id = physical_resource_id
+        self.logical_resource_id = resource_name
+        self.resource_type = resource_type
         try:
             self.resource_properties = dict(resource_properties)
         except ValueError as ex:
@@ -60,24 +60,22 @@ class Event(object):
 
         st = stack if stack is not None else\
             parser.Stack.load(context, ev.stack_id)
-        resource = st[ev.logical_resource_id]
 
-        return cls(context, st, resource,
-                   ev.resource_action, ev.resource_status,
-                   ev.resource_status_reason,
-                   ev.physical_resource_id, ev.resource_properties,
-                   ev.created_at, ev.id)
+        return cls(context, st, ev.resource_action, ev.resource_status,
+                   ev.resource_status_reason, ev.physical_resource_id,
+                   ev.resource_properties, ev.logical_resource_id,
+                   ev.resource_type, ev.created_at, ev.id)
 
     def store(self):
         '''Store the Event in the database.'''
         ev = {
-            'logical_resource_id': self.resource.name,
+            'logical_resource_id': self.logical_resource_id,
             'physical_resource_id': self.physical_resource_id,
             'stack_id': self.stack.id,
             'resource_action': self.action,
             'resource_status': self.status,
             'resource_status_reason': self.reason,
-            'resource_type': self.resource.type(),
+            'resource_type': self.resource_type,
             'resource_properties': self.resource_properties,
         }
 
@@ -96,5 +94,7 @@ class Event(object):
         if self.id is None:
             return None
 
-        return identifier.EventIdentifier(event_id=str(self.id),
-                                          **self.resource.identifier())
+        res_id = identifier.ResourceIdentifier(
+            resource_name=self.logical_resource_id, **self.stack.identifier())
+
+        return identifier.EventIdentifier(event_id=str(self.id), **res_id)

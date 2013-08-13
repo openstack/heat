@@ -59,9 +59,9 @@ class EventTest(HeatTestCase):
     def test_load(self):
         self.resource.resource_id_set('resource_physical_id')
 
-        e = event.Event(self.ctx, self.stack, self.resource,
-                        'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource.properties)
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'wibble', self.resource.properties,
+                        self.resource.name, self.resource.type())
 
         e.store()
         self.assertNotEqual(e.id, None)
@@ -69,8 +69,7 @@ class EventTest(HeatTestCase):
         loaded_e = event.Event.load(self.ctx, e.id)
 
         self.assertEqual(self.stack.id, loaded_e.stack.id)
-        self.assertEqual(self.resource.name, loaded_e.resource.name)
-        self.assertEqual(self.resource.id, loaded_e.resource.id)
+        self.assertEqual(self.resource.name, loaded_e.logical_resource_id)
         self.assertEqual('wibble', loaded_e.physical_resource_id)
         self.assertEqual('TEST', loaded_e.action)
         self.assertEqual('IN_PROGRESS', loaded_e.status)
@@ -81,9 +80,9 @@ class EventTest(HeatTestCase):
     def test_load_given_stack_event(self):
         self.resource.resource_id_set('resource_physical_id')
 
-        e = event.Event(self.ctx, self.stack, self.resource,
-                        'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource.properties)
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'wibble', self.resource.properties,
+                        self.resource.name, self.resource.type())
 
         e.store()
         self.assertNotEqual(e.id, None)
@@ -93,8 +92,7 @@ class EventTest(HeatTestCase):
         loaded_e = event.Event.load(self.ctx, e.id, stack=self.stack, event=ev)
 
         self.assertEqual(self.stack.id, loaded_e.stack.id)
-        self.assertEqual(self.resource.name, loaded_e.resource.name)
-        self.assertEqual(self.resource.id, loaded_e.resource.id)
+        self.assertEqual(self.resource.name, loaded_e.logical_resource_id)
         self.assertEqual('wibble', loaded_e.physical_resource_id)
         self.assertEqual('TEST', loaded_e.action)
         self.assertEqual('IN_PROGRESS', loaded_e.status)
@@ -103,9 +101,9 @@ class EventTest(HeatTestCase):
         self.assertEqual({'Foo': 'goo'}, loaded_e.resource_properties)
 
     def test_identifier(self):
-        e = event.Event(self.ctx, self.stack, self.resource,
-                        'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource.properties)
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'wibble', self.resource.properties,
+                        self.resource.name, self.resource.type())
 
         eid = e.store()
         expected_identifier = {
@@ -121,7 +119,6 @@ class EventTest(HeatTestCase):
                 'Properties': {'Foo': False}}
         rname = 'bad_resource'
         res = generic_rsrc.ResourceWithRequiredProps(rname, tmpl, self.stack)
-        e = event.Event(self.ctx, self.stack, res,
-                        'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', res.properties)
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'wibble', res.properties, res.name, res.type())
         self.assertTrue('Error' in e.resource_properties)
