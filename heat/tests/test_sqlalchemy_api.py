@@ -16,6 +16,7 @@ from heat.db.sqlalchemy import api as db_api
 from heat.engine import environment
 from heat.tests.v1_1 import fakes
 from heat.engine.resource import Resource
+from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import instance as instances
 from heat.engine import parser
@@ -136,6 +137,18 @@ class SqlAlchemyTest(HeatTestCase):
         decrypted_key = cs.my_secret
         self.assertEqual(decrypted_key, "fake secret")
         cs.destroy()
+
+    def test_resource_data_delete(self):
+        stack = self._setup_test_stack('stack', UUID1)[1]
+        self._mock_create(self.m)
+        self.m.ReplayAll()
+        stack.create()
+        rsrc = stack.resources['WebServer']
+        db_api.resource_data_set(rsrc, 'test', 'test_data')
+        self.assertEqual('test_data', db_api.resource_data_get(rsrc, 'test'))
+        db_api.resource_data_delete(rsrc, 'test')
+        self.assertRaises(exception.NotFound,
+                          db_api.resource_data_get, rsrc, 'test')
 
     def test_stack_get_by_name(self):
         stack = self._setup_test_stack('stack', UUID1)[1]

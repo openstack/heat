@@ -144,6 +144,11 @@ def resource_data_set(resource, key, value, redact=False):
     return current
 
 
+def resource_data_delete(resource, key):
+    result = resource_data_get_by_key(resource.context, resource.id, key)
+    result.delete()
+
+
 def resource_create(context, values):
     resource_ref = models.Resource()
     resource_ref.update(values)

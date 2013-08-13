@@ -78,6 +78,11 @@ def resource_data_get_by_key(context, resource_id, key):
     return IMPL.resource_data_get_by_key(context, resource_id, key)
 
 
+def resource_data_delete(resource, key):
+    """Remove a resource_data element associated to a resource."""
+    return IMPL.resource_data_delete(resource, key)
+
+
 def resource_get(context, resource_id):
     return IMPL.resource_get(context, resource_id)
 
