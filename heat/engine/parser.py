@@ -63,7 +63,7 @@ class Stack(object):
     def __init__(self, context, stack_name, tmpl, env=None,
                  stack_id=None, action=None, status=None,
                  status_reason='', timeout_mins=60, resolve_data=True,
-                 disable_rollback=True, parent_resource=None):
+                 disable_rollback=True, parent_resource=None, owner_id=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -77,6 +77,7 @@ class Stack(object):
                                ) % stack_name)
 
         self.id = stack_id
+        self.owner_id = owner_id
         self.context = context
         self.clients = Clients(context)
         self.t = tmpl
@@ -147,11 +148,11 @@ class Stack(object):
         stack = cls(context, stack.name, template, env,
                     stack.id, stack.action, stack.status, stack.status_reason,
                     stack.timeout, resolve_data, stack.disable_rollback,
-                    parent_resource)
+                    parent_resource, owner_id=stack.owner_id)
 
         return stack
 
-    def store(self, owner=None):
+    def store(self):
         '''
         Store the stack in the database and return its ID
         If self.id is set, we update the existing stack
@@ -162,7 +163,7 @@ class Stack(object):
             'name': self.name,
             'raw_template_id': self.t.store(self.context),
             'parameters': self.env.user_env_as_dict(),
-            'owner_id': owner and owner.id,
+            'owner_id': self.owner_id,
             'user_creds_id': new_creds.id,
             'username': self.context.username,
             'tenant': self.context.tenant_id,

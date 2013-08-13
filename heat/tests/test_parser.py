@@ -598,7 +598,7 @@ class StackTest(HeatTestCase):
         parser.Stack.__init__(self.ctx, stack.name, t, env, stack.id,
                               stack.action, stack.status, stack.status_reason,
                               stack.timeout, True, stack.disable_rollback,
-                              'parent')
+                              'parent', owner_id=None)
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,
@@ -1598,3 +1598,33 @@ class StackTest(HeatTestCase):
         self.assertEqual(2, len(required_by))
         for r in ['CResource', 'DResource']:
             self.assertIn(r, required_by)
+
+    @utils.stack_delete_after
+    def test_store_saves_owner(self):
+        """
+        The owner_id attribute of Store is saved to the database when stored.
+        """
+        self.stack = parser.Stack(
+            self.ctx, 'owner_stack', template.Template({}))
+        stack_ownee = parser.Stack(
+            self.ctx, 'ownee_stack', template.Template({}),
+            owner_id=self.stack.id)
+        stack_ownee.store()
+        db_stack = db_api.stack_get(self.ctx, stack_ownee.id)
+        self.assertEqual(db_stack.owner_id, self.stack.id)
+
+    @utils.stack_delete_after
+    def test_load_honors_owner(self):
+        """
+        Loading a stack from the database will set the owner_id of the
+        resultant stack appropriately.
+        """
+        self.stack = parser.Stack(
+            self.ctx, 'owner_stack', template.Template({}))
+        stack_ownee = parser.Stack(
+            self.ctx, 'ownee_stack', template.Template({}),
+            owner_id=self.stack.id)
+        stack_ownee.store()
+
+        saved_stack = parser.Stack.load(self.ctx, stack_id=stack_ownee.id)
+        self.assertEqual(saved_stack.owner_id, self.stack.id)

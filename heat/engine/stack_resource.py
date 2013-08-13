@@ -74,10 +74,11 @@ class StackResource(resource.Resource):
                               environment.Environment(user_params),
                               timeout_mins=timeout_mins,
                               disable_rollback=True,
-                              parent_resource=self)
+                              parent_resource=self,
+                              owner_id=self.stack.id)
         nested.validate()
         self._nested = nested
-        nested_id = self._nested.store(self.stack)
+        nested_id = self._nested.store()
         self.resource_id_set(nested_id)
 
         stack_creator = scheduler.TaskRunner(self._nested.stack_task,
