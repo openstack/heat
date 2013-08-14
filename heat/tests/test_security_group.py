@@ -15,6 +15,7 @@
 import collections
 
 from heat.engine import clients
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
@@ -55,6 +56,24 @@ Resources:
           FromPort : 80
           ToPort : 80
           CidrIp : 0.0.0.0/0
+        - IpProtocol: tcp
+          SourceSecurityGroupName: test
+        - IpProtocol: icmp
+          SourceSecurityGroupId: 1
+'''
+
+    test_template_nova_with_egress = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_sg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTP and SSH access
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
 '''
 
     test_template_neutron = '''
@@ -74,11 +93,14 @@ Resources:
           FromPort : 80
           ToPort : 80
           CidrIp : 0.0.0.0/0
+        - IpProtocol: tcp
+          SourceSecurityGroupId: wwww
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
           CidrIp: 10.0.1.0/24
+        - SourceSecurityGroupName: xxxx
 '''
 
     def setUp(self):
@@ -142,9 +164,13 @@ Resources:
 
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', 22, 22, '0.0.0.0/0').AndReturn(None)
+            2, 'tcp', 22, 22, '0.0.0.0/0', None).AndReturn(None)
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', 80, 80, '0.0.0.0/0').AndReturn(None)
+            2, 'tcp', 80, 80, '0.0.0.0/0', None).AndReturn(None)
+        nova_sgr.SecurityGroupRuleManager.create(
+            2, 'tcp', None, None, None, 1).AndReturn(None)
+        nova_sgr.SecurityGroupRuleManager.create(
+            2, 'icmp', None, None, None, 1).AndReturn(None)
 
         # delete script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
@@ -172,12 +198,38 @@ Resources:
                     'cidr': '0.0.0.0/0'
                 },
                 'id': 131
+            }, {
+                'from_port': None,
+                'group': {
+                    'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                    'name': 'test'
+                },
+                'ip_protocol': 'tcp',
+                'to_port': None,
+                'parent_group_id': 2,
+                'ip_range': {},
+                'id': 132
+            }, {
+                'from_port': None,
+                'group': {
+                    'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                    'name': 'test'
+                },
+                'ip_protocol': 'icmp',
+                'to_port': None,
+                'parent_group_id': 2,
+                'ip_range': {},
+                'id': 133
             }]
         ))
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.delete(130).AndReturn(None)
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.delete(131).AndReturn(None)
+        clients.OpenStackClients.nova('compute').AndReturn(self.fc)
+        nova_sgr.SecurityGroupRuleManager.delete(132).AndReturn(None)
+        clients.OpenStackClients.nova('compute').AndReturn(self.fc)
+        nova_sgr.SecurityGroupRuleManager.delete(133).AndReturn(None)
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sg.SecurityGroupManager.delete(2).AndReturn(None)
 
@@ -197,20 +249,36 @@ Resources:
         #create script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         sg_name = utils.PhysName('test_stack', 'the_sg')
-        nova_sg.SecurityGroupManager.list().AndReturn([NovaSG(
-            id=2,
-            name=sg_name,
-            description='HTTP and SSH access',
-            rules=[],
-        )])
+        nova_sg.SecurityGroupManager.list().AndReturn([
+            NovaSG(
+                id=2,
+                name=sg_name,
+                description='HTTP and SSH access',
+                rules=[],
+            ),
+            NovaSG(
+                id=1,
+                name='test',
+                description='FAKE_SECURITY_GROUP',
+                rules=[],
+            )
+        ])
 
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', 22, 22, '0.0.0.0/0').AndRaise(
+            2, 'tcp', 22, 22, '0.0.0.0/0', None).AndRaise(
                 clients.novaclient.exceptions.BadRequest(
                     400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', 80, 80, '0.0.0.0/0').AndReturn(
+            2, 'tcp', 80, 80, '0.0.0.0/0', None).AndReturn(
+                clients.novaclient.exceptions.BadRequest(
+                    400, 'Rule already exists'))
+        nova_sgr.SecurityGroupRuleManager.create(
+            2, 'tcp', None, None, None, 1).AndReturn(
+                clients.novaclient.exceptions.BadRequest(
+                    400, 'Rule already exists'))
+        nova_sgr.SecurityGroupRuleManager.create(
+            2, 'icmp', None, None, None, 1).AndReturn(
                 clients.novaclient.exceptions.BadRequest(
                     400, 'Rule already exists'))
 
@@ -240,6 +308,28 @@ Resources:
                     'cidr': '0.0.0.0/0'
                 },
                 'id': 131
+            }, {
+                'from_port': None,
+                'group': {
+                    'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                    'name': 'test'
+                },
+                'ip_protocol': 'tcp',
+                'to_port': None,
+                'parent_group_id': 2,
+                'ip_range': {},
+                'id': 132
+            }, {
+                'from_port': None,
+                'group': {
+                    'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                    'name': 'test'
+                },
+                'ip_protocol': 'icmp',
+                'to_port': None,
+                'parent_group_id': 2,
+                'ip_range': {},
+                'id': 133
             }]
         ))
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
@@ -247,6 +337,12 @@ Resources:
             clients.novaclient.exceptions.NotFound('goneburger'))
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.delete(131).AndRaise(
+            clients.novaclient.exceptions.NotFound('goneburger'))
+        clients.OpenStackClients.nova('compute').AndReturn(self.fc)
+        nova_sgr.SecurityGroupRuleManager.delete(132).AndRaise(
+            clients.novaclient.exceptions.NotFound('goneburger'))
+        clients.OpenStackClients.nova('compute').AndReturn(self.fc)
+        nova_sgr.SecurityGroupRuleManager.delete(133).AndRaise(
             clients.novaclient.exceptions.NotFound('goneburger'))
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sg.SecurityGroupManager.delete(2).AndReturn(None)
@@ -271,6 +367,13 @@ Resources:
 
         self.m.VerifyAll()
 
+    def test_security_group_nova_with_egress_rules(self):
+        t = template_format.parse(self.test_template_nova_with_egress)
+        stack = self.parse_stack(t)
+
+        sg = stack['the_sg']
+        self.assertRaises(exception.EgressRuleNotAllowed, sg.validate)
+
     @utils.stack_delete_after
     def test_security_group_neutron(self):
         #create script
@@ -287,7 +390,29 @@ Resources:
                 'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                 'name': sg_name,
                 'description': 'HTTP and SSH access',
-                'security_group_rules': [],
+                'security_group_rules': [{
+                    "direction": "egress",
+                    "ethertype": "IPv4",
+                    "id": "aaaa-1",
+                    "port_range_max": None,
+                    "port_range_min": None,
+                    "protocol": None,
+                    "remote_group_id": None,
+                    "remote_ip_prefix": None,
+                    "security_group_id": "aaaa",
+                    "tenant_id": "f18ca530cc05425e8bac0a5ff92f7e88"
+                }, {
+                    "direction": "egress",
+                    "ethertype": "IPv6",
+                    "id": "aaaa-2",
+                    "port_range_max": None,
+                    "port_range_min": None,
+                    "protocol": None,
+                    "remote_group_id": None,
+                    "remote_ip_prefix": None,
+                    "security_group_id": "aaaa",
+                    "tenant_id": "f18ca530cc05425e8bac0a5ff92f7e88"
+                }],
                 'id': 'aaaa'
             }
         })
@@ -295,6 +420,7 @@ Resources:
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
                 'port_range_min': 22,
                 'ethertype': 'IPv4',
@@ -305,6 +431,7 @@ Resources:
         }).AndReturn({
             'security_group_rule': {
                 'direction': 'ingress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
                 'port_range_min': 22,
                 'ethertype': 'IPv4',
@@ -317,6 +444,7 @@ Resources:
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
                 'port_range_min': 80,
                 'ethertype': 'IPv4',
@@ -327,6 +455,7 @@ Resources:
         }).AndReturn({
             'security_group_rule': {
                 'direction': 'ingress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
                 'port_range_min': 80,
                 'ethertype': 'IPv4',
@@ -338,7 +467,36 @@ Resources:
         })
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
+                'direction': 'ingress',
+                'remote_group_id': 'wwww',
+                'remote_ip_prefix': None,
+                'port_range_min': None,
+                'ethertype': 'IPv4',
+                'port_range_max': None,
+                'protocol': 'tcp',
+                'security_group_id': 'aaaa'
+            }
+        }).AndReturn({
+            'security_group_rule': {
+                'direction': 'ingress',
+                'remote_group_id': 'wwww',
+                'remote_ip_prefix': None,
+                'port_range_min': None,
+                'ethertype': 'IPv4',
+                'port_range_max': None,
+                'protocol': 'tcp',
+                'security_group_id': 'aaaa',
+                'id': 'dddd'
+            }
+        })
+        neutronclient.Client.delete_security_group_rule('aaaa-1').AndReturn(
+            None)
+        neutronclient.Client.delete_security_group_rule('aaaa-2').AndReturn(
+            None)
+        neutronclient.Client.create_security_group_rule({
+            'security_group_rule': {
                 'direction': 'egress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '10.0.1.0/24',
                 'port_range_min': 22,
                 'ethertype': 'IPv4',
@@ -349,13 +507,38 @@ Resources:
         }).AndReturn({
             'security_group_rule': {
                 'direction': 'egress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '10.0.1.0/24',
                 'port_range_min': 22,
                 'ethertype': 'IPv4',
                 'port_range_max': 22,
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa',
-                'id': 'dddd'
+                'id': 'eeee'
+            }
+        })
+        neutronclient.Client.create_security_group_rule({
+            'security_group_rule': {
+                'direction': 'egress',
+                'remote_group_id': 'xxxx',
+                'remote_ip_prefix': None,
+                'port_range_min': None,
+                'ethertype': 'IPv4',
+                'port_range_max': None,
+                'protocol': None,
+                'security_group_id': 'aaaa'
+            }
+        }).AndReturn({
+            'security_group_rule': {
+                'direction': 'egress',
+                'remote_group_id': 'xxxx',
+                'remote_ip_prefix': None,
+                'port_range_min': None,
+                'ethertype': 'IPv4',
+                'port_range_max': None,
+                'protocol': None,
+                'security_group_id': 'aaaa',
+                'id': 'ffff'
             }
         })
 
@@ -372,6 +555,7 @@ Resources:
                     'id': 'bbbb',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
+                    'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                     'port_range_min': 22
@@ -382,24 +566,50 @@ Resources:
                     'id': 'cccc',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
+                    'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                     'port_range_min': 80
                 }, {
-                    'direction': 'egress',
+                    'direction': 'ingress',
                     'protocol': 'tcp',
-                    'port_range_max': 22,
+                    'port_range_max': None,
                     'id': 'dddd',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
+                    'remote_group_id': 'wwww',
+                    'remote_ip_prefix': None,
+                    'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                    'port_range_min': None
+                }, {
+                    'direction': 'egress',
+                    'protocol': 'tcp',
+                    'port_range_max': 22,
+                    'id': 'eeee',
+                    'ethertype': 'IPv4',
+                    'security_group_id': 'aaaa',
+                    'remote_group_id': None,
                     'remote_ip_prefix': '10.0.1.0/24',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                     'port_range_min': 22
+                }, {
+                    'direction': 'egress',
+                    'protocol': None,
+                    'port_range_max': None,
+                    'id': 'ffff',
+                    'ethertype': 'IPv4',
+                    'security_group_id': 'aaaa',
+                    'remote_group_id': None,
+                    'remote_ip_prefix': None,
+                    'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                    'port_range_min': None
                 }],
                 'id': 'aaaa'}})
         neutronclient.Client.delete_security_group_rule('bbbb').AndReturn(None)
         neutronclient.Client.delete_security_group_rule('cccc').AndReturn(None)
         neutronclient.Client.delete_security_group_rule('dddd').AndReturn(None)
+        neutronclient.Client.delete_security_group_rule('eeee').AndReturn(None)
+        neutronclient.Client.delete_security_group_rule('ffff').AndReturn(None)
         neutronclient.Client.delete_security_group('aaaa').AndReturn(None)
 
         self.m.ReplayAll()
@@ -437,6 +647,7 @@ Resources:
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
                 'port_range_min': 22,
                 'ethertype': 'IPv4',
@@ -449,6 +660,7 @@ Resources:
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
                 'port_range_min': 80,
                 'ethertype': 'IPv4',
@@ -460,12 +672,39 @@ Resources:
             NeutronClientException(status_code=409))
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
+                'direction': 'ingress',
+                'remote_group_id': 'wwww',
+                'remote_ip_prefix': None,
+                'port_range_min': None,
+                'ethertype': 'IPv4',
+                'port_range_max': None,
+                'protocol': 'tcp',
+                'security_group_id': 'aaaa'
+            }
+        }).AndRaise(
+            NeutronClientException(status_code=409))
+        neutronclient.Client.create_security_group_rule({
+            'security_group_rule': {
                 'direction': 'egress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '10.0.1.0/24',
                 'port_range_min': 22,
                 'ethertype': 'IPv4',
                 'port_range_max': 22,
                 'protocol': 'tcp',
+                'security_group_id': 'aaaa'
+            }
+        }).AndRaise(
+            NeutronClientException(status_code=409))
+        neutronclient.Client.create_security_group_rule({
+            'security_group_rule': {
+                'direction': 'egress',
+                'remote_group_id': 'xxxx',
+                'remote_ip_prefix': None,
+                'port_range_min': None,
+                'ethertype': 'IPv4',
+                'port_range_max': None,
+                'protocol': None,
                 'security_group_id': 'aaaa'
             }
         }).AndRaise(
@@ -484,6 +723,7 @@ Resources:
                     'id': 'bbbb',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
+                    'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                     'port_range_min': 22
@@ -494,19 +734,43 @@ Resources:
                     'id': 'cccc',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
+                    'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                     'port_range_min': 80
                 }, {
-                    'direction': 'egress',
+                    'direction': 'ingress',
                     'protocol': 'tcp',
-                    'port_range_max': 22,
+                    'port_range_max': None,
                     'id': 'dddd',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
+                    'remote_group_id': 'wwww',
+                    'remote_ip_prefix': None,
+                    'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                    'port_range_min': None
+                }, {
+                    'direction': 'egress',
+                    'protocol': 'tcp',
+                    'port_range_max': 22,
+                    'id': 'eeee',
+                    'ethertype': 'IPv4',
+                    'security_group_id': 'aaaa',
+                    'remote_group_id': None,
                     'remote_ip_prefix': '10.0.1.0/24',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                     'port_range_min': 22
+                }, {
+                    'direction': 'egress',
+                    'protocol': None,
+                    'port_range_max': None,
+                    'id': 'ffff',
+                    'ethertype': 'IPv4',
+                    'security_group_id': 'aaaa',
+                    'remote_group_id': None,
+                    'remote_ip_prefix': None,
+                    'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                    'port_range_min': None
                 }],
                 'id': 'aaaa'}})
         neutronclient.Client.delete_security_group_rule('bbbb').AndRaise(
@@ -514,6 +778,10 @@ Resources:
         neutronclient.Client.delete_security_group_rule('cccc').AndRaise(
             NeutronClientException(status_code=404))
         neutronclient.Client.delete_security_group_rule('dddd').AndRaise(
+            NeutronClientException(status_code=404))
+        neutronclient.Client.delete_security_group_rule('eeee').AndRaise(
+            NeutronClientException(status_code=404))
+        neutronclient.Client.delete_security_group_rule('ffff').AndRaise(
             NeutronClientException(status_code=404))
         neutronclient.Client.delete_security_group('aaaa').AndRaise(
             NeutronClientException(status_code=404))

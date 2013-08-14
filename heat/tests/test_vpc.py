@@ -192,6 +192,7 @@ class VPCTestBase(HeatTestCase):
         neutronclient.Client.create_security_group_rule({
             'security_group_rule': {
                 'direction': 'ingress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
                 'port_range_min': 22,
                 'ethertype': 'IPv4',
@@ -202,6 +203,7 @@ class VPCTestBase(HeatTestCase):
         }).AndReturn({
             'security_group_rule': {
                 'direction': 'ingress',
+                'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
                 'port_range_min': 22,
                 'ethertype': 'IPv4',
@@ -226,6 +228,7 @@ class VPCTestBase(HeatTestCase):
                     'id': 'bbbb',
                     'ethertype': 'IPv4',
                     'security_group_id': 'eeee',
+                    'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                     'port_range_min': 22

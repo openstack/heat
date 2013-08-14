@@ -337,3 +337,8 @@ class HTTPExceptionDisguise(Exception):
 
 class TemplateTooBig(HeatException):
     message = _('Template exceeds maximum allowed size.')
+
+
+class EgressRuleNotAllowed(HeatException):
+    message = _("Egress rules are only allowed when "
+                "Neutron is used and the 'VpcId' property is set.")

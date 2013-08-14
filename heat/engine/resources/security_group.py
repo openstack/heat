@@ -16,6 +16,7 @@
 from heat.engine import clients
 from heat.engine import resource
 
+from heat.common import exception
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,20 @@ class SecurityGroup(resource.Resource):
         else:
             self._handle_create_nova()
 
+    def _convert_to_neutron_rule(self, direction, sg_rule):
+        return {
+            'direction': direction,
+            'ethertype': 'IPv4',
+            'remote_ip_prefix': sg_rule.get('CidrIp'),
+            'port_range_min': sg_rule.get('FromPort'),
+            'port_range_max': sg_rule.get('ToPort'),
+            'protocol': sg_rule.get('IpProtocol'),
+            # Neutron understands both names and ids
+            'remote_group_id': sg_rule.get('SourceSecurityGroupId') or
+            sg_rule.get('SourceSecurityGroupName'),
+            'security_group_id': self.resource_id
+        }
+
     def _handle_create_neutron(self):
         from neutronclient.common.exceptions import NeutronClientException
         client = self.neutron()
@@ -43,28 +58,23 @@ class SecurityGroup(resource.Resource):
             'description': self.properties['GroupDescription']}
         })['security_group']
 
+        def sanitize_security_group(i):
+            # Neutron only accepts positive ints
+            if i.get('FromPort') is not None and int(i['FromPort']) < 0:
+                i['FromPort'] = None
+            if i.get('ToPort') is not None and int(i['ToPort']) < 0:
+                i['ToPort'] = None
+            if i.get('FromPort') is None and i.get('ToPort') is None:
+                i['CidrIp'] = None
+
         self.resource_id_set(sec['id'])
         if self.properties['SecurityGroupIngress']:
             for i in self.properties['SecurityGroupIngress']:
-                # Neutron only accepts positive ints
-                if int(i['FromPort']) < 0:
-                    i['FromPort'] = None
-                if int(i['ToPort']) < 0:
-                    i['ToPort'] = None
-                if i['FromPort'] is None and i['ToPort'] is None:
-                    i['CidrIp'] = None
-
+                sanitize_security_group(i)
                 try:
                     rule = client.create_security_group_rule({
-                        'security_group_rule': {
-                            'direction': 'ingress',
-                            'remote_ip_prefix': i['CidrIp'],
-                            'port_range_min': i['FromPort'],
-                            'ethertype': 'IPv4',
-                            'port_range_max': i['ToPort'],
-                            'protocol': i['IpProtocol'],
-                            'security_group_id': sec['id']
-                        }
+                        'security_group_rule':
+                        self._convert_to_neutron_rule('ingress', i)
                     })
                 except NeutronClientException as ex:
                     if ex.status_code == 409:
@@ -74,18 +84,17 @@ class SecurityGroup(resource.Resource):
                         # unexpected error
                         raise
         if self.properties['SecurityGroupEgress']:
+            # Delete the default rules which allow all egress traffic
+            for rule in sec['security_group_rules']:
+                if rule['direction'] == 'egress':
+                    client.delete_security_group_rule(rule['id'])
+
             for i in self.properties['SecurityGroupEgress']:
+                sanitize_security_group(i)
                 try:
                     rule = client.create_security_group_rule({
-                        'security_group_rule': {
-                            'direction': 'egress',
-                            'remote_ip_prefix': i['CidrIp'],
-                            'port_range_min': i['FromPort'],
-                            'ethertype': 'IPv4',
-                            'port_range_max': i['ToPort'],
-                            'protocol': i['IpProtocol'],
-                            'security_group_id': sec['id']
-                        }
+                        'security_group_rule':
+                        self._convert_to_neutron_rule('egress', i)
                     })
                 except NeutronClientException as ex:
                     if ex.status_code == 409:
@@ -113,12 +122,22 @@ class SecurityGroup(resource.Resource):
         if self.properties['SecurityGroupIngress']:
             rules_client = self.nova().security_group_rules
             for i in self.properties['SecurityGroupIngress']:
+                source_group_id = None
+                if i.get('SourceSecurityGroupId') is not None:
+                    source_group_id = i['SourceSecurityGroupId']
+                elif i.get('SourceSecurityGroupName') is not None:
+                    for group in groups:
+                        if group.name == i['SourceSecurityGroupName']:
+                            source_group_id = group.id
+                            break
                 try:
-                    rule = rules_client.create(sec.id,
-                                               i['IpProtocol'],
-                                               i['FromPort'],
-                                               i['ToPort'],
-                                               i['CidrIp'])
+                    rule = rules_client.create(
+                        sec.id,
+                        i.get('IpProtocol'),
+                        i.get('FromPort'),
+                        i.get('ToPort'),
+                        i.get('CidrIp'),
+                        source_group_id)
                 except clients.novaclient.exceptions.BadRequest as ex:
                     if ex.message.find('already exists') >= 0:
                         # no worries, the rule is already there
@@ -180,6 +199,16 @@ class SecurityGroup(resource.Resource):
             return super(SecurityGroup, self).FnGetRefId()
         else:
             return self.physical_resource_name()
+
+    def validate(self):
+        res = super(SecurityGroup, self).validate()
+        if res:
+            return res
+
+        if self.properties['SecurityGroupEgress'] and not(
+                self.properties['VpcId'] and
+                clients.neutronclient is not None):
+            raise exception.EgressRuleNotAllowed()
 
 
 def resource_mapping():
