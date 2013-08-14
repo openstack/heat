@@ -279,6 +279,16 @@ class ResourceTest(HeatTestCase):
         self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
+    def test_create_fail_metadata_parse_error(self):
+        tmpl = {'Type': 'GenericResourceType', 'Properties': {},
+                'Metadata': {"Fn::GetAtt": ["ResourceA", "abc"]}}
+        rname = 'test_resource'
+        res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
+
+        create = scheduler.TaskRunner(res.create)
+        self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual((res.CREATE, res.FAILED), res.state)
+
     def test_create_resource_after_destroy(self):
         tmpl = {'Type': 'GenericResourceType'}
         rname = 'test_res_id_none'

@@ -887,6 +887,10 @@ class AutoScalingTest(HeatTestCase):
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
 
+        #stub for the metadata accesses while creating the two instances
+        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+
         # raise by 200%, should work
         self._stub_lb_reload(3, unset=False)
         self._stub_create(2)
@@ -937,7 +941,11 @@ class AutoScalingTest(HeatTestCase):
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
 
+        #stub for the metadata accesses while creating the two instances
+        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
         # raise by 200%, should work
+
         self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'PercentChangeInCapacity : 200')
         self._stub_create(2)
@@ -1120,6 +1128,9 @@ class AutoScalingTest(HeatTestCase):
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
 
+        #stub for the metadata accesses while creating the additional instance
+        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+
         now = now + datetime.timedelta(seconds=61)
         self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
@@ -1176,6 +1187,9 @@ class AutoScalingTest(HeatTestCase):
                          ).AndReturn(previous_meta)
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
+
+        #stub for the metadata accesses while creating the additional instance
+        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
 
         self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
@@ -1234,6 +1248,9 @@ class AutoScalingTest(HeatTestCase):
                          ).AndReturn(previous_meta)
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
+
+        #stub for the metadata accesses while creating the addtional instance
+        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
 
         self._stub_lb_reload(3, unset=False)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
@@ -1296,10 +1313,15 @@ class AutoScalingTest(HeatTestCase):
         self.m.UnsetStubs()
 
         self.m.StubOutWithMock(Metadata, '__get__')
+
         Metadata.__get__(mox.IgnoreArg(), up_policy, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
         Metadata.__get__(mox.IgnoreArg(), rsrc, mox.IgnoreArg()
                          ).AndReturn(previous_meta)
+
+        #stub for the metadata accesses while creating the two instances
+        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
+        Metadata.__get__(mox.IgnoreArg(), mox.IgnoreArg(), mox.IgnoreArg())
 
         now = now + datetime.timedelta(seconds=61)
 
