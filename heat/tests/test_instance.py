@@ -225,6 +225,11 @@ class InstancesTest(HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'test_instance_create')
         return_server.status = 'ERROR'
+        return_server.fault = {
+            'message': 'NoValidHost',
+            'code': 500,
+            'created': '2013-08-14T03:12:10Z'
+        }
         self.m.StubOutWithMock(return_server, 'get')
         return_server.get()
         return_server.get().AndRaise(

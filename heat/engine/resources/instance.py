@@ -323,10 +323,13 @@ class Instance(resource.Resource):
                 volume_attach.start()
                 return volume_attach.done()
             elif server.status == 'ERROR':
+                fault = server.fault or {}
+                message = fault.get('message', 'Unknown')
+                code = fault.get('code', 500)
                 delete = scheduler.TaskRunner(self._delete_server, server)
                 delete(wait_time=0.2)
-                exc = exception.Error("Build of server %s failed." %
-                                      server.name)
+                exc = exception.Error("Build of server %s failed: %s (%s)" %
+                                      (server.name, message, code))
                 raise exc
             else:
                 exc = exception.Error('%s instance[%s] status[%s]' %
