@@ -1214,7 +1214,7 @@ class StackTest(HeatTestCase):
     def test_update_rollback_remove(self):
         tmpl = {'Resources': {
                 'AResource': {'Type': 'GenericResourceType'},
-                'BResource': {'Type': 'GenericResourceType'}}}
+                'BResource': {'Type': 'ResourceWithPropsType'}}}
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
@@ -1230,8 +1230,8 @@ class StackTest(HeatTestCase):
                                      template.Template(tmpl2))
 
         # patch in a dummy delete making the destroy fail
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
-        generic_rsrc.GenericResource.handle_delete().AndRaise(Exception)
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
+        generic_rsrc.ResourceWithProps.handle_delete().AndRaise(Exception)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
