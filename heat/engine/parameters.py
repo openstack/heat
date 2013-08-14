@@ -55,6 +55,28 @@ class ParamSchema(dict):
                 continue
             check(name, value, const)
 
+    def constraints(self):
+        ptype = self[TYPE]
+        keys = {
+            STRING: [ALLOWED_VALUES, ALLOWED_PATTERN, MAX_LENGTH, MIN_LENGTH],
+            NUMBER: [ALLOWED_VALUES, MAX_VALUE, MIN_VALUE],
+            JSON: [MAX_LENGTH, MIN_LENGTH]
+        }.get(ptype)
+        list_keys = {
+            COMMA_DELIMITED_LIST: [ALLOWED_VALUES],
+            JSON: [ALLOWED_VALUES]
+        }.get(ptype)
+        return (keys, list_keys)
+
+    def validate(self, name, value):
+        (keys, list_keys) = self.constraints()
+        if keys:
+            self.do_check(name, value, keys)
+        if list_keys:
+            values = value
+            for value in values:
+                self.do_check(name, value, list_keys)
+
     def raise_error(self, name, message, desc=True):
         if desc:
             message = self.get(CONSTRAINT_DESCRIPTION) or message
@@ -200,17 +222,14 @@ class NumberParam(Parameter):
         return float(self.value())
 
     def validate(self, val):
-        self.schema.do_check(self.name, val, [ALLOWED_VALUES,
-                                              MAX_VALUE, MIN_VALUE])
+        self.schema.validate(self.name, val)
 
 
 class StringParam(Parameter):
     '''A template parameter of type "String".'''
 
     def validate(self, val):
-        self.schema.do_check(self.name, val,
-                             [ALLOWED_VALUES,
-                              ALLOWED_PATTERN, MAX_LENGTH, MIN_LENGTH])
+        self.schema.validate(self.name, val)
 
 
 class CommaDelimitedListParam(Parameter, collections.Sequence):
@@ -240,8 +259,7 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
 
     def validate(self, val):
         parsed = self.parse(val)
-        for val in parsed:
-            self.schema.do_check(self.name, val, [ALLOWED_VALUES])
+        self.schema.validate(self.name, parsed)
 
 
 class JsonParam(Parameter, collections.Mapping):
@@ -286,9 +304,7 @@ class JsonParam(Parameter, collections.Mapping):
 
     def validate(self, val):
         val = self.parse(val)
-        self.schema.do_check(self.name, val, [MAX_LENGTH, MIN_LENGTH])
-        for key in val:
-            self.schema.do_check(self.name, key, [ALLOWED_VALUES])
+        self.schema.validate(self.name, val)
 
 
 class Parameters(collections.Mapping):
