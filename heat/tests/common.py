@@ -16,7 +16,12 @@
 import fixtures
 import logging
 import mox
+import os
+import sys
 import testtools
+
+from oslo.config import cfg
+
 import heat.engine.scheduler as scheduler
 
 
@@ -33,3 +38,10 @@ class HeatTestCase(testtools.TestCase):
             scheduler.ENABLE_SLEEP = True
 
         self.addCleanup(enable_sleep)
+
+        mod_dir = os.path.dirname(sys.modules[__name__].__file__)
+        project_dir = os.path.abspath(os.path.join(mod_dir, '../../'))
+        env_dir = os.path.join(project_dir, 'etc', 'heat',
+                               'environment.d')
+
+        cfg.CONF.set_default('environment_dir', env_dir)
