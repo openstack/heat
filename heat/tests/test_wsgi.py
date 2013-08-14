@@ -182,7 +182,13 @@ class ResourceTest(HeatTestCase):
         resource = wsgi.Resource(Controller(),
                                  wsgi.JSONRequestDeserializer(),
                                  None)
-        self.assertRaises(webob.exc.HTTPBadRequest, resource, request)
+        # The Resource does not throw webob.HTTPExceptions, since they
+        # would be considered responses by wsgi and the request flow would end,
+        # instead they are wrapped so they can reach the fault application
+        # where they are converted to a nice JSON/XML response
+        e = self.assertRaises(exception.HTTPExceptionDisguise,
+                              resource, request)
+        self.assertIsInstance(e.exc, webob.exc.HTTPBadRequest)
 
     def test_resource_call_error_handle_localized(self):
         class Controller(object):
@@ -208,8 +214,8 @@ class ResourceTest(HeatTestCase):
 
         try:
             resource(request)
-        except webob.exc.HTTPBadRequest as e:
-            self.assertEquals(message_es, e.message)
+        except exception.HTTPExceptionDisguise as e:
+            self.assertEquals(message_es, e.exc.message)
         self.m.VerifyAll()
 
 

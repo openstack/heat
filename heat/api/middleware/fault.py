@@ -76,6 +76,15 @@ class FaultWrapper(wsgi.Middleware):
 
     def _error(self, ex):
 
+        trace = None
+        webob_exc = None
+        if isinstance(ex, exception.HTTPExceptionDisguise):
+            # An HTTP exception was disguised so it could make it here
+            # let's remove the disguise and set the original HTTP exception
+            trace = ''.join(traceback.format_tb(ex.tb))
+            ex = ex.exc
+            webob_exc = ex
+
         ex_type = ex.__class__.__name__
 
         if ex_type.endswith(rpc_common._REMOTE_POSTFIX):
@@ -89,14 +98,16 @@ class FaultWrapper(wsgi.Middleware):
         else:
             message = ex.message
 
-        trace = str(ex)
-        if trace.find('\n') > -1:
-            unused, trace = trace.split('\n', 1)
-        else:
-            trace = traceback.format_exc()
+        if not trace:
+            trace = str(ex)
+            if trace.find('\n') > -1:
+                unused, trace = trace.split('\n', 1)
+            else:
+                trace = traceback.format_exc()
 
-        webob_exc = self.error_map.get(ex_type,
-                                       webob.exc.HTTPInternalServerError)
+        if not webob_exc:
+            webob_exc = self.error_map.get(ex_type,
+                                           webob.exc.HTTPInternalServerError)
 
         error = {
             'code': webob_exc.code,

@@ -13,6 +13,7 @@
 #    under the License.
 
 import json
+import mock
 
 from oslo.config import cfg
 import webob.exc
@@ -631,6 +632,27 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual(resp.json['code'], 400)
         self.assertEqual(resp.json['error']['type'], 'StackValidationFailed')
         self.m.VerifyAll()
+
+    def test_create_err_stack_bad_reqest(self):
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': template,
+                'parameters': parameters,
+                'timeout_mins': 30}
+
+        req = self._post('/stacks', json.dumps(body))
+
+        error = heat_exc.HTTPExceptionDisguise(webob.exc.HTTPBadRequest())
+        self.controller.create = mock.MagicMock(side_effect=error)
+
+        resp = request_with_middleware(fault.FaultWrapper,
+                                       self.controller.create, req, body)
+
+        # When HTTP disguised exceptions reach the fault app, they are
+        # converted into regular responses, just like non-HTTP exceptions
+        self.assertEqual(resp.json['code'], 400)
+        self.assertEqual(resp.json['error']['type'], 'HTTPBadRequest')
+        self.assertIsNotNone(resp.json['error']['traceback'])
 
     def test_lookup(self):
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
