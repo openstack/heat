@@ -44,6 +44,12 @@ swift_template = '''
          }
       }
     },
+    "SwiftContainer": {
+         "Type": "OS::Swift::Container",
+         "Properties": {
+            "S3Bucket": {"Ref" : "S3Bucket"},
+         }
+      },
     "S3Bucket" : {
       "Type" : "AWS::S3::Bucket",
       "Properties" : {
