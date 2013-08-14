@@ -20,6 +20,7 @@ from oslo.config import cfg
 
 from keystoneclient.contrib.ec2 import utils as ec2_utils
 
+from heat.db import api as db_api
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import resource
@@ -56,6 +57,7 @@ class SignalResponder(resource.Resource):
             self.keystone().delete_stack_user(self.resource_id)
         except clients.hkc.kc.exceptions.NotFound:
             pass
+        db_api.resource_data_delete(self, 'ec2_signed_url')
 
     def _get_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
@@ -68,6 +70,13 @@ class SignalResponder(resource.Resource):
 
         :param signal_type: either WAITCONDITION or SIGNAL.
         """
+        try:
+            stored = db_api.resource_data_get(self, 'ec2_signed_url')
+        except exception.NotFound:
+            stored = None
+        if stored is not None:
+            return stored
+
         waitcond_url = cfg.CONF.heat_waitcondition_server_url
         signal_url = waitcond_url.replace('/waitcondition', signal_type)
         host_url = urlparse.urlparse(signal_url)
@@ -96,4 +105,6 @@ class SignalResponder(resource.Resource):
         qs = urllib.urlencode(request['params'])
         url = "%s%s?%s" % (signal_url.lower(),
                            path, qs)
+
+        db_api.resource_data_set(self, 'ec2_signed_url', url)
         return url

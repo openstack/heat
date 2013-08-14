@@ -115,6 +115,21 @@ class SignalTest(HeatTestCase):
         self.m.VerifyAll()
 
     @utils.stack_delete_after
+    def test_FnGetAtt_Alarm_Url_is_cached(self):
+        self.stack = self.create_stack()
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack.resources['signal_handler']
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+        first_url = rsrc.FnGetAtt('AlarmUrl')
+        second_url = rsrc.FnGetAtt('AlarmUrl')
+        self.assertEqual(first_url, second_url)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
     def test_signal(self):
         test_d = {'Data': 'foo', 'Reason': 'bar',
                   'Status': 'SUCCESS', 'UniqueId': '123'}
