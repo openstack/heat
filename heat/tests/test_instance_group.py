@@ -21,6 +21,7 @@ from heat.engine.resources import instance
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
+from heat.engine import parser
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -67,10 +68,13 @@ class InstanceGroupTest(HeatTestCase):
         :param instance_class: The resource class to expect to be created
                                instead of instance.Instance.
         """
+        self.m.StubOutWithMock(parser.Stack, 'validate')
+        parser.Stack.validate()
 
         self.m.StubOutWithMock(instance_class, 'handle_create')
         self.m.StubOutWithMock(instance_class, 'check_create_complete')
         cookie = object()
+
         for x in range(num):
             instance_class.handle_create().AndReturn(cookie)
         instance_class.check_create_complete(cookie).AndReturn(False)
@@ -147,6 +151,8 @@ class InstanceGroupTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         not_found = exception.ImageNotFound(image_name='bla')
         instance.Instance.handle_create().AndRaise(not_found)
+        self.m.StubOutWithMock(parser.Stack, 'validate')
+        parser.Stack.validate()
 
         self.m.ReplayAll()
 

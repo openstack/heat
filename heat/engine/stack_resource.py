@@ -68,14 +68,15 @@ class StackResource(resource.Resource):
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
-        self._nested = parser.Stack(self.context,
-                                    self.physical_resource_name(),
-                                    template,
-                                    environment.Environment(user_params),
-                                    timeout_mins=timeout_mins,
-                                    disable_rollback=True,
-                                    parent_resource=self)
-
+        nested = parser.Stack(self.context,
+                              self.physical_resource_name(),
+                              template,
+                              environment.Environment(user_params),
+                              timeout_mins=timeout_mins,
+                              disable_rollback=True,
+                              parent_resource=self)
+        nested.validate()
+        self._nested = nested
         nested_id = self._nested.store(self.stack)
         self.resource_id_set(nested_id)
 
@@ -112,6 +113,7 @@ class StackResource(resource.Resource):
                              timeout_mins=timeout_mins,
                              disable_rollback=True,
                              parent_resource=self)
+        stack.validate()
         return self._nested.update(stack)
 
     def delete_nested(self):
