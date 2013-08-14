@@ -18,6 +18,8 @@ import json
 
 from oslo.config import cfg
 
+from heat.openstack.common import uuidutils
+
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
@@ -84,7 +86,6 @@ class WaitConditionTest(HeatTestCase):
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://127.0.0.1:8000/v1/waitcondition')
 
-        self.stack_id = 'STACKABCD1234'
         self.fc = fakes.FakeKeystoneClient()
 
     def tearDown(self):
@@ -93,17 +94,21 @@ class WaitConditionTest(HeatTestCase):
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
-    def create_stack(self, stack_name='test_stack',
+    def create_stack(self, stack_id=None,
                      template=test_template_waitcondition, params={},
                      stub=True):
         temp = template_format.parse(template)
         template = parser.Template(temp)
         ctx = utils.dummy_context(tenant_id='test_tenant')
-        stack = parser.Stack(ctx, stack_name, template,
+        stack = parser.Stack(ctx, 'test_stack', template,
                              environment.Environment(params),
                              disable_rollback=True)
 
         # Stub out the stack ID so we have a known value
+        if stack_id is None:
+            stack_id = uuidutils.generate_uuid()
+
+        self.stack_id = stack_id
         with utils.UUIDStub(self.stack_id):
             stack.store()
 
@@ -271,6 +276,7 @@ class WaitConditionTest(HeatTestCase):
     def test_validate_handle_url_bad_stackid(self):
         self.m.ReplayAll()
 
+        stack_id = 'STACK_HUBSID_1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
@@ -278,7 +284,8 @@ class WaitConditionTest(HeatTestCase):
                      "bad1" +
                      "%2Fresources%2FWaitHandle")
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
-        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+        self.stack = self.create_stack(template=json.dumps(t), stub=False,
+                                       stack_id=stack_id)
         self.m.ReplayAll()
 
         rsrc = self.stack.resources['WaitForTheHandle']
@@ -290,13 +297,15 @@ class WaitConditionTest(HeatTestCase):
     def test_validate_handle_url_bad_stackname(self):
         self.m.ReplayAll()
 
+        stack_id = 'STACKABCD1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2FBAD_stack%2F" +
-                     self.stack_id + "%2Fresources%2FWaitHandle")
+                     stack_id + "%2Fresources%2FWaitHandle")
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
-        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+        self.stack = self.create_stack(template=json.dumps(t), stub=False,
+                                       stack_id=stack_id)
 
         rsrc = self.stack.resources['WaitForTheHandle']
         self.assertRaises(ValueError, rsrc.handle_create)
@@ -307,13 +316,15 @@ class WaitConditionTest(HeatTestCase):
     def test_validate_handle_url_bad_tenant(self):
         self.m.ReplayAll()
 
+        stack_id = 'STACKABCD1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3ABAD_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
-                     self.stack_id + "%2Fresources%2FWaitHandle")
+                     stack_id + "%2Fresources%2FWaitHandle")
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
-        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+        self.stack = self.create_stack(stack_id=stack_id,
+                                       template=json.dumps(t), stub=False)
 
         rsrc = self.stack.resources['WaitForTheHandle']
         self.assertRaises(ValueError, rsrc.handle_create)
@@ -324,13 +335,15 @@ class WaitConditionTest(HeatTestCase):
     def test_validate_handle_url_bad_resource(self):
         self.m.ReplayAll()
 
+        stack_id = 'STACK_HUBR_1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
-                     self.stack_id + "%2Fresources%2FBADHandle")
+                     stack_id + "%2Fresources%2FBADHandle")
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
-        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+        self.stack = self.create_stack(stack_id=stack_id,
+                                       template=json.dumps(t), stub=False)
 
         rsrc = self.stack.resources['WaitForTheHandle']
         self.assertRaises(ValueError, rsrc.handle_create)
@@ -340,14 +353,15 @@ class WaitConditionTest(HeatTestCase):
     @utils.stack_delete_after
     def test_validate_handle_url_bad_resource_type(self):
         self.m.ReplayAll()
-
+        stack_id = 'STACKABCD1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
-                     self.stack_id + "%2Fresources%2FWaitForTheHandle")
+                     stack_id + "%2Fresources%2FWaitForTheHandle")
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
-        self.stack = self.create_stack(template=json.dumps(t), stub=False)
+        self.stack = self.create_stack(stack_id=stack_id,
+                                       template=json.dumps(t), stub=False)
 
         rsrc = self.stack.resources['WaitForTheHandle']
         self.assertRaises(ValueError, rsrc.handle_create)
@@ -363,22 +377,26 @@ class WaitConditionHandleTest(HeatTestCase):
 
         self.fc = fakes.FakeKeystoneClient()
         utils.setup_dummy_db()
-        self.stack = self.create_stack()
 
     def tearDown(self):
         super(WaitConditionHandleTest, self).tearDown()
         utils.reset_dummy_db()
 
-    def create_stack(self, stack_name='test_stack2', params={}):
+    def create_stack(self, stack_name=None, stack_id=None):
         temp = template_format.parse(test_template_waitcondition)
         template = parser.Template(temp)
         ctx = utils.dummy_context(tenant_id='test_tenant')
+        if stack_name is None:
+            stack_name = utils.random_name()
         stack = parser.Stack(ctx, stack_name, template,
-                             environment.Environment(params),
                              disable_rollback=True)
         # Stub out the UUID for this test, so we can get an expected signature
-        with utils.UUIDStub('STACKABCD1234'):
+        if stack_id is not None:
+            with utils.UUIDStub(stack_id):
+                stack.store()
+        else:
             stack.store()
+        self.stack_id = stack.id
 
         # Stub waitcondition status so all goes CREATE_COMPLETE
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
@@ -400,16 +418,23 @@ class WaitConditionHandleTest(HeatTestCase):
 
     @utils.stack_delete_after
     def test_handle(self):
+        stack_id = 'STACKABCD1234'
+        stack_name = 'test_stack2'
         created_time = datetime.datetime(2012, 11, 29, 13, 49, 37)
+        self.stack = self.create_stack(stack_id=stack_id,
+                                       stack_name=stack_name)
 
         rsrc = self.stack.resources['WaitHandle']
+        # clear the url
+        db_api.resource_data_set(rsrc, 'ec2_signed_url', None, False)
+
         rsrc.created_time = created_time
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         expected_url = "".join([
             'http://127.0.0.1:8000/v1/waitcondition/',
             'arn%3Aopenstack%3Aheat%3A%3Atest_tenant%3Astacks%2F',
-            'test_stack2%2FSTACKABCD1234%2Fresources%2F',
+            'test_stack2%2F', stack_id, '%2Fresources%2F',
             'WaitHandle?',
             'Timestamp=2012-11-29T13%3A49%3A37Z&',
             'SignatureMethod=HmacSHA256&',
@@ -418,7 +443,7 @@ class WaitConditionHandleTest(HeatTestCase):
             'Signature=',
             'ePyTwmC%2F1kSigeo%2Fha7kP8Avvb45G9Y7WOQWe4F%2BnXM%3D'])
 
-        self.assertEqual(expected_url, rsrc.FnGetRefId())
+        self.assertEqual(unicode(expected_url), rsrc.FnGetRefId())
 
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
@@ -426,6 +451,7 @@ class WaitConditionHandleTest(HeatTestCase):
 
     @utils.stack_delete_after
     def test_metadata_update(self):
+        self.stack = self.create_stack()
         rsrc = self.stack.resources['WaitHandle']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
@@ -435,11 +461,12 @@ class WaitConditionHandleTest(HeatTestCase):
         handle_metadata = {u'123': {u'Data': u'foo',
                                     u'Reason': u'bar',
                                     u'Status': u'SUCCESS'}}
-        self.assertEqual(rsrc.metadata, handle_metadata)
+        self.assertEqual(handle_metadata, rsrc.metadata)
         self.m.VerifyAll()
 
     @utils.stack_delete_after
     def test_metadata_update_invalid(self):
+        self.stack = self.create_stack()
         rsrc = self.stack.resources['WaitHandle']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
@@ -483,6 +510,7 @@ class WaitConditionHandleTest(HeatTestCase):
 
     @utils.stack_delete_after
     def test_get_status(self):
+        self.stack = self.create_stack()
         rsrc = self.stack.resources['WaitHandle']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
@@ -509,21 +537,22 @@ class WaitConditionHandleTest(HeatTestCase):
 
     @utils.stack_delete_after
     def test_get_status_reason(self):
+        self.stack = self.create_stack()
         rsrc = self.stack.resources['WaitHandle']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
         rsrc.metadata_update(new_metadata=test_metadata)
-        self.assertEqual(rsrc.get_status_reason('SUCCESS'), 'bar')
+        self.assertEqual('bar', rsrc.get_status_reason('SUCCESS'))
 
         test_metadata = {'Data': 'dog', 'Reason': 'cat',
                          'Status': 'SUCCESS', 'UniqueId': '456'}
         rsrc.metadata_update(new_metadata=test_metadata)
-        self.assertEqual(rsrc.get_status_reason('SUCCESS'), 'bar;cat')
+        self.assertEqual('bar;cat', rsrc.get_status_reason('SUCCESS'))
 
         test_metadata = {'Data': 'boo', 'Reason': 'hoo',
                          'Status': 'FAILURE', 'UniqueId': '789'}
         rsrc.metadata_update(new_metadata=test_metadata)
-        self.assertEqual(rsrc.get_status_reason('FAILURE'), 'hoo')
+        self.assertEqual('hoo', rsrc.get_status_reason('FAILURE'))
         self.m.VerifyAll()
