@@ -36,10 +36,7 @@ logger = logging.getLogger(__name__)
 opts = [
     cfg.StrOpt('auth_uri',
                default=None,
-               help=_("Authentication Endpoint URI")),
-    cfg.StrOpt('keystone_ec2_uri',
-               default=None,
-               help=_("Keystone EC2 Service Endpoint URI"))
+               help=_("Authentication Endpoint URI"))
 ]
 cfg.CONF.register_opts(opts, group='ec2authtoken')
 
@@ -57,6 +54,12 @@ class EC2Token(wsgi.Middleware):
             return self.conf[name]
         else:
             return cfg.CONF.ec2authtoken[name]
+
+    def _conf_get_keystone_ec2_uri(self):
+        auth_uri = self._conf_get('auth_uri')
+        if auth_uri.endswith('/'):
+            return '%sec2tokens' % auth_uri
+        return '%s/ec2tokens' % auth_uri
 
     def _get_signature(self, req):
         """
@@ -145,7 +148,7 @@ class EC2Token(wsgi.Middleware):
         # for httplib and urlparse
         # pylint: disable-msg=E1101
 
-        keystone_ec2_uri = self._conf_get('keystone_ec2_uri')
+        keystone_ec2_uri = self._conf_get_keystone_ec2_uri()
         logger.info('Authenticating with %s' % keystone_ec2_uri)
         o = urlparse.urlparse(keystone_ec2_uri)
         if o.scheme == 'http':
@@ -190,7 +193,6 @@ class EC2Token(wsgi.Middleware):
         req.headers['X-Tenant-Name'] = tenant
         req.headers['X-Tenant-Id'] = tenant_id
         req.headers['X-Auth-URL'] = self._conf_get('auth_uri')
-        req.headers['X-Auth-EC2_URL'] = keystone_ec2_uri
 
         metadata = result['access'].get('metadata', {})
         roles = metadata.get('roles', [])

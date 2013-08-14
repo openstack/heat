@@ -37,18 +37,19 @@ class Ec2TokenTest(HeatTestCase):
         return req
 
     def test_conf_get_paste(self):
-        dummy_conf = {'auth_uri': 'abc',
-                      'keystone_ec2_uri': 'xyz'}
+        dummy_conf = {'auth_uri': 'http://192.0.2.9/v2.0'}
         ec2 = ec2token.EC2Token(app=None, conf=dummy_conf)
-        self.assertEqual(ec2._conf_get('auth_uri'), 'abc')
-        self.assertEqual(ec2._conf_get('keystone_ec2_uri'), 'xyz')
+        self.assertEqual(ec2._conf_get('auth_uri'), 'http://192.0.2.9/v2.0')
+        self.assertEqual(ec2._conf_get_keystone_ec2_uri(),
+                         'http://192.0.2.9/v2.0/ec2tokens')
 
     def test_conf_get_opts(self):
-        cfg.CONF.set_default('auth_uri', 'abc', group='ec2authtoken')
-        cfg.CONF.set_default('keystone_ec2_uri', 'xyz', group='ec2authtoken')
+        cfg.CONF.set_default('auth_uri', 'http://192.0.2.9/v2.0/',
+                             group='ec2authtoken')
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._conf_get('auth_uri'), 'abc')
-        self.assertEqual(ec2._conf_get('keystone_ec2_uri'), 'xyz')
+        self.assertEqual(ec2._conf_get('auth_uri'), 'http://192.0.2.9/v2.0/')
+        self.assertEqual(ec2._conf_get_keystone_ec2_uri(),
+                         'http://192.0.2.9/v2.0/ec2tokens')
 
     def test_get_signature_param_old(self):
         params = {'Signature': 'foo'}
@@ -196,7 +197,7 @@ class Ec2TokenTest(HeatTestCase):
                                  "path": "/v1",
                                  "body_hash": body_hash}})
         req_headers = {'Content-Type': 'application/json'}
-        req_path = '/foo'
+        req_path = '/v2.0/ec2tokens'
         httplib.HTTPConnection.request('POST', req_path,
                                        body=req_creds,
                                        headers=req_headers).AndReturn(None)
@@ -208,8 +209,7 @@ class Ec2TokenTest(HeatTestCase):
         httplib.HTTPConnection.close().AndReturn(None)
 
     def test_call_ok(self):
-        dummy_conf = {'auth_uri': 'http://123:5000/foo',
-                      'keystone_ec2_uri': 'http://456:5000/foo'}
+        dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
         ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
@@ -234,8 +234,7 @@ class Ec2TokenTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_call_ok_roles(self):
-        dummy_conf = {'auth_uri': 'http://123:5000/foo',
-                      'keystone_ec2_uri': 'http://456:5000/foo'}
+        dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
         ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
@@ -262,8 +261,7 @@ class Ec2TokenTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_call_err_tokenid(self):
-        dummy_conf = {'auth_uri': 'http://123:5000/foo',
-                      'keystone_ec2_uri': 'http://456:5000/foo'}
+        dummy_conf = {'auth_uri': 'http://123:5000/v2.0/'}
         ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
@@ -286,8 +284,7 @@ class Ec2TokenTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_call_err_signature(self):
-        dummy_conf = {'auth_uri': 'http://123:5000/foo',
-                      'keystone_ec2_uri': 'http://456:5000/foo'}
+        dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
         ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
@@ -310,8 +307,7 @@ class Ec2TokenTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_call_err_denied(self):
-        dummy_conf = {'auth_uri': 'http://123:5000/foo',
-                      'keystone_ec2_uri': 'http://456:5000/foo'}
+        dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
         ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
@@ -333,8 +329,7 @@ class Ec2TokenTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_call_ok_v2(self):
-        dummy_conf = {'auth_uri': 'http://123:5000/foo',
-                      'keystone_ec2_uri': 'http://456:5000/foo'}
+        dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
         ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
         params = {'AWSAccessKeyId': 'foo', 'Signature': 'xyz'}
         req_env = {'SERVER_NAME': 'heat',
