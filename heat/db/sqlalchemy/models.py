@@ -32,7 +32,7 @@ from sqlalchemy.orm.session import Session
 BASE = declarative_base()
 
 
-class Json(types.TypeDecorator, types.MutableType):
+class Json(types.TypeDecorator):
     impl = types.Text
 
     def process_bind_param(self, value, dialect):
@@ -40,6 +40,15 @@ class Json(types.TypeDecorator, types.MutableType):
 
     def process_result_value(self, value, dialect):
         return loads(value)
+
+# TODO(leizhang) When we removed sqlalchemy 0.7 dependence
+# we can import MutableDict directly and remove ./mutable.py
+try:
+    from sqlalchemy.ext.mutable import MutableDict as sa_MutableDict
+    sa_MutableDict.associate_with(Json)
+except ImportError:
+    from heat.db.sqlalchemy.mutable import MutableDict
+    MutableDict.associate_with(Json)
 
 
 class HeatBase(object):
