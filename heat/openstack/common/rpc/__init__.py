@@ -29,7 +29,7 @@ import inspect
 
 from oslo.config import cfg
 
-from heat.openstack.common.gettextutils import _
+from heat.openstack.common.gettextutils import _  # noqa
 from heat.openstack.common import importutils
 from heat.openstack.common import local
 from heat.openstack.common import log as logging

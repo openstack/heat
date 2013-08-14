@@ -19,10 +19,7 @@
 Network-related utilities and helper functions.
 """
 
-from heat.openstack.common import log as logging
-
-
-LOG = logging.getLogger(__name__)
+import urlparse
 
 
 def parse_host_port(address, default_port=None):
@@ -67,3 +64,18 @@ def parse_host_port(address, default_port=None):
             port = default_port
 
     return (host, None if port is None else int(port))
+
+
+def urlsplit(url, scheme='', allow_fragments=True):
+    """Parse a URL using urlparse.urlsplit(), splitting query and fragments.
+    This function papers over Python issue9374 when needed.
+
+    The parameters are the same as urlparse.urlsplit.
+    """
+    scheme, netloc, path, query, fragment = urlparse.urlsplit(
+        url, scheme, allow_fragments)
+    if allow_fragments and '#' in path:
+        path, fragment = path.split('#', 1)
+    if '?' in path:
+        path, query = path.split('?', 1)
+    return urlparse.SplitResult(scheme, netloc, path, query, fragment)

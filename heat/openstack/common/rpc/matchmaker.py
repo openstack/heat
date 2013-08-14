@@ -23,7 +23,7 @@ import contextlib
 import eventlet
 from oslo.config import cfg
 
-from heat.openstack.common.gettextutils import _
+from heat.openstack.common.gettextutils import _  # noqa
 from heat.openstack.common import log as logging
 
 
@@ -248,9 +248,7 @@ class DirectBinding(Binding):
     that it maps directly to a host, thus direct.
     """
     def test(self, key):
-        if '.' in key:
-            return True
-        return False
+        return '.' in key
 
 
 class TopicBinding(Binding):
@@ -262,17 +260,13 @@ class TopicBinding(Binding):
     matches that of a direct exchange.
     """
     def test(self, key):
-        if '.' not in key:
-            return True
-        return False
+        return '.' not in key
 
 
 class FanoutBinding(Binding):
     """Match on fanout keys, where key starts with 'fanout.' string."""
     def test(self, key):
-        if key.startswith('fanout~'):
-            return True
-        return False
+        return key.startswith('fanout~')
 
 
 class StubExchange(Exchange):

@@ -128,7 +128,14 @@
 # Options defined in heat.openstack.common.eventlet_backdoor
 #
 
-# port for eventlet backdoor to listen (integer value)
+# Enable eventlet backdoor.  Acceptable values are 0, <port>,
+# and <start>:<end>, where 0 results in listening on a random
+# tcp port number; <port> results in listening on the
+# specified port number (and not enabling backdoor if that
+# port is in use); and <start>:<end> results in listening on
+# the smallest unused port number within the specified range
+# of port numbers.  The chosen port is displayed in the
+# service's log file. (string value)
 #backdoor_port=<None>
 
 
@@ -293,11 +300,23 @@
 
 
 #
+# Options defined in heat.openstack.common.rpc.amqp
+#
+
+# Use durable queues in amqp. (boolean value)
+#amqp_durable_queues=false
+
+# Auto-delete queues in amqp. (boolean value)
+#amqp_auto_delete=false
+
+
+#
 # Options defined in heat.openstack.common.rpc.impl_kombu
 #
 
-# SSL version to use (valid only if SSL enabled) (string
-# value)
+# SSL version to use (valid only if SSL enabled). valid values
+# are TLSv1, SSLv23 and SSLv3. SSLv2 may be available on some
+# distributions (string value)
 #kombu_ssl_version=
 
 # SSL key file (valid only if SSL enabled) (string value)
@@ -345,9 +364,6 @@
 # default of 0 implies an infinite retry count) (integer
 # value)
 #rabbit_max_retries=0
-
-# use durable queues in RabbitMQ (boolean value)
-#rabbit_durable_queues=false
 
 # use H/A queues in RabbitMQ (x-ha-policy: all).You need to
 # wipe RabbitMQ database when changing this option. (boolean
@@ -431,6 +447,25 @@
 #matchmaker_heartbeat_ttl=600
 
 
+[ssl]
+
+#
+# Options defined in heat.openstack.common.sslutils
+#
+
+# CA certificate file to use to verify connecting clients
+# (string value)
+#ca_file=<None>
+
+# Certificate file to use when starting the server securely
+# (string value)
+#cert_file=<None>
+
+# Private key file to use when starting the server securely
+# (string value)
+#key_file=<None>
+
+
 [paste_deploy]
 
 #
@@ -507,4 +542,3 @@
 #ringfile=/etc/oslo/matchmaker_ring.json
 
 
-# Total option count: 109

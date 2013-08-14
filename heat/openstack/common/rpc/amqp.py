@@ -34,13 +34,27 @@ from eventlet import greenpool
 from eventlet import pools
 from eventlet import queue
 from eventlet import semaphore
+from oslo.config import cfg
 
 from heat.openstack.common import excutils
-from heat.openstack.common.gettextutils import _
+from heat.openstack.common.gettextutils import _  # noqa
 from heat.openstack.common import local
 from heat.openstack.common import log as logging
 from heat.openstack.common.rpc import common as rpc_common
 
+
+amqp_opts = [
+    cfg.BoolOpt('amqp_durable_queues',
+                default=False,
+                deprecated_name='rabbit_durable_queues',
+                deprecated_group='DEFAULT',
+                help='Use durable queues in amqp.'),
+    cfg.BoolOpt('amqp_auto_delete',
+                default=False,
+                help='Auto-delete queues in amqp.'),
+]
+
+cfg.CONF.register_opts(amqp_opts)
 
 UNIQUE_ID = '_unique_id'
 LOG = logging.getLogger(__name__)
@@ -151,11 +165,13 @@ class ConnectionContext(rpc_common.Connection):
     def create_worker(self, topic, proxy, pool_name):
         self.connection.create_worker(topic, proxy, pool_name)
 
-    def join_consumer_pool(self, callback, pool_name, topic, exchange_name):
+    def join_consumer_pool(self, callback, pool_name, topic, exchange_name,
+                           ack_on_error=True):
         self.connection.join_consumer_pool(callback,
                                            pool_name,
                                            topic,
-                                           exchange_name)
+                                           exchange_name,
+                                           ack_on_error)
 
     def consume_in_thread(self):
         self.connection.consume_in_thread()
@@ -219,12 +235,7 @@ def msg_reply(conf, msg_id, reply_q, connection_pool, reply=None,
             failure = rpc_common.serialize_remote_exception(failure,
                                                             log_failure)
 
-        try:
-            msg = {'result': reply, 'failure': failure}
-        except TypeError:
-            msg = {'result': dict((k, repr(v))
-                   for k, v in reply.__dict__.iteritems()),
-                   'failure': failure}
+        msg = {'result': reply, 'failure': failure}
         if ending:
             msg['ending'] = True
         _add_unique_id(msg)
