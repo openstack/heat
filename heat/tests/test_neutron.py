@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mox
 
 from testtools import skipIf
 
@@ -524,6 +525,7 @@ class NeutronSubnetTest(HeatTestCase):
 
 @skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronRouterTest(HeatTestCase):
+    @skipIf(router.neutronV20 is None, "Missing Neutron v2_0")
     def setUp(self):
         super(NeutronRouterTest, self).setUp()
         self.m.StubOutWithMock(neutronclient.Client, 'create_router')
@@ -533,6 +535,8 @@ class NeutronRouterTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'remove_interface_router')
         self.m.StubOutWithMock(neutronclient.Client, 'add_gateway_router')
         self.m.StubOutWithMock(neutronclient.Client, 'remove_gateway_router')
+        self.m.StubOutWithMock(router.neutronV20,
+                               'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         utils.setup_dummy_db()
 
@@ -702,6 +706,11 @@ class NeutronRouterTest(HeatTestCase):
     def test_gateway_router(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
+        router.neutronV20.find_resourceid_by_name_or_id(
+            mox.IsA(neutronclient.Client),
+            'network',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronclient.Client.add_gateway_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
