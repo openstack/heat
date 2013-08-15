@@ -21,6 +21,7 @@ from oslo.config import cfg
 from keystoneclient.contrib.ec2 import utils as ec2_utils
 
 from heat.common import exception
+from heat.engine import clients
 from heat.engine import resource
 
 from heat.openstack.common import log
@@ -51,7 +52,10 @@ class SignalResponder(resource.Resource):
     def handle_delete(self):
         if self.resource_id is None:
             return
-        self.keystone().delete_stack_user(self.resource_id)
+        try:
+            self.keystone().delete_stack_user(self.resource_id)
+        except clients.hkc.kc.exceptions.NotFound:
+            pass
 
     def _get_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
