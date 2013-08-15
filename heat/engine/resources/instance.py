@@ -373,9 +373,7 @@ class Instance(resource.Resource):
         # check validity of key
         key_name = self.properties.get('KeyName', None)
         if key_name:
-            keypairs = self.nova().keypairs.list()
-            if not any(k.name == key_name for k in keypairs):
-                raise exception.UserKeyPairMissing(key_name=key_name)
+            nova_utils.get_keypair(self.nova(), key_name)
 
         # check validity of security groups vs. network interfaces
         security_groups = self._get_security_groups()
