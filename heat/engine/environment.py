@@ -317,6 +317,10 @@ class ResourceRegistry(object):
         return [k for k in self._registry if is_plugin(k)]
 
 
+SECTIONS = (PARAMETERS, RESOURCE_REGISTRY) = \
+           ('parameters', 'resource_registry')
+
+
 class Environment(object):
 
     def __init__(self, env=None, user_env=True):
@@ -336,22 +340,22 @@ class Environment(object):
             global_registry = None
 
         self.registry = ResourceRegistry(global_registry)
-        self.registry.load(env.get('resource_registry', {}))
+        self.registry.load(env.get(RESOURCE_REGISTRY, {}))
 
         if 'parameters' in env:
             self.params = env['parameters']
         else:
             self.params = dict((k, v) for (k, v) in env.iteritems()
-                               if k != 'resource_registry')
+                               if k != RESOURCE_REGISTRY)
 
     def load(self, env_snippet):
-        self.registry.load(env_snippet.get('resource_registry', {}))
+        self.registry.load(env_snippet.get(RESOURCE_REGISTRY, {}))
         self.params.update(env_snippet.get('parameters', {}))
 
     def user_env_as_dict(self):
         """Get the environment as a dict, ready for storing in the db."""
-        return {'resource_registry': self.registry.as_dict(),
-                'parameters': self.params}
+        return {RESOURCE_REGISTRY: self.registry.as_dict(),
+                PARAMETERS: self.params}
 
     def register_class(self, resource_type, resource_class):
         self.registry.register_class(resource_type, resource_class)
