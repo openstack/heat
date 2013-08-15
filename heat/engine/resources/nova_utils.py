@@ -33,6 +33,18 @@ from heat.openstack.common import uuidutils
 logger = logging.getLogger(__name__)
 
 
+deferred_server_statuses = ['BUILD',
+                            'HARD_REBOOT',
+                            'PASSWORD',
+                            'REBOOT',
+                            'RESCUE',
+                            'RESIZE',
+                            'REVERT_RESIZE',
+                            'SHUTOFF',
+                            'SUSPENDED',
+                            'VERIFY_RESIZE']
+
+
 def get_image_id(nova_client, image_identifier):
     '''
     Return an id for the specified image name or identifier.

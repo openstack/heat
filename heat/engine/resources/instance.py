@@ -138,17 +138,6 @@ class Instance(resource.Resource):
     update_allowed_keys = ('Metadata', 'Properties')
     update_allowed_properties = ('InstanceType',)
 
-    _deferred_server_statuses = ['BUILD',
-                                 'HARD_REBOOT',
-                                 'PASSWORD',
-                                 'REBOOT',
-                                 'RESCUE',
-                                 'RESIZE',
-                                 'REVERT_RESIZE',
-                                 'SHUTOFF',
-                                 'SUSPENDED',
-                                 'VERIFY_RESIZE']
-
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = None
@@ -316,7 +305,7 @@ class Instance(resource.Resource):
 
             # Some clouds append extra (STATUS) strings to the status
             short_server_status = server.status.split('(')[0]
-            if short_server_status in self._deferred_server_statuses:
+            if short_server_status in nova_utils.deferred_server_statuses:
                 return False
             elif server.status == 'ACTIVE':
                 self._set_ipaddress(server.networks)
@@ -485,7 +474,7 @@ class Instance(resource.Resource):
                 server.get()
                 logger.debug("%s check_suspend_complete status = %s" %
                              (self.name, server.status))
-                if server.status in list(self._deferred_server_statuses +
+                if server.status in list(nova_utils.deferred_server_statuses +
                                          ['ACTIVE']):
                     return server.status == 'SUSPENDED'
                 else:
