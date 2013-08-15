@@ -328,13 +328,18 @@ class Instance(resource.Resource):
                 code = fault.get('code', 500)
                 delete = scheduler.TaskRunner(self._delete_server, server)
                 delete(wait_time=0.2)
-                exc = exception.Error("Build of server %s failed: %s (%s)" %
-                                      (server.name, message, code))
+                exc = exception.Error(_("Build of server %(server)s failed: "
+                                        "%(message)s (%(code)s)") %
+                                      dict(server=server.name,
+                                           message=message,
+                                           code=code))
                 raise exc
             else:
-                exc = exception.Error('%s instance[%s] status[%s]' %
-                                      ('nova reported unexpected',
-                                       self.name, server.status))
+                exc = exception.Error(_('Nova reported unexpected '
+                                        'instance[%(name)s] '
+                                        'status[%(status)s]') %
+                                      dict(name=self.name,
+                                           status=server.status))
                 raise exc
         else:
             return volume_attach.step()
@@ -374,8 +379,8 @@ class Instance(resource.Resource):
             server.confirm_resize()
         else:
             raise exception.Error(
-                "Resizing to '%s' failed, status '%s'" % (
-                    flavor, server.status))
+                _("Resizing to '%(flavor)s' failed, status '%(status)s'") %
+                dict(flavor=flavor, status=server.status))
 
     def metadata_update(self, new_metadata=None):
         '''
