@@ -418,7 +418,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         if 'flavor' in prop_diff:
             self.flavor = json_snippet['Properties']['flavor']
             self.server.resize(self.flavor)
-            resize = scheduler.TaskRunner(self._check_resize,
+            resize = scheduler.TaskRunner(nova_utils.check_resize,
                                           self.server,
                                           self.flavor)
             resize(wait_time=1.0)

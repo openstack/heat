@@ -201,3 +201,21 @@ def delete_server(server):
             server.get()
         except clients.novaclient.exceptions.NotFound:
             break
+
+
+def check_resize(server, flavor):
+    """
+    Verify that the server is properly resized. If that's the case, confirm
+    the resize, if not raise an error.
+    """
+    yield
+    server.get()
+    while server.status == 'RESIZE':
+        yield
+        server.get()
+    if server.status == 'VERIFY_RESIZE':
+        server.confirm_resize()
+    else:
+        raise exception.Error(
+            _("Resizing to '%(flavor)s' failed, status '%(status)s'") %
+            dict(flavor=flavor, status=server.status))
