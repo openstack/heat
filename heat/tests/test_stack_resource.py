@@ -162,6 +162,11 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(set(self.stack.resources.keys()),
                          set(["WebServer", "WebServer2"]))
 
+        # The stack's owner_id is maintained.
+        saved_stack = parser.Stack.load(
+            self.parent_stack.context, self.stack.id)
+        self.assertEqual(saved_stack.owner_id, self.parent_stack.id)
+
     @utils.stack_delete_after
     def test_load_nested_ok(self):
         self.parent_resource.create_with_template(self.templ,
@@ -255,7 +260,8 @@ class StackResourceTest(HeatTestCase):
         self.m.StubOutWithMock(parser, 'Stack')
         parser.Stack(ctx, phy_id, templ, env, timeout_mins=None,
                      disable_rollback=True,
-                     parent_resource=self.parent_resource)\
+                     parent_resource=self.parent_resource,
+                     owner_id=self.parent_stack.id)\
             .AndReturn(self.stack)
 
         st_set = self.stack.state_set
