@@ -173,3 +173,19 @@ def build_userdata(resource, userdata=None):
     mime_blob = MIMEMultipart(_subparts=subparts)
 
     return mime_blob.as_string()
+
+
+def delete_server(server):
+    '''
+    Return a co-routine that deletes the server and waits for it to
+    disappear from Nova.
+    '''
+    server.delete()
+
+    while True:
+        yield
+
+        try:
+            server.get()
+        except clients.novaclient.exceptions.NotFound:
+            break

@@ -326,7 +326,8 @@ class Instance(resource.Resource):
                 fault = server.fault or {}
                 message = fault.get('message', 'Unknown')
                 code = fault.get('code', 500)
-                delete = scheduler.TaskRunner(self._delete_server, server)
+                delete = scheduler.TaskRunner(
+                    nova_utils.delete_server, server)
                 delete(wait_time=0.2)
                 exc = exception.Error(_("Build of server %(server)s failed: "
                                         "%(message)s (%(code)s)") %
@@ -414,21 +415,6 @@ class Instance(resource.Resource):
         # make sure the image exists.
         nova_utils.get_image_id(self.nova(), self.properties['ImageId'])
 
-    def _delete_server(self, server):
-        '''
-        Return a co-routine that deletes the server and waits for it to
-        disappear from Nova.
-        '''
-        server.delete()
-
-        while True:
-            yield
-
-            try:
-                server.get()
-            except clients.novaclient.exceptions.NotFound:
-                break
-
     def _detach_volumes_task(self):
         '''
         Detach volumes from the instance
@@ -453,7 +439,8 @@ class Instance(resource.Resource):
         except clients.novaclient.exceptions.NotFound:
             pass
         else:
-            delete = scheduler.TaskRunner(self._delete_server, server)
+            delete = scheduler.TaskRunner(
+                nova_utils.delete_server, server)
             delete(wait_time=0.2)
 
         self.resource_id = None
