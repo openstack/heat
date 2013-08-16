@@ -744,6 +744,64 @@ class StackServiceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    @stack_context('service_event_list_deleted_resource_test_stack')
+    def test_stack_event_list_deleted_resource(self):
+        rsrs._register_class('GenericResourceType',
+                             generic_rsrc.GenericResource)
+
+        def run(stack_id, func, *args):
+            func(*args)
+        self.eng._start_in_thread = run
+
+        new_tmpl = {'Resources': {'AResource': {'Type':
+                                                'GenericResourceType'}}}
+
+        self.m.StubOutWithMock(instances.Instance, 'handle_delete')
+        instances.Instance.handle_delete()
+
+        self.m.ReplayAll()
+
+        result = self.eng.update_stack(self.ctx, self.stack.identifier(),
+                                       new_tmpl, None, None, {})
+
+        # The self.stack reference needs to be updated. Since the underlying
+        # stack is updated in update_stack, the original reference is now
+        # pointing to an orphaned stack object.
+        self.stack = parser.Stack.load(self.ctx, stack_id=result['stack_id'])
+
+        self.assertEqual(self.stack.identifier(), result)
+        self.assertTrue(isinstance(result, dict))
+        self.assertTrue(result['stack_id'])
+        events = self.eng.list_events(self.ctx, self.stack.identifier())
+
+        self.assertEqual(6, len(events))
+
+        for ev in events:
+            self.assertIn('event_identity', ev)
+            self.assertEqual(dict, type(ev['event_identity']))
+            self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
+
+            self.assertIn('logical_resource_id', ev)
+            self.assertIn('physical_resource_id', ev)
+            self.assertIn('resource_properties', ev)
+            self.assertIn('resource_status_reason', ev)
+
+            self.assertIn(ev['resource_action'], ('CREATE', 'DELETE'))
+            self.assertIn(ev['resource_status'], ('IN_PROGRESS', 'COMPLETE'))
+
+            self.assertIn('resource_type', ev)
+            self.assertIn(ev['resource_type'], ('AWS::EC2::Instance',
+                                                'GenericResourceType'))
+
+            self.assertIn('stack_identity', ev)
+
+            self.assertIn('stack_name', ev)
+            self.assertEqual(self.stack.name, ev['stack_name'])
+
+            self.assertIn('event_time', ev)
+
+        self.m.VerifyAll()
+
     @stack_context('service_event_list_test_stack')
     def test_stack_event_list_by_tenant(self):
         events = self.eng.list_events(self.ctx, None)
