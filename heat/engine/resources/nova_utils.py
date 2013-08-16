@@ -219,3 +219,17 @@ def check_resize(server, flavor):
         raise exception.Error(
             _("Resizing to '%(flavor)s' failed, status '%(status)s'") %
             dict(flavor=flavor, status=server.status))
+
+
+def server_to_ipaddress(client, server):
+    '''
+    Return the server's IP address, fetching it from Nova.
+    '''
+    try:
+        server = client.servers.get(server)
+    except clients.novaclient.exceptions.NotFound as ex:
+        logger.warn('Instance (%s) not found: %s' % (server, str(ex)))
+    else:
+        for n in server.networks:
+            if len(server.networks[n]) > 0:
+                return server.networks[n][0]
