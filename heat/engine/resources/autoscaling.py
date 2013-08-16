@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 from heat.common import exception
 from heat.engine import resource
 from heat.engine import signal_responder
@@ -73,7 +74,7 @@ class InstanceGroup(stack_resource.StackResource):
                             'Schema': tags_schema}}
     }
     update_allowed_keys = ('Properties',)
-    update_allowed_properties = ('Size',)
+    update_allowed_properties = ('Size', 'LaunchConfigurationName',)
     attributes_schema = {
         "InstanceList": ("A comma-delimited list of server ip addresses. "
                          "(Heat extension)")
@@ -154,12 +155,12 @@ class InstanceGroup(stack_resource.StackResource):
         launch configuration.
         """
         conf_name = self.properties['LaunchConfigurationName']
-        instance_definition = self.stack.t['Resources'][conf_name].copy()
+        conf = self.stack.resource_by_refid(conf_name)
+        instance_definition = copy.deepcopy(conf.t)
         instance_definition['Type'] = 'AWS::EC2::Instance'
         instance_definition['Properties']['Tags'] = self._tags()
         # resolve references within the context of this stack.
-        static_parsed = self.stack.resolve_static_data(instance_definition)
-        fully_parsed = self.stack.resolve_runtime_data(static_parsed)
+        fully_parsed = self.stack.resolve_runtime_data(instance_definition)
 
         resources = {}
         for i in range(num_instances):
@@ -241,7 +242,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
     # template keys and properties supported for handle_update,
     # note trailing comma is required for a single item to get a tuple
     update_allowed_keys = ('Properties',)
-    update_allowed_properties = ('MaxSize', 'MinSize',
+    update_allowed_properties = ('LaunchConfigurationName',
+                                 'MaxSize', 'MinSize',
                                  'Cooldown', 'DesiredCapacity',)
 
     def handle_create(self):
@@ -363,6 +365,9 @@ class LaunchConfiguration(resource.Resource):
                                'Schema': {'Type': 'Map',
                                           'Schema': tags_schema}},
     }
+
+    def FnGetRefId(self):
+        return unicode(self.physical_resource_name())
 
 
 class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
