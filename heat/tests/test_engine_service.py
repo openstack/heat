@@ -406,8 +406,12 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
     def test_stack_delete(self):
         stack_name = 'service_delete_test_stack'
         stack = get_wordpress_stack(stack_name, self.ctx)
-        stack.status = "COMPLETE"
-        stack.store()
+        sid = stack.store()
+
+        s = db_api.stack_get(self.ctx, sid)
+        self.m.StubOutWithMock(parser.Stack, 'load')
+
+        parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
 
         self.man.tg = DummyThreadGroup()
 
@@ -417,29 +421,16 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                          self.man.delete_stack(self.ctx, stack.identifier()))
         self.m.VerifyAll()
 
-    def test_stack_delete_action_in_progress_err(self):
-        '''
-        Test that deleting a stack with an action in progress results in
-        an ActionInProgress exception.
-
-        '''
-        stack_name = 'service_delete_action_in_progress_err'
-        stack = get_wordpress_stack(stack_name, self.ctx)
-        stack.status = "IN_PROGRESS"
-        stack.store()
-
-        self.assertRaises(exception.ActionInProgress,
-                          self.man.delete_stack,
-                          self.ctx,
-                          stack.identifier())
-
     def test_stack_delete_nonexist(self):
         stack_name = 'service_delete_nonexist_test_stack'
         stack = get_wordpress_stack(stack_name, self.ctx)
 
+        self.m.ReplayAll()
+
         self.assertRaises(exception.StackNotFound,
                           self.man.delete_stack,
                           self.ctx, stack.identifier())
+        self.m.VerifyAll()
 
     def test_stack_update(self):
         stack_name = 'service_update_test_stack'
@@ -447,7 +438,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         template = '{ "Template": "data" }'
 
         old_stack = get_wordpress_stack(stack_name, self.ctx)
-        old_stack.status = 'COMPLETE'
         sid = old_stack.store()
         s = db_api.stack_get(self.ctx, sid)
 
@@ -480,33 +470,12 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertTrue(result['stack_id'])
         self.m.VerifyAll()
 
-    def test_stack_update_action_in_progress_err(self):
-        '''
-        Test that updating a stack with an action in progress results
-        in an ActionInProgress exception.
-
-        '''
-        stack_name = 'service_update_action_in_progress_err_test_stack'
-        params = {'foo': 'bar'}
-        template = '{ "Template": "data" }'
-
-        old_stack = get_wordpress_stack(stack_name, self.ctx)
-        old_stack.status = 'IN_PROGRESS'
-        old_stack.store()
-
-        self.assertRaises(
-            exception.ActionInProgress,
-            self.man.update_stack,
-            self.ctx, old_stack.identifier(),
-            template, params, None, {})
-
     def test_stack_update_verify_err(self):
         stack_name = 'service_update_verify_err_test_stack'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
         old_stack = get_wordpress_stack(stack_name, self.ctx)
-        old_stack.status = 'COMPLETE'
         old_stack.store()
         sid = old_stack.store()
         s = db_api.stack_get(self.ctx, sid)

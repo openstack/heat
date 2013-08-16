@@ -972,48 +972,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                           body=body)
         self.m.VerifyAll()
 
-    def test_update_in_progress_err(self):
-        '''
-        Tests that the ActionInProgress exception results in an HTTPConflict.
-
-        '''
-        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
-        body = {'template': template,
-                'parameters': parameters,
-                'files': {},
-                'timeout_mins': 30}
-
-        req = self._put('/stacks/%(stack_name)s/%(stack_id)s' % identity,
-                        json.dumps(body))
-
-        self.m.StubOutWithMock(rpc, 'call')
-        error = to_remote_error(heat_exc.ActionInProgress(stack_name="foo",
-                                                          action="UPDATE"))
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'update_stack',
-                  'args': {'stack_identity': dict(identity),
-                           'template': template,
-                           'params': {'parameters': parameters},
-                           'files': {},
-                           'args': {'timeout_mins': 30}},
-                  'version': self.api_version},
-                 None).AndRaise(error)
-        self.m.ReplayAll()
-
-        resp = request_with_middleware(fault.FaultWrapper,
-                                       self.controller.update,
-                                       req, tenant_id=identity.tenant,
-                                       stack_name=identity.stack_name,
-                                       stack_id=identity.stack_id,
-                                       body=body)
-        self.assertEqual(resp.json['code'], 409)
-        self.assertEqual(resp.json['title'], 'Conflict')
-        self.assertEqual(resp.json['error']['type'], 'ActionInProgress')
-        self.m.VerifyAll()
-
     def test_update_bad_name(self):
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
         template = {u'Foo': u'bar'}
