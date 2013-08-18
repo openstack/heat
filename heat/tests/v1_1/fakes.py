@@ -121,6 +121,8 @@ class FakeHTTPClient(base_client.HTTPClient):
     def get_servers_detail(self, **kw):
         return (200, {"servers": [{"id": 1234,
                                    "name": "sample-server",
+                                   "OS-EXT-SRV-ATTR:instance_name":
+                                   "sample-server",
                                    "image": {"id": 2,
                                              "name": "sample image"},
                                    "flavor": {"id": 1,
@@ -137,10 +139,14 @@ class FakeHTTPClient(base_client.HTTPClient):
                                                              "5.6.7.8"}],
                                    "private": [{"version": 4,
                                                 "addr": "10.11.12.13"}]},
+                                   "accessIPv4": "",
+                                   "accessIPv6": "",
                                    "metadata": {"Server Label": "Web Head 1",
                                                 "Image Version": "2.1"}},
                                   {"id": 5678,
                                    "name": "sample-server2",
+                                   "OS-EXT-SRV-ATTR:instance_name":
+                                   "sample-server2",
                                    "image": {"id": 2,
                                              "name": "sample image"},
                                    "flavor": {"id": 1,
@@ -148,6 +154,8 @@ class FakeHTTPClient(base_client.HTTPClient):
                                    "hostId":
                                    "9e107d9d372bb6826bd81d3542a419d6",
                                    "status": "ACTIVE",
+                                   "accessIPv4": "192.0.2.0",
+                                   "accessIPv6": "::babe:4317:0A83",
                                    "addresses": {"public": [{"version": 4,
                                                              "addr":
                                                              "4.5.6.7"},
@@ -159,6 +167,8 @@ class FakeHTTPClient(base_client.HTTPClient):
                                    "metadata": {"Server Label": "DB 1"}},
                                   {"id": 9101,
                                    "name": "hard-reboot",
+                                   "OS-EXT-SRV-ATTR:instance_name":
+                                   "hard-reboot",
                                    "image": {"id": 2,
                                              "name": "sample image"},
                                    "flavor": {"id": 1,
@@ -166,6 +176,8 @@ class FakeHTTPClient(base_client.HTTPClient):
                                    "hostId":
                                    "9e44d8d435c43dd8d96bb63ed995605f",
                                    "status": "HARD_REBOOT",
+                                   "accessIPv4": "",
+                                   "accessIPv6": "",
                                    "addresses": {"public": [{"version": 4,
                                                              "addr":
                                                              "172.17.1.2"},
@@ -177,6 +189,8 @@ class FakeHTTPClient(base_client.HTTPClient):
                                    "metadata": {"Server Label": "DB 1"}},
                                   {"id": 9102,
                                    "name": "server-with-no-ip",
+                                   "OS-EXT-SRV-ATTR:instance_name":
+                                   "server-with-no-ip",
                                    "image": {"id": 2,
                                              "name": "sample image"},
                                    "flavor": {"id": 1,
@@ -184,11 +198,15 @@ class FakeHTTPClient(base_client.HTTPClient):
                                    "hostId":
                                    "c1365ba78c624df9b2ff446515a682f5",
                                    "status": "ACTIVE",
+                                   "accessIPv4": "",
+                                   "accessIPv6": "",
                                    "addresses": {
                                        "empty_net": []},
                                    "metadata": {"Server Label": "DB 1"}},
                                   {"id": 9999,
                                    "name": "sample-server3",
+                                   "OS-EXT-SRV-ATTR:instance_name":
+                                   "sample-server3",
                                    "image": {"id": 3,
                                              "name": "sample image"},
                                    "flavor": {"id": 3,
@@ -196,6 +214,8 @@ class FakeHTTPClient(base_client.HTTPClient):
                                    "hostId":
                                    "9e107d9d372bb6826bd81d3542a419d6",
                                    "status": "ACTIVE",
+                                   "accessIPv4": "",
+                                   "accessIPv6": "",
                                    "addresses": {
                                    "public": [{"version": 4,
                                                "addr": "4.5.6.7"},
