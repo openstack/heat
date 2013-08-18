@@ -16,6 +16,7 @@
 from heat.engine import clients
 from heat.engine import resource
 
+from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
@@ -48,10 +49,18 @@ class ElasticIp(resource.Resource):
 
     def handle_create(self):
         """Allocate a floating IP for the current tenant."""
-        ips = self.nova().floating_ips.create()
-        logger.info('ElasticIp create %s' % str(ips))
-        self.ipaddress = ips.ip
-        self.resource_id_set(ips.id)
+        try:
+            ips = self.nova().floating_ips.create()
+        except clients.novaclient.exceptions.NotFound:
+            with excutils.save_and_reraise_exception():
+                msg = ("No default floating IP pool configured."
+                       "Set 'default_floating_pool' in nova.conf.")
+                logger.error(msg)
+
+        if ips:
+            logger.info('ElasticIp create %s' % str(ips))
+            self.ipaddress = ips.ip
+            self.resource_id_set(ips.id)
 
         if self.properties['InstanceId']:
             server = self.nova().servers.get(self.properties['InstanceId'])
