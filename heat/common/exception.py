@@ -21,13 +21,8 @@ import functools
 import urlparse
 import sys
 
-from heat.openstack.common import exception
 from heat.openstack.common import log as logging
 
-
-NotFound = exception.NotFound
-Error = exception.Error
-InvalidContentType = exception.InvalidContentType
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
 
@@ -342,3 +337,16 @@ class TemplateTooBig(HeatException):
 class EgressRuleNotAllowed(HeatException):
     message = _("Egress rules are only allowed when "
                 "Neutron is used and the 'VpcId' property is set.")
+
+
+class Error(Exception):
+    def __init__(self, message=None):
+        super(Error, self).__init__(message)
+
+
+class NotFound(Error):
+    pass
+
+
+class InvalidContentType(HeatException):
+    message = "Invalid content type %(content_type)s"
