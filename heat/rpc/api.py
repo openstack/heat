@@ -54,7 +54,7 @@ RES_KEYS = (
     RES_REQUIRED_BY,
 ) = (
     'description', 'updated_time',
-    'logical_resource_id', 'physical_resource_id', 'metadata',
+    'resource_name', 'physical_resource_id', 'metadata',
     'resource_action', 'resource_status', 'resource_status_reason',
     'resource_type', 'resource_identity', STACK_ID, STACK_NAME,
     'required_by',

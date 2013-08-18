@@ -38,7 +38,7 @@ class Event(object):
         self.status = status
         self.reason = reason
         self.physical_resource_id = physical_resource_id
-        self.logical_resource_id = resource_name
+        self.resource_name = resource_name
         self.resource_type = resource_type
         try:
             self.resource_properties = dict(resource_properties)
@@ -63,13 +63,13 @@ class Event(object):
 
         return cls(context, st, ev.resource_action, ev.resource_status,
                    ev.resource_status_reason, ev.physical_resource_id,
-                   ev.resource_properties, ev.logical_resource_id,
+                   ev.resource_properties, ev.resource_name,
                    ev.resource_type, ev.created_at, ev.id)
 
     def store(self):
         '''Store the Event in the database.'''
         ev = {
-            'logical_resource_id': self.logical_resource_id,
+            'resource_name': self.resource_name,
             'physical_resource_id': self.physical_resource_id,
             'stack_id': self.stack.id,
             'resource_action': self.action,
@@ -95,6 +95,6 @@ class Event(object):
             return None
 
         res_id = identifier.ResourceIdentifier(
-            resource_name=self.logical_resource_id, **self.stack.identifier())
+            resource_name=self.resource_name, **self.stack.identifier())
 
         return identifier.EventIdentifier(event_id=str(self.id), **res_id)
