@@ -140,6 +140,17 @@
 
 
 #
+# Options defined in heat.openstack.common.lockutils
+#
+
+# Whether to disable inter-process locks (boolean value)
+#disable_process_locking=false
+
+# Directory to use for lock files. (string value)
+#lock_path=<None>
+
+
+#
 # Options defined in heat.openstack.common.log
 #
 
@@ -464,6 +475,20 @@
 # Private key file to use when starting the server securely
 # (string value)
 #key_file=<None>
+
+
+[database]
+
+#
+# Options defined in heat.openstack.common.db.api
+#
+
+# The backend to use for db (string value)
+#backend=sqlalchemy
+
+# Enable the experimental use of thread pooling for all DB API
+# calls (boolean value)
+#use_tpool=false
 
 
 [paste_deploy]
