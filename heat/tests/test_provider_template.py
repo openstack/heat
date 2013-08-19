@@ -47,46 +47,43 @@ class ProviderTemplateTest(HeatTestCase):
         # default class.
         env_str = {'resource_registry': {}}
         env = environment.Environment(env_str)
-        cls = resource.get_class('OS::ResourceType', 'fred', env)
-        self.assertEqual(cls, generic_rsrc.GenericResource)
+        cls = env.get_class('OS::ResourceType', 'fred')
+        self.assertEqual(generic_rsrc.GenericResource, cls)
 
     def test_get_mine_global_map(self):
         # assertion: with a global rule we get the "mycloud" class.
         env_str = {'resource_registry': {"OS::*": "myCloud::*"}}
         env = environment.Environment(env_str)
-        cls = resource.get_class('OS::ResourceType', 'fred', env)
-        self.assertEqual(cls, MyCloudResource)
+        cls = env.get_class('OS::ResourceType', 'fred')
+        self.assertEqual(MyCloudResource, cls)
 
     def test_get_mine_type_map(self):
         # assertion: with a global rule we get the "mycloud" class.
         env_str = {'resource_registry': {
             "OS::ResourceType": "myCloud::ResourceType"}}
         env = environment.Environment(env_str)
-        cls = resource.get_class('OS::ResourceType', 'fred', env)
-        self.assertEqual(cls, MyCloudResource)
+        cls = env.get_class('OS::ResourceType', 'fred')
+        self.assertEqual(MyCloudResource, cls)
 
     def test_get_mine_resource_map(self):
         # assertion: with a global rule we get the "mycloud" class.
         env_str = {'resource_registry': {'resources': {'fred': {
             "OS::ResourceType": "myCloud::ResourceType"}}}}
         env = environment.Environment(env_str)
-        cls = resource.get_class('OS::ResourceType', 'fred', env)
-        self.assertEqual(cls, MyCloudResource)
+        cls = env.get_class('OS::ResourceType', 'fred')
+        self.assertEqual(MyCloudResource, cls)
 
     def test_get_os_no_match(self):
         # assertion: make sure 'fred' doesn't match 'jerry'.
         env_str = {'resource_registry': {'resources': {'jerry': {
             "OS::ResourceType": "myCloud::ResourceType"}}}}
         env = environment.Environment(env_str)
-        cls = resource.get_class('OS::ResourceType', 'fred', env)
-        self.assertEqual(cls, generic_rsrc.GenericResource)
+        cls = env.get_class('OS::ResourceType', 'fred')
+        self.assertEqual(generic_rsrc.GenericResource, cls)
 
     def test_to_parameters(self):
         """Tests property conversion to parameter values."""
         utils.setup_dummy_db()
-        stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}),
-                             stack_id=uuidutils.generate_uuid())
 
         class DummyResource(object):
             attributes_schema = {"Foo": "A test attribute"}
@@ -97,6 +94,14 @@ class ProviderTemplateTest(HeatTestCase):
                 "AMap": {"Type": "Map"}
             }
 
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
         map_prop_val = {
             "key1": "val1",
             "key2": ["lval1", "lval2", "lval3"],
@@ -106,7 +111,7 @@ class ProviderTemplateTest(HeatTestCase):
             }
         }
         json_snippet = {
-            "Type": "test_resource.template",
+            "Type": "DummyResource",
             "Properties": {
                 "Foo": "Bar",
                 "AList": ["one", "two", "three"],
@@ -114,9 +119,6 @@ class ProviderTemplateTest(HeatTestCase):
                 "AMap": map_prop_val
             }
         }
-        self.m.StubOutWithMock(template_resource.resource, "get_class")
-        (template_resource.resource.get_class("test_resource.template")
-         .AndReturn(DummyResource))
         self.m.ReplayAll()
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
@@ -143,7 +145,7 @@ class ProviderTemplateTest(HeatTestCase):
         env_str = {'resource_registry': {'resources': {'fred': {
             "OS::ResourceType": "some_magic.yaml"}}}}
         env = environment.Environment(env_str)
-        cls = resource.get_class('OS::ResourceType', 'fred', env)
+        cls = env.get_class('OS::ResourceType', 'fred')
         self.assertEqual(cls, template_resource.TemplateResource)
 
     def test_template_as_resource(self):

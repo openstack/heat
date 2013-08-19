@@ -16,7 +16,7 @@
 import testtools
 
 from heat.engine import properties
-from heat.engine import resource
+from heat.engine import resources
 from heat.common import exception
 
 
@@ -184,7 +184,7 @@ class SchemaTest(testtools.TestCase):
         self.assertEqual(d, dict(l))
 
     def test_all_resource_schemata(self):
-        for resource_type in resource._resource_classes.itervalues():
+        for resource_type in resources.global_env().get_types():
             for schema in getattr(resource_type,
                                   'properties_schema',
                                   {}).itervalues():
