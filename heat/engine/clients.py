@@ -195,7 +195,7 @@ class OpenStackClients(object):
             'auth_url': con.auth_url,
             'service_type': 'metering',
             'project_id': con.tenant,
-            'token': self.auth_token,
+            'token': lambda: self.auth_token,
             'endpoint': self.url_for(service_type='metering'),
         }
 
