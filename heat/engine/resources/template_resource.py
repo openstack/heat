@@ -67,15 +67,18 @@ class TemplateResource(stack_resource.StackResource):
         for n, v in iter(self.properties.props.items()):
             if not v.implemented():
                 continue
-            elif v.type() == properties.LIST:
+
+            val = self.properties[n]
+
+            if val is not None:
                 # take a list and create a CommaDelimitedList
-                val = self.properties[n]
-                if val:
-                    params[n] = ','.join(val)
-            else:
+                if v.type() == properties.LIST:
+                    val = ','.join(val)
+
                 # for MAP, the JSON param takes either a collection or string,
                 # so just pass it on and let the param validate as appropriate
-                params[n] = self.properties[n]
+
+                params[n] = val
 
         return params
 
