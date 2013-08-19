@@ -174,6 +174,47 @@ class Schema(collections.Mapping):
                    constraints=list(constraints()),
                    implemented=schema_dict.get(IMPLEMENTED, True))
 
+    @classmethod
+    def from_parameter(cls, param):
+        """
+        Return a property Schema corresponding to a parameter.
+
+        Convert a parameter schema from a provider template to a property
+        Schema for the corresponding resource facade.
+        """
+        param_type_map = {
+            parameters.STRING: STRING,
+            parameters.NUMBER: NUMBER,
+            parameters.COMMA_DELIMITED_LIST: LIST,
+            parameters.JSON: MAP
+        }
+
+        def constraints():
+            def get_num(key):
+                val = param.get(key)
+                if val is not None:
+                    val = Property.str_to_num(val)
+                return val
+
+            desc = param.get(parameters.CONSTRAINT_DESCRIPTION)
+
+            if parameters.MIN_VALUE in param or parameters.MAX_VALUE in param:
+                yield Range(get_num(parameters.MIN_VALUE),
+                            get_num(parameters.MAX_VALUE))
+            if (parameters.MIN_LENGTH in param or
+                    parameters.MAX_LENGTH in param):
+                yield Length(get_num(parameters.MIN_LENGTH),
+                             get_num(parameters.MAX_LENGTH))
+            if parameters.ALLOWED_VALUES in param:
+                yield AllowedValues(param[parameters.ALLOWED_VALUES], desc)
+            if parameters.ALLOWED_PATTERN in param:
+                yield AllowedPattern(param[parameters.ALLOWED_PATTERN], desc)
+
+        return cls(param_type_map.get(param[parameters.TYPE], MAP),
+                   description=param.get(parameters.DESCRIPTION),
+                   required=parameters.DEFAULT not in param,
+                   constraints=list(constraints()))
+
     def validate_constraints(self, value):
         for constraint in self.constraints:
             constraint.validate(value)
