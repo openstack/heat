@@ -117,8 +117,9 @@ auth_password_opts = [
                 help=_('Allow orchestration of multiple clouds')),
     cfg.ListOpt('allowed_auth_uris',
                 default=[],
-                help=_('Allowed targets for auth_uri when multi_cloud is '
-                       'enabled.  If empty, all targets will be allowed.'))]
+                help=_('Allowed keystone endpoints for auth_uri when '
+                       'multi_cloud is enabled. At least one endpoint needs '
+                       'to be specified.'))]
 
 cfg.CONF.register_opts(db_opts)
 cfg.CONF.register_opts(engine_opts)
