@@ -257,8 +257,8 @@ class WatchRule(object):
             stack = parser.Stack.load(self.context, stack=s)
             if (stack.action != stack.DELETE
                     and stack.status == stack.COMPLETE):
-                for a in self.rule[self.ACTION_MAP[new_state]]:
-                    actions.append(stack[a].signal)
+                for refid in self.rule[self.ACTION_MAP[new_state]]:
+                    actions.append(stack.resource_by_refid(refid).signal)
             else:
                 logger.warning("Could not process watch state %s for stack" %
                                new_state)

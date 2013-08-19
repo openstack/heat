@@ -1423,8 +1423,8 @@ class StackServiceTest(HeatTestCase):
             signal = "dummyfoo"
 
         dummy_action = DummyAction()
-        self.m.StubOutWithMock(parser.Stack, '__getitem__')
-        parser.Stack.__getitem__(
+        self.m.StubOutWithMock(parser.Stack, 'resource_by_refid')
+        parser.Stack.resource_by_refid(
             'WebServerRestartPolicy').AndReturn(dummy_action)
 
         # Replace the real stack threadgroup with a dummy one, so we can
