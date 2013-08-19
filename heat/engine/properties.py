@@ -643,7 +643,7 @@ class Properties(collections.Mapping):
         :returns: an equivalent properties schema for the specified params
         """
         if params_snippet:
-            return dict((k, Property.schema_from_param(v)) for k, v
+            return dict((n, Schema.from_parameter(p)) for n, p
                         in params_snippet.items())
         return {}
 
