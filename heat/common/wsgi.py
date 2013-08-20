@@ -426,10 +426,15 @@ class Request(webob.Request):
             return content_type
 
     def best_match_language(self):
-        """Determine language for returned response."""
+        """Determines best available locale from the Accept-Language header.
+
+        :returns: the best language match or None if the 'Accept-Language'
+                  header was not available in the request.
+        """
+        if not self.accept_language:
+            return None
         all_languages = gettextutils.get_available_languages('heat')
-        return self.accept_language.best_match(all_languages,
-                                               default_match='en_US')
+        return self.accept_language.best_match(all_languages)
 
 
 def is_json_content_type(request):
