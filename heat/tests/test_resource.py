@@ -18,6 +18,7 @@ from heat.common import exception
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import environment
 from heat.openstack.common import uuidutils
 import heat.db.api as db_api
 
@@ -30,12 +31,17 @@ class ResourceTest(HeatTestCase):
     def setUp(self):
         super(ResourceTest, self).setUp()
         utils.setup_dummy_db()
-        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                  parser.Template({}),
-                                  stack_id=uuidutils.generate_uuid())
 
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
+
+        env = environment.Environment()
+        env.load({u'resource_registry':
+                  {u'OS::Test::GenericResource': u'GenericResourceType'}})
+
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  parser.Template({}), env=env,
+                                  stack_id=uuidutils.generate_uuid())
 
     def test_get_class_ok(self):
         cls = resource.get_class('GenericResourceType')
@@ -88,6 +94,21 @@ class ResourceTest(HeatTestCase):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual(res.type(), 'Foo')
+
+    def test_has_interface_direct_match(self):
+        tmpl = {'Type': 'GenericResourceType'}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        self.assertTrue(res.has_interface('GenericResourceType'))
+
+    def test_has_interface_no_match(self):
+        tmpl = {'Type': 'GenericResourceType'}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        self.assertFalse(res.has_interface('LookingForAnotherType'))
+
+    def test_has_interface_mapping(self):
+        tmpl = {'Type': 'OS::Test::GenericResource'}
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        self.assertTrue(res.has_interface('GenericResourceType'))
 
     def test_created_time(self):
         tmpl = {'Type': 'Foo'}

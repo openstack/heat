@@ -65,8 +65,7 @@ class Port(neutron.NeutronResource):
         # to so all subnets in a network should be created before
         # the ports in that network.
         for resource in self.stack.resources.itervalues():
-            if ((resource.type() == 'OS::Neutron::Subnet' or
-                resource.type() == 'OS::Quantum::Subnet') and
+            if (resource.has_interface('OS::Neutron::Subnet') and
                 resource.properties.get('network_id') ==
                     self.properties.get('network_id')):
                         deps += (self, resource)
