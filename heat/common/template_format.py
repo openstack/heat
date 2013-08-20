@@ -20,21 +20,30 @@ import json
 HEAT_VERSIONS = (u'2012-12-12',)
 CFN_VERSIONS = (u'2010-09-09',)
 
+if hasattr(yaml, 'CSafeLoader'):
+    yaml_loader = yaml.CSafeLoader
+else:
+    yaml_loader = yaml.SafeLoader
+
+if hasattr(yaml, 'CSafeDumper'):
+    yaml_dumper = yaml.CSafeDumper
+else:
+    yaml_dumper = yaml.SafeDumper
+
 
 def _construct_yaml_str(self, node):
     # Override the default string handling function
     # to always return unicode objects
     return self.construct_scalar(node)
-yaml.Loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
-yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
+yaml_loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 # Unquoted dates like 2013-05-23 in yaml files get loaded as objects of type
 # datetime.data which causes problems in API layer when being processed by
 # openstack.common.jsonutils. Therefore, make unicode string out of timestamps
 # until jsonutils can handle dates.
-yaml.Loader.add_constructor(u'tag:yaml.org,2002:timestamp',
+yaml_loader.add_constructor(u'tag:yaml.org,2002:timestamp',
                             _construct_yaml_str)
-yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:timestamp',
-                                _construct_yaml_str)
+yaml_loader.add_constructor(u'tag:yaml.org,2002:timestamp',
+                            _construct_yaml_str)
 
 
 def parse(tmpl_str, add_template_sections=True):
@@ -47,7 +56,7 @@ def parse(tmpl_str, add_template_sections=True):
         tpl = json.loads(tmpl_str)
     else:
         try:
-            tpl = yaml.safe_load(tmpl_str)
+            tpl = yaml.load(tmpl_str, Loader=yaml_loader)
         except (yaml.scanner.ScannerError, yaml.parser.ParserError) as e:
             raise ValueError(e)
         else:
@@ -100,10 +109,11 @@ def convert_json_to_yaml(json_str):
     json_str = key_re.sub(order_key, json_str)
 
     # parse the string as json to a python structure
-    tpl = yaml.safe_load(json_str)
+    tpl = yaml.load(json_str, Loader=yaml_loader)
 
     # dump python structure to yaml
-    yml = "HeatTemplateFormatVersion: '2012-12-12'\n" + yaml.safe_dump(tpl)
+    tpl["HeatTemplateFormatVersion"] = '2012-12-12'
+    yml = yaml.dump(tpl, Dumper=yaml_dumper)
 
     # remove ordering from key names
     yml = re.sub('__\d*__order__', '', yml)
