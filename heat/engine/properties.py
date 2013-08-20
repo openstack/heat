@@ -22,11 +22,11 @@ from heat.engine import parameters
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
     ALLOWED_PATTERN, MIN_VALUE, MAX_VALUE, ALLOWED_VALUES,
-    MIN_LENGTH, MAX_LENGTH,
+    MIN_LENGTH, MAX_LENGTH, DESCRIPTION,
 ) = (
     'Required', 'Implemented', 'Default', 'Type', 'Schema',
     'AllowedPattern', 'MinValue', 'MaxValue', 'AllowedValues',
-    'MinLength', 'MaxLength',
+    'MinLength', 'MaxLength', 'Description',
 )
 
 SCHEMA_TYPES = (
