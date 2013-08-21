@@ -200,6 +200,9 @@ class InstanceGroup(stack_resource.StackResource):
         instance_definition = copy.deepcopy(conf.t)
         instance_definition['Type'] = 'AWS::EC2::Instance'
         instance_definition['Properties']['Tags'] = self._tags()
+        if self.properties.get('VPCZoneIdentifier'):
+            instance_definition['Properties']['SubnetId'] = \
+                self.properties['VPCZoneIdentifier'][0]
         # resolve references within the context of this stack.
         fully_parsed = self.stack.resolve_runtime_data(instance_definition)
 
@@ -288,6 +291,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                             'AllowedValues': ['EC2', 'ELB'],
                             'Implemented': False},
         'LoadBalancerNames': {'Type': 'List'},
+        'VPCZoneIdentifier': {'Type': 'List'},
         'Tags': {'Type': 'List', 'Schema': {'Type': 'Map',
                                             'Schema': tags_schema}}
     }
@@ -413,6 +417,20 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
 
     def FnGetRefId(self):
         return unicode(self.name)
+
+    def validate(self):
+        res = super(AutoScalingGroup, self).validate()
+        if res:
+            return res
+
+        # TODO(pasquier-s): once Neutron is able to assign subnets to
+        # availability zones, it will be possible to specify multiple subnets.
+        # For now, only one subnet can be specified. The bug #1096017 tracks
+        # this issue.
+        if self.properties.get('VPCZoneIdentifier') and \
+                len(self.properties['VPCZoneIdentifier']) != 1:
+            raise exception.NotSupported(feature=_("Anything other than one "
+                                         "VPCZoneIdentifier"))
 
 
 class LaunchConfiguration(resource.Resource):

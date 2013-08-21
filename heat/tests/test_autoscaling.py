@@ -1409,3 +1409,34 @@ class AutoScalingTest(HeatTestCase):
 
         rsrc.delete()
         self.m.VerifyAll()
+
+    def test_vpc_zone_identifier(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['VPCZoneIdentifier'] = ['xxxx']
+
+        stack = utils.parse_stack(t, params=self.params)
+
+        self._stub_lb_reload(1)
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+
+        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
+        instances = rsrc.get_instances()
+        self.assertEqual(1, len(instances))
+        self.assertEqual('xxxx', instances[0].properties['SubnetId'])
+
+        rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_invalid_vpc_zone_identifier(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['VPCZoneIdentifier'] = ['xxxx', 'yyyy']
+
+        stack = utils.parse_stack(t, params=self.params)
+
+        self.assertRaises(exception.NotSupported, self.create_scaling_group, t,
+                          stack, 'WebServerGroup')
