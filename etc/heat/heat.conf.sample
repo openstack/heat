@@ -70,6 +70,9 @@
 # Keystone role for heat template-defined users (string value)
 #heat_stack_user_role=heat_stack_user
 
+# Maximum raw byte size of any template. (integer value)
+#max_template_size=524288
+
 
 #
 # Options defined in heat.common.crypt
