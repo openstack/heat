@@ -18,6 +18,7 @@ Utility for fetching a resource (e.g. a template) from a URL.
 '''
 
 import requests
+from requests import exceptions
 import urlparse
 
 from heat.openstack.common import log as logging
@@ -40,4 +41,9 @@ def get(url):
     if components.scheme not in ('http', 'https'):
         raise IOError('Invalid URL scheme %s' % components.scheme)
 
-    return requests.get(url).text
+    try:
+        resp = requests.get(url)
+        resp.raise_for_status()
+        return resp.text
+    except exceptions.RequestException as ex:
+        raise IOError('Failed to retrieve template: %s' % str(ex))
