@@ -14,9 +14,8 @@
 
 
 from heat.tests.common import HeatTestCase
-import mox
 
-import httplib
+import requests
 import json
 from oslo.config import cfg
 
@@ -176,15 +175,12 @@ class Ec2TokenTest(HeatTestCase):
     def _stub_http_connection(self, headers={}, params={}, response=None):
 
         class DummyHTTPResponse(object):
-            resp = response
+            text = response
 
-            def read(self):
-                return self.resp
+            def json(self):
+                return json.loads(self.text)
 
-        self.m.StubOutWithMock(httplib.HTTPConnection, '__init__')
-        httplib.HTTPConnection.__init__(mox.IgnoreArg()).AndReturn(None)
-
-        self.m.StubOutWithMock(httplib.HTTPConnection, 'request')
+        self.m.StubOutWithMock(requests, 'post')
         body_hash = ('e3b0c44298fc1c149afbf4c8996fb9'
                      '2427ae41e4649b934ca495991b7852b855')
         req_creds = json.dumps({"ec2Credentials":
@@ -197,16 +193,9 @@ class Ec2TokenTest(HeatTestCase):
                                  "path": "/v1",
                                  "body_hash": body_hash}})
         req_headers = {'Content-Type': 'application/json'}
-        req_path = '/v2.0/ec2tokens'
-        httplib.HTTPConnection.request('POST', req_path,
-                                       body=req_creds,
-                                       headers=req_headers).AndReturn(None)
-
-        self.m.StubOutWithMock(httplib.HTTPConnection, 'getresponse')
-        httplib.HTTPConnection.getresponse().AndReturn(DummyHTTPResponse())
-
-        self.m.StubOutWithMock(httplib.HTTPConnection, 'close')
-        httplib.HTTPConnection.close().AndReturn(None)
+        req_url = 'http://123:5000/v2.0/ec2tokens'
+        requests.post(req_url, data=req_creds,
+                      headers=req_headers).AndReturn(DummyHTTPResponse())
 
     def test_call_ok(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
