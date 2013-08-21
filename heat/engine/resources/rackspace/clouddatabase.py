@@ -13,6 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+try:
+    from pyrax.exceptions import NotFound
+except ImportError:
+    # fake exception for testing without pyrax
+    class NotFound(Exception):
+        pass
+
 from heat.common import exception
 from heat.engine.resources.rackspace import rackspace_resource
 from heat.openstack.common import log as logging
@@ -174,12 +181,13 @@ class CloudDBInstance(rackspace_resource.RackspaceResource):
         Delete a Rackspace Cloud DB Instance.
         '''
         logger.debug("CloudDBInstance handle_delete called.")
-        sqlinstancename = self.properties['InstanceName']
         if self.resource_id is None:
-            logger.debug("resource_id is null and returning without delete.")
-            raise exception.ResourceNotFound(resource_name=sqlinstancename,
-                                             stack_name=self.stack.name)
-        instances = self.cloud_db().delete(self.resource_id)
+            return
+
+        try:
+            instances = self.cloud_db().delete(self.resource_id)
+        except NotFound:
+            pass
         self.resource_id = None
 
     def validate(self):

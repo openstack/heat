@@ -13,7 +13,6 @@
 #    under the License.
 
 
-from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import environment
@@ -142,7 +141,7 @@ class CloudDBInstanceTest(HeatTestCase):
         instance = self._setup_test_clouddbinstance('dbinstance_delete')
         instance.resource_id = None
         self.m.ReplayAll()
-        self.assertRaises(exception.ResourceNotFound, instance.handle_delete)
+        instance.handle_delete()
         self.m.VerifyAll()
 
     def test_attribute_not_found(self):
