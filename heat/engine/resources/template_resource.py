@@ -18,8 +18,8 @@ from requests import exceptions
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import attributes
+from heat.engine import environment
 from heat.engine import properties
-from heat.engine import resource
 from heat.engine import stack_resource
 
 from heat.openstack.common import log as logging
@@ -37,16 +37,20 @@ class TemplateResource(stack_resource.StackResource):
     '''
 
     def __init__(self, name, json_snippet, stack):
-        self.template_name = stack.env.get_resource_type(json_snippet['Type'],
-                                                         name)
         self._parsed_nested = None
         self.stack = stack
-        # on purpose don't pass in the environment so we get
-        # the official/facade class in case we need to copy it's schema.
-        cls_facade = resource.get_class(json_snippet['Type'])
+        tri = stack.env.get_resource_info(
+            json_snippet['Type'],
+            registry_type=environment.TemplateResourceInfo)
+        self.template_name = tri.template_name
+
+        cri = stack.env.get_resource_info(
+            json_snippet['Type'],
+            registry_type=environment.ClassResourceInfo)
+
         # if we're not overriding via the environment, mirror the template as
         # a new resource
-        if cls_facade == self.__class__:
+        if cri is None or cri.get_class() == self.__class__:
             self.properties_schema = (properties.Properties
                 .schema_from_params(self.parsed_nested.get('Parameters')))
             self.attributes_schema = (attributes.Attributes
@@ -54,6 +58,7 @@ class TemplateResource(stack_resource.StackResource):
         # otherwise we are overriding a resource type via the environment
         # and should mimic that type
         else:
+            cls_facade = cri.get_class()
             self.properties_schema = cls_facade.properties_schema
             self.attributes_schema = cls_facade.attributes_schema
 
@@ -115,6 +120,3 @@ class TemplateResource(stack_resource.StackResource):
         if not self.nested():
             return unicode(self.name)
         return self.nested().identifier().arn()
-
-
-resource.register_template_class(TemplateResource)

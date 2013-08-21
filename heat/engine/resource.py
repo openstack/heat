@@ -22,6 +22,7 @@ from heat.openstack.common import excutils
 from heat.db import api as db_api
 from heat.common import identifier
 from heat.common import short_id
+from heat.engine import resources
 from heat.engine import timestamp
 # import class to avoid name collisions and ugly aliasing
 from heat.engine.attributes import Attributes
@@ -33,45 +34,18 @@ from heat.openstack.common.gettextutils import _
 logger = logging.getLogger(__name__)
 
 
-_resource_classes = {}
-_template_class = None
-
-
 def get_types():
     '''Return an iterator over the list of valid resource types.'''
-    return iter(_resource_classes)
+    return iter(resources.global_env().get_types())
 
 
-def get_class(resource_type, resource_name=None, environment=None):
+def get_class(resource_type, resource_name=None):
     '''Return the Resource class for a given resource type.'''
-    if environment:
-        resource_type = environment.get_resource_type(resource_type,
-                                                      resource_name)
-
-    if resource_type.endswith(('.yaml', '.template')):
-        cls = _template_class
-    else:
-        cls = _resource_classes.get(resource_type)
-    if cls is None:
-        msg = "Unknown resource Type : %s" % resource_type
-        raise exception.StackValidationFailed(message=msg)
-    else:
-        return cls
+    return resources.global_env().get_class(resource_type, resource_name)
 
 
 def _register_class(resource_type, resource_class):
-    logger.info(_('Registering resource type %s') % resource_type)
-    if resource_type in _resource_classes:
-        logger.warning(_('Replacing existing resource type %s') %
-                       resource_type)
-
-    _resource_classes[resource_type] = resource_class
-
-
-def register_template_class(cls):
-    global _template_class
-    if _template_class is None:
-        _template_class = cls
+    resources.global_env().register_class(resource_type, resource_class)
 
 
 class UpdateReplace(Exception):
@@ -149,9 +123,8 @@ class Resource(object):
             return super(Resource, cls).__new__(cls)
 
         # Select the correct subclass to instantiate
-        ResourceClass = get_class(json['Type'],
-                                  resource_name=name,
-                                  environment=stack.env)
+        ResourceClass = stack.env.get_class(json['Type'],
+                                            resource_name=name)
         return ResourceClass(name, json, stack)
 
     def __init__(self, name, json_snippet, stack):

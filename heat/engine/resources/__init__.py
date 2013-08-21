@@ -14,16 +14,16 @@
 #    under the License.
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.engine import environment
 
 
 logger = logging.getLogger(__name__)
 
 
 def _register_resources(type_pairs):
-    from heat.engine import resource
 
     for res_name, res_class in type_pairs:
-        resource._register_class(res_name, res_class)
+        _environment.register_class(res_name, res_class)
 
 
 def _get_module_resources(module):
@@ -43,16 +43,24 @@ def _register_modules(modules):
     _register_resources(itertools.chain.from_iterable(resource_lists))
 
 
-_initialized = False
+_environment = None
+
+
+def global_env():
+    global _environment
+    if _environment is None:
+        initialise()
+    return _environment
 
 
 def initialise():
-    global _initialized
-    if _initialized:
+    global _environment
+    if _environment is not None:
         return
     import sys
     from heat.common import plugin_loader
 
+    _environment = environment.Environment({}, user_env=False)
     _register_modules(plugin_loader.load_modules(sys.modules[__name__]))
 
     from oslo.config import cfg
