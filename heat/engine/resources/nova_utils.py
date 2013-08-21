@@ -66,7 +66,8 @@ def get_image_id(nova_client, image_identifier):
         try:
             image_list = nova_client.images.list()
         except clients.novaclient.exceptions.ClientException as ex:
-            raise exception.ServerError(message=str(ex))
+            raise exception.Error(
+                message="Error retrieving image list from nova: %s" % str(ex))
         image_names = dict(
             (o.id, o.name)
             for o in image_list if o.name == image_identifier)

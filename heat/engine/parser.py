@@ -34,7 +34,6 @@ from heat.db import api as db_api
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
 
-from heat.common.exception import ServerError
 from heat.common.exception import StackValidationFailed
 
 logger = logging.getLogger(__name__)
@@ -259,7 +258,7 @@ class Stack(object):
         for res in self:
             try:
                 result = res.validate()
-            except ServerError as ex:
+            except exception.Error as ex:
                 logger.exception(ex)
                 raise ex
             except Exception as ex:
