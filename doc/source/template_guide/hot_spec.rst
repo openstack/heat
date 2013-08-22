@@ -21,7 +21,7 @@ HOT is a new template format meant to replace the Heat CloudFormation-compatible
 format (CFN) as the native format supported by the Heat over time.
 This specification explains in detail all elements of the HOT template format.
 An example driven guide to writing HOT templates can be found
-at :ref:`_hot_guide`.
+at :ref:`hot_guide`.
 
 ------
 Status
@@ -320,7 +320,7 @@ type
 properties
     This section contains a list of resource specific properties. The property
     value can be provided in place, or can be provided via a function
-    (see :ref:`_hot_spec_intrinsic_functions`).
+    (see :ref:`hot_spec_intrinsic_functions`).
 
 Depending on the type of resource, the resource block might include more
 resource specific metadata. Basically all resource types that can be used in
@@ -363,7 +363,7 @@ parameter value
     This element specifies the value of the output parameter. Typically, this
     will be resolved by means of a function, e.g. by getting an attribute value
     of one of the stack's resources (see also
-    :ref:`_hot_spec_intrinsic_functions`).
+    :ref:`hot_spec_intrinsic_functions`).
 
 The example below shows, how the public IP address of a compute resource can be
 defined as an output parameter.
@@ -427,7 +427,7 @@ The syntax of the get_attr function is as follows:
 resource ID
     This parameter specifies the resource the attribute of which shall be
     resolved. This resource must be defined within the *resources* section of
-    the template (see also :ref:`_hot_spec_resources`).
+    the template (see also :ref:`hot_spec_resources`).
 attribute name
     This parameter specifies the attribute to be resolved.
 

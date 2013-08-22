@@ -34,7 +34,7 @@ Getting Started
     :maxdepth: 1
 
     getting_started/index
-    troubleshooting/index
+    templates/index
     template_guide/index
     glossary
 

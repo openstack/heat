@@ -22,38 +22,38 @@ AWS CloudFormation Sample Template WordPress_Single_Instance: WordPress is web s
 
 Parameters
 ----------
-*KeyName :mod:`(required)`
-	*type
-		*string
-	*description
-		*Name of an existing key pair to use for the instance
-*InstanceType :mod:`(optional)`
-	*type
-		*string
-	*description
-		*Instance type for the instance to be created
-*DBName :mod:`(optional)`
-	*type
-		*string
-	*description
-		*The WordPress database name
-*DBUsernameName :mod:`(optional)`
-	*type
-		*string
-	*description
-		*The WordPress database admin account username
-*DBPassword :mod:`(optional)`
-	*type
-		*string
-	*description
-		*The WordPress database admin account password
-*DBRootPassword :mod:`(optional)`
-	*type
-		*string
-	*description
-		*Root password for MySQL
-*LinuxDistribution :mod:`(optional)`
-	*type
-		*string
-	*description
-		*Distribution of choice
+*KeyName* :mod:`(required)`
+	*type*
+		*string*
+	*description*
+		*Name* of an existing key pair to use for the instance
+*InstanceType* :mod:`(optional)`
+	*type*
+		*string*
+	*description*
+		*Instance type* for the instance to be created
+*DBName* :mod:`(optional)`
+	*type*
+		*string*
+	*description*
+		*The WordPress database name*
+*DBUsernameName* :mod:`(optional)`
+	*type*
+		*string*
+	*description*
+		*The WordPress database admin account username*
+*DBPassword* :mod:`(optional)`
+	*type*
+		*string*
+	*description*
+		*The WordPress database admin account password*
+*DBRootPassword* :mod:`(optional)`
+	*type*
+		*string*
+	*description*
+		*Root password for MySQL*
+*LinuxDistribution* :mod:`(optional)`
+	*type*
+		*string*
+	*description*
+		*Distribution of choice*

@@ -23,18 +23,18 @@ Description
 
 Parameters
 ----------
-*KeyName :mod:`(required)`
-	*type
-		*string
-	*description
-		*Name of an existing key pair to use for the instance
-*InstanceType :mod:`(required)`
-	*type
-		*string
-	*description
-		*Instance type for the instance to be created
-*ImageId :mod:`(required)`
-	*type
-		*string
-	*description
-		*ID of the image to use for the instance
+*KeyName* :mod:`(required)`
+	*type*
+		*string*
+	*description*
+		*Name* of an existing key pair to use for the instance
+*InstanceType* :mod:`(required)`
+	*type*
+		*string*
+	*description*
+		*Instance type* for the instance to be created
+*ImageId* :mod:`(required)`
+	*type*
+		*string*
+	*description*
+		*ID* of the image to use for the instance
