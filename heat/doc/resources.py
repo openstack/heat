@@ -21,7 +21,8 @@ from docutils import nodes
 from sphinx.util.compat import Directive
 
 
-class resourcepages(nodes.General, nodes.Element): pass
+class resourcepages(nodes.General, nodes.Element):
+    pass
 
 
 class ResourcePages(Directive):
@@ -30,7 +31,6 @@ class ResourcePages(Directive):
     optional_arguments = 1
     final_argument_whitespace = False
     option_spec = {}
-
 
     def run(self):
         prefix = self.arguments and self.arguments.pop() or None
@@ -65,7 +65,7 @@ class ResourcePages(Directive):
     def _prop_syntax_example(self, prop):
         if not prop or not prop.get('Type'):
             return 'Value'
-        prop_type=prop.get('Type')
+        prop_type = prop.get('Type')
         if prop_type == 'List':
             sub_prop = prop.get('Schema')
             sub_type = self._prop_syntax_example(sub_prop)
@@ -88,7 +88,8 @@ class ResourcePages(Directive):
         for prop_key in sorted(schema.keys()):
             prop = schema[prop_key]
             if prop.get('Implemented', True):
-                props.append('%s: %s' % (prop_key, self._prop_syntax_example(prop)))
+                props.append('%s: %s' % (prop_key,
+                                         self._prop_syntax_example(prop)))
 
         template = '''heat_template_version: 2013-05-23
 ...
@@ -109,7 +110,8 @@ resources:
         for prop_key in sorted(schema.keys()):
             prop = schema[prop_key]
             if prop.get('Implemented', True):
-                props.append('%s: %s' % (prop_key, self._prop_syntax_example(prop)))
+                props.append('%s: %s' % (prop_key,
+                                         self._prop_syntax_example(prop)))
 
         template = '''HeatTemplateFormatVersion: '2012-12-12'
 ...
@@ -131,7 +133,8 @@ Resources:
         for prop_key in sorted(schema.keys()):
             prop = schema[prop_key]
             if prop.get('Implemented', True):
-                props.append('"%s": %s' % (prop_key, self._prop_syntax_example(prop)))
+                props.append('"%s": %s' % (prop_key,
+                                           self._prop_syntax_example(prop)))
         template = '''{
   "AWSTemplateFormatVersion" : "2010-09-09",
   ...
@@ -147,10 +150,9 @@ Resources:
         block = nodes.literal_block('', template)
         section.append(block)
 
-
     def contribute_property(self, prop_list, prop_key, prop):
         prop_item = nodes.definition_list_item(
-            '',nodes.term('', prop_key))
+            '', nodes.term('', prop_key))
         prop_list.append(prop_item)
 
         prop_type = prop.get('Type')
@@ -184,7 +186,8 @@ Resources:
         elif prop.get('Default'):
             para = nodes.paragraph(
                 '',
-                _('Optional property, defaults to "%s".') % prop.get('Default'))
+                _('Optional property, defaults to "%s".') %
+                prop.get('Default'))
         else:
             para = nodes.paragraph('', _('Optional property.'))
         definition.append(para)
@@ -195,7 +198,8 @@ Resources:
             definition.append(para)
 
         if prop.get('AllowedValues'):
-            allowed = [str(a) for a in prop.get('AllowedValues') if a is not None]
+            allowed = [str(a) for a in prop.get('AllowedValues')
+                       if a is not None]
             para = nodes.paragraph('', _(
                 'Allowed values: %s') % ', '.join(allowed))
             definition.append(para)
@@ -230,7 +234,6 @@ Resources:
             prop = schema[prop_key]
             self.contribute_property(prop_list, prop_key, prop)
 
-
     def contribute_attributes(self, parent):
         schema = self.resource_class.attributes_schema
         if not schema:
@@ -241,7 +244,7 @@ Resources:
         for prop_key in sorted(schema.keys()):
             description = schema[prop_key]
             prop_item = nodes.definition_list_item(
-                '',nodes.term('', prop_key))
+                '', nodes.term('', prop_key))
             prop_list.append(prop_item)
 
             definition = nodes.definition()
