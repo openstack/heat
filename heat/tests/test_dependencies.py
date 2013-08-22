@@ -48,6 +48,11 @@ class dependenciesTest(testtools.TestCase):
                             '"%s" is not greater than "%s"' % (str(a), str(b)))
         self._dep_test(reversed, assertGreater, deps)
 
+    def test_edges(self):
+        input_edges = [('1', None), ('2', '3'), ('2', '4')]
+        dp = Dependencies(input_edges)
+        self.assertEqual(set(dp.graph().edges()), set(input_edges))
+
     def test_repr(self):
         dp = Dependencies([('1', None), ('2', '3'), ('2', '4')])
         s = "Dependencies([('1', None), ('2', '3'), ('2', '4')])"

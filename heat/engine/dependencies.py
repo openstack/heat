@@ -112,6 +112,17 @@ class Graph(collections.defaultdict):
         '''Return a copy of the graph with the edges reversed.'''
         return Graph(self.map(lambda n: n.reverse_copy()))
 
+    def edges(self):
+        '''Return an iterator over all of the edges in the graph.'''
+        def outgoing_edges(rqr, node):
+            if node.disjoint():
+                yield (rqr, None)
+            else:
+                for rqd in node:
+                    yield (rqr, rqd)
+        return itertools.chain.from_iterable(outgoing_edges(*i)
+                                             for i in self.iteritems())
+
     def __delitem__(self, key):
         '''Delete the node given by the specified key from the graph.'''
         node = self[key]
@@ -213,20 +224,10 @@ class Dependencies(object):
         '''
         return str(self._graph)
 
-    def _edges(self):
-        '''Return an iterator over all of the edges in the graph.'''
-        def outgoing_edges(rqr, node):
-            if node.disjoint():
-                yield (rqr, None)
-            else:
-                for rqd in node:
-                    yield (rqr, rqd)
-        return itertools.chain.from_iterable(outgoing_edges(*i)
-                                             for i in self._graph.iteritems())
-
     def __repr__(self):
         '''Return a string representation of the object.'''
-        return 'Dependencies([%s])' % ', '.join(repr(e) for e in self._edges())
+        edge_reprs = (repr(e) for e in self._graph.edges())
+        return 'Dependencies([%s])' % ', '.join(edge_reprs)
 
     def graph(self, reverse=False):
         '''Return a copy of the underlying dependency graph.'''
