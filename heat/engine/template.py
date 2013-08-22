@@ -16,6 +16,7 @@
 import collections
 import json
 
+from heat.api.aws import utils as aws_utils
 from heat.db import api as db_api
 from heat.common import exception
 from heat.engine.parameters import ParamSchema
@@ -360,6 +361,44 @@ class Template(collections.Mapping):
             return string
 
         return _resolve(lambda k, v: k == 'Fn::Base64', handle_base64, s)
+
+    @staticmethod
+    def resolve_member_list_to_map(s):
+        '''
+        Resolve constructs of the form
+        {'Fn::MemberListToMap': ['Name', 'Value', ['.member.0.Name=key',
+                                                   '.member.0.Value=door']]}
+        the first two arguments are the names of the key and value.
+        '''
+
+        def handle_member_list_to_map(args):
+            correct = '''
+            {'Fn::MemberListToMap': ['Name', 'Value',
+                                     ['.member.0.Name=key',
+                                      '.member.0.Value=door']]}
+            '''
+            if not isinstance(args, (list, tuple)):
+                raise TypeError('Wrong Arguments try: "%s"' % correct)
+            if len(args) != 3:
+                raise TypeError('Wrong Arguments try: "%s"' % correct)
+            if not isinstance(args[0], basestring):
+                raise TypeError('Wrong Arguments try: "%s"' % correct)
+            if not isinstance(args[1], basestring):
+                raise TypeError('Wrong Arguments try: "%s"' % correct)
+            if not isinstance(args[2], (list, tuple)):
+                raise TypeError('Wrong Arguments try: "%s"' % correct)
+
+            partial = {}
+            for item in args[2]:
+                sp = item.split('=')
+                partial[sp[0]] = sp[1]
+            return aws_utils.extract_param_pairs(partial,
+                                                 prefix='',
+                                                 keyname=args[0],
+                                                 valuename=args[1])
+
+        return _resolve(lambda k, v: k == 'Fn::MemberListToMap',
+                        handle_member_list_to_map, s)
 
     @staticmethod
     def resolve_resource_facade(s, stack):

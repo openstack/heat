@@ -574,6 +574,7 @@ def resolve_runtime_data(template, resources, snippet):
                       functools.partial(template.resolve_attributes,
                                         resources=resources),
                       template.resolve_split,
+                      template.resolve_member_list_to_map,
                       template.resolve_select,
                       template.resolve_joins,
                       template.resolve_replace,
