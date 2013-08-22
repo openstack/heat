@@ -101,7 +101,10 @@ engine_opts = [
                help='Driver to use for controlling instances'),
     cfg.ListOpt('plugin_dirs',
                 default=['/usr/lib64/heat', '/usr/lib/heat'],
-                help='List of directories to search for Plugins')]
+                help='List of directories to search for Plugins'),
+    cfg.StrOpt('environment_dir',
+               default='/etc/heat/environment.d',
+               help='The directory to search for environment files')]
 
 rpc_opts = [
     cfg.StrOpt('host',

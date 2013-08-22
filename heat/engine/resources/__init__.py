@@ -12,12 +12,17 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from heat.openstack.common import log as logging
+
+import os
+import os.path
+
+from heat.common import environment_format
+from heat.openstack.common import log
 from heat.openstack.common.gettextutils import _
 from heat.engine import environment
 
 
-logger = logging.getLogger(__name__)
+LOG = log.getLogger(__name__)
 
 
 def _register_resources(type_pairs):
@@ -31,7 +36,7 @@ def _get_module_resources(module):
         try:
             return module.resource_mapping().iteritems()
         except Exception as ex:
-            logger.error(_('Failed to load resources from %s') % str(module))
+            LOG.error(_('Failed to load resources from %s') % str(module))
     else:
         return []
 
@@ -53,17 +58,44 @@ def global_env():
     return _environment
 
 
+def _list_environment_files(env_dir):
+    try:
+        return os.listdir(env_dir)
+    except OSError as osex:
+        LOG.error('Failed to read %s' % (env_dir))
+        LOG.exception(osex)
+        return []
+
+
+def _load_global_environment(env_dir):
+    for env_name in _list_environment_files(env_dir):
+        try:
+            file_path = os.path.join(env_dir, env_name)
+            with open(file_path) as env_fd:
+                LOG.info('Loading %s' % file_path)
+                env_body = environment_format.parse(env_fd.read())
+                environment_format.default_for_missing(env_body)
+                _environment.load(env_body)
+        except ValueError as vex:
+            LOG.error('Failed to parse %s/%s' % (env_dir, env_name))
+            LOG.exception(vex)
+        except IOError as ioex:
+            LOG.error('Failed to read %s/%s' % (env_dir, env_name))
+            LOG.exception(ioex)
+
+
 def initialise():
     global _environment
     if _environment is not None:
         return
     import sys
+    from oslo.config import cfg
     from heat.common import plugin_loader
 
     _environment = environment.Environment({}, user_env=False)
+    cfg.CONF.import_opt('environment_dir', 'heat.common.config')
+    _load_global_environment(cfg.CONF.environment_dir)
     _register_modules(plugin_loader.load_modules(sys.modules[__name__]))
-
-    from oslo.config import cfg
 
     cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
 
