@@ -12,6 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
+import mox
+
 from heat.common import template_format
 from heat.common import exception
 from heat.engine import environment
@@ -166,6 +169,35 @@ class StackResourceTest(HeatTestCase):
         saved_stack = parser.Stack.load(
             self.parent_stack.context, self.stack.id)
         self.assertEqual(saved_stack.owner_id, self.parent_stack.id)
+
+    @utils.stack_delete_after
+    def test_update_with_template_state_err(self):
+        """
+        update_with_template_state_err method should raise error when update
+        task is done but the nested stack is in (UPDATE, FAILED) state.
+        """
+        create_creator = self.parent_resource.create_with_template(
+            self.simple_template, {})
+        create_creator.run_to_completion()
+        self.stack = self.parent_resource.nested()
+
+        new_templ = self.simple_template.copy()
+        inst_snippet = new_templ["Resources"]["WebServer"].copy()
+        new_templ["Resources"]["WebServer2"] = inst_snippet
+
+        def change_state(stack):
+            self.stack.state_set(parser.Stack.UPDATE, parser.Stack.FAILED, '')
+
+        self.m.StubOutWithMock(self.stack, 'update')
+        self.stack.update(mox.IgnoreArg()).WithSideEffects(change_state)
+        self.m.ReplayAll()
+
+        try:
+            self.parent_resource.update_with_template(new_templ, {})
+        except exception.Error as ex:
+            self.assertEqual('Nested stack update failed: ', ex.message)
+
+        self.m.VerifyAll()
 
     @utils.stack_delete_after
     def test_load_nested_ok(self):

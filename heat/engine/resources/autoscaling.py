@@ -174,12 +174,15 @@ class InstanceGroup(stack_resource.StackResource):
         When shrinking, the newest instances will be removed.
         """
         new_template = self._create_template(new_capacity)
-        result = self.update_with_template(new_template, {})
-        for resource in self.nested():
-            if resource.state == ('CREATE', 'FAILED'):
-                resource.destroy()
+        try:
+            self.update_with_template(new_template, {})
+        except exception.Error as ex:
+            logger.error('Failed to resize instance group %s. Error: %s' %
+                         (self.name, ex))
+            for resource in self.nested():
+                if resource.state == ('CREATE', 'FAILED'):
+                    resource.destroy()
         self._lb_reload()
-        return result
 
     def _lb_reload(self):
         '''
