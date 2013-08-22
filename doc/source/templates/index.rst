@@ -12,6 +12,7 @@
       under the License.
 
 This page documents the templates at _https://github.com/openstack/heat-templates/
+
 HOT Templates
 =============
 
