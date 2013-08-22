@@ -14,8 +14,8 @@
 #    under the License.
 
 from heat.common import template_format
-from heat.engine import clients
 from heat.engine import stack_resource
+from heat.engine.resources import nova_utils
 
 from heat.openstack.common import log as logging
 
@@ -254,21 +254,6 @@ class LoadBalancer(stack_resource.StackResource):
     update_allowed_keys = ('Properties',)
     update_allowed_properties = ('Instances',)
 
-    def _instance_to_ipaddress(self, inst):
-        '''
-        Return the server's IP address, fetching it from Nova
-        '''
-        try:
-            server = self.nova().servers.get(inst)
-        except clients.novaclient.exceptions.NotFound as ex:
-            logger.warn('Instance (%s) not found: %s' % (inst, str(ex)))
-        else:
-            for n in server.networks:
-                if len(server.networks[n]) > 0:
-                    return server.networks[n][0]
-
-        return '0.0.0.0'
-
     def _haproxy_config(self, templ, instances):
         # initial simplifications:
         # - only one Listener
@@ -321,8 +306,9 @@ class LoadBalancer(stack_resource.StackResource):
 
         servers = []
         n = 1
+        client = self.nova()
         for i in instances:
-            ip = self._instance_to_ipaddress(i)
+            ip = nova_utils.server_to_ipaddress(client, i) or '0.0.0.0'
             logger.debug('haproxy server:%s' % ip)
             servers.append('%sserver server%d %s:%s %s' % (spaces, n,
                                                            ip, inst_port,
