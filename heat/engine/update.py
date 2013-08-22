@@ -26,10 +26,11 @@ class StackUpdate(object):
     A Task to perform the update of an existing stack to a new template.
     """
 
-    def __init__(self, existing_stack, new_stack):
+    def __init__(self, existing_stack, new_stack, previous_stack):
         """Initialise with the existing stack and the new stack."""
         self.existing_stack = existing_stack
         self.new_stack = new_stack
+        self.previous_stack = previous_stack
 
         self.existing_snippets = dict((r.name, r.parsed_template())
                                       for r in self.existing_stack)
