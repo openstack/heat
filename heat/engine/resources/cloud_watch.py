@@ -132,5 +132,5 @@ class CloudWatchAlarm(resource.Resource):
 
 def resource_mapping():
     return {
-        'AWS::CloudWatch::Alarm': CloudWatchAlarm,
+        'OS::Heat::CWLiteAlarm': CloudWatchAlarm,
     }

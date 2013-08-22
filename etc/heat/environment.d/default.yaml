@@ -1,0 +1,3 @@
+
+resource_registry:
+    "AWS::CloudWatch::Alarm": "OS::Heat::CWLiteAlarm"
