@@ -311,9 +311,6 @@ class Instance(resource.Resource):
                 fault = getattr(server, 'fault', {})
                 message = fault.get('message', 'Unknown')
                 code = fault.get('code', 500)
-                delete = scheduler.TaskRunner(
-                    nova_utils.delete_server, server)
-                delete(wait_time=0.2)
                 exc = exception.Error(_("Build of server %(server)s failed: "
                                         "%(message)s (%(code)s)") %
                                       dict(server=server.name,
