@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
 #
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+#
 # Heat documentation build configuration file, created by
 # sphinx-quickstart on Thu Dec 13 11:23:35 2012.
 #
@@ -28,9 +40,9 @@ sys.path.insert(0, os.path.abspath('../../'))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'heat.doc.resources']
+              'sphinx.ext.ifconfig',
+              'sphinx.ext.viewcode',
+              'heat.doc.resources']
 
 # Add any paths that contain templates here, relative to this directory.
 #templates_path = ['_templates']
@@ -170,21 +182,21 @@ htmlhelp_basename = 'Heatdoc'
 # -- Options for LaTeX output -------------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual])
 latex_documents = [
-  ('index', 'Heat.tex', u'Heat Documentation',
-   u'Heat Developers', 'manual'),
+    ('index', 'Heat.tex', u'Heat Documentation',
+     u'Heat Developers', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -214,23 +226,23 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('man/heat-api', 'heat-api',
-    u'REST API service to the heat project.',
-    [u'Heat Developers'], 1),
+     u'REST API service to the heat project.',
+     [u'Heat Developers'], 1),
     ('man/heat-api-cfn', 'heat-api-cfn',
-    u'CloudFormation compatible API service to the heat project.',
-    [u'Heat Developers'], 1),
+     u'CloudFormation compatible API service to the heat project.',
+     [u'Heat Developers'], 1),
     ('man/heat-api-cloudwatch', 'heat-api-cloudwatch',
-    u'CloudWatch alike API service to the heat project',
-    [u'Heat Developers'], 1),
+     u'CloudWatch alike API service to the heat project',
+     [u'Heat Developers'], 1),
     ('man/heat-db-setup', 'heat-db-setup',
-    u'Command line utility to setup the Heat database',
-    [u'Heat Developers'], 1),
+     u'Command line utility to setup the Heat database',
+     [u'Heat Developers'], 1),
     ('man/heat-engine', 'heat-engine',
-    u'Service which performs the actions from the API calls made by the user',
-    [u'Heat Developers'], 1),
+     u'Service which performs the actions from the API calls made by the user',
+     [u'Heat Developers'], 1),
     ('man/heat-keystone-setup', 'heat-keystone-setup',
-    u'Script which sets up keystone for usage by Heat',
-    [u'Heat Developers'], 1),
+     u'Script which sets up keystone for usage by Heat',
+     [u'Heat Developers'], 1),
 ]
 
 # If true, show URL addresses after external links.
@@ -243,9 +255,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Heat', u'Heat Documentation',
-   u'Heat Developers', 'Heat', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'Heat', u'Heat Documentation',
+     u'Heat Developers', 'Heat', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
