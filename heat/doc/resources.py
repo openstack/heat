@@ -15,7 +15,6 @@
 # -*- coding: utf-8 -*-
 
 from heat.engine import resources
-from heat.engine import resource
 from heat.openstack.common.gettextutils import _
 
 from docutils import nodes
@@ -254,9 +253,10 @@ Resources:
 
 
 def _all_resources(prefix=None):
-    all_resources = resource._resource_classes
-    for resource_type in sorted(all_resources.keys()):
-        resource_class = all_resources[resource_type]
+    g_env = resources.global_env()
+    all_resources = g_env.get_types()
+    for resource_type in sorted(all_resources):
+        resource_class = g_env.get_class(resource_type)
         if not prefix or resource_type.startswith(prefix):
             yield resource_type, resource_class
 
@@ -267,4 +267,3 @@ def setup(app):
     app.add_node(resourcepages)
 
     app.add_directive('resourcepages', ResourcePages)
-
