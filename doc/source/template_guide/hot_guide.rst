@@ -11,6 +11,8 @@
       License for the specific language governing permissions and limitations
       under the License.
 
+.. _hot_guide:
+
 =======================================
 Heat Orchestration Template (HOT) Guide
 =======================================
@@ -19,7 +21,7 @@ HOT is a new template format meant to replace the Heat CloudFormation-compatible
 format (CFN) as the native format supported by the Heat over time.
 This guide is targeted towards template authors and explains how to write
 HOT templates based on examples. A detailed specification of HOT can be found
-at :ref:`_hot_spec`.
+at :ref:`hot_spec`.
 
 ------
 Status
@@ -83,7 +85,7 @@ set of *input parameters* instead of hard-coding such values.
 Template input parameters
 -------------------------
 Input parameters defined in the *parameters* section of a HOT template (see also
-:ref:`_hot_spec_parameters`) allow users to customize a template during
+:ref:`hot_spec_parameters`) allow users to customize a template during
 deployment. For example, this allows for providing custom key-pair names or
 image IDs to be used for a deployment.
 From a template author's perspective, this helps to make a template more easily
@@ -123,7 +125,7 @@ In the example above, three input parameters have been defined that have to be
 provided by the user upon deployment. The fixed values for the respective
 resource properties have been replaced by references to the corresponding
 input parameters by means of the *get_param* function (see also
-:ref:`_hot_spec_intrinsic_functions`).
+:ref:`hot_spec_intrinsic_functions`).
 
 You can also define default values for input parameters which will be used in
 case the user does not provide the respective parameter during deployment. For
@@ -159,7 +161,7 @@ users can supply. For example, you might know that the software running in a
 compute instance needs a certain amount of resources so you might want to
 restrict the *instance_type* parameter introduced above. Parameters in HOT
 templates can be restricted by adding a *constraints* section (see also
-:ref:`_hot_spec_parameters_constraints`).
+:ref:`hot_spec_parameters_constraints`).
 For example, the following would allow only three values to be provided as input
 for the *instance_type* parameter:
 
@@ -203,7 +205,7 @@ Providing template outputs
 --------------------------
 In addition to template customization through input parameters, you will
 typically want to provide outputs to users, which can be done in the
-*outputs* section of a template (see also :ref:`_hot_spec_outputs`).
+*outputs* section of a template (see also :ref:`hot_spec_outputs`).
 For example, the IP address by which the instance defined in the example
 above can be accessed should be provided to users. Otherwise, users would have
 to look it up themselves. The definition for providing the IP address of the
@@ -218,4 +220,4 @@ compute instance as an output is shown in the following snippet:
 
 Output values are typically resolved using intrinsic function such as
 the *get_attr* function in the example above (see also
-:ref:`_hot_spec_intrinsic_functions`).
+:ref:`hot_spec_intrinsic_functions`).
