@@ -24,6 +24,7 @@ from heat.api.openstack.v1 import util
 from heat.common import identifier
 from heat.common import wsgi
 from heat.common import template_format
+from heat.common import environment_format
 from heat.rpc import api as engine_api
 from heat.rpc import client as rpc_client
 from heat.common import urlfetch
@@ -59,15 +60,17 @@ class InstantiationData(object):
         self.data = data
 
     @staticmethod
-    def format_parse(data, data_type, add_template_sections=True):
+    def format_parse(data, data_type):
         """
         Parse the supplied data as JSON or YAML, raising the appropriate
         exception if it is in the wrong format.
         """
 
         try:
-            return template_format.parse(data,
-                                         add_template_sections)
+            if data_type == 'Environment':
+                return environment_format.parse(data)
+            else:
+                return template_format.parse(data)
         except ValueError:
             err_reason = _("%s not in valid format") % data_type
             raise exc.HTTPBadRequest(err_reason)
@@ -115,17 +118,9 @@ class InstantiationData(object):
                 env = env_data
             else:
                 env = self.format_parse(env_data,
-                                        'Environment',
-                                        add_template_sections=False)
+                                        'Environment')
 
-            for field in env:
-                if field not in ('parameters', 'resource_registry'):
-                    reason = _("%s not in valid in the environment") % field
-                    raise exc.HTTPBadRequest(reason)
-
-        if not env.get(self.PARAM_USER_PARAMS):
-            env[self.PARAM_USER_PARAMS] = {}
-
+        environment_format.default_for_missing(env)
         parameters = self.data.get(self.PARAM_USER_PARAMS, {})
         env[self.PARAM_USER_PARAMS].update(parameters)
         return env

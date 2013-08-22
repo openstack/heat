@@ -142,7 +142,8 @@ blarg: wibble
 
     def test_parameters(self):
         params = {'foo': 'bar', 'blarg': 'wibble'}
-        body = {'parameters': params}
+        body = {'parameters': params,
+                'resource_registry': {}}
         data = stacks.InstantiationData(body)
         self.assertEqual(data.environment(), body)
 
@@ -156,7 +157,8 @@ blarg: wibble
         body = {'parameters': {'foo': 'bar'},
                 'environment': {'parameters': {'blarg': 'wibble'}}}
         expect = {'parameters': {'blarg': 'wibble',
-                                 'foo': 'bar'}}
+                                 'foo': 'bar'},
+                  'resource_registry': {}}
         data = stacks.InstantiationData(body)
         self.assertEqual(data.environment(), expect)
 
@@ -169,12 +171,14 @@ blarg: wibble
                                                'tester': 'fail'}}}
         expect = {'parameters': {'blarg': 'wibble',
                                  'foo': 'bar',
-                                 'tester': 'Yes'}}
+                                 'tester': 'Yes'},
+                  'resource_registry': {}}
         data = stacks.InstantiationData(body)
         self.assertEqual(data.environment(), expect)
 
     def test_environment_bad_format(self):
-        body = {'environment': {'somethingnotsupported': {'blarg': 'wibble'}}}
+        env = {'somethingnotsupported': {'blarg': 'wibble'}}
+        body = {'environment': json.dumps(env)}
         data = stacks.InstantiationData(body)
         self.assertRaises(webob.exc.HTTPBadRequest, data.environment)
 
@@ -182,7 +186,9 @@ blarg: wibble
         env = {'foo': 'bar', 'blarg': 'wibble'}
         body = {'not the environment': env}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.environment(), {'parameters': {}})
+        self.assertEqual(data.environment(),
+                         {'parameters': {},
+                          'resource_registry': {}})
 
     def test_args(self):
         body = {
@@ -443,7 +449,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'create_stack',
                   'args': {'stack_name': identity.stack_name,
                            'template': template,
-                           'params': {'parameters': parameters},
+                           'params': {'parameters': parameters,
+                                      'resource_registry': {}},
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
@@ -480,7 +487,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'create_stack',
                   'args': {'stack_name': identity.stack_name,
                            'template': template,
-                           'params': {'parameters': parameters},
+                           'params': {'parameters': parameters,
+                                      'resource_registry': {}},
                            'files': {'my.yaml': 'This is the file contents.'},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
@@ -517,7 +525,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'create_stack',
                   'args': {'stack_name': stack_name,
                            'template': template,
-                           'params': {'parameters': parameters},
+                           'params': {'parameters': parameters,
+                                      'resource_registry': {}},
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
@@ -527,7 +536,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'create_stack',
                   'args': {'stack_name': stack_name,
                            'template': template,
-                           'params': {'parameters': parameters},
+                           'params': {'parameters': parameters,
+                                      'resource_registry': {}},
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
@@ -537,7 +547,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'create_stack',
                   'args': {'stack_name': stack_name,
                            'template': template,
-                           'params': {'parameters': parameters},
+                           'params': {'parameters': parameters,
+                                      'resource_registry': {}},
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
@@ -584,7 +595,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'create_stack',
                   'args': {'stack_name': stack_name,
                            'template': template,
-                           'params': {'parameters': parameters},
+                           'params': {'parameters': parameters,
+                                      'resource_registry': {}},
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
@@ -618,7 +630,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'create_stack',
                   'args': {'stack_name': stack_name,
                            'template': template,
-                           'params': {'parameters': parameters},
+                           'params': {'parameters': parameters,
+                                      'resource_registry': {}},
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
@@ -957,7 +970,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'update_stack',
                   'args': {'stack_identity': dict(identity),
                            'template': template,
-                           'params': {'parameters': parameters},
+                           'params': {'parameters': parameters,
+                                      'resource_registry': {}},
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
@@ -992,7 +1006,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                   'method': 'update_stack',
                   'args': {'stack_identity': dict(identity),
                            'template': template,
-                           'params': {u'parameters': parameters},
+                           'params': {u'parameters': parameters,
+                                      u'resource_registry': {}},
                            'files': {},
                            'args': {'timeout_mins': 30}},
                   'version': self.api_version},
