@@ -308,7 +308,7 @@ class Instance(resource.Resource):
                 volume_attach.start()
                 return volume_attach.done()
             elif server.status == 'ERROR':
-                fault = server.fault or {}
+                fault = getattr(server, 'fault', {})
                 message = fault.get('message', 'Unknown')
                 code = fault.get('code', 500)
                 delete = scheduler.TaskRunner(
