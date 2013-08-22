@@ -34,7 +34,7 @@ class StackUpdate(object):
         self.existing_snippets = dict((r.name, r.parsed_template())
                                       for r in self.existing_stack)
 
-    def __str__(self):
+    def __repr__(self):
         return '%s Update' % str(self.existing_stack)
 
     @scheduler.wrappertask
