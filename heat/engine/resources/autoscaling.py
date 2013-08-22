@@ -14,6 +14,7 @@
 #    under the License.
 
 import copy
+
 from heat.common import exception
 from heat.engine import resource
 from heat.engine import signal_responder
@@ -21,6 +22,7 @@ from heat.engine import signal_responder
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.engine.properties import Properties
+from heat.engine import properties
 from heat.engine import stack_resource
 
 logger = logging.getLogger(__name__)
@@ -73,12 +75,43 @@ class InstanceGroup(stack_resource.StackResource):
                  'Schema': {'Type': 'Map',
                             'Schema': tags_schema}}
     }
-    update_allowed_keys = ('Properties',)
+    update_allowed_keys = ('Properties', 'UpdatePolicy',)
     update_allowed_properties = ('Size', 'LaunchConfigurationName',)
     attributes_schema = {
         "InstanceList": ("A comma-delimited list of server ip addresses. "
                          "(Heat extension)")
     }
+    rolling_update_schema = {
+        'MinInstancesInService': properties.Schema(properties.NUMBER,
+                                                   default=0),
+        'MaxBatchSize': properties.Schema(properties.NUMBER,
+                                          default=1),
+        'PauseTime': properties.Schema(properties.STRING,
+                                       default='PT0S')
+    }
+    update_policy_schema = {
+        'RollingUpdate': properties.Schema(properties.MAP,
+                                           schema=rolling_update_schema)
+    }
+
+    def __init__(self, name, json_snippet, stack):
+        """
+        UpdatePolicy is currently only specific to InstanceGroup and
+        AutoScalingGroup. Therefore, init is overridden to parse for the
+        UpdatePolicy.
+        """
+        super(InstanceGroup, self).__init__(name, json_snippet, stack)
+        self.update_policy = Properties(self.update_policy_schema,
+                                        self.t.get('UpdatePolicy', {}),
+                                        parent_name=self.name)
+
+    def validate(self):
+        """
+        Add validation for update_policy
+        """
+        super(InstanceGroup, self).validate()
+        if self.update_policy:
+            self.update_policy.validate()
 
     def get_instance_names(self):
         """Get a list of resource names of the instances in this InstanceGroup.
@@ -120,6 +153,14 @@ class InstanceGroup(stack_resource.StackResource):
         If Properties has changed, update self.properties, so we
         get the new values during any subsequent adjustment.
         """
+        if tmpl_diff:
+            # parse update policy
+            if 'UpdatePolicy' in tmpl_diff:
+                self.update_policy = Properties(
+                    self.update_policy_schema,
+                    json_snippet.get('UpdatePolicy', {}),
+                    parent_name=self.name)
+
         if prop_diff:
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),
@@ -238,10 +279,22 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         'Tags': {'Type': 'List', 'Schema': {'Type': 'Map',
                                             'Schema': tags_schema}}
     }
+    rolling_update_schema = {
+        'MinInstancesInService': properties.Schema(properties.NUMBER,
+                                                   default=0),
+        'MaxBatchSize': properties.Schema(properties.NUMBER,
+                                          default=1),
+        'PauseTime': properties.Schema(properties.STRING,
+                                       default='PT0S')
+    }
+    update_policy_schema = {
+        'AutoScalingRollingUpdate': properties.Schema(
+            properties.MAP, schema=rolling_update_schema)
+    }
 
     # template keys and properties supported for handle_update,
     # note trailing comma is required for a single item to get a tuple
-    update_allowed_keys = ('Properties',)
+    update_allowed_keys = ('Properties', 'UpdatePolicy',)
     update_allowed_properties = ('LaunchConfigurationName',
                                  'MaxSize', 'MinSize',
                                  'Cooldown', 'DesiredCapacity',)
@@ -267,6 +320,14 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         If Properties has changed, update self.properties, so we get the new
         values during any subsequent adjustment.
         """
+        if tmpl_diff:
+            # parse update policy
+            if 'UpdatePolicy' in tmpl_diff:
+                self.update_policy = Properties(
+                    self.update_policy_schema,
+                    json_snippet.get('UpdatePolicy', {}),
+                    parent_name=self.name)
+
         if prop_diff:
             self.properties = Properties(self.properties_schema,
                                          json_snippet.get('Properties', {}),

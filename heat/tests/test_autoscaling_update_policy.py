@@ -23,21 +23,22 @@ from heat.tests.utils import setup_dummy_db
 from heat.tests import utils
 
 
-ig_tmpl_without_updt_policy = '''
+asg_tmpl_without_updt_policy = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to create multiple instances.",
+  "Description" : "Template to create autoscaling group.",
   "Parameters" : {},
   "Resources" : {
-    "JobServerGroup" : {
-      "Type" : "OS::Heat::InstanceGroup",
+    "WebServerGroup" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
-        "LaunchConfigurationName" : { "Ref" : "JobServerConfig" },
-        "Size" : "8",
-        "AvailabilityZones" : ["nova"]
+        "AvailabilityZones" : ["nova"],
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : "1",
+        "MaxSize" : "10"
       }
     },
-    "JobServerConfig" : {
+    "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "ImageId"           : "foo",
@@ -51,56 +52,26 @@ ig_tmpl_without_updt_policy = '''
 }
 '''
 
-ig_tmpl_with_bad_updt_policy = '''
+asg_tmpl_with_bad_updt_policy = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to create multiple instances.",
+  "Description" : "Template to create autoscaling group.",
   "Parameters" : {},
   "Resources" : {
-    "JobServerGroup" : {
-      "UpdatePolicy" : {
-        "RollingUpdate": "foo"
-      },
-      "Type" : "OS::Heat::InstanceGroup",
-      "Properties" : {
-        "LaunchConfigurationName" : { "Ref" : "JobServerConfig" },
-        "Size" : "8",
-        "AvailabilityZones" : ["nova"]
-      }
-    },
-    "JobServerConfig" : {
-      "Type" : "AWS::AutoScaling::LaunchConfiguration",
-      "Properties": {
-        "ImageId"           : "foo",
-        "InstanceType"      : "m1.medium",
-        "KeyName"           : "test",
-        "SecurityGroups"    : [ "sg-1" ],
-        "UserData"          : "jsconfig data"
-      }
-    }
-  }
-}
-'''
-
-ig_tmpl_with_default_updt_policy = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to create multiple instances.",
-  "Parameters" : {},
-  "Resources" : {
-    "JobServerGroup" : {
-      "UpdatePolicy" : {
-        "RollingUpdate" : {
+    "WebServerGroup" : {
+      "UpdatePolicy": {
+        "foo": {
         }
       },
-      "Type" : "OS::Heat::InstanceGroup",
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
-        "LaunchConfigurationName" : { "Ref" : "JobServerConfig" },
-        "Size" : "8",
-        "AvailabilityZones" : ["nova"]
+        "AvailabilityZones" : ["nova"],
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : "1",
+        "MaxSize" : "10"
       }
     },
-    "JobServerConfig" : {
+    "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "ImageId"           : "foo",
@@ -114,28 +85,62 @@ ig_tmpl_with_default_updt_policy = '''
 }
 '''
 
-ig_tmpl_with_updt_policy_1 = '''
+asg_tmpl_with_default_updt_policy = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to create multiple instances.",
+  "Description" : "Template to create autoscaling group.",
   "Parameters" : {},
   "Resources" : {
-    "JobServerGroup" : {
+    "WebServerGroup" : {
       "UpdatePolicy" : {
-        "RollingUpdate" : {
+        "AutoScalingRollingUpdate" : {
+        }
+      },
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "Properties" : {
+        "AvailabilityZones" : ["nova"],
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : "1",
+        "MaxSize" : "10"
+      }
+    },
+    "LaunchConfig" : {
+      "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId"           : "foo",
+        "InstanceType"      : "m1.medium",
+        "KeyName"           : "test",
+        "SecurityGroups"    : [ "sg-1" ],
+        "UserData"          : "jsconfig data"
+      }
+    }
+  }
+}
+'''
+
+asg_tmpl_with_updt_policy_1 = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to create autoscaling group.",
+  "Parameters" : {},
+  "Resources" : {
+    "WebServerGroup" : {
+      "UpdatePolicy" : {
+        "AutoScalingRollingUpdate" : {
           "MinInstancesInService" : "1",
           "MaxBatchSize" : "3",
           "PauseTime" : "PT30S"
         }
       },
-      "Type" : "OS::Heat::InstanceGroup",
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
-        "LaunchConfigurationName" : { "Ref" : "JobServerConfig" },
-        "Size" : "8",
-        "AvailabilityZones" : ["nova"]
+        "AvailabilityZones" : ["nova"],
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : "1",
+        "MaxSize" : "10"
       }
     },
-    "JobServerConfig" : {
+    "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "ImageId"           : "foo",
@@ -149,28 +154,29 @@ ig_tmpl_with_updt_policy_1 = '''
 }
 '''
 
-ig_tmpl_with_updt_policy_2 = '''
+asg_tmpl_with_updt_policy_2 = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Template to create multiple instances.",
+  "Description" : "Template to create autoscaling group.",
   "Parameters" : {},
   "Resources" : {
-    "JobServerGroup" : {
+    "WebServerGroup" : {
       "UpdatePolicy" : {
-        "RollingUpdate" : {
+        "AutoScalingRollingUpdate" : {
           "MinInstancesInService" : "1",
           "MaxBatchSize" : "5",
           "PauseTime" : "PT30S"
         }
       },
-      "Type" : "OS::Heat::InstanceGroup",
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
-        "LaunchConfigurationName" : { "Ref" : "JobServerConfig" },
-        "Size" : "8",
-        "AvailabilityZones" : ["nova"]
+        "AvailabilityZones" : ["nova"],
+        "LaunchConfigurationName" : { "Ref" : "LaunchConfig" },
+        "MinSize" : "1",
+        "MaxSize" : "10"
       }
     },
-    "JobServerConfig" : {
+    "LaunchConfig" : {
       "Type" : "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
         "ImageId"           : "foo",
@@ -214,39 +220,39 @@ class InstanceGroupTest(HeatTestCase):
         return stack.resources[ig_name].properties['LaunchConfigurationName']
 
     def test_parse_without_update_policy(self):
-        tmpl = template_format.parse(ig_tmpl_without_updt_policy)
+        tmpl = template_format.parse(asg_tmpl_without_updt_policy)
         stack = utils.parse_stack(tmpl)
-        grp = stack.resources['JobServerGroup']
-        self.assertFalse(grp.update_policy['RollingUpdate'])
+        grp = stack.resources['WebServerGroup']
+        self.assertFalse(grp.update_policy['AutoScalingRollingUpdate'])
 
     def test_parse_with_update_policy(self):
-        tmpl = template_format.parse(ig_tmpl_with_updt_policy_1)
+        tmpl = template_format.parse(asg_tmpl_with_updt_policy_1)
         stack = utils.parse_stack(tmpl)
-        grp = stack.resources['JobServerGroup']
+        grp = stack.resources['WebServerGroup']
         self.assertTrue(grp.update_policy)
         self.assertTrue(len(grp.update_policy) == 1)
-        self.assertTrue('RollingUpdate' in grp.update_policy)
-        policy = grp.update_policy['RollingUpdate']
+        self.assertTrue('AutoScalingRollingUpdate' in grp.update_policy)
+        policy = grp.update_policy['AutoScalingRollingUpdate']
         self.assertTrue(policy and len(policy) > 0)
         self.assertEqual(int(policy['MinInstancesInService']), 1)
         self.assertEqual(int(policy['MaxBatchSize']), 3)
         self.assertEqual(policy['PauseTime'], 'PT30S')
 
     def test_parse_with_default_update_policy(self):
-        tmpl = template_format.parse(ig_tmpl_with_default_updt_policy)
+        tmpl = template_format.parse(asg_tmpl_with_default_updt_policy)
         stack = utils.parse_stack(tmpl)
-        grp = stack.resources['JobServerGroup']
+        grp = stack.resources['WebServerGroup']
         self.assertTrue(grp.update_policy)
         self.assertTrue(len(grp.update_policy) == 1)
-        self.assertTrue('RollingUpdate' in grp.update_policy)
-        policy = grp.update_policy['RollingUpdate']
+        self.assertTrue('AutoScalingRollingUpdate' in grp.update_policy)
+        policy = grp.update_policy['AutoScalingRollingUpdate']
         self.assertTrue(policy and len(policy) > 0)
         self.assertEqual(int(policy['MinInstancesInService']), 0)
         self.assertEqual(int(policy['MaxBatchSize']), 1)
         self.assertEqual(policy['PauseTime'], 'PT0S')
 
     def test_parse_with_bad_update_policy(self):
-        tmpl = template_format.parse(ig_tmpl_with_bad_updt_policy)
+        tmpl = template_format.parse(asg_tmpl_with_bad_updt_policy)
         stack = utils.parse_stack(tmpl)
         self.assertRaises(exception.StackValidationFailed, stack.validate)
 
@@ -257,7 +263,7 @@ class InstanceGroupTest(HeatTestCase):
         current_stack = utils.parse_stack(current_tmpl)
 
         # get the json snippet for the current InstanceGroup resource
-        current_grp = current_stack.resources['JobServerGroup']
+        current_grp = current_stack.resources['WebServerGroup']
         current_snippets = dict((r.name, r.parsed_template())
                                 for r in current_stack)
         current_grp_json = current_snippets[current_grp.name]
@@ -268,7 +274,7 @@ class InstanceGroupTest(HeatTestCase):
 
         # get the updated json snippet for the InstanceGroup resource in the
         # context of the current stack
-        updated_grp = updated_stack.resources['JobServerGroup']
+        updated_grp = updated_stack.resources['WebServerGroup']
         updated_grp_json = current_stack.resolve_runtime_data(updated_grp.t)
 
         # identify the template difference
@@ -280,94 +286,97 @@ class InstanceGroupTest(HeatTestCase):
         self.assertEqual(tmpl_diff, expected)
 
     def test_update_policy_added(self):
-        self.validate_update_policy_diff(ig_tmpl_without_updt_policy,
-                                         ig_tmpl_with_updt_policy_1)
+        self.validate_update_policy_diff(asg_tmpl_without_updt_policy,
+                                         asg_tmpl_with_updt_policy_1)
 
     def test_update_policy_updated(self):
-        self.validate_update_policy_diff(ig_tmpl_with_updt_policy_1,
-                                         ig_tmpl_with_updt_policy_2)
+        self.validate_update_policy_diff(asg_tmpl_with_updt_policy_1,
+                                         asg_tmpl_with_updt_policy_2)
 
     def test_update_policy_removed(self):
-        self.validate_update_policy_diff(ig_tmpl_with_updt_policy_1,
-                                         ig_tmpl_without_updt_policy)
+        self.validate_update_policy_diff(asg_tmpl_with_updt_policy_1,
+                                         asg_tmpl_without_updt_policy)
 
-    def test_instance_group_update(self):
+    def test_autoscaling_group_update(self):
 
         # setup stack from the initial template
-        tmpl = template_format.parse(ig_tmpl_with_updt_policy_1)
+        tmpl = template_format.parse(asg_tmpl_with_updt_policy_1)
         stack = utils.parse_stack(tmpl)
-        nested = stack.resources['JobServerGroup'].nested()
+        nested = stack.resources['WebServerGroup'].nested()
 
         # test stack create
         # test the number of instance creation
         # test that physical resource name of launch configuration is used
-        size = int(stack.resources['JobServerGroup'].properties['Size'])
+        size = int(stack.resources['WebServerGroup'].properties['MinSize'])
         self._stub_create(size)
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
         self.assertEqual(stack.state, ('CREATE', 'COMPLETE'))
-        conf = stack.resources['JobServerConfig']
-        conf_name_pattern = '%s-JobServerConfig-[a-zA-Z0-9]+$' % stack.name
+        conf = stack.resources['LaunchConfig']
+        conf_name_pattern = '%s-LaunchConfig-[a-zA-Z0-9]+$' % stack.name
         regex_pattern = re.compile(conf_name_pattern)
         self.assertTrue(regex_pattern.match(conf.FnGetRefId()))
-        nested = stack.resources['JobServerGroup'].nested()
+        nested = stack.resources['WebServerGroup'].nested()
         self.assertTrue(len(nested.resources), size)
 
         # test stack update
         # test that update policy is updated
         # test that launch configuration is replaced
-        current_grp = stack.resources['JobServerGroup']
-        self.assertTrue('RollingUpdate' in current_grp.update_policy)
-        current_policy = current_grp.update_policy['RollingUpdate']
+        current_grp = stack.resources['WebServerGroup']
+        self.assertTrue('AutoScalingRollingUpdate'
+                        in current_grp.update_policy)
+        current_policy = current_grp.update_policy['AutoScalingRollingUpdate']
         self.assertTrue(current_policy and len(current_policy) > 0)
         self.assertEqual(int(current_policy['MaxBatchSize']), 3)
-        conf_name = self.get_launch_conf_name(stack, 'JobServerGroup')
-        updated_tmpl = template_format.parse(ig_tmpl_with_updt_policy_2)
+        conf_name = self.get_launch_conf_name(stack, 'WebServerGroup')
+        updated_tmpl = template_format.parse(asg_tmpl_with_updt_policy_2)
         updated_stack = utils.parse_stack(updated_tmpl)
         stack.update(updated_stack)
         self.assertEqual(stack.state, ('UPDATE', 'COMPLETE'))
-        updated_grp = stack.resources['JobServerGroup']
-        self.assertTrue('RollingUpdate' in updated_grp.update_policy)
-        updated_policy = updated_grp.update_policy['RollingUpdate']
+        updated_grp = stack.resources['WebServerGroup']
+        self.assertTrue('AutoScalingRollingUpdate'
+                        in updated_grp.update_policy)
+        updated_policy = updated_grp.update_policy['AutoScalingRollingUpdate']
         self.assertTrue(updated_policy and len(updated_policy) > 0)
         self.assertEqual(int(updated_policy['MaxBatchSize']), 5)
-        updated_conf_name = self.get_launch_conf_name(stack, 'JobServerGroup')
+        updated_conf_name = self.get_launch_conf_name(stack, 'WebServerGroup')
         self.assertNotEqual(conf_name, updated_conf_name)
 
-    def test_instance_group_update_policy_removed(self):
+    def test_autoscaling_group_update_policy_removed(self):
 
         # setup stack from the initial template
-        tmpl = template_format.parse(ig_tmpl_with_updt_policy_1)
+        tmpl = template_format.parse(asg_tmpl_with_updt_policy_1)
         stack = utils.parse_stack(tmpl)
-        nested = stack.resources['JobServerGroup'].nested()
+        nested = stack.resources['WebServerGroup'].nested()
 
         # test stack create
         # test the number of instance creation
         # test that physical resource name of launch configuration is used
-        size = int(stack.resources['JobServerGroup'].properties['Size'])
+        size = int(stack.resources['WebServerGroup'].properties['MinSize'])
         self._stub_create(size)
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
         self.assertEqual(stack.state, ('CREATE', 'COMPLETE'))
-        conf = stack.resources['JobServerConfig']
-        conf_name_pattern = '%s-JobServerConfig-[a-zA-Z0-9]+$' % stack.name
+        conf = stack.resources['LaunchConfig']
+        conf_name_pattern = '%s-LaunchConfig-[a-zA-Z0-9]+$' % stack.name
         regex_pattern = re.compile(conf_name_pattern)
         self.assertTrue(regex_pattern.match(conf.FnGetRefId()))
-        nested = stack.resources['JobServerGroup'].nested()
+        nested = stack.resources['WebServerGroup'].nested()
         self.assertTrue(len(nested.resources), size)
 
         # test stack update
         # test that update policy is removed
-        current_grp = stack.resources['JobServerGroup']
-        self.assertTrue('RollingUpdate' in current_grp.update_policy)
-        current_policy = current_grp.update_policy['RollingUpdate']
+        current_grp = stack.resources['WebServerGroup']
+        self.assertTrue('AutoScalingRollingUpdate'
+                        in current_grp.update_policy)
+        current_policy = current_grp.update_policy['AutoScalingRollingUpdate']
         self.assertTrue(current_policy and len(current_policy) > 0)
         self.assertEqual(int(current_policy['MaxBatchSize']), 3)
-        updated_tmpl = template_format.parse(ig_tmpl_without_updt_policy)
+        updated_tmpl = template_format.parse(asg_tmpl_without_updt_policy)
         updated_stack = utils.parse_stack(updated_tmpl)
         stack.update(updated_stack)
         self.assertEqual(stack.state, ('UPDATE', 'COMPLETE'))
-        updated_grp = stack.resources['JobServerGroup']
-        self.assertFalse(updated_grp.update_policy['RollingUpdate'])
+        updated_grp = stack.resources['WebServerGroup']
+        self.assertFalse(updated_grp.update_policy['AutoScalingRollingUpdate'])
