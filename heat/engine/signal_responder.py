@@ -57,7 +57,10 @@ class SignalResponder(resource.Resource):
             self.keystone().delete_stack_user(self.resource_id)
         except clients.hkc.kc.exceptions.NotFound:
             pass
-        db_api.resource_data_delete(self, 'ec2_signed_url')
+        try:
+            db_api.resource_data_delete(self, 'ec2_signed_url')
+        except exception.NotFound:
+            pass
 
     def _get_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
