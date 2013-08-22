@@ -13,44 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# The environment should look like this:
-# Note: the base_url, urls and files should be handled earlier
-#       and by the time it gets to the engine they are all just names.
-#
-# Use case 1: I want to use all the resource types from provider X
-#resource_registry:
-#  "OS::*": "Dreamhost::*"
-#  # could also use a url like this (assuming they could all be
-#  # expressed in nested stacks)
-#  "OS::*": http://dreamhost.com/bla/resources-types/*"
-#
-# Use case 2: I want to use mostly the default resources except my
-# custom one for a particular resource in the template.
-#resource_registry:
-#  resources:
-#    my_db_server:
-#      "OS::DBInstance": file://~/all_my_cool_templates/db.yaml
-#
-# Use case 3: I always want to always map resource type X to Y
-#resource_registry:
-#  "OS::Networking::FloatingIP": "OS::Nova::FloatingIP"
-#  "OS::Loadbalancer": file://~/all_my_cool_templates/lb.yaml
-#
-# Use case 4: I use custom resources a lot and want to shorten the
-# url/path
-#resource_registry:
-#  base_url: http://bla.foo/long/url/
-#  resources:
-#    my_db_server:
-#      "OS::DBInstance": dbaas.yaml
-#
-# Use case 5: I want to put some common parameters in the environment
-#parameters:
-#  KeyName: heat_key
-#  InstanceType: m1.large
-#  DBUsername: wp_admin
-#  LinuxDistribution: F17
-
 import itertools
 
 from heat.openstack.common import log
