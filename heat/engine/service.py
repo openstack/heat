@@ -187,7 +187,7 @@ class EngineService(service.Service):
     @request_context
     def list_stacks(self, cnxt):
         cProfile.runctx('self._list_stacks(cnxt)', globals(), locals(),
-                        '%s_service_list_stats' % str(time.time()))
+                        '/tmp/%s_service_list_stats' % str(time.time()))
         return self._list_stacks(cnxt)
 
     def _list_stacks(self, cnxt):
