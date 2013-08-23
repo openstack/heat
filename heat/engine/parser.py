@@ -70,11 +70,12 @@ class Stack(object):
         stack is already in the database.
         '''
 
-        if re.match("[a-zA-Z][a-zA-Z0-9_.-]*$", stack_name) is None:
-            raise ValueError(_('Invalid stack name %s'
-                               ' must contain only alphanumeric or '
-                               '\"_-.\" characters, must start with alpha'
-                               ) % stack_name)
+        if owner_id is None:
+            if re.match("[a-zA-Z][a-zA-Z0-9_.-]*$", stack_name) is None:
+                raise ValueError(_('Invalid stack name %s'
+                                   ' must contain only alphanumeric or '
+                                   '\"_-.\" characters, must start with alpha'
+                                   ) % stack_name)
 
         self.id = stack_id
         self.owner_id = owner_id
@@ -152,7 +153,7 @@ class Stack(object):
 
         return stack
 
-    def store(self):
+    def store(self, backup=False):
         '''
         Store the stack in the database and return its ID
         If self.id is set, we update the existing stack
@@ -160,7 +161,7 @@ class Stack(object):
         new_creds = db_api.user_creds_create(self.context)
 
         s = {
-            'name': self.name,
+            'name': self._backup_name() if backup else self.name,
             'raw_template_id': self.t.store(self.context),
             'parameters': self.env.user_env_as_dict(),
             'owner_id': self.owner_id,
@@ -182,6 +183,9 @@ class Stack(object):
         self._set_param_stackid()
 
         return self.id
+
+    def _backup_name(self):
+        return '%s*' % self.name
 
     def identifier(self):
         '''
@@ -355,6 +359,23 @@ class Stack(object):
 
         if callable(post_func):
             post_func()
+
+    def _backup_stack(self):
+        '''
+        Get a Stack containing any in-progress resources from the previous
+        stack state prior to an update.
+        '''
+        s = db_api.stack_get_by_name(self.context, self._backup_name(),
+                                     owner_id=self.id)
+        if s is not None:
+            logger.debug('Loaded existing backup stack')
+            return self.load(self.context, stack=s)
+        else:
+            prev = type(self)(self.context, self.name, self.t, self.env,
+                              owner_id=self.id)
+            prev.store(backup=True)
+            logger.debug('Created new backup stack')
+            return prev
 
     def update(self, newstack, action=UPDATE):
         '''
