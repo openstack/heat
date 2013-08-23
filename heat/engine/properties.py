@@ -584,6 +584,16 @@ class Property(object):
         return value
 
 
+def schemata(schema_dicts):
+    """
+    Return a dictionary of Schema objects for the given dictionary of schemata.
+
+    The input schemata are converted from the legacy (dictionary-based) format
+    to Schema objects where necessary.
+    """
+    return dict((n, Schema.from_legacy(s)) for n, s in schema_dicts.items())
+
+
 class Properties(collections.Mapping):
 
     def __init__(self, schema, data, resolver=lambda d: d, parent_name=None):
