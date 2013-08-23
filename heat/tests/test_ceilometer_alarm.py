@@ -44,7 +44,7 @@ alarm_template = '''
   "Parameters" : {},
   "Resources" : {
     "MEMAlarmHigh": {
-     "Type": "OS::Metering::Alarm",
+     "Type": "OS::Ceilometer::Alarm",
      "Properties": {
         "description": "Scale-up if MEM > 50% for 1 minute",
         "counter_name": "MemoryUtilization",
