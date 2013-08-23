@@ -21,6 +21,7 @@ from heat.engine import attributes
 from heat.engine import environment
 from heat.engine import properties
 from heat.engine import stack_resource
+from heat.engine import template
 
 from heat.openstack.common import log as logging
 
@@ -51,10 +52,11 @@ class TemplateResource(stack_resource.StackResource):
         # if we're not overriding via the environment, mirror the template as
         # a new resource
         if cri is None or cri.get_class() == self.__class__:
+            tmpl = template.Template(self.parsed_nested)
             self.properties_schema = (properties.Properties
-                .schema_from_params(self.parsed_nested.get('Parameters')))
+                .schema_from_params(tmpl.param_schemata()))
             self.attributes_schema = (attributes.Attributes
-                .schema_from_outputs(self.parsed_nested.get('Outputs')))
+                .schema_from_outputs(tmpl[template.OUTPUTS]))
         # otherwise we are overriding a resource type via the environment
         # and should mimic that type
         else:
