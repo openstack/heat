@@ -509,7 +509,10 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
             return unicode(self._get_signed_url())
 
     def FnGetRefId(self):
-        return unicode(self.name)
+        if self.resource_id is not None:
+            return unicode(self._get_signed_url())
+        else:
+            return unicode(self.name)
 
 
 def resource_mapping():
