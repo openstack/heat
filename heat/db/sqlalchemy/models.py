@@ -209,9 +209,7 @@ class UserCreds(BASE, HeatBase):
     password = sqlalchemy.Column(sqlalchemy.String)
     tenant = sqlalchemy.Column(sqlalchemy.String)
     auth_url = sqlalchemy.Column(sqlalchemy.String)
-    aws_auth_url = sqlalchemy.Column(sqlalchemy.String)
     tenant_id = sqlalchemy.Column(sqlalchemy.String)
-    aws_creds = sqlalchemy.Column(sqlalchemy.String)
     stack = relationship(Stack, backref=backref('user_creds'))
 
 
