@@ -127,7 +127,7 @@ def format_event(event):
         api.EVENT_STACK_ID: dict(stack_identifier),
         api.EVENT_STACK_NAME: stack_identifier.stack_name,
         api.EVENT_TIMESTAMP: timeutils.isotime(event.timestamp),
-        api.EVENT_RES_NAME: event.logical_resource_id,
+        api.EVENT_RES_NAME: event.resource_name,
         api.EVENT_RES_PHYSICAL_ID: event.physical_resource_id,
         api.EVENT_RES_ACTION: event.action,
         api.EVENT_RES_STATUS: event.status,

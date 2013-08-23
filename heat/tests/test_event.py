@@ -69,7 +69,7 @@ class EventTest(HeatTestCase):
         loaded_e = event.Event.load(self.ctx, e.id)
 
         self.assertEqual(self.stack.id, loaded_e.stack.id)
-        self.assertEqual(self.resource.name, loaded_e.logical_resource_id)
+        self.assertEqual(self.resource.name, loaded_e.resource_name)
         self.assertEqual('wibble', loaded_e.physical_resource_id)
         self.assertEqual('TEST', loaded_e.action)
         self.assertEqual('IN_PROGRESS', loaded_e.status)
@@ -92,7 +92,7 @@ class EventTest(HeatTestCase):
         loaded_e = event.Event.load(self.ctx, e.id, stack=self.stack, event=ev)
 
         self.assertEqual(self.stack.id, loaded_e.stack.id)
-        self.assertEqual(self.resource.name, loaded_e.logical_resource_id)
+        self.assertEqual(self.resource.name, loaded_e.resource_name)
         self.assertEqual('wibble', loaded_e.physical_resource_id)
         self.assertEqual('TEST', loaded_e.action)
         self.assertEqual('IN_PROGRESS', loaded_e.status)

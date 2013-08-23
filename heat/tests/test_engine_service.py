@@ -679,8 +679,8 @@ class StackServiceTest(HeatTestCase):
             self.assertEqual(dict, type(ev['event_identity']))
             self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
-            self.assertTrue('logical_resource_id' in ev)
-            self.assertEqual('WebServer', ev['logical_resource_id'])
+            self.assertTrue('resource_name' in ev)
+            self.assertEqual('WebServer', ev['resource_name'])
 
             self.assertTrue('physical_resource_id' in ev)
 
@@ -750,7 +750,7 @@ class StackServiceTest(HeatTestCase):
             self.assertEqual(dict, type(ev['event_identity']))
             self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
-            self.assertIn('logical_resource_id', ev)
+            self.assertIn('resource_name', ev)
             self.assertIn('physical_resource_id', ev)
             self.assertIn('resource_properties', ev)
             self.assertIn('resource_status_reason', ev)
@@ -781,8 +781,8 @@ class StackServiceTest(HeatTestCase):
             self.assertThat(ev['event_identity'], matchers.IsInstance(dict))
             self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
-            self.assertTrue('logical_resource_id' in ev)
-            self.assertEqual('WebServer', ev['logical_resource_id'])
+            self.assertTrue('resource_name' in ev)
+            self.assertEqual('WebServer', ev['resource_name'])
 
             self.assertTrue('physical_resource_id' in ev)
 
@@ -969,8 +969,8 @@ class StackServiceTest(HeatTestCase):
         self.assertTrue('resource_status_reason' in r)
         self.assertTrue('resource_type' in r)
         self.assertTrue('physical_resource_id' in r)
-        self.assertTrue('logical_resource_id' in r)
-        self.assertEqual('WebServer', r['logical_resource_id'])
+        self.assertTrue('resource_name' in r)
+        self.assertEqual('WebServer', r['resource_name'])
 
         self.m.VerifyAll()
 
@@ -1070,8 +1070,8 @@ class StackServiceTest(HeatTestCase):
         self.assertTrue('resource_status_reason' in r)
         self.assertTrue('resource_type' in r)
         self.assertTrue('physical_resource_id' in r)
-        self.assertTrue('logical_resource_id' in r)
-        self.assertEqual('WebServer', r['logical_resource_id'])
+        self.assertTrue('resource_name' in r)
+        self.assertEqual('WebServer', r['resource_name'])
 
         self.m.VerifyAll()
 
@@ -1088,8 +1088,8 @@ class StackServiceTest(HeatTestCase):
 
         self.assertEqual(1, len(resources))
         r = resources[0]
-        self.assertTrue('logical_resource_id' in r)
-        self.assertEqual('WebServer', r['logical_resource_id'])
+        self.assertTrue('resource_name' in r)
+        self.assertEqual('WebServer', r['resource_name'])
 
         self.m.VerifyAll()
 
@@ -1146,8 +1146,8 @@ class StackServiceTest(HeatTestCase):
         self.assertTrue('resource_identity' in r)
         self.assertTrue('updated_time' in r)
         self.assertTrue('physical_resource_id' in r)
-        self.assertTrue('logical_resource_id' in r)
-        self.assertEqual('WebServer', r['logical_resource_id'])
+        self.assertTrue('resource_name' in r)
+        self.assertEqual('WebServer', r['resource_name'])
         self.assertTrue('resource_status' in r)
         self.assertTrue('resource_status_reason' in r)
         self.assertTrue('resource_type' in r)

@@ -1207,7 +1207,7 @@ class CfnStackControllerTest(HeatTestCase):
                                             u'stack_name': u'wordpress',
                                             u'stack_id': u'6',
                                             u'path': u''},
-                        u'logical_resource_id': u'WikiDatabase',
+                        u'resource_name': u'WikiDatabase',
                         u'resource_status_reason': u'state changed',
                         u'event_identity':
                         {u'tenant': u't',
@@ -1322,7 +1322,7 @@ class CfnStackControllerTest(HeatTestCase):
                            u'path': u'resources/WikiDatabase'
                        },
                        u'stack_name': u'wordpress',
-                       u'logical_resource_id': u'WikiDatabase',
+                       u'resource_name': u'WikiDatabase',
                        u'resource_status_reason': None,
                        u'updated_time': u'2012-07-23T13:06:00Z',
                        u'stack_identity': {u'tenant': u't',
@@ -1451,7 +1451,7 @@ class CfnStackControllerTest(HeatTestCase):
                             u'path': u'resources/WikiDatabase'
                         },
                         u'stack_name': u'wordpress',
-                        u'logical_resource_id': u'WikiDatabase',
+                        u'resource_name': u'WikiDatabase',
                         u'resource_status_reason': None,
                         u'updated_time': u'2012-07-23T13:06:00Z',
                         u'stack_identity': {u'tenant': u't',
@@ -1544,7 +1544,7 @@ class CfnStackControllerTest(HeatTestCase):
                             u'path': u'resources/WikiDatabase'
                         },
                         u'stack_name': u'wordpress',
-                        u'logical_resource_id': u'WikiDatabase',
+                        u'resource_name': u'WikiDatabase',
                         u'resource_status_reason': None,
                         u'updated_time': u'2012-07-23T13:06:00Z',
                         u'stack_identity': {u'tenant': u't',
@@ -1653,7 +1653,7 @@ class CfnStackControllerTest(HeatTestCase):
                          u'stack_id': u'6',
                          u'path': u'/resources/WikiDatabase'},
                         u'stack_name': u'wordpress',
-                        u'logical_resource_id': u'WikiDatabase',
+                        u'resource_name': u'WikiDatabase',
                         u'resource_status_reason': None,
                         u'updated_time': u'2012-07-23T13:06:00Z',
                         u'stack_identity': {u'tenant': u't',
