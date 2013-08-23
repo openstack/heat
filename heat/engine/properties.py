@@ -475,13 +475,6 @@ class AllowedPattern(Constraint):
 
 class Property(object):
 
-    __param_type_map = {
-        parameters.STRING: STRING,
-        parameters.NUMBER: NUMBER,
-        parameters.COMMA_DELIMITED_LIST: LIST,
-        parameters.JSON: MAP
-    }
-
     def __init__(self, schema, name=None):
         self.schema = Schema.from_legacy(schema)
         self.name = name
@@ -507,37 +500,6 @@ class Property(object):
             return int(value)
         except ValueError:
             return float(value)
-
-    @staticmethod
-    def schema_from_param(param):
-        """
-        Convert the param specification to a property schema definition
-
-        :param param: parameter definition
-        :return: a property schema definition for param
-        """
-        if parameters.TYPE not in param:
-            raise ValueError("Parameter does not define a type for conversion")
-        ret = {
-            TYPE: Property.__param_type_map.get(param.get(parameters.TYPE))
-        }
-        if parameters.DEFAULT in param:
-            ret.update({DEFAULT: param[parameters.DEFAULT]})
-        else:
-            ret.update({REQUIRED: "true"})
-        if parameters.ALLOWED_VALUES in param:
-            ret.update({ALLOWED_VALUES: param[parameters.ALLOWED_VALUES]})
-        if parameters.ALLOWED_PATTERN in param:
-            ret.update({ALLOWED_PATTERN: param[parameters.ALLOWED_PATTERN]})
-        if parameters.MAX_LENGTH in param:
-            ret.update({MAX_LENGTH: param[parameters.MAX_LENGTH]})
-        if parameters.MIN_LENGTH in param:
-            ret.update({MIN_LENGTH: param[parameters.MIN_LENGTH]})
-        if parameters.MAX_VALUE in param:
-            ret.update({MAX_VALUE: param[parameters.MAX_VALUE]})
-        if parameters.MIN_VALUE in param:
-            ret.update({MIN_VALUE: param[parameters.MIN_VALUE]})
-        return ret
 
     def _validate_integer(self, value):
         if value is None:
