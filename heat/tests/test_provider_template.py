@@ -13,9 +13,9 @@
 #    under the License.
 
 import os
-import yaml
 
 from heat.common import urlfetch
+from heat.common import template_format
 
 from heat.engine import environment
 from heat.engine import parser
@@ -167,7 +167,7 @@ class ProviderTemplateTest(HeatTestCase):
         self.assertTrue(test_templ, "Empty test template")
         self.m.StubOutWithMock(urlfetch, "get")
         urlfetch.get(test_templ_name).AndReturn(test_templ)
-        parsed_test_templ = yaml.safe_load(test_templ)
+        parsed_test_templ = template_format.parse(test_templ)
         self.m.ReplayAll()
         json_snippet = {
             "Type": test_templ_name,
