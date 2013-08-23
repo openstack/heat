@@ -242,6 +242,30 @@ class InstancesTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_instance_create_error_no_fault(self):
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_instance_create')
+        return_server.status = 'ERROR'
+
+        self.m.StubOutWithMock(return_server, 'get')
+        return_server.get()
+        return_server.get().AndRaise(
+            clients.novaclient.exceptions.NotFound('test'))
+        self.m.ReplayAll()
+
+        try:
+            instance.check_create_complete(
+                (return_server, self.FakeVolumeAttach()))
+        except exception.Error as e:
+            self.assertEqual(
+                'Build of server sample-server2 failed: Unknown (500)',
+                str(e))
+        else:
+            self.fail('Error not raised')
+
+        self.m.VerifyAll()
+
     def test_instance_validate(self):
         stack_name = 'test_instance_validate_stack'
         (t, stack) = self._setup_test_stack(stack_name)
