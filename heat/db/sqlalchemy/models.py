@@ -277,7 +277,7 @@ class Resource(BASE, HeatBase):
     stack = relationship(Stack, backref=backref('resources'))
     data = relationship(ResourceData,
                         cascade="all,delete",
-                        backref=backref('resource', lazy='joined'))
+                        backref=backref('resource'))
 
 
 class WatchRule(BASE, HeatBase):
