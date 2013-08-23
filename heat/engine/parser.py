@@ -157,14 +157,12 @@ class Stack(object):
         Store the stack in the database and return its ID
         If self.id is set, we update the existing stack
         '''
-        new_creds = db_api.user_creds_create(self.context)
 
         s = {
             'name': self.name,
             'raw_template_id': self.t.store(self.context),
             'parameters': self.env.user_env_as_dict(),
             'owner_id': self.owner_id,
-            'user_creds_id': new_creds.id,
             'username': self.context.username,
             'tenant': self.context.tenant_id,
             'action': self.action,
@@ -176,6 +174,8 @@ class Stack(object):
         if self.id:
             db_api.stack_update(self.context, self.id, s)
         else:
+            new_creds = db_api.user_creds_create(self.context)
+            s['user_creds_id'] = new_creds.id
             new_s = db_api.stack_create(self.context, s)
             self.id = new_s.id
 
