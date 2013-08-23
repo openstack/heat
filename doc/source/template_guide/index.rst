@@ -17,6 +17,7 @@ Template Guide
 .. toctree::
    :maxdepth: 2
 
+   environment
    functions
    openstack
    cfn
