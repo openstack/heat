@@ -408,8 +408,10 @@ class Stack(object):
                        'Stack %s started' % action)
 
         oldstack = Stack(self.context, self.name, self.t, self.env)
+        backup_stack = self._backup_stack()
+
         try:
-            update_task = update.StackUpdate(self, newstack, oldstack)
+            update_task = update.StackUpdate(self, newstack, backup_stack)
             updater = scheduler.TaskRunner(update_task)
 
             self.env = newstack.env
@@ -440,6 +442,9 @@ class Stack(object):
                 if not self.disable_rollback:
                     self.update(oldstack, action=self.ROLLBACK)
                     return
+        else:
+            logger.debug('Deleting backup stack')
+            backup_stack.delete()
 
         self.state_set(action, stack_status, reason)
 
