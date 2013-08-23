@@ -16,7 +16,6 @@ import copy
 
 import mox
 
-from heat.engine import clients
 from heat.engine import environment
 from heat.tests.v1_1 import fakes
 from heat.common import exception
@@ -232,8 +231,6 @@ class InstancesTest(HeatTestCase):
         }
         self.m.StubOutWithMock(return_server, 'get')
         return_server.get()
-        return_server.get().AndRaise(
-            clients.novaclient.exceptions.NotFound('test'))
         self.m.ReplayAll()
 
         self.assertRaises(exception.Error,
@@ -250,8 +247,6 @@ class InstancesTest(HeatTestCase):
 
         self.m.StubOutWithMock(return_server, 'get')
         return_server.get()
-        return_server.get().AndRaise(
-            clients.novaclient.exceptions.NotFound('test'))
         self.m.ReplayAll()
 
         try:
