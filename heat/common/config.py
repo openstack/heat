@@ -81,7 +81,10 @@ service_opts = [
                help='Instance connection to cfn/cw API validate certs if ssl'),
     cfg.StrOpt('heat_stack_user_role',
                default="heat_stack_user",
-               help='Keystone role for heat template-defined users')]
+               help='Keystone role for heat template-defined users'),
+    cfg.IntOpt('max_template_size',
+               default=524288,
+               help='Maximum raw byte size of any template.')]
 
 db_opts = [
     cfg.StrOpt('sql_connection',

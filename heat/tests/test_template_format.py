@@ -14,8 +14,11 @@
 
 from testtools import skipIf
 import os
+import yaml
 
 from heat.engine import clients
+from heat.common import config
+from heat.common import exception
 from heat.common import template_format
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -88,6 +91,15 @@ Outputs: {}
         tpl1 = template_format.parse(yaml1)
         tpl2 = template_format.parse(yaml2)
         self.assertEqual(tpl1, tpl2)
+
+    def test_long_yaml(self):
+        template = {'HeatTemplateVersion': '2012-12-12'}
+        template['Resources'] = ['a'] * (config.cfg.CONF.max_template_size / 3)
+        limit = config.cfg.CONF.max_template_size
+        long_yaml = yaml.safe_dump(template)
+        self.assertTrue(len(long_yaml) > limit)
+        self.assertRaises(exception.TemplateTooBig, template_format.parse,
+                          long_yaml)
 
 
 class JsonYamlResolvedCompareTest(HeatTestCase):

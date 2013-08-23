@@ -17,6 +17,12 @@ import re
 import yaml
 import json
 
+from oslo.config import cfg
+
+from heat.common import exception
+
+cfg.CONF.import_opt('max_template_size', 'heat.common.config')
+
 HEAT_VERSIONS = (u'2012-12-12',)
 CFN_VERSIONS = (u'2010-09-09',)
 
@@ -43,6 +49,8 @@ def parse(tmpl_str):
     This includes determination of whether the string is using the
     JSON or YAML format.
     '''
+    if len(tmpl_str) > cfg.CONF.max_template_size:
+        raise exception.TemplateTooBig()
     if tmpl_str.startswith('{'):
         tpl = json.loads(tmpl_str)
     else:

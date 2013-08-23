@@ -297,3 +297,7 @@ class HTTPExceptionDisguise(Exception):
     def __init__(self, exception):
         self.exc = exception
         self.tb = sys.exc_info()[2]
+
+
+class TemplateTooBig(OpenstackException):
+    message = _('Template exceeds maximum allowed size.')
