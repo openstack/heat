@@ -461,6 +461,53 @@ Mappings:
             parser.Template.resolve_replace(snippet),
             '"foo" is "${var3}"')
 
+    def test_member_list2map_good(self):
+        snippet = {"Fn::MemberListToMap": [
+            'Name', 'Value', ['.member.0.Name=metric',
+                              '.member.0.Value=cpu',
+                              '.member.1.Name=size',
+                              '.member.1.Value=56']]}
+        self.assertEqual(
+            {'metric': 'cpu', 'size': '56'},
+            parser.Template.resolve_member_list_to_map(snippet))
+
+    def test_member_list2map_good2(self):
+        snippet = {"Fn::MemberListToMap": [
+            'Key', 'Value', ['.member.2.Key=metric',
+                             '.member.2.Value=cpu',
+                             '.member.5.Key=size',
+                             '.member.5.Value=56']]}
+        self.assertEqual(
+            {'metric': 'cpu', 'size': '56'},
+            parser.Template.resolve_member_list_to_map(snippet))
+
+    def test_member_list2map_no_key_or_val(self):
+        snippet = {"Fn::MemberListToMap": [
+            'Key', ['.member.2.Key=metric',
+                    '.member.2.Value=cpu',
+                    '.member.5.Key=size',
+                    '.member.5.Value=56']]}
+        self.assertRaises(TypeError,
+                          parser.Template.resolve_member_list_to_map,
+                          snippet)
+
+    def test_member_list2map_no_list(self):
+        snippet = {"Fn::MemberListToMap": [
+            'Key', '.member.2.Key=metric']}
+        self.assertRaises(TypeError,
+                          parser.Template.resolve_member_list_to_map,
+                          snippet)
+
+    def test_member_list2map_not_string(self):
+        snippet = {"Fn::MemberListToMap": [
+            'Name', ['Value'], ['.member.0.Name=metric',
+                                '.member.0.Value=cpu',
+                                '.member.1.Name=size',
+                                '.member.1.Value=56']]}
+        self.assertRaises(TypeError,
+                          parser.Template.resolve_member_list_to_map,
+                          snippet)
+
     def test_resource_facade(self):
         metadata_snippet = {'Fn::ResourceFacade': 'Metadata'}
         deletion_policy_snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}

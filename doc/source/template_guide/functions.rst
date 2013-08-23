@@ -294,3 +294,31 @@ To use it
 What happened is the metadata in ``top.yaml`` (key: value, some: more
 stuff) gets passed into the resource template via the `Fn::ResourceFacade`_
 function.
+
+-------------------
+Fn::MemberListToMap
+-------------------
+Convert an AWS style member list into a map.
+
+Parameters
+~~~~~~~~~~
+key name: string
+    The name of the key (normally "Name" or "Key")
+
+value name: string
+    The name of the value (normally "Value")
+
+list: A list of strings
+    The string to convert.
+
+Usage
+~~~~~
+::
+
+  {'Fn::MemberListToMap': ['Name', 'Value', ['.member.0.Name=key',
+                                             '.member.0.Value=door',
+                                             '.member.1.Name=colour',
+                                             '.member.1.Value=green']]}
+
+  returns
+  {'key': 'door', 'colour': 'green'}
