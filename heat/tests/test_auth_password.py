@@ -124,7 +124,8 @@ class KeystonePasswordAuthProtocolTest(HeatTestCase):
         self.middleware(req.environ, self._start_fake_response)
         self.assertEqual(self.response_status, 401)
 
-    def _test_multi_cloud(self, allowed_auth_uris=[]):
+    def test_multi_cloud(self):
+        allowed_auth_uris = ['http://multicloud.test.com:5000/v2.0']
         cfg.CONF.set_override('multi_cloud', True, group='auth_password')
         auth_url = 'http://multicloud.test.com:5000/v2.0'
         cfg.CONF.set_override('allowed_auth_uris',
@@ -147,11 +148,18 @@ class KeystonePasswordAuthProtocolTest(HeatTestCase):
         self.middleware(req.environ, self._start_fake_response)
         self.m.VerifyAll()
 
-    def test_multi_cloud(self):
-        self._test_multi_cloud(['http://multicloud.test.com:5000/v2.0'])
-
     def test_multi_cloud_empty_allowed_uris(self):
-        self._test_multi_cloud()
+        cfg.CONF.set_override('multi_cloud', True, group='auth_password')
+        auth_url = 'http://multicloud.test.com:5000/v2.0'
+        cfg.CONF.set_override('allowed_auth_uris',
+                              [],
+                              group='auth_password')
+        req = webob.Request.blank('/tenant_id1/')
+        req.headers['X_AUTH_USER'] = 'user_name1'
+        req.headers['X_AUTH_KEY'] = 'goodpassword'
+        req.headers['X_AUTH_URL'] = auth_url
+        self.middleware(req.environ, self._start_fake_response)
+        self.assertEqual(self.response_status, 401)
 
     def test_multi_cloud_target_not_allowed(self):
         cfg.CONF.set_override('multi_cloud', True, group='auth_password')

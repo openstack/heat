@@ -555,8 +555,9 @@
 # Allow orchestration of multiple clouds (boolean value)
 #multi_cloud=false
 
-# Allowed targets for auth_uri when multi_cloud is enabled.
-# If empty, all targets will be allowed. (list value)
+# Allowed keystone endpoints for auth_uri when multi_cloud is
+# enabled. At least one endpoint needs to be specified. (list
+# value)
 #allowed_auth_uris=
 
 

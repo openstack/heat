@@ -117,8 +117,9 @@ class KeystonePasswordAuthProtocol(object):
                                     'X-Auth-Url'))
             return resp(env, start_response)
         allowed = cfg.CONF.auth_password.allowed_auth_uris
-        if allowed and not auth_url in allowed:
-            resp = HTTPUnauthorized(_('Header X-Auth-Url "%s" not allowed')
+        if auth_url not in allowed:
+            resp = HTTPUnauthorized(_('Header X-Auth-Url "%s" not an allowed '
+                                      'endpoint')
                                     % auth_url)
             return resp(env, start_response)
         return None
