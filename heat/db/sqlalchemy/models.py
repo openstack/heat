@@ -207,8 +207,6 @@ class UserCreds(BASE, HeatBase):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     username = sqlalchemy.Column(sqlalchemy.String)
     password = sqlalchemy.Column(sqlalchemy.String)
-    service_user = sqlalchemy.Column(sqlalchemy.String)
-    service_password = sqlalchemy.Column(sqlalchemy.String)
     tenant = sqlalchemy.Column(sqlalchemy.String)
     auth_url = sqlalchemy.Column(sqlalchemy.String)
     aws_auth_url = sqlalchemy.Column(sqlalchemy.String)
