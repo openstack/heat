@@ -184,6 +184,16 @@ class Resource(object):
     def type(self):
         return self.t['Type']
 
+    def has_interface(self, resource_type):
+        """Check to see if this resource is either mapped to resource_type
+        or is a "resource_type".
+        """
+        if self.type() == resource_type:
+            return True
+        ri = self.stack.env.get_resource_info(self.type(),
+                                              self.name)
+        return ri.name == resource_type
+
     def identifier(self):
         '''Return an identifier for this resource.'''
         return identifier.ResourceIdentifier(resource_name=self.name,

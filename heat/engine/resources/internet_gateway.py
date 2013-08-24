@@ -68,7 +68,7 @@ class VPCGatewayAttachment(resource.Resource):
 
     def _vpc_route_tables(self):
         for resource in self.stack.resources.itervalues():
-            if (resource.type() == 'AWS::EC2::RouteTable' and
+            if (resource.has_interface('AWS::EC2::RouteTable') and
                 resource.properties.get('VpcId') ==
                     self.properties.get('VpcId')):
                         yield resource
