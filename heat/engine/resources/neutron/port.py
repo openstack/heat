@@ -102,5 +102,4 @@ def resource_mapping():
 
     return {
         'OS::Neutron::Port': Port,
-        'OS::Quantum::Port': Port,
     }

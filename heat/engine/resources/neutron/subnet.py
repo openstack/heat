@@ -91,5 +91,4 @@ def resource_mapping():
 
     return {
         'OS::Neutron::Subnet': Subnet,
-        'OS::Quantum::Subnet': Subnet,
     }

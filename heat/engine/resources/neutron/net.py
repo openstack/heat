@@ -71,5 +71,4 @@ def resource_mapping():
 
     return {
         'OS::Neutron::Net': Net,
-        'OS::Quantum::Net': Net,
     }
