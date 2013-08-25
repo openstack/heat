@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urlparse
-import httplib
 import hashlib
+import requests
 
 from heat.openstack.common import gettextutils
 
@@ -144,26 +143,11 @@ class EC2Token(wsgi.Middleware):
         creds_json = json.dumps(creds)
         headers = {'Content-Type': 'application/json'}
 
-        # Disable 'has no x member' pylint error
-        # for httplib and urlparse
-        # pylint: disable-msg=E1101
-
         keystone_ec2_uri = self._conf_get_keystone_ec2_uri()
         logger.info('Authenticating with %s' % keystone_ec2_uri)
-        o = urlparse.urlparse(keystone_ec2_uri)
-        if o.scheme == 'http':
-            conn = httplib.HTTPConnection(o.netloc)
-        else:
-            conn = httplib.HTTPSConnection(o.netloc)
-        conn.request('POST', o.path, body=creds_json, headers=headers)
-        response = conn.getresponse().read()
-        conn.close()
-
-        # NOTE(vish): We could save a call to keystone by
-        #             having keystone return token, tenant,
-        #             user, and roles from this call.
-
-        result = json.loads(response)
+        response = requests.post(keystone_ec2_uri, data=creds_json,
+                                 headers=headers)
+        result = response.json()
         try:
             token_id = result['access']['token']['id']
             tenant = result['access']['token']['tenant']['name']
