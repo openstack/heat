@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 from heat.common import heat_keystoneclient as hkc
 from novaclient import client as novaclient
+from novaclient import shell as novashell
 try:
     from swiftclient import client as swiftclient
 except ImportError:
@@ -93,12 +94,16 @@ class OpenStackClients(object):
             logger.error("Nova connection failed, no auth_token!")
             return None
 
+        computeshell = novashell.OpenStackComputeShell()
+        extensions = computeshell._discover_extensions("1.1")
+
         args = {
             'project_id': con.tenant,
             'auth_url': con.auth_url,
             'service_type': service_type,
             'username': None,
-            'api_key': None
+            'api_key': None,
+            'extensions': extensions
         }
 
         client = novaclient.Client(1.1, **args)
