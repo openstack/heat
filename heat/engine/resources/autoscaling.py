@@ -15,10 +15,10 @@
 
 import copy
 
-from heat.common import exception
 from heat.engine import resource
 from heat.engine import signal_responder
 
+from heat.common import exception
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.engine.properties import Properties
@@ -116,14 +116,14 @@ class InstanceGroup(stack_resource.StackResource):
     def get_instance_names(self):
         """Get a list of resource names of the instances in this InstanceGroup.
 
-        Deleted resources will be ignored.
+        Failed resources will be ignored.
         """
         return sorted(x.name for x in self.get_instances())
 
     def get_instances(self):
         """Get a set of all the instance resources managed by this group."""
         return [resource for resource in self.nested()
-                if resource.state[0] != resource.DELETE]
+                if resource.state[1] != resource.FAILED]
 
     def handle_create(self):
         """Create a nested stack and add the initial resources to it."""
@@ -137,14 +137,8 @@ class InstanceGroup(stack_resource.StackResource):
 
         If any instances failed to be created, delete them.
         """
-        try:
-            done = super(InstanceGroup, self).check_create_complete(task)
-        except exception.Error as exc:
-            for resource in self.nested():
-                if resource.state == ('CREATE', 'FAILED'):
-                    resource.destroy()
-            raise
-        if done and len(self.get_instances()):
+        done = super(InstanceGroup, self).check_create_complete(task)
+        if done:
             self._lb_reload()
         return done
 
@@ -217,13 +211,10 @@ class InstanceGroup(stack_resource.StackResource):
         new_template = self._create_template(new_capacity)
         try:
             self.update_with_template(new_template, {})
-        except exception.Error as ex:
-            logger.error('Failed to resize instance group %s. Error: %s' %
-                         (self.name, ex))
-            for resource in self.nested():
-                if resource.state == ('CREATE', 'FAILED'):
-                    resource.destroy()
-        self._lb_reload()
+        finally:
+            # Reload the LB in any case, so it's only pointing at healthy
+            # nodes.
+            self._lb_reload()
 
     def _lb_reload(self):
         '''

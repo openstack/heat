@@ -197,6 +197,75 @@ class InstanceGroupTest(HeatTestCase):
         rsrc.delete()
         self.m.VerifyAll()
 
+    def test_create_error(self):
+        """
+        If a resource in an instance group fails to be created, the instance
+        group itself will fail and the broken inner resource will remain.
+        """
+        t = template_format.parse(ig_template)
+        stack = utils.parse_stack(t)
+
+        self.m.StubOutWithMock(parser.Stack, 'validate')
+        parser.Stack.validate()
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
+        instance.Instance.handle_create().AndRaise(Exception)
+
+        self.m.ReplayAll()
+        conf = self.create_resource(t, stack, 'JobServerConfig')
+        self.assertRaises(
+            exception.ResourceFailure,
+            self.create_resource, t, stack, 'JobServerGroup')
+
+        rsrc = stack.resources['JobServerGroup']
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+
+        # The failed inner resource remains
+        child_resource = rsrc.nested().resources['JobServerGroup-0']
+        self.assertEqual((child_resource.CREATE, child_resource.FAILED),
+                         child_resource.state)
+
+        self.m.VerifyAll()
+
+    def test_update_error(self):
+        """
+        If a resource in an instance group fails to be created during an
+        update, the instance group itself will fail and the broken inner
+        resource will remain.
+        """
+        t = template_format.parse(ig_template)
+        stack = utils.parse_stack(t)
+
+        self._stub_create(1)
+        self.m.ReplayAll()
+        conf = self.create_resource(t, stack, 'JobServerConfig')
+        rsrc = self.create_resource(t, stack, 'JobServerGroup')
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        self.m.StubOutWithMock(parser.Stack, 'validate')
+        parser.Stack.validate()
+        self.m.StubOutWithMock(instance.Instance, 'handle_create')
+        instance.Instance.handle_create().AndRaise(Exception)
+
+        self.m.ReplayAll()
+
+        update_snippet = copy.deepcopy(rsrc.parsed_template())
+        update_snippet['Properties']['Size'] = '2'
+        tmpl_diff = {'Properties': {'Size': '2'}}
+        prop_diff = {'Size': '2'}
+        self.assertRaises(exception.ResourceFailure,
+                          rsrc.update, update_snippet)
+
+        self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
+
+        # The failed inner resource remains
+        child_resource = rsrc.nested().resources['JobServerGroup-1']
+        self.assertEqual((child_resource.CREATE, child_resource.FAILED),
+                         child_resource.state)
+
+        self.m.VerifyAll()
+
     def test_update_fail_badkey(self):
         t = template_format.parse(ig_template)
         properties = t['Resources']['JobServerGroup']['Properties']

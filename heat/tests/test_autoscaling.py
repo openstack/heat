@@ -186,7 +186,7 @@ class AutoScalingTest(HeatTestCase):
         properties['MinSize'] = '0'
         properties['MaxSize'] = '0'
         stack = utils.parse_stack(t, params=self.params)
-
+        self._stub_lb_reload(0)
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
         self.assertEqual(None, rsrc.FnGetAtt("InstanceList"))
@@ -780,7 +780,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_validate()
         self.m.ReplayAll()
 
-        rsrc.adjust(1)
+        self.assertRaises(Exception, rsrc.adjust, 1)
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
 
         self.m.VerifyAll()
