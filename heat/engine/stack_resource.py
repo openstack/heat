@@ -113,9 +113,25 @@ class StackResource(resource.Resource):
                              environment.Environment(user_params),
                              timeout_mins=timeout_mins,
                              disable_rollback=True,
-                             parent_resource=self)
+                             parent_resource=self,
+                             owner_id=self.stack.id)
         stack.validate()
-        return self._nested.update(stack)
+
+        nested_stack = self.nested()
+        if nested_stack is None:
+            raise exception.Error(_('Cannot update %s, stack not created')
+                                  % self.name)
+
+        if not hasattr(type(self), 'attributes_schema'):
+            self.attributes = None
+            self._outputs_to_attribs(child_template)
+
+        nested_stack.update(stack)
+
+        if nested_stack.state != (nested_stack.UPDATE,
+                                  nested_stack.COMPLETE):
+            raise exception.Error("Nested stack update failed: %s" %
+                                  nested_stack.status_reason)
 
     def delete_nested(self):
         '''
