@@ -1661,6 +1661,24 @@ class StackTest(HeatTestCase):
         self.assertEqual(db_stack.owner_id, self.stack.id)
 
     @utils.stack_delete_after
+    def test_store_saves_creds(self):
+        """
+        A user_creds entry is created on first stack store
+        """
+        self.stack = parser.Stack(
+            self.ctx, 'creds_stack', template.Template({}))
+        self.stack.store()
+
+        # The store should've created a user_creds row and set user_creds_id
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        user_creds_id = db_stack.user_creds_id
+        self.assertIsNotNone(user_creds_id)
+
+        # Store again, ID should not change
+        self.stack.store()
+        self.assertEqual(user_creds_id, db_stack.user_creds_id)
+
+    @utils.stack_delete_after
     def test_load_honors_owner(self):
         """
         Loading a stack from the database will set the owner_id of the
