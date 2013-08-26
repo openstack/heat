@@ -15,6 +15,8 @@
 
 import requests
 from requests import exceptions
+import urllib2
+import cStringIO
 
 from heat.common import urlfetch
 from heat.tests.common import HeatTestCase
@@ -37,9 +39,30 @@ class UrlFetchTest(HeatTestCase):
         super(UrlFetchTest, self).setUp()
         self.m.StubOutWithMock(requests, 'get')
 
-    def test_file_scheme(self):
+    def test_file_scheme_default_behaviour(self):
         self.m.ReplayAll()
         self.assertRaises(IOError, urlfetch.get, 'file:///etc/profile')
+        self.m.VerifyAll()
+
+    def test_file_scheme_supported(self):
+        data = '{ "foo": "bar" }'
+        url = 'file:///etc/profile'
+
+        self.m.StubOutWithMock(urllib2, 'urlopen')
+        urllib2.urlopen(url).AndReturn(cStringIO.StringIO(data))
+        self.m.ReplayAll()
+
+        self.assertEqual(data, urlfetch.get(url, allowed_schemes=['file']))
+        self.m.VerifyAll()
+
+    def test_file_scheme_failure(self):
+        url = 'file:///etc/profile'
+
+        self.m.StubOutWithMock(urllib2, 'urlopen')
+        urllib2.urlopen(url).AndRaise(urllib2.URLError('oops'))
+        self.m.ReplayAll()
+
+        self.assertRaises(IOError, urlfetch.get, url, allowed_schemes=['file'])
         self.m.VerifyAll()
 
     def test_http_scheme(self):

@@ -19,6 +19,7 @@ Utility for fetching a resource (e.g. a template) from a URL.
 
 import requests
 from requests import exceptions
+import urllib2
 import urlparse
 
 from heat.openstack.common import log as logging
@@ -27,19 +28,27 @@ from heat.openstack.common.gettextutils import _
 logger = logging.getLogger(__name__)
 
 
-def get(url):
+def get(url, allowed_schemes=('http', 'https')):
     '''
     Get the data at the specifier URL.
 
     The URL must use the http: or https: schemes.
+    The file: scheme is also supported if you override
+    the allowed_schemes argument.
     Raise an IOError if getting the data fails.
     '''
     logger.info(_('Fetching data from %s') % url)
 
     components = urlparse.urlparse(url)
 
-    if components.scheme not in ('http', 'https'):
+    if components.scheme not in allowed_schemes:
         raise IOError('Invalid URL scheme %s' % components.scheme)
+
+    if components.scheme == 'file':
+        try:
+            return urllib2.urlopen(url).read()
+        except urllib2.URLError as uex:
+            raise IOError('Failed to retrieve template: %s' % str(uex))
 
     try:
         resp = requests.get(url)
