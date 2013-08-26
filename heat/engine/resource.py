@@ -138,7 +138,7 @@ class Resource(object):
         self.t = stack.resolve_static_data(json_snippet)
         self.properties = Properties(self.properties_schema,
                                      self.t.get('Properties', {}),
-                                     self.stack.resolve_runtime_data,
+                                     self._resolve_runtime_data,
                                      self.name)
         self.attributes = Attributes(self.name,
                                      self.attributes_schema,
@@ -184,6 +184,9 @@ class Resource(object):
     def type(self):
         return self.t['Type']
 
+    def _resolve_runtime_data(self, snippet):
+        return self.stack.resolve_runtime_data(snippet)
+
     def has_interface(self, resource_type):
         """Check to see if this resource is either mapped to resource_type
         or is a "resource_type".
@@ -209,7 +212,7 @@ class Resource(object):
             template = self.t
         else:
             template = self.t.get(section, default)
-        return self.stack.resolve_runtime_data(template)
+        return self._resolve_runtime_data(template)
 
     def update_template_diff(self, after, before):
         '''
@@ -386,7 +389,7 @@ class Resource(object):
         self.t = self.stack.resolve_static_data(self.json_snippet)
         self.properties = Properties(self.properties_schema,
                                      self.t.get('Properties', {}),
-                                     self.stack.resolve_runtime_data,
+                                     self._resolve_runtime_data,
                                      self.name)
         return self._do_action(action, self.properties.validate)
 
@@ -411,7 +414,7 @@ class Resource(object):
             self.state_set(action, self.IN_PROGRESS)
             properties = Properties(self.properties_schema,
                                     after.get('Properties', {}),
-                                    self.stack.resolve_runtime_data,
+                                    self._resolve_runtime_data,
                                     self.name)
             properties.validate()
             tmpl_diff = self.update_template_diff(after, before)
