@@ -236,9 +236,21 @@ class SchemaTest(testtools.TestCase):
         s = properties.Schema(properties.STRING)
         self.assertTrue(properties.Schema.from_legacy(s) is s)
 
+    def test_from_legacy_minimal_string(self):
+        s = properties.Schema.from_legacy({
+            'Type': 'String',
+        })
+        self.assertEqual(properties.STRING, s.type)
+        self.assertEqual(None, s.description)
+        self.assertEqual(None, s.default)
+        self.assertFalse(s.required)
+        self.assertEqual(0, len(s.constraints))
+        self.assertTrue(s.implemented)
+
     def test_from_legacy_string(self):
         s = properties.Schema.from_legacy({
             'Type': 'String',
+            'Description': 'a string',
             'Default': 'wibble',
             'Required': True,
             'Implemented': False,
@@ -248,7 +260,7 @@ class SchemaTest(testtools.TestCase):
             'AllowedPattern': '[a-z]*',
         })
         self.assertEqual(properties.STRING, s.type)
-        self.assertEqual(None, s.description)
+        self.assertEqual('a string', s.description)
         self.assertEqual('wibble', s.default)
         self.assertTrue(s.required)
         self.assertEqual(3, len(s.constraints))

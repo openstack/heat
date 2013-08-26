@@ -168,6 +168,7 @@ class Schema(collections.Mapping):
             ss = None
 
         return cls(data_type,
+                   description=schema_dict.get(DESCRIPTION),
                    default=schema_dict.get(DEFAULT),
                    schema=ss,
                    required=schema_dict.get(REQUIRED, False),
