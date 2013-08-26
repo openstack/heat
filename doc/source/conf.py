@@ -42,10 +42,14 @@ sys.path.insert(0, os.path.abspath('../../'))
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.ifconfig',
               'sphinx.ext.viewcode',
+              'oslo.sphinx',
               'heat.doc.resources']
 
 # Add any paths that contain templates here, relative to this directory.
-#templates_path = ['_templates']
+if os.getenv('HUDSON_PUBLISH_DOCS'):
+    templates_path = ['_ga', '_templates']
+else:
+    templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -72,10 +76,10 @@ copyright = u'2012,2013 Heat Developers'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ['**/#*', '**~', '**/#*#']
 
-# The reST default role (used for this markup: `text`) to use for all
-# documents.
+# The reST default role (used for this markup: `text`)
+# to use for all documents.
 #default_role = None
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
@@ -95,13 +99,16 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+primary_domain = 'py'
+nitpicky = False
+
 
 # -- Options for HTML output --------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme_path = ['.']
-html_theme = '_theme'
+# html_theme_path = ['.']
+# html_theme = '_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -137,6 +144,8 @@ html_static_path = ['_static']
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 #html_last_updated_fmt = '%b %d, %Y'
+git_cmd = "git log --pretty=format:'%ad, commit %h' --date=local -n1"
+html_last_updated_fmt = os.popen(git_cmd).read()
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
