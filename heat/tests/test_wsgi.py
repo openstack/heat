@@ -80,19 +80,25 @@ class RequestTest(HeatTestCase):
         self.assertEqual(result, "application/json")
 
     def test_best_match_language(self):
-        # Here we test that we are actually invoking language negotiation
-        # by webop and also that the default locale always available is en-US
+        # Test that we are actually invoking language negotiation by webop
         request = wsgi.Request.blank('/')
         accepted = 'unknown-lang'
         request.headers = {'Accept-Language': accepted}
 
         def fake_best_match(self, offers, default_match=None):
-            return default_match
+            # Best match on an unknown locale returns None
+            return None
 
         self.stubs.SmartSet(request.accept_language,
                             'best_match', fake_best_match)
 
-        self.assertEqual(request.best_match_language(), 'en_US')
+        self.assertEqual(request.best_match_language(), None)
+
+        # If Accept-Language is missing or empty, match should be None
+        request.headers = {'Accept-Language': ''}
+        self.assertEqual(request.best_match_language(), None)
+        request.headers.pop('Accept-Language')
+        self.assertEqual(request.best_match_language(), None)
 
 
 class ResourceTest(HeatTestCase):
