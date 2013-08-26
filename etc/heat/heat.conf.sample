@@ -29,30 +29,8 @@
 # value)
 #host=heat
 
-# seconds between nodes reporting state to datastore (integer
-# value)
-#report_interval=10
-
 # seconds between running periodic tasks (integer value)
 #periodic_interval=60
-
-# IP address for EC2 API to listen (string value)
-#ec2_listen=0.0.0.0
-
-# port for ec2 api to listen (integer value)
-#ec2_listen_port=8773
-
-# IP address for OpenStack API to listen (string value)
-#osapi_compute_listen=0.0.0.0
-
-# list port for osapi compute (integer value)
-#osapi_compute_listen_port=8774
-
-# IP address for OpenStack Volume API to listen (string value)
-#osapi_volume_listen=0.0.0.0
-
-# port for os volume api to listen (integer value)
-#osapi_volume_listen_port=8776
 
 # URL of the Heat metadata server (string value)
 #heat_metadata_server_url=
