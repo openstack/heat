@@ -410,7 +410,8 @@ class Stack(object):
         backup_stack = self._backup_stack()
 
         try:
-            update_task = update.StackUpdate(self, newstack, backup_stack)
+            update_task = update.StackUpdate(self, newstack, backup_stack,
+                                             rollback=action == self.ROLLBACK)
             updater = scheduler.TaskRunner(update_task)
 
             self.env = newstack.env
