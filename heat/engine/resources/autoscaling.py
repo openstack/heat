@@ -236,11 +236,20 @@ class InstanceGroup(stack_resource.StackResource):
         if self.properties['LoadBalancerNames']:
             id_list = [inst.FnGetRefId() for inst in self.get_instances()]
             for lb in self.properties['LoadBalancerNames']:
-                self.stack[lb].json_snippet['Properties']['Instances'] = \
-                    id_list
+                lb_resource = self.stack[lb]
+                if 'Instances' in lb_resource.properties_schema:
+                    lb_resource.json_snippet['Properties']['Instances'] = (
+                        id_list)
+                elif 'members' in lb_resource.properties_schema:
+                    lb_resource.json_snippet['Properties']['members'] = (
+                        id_list)
+                else:
+                    raise exception.Error(
+                        "Unsupported resource '%s' in LoadBalancerNames" %
+                        (lb,))
                 resolved_snippet = self.stack.resolve_static_data(
-                    self.stack[lb].json_snippet)
-                self.stack[lb].update(resolved_snippet)
+                    lb_resource.json_snippet)
+                lb_resource.update(resolved_snippet)
 
     def FnGetRefId(self):
         return unicode(self.name)
