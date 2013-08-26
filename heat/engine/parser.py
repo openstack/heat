@@ -359,7 +359,7 @@ class Stack(object):
         if callable(post_func):
             post_func()
 
-    def _backup_stack(self):
+    def _backup_stack(self, create_if_missing=True):
         '''
         Get a Stack containing any in-progress resources from the previous
         stack state prior to an update.
@@ -369,12 +369,14 @@ class Stack(object):
         if s is not None:
             logger.debug('Loaded existing backup stack')
             return self.load(self.context, stack=s)
-        else:
+        elif create_if_missing:
             prev = type(self)(self.context, self.name, self.t, self.env,
                               owner_id=self.id)
             prev.store(backup=True)
             logger.debug('Created new backup stack')
             return prev
+        else:
+            return None
 
     def update(self, newstack, action=UPDATE):
         '''
@@ -474,6 +476,14 @@ class Stack(object):
         self.state_set(action, self.IN_PROGRESS, 'Stack %s started' % action)
 
         failures = []
+
+        backup_stack = self._backup_stack(False)
+        if backup_stack is not None:
+            backup_stack.delete()
+            if backup_stack.status != backup_stack.COMPLETE:
+                errs = backup_stack.status_reason
+                failures.append('Error deleting backup resources: %s' % errs)
+
         for res in reversed(self):
             try:
                 res.destroy()
