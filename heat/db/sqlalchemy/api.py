@@ -226,14 +226,6 @@ def stack_update(context, stack_id, values):
     stack.update(values)
     stack.save(_session(context))
 
-    # When the raw_template ID changes, we delete the old template
-    # after storing the new template ID
-    if stack.raw_template_id != old_template_id:
-        session = Session.object_session(stack)
-        rt = raw_template_get(context, old_template_id)
-        session.delete(rt)
-        session.flush()
-
 
 def stack_delete(context, stack_id):
     s = stack_get(context, stack_id)
