@@ -817,8 +817,7 @@ class validateTest(HeatTestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        self.assertRaises(exception.ServerError,
-                          stack.validate)
+        self.assertRaises(exception.Error, stack.validate)
         self.m.VerifyAll()
 
     def test_validate_unique_logical_name(self):
