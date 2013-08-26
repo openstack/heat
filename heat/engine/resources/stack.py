@@ -16,6 +16,7 @@
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
+from heat.engine.properties import Properties
 from heat.engine import stack_resource
 
 from heat.openstack.common import log as logging
@@ -38,6 +39,10 @@ class NestedStack(stack_resource.StackResource):
                          PROP_TIMEOUT_MINS: {'Type': 'Number'},
                          PROP_PARAMETERS: {'Type': 'Map'}}
 
+    update_allowed_keys = ('Properties',)
+    update_allowed_properties = (PROP_TEMPLATE_URL, PROP_TIMEOUT_MINS,
+                                 PROP_PARAMETERS)
+
     def handle_create(self):
         template_data = urlfetch.get(self.properties[PROP_TEMPLATE_URL])
         template = template_format.parse(template_data)
@@ -57,6 +62,20 @@ class NestedStack(stack_resource.StackResource):
 
     def FnGetRefId(self):
         return self.nested().identifier().arn()
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        # Nested stack template may be changed even if the prop_diff is empty.
+        self.properties = Properties(self.properties_schema,
+                                     json_snippet.get('Properties', {}),
+                                     self.stack.resolve_runtime_data,
+                                     self.name)
+
+        template_data = urlfetch.get(self.properties[PROP_TEMPLATE_URL])
+        template = template_format.parse(template_data)
+
+        self.update_with_template(template,
+                                  self.properties[PROP_PARAMETERS],
+                                  self.properties[PROP_TIMEOUT_MINS])
 
 
 def resource_mapping():

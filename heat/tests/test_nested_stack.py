@@ -13,6 +13,8 @@
 #    under the License.
 
 
+import copy
+
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
@@ -47,6 +49,16 @@ Outputs:
     Value: bar
 '''
 
+    update_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  KeyName:
+    Type: String
+Outputs:
+  Bar:
+    Value: foo
+'''
+
     def setUp(self):
         super(NestedStackTest, self).setUp()
         self.m.StubOutWithMock(urlfetch, 'get')
@@ -67,9 +79,9 @@ Outputs:
         stack.store()
         return stack
 
-    def test_nested_stack(self):
-        urlfetch.get('https://localhost/the.template').AndReturn(
-            self.nested_template)
+    def test_nested_stack_create(self):
+        urlfetch.get('https://localhost/the.template').MultipleTimes().\
+            AndReturn(self.nested_template)
         self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)
@@ -79,9 +91,6 @@ Outputs:
         arn_prefix = ('arn:openstack:heat::aaaa:stacks/%s/' %
                       rsrc.physical_resource_name())
         self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
-
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
 
         self.assertEqual('bar', rsrc.FnGetAtt('Outputs.Foo'))
         self.assertRaises(
@@ -93,6 +102,44 @@ Outputs:
 
         rsrc.delete()
         self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
+
+        self.m.VerifyAll()
+
+    def test_nested_stack_update(self):
+        urlfetch.get('https://localhost/the.template').MultipleTimes().\
+            AndReturn(self.nested_template)
+        urlfetch.get('https://localhost/new.template').MultipleTimes().\
+            AndReturn(self.update_template)
+
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template)
+        rsrc = stack['the_nested']
+
+        original_nested_id = rsrc.resource_id
+        t = template_format.parse(self.test_template)
+        new_res = copy.deepcopy(t['Resources']['the_nested'])
+        new_res['Properties']['TemplateURL'] = 'https://localhost/new.template'
+        prop_diff = {'TemplateURL': 'https://localhost/new.template'}
+        rsrc.handle_update(new_res, {}, prop_diff)
+
+        # Expect the physical resource name staying the same after update,
+        # so that the nested was actually updated instead of replaced.
+        self.assertEqual(original_nested_id, rsrc.resource_id)
+        db_nested = db_api.stack_get(stack.context,
+                                     rsrc.resource_id)
+        # Owner_id should be preserved during the update process.
+        self.assertEqual(stack.id, db_nested.owner_id)
+
+        self.assertEqual('foo', rsrc.FnGetAtt('Outputs.Bar'))
+        self.assertRaises(
+            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
+        self.assertRaises(
+            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Outputs.Foo')
+        self.assertRaises(
+            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Bar')
+
+        rsrc.delete()
 
         self.m.VerifyAll()
 
