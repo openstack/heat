@@ -13,12 +13,15 @@
 #    under the License.
 
 import os
+import json
 
+from heat.common import exception
 from heat.common import urlfetch
 from heat.common import template_format
 
 from heat.engine import environment
 from heat.engine import parser
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import template_resource
 
@@ -83,7 +86,19 @@ class ProviderTemplateTest(HeatTestCase):
 
     def test_to_parameters(self):
         """Tests property conversion to parameter values."""
-        utils.setup_dummy_db()
+        provider = {
+            'Parameters': {
+                'Foo': {'Type': 'String'},
+                'AList': {'Type': 'CommaDelimitedList'},
+                'ANum': {'Type': 'Number'},
+                'AMap': {'Type': 'Json'},
+            },
+            'Outputs': {
+                'Foo': {'Value': 'bar'},
+            },
+        }
+
+        files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
             attributes_schema = {"Foo": "A test attribute"}
@@ -99,7 +114,7 @@ class ProviderTemplateTest(HeatTestCase):
         env.load({'resource_registry':
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             parser.Template({}), env=env,
+                             parser.Template({}, files=files), env=env,
                              stack_id=uuidutils.generate_uuid())
 
         map_prop_val = {
@@ -119,10 +134,9 @@ class ProviderTemplateTest(HeatTestCase):
                 "AMap": map_prop_val
             }
         }
-        self.m.ReplayAll()
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
-        self.m.VerifyAll()
+        temp_res.validate()
         converted_params = temp_res._to_parameters()
         self.assertTrue(converted_params)
         for key in DummyResource.properties_schema:
@@ -138,6 +152,191 @@ class ProviderTemplateTest(HeatTestCase):
         self.assertEqual(5, converted_params.get("ANum"))
         # verify Map conversion
         self.assertEqual(map_prop_val, converted_params.get("AMap"))
+
+    def test_attributes_extra(self):
+        provider = {
+            'Outputs': {
+                'Foo': {'Value': 'bar'},
+                'Blarg': {'Value': 'wibble'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            properties_schema = {}
+            attributes_schema = {"Foo": "A test attribute"}
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}, files=files), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
+        json_snippet = {
+            "Type": "DummyResource",
+        }
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      json_snippet, stack)
+        self.assertEqual(None, temp_res.validate())
+
+    def test_attributes_missing(self):
+        provider = {
+            'Outputs': {
+                'Blarg': {'Value': 'wibble'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            properties_schema = {}
+            attributes_schema = {"Foo": "A test attribute"}
+
+        json_snippet = {
+            "Type": "DummyResource",
+        }
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}, files=files), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      json_snippet, stack)
+        self.assertRaises(exception.StackValidationFailed,
+                          temp_res.validate)
+
+    def test_properties_normal(self):
+        provider = {
+            'Parameters': {
+                'Foo': {'Type': 'String'},
+                'Blarg': {'Type': 'String', 'Default': 'wibble'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            properties_schema = {"Foo": properties.Schema(properties.STRING,
+                                                          required=True)}
+            attributes_schema = {}
+
+        json_snippet = {
+            "Type": "DummyResource",
+            "Properties": {
+                "Foo": "bar",
+            },
+        }
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}, files=files), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      json_snippet, stack)
+        self.assertEqual(None, temp_res.validate())
+
+    def test_properties_missing(self):
+        provider = {
+            'Parameters': {
+                'Blarg': {'Type': 'String', 'Default': 'wibble'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            properties_schema = {"Foo": properties.Schema(properties.STRING,
+                                                          required=True)}
+            attributes_schema = {}
+
+        json_snippet = {
+            "Type": "DummyResource",
+        }
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}, files=files), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      json_snippet, stack)
+        self.assertRaises(exception.StackValidationFailed,
+                          temp_res.validate)
+
+    def test_properties_extra_required(self):
+        provider = {
+            'Parameters': {
+                'Blarg': {'Type': 'String'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            properties_schema = {}
+            attributes_schema = {}
+
+        json_snippet = {
+            "Type": "DummyResource",
+            "Properties": {
+                "Blarg": "wibble",
+            },
+        }
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}, files=files), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      json_snippet, stack)
+        self.assertRaises(exception.StackValidationFailed,
+                          temp_res.validate)
+
+    def test_properties_type_mismatch(self):
+        provider = {
+            'Parameters': {
+                'Foo': {'Type': 'String'},
+            },
+        }
+        files = {'test_resource.template': json.dumps(provider)}
+
+        class DummyResource(object):
+            properties_schema = {"Foo": properties.Schema(properties.MAP)}
+            attributes_schema = {}
+
+        json_snippet = {
+            "Type": "DummyResource",
+            "Properties": {
+                "Foo": "bar",
+            },
+        }
+
+        env = environment.Environment()
+        resource._register_class('DummyResource', DummyResource)
+        env.load({'resource_registry':
+                  {'DummyResource': 'test_resource.template'}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}, files=files), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      json_snippet, stack)
+        self.assertRaises(exception.StackValidationFailed,
+                          temp_res.validate)
 
     def test_get_template_resource(self):
         # assertion: if the name matches {.yaml|.template} we get the
