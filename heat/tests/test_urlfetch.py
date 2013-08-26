@@ -14,6 +14,7 @@
 #    under the License.
 
 import requests
+from requests import exceptions
 
 from heat.common import urlfetch
 from heat.tests.common import HeatTestCase
@@ -26,6 +27,9 @@ class Response:
     @property
     def text(self):
         return self._text
+
+    def raise_for_status(self):
+        pass
 
 
 class UrlFetchTest(HeatTestCase):
@@ -61,7 +65,16 @@ class UrlFetchTest(HeatTestCase):
     def test_http_error(self):
         url = 'http://example.com/template'
 
-        requests.get(url).AndRaise(IOError('fubar'))
+        requests.get(url).AndRaise(exceptions.HTTPError())
+        self.m.ReplayAll()
+
+        self.assertRaises(IOError, urlfetch.get, url)
+        self.m.VerifyAll()
+
+    def test_non_exist_url(self):
+        url = 'http://non-exist.com/template'
+
+        requests.get(url).AndRaise(exceptions.Timeout())
         self.m.ReplayAll()
 
         self.assertRaises(IOError, urlfetch.get, url)
