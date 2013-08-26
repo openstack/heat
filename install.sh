@@ -74,5 +74,5 @@ install_dir() {
 
 install_dir etc $CONF_PREFIX
 
-./setup.py install >/dev/null
+python setup.py install >/dev/null
 rm -rf build heat.egg-info
