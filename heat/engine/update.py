@@ -26,17 +26,23 @@ class StackUpdate(object):
     A Task to perform the update of an existing stack to a new template.
     """
 
-    def __init__(self, existing_stack, new_stack, previous_stack):
+    def __init__(self, existing_stack, new_stack, previous_stack,
+                 rollback=False):
         """Initialise with the existing stack and the new stack."""
         self.existing_stack = existing_stack
         self.new_stack = new_stack
         self.previous_stack = previous_stack
 
+        self.rollback = rollback
+
         self.existing_snippets = dict((r.name, r.parsed_template())
                                       for r in self.existing_stack)
 
     def __repr__(self):
-        return '%s Update' % str(self.existing_stack)
+        if self.rollback:
+            return '%s Rollback' % str(self.existing_stack)
+        else:
+            return '%s Update' % str(self.existing_stack)
 
     @scheduler.wrappertask
     def __call__(self):
