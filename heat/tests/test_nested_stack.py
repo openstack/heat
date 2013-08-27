@@ -34,7 +34,7 @@ Resources:
   the_nested:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://localhost/the.template
+      TemplateURL: https://server.test/the.template
       Parameters:
         KeyName: foo
 '''
@@ -80,7 +80,7 @@ Outputs:
         return stack
 
     def test_nested_stack_create(self):
-        urlfetch.get('https://localhost/the.template').MultipleTimes().\
+        urlfetch.get('https://server.test/the.template').MultipleTimes().\
             AndReturn(self.nested_template)
         self.m.ReplayAll()
 
@@ -106,9 +106,9 @@ Outputs:
         self.m.VerifyAll()
 
     def test_nested_stack_update(self):
-        urlfetch.get('https://localhost/the.template').MultipleTimes().\
+        urlfetch.get('https://server.test/the.template').MultipleTimes().\
             AndReturn(self.nested_template)
-        urlfetch.get('https://localhost/new.template').MultipleTimes().\
+        urlfetch.get('https://server.test/new.template').MultipleTimes().\
             AndReturn(self.update_template)
 
         self.m.ReplayAll()
@@ -119,8 +119,9 @@ Outputs:
         original_nested_id = rsrc.resource_id
         t = template_format.parse(self.test_template)
         new_res = copy.deepcopy(t['Resources']['the_nested'])
-        new_res['Properties']['TemplateURL'] = 'https://localhost/new.template'
-        prop_diff = {'TemplateURL': 'https://localhost/new.template'}
+        new_res['Properties']['TemplateURL'] = (
+            'https://server.test/new.template')
+        prop_diff = {'TemplateURL': 'https://server.test/new.template'}
         rsrc.handle_update(new_res, {}, prop_diff)
 
         # Expect the physical resource name staying the same after update,
@@ -144,7 +145,7 @@ Outputs:
         self.m.VerifyAll()
 
     def test_nested_stack_suspend_resume(self):
-        urlfetch.get('https://localhost/the.template').AndReturn(
+        urlfetch.get('https://server.test/the.template').AndReturn(
             self.nested_template)
         self.m.ReplayAll()
 
@@ -186,7 +187,7 @@ Outputs:
         super(ResDataNestedStackTest, self).setUp()
 
     def test_res_data_delete(self):
-        urlfetch.get('https://localhost/the.template').AndReturn(
+        urlfetch.get('https://server.test/the.template').AndReturn(
             self.nested_template)
         self.m.ReplayAll()
         stack = self.create_stack(self.test_template)
