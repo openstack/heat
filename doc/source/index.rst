@@ -56,9 +56,9 @@ Developers Documentation
 Code Documentation
 ==================
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
 
-   api/autoindex
+   sourcecode/autoindex
 
 Indices and tables
 ==================
