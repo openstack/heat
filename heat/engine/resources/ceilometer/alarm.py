@@ -130,5 +130,5 @@ class CeilometerAlarm(resource.Resource):
 
 def resource_mapping():
     return {
-        'OS::Metering::Alarm': CeilometerAlarm,
+        'OS::Ceilometer::Alarm': CeilometerAlarm,
     }

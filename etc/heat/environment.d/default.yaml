@@ -5,3 +5,4 @@ resource_registry:
     # Choose your implementation of AWS::CloudWatch::Alarm
     #"AWS::CloudWatch::Alarm": "file:///etc/heat/templates/AWS_CloudWatch_Alarm.yaml"
     "AWS::CloudWatch::Alarm": "OS::Heat::CWLiteAlarm"
+    "OS::Metering::Alarm": "OS::Ceilometer::Alarm"

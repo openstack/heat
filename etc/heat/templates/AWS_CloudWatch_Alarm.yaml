@@ -59,7 +59,7 @@ Mappings:
 
 Resources:
   __alarm__:
-    Type: OS::Metering::Alarm
+    Type: OS::Ceilometer::Alarm
     Properties:
       description:
         Ref: AlarmDescription
