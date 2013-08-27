@@ -50,34 +50,92 @@ from heat.openstack.common import importutils
 
 URL_LENGTH_LIMIT = 50000
 
-bind_opts = [
+api_opts = [
     cfg.StrOpt('bind_host', default='0.0.0.0',
                help=_('Address to bind the server.  Useful when '
-                      'selecting a particular network interface.')),
-    cfg.IntOpt('bind_port',
-               help=_('The port on which the server will listen.'))
-]
-
-cfg.CONF.register_opts(bind_opts)
-
-socket_opts = [
+                      'selecting a particular network interface.'),
+               deprecated_group='DEFAULT'),
+    cfg.IntOpt('bind_port', default=8004,
+               help=_('The port on which the server will listen.'),
+               deprecated_group='DEFAULT'),
     cfg.IntOpt('backlog', default=4096,
                help=_("Number of backlog requests "
-                      "to configure the socket with")),
+                      "to configure the socket with"),
+               deprecated_group='DEFAULT'),
     cfg.StrOpt('cert_file', default=None,
                help=_("Location of the SSL Certificate File "
-                      "to use for SSL mode")),
+                      "to use for SSL mode"),
+               deprecated_group='DEFAULT'),
     cfg.StrOpt('key_file', default=None,
                help=_("Location of the SSL Key File to use "
-                      "for enabling SSL mode")),
+                      "for enabling SSL mode"),
+               deprecated_group='DEFAULT'),
+    cfg.IntOpt('workers', default=0,
+               help=_("Number of workers for Heat service"),
+               deprecated_group='DEFAULT'),
 ]
+api_group = cfg.OptGroup('heat_api')
+cfg.CONF.register_group(api_group)
+cfg.CONF.register_opts(api_opts,
+                       group=api_group)
 
-cfg.CONF.register_opts(socket_opts)
+api_cfn_opts = [
+    cfg.StrOpt('bind_host', default='0.0.0.0',
+               help=_('Address to bind the server.  Useful when '
+                      'selecting a particular network interface.'),
+               deprecated_group='DEFAULT'),
+    cfg.IntOpt('bind_port', default=8000,
+               help=_('The port on which the server will listen.'),
+               deprecated_group='DEFAULT'),
+    cfg.IntOpt('backlog', default=4096,
+               help=_("Number of backlog requests "
+                      "to configure the socket with"),
+               deprecated_group='DEFAULT'),
+    cfg.StrOpt('cert_file', default=None,
+               help=_("Location of the SSL Certificate File "
+                      "to use for SSL mode"),
+               deprecated_group='DEFAULT'),
+    cfg.StrOpt('key_file', default=None,
+               help=_("Location of the SSL Key File to use "
+                      "for enabling SSL mode"),
+               deprecated_group='DEFAULT'),
+    cfg.IntOpt('workers', default=0,
+               help=_("Number of workers for Heat service"),
+               deprecated_group='DEFAULT'),
+]
+api_cfn_group = cfg.OptGroup('heat_api_cfn')
+cfg.CONF.register_group(api_cfn_group)
+cfg.CONF.register_opts(api_cfn_opts,
+                       group=api_cfn_group)
 
-workers_opts = cfg.IntOpt('workers', default=0,
-                          help=_("Number of workers for Heat service"))
-
-cfg.CONF.register_opt(workers_opts)
+api_cw_opts = [
+    cfg.StrOpt('bind_host', default='0.0.0.0',
+               help=_('Address to bind the server.  Useful when '
+                      'selecting a particular network interface.'),
+               deprecated_group='DEFAULT'),
+    cfg.IntOpt('bind_port', default=8003,
+               help=_('The port on which the server will listen.'),
+               deprecated_group='DEFAULT'),
+    cfg.IntOpt('backlog', default=4096,
+               help=_("Number of backlog requests "
+                      "to configure the socket with"),
+               deprecated_group='DEFAULT'),
+    cfg.StrOpt('cert_file', default=None,
+               help=_("Location of the SSL Certificate File "
+                      "to use for SSL mode"),
+               deprecated_group='DEFAULT'),
+    cfg.StrOpt('key_file', default=None,
+               help=_("Location of the SSL Key File to use "
+                      "for enabling SSL mode"),
+               deprecated_group='DEFAULT'),
+    cfg.IntOpt('workers', default=0,
+               help=_("Number of workers for Heat service"),
+               deprecated_group='DEFAULT'),
+]
+api_cw_group = cfg.OptGroup('heat_api_cloudwatch')
+cfg.CONF.register_group(api_cw_group)
+cfg.CONF.register_opts(api_cw_opts,
+                       group=api_cw_group)
 
 
 class WritableLogger(object):
@@ -93,9 +151,6 @@ class WritableLogger(object):
 
 def get_bind_addr(conf, default_port=None):
     """Return the host and port to bind to."""
-    for opt in bind_opts:
-        if opt.name not in conf:
-            conf.register_opt(opt)
     return (conf.bind_host, conf.bind_port or default_port)
 
 
@@ -119,8 +174,6 @@ def get_socket(conf, default_port):
     address_family = [addr[0] for addr in socket.getaddrinfo(bind_addr[0],
                       bind_addr[1], socket.AF_UNSPEC, socket.SOCK_STREAM)
                       if addr[0] in (socket.AF_INET, socket.AF_INET6)][0]
-
-    conf.register_opts(socket_opts)
 
     cert_file = conf.cert_file
     key_file = conf.key_file

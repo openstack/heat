@@ -58,11 +58,11 @@ if __name__ == '__main__':
 
         app = config.load_paste_app()
 
-        port = cfg.CONF.bind_port
-        host = cfg.CONF.bind_host
+        port = cfg.CONF.heat_api_cloudwatch.bind_port
+        host = cfg.CONF.heat_api_cloudwatch.bind_host
         LOG.info('Starting Heat CloudWatch API on %s:%s' % (host, port))
         server = wsgi.Server()
-        server.start(app, cfg.CONF, default_port=port)
+        server.start(app, cfg.CONF.heat_api_cloudwatch, default_port=port)
         server.wait()
     except RuntimeError as e:
         sys.exit("ERROR: %s" % e)
