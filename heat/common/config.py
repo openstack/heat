@@ -63,7 +63,10 @@ service_opts = [
                help='Keystone role for heat template-defined users'),
     cfg.IntOpt('max_template_size',
                default=524288,
-               help='Maximum raw byte size of any template.')]
+               help='Maximum raw byte size of any template.'),
+    cfg.IntOpt('max_nested_stack_depth',
+               default=3,
+               help='Maximum depth allowed when using nested stacks.')]
 
 db_opts = [
     cfg.StrOpt('sql_connection',

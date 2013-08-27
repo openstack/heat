@@ -350,3 +350,11 @@ class NotFound(Error):
 
 class InvalidContentType(HeatException):
     message = "Invalid content type %(content_type)s"
+
+
+class StackRecursionLimitReached(HeatException):
+    message = _("Recursion depth exceeds %d.")
+
+    def __init__(self, recursion_depth):
+        self.message = self.message % recursion_depth
+        super(StackRecursionLimitReached, self).__init__()

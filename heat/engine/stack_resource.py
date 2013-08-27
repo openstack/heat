@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
+
 from heat.common import exception
 from heat.engine import attributes
 from heat.engine import environment
@@ -34,6 +36,11 @@ class StackResource(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(StackResource, self).__init__(name, json_snippet, stack)
         self._nested = None
+        if self.stack.parent_resource:
+            self.recursion_depth = (
+                self.stack.parent_resource.recursion_depth + 1)
+        else:
+            self.recursion_depth = 0
 
     def _outputs_to_attribs(self, json_snippet):
         if not self.attributes and 'Outputs' in json_snippet:
@@ -63,6 +70,9 @@ class StackResource(resource.Resource):
         '''
         Handle the creation of the nested stack from a given JSON template.
         '''
+        if self.recursion_depth >= cfg.CONF.max_nested_stack_depth:
+            raise exception.StackRecursionLimitReached(
+                cfg.CONF.max_nested_stack_depth)
         template = parser.Template(child_template)
         self._outputs_to_attribs(child_template)
 

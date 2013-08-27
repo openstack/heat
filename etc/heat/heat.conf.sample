@@ -54,6 +54,10 @@
 # Maximum raw byte size of any template. (integer value)
 #max_template_size=524288
 
+# Maximum depth allowed when using nested stacks. (integer
+# value)
+#max_nested_stack_depth=3
+
 
 #
 # Options defined in heat.common.crypt
