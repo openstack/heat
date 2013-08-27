@@ -17,6 +17,8 @@ import copy
 
 import mox
 
+from testtools import skipIf
+
 from oslo.config import cfg
 
 from heat.common import template_format
@@ -24,14 +26,18 @@ from heat.common import exception
 from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import instance
+from heat.engine.resources.neutron import loadbalancer as neutron_lb
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resource import Metadata
 from heat.openstack.common import timeutils
+from heat.openstack.common.importutils import try_import
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
+
+neutronclient = try_import('neutronclient.v2_0.client')
 
 
 as_template = '''
@@ -652,6 +658,59 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual(None, rsrc.update(update_snippet))
 
         rsrc.delete()
+        self.m.VerifyAll()
+
+    @skipIf(neutronclient is None, 'neutronclient unavailable')
+    def test_lb_reload_members(self):
+        t = template_format.parse(as_template)
+        t['Resources']['ElasticLoadBalancer'] = {
+            'Type': 'OS::Neutron::LoadBalancer',
+            'Properties': {
+                'protocol_port': 8080,
+                'pool_id': 'pool123'
+            }
+        }
+
+        expected = {
+            'Type': 'OS::Neutron::LoadBalancer',
+            'Properties': {
+                'protocol_port': 8080,
+                'pool_id': 'pool123',
+                'members': [u'WebServerGroup-0']}
+        }
+        self.m.StubOutWithMock(neutron_lb.LoadBalancer, 'update')
+        neutron_lb.LoadBalancer.update(expected).AndReturn(None)
+
+        now = timeutils.utcnow()
+        self._stub_meta_expected(now, 'ExactCapacity : 1')
+        self._stub_create(1)
+        self.m.ReplayAll()
+        stack = utils.parse_stack(t, params=self.params)
+        self.create_scaling_group(t, stack, 'WebServerGroup')
+
+        self.m.VerifyAll()
+
+    @skipIf(neutronclient is None, 'neutronclient unavailable')
+    def test_lb_reload_invalid_resource(self):
+        t = template_format.parse(as_template)
+        t['Resources']['ElasticLoadBalancer'] = {
+            'Type': 'AWS::EC2::Volume',
+            'Properties': {
+                'AvailabilityZone': 'nova'
+            }
+        }
+
+        self._stub_create(1)
+        self.m.ReplayAll()
+        stack = utils.parse_stack(t, params=self.params)
+        error = self.assertRaises(
+            exception.ResourceFailure,
+            self.create_scaling_group, t, stack, 'WebServerGroup')
+        self.assertEqual(
+            "Error: Unsupported resource 'ElasticLoadBalancer' in "
+            "LoadBalancerNames",
+            str(error))
+
         self.m.VerifyAll()
 
     def test_scaling_group_adjust(self):

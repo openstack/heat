@@ -279,7 +279,7 @@ class LoadBalancer(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'members' in prop_diff:
             members = set(prop_diff['members'])
-            old_members = set(self.t['Properties']['members'])
+            old_members = set(self.t['Properties'].get('members', []))
             client = self.neutron()
             for member in old_members - members:
                 member_id = db_api.resource_data_get(self, member)
