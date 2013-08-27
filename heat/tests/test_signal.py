@@ -130,6 +130,22 @@ class SignalTest(HeatTestCase):
         self.m.VerifyAll()
 
     @utils.stack_delete_after
+    def test_FnGetAtt_delete_not_found(self):
+        self.stack = self.create_stack()
+
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack.resources['signal_handler']
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+        rsrc.delete()
+        rsrc.resource_id = 'not-none'
+        rsrc.delete()
+
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
     def test_signal(self):
         test_d = {'Data': 'foo', 'Reason': 'bar',
                   'Status': 'SUCCESS', 'UniqueId': '123'}
