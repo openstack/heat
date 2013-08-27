@@ -311,17 +311,16 @@ class Instance(resource.Resource):
                 fault = getattr(server, 'fault', {})
                 message = fault.get('message', 'Unknown')
                 code = fault.get('code', 500)
-                exc = exception.Error(_("Build of server %(server)s failed: "
-                                        "%(message)s (%(code)s)") %
+                exc = exception.Error(_("Creation of server %(server)s "
+                                        "failed: %(message)s (%(code)s)") %
                                       dict(server=server.name,
                                            message=message,
                                            code=code))
                 raise exc
             else:
-                exc = exception.Error(_('Nova reported unexpected '
-                                        'instance[%(name)s] '
-                                        'status[%(status)s]') %
-                                      dict(name=self.name,
+                exc = exception.Error(_("Creation of server %(server)s failed "
+                                        "with unknown status: %(status)s") %
+                                      dict(server=server.name,
                                            status=server.status))
                 raise exc
         else:

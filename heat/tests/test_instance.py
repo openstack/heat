@@ -254,7 +254,7 @@ class InstancesTest(HeatTestCase):
                 (return_server, self.FakeVolumeAttach()))
         except exception.Error as e:
             self.assertEqual(
-                'Build of server sample-server2 failed: Unknown (500)',
+                'Creation of server sample-server2 failed: Unknown (500)',
                 str(e))
         else:
             self.fail('Error not raised')
