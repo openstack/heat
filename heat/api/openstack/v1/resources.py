@@ -44,6 +44,10 @@ def format_resource(req, res, keys=[]):
             # and RES_STATUS, so the API format doesn't expose the
             # internal split of state into action/status
             yield (key, '_'.join((res[engine_api.RES_ACTION], value)))
+        elif (key == engine_api.RES_NAME):
+            yield ('logical_resource_id', value)
+            yield (key, value)
+
         else:
             yield (key, value)
 

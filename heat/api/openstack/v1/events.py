@@ -57,6 +57,9 @@ def format_event(req, event, keys=None):
             # and RES_STATUS, so the API format doesn't expose the
             # internal split of state into action/status
             yield (key, '_'.join((event[engine_api.EVENT_RES_ACTION], value)))
+        elif (key == engine_api.RES_NAME):
+            yield ('logical_resource_id', value)
+            yield (key, value)
 
         else:
             yield (key, value)
