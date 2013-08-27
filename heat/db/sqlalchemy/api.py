@@ -144,6 +144,19 @@ def resource_data_set(resource, key, value, redact=False):
     return current
 
 
+def resource_exchange_stacks(context, resource_id1, resource_id2):
+    query = model_query(context, models.Resource)
+    session = query.session
+    session.begin()
+
+    res1 = query.get(resource_id1)
+    res2 = query.get(resource_id2)
+
+    res1.stack, res2.stack = res2.stack, res1.stack
+
+    session.commit()
+
+
 def resource_data_delete(resource, key):
     result = resource_data_get_by_key(resource.context, resource.id, key)
     result.delete()
