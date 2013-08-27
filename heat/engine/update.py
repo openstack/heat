@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.db import api as db_api
+
 from heat.engine import resource
 from heat.engine import scheduler
 
@@ -51,6 +53,10 @@ class StackUpdate(object):
         existing_deps = self.existing_stack.dependencies
         new_deps = self.new_stack.dependencies
 
+        cleanup_prev = scheduler.DependencyTaskGroup(
+            self.previous_stack.dependencies,
+            self._remove_backup_resource,
+            reverse=True)
         cleanup = scheduler.DependencyTaskGroup(existing_deps,
                                                 self._remove_old_resource,
                                                 reverse=True)
@@ -59,13 +65,32 @@ class StackUpdate(object):
         update = scheduler.DependencyTaskGroup(new_deps,
                                                self._update_resource)
 
-        yield cleanup()
+        if not self.rollback:
+            yield cleanup_prev()
+
         yield create_new()
-        yield update()
+        try:
+            yield update()
+        finally:
+            prev_deps = self.previous_stack._get_dependencies(
+                self.previous_stack.resources.itervalues())
+            self.previous_stack.dependencies = prev_deps
+        yield cleanup()
+
+    @scheduler.wrappertask
+    def _remove_backup_resource(self, prev_res):
+        if prev_res.state not in ((prev_res.INIT, prev_res.COMPLETE),
+                                  (prev_res.DELETE, prev_res.COMPLETE)):
+            logger.debug("Deleting backup resource %s" % prev_res.name)
+            yield prev_res.destroy()
 
     @scheduler.wrappertask
     def _remove_old_resource(self, existing_res):
         res_name = existing_res.name
+
+        if res_name in self.previous_stack:
+            yield self._remove_backup_resource(self.previous_stack[res_name])
+
         if res_name not in self.new_stack:
             logger.debug("resource %s not found in updated stack"
                          % res_name + " definition, deleting")
@@ -78,14 +103,45 @@ class StackUpdate(object):
         if res_name not in self.existing_stack:
             logger.debug("resource %s not found in current stack"
                          % res_name + " definition, adding")
-            new_res.stack = self.existing_stack
-            self.existing_stack[res_name] = new_res
-            yield new_res.create()
+            yield self._create_resource(new_res)
+
+    @staticmethod
+    def _exchange_stacks(existing_res, prev_res):
+        db_api.resource_exchange_stacks(existing_res.stack.context,
+                                        existing_res.id, prev_res.id)
+        existing_res.stack, prev_res.stack = prev_res.stack, existing_res.stack
+        existing_res.stack[existing_res.name] = existing_res
+        prev_res.stack[prev_res.name] = prev_res
 
     @scheduler.wrappertask
-    def _replace_resource(self, new_res):
+    def _create_resource(self, new_res):
         res_name = new_res.name
-        yield self.existing_stack[res_name].destroy()
+
+        # Clean up previous resource
+        if res_name in self.previous_stack:
+            prev_res = self.previous_stack[res_name]
+
+            if prev_res.state not in ((prev_res.INIT, prev_res.COMPLETE),
+                                      (prev_res.DELETE, prev_res.COMPLETE)):
+                # Swap in the backup resource if it is in a valid state,
+                # instead of creating a new resource
+                if prev_res.status == prev_res.COMPLETE:
+                    logger.debug("Swapping in backup Resource %s" % res_name)
+                    self._exchange_stacks(self.existing_stack[res_name],
+                                          prev_res)
+                    return
+
+                logger.debug("Deleting backup Resource %s" % res_name)
+                yield prev_res.destroy()
+
+        # Back up existing resource
+        if res_name in self.existing_stack:
+            logger.debug("Backing up existing Resource %s" % res_name)
+            existing_res = self.existing_stack[res_name]
+            existing_res.stack = self.previous_stack
+            self.previous_stack[res_name] = existing_res
+            existing_res.state_set(existing_res.UPDATE, existing_res.COMPLETE)
+
         new_res.stack = self.existing_stack
         self.existing_stack[res_name] = new_res
         yield new_res.create()
@@ -108,7 +164,7 @@ class StackUpdate(object):
                 yield self.existing_stack[res_name].update(new_snippet,
                                                            existing_snippet)
             except resource.UpdateReplace:
-                yield self._replace_resource(new_res)
+                yield self._create_resource(new_res)
             else:
                 logger.info("Resource %s for stack %s updated" %
                             (res_name, self.existing_stack.name))

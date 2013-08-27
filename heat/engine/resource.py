@@ -602,6 +602,7 @@ class Resource(object):
                 rs.update_and_save({'action': self.action,
                                     'status': self.status,
                                     'status_reason': reason,
+                                    'stack_id': self.stack.id,
                                     'nova_instance': self.resource_id})
 
                 self.stack.updated_time = datetime.utcnow()
