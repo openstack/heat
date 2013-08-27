@@ -23,11 +23,25 @@ logger = logging.getLogger(__name__)
 
 
 class SecurityGroup(resource.Resource):
+    rule_schema = {'CidrIp': {'Type': 'String'},
+                   'FromPort': {'Type': 'String'},
+                   'ToPort': {'Type': 'String'},
+                   'IpProtocol': {'Type': 'String'},
+                   'SourceSecurityGroupId': {'Type': 'String'},
+                   'SourceSecurityGroupName': {'Type': 'String'},
+                   'SourceSecurityGroupOwnerId': {'Type': 'String',
+                                                  'Implemented': False}}
     properties_schema = {'GroupDescription': {'Type': 'String',
                                               'Required': True},
                          'VpcId': {'Type': 'String'},
-                         'SecurityGroupIngress': {'Type': 'List'},
-                         'SecurityGroupEgress': {'Type': 'List'}}
+                         'SecurityGroupIngress': {'Type': 'List',
+                                                  'Schema': {
+                                                      'Type': 'Map',
+                                                      'Schema': rule_schema}},
+                         'SecurityGroupEgress': {'Type': 'List',
+                                                 'Schema': {
+                                                     'Type': 'Map',
+                                                     'Schema': rule_schema}}}
 
     def handle_create(self):
         if self.properties['VpcId'] and clients.neutronclient is not None:
