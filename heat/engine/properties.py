@@ -51,7 +51,8 @@ class Schema(collections.Mapping):
     Schema objects are serialisable to dictionaries following a superset of
     the HOT input Parameter schema using dict().
 
-    Serialises to JSON in the form:
+    Serialises to JSON in the form::
+
         {
             'type': 'list',
             'required': False
@@ -332,7 +333,7 @@ class Range(Constraint):
     """
     Constrain values within a range.
 
-    Serialises to JSON as:
+    Serialises to JSON as::
 
         {
             'range': {'min': <min>, 'max': <max>},
@@ -385,7 +386,7 @@ class Length(Range):
     """
     Constrain the length of values within a range.
 
-    Serialises to JSON as:
+    Serialises to JSON as::
 
         {
             'length': {'min': <min>, 'max': <max>},
@@ -416,7 +417,7 @@ class AllowedValues(Constraint):
     """
     Constrain values to a predefined set.
 
-    Serialises to JSON as:
+    Serialises to JSON as::
 
         {
             'allowed_values': [<allowed1>, <allowed2>, ...],
@@ -448,7 +449,7 @@ class AllowedPattern(Constraint):
     """
     Constrain values to a predefined regular expression pattern.
 
-    Serialises to JSON as:
+    Serialises to JSON as::
 
         {
             'allowed_pattern': <pattern>,
@@ -702,6 +703,7 @@ class Properties(collections.Mapping):
     @staticmethod
     def _schema_to_params_and_props(schema, params=None):
         '''Generates a default template based on the provided schema.
+        ::
 
         ex: input: schema = {'foo': {'Type': 'String'}}, params = {}
             output: {'foo': {'Ref': 'foo'}},
@@ -733,9 +735,8 @@ class Properties(collections.Mapping):
     def schema_to_parameters_and_properties(schema):
         '''Generates properties with params resolved for a resource's
         properties_schema.
+
         :param schema: A resource's properties_schema
-        :param explode_nested: True if a resource's nested properties schema
-            should be resolved.
         :returns: A tuple of params and properties dicts
         '''
         params = {}
