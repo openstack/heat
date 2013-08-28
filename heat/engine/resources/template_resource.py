@@ -45,6 +45,10 @@ class TemplateResource(stack_resource.StackResource):
             json_snippet['Type'],
             registry_type=environment.TemplateResourceInfo)
         self.template_name = tri.template_name
+        if tri.user_resource:
+            self.allowed_schemes = ('http', 'https')
+        else:
+            self.allowed_schemes = ('http', 'https', 'file')
 
         tmpl = template.Template(self.parsed_nested)
         self.properties_schema = (properties.Properties
@@ -96,7 +100,8 @@ class TemplateResource(stack_resource.StackResource):
         t_data = self.stack.t.files.get(self.template_name)
         if not t_data and self.template_name.endswith((".yaml", ".template")):
             try:
-                t_data = urlfetch.get(self.template_name)
+                t_data = urlfetch.get(self.template_name,
+                                      allowed_schemes=self.allowed_schemes)
             except (exceptions.RequestException, IOError) as r_exc:
                 raise ValueError("Could not fetch remote template '%s': %s" %
                                  (self.template_name, str(r_exc)))

@@ -23,6 +23,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import resources
 from heat.engine.resources import template_resource
 
 from heat.openstack.common import uuidutils
@@ -365,7 +366,8 @@ class ProviderTemplateTest(HeatTestCase):
             test_templ = test_templ_file.read()
         self.assertTrue(test_templ, "Empty test template")
         self.m.StubOutWithMock(urlfetch, "get")
-        urlfetch.get(test_templ_name).AndReturn(test_templ)
+        urlfetch.get(test_templ_name,
+                     allowed_schemes=('http', 'https')).AndReturn(test_templ)
         parsed_test_templ = template_format.parse(test_templ)
         self.m.ReplayAll()
         json_snippet = {
@@ -392,3 +394,45 @@ class ProviderTemplateTest(HeatTestCase):
             self.assertIn(attrib, templ_resource.attributes)
         for k, v in json_snippet.get("Properties").items():
             self.assertEqual(v, templ_resource.properties[k])
+
+    def test_system_template_retrieve_by_file(self):
+        # make sure that a TemplateResource defined in the global environment
+        # can be created and the template retrieved using the "file:"
+        # scheme.
+        g_env = resources.global_env()
+        test_templ_name = 'file:///etc/heatr/frodo.yaml'
+        g_env.load({'resource_registry':
+                   {'Test::Frodo': test_templ_name}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}),
+                             stack_id=uuidutils.generate_uuid())
+
+        minimal_temp = json.dumps({'Parameters': {}, 'Resources': {}})
+        self.m.StubOutWithMock(urlfetch, "get")
+        urlfetch.get(test_templ_name,
+                     allowed_schemes=('http', 'https',
+                                      'file')).AndReturn(minimal_temp)
+        self.m.ReplayAll()
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      {"Type": 'Test::Frodo'},
+                                                      stack)
+        self.assertEqual(None, temp_res.validate())
+        self.m.VerifyAll()
+
+    def test_user_template_not_retrieved_by_file(self):
+        # make sure that a TemplateResource defined in the user environment
+        # can NOT be retrieved using the "file:" scheme.
+        env = environment.Environment()
+        test_templ_name = 'file:///etc/heatr/flippy.yaml'
+        env.load({'resource_registry':
+                  {'Test::Flippy': test_templ_name}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
+        self.assertRaises(ValueError,
+                          template_resource.TemplateResource,
+                          'test_t_res',
+                          {"Type": 'Test::Flippy'},
+                          stack)
