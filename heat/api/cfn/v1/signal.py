@@ -17,7 +17,6 @@ from heat.common import wsgi
 from heat.rpc import client as rpc_client
 from heat.common import identifier
 from heat.api.aws import exception
-import heat.openstack.common.rpc.common as rpc_common
 
 
 class SignalController(object):
@@ -34,7 +33,7 @@ class SignalController(object):
                 stack_identity=dict(identity.stack()),
                 resource_name=identity.resource_name,
                 metadata=body)
-        except rpc_common.RemoteError as ex:
+        except Exception as ex:
             return exception.map_remote_error(ex)
 
         return {'resource': identity.resource_name, 'metadata': md}
@@ -48,7 +47,7 @@ class SignalController(object):
                 stack_identity=dict(identity.stack()),
                 resource_name=identity.resource_name,
                 details=body)
-        except rpc_common.RemoteError as ex:
+        except Exception as ex:
             return exception.map_remote_error(ex)
 
 
