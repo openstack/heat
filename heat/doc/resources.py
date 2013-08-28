@@ -15,6 +15,7 @@
 # -*- coding: utf-8 -*-
 
 from heat.engine import resources
+from heat.engine import properties
 from heat.openstack.common.gettextutils import _
 
 from docutils import nodes
@@ -40,6 +41,9 @@ class ResourcePages(Directive):
             self.resource_class = resource_class
             section = self._section(content, resource_type, '%s')
 
+            self.props_schemata = properties.schemata(
+                self.resource_class.properties_schema)
+
             cls_doc = resource_class.__doc__
             if cls_doc:
                 para = nodes.paragraph('', cls_doc)
@@ -63,31 +67,29 @@ class ResourcePages(Directive):
         return section
 
     def _prop_syntax_example(self, prop):
-        if not prop or not prop.get('Type'):
+        if not prop:
             return 'Value'
-        prop_type = prop.get('Type')
-        if prop_type == 'List':
-            sub_prop = prop.get('Schema')
-            sub_type = self._prop_syntax_example(sub_prop)
-            return '[%s, %s, ...]' % (sub_type, sub_type)
-        elif prop_type == 'Map':
-            sub_prop = prop.get('Schema', {})
-            sub_props = []
-            for sub_key, sub_value in sub_prop.items():
-                if sub_value.get('Implemented', True):
-                    sub_props.append('"%s": %s' % (
-                        sub_key, self._prop_syntax_example(sub_value)))
-            return '{%s}' % ', '.join(sub_props or ['...'])
+        if prop.type == properties.LIST:
+            schema = lambda i: prop.schema[i] if prop.schema else None
+            sub_type = [self._prop_syntax_example(schema(i))
+                        for i in range(2)]
+            return '[%s, %s, ...]' % tuple(sub_type)
+        elif prop.type == properties.MAP:
+            def sub_props():
+                for sub_key, sub_value in prop.schema.items():
+                    if sub_value.implemented:
+                        yield '"%s": %s' % (
+                            sub_key, self._prop_syntax_example(sub_value))
+            return '{%s}' % (', '.join(sub_props()) if prop.schema else '...')
         else:
-            return prop_type
+            return prop.type
 
     def contribute_hot_syntax(self, parent):
         section = self._section(parent, _('HOT Syntax'), '%s-hot')
-        schema = self.resource_class.properties_schema
         props = []
-        for prop_key in sorted(schema.keys()):
-            prop = schema[prop_key]
-            if prop.get('Implemented', True):
+        for prop_key in sorted(self.props_schemata.keys()):
+            prop = self.props_schemata[prop_key]
+            if prop.implemented:
                 props.append('%s: %s' % (prop_key,
                                          self._prop_syntax_example(prop)))
 
@@ -105,11 +107,10 @@ resources:
 
     def contribute_yaml_syntax(self, parent):
         section = self._section(parent, _('YAML Syntax'), '%s-yaml')
-        schema = self.resource_class.properties_schema
         props = []
-        for prop_key in sorted(schema.keys()):
-            prop = schema[prop_key]
-            if prop.get('Implemented', True):
+        for prop_key in sorted(self.props_schemata.keys()):
+            prop = self.props_schemata[prop_key]
+            if prop.implemented:
                 props.append('%s: %s' % (prop_key,
                                          self._prop_syntax_example(prop)))
 
@@ -127,12 +128,11 @@ Resources:
 
     def contribute_json_syntax(self, parent):
         section = self._section(parent, _('JSON Syntax'), '%s-json')
-        schema = self.resource_class.properties_schema
 
         props = []
-        for prop_key in sorted(schema.keys()):
-            prop = schema[prop_key]
-            if prop.get('Implemented', True):
+        for prop_key in sorted(self.props_schemata.keys()):
+            prop = self.props_schemata[prop_key]
+            if prop.implemented:
                 props.append('"%s": %s' % (prop_key,
                                            self._prop_syntax_example(prop)))
         template = '''{
@@ -155,66 +155,46 @@ Resources:
             '', nodes.term('', prop_key))
         prop_list.append(prop_item)
 
-        prop_type = prop.get('Type')
-        classifier = prop_type
-        if prop.get('MinValue'):
-            classifier += _(' from %s') % prop.get('MinValue')
-        if prop.get('MaxValue'):
-            classifier += _(' up to %s') % prop.get('MaxValue')
-        if prop.get('MinLength'):
-            classifier += _(' from length %s') % prop.get('MinLength')
-        if prop.get('MaxLength'):
-            classifier += _(' up to length %s') % prop.get('MaxLength')
-        prop_item.append(nodes.classifier('', classifier))
+        prop_item.append(nodes.classifier('', prop.type))
 
         definition = nodes.definition()
         prop_item.append(definition)
 
-        if not prop.get('Implemented', True):
+        if not prop.implemented:
             para = nodes.inline('', _('Not implemented.'))
             warning = nodes.note('', para)
             definition.append(warning)
             return
 
-        description = prop.get('Description')
-        if description:
-            para = nodes.paragraph('', description)
+        if prop.description:
+            para = nodes.paragraph('', prop.description)
             definition.append(para)
 
-        if prop.get('Required'):
+        if prop.required:
             para = nodes.paragraph('', _('Required property.'))
-        elif prop.get('Default'):
+        elif prop.default is not None:
             para = nodes.paragraph(
                 '',
-                _('Optional property, defaults to "%s".') %
-                prop.get('Default'))
+                _('Optional property, defaults to "%s".') % prop.default)
         else:
             para = nodes.paragraph('', _('Optional property.'))
         definition.append(para)
 
-        if prop.get('AllowedPattern'):
-            para = nodes.paragraph('', _(
-                'Value must match pattern: %s') % prop.get('AllowedPattern'))
-            definition.append(para)
-
-        if prop.get('AllowedValues'):
-            allowed = [str(a) for a in prop.get('AllowedValues')
-                       if a is not None]
-            para = nodes.paragraph('', _(
-                'Allowed values: %s') % ', '.join(allowed))
+        for constraint in prop.constraints:
+            para = nodes.paragraph('', str(constraint))
             definition.append(para)
 
         sub_schema = None
-        if prop.get('Schema') and prop_type == 'Map':
+        if prop.schema and prop.type == properties.MAP:
             para = nodes.emphasis('', _('Map properties:'))
             definition.append(para)
-            sub_schema = prop.get('Schema')
+            sub_schema = prop.schema
 
-        elif prop_type == 'List' and prop.get('Schema', {}).get('Schema'):
+        elif prop.schema and prop.type == properties.LIST:
             para = nodes.emphasis(
-                '', _('List contains maps with the properties:'))
+                '', _('List contents:'))
             definition.append(para)
-            sub_schema = prop.get('Schema').get('Schema')
+            sub_schema = prop.schema
 
         if sub_schema:
             sub_prop_list = nodes.definition_list()
@@ -224,14 +204,13 @@ Resources:
                 self.contribute_property(sub_prop_list, sub_prop_key, sub_prop)
 
     def contribute_properties(self, parent):
-        schema = self.resource_class.properties_schema
-        if not schema:
+        if not self.props_schemata:
             return
         section = self._section(parent, _('Properties'), '%s-props')
         prop_list = nodes.definition_list()
         section.append(prop_list)
-        for prop_key in sorted(schema.keys()):
-            prop = schema[prop_key]
+        for prop_key in sorted(self.props_schemata.keys()):
+            prop = self.props_schemata[prop_key]
             self.contribute_property(prop_list, prop_key, prop)
 
     def contribute_attributes(self, parent):
