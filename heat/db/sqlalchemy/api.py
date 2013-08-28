@@ -261,7 +261,6 @@ def user_creds_create(context):
     user_creds_ref = models.UserCreds()
     user_creds_ref.update(values)
     user_creds_ref.password = crypt.encrypt(values['password'])
-    user_creds_ref.aws_creds = crypt.encrypt(values['aws_creds'])
     user_creds_ref.save(_session(context))
     return user_creds_ref
 
@@ -272,7 +271,6 @@ def user_creds_get(user_creds_id):
     # or it can be committed back to the DB in decrypted form
     result = dict(db_result)
     result['password'] = crypt.decrypt(result['password'])
-    result['aws_creds'] = crypt.decrypt(result['aws_creds'])
     return result
 
 
