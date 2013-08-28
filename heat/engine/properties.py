@@ -294,6 +294,14 @@ class Constraint(collections.Mapping):
     def __init__(self, description=None):
         self.description = description
 
+    def __str__(self):
+        def desc():
+            if self.description:
+                yield self.description
+            yield self._str()
+
+        return '\n'.join(desc())
+
     def validate(self, value):
         if not self._is_valid(value):
             if self.description:
@@ -353,6 +361,18 @@ class Range(Constraint):
             if not isinstance(param, (float, int, long, type(None))):
                 raise InvalidPropertySchemaError('min/max must be numeric')
 
+        if min is max is None:
+            raise InvalidPropertySchemaError('range must have min and/or max')
+
+    def _str(self):
+        if self.max is None:
+            fmt = _('The value must be at least %(min)s.')
+        elif self.min is None:
+            fmt = _('The value must be no greater than %(max)s.')
+        else:
+            fmt = _('The value must be in the range %(min)s to %(max)s.')
+        return fmt % self._constraint()
+
     def _err_msg(self, value):
         return '%s is out of range (min: %s, max: %s)' % (value,
                                                           self.min,
@@ -403,6 +423,15 @@ class Length(Range):
                 msg = 'min/max length must be integral'
                 raise InvalidPropertySchemaError(msg)
 
+    def _str(self):
+        if self.max is None:
+            fmt = _('The length must be at least %(min)s.')
+        elif self.min is None:
+            fmt = _('The length must be no greater than %(max)s.')
+        else:
+            fmt = _('The length must be in the range %(min)s to %(max)s.')
+        return fmt % self._constraint()
+
     def _err_msg(self, value):
         return 'length (%d) is out of range (min: %s, max: %s)' % (len(value),
                                                                    self.min,
@@ -433,6 +462,10 @@ class AllowedValues(Constraint):
             raise InvalidPropertySchemaError('AllowedValues must be a list')
         self.allowed = tuple(allowed)
 
+    def _str(self):
+        allowed = ', '.join(str(a) for a in self.allowed)
+        return _('Allowed values: %s') % allowed
+
     def _err_msg(self, value):
         allowed = '[%s]' % ', '.join(str(a) for a in self.allowed)
         return '"%s" is not an allowed value %s' % (value, allowed)
@@ -462,6 +495,9 @@ class AllowedPattern(Constraint):
         super(AllowedPattern, self).__init__(description)
         self.pattern = pattern
         self.match = re.compile(pattern).match
+
+    def _str(self):
+        return _('Value must match pattern: %s') % self.pattern
 
     def _err_msg(self, value):
         return '"%s" does not match pattern "%s"' % (value, self.pattern)
