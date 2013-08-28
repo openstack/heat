@@ -14,6 +14,7 @@
 #    under the License.
 
 '''Implementation of SQLAlchemy backend.'''
+import sys
 from datetime import datetime
 from datetime import timedelta
 
@@ -28,8 +29,17 @@ from heat.openstack.common.gettextutils import _
 from heat.common import crypt
 from heat.common import exception
 from heat.db.sqlalchemy import models
-from heat.db.sqlalchemy.session import get_engine
-from heat.db.sqlalchemy.session import get_session
+from heat.openstack.common.db.sqlalchemy import session as db_session
+
+
+get_engine = db_session.get_engine
+get_session = db_session.get_session
+
+
+def get_backend():
+    """The backend is this module itself."""
+
+    return sys.modules[__name__]
 
 
 def model_query(context, *args):
@@ -160,7 +170,7 @@ def resource_data_set(resource, key, value, redact=False):
         current.resource_id = resource.id
     current.redact = redact
     current.value = value
-    current.save()
+    current.save(session=resource.context.session)
     return current
 
 

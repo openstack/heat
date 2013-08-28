@@ -43,7 +43,6 @@ from oslo.config import cfg
 from heat.openstack.common import log as logging
 from heat.openstack.common import service
 
-from heat.db import api as db_api
 from heat.rpc import api as rpc_api
 
 
@@ -62,7 +61,6 @@ if __name__ == '__main__':
 
     from heat.engine import service as engine
 
-    db_api.configure()
     srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
     launcher = service.launch(srv)
     launcher.wait()

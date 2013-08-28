@@ -14,13 +14,13 @@
 
 """Database setup and migration commands."""
 
-from heat.db import utils
+from heat.openstack.common.db import api as db_api
 
-
-IMPL = utils.LazyPluggable('db_backend',
-                           sqlalchemy='heat.db.sqlalchemy.migration')
 
 INIT_VERSION = 14
+_BACKEND_MAPPING = {'sqlalchemy': 'heat.db.sqlalchemy.migration'}
+
+IMPL = db_api.DBAPI(backend_mapping=_BACKEND_MAPPING)
 
 
 def db_sync(version=None):

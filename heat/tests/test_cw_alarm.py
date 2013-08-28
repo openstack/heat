@@ -133,8 +133,10 @@ class CloudWatchAlarmTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.suspend)()
         self.assertEqual(rsrc.state, (rsrc.SUSPEND, rsrc.COMPLETE))
 
+        self.ctx = utils.dummy_context()
+
         wr = watchrule.WatchRule.load(
-            None, watch_name="test_stack-MEMAlarmHigh")
+            self.ctx, watch_name="test_stack-MEMAlarmHigh")
 
         self.assertEqual(wr.state, watchrule.WatchRule.SUSPENDED)
 
@@ -142,7 +144,7 @@ class CloudWatchAlarmTest(HeatTestCase):
         self.assertEqual(rsrc.state, (rsrc.RESUME, rsrc.COMPLETE))
 
         wr = watchrule.WatchRule.load(
-            None, watch_name="test_stack-MEMAlarmHigh")
+            self.ctx, watch_name="test_stack-MEMAlarmHigh")
 
         self.assertEqual(wr.state, watchrule.WatchRule.NODATA)
 

@@ -718,6 +718,9 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         self.m.StubOutWithMock(parser, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
+        self.m.StubOutWithMock(self.man, '_get_stack')
+
+        self.man._get_stack(self.ctx, old_stack.identifier()).AndReturn(s)
 
         parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
 

@@ -16,7 +16,6 @@ import distutils.version as dist_version
 import os
 import sys
 
-from heat.db.sqlalchemy.session import get_engine
 from heat.db import migration
 
 import sqlalchemy
@@ -24,9 +23,16 @@ import migrate
 from migrate.versioning import util as migrate_util
 
 from heat.openstack.common import exception
+from heat.openstack.common.db.sqlalchemy.session import get_engine
 from heat.openstack.common.gettextutils import _
 
 _REPOSITORY = None
+
+
+def get_backend():
+    """The backend is this module itself."""
+
+    return sys.modules[__name__]
 
 
 @migrate_util.decorator

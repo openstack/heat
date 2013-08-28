@@ -434,7 +434,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs._store_or_update(cs.CREATE, cs.IN_PROGRESS, 'test_store')
 
         cs.private_key = 'fake private key'
-        rs = db_api.resource_get_by_name_and_stack(None,
+        self.ctx = utils.dummy_context()
+        rs = db_api.resource_get_by_name_and_stack(self.ctx,
                                                    'cs_private_key',
                                                    stack.id)
         encrypted_key = rs.data[0]['value']
