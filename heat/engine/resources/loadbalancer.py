@@ -354,7 +354,7 @@ class LoadBalancer(stack_resource.StackResource):
             self.nested()['LB_instance'].metadata = md
 
     def handle_delete(self):
-        self.delete_nested()
+        return self.delete_nested()
 
     def validate(self):
         '''
