@@ -49,17 +49,17 @@ Resources:
       GroupDescription: HTTP and SSH access
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
+          FromPort: "22"
+          ToPort: "22"
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort : 80
-          ToPort : 80
+          FromPort : "80"
+          ToPort : "80"
           CidrIp : 0.0.0.0/0
         - IpProtocol: tcp
           SourceSecurityGroupName: test
         - IpProtocol: icmp
-          SourceSecurityGroupId: 1
+          SourceSecurityGroupId: "1"
 '''
 
     test_template_nova_with_egress = '''
@@ -71,8 +71,8 @@ Resources:
       GroupDescription: HTTP and SSH access
       SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
+          FromPort: "22"
+          ToPort: "22"
           CidrIp: 0.0.0.0/0
 '''
 
@@ -86,19 +86,19 @@ Resources:
       VpcId: aaaa
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
+          FromPort: "22"
+          ToPort: "22"
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort : 80
-          ToPort : 80
+          FromPort : "80"
+          ToPort : "80"
           CidrIp : 0.0.0.0/0
         - IpProtocol: tcp
           SourceSecurityGroupId: wwww
       SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
+          FromPort: "22"
+          ToPort: "22"
           CidrIp: 10.0.1.0/24
         - SourceSecurityGroupName: xxxx
 '''
@@ -164,13 +164,13 @@ Resources:
 
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', 22, 22, '0.0.0.0/0', None).AndReturn(None)
+            2, 'tcp', '22', '22', '0.0.0.0/0', None).AndReturn(None)
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', 80, 80, '0.0.0.0/0', None).AndReturn(None)
+            2, 'tcp', '80', '80', '0.0.0.0/0', None).AndReturn(None)
         nova_sgr.SecurityGroupRuleManager.create(
             2, 'tcp', None, None, None, 1).AndReturn(None)
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'icmp', None, None, None, 1).AndReturn(None)
+            2, 'icmp', None, None, None, '1').AndReturn(None)
 
         # delete script
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
@@ -179,20 +179,20 @@ Resources:
             name=sg_name,
             description='HTTP and SSH access',
             rules=[{
-                "from_port": 22,
+                "from_port": '22',
                 "group": {},
                 "ip_protocol": "tcp",
-                "to_port": 22,
+                "to_port": '22',
                 "parent_group_id": 2,
                 "ip_range": {
                     "cidr": "0.0.0.0/0"
                 },
                 'id': 130
             }, {
-                'from_port': 80,
+                'from_port': '80',
                 'group': {},
                 'ip_protocol': 'tcp',
-                'to_port': 80,
+                'to_port': '80',
                 'parent_group_id': 2,
                 'ip_range': {
                     'cidr': '0.0.0.0/0'
@@ -266,11 +266,11 @@ Resources:
 
         clients.OpenStackClients.nova('compute').AndReturn(self.fc)
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', 22, 22, '0.0.0.0/0', None).AndRaise(
+            2, 'tcp', '22', '22', '0.0.0.0/0', None).AndRaise(
                 clients.novaclient.exceptions.BadRequest(
                     400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'tcp', 80, 80, '0.0.0.0/0', None).AndReturn(
+            2, 'tcp', '80', '80', '0.0.0.0/0', None).AndReturn(
                 clients.novaclient.exceptions.BadRequest(
                     400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
@@ -278,7 +278,7 @@ Resources:
                 clients.novaclient.exceptions.BadRequest(
                     400, 'Rule already exists'))
         nova_sgr.SecurityGroupRuleManager.create(
-            2, 'icmp', None, None, None, 1).AndReturn(
+            2, 'icmp', None, None, None, '1').AndReturn(
                 clients.novaclient.exceptions.BadRequest(
                     400, 'Rule already exists'))
 
@@ -289,20 +289,20 @@ Resources:
             name=sg_name,
             description='HTTP and SSH access',
             rules=[{
-                "from_port": 22,
+                "from_port": '22',
                 "group": {},
                 "ip_protocol": "tcp",
-                "to_port": 22,
+                "to_port": '22',
                 "parent_group_id": 2,
                 "ip_range": {
                     "cidr": "0.0.0.0/0"
                 },
                 'id': 130
             }, {
-                'from_port': 80,
+                'from_port': '80',
                 'group': {},
                 'ip_protocol': 'tcp',
-                'to_port': 80,
+                'to_port': '80',
                 'parent_group_id': 2,
                 'ip_range': {
                     'cidr': '0.0.0.0/0'
@@ -422,9 +422,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
+                'port_range_min': '22',
                 'ethertype': 'IPv4',
-                'port_range_max': 22,
+                'port_range_max': '22',
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -433,9 +433,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
+                'port_range_min': '22',
                 'ethertype': 'IPv4',
-                'port_range_max': 22,
+                'port_range_max': '22',
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa',
                 'id': 'bbbb'
@@ -446,9 +446,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 80,
+                'port_range_min': '80',
                 'ethertype': 'IPv4',
-                'port_range_max': 80,
+                'port_range_max': '80',
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -457,9 +457,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 80,
+                'port_range_min': '80',
                 'ethertype': 'IPv4',
-                'port_range_max': 80,
+                'port_range_max': '80',
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa',
                 'id': 'cccc'
@@ -498,9 +498,9 @@ Resources:
                 'direction': 'egress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '10.0.1.0/24',
-                'port_range_min': 22,
+                'port_range_min': '22',
                 'ethertype': 'IPv4',
-                'port_range_max': 22,
+                'port_range_max': '22',
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -509,9 +509,9 @@ Resources:
                 'direction': 'egress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '10.0.1.0/24',
-                'port_range_min': 22,
+                'port_range_min': '22',
                 'ethertype': 'IPv4',
-                'port_range_max': 22,
+                'port_range_max': '22',
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa',
                 'id': 'eeee'
@@ -551,25 +551,25 @@ Resources:
                 'security_group_rules': [{
                     'direction': 'ingress',
                     'protocol': 'tcp',
-                    'port_range_max': 22,
+                    'port_range_max': '22',
                     'id': 'bbbb',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
                     'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
-                    'port_range_min': 22
+                    'port_range_min': '22'
                 }, {
                     'direction': 'ingress',
                     'protocol': 'tcp',
-                    'port_range_max': 80,
+                    'port_range_max': '80',
                     'id': 'cccc',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
                     'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
-                    'port_range_min': 80
+                    'port_range_min': '80'
                 }, {
                     'direction': 'ingress',
                     'protocol': 'tcp',
@@ -584,14 +584,14 @@ Resources:
                 }, {
                     'direction': 'egress',
                     'protocol': 'tcp',
-                    'port_range_max': 22,
+                    'port_range_max': '22',
                     'id': 'eeee',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
                     'remote_group_id': None,
                     'remote_ip_prefix': '10.0.1.0/24',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
-                    'port_range_min': 22
+                    'port_range_min': '22'
                 }, {
                     'direction': 'egress',
                     'protocol': None,
@@ -649,9 +649,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
+                'port_range_min': '22',
                 'ethertype': 'IPv4',
-                'port_range_max': 22,
+                'port_range_max': '22',
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -662,9 +662,9 @@ Resources:
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 80,
+                'port_range_min': '80',
                 'ethertype': 'IPv4',
-                'port_range_max': 80,
+                'port_range_max': '80',
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -688,9 +688,9 @@ Resources:
                 'direction': 'egress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '10.0.1.0/24',
-                'port_range_min': 22,
+                'port_range_min': '22',
                 'ethertype': 'IPv4',
-                'port_range_max': 22,
+                'port_range_max': '22',
                 'protocol': 'tcp',
                 'security_group_id': 'aaaa'
             }
@@ -719,25 +719,25 @@ Resources:
                 'security_group_rules': [{
                     'direction': 'ingress',
                     'protocol': 'tcp',
-                    'port_range_max': 22,
+                    'port_range_max': '22',
                     'id': 'bbbb',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
                     'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
-                    'port_range_min': 22
+                    'port_range_min': '22'
                 }, {
                     'direction': 'ingress',
                     'protocol': 'tcp',
-                    'port_range_max': 80,
+                    'port_range_max': '80',
                     'id': 'cccc',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
                     'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
-                    'port_range_min': 80
+                    'port_range_min': '80'
                 }, {
                     'direction': 'ingress',
                     'protocol': 'tcp',
@@ -752,14 +752,14 @@ Resources:
                 }, {
                     'direction': 'egress',
                     'protocol': 'tcp',
-                    'port_range_max': 22,
+                    'port_range_max': '22',
                     'id': 'eeee',
                     'ethertype': 'IPv4',
                     'security_group_id': 'aaaa',
                     'remote_group_id': None,
                     'remote_ip_prefix': '10.0.1.0/24',
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
-                    'port_range_min': 22
+                    'port_range_min': '22'
                 }, {
                     'direction': 'egress',
                     'protocol': None,

@@ -194,9 +194,9 @@ class VPCTestBase(HeatTestCase):
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
+                'port_range_min': '22',
                 'ethertype': 'IPv4',
-                'port_range_max': 22,
+                'port_range_max': '22',
                 'protocol': 'tcp',
                 'security_group_id': 'eeee'
             }
@@ -205,9 +205,9 @@ class VPCTestBase(HeatTestCase):
                 'direction': 'ingress',
                 'remote_group_id': None,
                 'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
+                'port_range_min': '22',
                 'ethertype': 'IPv4',
-                'port_range_max': 22,
+                'port_range_max': '22',
                 'protocol': 'tcp',
                 'security_group_id': 'eeee',
                 'id': 'bbbb'
@@ -224,14 +224,14 @@ class VPCTestBase(HeatTestCase):
                 'security_group_rules': [{
                     'direction': 'ingress',
                     'protocol': 'tcp',
-                    'port_range_max': 22,
+                    'port_range_max': '22',
                     'id': 'bbbb',
                     'ethertype': 'IPv4',
                     'security_group_id': 'eeee',
                     'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
                     'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                    'port_range_min': 22
+                    'port_range_min': '22'
                 }],
                 'id': 'eeee'}})
         neutronclient.Client.delete_security_group_rule('bbbb').AndReturn(None)
@@ -420,8 +420,8 @@ Resources:
       GroupDescription: SSH access
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
+          FromPort: "22"
+          ToPort: "22"
           CidrIp: 0.0.0.0/0
   the_vpc:
     Type: AWS::EC2::VPC
@@ -470,8 +470,8 @@ Resources:
       GroupDescription: SSH access
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
+          FromPort: "22"
+          ToPort: "22"
           CidrIp: 0.0.0.0/0
   the_vpc:
     Type: AWS::EC2::VPC
