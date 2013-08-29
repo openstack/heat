@@ -112,6 +112,15 @@ class VolumeTest(HeatTestCase):
             display_description=vol_name,
             display_name=vol_name).AndReturn(fv)
 
+    def _stubout_delete_volume(self, fv):
+        self.m.StubOutWithMock(fv, 'delete')
+        fv.delete().AndReturn(True)
+        self.m.StubOutWithMock(fv, 'get')
+        fv.get().AndReturn(None)
+        fv.get().AndRaise(
+            clients.cinderclient.exceptions.NotFound('Not found'))
+        self.m.ReplayAll()
+
     def _mock_create_server_volume_script(self, fva):
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
         self.fc.volumes.create_server_volume(
@@ -130,10 +139,6 @@ class VolumeTest(HeatTestCase):
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
 
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
-        self.cinder_fc.volumes.delete('vol-123').AndReturn(None)
-
-        self.cinder_fc.volumes.get('vol-123').AndRaise(
-            clients.cinderclient.exceptions.NotFound('Not found'))
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
@@ -148,6 +153,8 @@ class VolumeTest(HeatTestCase):
         fv.status = 'in-use'
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(rsrc.destroy))
+
+        self._stubout_delete_volume(fv)
         fv.status = 'available'
         scheduler.TaskRunner(rsrc.destroy)()
 
@@ -420,7 +427,7 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
         self.cinder_fc.backups.create('vol-123').AndReturn(fb)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
-        self.cinder_fc.volumes.delete('vol-123').AndReturn(None)
+
         self.m.ReplayAll()
 
         t = template_format.parse(volume_template)
@@ -429,6 +436,7 @@ class VolumeTest(HeatTestCase):
 
         rsrc = self.create_volume(t, stack, 'DataVolume')
 
+        self._stubout_delete_volume(fv)
         scheduler.TaskRunner(rsrc.destroy)()
 
         self.m.VerifyAll()
@@ -466,7 +474,6 @@ class VolumeTest(HeatTestCase):
         self._mock_create_volume(fv, stack_name)
 
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv)
-        self.cinder_fc.volumes.delete('vol-123').AndReturn(None)
 
         self.m.ReplayAll()
 
@@ -481,6 +488,7 @@ class VolumeTest(HeatTestCase):
         create = scheduler.TaskRunner(rsrc.create)
         self.assertRaises(exception.ResourceFailure, create)
 
+        self._stubout_delete_volume(fv)
         scheduler.TaskRunner(rsrc.destroy)()
 
         self.m.VerifyAll()
@@ -734,6 +742,9 @@ class FakeVolume(object):
         self.status = self.final_status
 
     def update(self, **kw):
+        pass
+
+    def delete(self):
         pass
 
 
