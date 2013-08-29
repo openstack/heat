@@ -35,4 +35,4 @@ OPTIONS
 FILES
 ========
 
-* /etc/heat/heat-engine.conf
+* /etc/heat/heat.conf

@@ -111,9 +111,7 @@ In the heat directory, run the install script::
 
 If running OpenStack grizzly installed via tools/openstack, it is necessary to modify the default service user password::
 
-    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cfn.conf
-    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api-cloudwatch.conf
-    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat-api.conf
+    sudo sed -i "s/verybadpass/secrete/" /etc/heat/heat.conf
 
 Source the keystone credentials created with tools/openstack
 ------------------------------------------------------------
@@ -186,9 +184,10 @@ The heat engine configuration file should be updated with the address of the bri
 
 ::
 
-    sudo sed -i -e "/heat_metadata_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
-    sudo sed -i -e "/heat_waitcondition_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
-    sudo sed -i -e "/heat_watch_server_url/ s/127\.0\.0\.1/${BRIDGE_IP}/" /etc/heat/heat-engine.conf
+    sudo sed -i -e "/^\[DEFAULT\]/ a\\\nheat_metadata_server_url=http://${BRIDGE_IP}:8000/\n" /etc/heat/heat.conf
+    sudo sed -i -e "/^\[DEFAULT\]/ a\\\nheat_waitcondition_server_url=http://${BRIDGE_IP}:8000/v1/waitcondition/" /etc/heat/heat.conf
+    sudo sed -i -e "/^\[DEFAULT\]/ a\\\nheat_watch_server_url=http://${BRIDGE_IP}:8003/" /etc/heat/heat.conf
+
 
 Launch the Heat services
 ------------------------

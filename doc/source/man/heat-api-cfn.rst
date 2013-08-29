@@ -36,4 +36,4 @@ OPTIONS
 FILES
 ========
 
-* /etc/heat/heat-api-cfn.conf
+* /etc/heat/heat.conf

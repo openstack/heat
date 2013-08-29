@@ -30,4 +30,4 @@ OPTIONS
 FILES
 ========
 
-* /etc/heat/heat-api-cloudwatch.conf
+* /etc/heat/heat.conf
