@@ -19,6 +19,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests.fakes import FakeKeystoneClient
 from heat.tests.v1_1 import fakes
@@ -359,7 +360,7 @@ Resources:
 
         self.assertResourceState(sg, utils.PhysName('test_stack', 'the_sg'))
 
-        self.assertEqual(None, sg.delete())
+        scheduler.TaskRunner(sg.delete)()
 
         sg.state_set(sg.CREATE, sg.COMPLETE, 'to delete again')
         sg.resource_id = 2
@@ -797,7 +798,7 @@ Resources:
 
         self.assertResourceState(sg, 'aaaa')
 
-        self.assertEqual(None, sg.delete())
+        scheduler.TaskRunner(sg.delete)()
 
         sg.state_set(sg.CREATE, sg.COMPLETE, 'to delete again')
         sg.resource_id = 'aaaa'

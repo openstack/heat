@@ -92,7 +92,7 @@ class CloudWatchAlarmTest(HeatTestCase):
 
         scheduler.TaskRunner(rsrc.update, snippet)()
 
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_mem_alarm_high_update_replace(self):
@@ -119,7 +119,7 @@ class CloudWatchAlarmTest(HeatTestCase):
         updater = scheduler.TaskRunner(rsrc.update, snippet)
         self.assertRaises(resource.UpdateReplace, updater)
 
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_suspend_resume(self):
@@ -146,5 +146,5 @@ class CloudWatchAlarmTest(HeatTestCase):
 
         self.assertEqual(wr.state, watchrule.WatchRule.NODATA)
 
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()

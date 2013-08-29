@@ -22,6 +22,7 @@ from heat.openstack.common import excutils
 from heat.db import api as db_api
 from heat.common import identifier
 from heat.common import short_id
+from heat.engine import scheduler
 from heat.engine import resources
 from heat.engine import timestamp
 # import class to avoid name collisions and ugly aliasing
@@ -515,12 +516,21 @@ class Resource(object):
             self.state_set(action, self.IN_PROGRESS)
 
             deletion_policy = self.t.get('DeletionPolicy', 'Delete')
+            handle_data = None
             if deletion_policy == 'Delete':
                 if callable(getattr(self, 'handle_delete', None)):
-                    self.handle_delete()
+                    handle_data = self.handle_delete()
+                    yield
             elif deletion_policy == 'Snapshot':
                 if callable(getattr(self, 'handle_snapshot_delete', None)):
-                    self.handle_snapshot_delete(initial_state)
+                    handle_data = self.handle_snapshot_delete(initial_state)
+                    yield
+
+            if (deletion_policy != 'Retain' and
+                    callable(getattr(self, 'check_delete_complete', None))):
+                while not self.check_delete_complete(handle_data):
+                    yield
+
         except Exception as ex:
             logger.exception('Delete %s', str(self))
             failure = exception.ResourceFailure(ex, self, self.action)
@@ -536,11 +546,12 @@ class Resource(object):
         else:
             self.state_set(action, self.COMPLETE)
 
+    @scheduler.wrappertask
     def destroy(self):
         '''
         Delete the resource and remove it from the database.
         '''
-        self.delete()
+        yield self.delete()
 
         if self.id is None:
             return

@@ -481,30 +481,34 @@ class Stack(object):
                            "Invalid action %s" % action)
             return
 
+        stack_status = self.COMPLETE
+        reason = 'Stack %s completed successfully' % action.lower()
         self.state_set(action, self.IN_PROGRESS, 'Stack %s started' % action)
-
-        failures = []
 
         backup_stack = self._backup_stack(False)
         if backup_stack is not None:
             backup_stack.delete()
             if backup_stack.status != backup_stack.COMPLETE:
                 errs = backup_stack.status_reason
-                failures.append('Error deleting backup resources: %s' % errs)
+                failure = 'Error deleting backup resources: %s' % errs
+                self.state_set(action, self.FAILED,
+                               'Failed to %s : %s' % (action, failure))
+                return
 
-        for res in reversed(self):
-            try:
-                res.destroy()
-            except exception.ResourceFailure as ex:
-                logger.error('Failed to delete %s error: %s' % (str(res),
-                                                                str(ex)))
-                failures.append(str(res))
+        action_task = scheduler.DependencyTaskGroup(self.dependencies,
+                                                    resource.Resource.destroy,
+                                                    reverse=True)
+        try:
+            scheduler.TaskRunner(action_task)(timeout=self.timeout_secs())
+        except exception.ResourceFailure as ex:
+            stack_status = self.FAILED
+            reason = 'Resource %s failed: %s' % (action.lower(), str(ex))
+        except scheduler.Timeout:
+            stack_status = self.FAILED
+            reason = '%s timed out' % action.title()
 
-        if failures:
-            self.state_set(action, self.FAILED,
-                           'Failed to %s : %s' % (action, ', '.join(failures)))
-        else:
-            self.state_set(action, self.COMPLETE, '%s completed' % action)
+        self.state_set(action, stack_status, reason)
+        if stack_status != self.FAILED:
             db_api.stack_delete(self.context, self.id)
             self.id = None
 
@@ -553,7 +557,7 @@ class Stack(object):
 
         for res in reversed(deps):
             try:
-                res.destroy()
+                scheduler.TaskRunner(res.destroy)()
             except exception.ResourceFailure as ex:
                 failed = True
                 logger.error('delete: %s' % str(ex))

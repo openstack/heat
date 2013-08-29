@@ -181,7 +181,7 @@ class EIPTest(HeatTestCase):
                               rsrc.FnGetAtt, 'Foo')
 
         finally:
-            rsrc.destroy()
+            scheduler.TaskRunner(rsrc.destroy)()
 
         self.m.VerifyAll()
 
@@ -200,8 +200,8 @@ class EIPTest(HeatTestCase):
         # TODO(sbaker), figure out why this is an empty string
         #self.assertEqual('', association.FnGetRefId())
 
-        association.delete()
-        rsrc.delete()
+        scheduler.TaskRunner(association.delete)()
+        scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 
@@ -420,7 +420,7 @@ class AllocTest(HeatTestCase):
                               rsrc.FnGetAtt, 'Foo')
 
         finally:
-            rsrc.destroy()
+            scheduler.TaskRunner(rsrc.destroy)()
 
         self.m.VerifyAll()
 
@@ -448,7 +448,7 @@ class AllocTest(HeatTestCase):
         rsrc = self.create_eip(t, stack, 'the_eip')
         association = self.create_association(t, stack, 'IPAssoc')
 
-        association.delete()
-        rsrc.delete()
+        scheduler.TaskRunner(association.delete)()
+        scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()

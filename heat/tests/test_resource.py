@@ -319,7 +319,7 @@ class ResourceTest(HeatTestCase):
         res.id = 'test_res_id'
         (res.action, res.status) = (res.INIT, res.DELETE)
         self.assertRaises(exception.ResourceFailure, res.create)
-        res.destroy()
+        scheduler.TaskRunner(res.destroy)()
         res.state_reset()
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)

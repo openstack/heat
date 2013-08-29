@@ -216,7 +216,7 @@ class WaitConditionTest(HeatTestCase):
 
         # Avoid the stack create exercising the timeout code at the same time
         self.m.StubOutWithMock(self.stack, 'timeout_secs')
-        self.stack.timeout_secs().AndReturn(None)
+        self.stack.timeout_secs().MultipleTimes().AndReturn(None)
 
         self.m.StubOutWithMock(scheduler, 'wallclock')
 

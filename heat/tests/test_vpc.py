@@ -19,6 +19,7 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine import clients
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
 from heat.tests import utils
@@ -363,7 +364,7 @@ Resources:
         self.assertRaises(resource.UpdateReplace,
                           vpc.handle_update, {}, {}, {})
 
-        self.assertEqual(None, vpc.delete())
+        scheduler.TaskRunner(vpc.delete)()
         self.m.VerifyAll()
 
 
@@ -414,10 +415,10 @@ Resources:
 
         self.assertEqual('moon', subnet.FnGetAtt('AvailabilityZone'))
 
-        self.assertEqual(None, subnet.delete())
+        scheduler.TaskRunner(subnet.delete)()
         subnet.state_set(subnet.CREATE, subnet.COMPLETE, 'to delete again')
-        self.assertEqual(None, subnet.delete())
-        self.assertEqual(None, stack['the_vpc'].delete())
+        scheduler.TaskRunner(subnet.delete)()
+        scheduler.TaskRunner(stack['the_vpc'].delete)()
         self.m.VerifyAll()
 
 
@@ -584,7 +585,7 @@ Resources:
                               rsrc.handle_update, {}, {}, {})
 
         finally:
-            stack.delete()
+            scheduler.TaskRunner(stack.delete)()
 
         self.m.VerifyAll()
 
@@ -679,6 +680,7 @@ Resources:
         self.mock_show_subnet()
         self.mock_show_security_group(group='INVALID-NO-REF')
         self.mock_delete_subnet()
+        neutronclient.Client.delete_port(None).AndReturn(None)
         self.mock_delete_network()
 
         self.m.ReplayAll()
@@ -691,7 +693,7 @@ Resources:
             reason = rsrc.status_reason
             self.assertTrue(reason.startswith('InvalidTemplateAttribute:'))
         finally:
-            stack.delete()
+            scheduler.TaskRunner(stack.delete)()
 
         self.m.VerifyAll()
 
@@ -837,8 +839,8 @@ Resources:
             resource.UpdateReplace,
             association.handle_update, {}, {}, {})
 
-        association.delete()
-        route_table.delete()
+        scheduler.TaskRunner(association.delete)()
+        scheduler.TaskRunner(route_table.delete)()
 
         stack.delete()
         self.m.VerifyAll()

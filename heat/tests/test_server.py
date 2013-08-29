@@ -334,13 +334,13 @@ class ServersTest(HeatTestCase):
         get().AndRaise(servers.clients.novaclient.exceptions.NotFound(404))
         mox.Replay(get)
 
-        server.delete()
+        scheduler.TaskRunner(server.delete)()
         self.assertTrue(server.resource_id is None)
         self.assertEqual(server.state, (server.DELETE, server.COMPLETE))
         self.m.VerifyAll()
 
         server.state_set(server.CREATE, server.COMPLETE, 'to delete again')
-        server.delete()
+        scheduler.TaskRunner(server.delete)()
         self.assertEqual(server.state, (server.DELETE, server.COMPLETE))
         self.m.VerifyAll()
 
