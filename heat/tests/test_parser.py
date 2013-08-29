@@ -1179,10 +1179,9 @@ class StackTest(HeatTestCase):
         # key/property in update_allowed_keys/update_allowed_properties
 
         # patch in a dummy handle_create making the replace fail when creating
-        # the replacement rsrc, but succeed the second call (rollback)
+        # the replacement rsrc
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-        generic_rsrc.ResourceWithProps.handle_create().AndReturn(None)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -1217,8 +1216,9 @@ class StackTest(HeatTestCase):
         # patch in a dummy handle_create making the replace fail when creating
         # the replacement rsrc, and again on the second call (rollback)
         self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_create')
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-        generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
+        generic_rsrc.ResourceWithProps.handle_delete().AndRaise(Exception)
         self.m.ReplayAll()
 
         self.stack.update(updated_stack)
@@ -1285,6 +1285,40 @@ class StackTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
         self.assertTrue('BResource' in self.stack)
+        self.m.VerifyAll()
+        # Unset here so delete() is not stubbed for stack.delete cleanup
+        self.m.UnsetStubs()
+
+    @utils.stack_delete_after
+    def test_update_rollback_replace(self):
+        tmpl = {'Resources': {
+                'AResource': {'Type': 'ResourceWithPropsType',
+                              'Properties': {'Foo': 'foo'}}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl),
+                                  disable_rollback=False)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+
+        tmpl2 = {'Resources': {'AResource': {'Type': 'ResourceWithPropsType',
+                                             'Properties': {'Foo': 'bar'}}}}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+
+        # patch in a dummy delete making the destroy fail
+        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps, 'handle_delete')
+        generic_rsrc.ResourceWithProps.handle_delete().AndRaise(Exception)
+        generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
+        generic_rsrc.ResourceWithProps.handle_delete().AndReturn(None)
+        self.m.ReplayAll()
+
+        self.stack.update(updated_stack)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
         self.m.VerifyAll()
         # Unset here so delete() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
@@ -1386,15 +1420,11 @@ class StackTest(HeatTestCase):
         # resource.UpdateReplace because we've not specified the modified
         # key/property in update_allowed_keys/update_allowed_properties
 
-        generic_rsrc.ResourceWithProps.FnGetRefId().AndReturn(
+        generic_rsrc.ResourceWithProps.FnGetRefId().MultipleTimes().AndReturn(
             'AResource')
 
         # mock to make the replace fail when creating the replacement resource
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
-
-        generic_rsrc.ResourceWithProps.handle_create().AndReturn(None)
-        generic_rsrc.ResourceWithProps.FnGetRefId().MultipleTimes().AndReturn(
-            'AResource')
 
         self.m.ReplayAll()
 
@@ -1464,12 +1494,6 @@ class StackTest(HeatTestCase):
         # replacement resource
         generic_rsrc.ResourceWithProps.handle_create().AndRaise(Exception)
 
-        # Calls to ResourceWithProps.handle_update will raise
-        # resource.UpdateReplace because we've not specified the modified
-        # key/property in update_allowed_keys/update_allowed_properties
-
-        generic_rsrc.ResourceWithProps.handle_create().AndReturn(None)
-
         self.m.ReplayAll()
 
         updated_stack = parser.Stack(self.ctx, 'updated_stack',
@@ -1480,7 +1504,7 @@ class StackTest(HeatTestCase):
                          (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
         self.assertEqual(self.stack['AResource'].properties['Foo'], 'abc')
         self.assertEqual(self.stack['BResource'].properties['Foo'],
-                         'AResource3')
+                         'AResource1')
 
         self.m.VerifyAll()
 
