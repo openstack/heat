@@ -17,10 +17,10 @@ import os
 
 from oslo.config import cfg
 
+from heat.common import exception as heat_exception
 from heat.common import identifier
 from heat.common import policy
 from heat.openstack.common import rpc
-import heat.openstack.common.rpc.common as rpc_common
 from heat.common.wsgi import Request
 from heat.rpc import api as rpc_api
 from heat.api.aws import exception
@@ -152,7 +152,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'list_stacks',
                   'args': {},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 None).AndRaise(AttributeError())
 
         self.m.ReplayAll()
 
@@ -174,7 +174,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'list_stacks',
                   'args': {},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("Exception"))
+                 None).AndRaise(Exception())
 
         self.m.ReplayAll()
 
@@ -372,7 +372,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'show_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("InvalidTenant"))
+                 None).AndRaise(heat_exception.InvalidTenant())
 
         self.m.ReplayAll()
 
@@ -400,7 +400,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'show_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(AttributeError())
 
         self.m.ReplayAll()
 
@@ -422,7 +422,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 ).AndRaise(heat_exception.StackNotFound())
 
         self.m.ReplayAll()
 
@@ -743,7 +743,7 @@ class CfnStackControllerTest(HeatTestCase):
                            'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(AttributeError())
         rpc.call(dummy_req.context, self.topic,
                  {'namespace': None,
                   'method': 'create_stack',
@@ -753,7 +753,7 @@ class CfnStackControllerTest(HeatTestCase):
                            'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("UnknownUserParameter"))
+                 ).AndRaise(heat_exception.UnknownUserParameter())
         rpc.call(dummy_req.context, self.topic,
                  {'namespace': None,
                   'method': 'create_stack',
@@ -763,7 +763,7 @@ class CfnStackControllerTest(HeatTestCase):
                            'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("UserParameterMissing"))
+                 ).AndRaise(heat_exception.UserParameterMissing())
 
         self.m.ReplayAll()
 
@@ -811,7 +811,7 @@ class CfnStackControllerTest(HeatTestCase):
                            'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("StackExists"))
+                 ).AndRaise(heat_exception.StackExists())
 
         self.m.ReplayAll()
 
@@ -847,9 +847,8 @@ class CfnStackControllerTest(HeatTestCase):
                   'files': {},
                   'args': engine_args},
                   'version': self.api_version}, None).AndRaise(
-                      rpc_common.RemoteError(
-                          'StackValidationFailed',
-                          'Something went wrong'))
+                      heat_exception.StackValidationFailed(
+                          message='Something went wrong'))
 
         self.m.ReplayAll()
 
@@ -926,7 +925,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 ).AndRaise(heat_exception.StackNotFound())
 
         self.m.ReplayAll()
 
@@ -993,7 +992,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'get_template',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(AttributeError())
 
         self.m.ReplayAll()
 
@@ -1016,7 +1015,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 ).AndRaise(heat_exception.StackNotFound())
 
         self.m.ReplayAll()
 
@@ -1161,7 +1160,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'delete_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("AttributeError"))
+                 ).AndRaise(AttributeError())
 
         self.m.ReplayAll()
 
@@ -1184,7 +1183,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 ).AndRaise(heat_exception.StackNotFound())
 
         self.m.ReplayAll()
 
@@ -1273,7 +1272,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'list_events',
                   'args': {'stack_identity': identity},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("Exception"))
+                 ).AndRaise(Exception())
 
         self.m.ReplayAll()
 
@@ -1295,7 +1294,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 ).AndRaise(heat_exception.StackNotFound())
 
         self.m.ReplayAll()
 
@@ -1390,7 +1389,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 None).AndRaise(heat_exception.StackNotFound())
 
         self.m.ReplayAll()
 
@@ -1424,7 +1423,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'describe_stack_resource',
                   'args': args,
                   'version': self.api_version},
-                 None).AndRaise(rpc_common.RemoteError("ResourceNotFound"))
+                 None).AndRaise(heat_exception.ResourceNotFound())
 
         self.m.ReplayAll()
 
@@ -1517,7 +1516,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 ).AndRaise(heat_exception.StackNotFound())
 
         self.m.ReplayAll()
 
@@ -1614,7 +1613,7 @@ class CfnStackControllerTest(HeatTestCase):
                            'aaaaaaaa-9f88-404d-cccc-ffffffffffff'},
                   'version': self.api_version},
                  None).AndRaise(
-                     rpc_common.RemoteError("PhysicalResourceNotFound"))
+                     heat_exception.PhysicalResourceNotFound())
 
         self.m.ReplayAll()
 
@@ -1709,7 +1708,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(rpc_common.RemoteError("StackNotFound"))
+                 ).AndRaise(heat_exception.StackNotFound())
 
         self.m.ReplayAll()
 
