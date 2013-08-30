@@ -775,12 +775,12 @@ class AutoScalingTest(HeatTestCase):
 
         # Scale up one 1 instance with resource failure
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        instance.Instance.handle_create().AndRaise(Exception)
+        instance.Instance.handle_create().AndRaise(exception.Error())
         self._stub_lb_reload(1, unset=False, nochange=True)
         self._stub_validate()
         self.m.ReplayAll()
 
-        self.assertRaises(Exception, rsrc.adjust, 1)
+        self.assertRaises(exception.Error, rsrc.adjust, 1)
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
 
         self.m.VerifyAll()
