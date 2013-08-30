@@ -164,6 +164,7 @@ class SignalTest(HeatTestCase):
 
         rsrc = self.stack.resources['signal_handler']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertTrue(rsrc.requires_deferred_auth)
 
         rsrc.signal(details=test_d)
 

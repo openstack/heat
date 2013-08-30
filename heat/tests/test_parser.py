@@ -1717,3 +1717,18 @@ class StackTest(HeatTestCase):
 
         saved_stack = parser.Stack.load(self.ctx, stack_id=stack_ownee.id)
         self.assertEqual(saved_stack.owner_id, self.stack.id)
+
+    @utils.stack_delete_after
+    def test_requires_deferred_auth(self):
+        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'},
+                              'BResource': {'Type': 'GenericResourceType'},
+                              'CResource': {'Type': 'GenericResourceType'}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_test_stack',
+                                  template.Template(tmpl),
+                                  disable_rollback=False)
+
+        self.assertFalse(self.stack.requires_deferred_auth())
+
+        self.stack['CResource'].requires_deferred_auth = True
+        self.assertTrue(self.stack.requires_deferred_auth())
