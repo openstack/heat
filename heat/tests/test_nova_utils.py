@@ -89,8 +89,8 @@ class NovaUtilsTests(HeatTestCase):
         self.m.StubOutWithMock(nova_utils.cfg, 'CONF')
         cnf = nova_utils.cfg.CONF
         cnf.instance_user = 'testuser'
-        cnf.heat_metadata_server_url = 'http://localhost:123'
-        cnf.heat_watch_server_url = 'http://localhost:345'
+        cnf.heat_metadata_server_url = 'http://_testnoexisthost_:123'
+        cnf.heat_watch_server_url = 'http://_testnoexisthost_:345'
         cnf.instance_connection_is_secure = False
         cnf.instance_connection_https_validate_certificates = False
         self.m.ReplayAll()
@@ -100,8 +100,8 @@ class NovaUtilsTests(HeatTestCase):
         self.assertTrue("Content-Type: text/part-handler;" in data)
         self.assertTrue("Content-Type: text/x-cfninitdata;" in data)
         self.assertTrue("Content-Type: text/x-shellscript;" in data)
-        self.assertTrue("http://localhost:345" in data)
-        self.assertTrue("http://localhost:123" in data)
+        self.assertTrue("http://_testnoexisthost_:345" in data)
+        self.assertTrue("http://_testnoexisthost_:123" in data)
         self.assertTrue("[Boto]" in data)
         self.assertTrue('testuser' in data)
         self.m.VerifyAll()

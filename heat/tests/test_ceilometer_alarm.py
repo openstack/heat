@@ -93,7 +93,7 @@ class CeilometerAlarmTest(HeatTestCase):
                                  generic_resource.SignalResource)
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://127.0.0.1:8000/v1/waitcondition')
+                             'http://_testnoexisthost_:8000/v1/waitcondition')
 
         self.fc = fakes.FakeKeystoneClient()
         self.fa = FakeCeilometerClient()

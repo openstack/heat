@@ -110,7 +110,7 @@ class LoadBalancerTest(HeatTestCase):
             username='test_stack.CfnLBUser')
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://127.0.0.1:8000/v1/waitcondition')
+                             'http://_testnoexisthost_:8000/v1/waitcondition')
         utils.setup_dummy_db()
 
     def create_loadbalancer(self, t, stack, resource_name):

@@ -91,7 +91,7 @@ class s3Test(HeatTestCase):
              'X-Container-Read': 'test_tenant:test_username'}
         ).AndReturn(None)
         swiftclient.Connection.get_auth().MultipleTimes().AndReturn(
-            ('http://localhost:8080/v_2', None))
+            ('http://_testnoexisthost_:8080/v_2', None))
         swiftclient.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
@@ -102,8 +102,8 @@ class s3Test(HeatTestCase):
         ref_id = rsrc.FnGetRefId()
         self.assertEqual(container_name, ref_id)
 
-        self.assertEqual('localhost', rsrc.FnGetAtt('DomainName'))
-        url = 'http://localhost:8080/v_2/%s' % ref_id
+        self.assertEqual('_testnoexisthost_', rsrc.FnGetAtt('DomainName'))
+        url = 'http://_testnoexisthost_:8080/v_2/%s' % ref_id
 
         self.assertEqual(url, rsrc.FnGetAtt('WebsiteURL'))
 

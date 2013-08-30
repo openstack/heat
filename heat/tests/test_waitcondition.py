@@ -84,7 +84,7 @@ class WaitConditionTest(HeatTestCase):
                                'get_status')
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://127.0.0.1:8000/v1/waitcondition')
+                             'http://_testnoexisthost_:8000/v1/waitcondition')
 
         self.fc = fakes.FakeKeystoneClient()
 
@@ -278,7 +278,7 @@ class WaitConditionTest(HeatTestCase):
 
         stack_id = 'STACK_HUBSID_1234'
         t = json.loads(test_template_waitcondition)
-        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+        badhandle = ("http://_testnoexisthost_:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
                      "bad1" +
@@ -299,7 +299,7 @@ class WaitConditionTest(HeatTestCase):
 
         stack_id = 'STACKABCD1234'
         t = json.loads(test_template_waitcondition)
-        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+        badhandle = ("http://_testnoexisthost_:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2FBAD_stack%2F" +
                      stack_id + "%2Fresources%2FWaitHandle")
@@ -318,7 +318,7 @@ class WaitConditionTest(HeatTestCase):
 
         stack_id = 'STACKABCD1234'
         t = json.loads(test_template_waitcondition)
-        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+        badhandle = ("http://_testnoexisthost_:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3ABAD_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
                      stack_id + "%2Fresources%2FWaitHandle")
@@ -337,7 +337,7 @@ class WaitConditionTest(HeatTestCase):
 
         stack_id = 'STACK_HUBR_1234'
         t = json.loads(test_template_waitcondition)
-        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+        badhandle = ("http://_testnoexisthost_:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
                      stack_id + "%2Fresources%2FBADHandle")
@@ -355,7 +355,7 @@ class WaitConditionTest(HeatTestCase):
         self.m.ReplayAll()
         stack_id = 'STACKABCD1234'
         t = json.loads(test_template_waitcondition)
-        badhandle = ("http://127.0.0.1:8000/v1/waitcondition/" +
+        badhandle = ("http://_testnoexisthost_:8000/v1/waitcondition/" +
                      "arn%3Aopenstack%3Aheat%3A%3Atest_tenant" +
                      "%3Astacks%2Ftest_stack%2F" +
                      stack_id + "%2Fresources%2FWaitForTheHandle")
@@ -373,7 +373,7 @@ class WaitConditionHandleTest(HeatTestCase):
     def setUp(self):
         super(WaitConditionHandleTest, self).setUp()
         cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://127.0.0.1:8000/v1/waitcondition')
+                             'http://_testnoexisthost_:8000/v1/waitcondition')
 
         self.fc = fakes.FakeKeystoneClient()
         utils.setup_dummy_db()
@@ -432,7 +432,7 @@ class WaitConditionHandleTest(HeatTestCase):
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         expected_url = "".join([
-            'http://127.0.0.1:8000/v1/waitcondition/',
+            'http://_testnoexisthost_:8000/v1/waitcondition/',
             'arn%3Aopenstack%3Aheat%3A%3Atest_tenant%3Astacks%2F',
             'test_stack2%2F', stack_id, '%2Fresources%2F',
             'WaitHandle?',
@@ -441,7 +441,7 @@ class WaitConditionHandleTest(HeatTestCase):
             'AWSAccessKeyId=4567&',
             'SignatureVersion=2&',
             'Signature=',
-            'ePyTwmC%2F1kSigeo%2Fha7kP8Avvb45G9Y7WOQWe4F%2BnXM%3D'])
+            'dGH5JuZW9mOQ%2Fs3aun7vm5ATj0YemC7C8zCHOeG6Fbs%3D'])
 
         self.assertEqual(unicode(expected_url), rsrc.FnGetRefId())
 
