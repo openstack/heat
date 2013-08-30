@@ -431,8 +431,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         elif 'name' in prop_diff:
             logger.info("Cloud Server rename not supported.")
 
-        return True
-
     def _resolve_attribute(self, key):
         """Return the method that provides a given template attribute."""
         attribute_function = {'PublicIp': self.public_ip,
