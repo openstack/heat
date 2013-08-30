@@ -351,7 +351,7 @@ class ServersTest(HeatTestCase):
 
         update_template = copy.deepcopy(server.t)
         update_template['Metadata'] = {'test': 123}
-        self.assertEqual(None, server.update(update_template))
+        scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual(server.metadata, {'test': 123})
 
         server.t['Metadata'] = {'test': 456}
@@ -385,7 +385,7 @@ class ServersTest(HeatTestCase):
             body={'confirmResize': None}).AndReturn((202, None))
         self.m.ReplayAll()
 
-        self.assertEqual(None, server.update(update_template))
+        scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
         self.m.VerifyAll()
 
@@ -414,8 +414,8 @@ class ServersTest(HeatTestCase):
             body={'resize': {'flavorRef': 2}}).AndReturn((202, None))
         self.m.ReplayAll()
 
-        error = self.assertRaises(exception.ResourceFailure,
-                                  server.update, update_template)
+        updater = scheduler.TaskRunner(server.update, update_template)
+        error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
             "Error: Resizing to 'm1.small' failed, status 'ACTIVE'",
             str(error))
@@ -433,8 +433,8 @@ class ServersTest(HeatTestCase):
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['flavor'] = 'm1.smigish'
-        self.assertRaises(resource.UpdateReplace,
-                          server.update, update_template)
+        updater = scheduler.TaskRunner(server.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_server_update_server_flavor_policy_update(self):
         stack_name = 'test_server_update_flavor_replace'
@@ -449,8 +449,8 @@ class ServersTest(HeatTestCase):
         # update
         update_template['Properties']['flavor_update_policy'] = 'REPLACE'
         update_template['Properties']['flavor'] = 'm1.smigish'
-        self.assertRaises(resource.UpdateReplace,
-                          server.update, update_template)
+        updater = scheduler.TaskRunner(server.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_server_update_replace(self):
         return_server = self.fc.servers.list()[1]
@@ -459,8 +459,8 @@ class ServersTest(HeatTestCase):
 
         update_template = copy.deepcopy(server.t)
         update_template['Notallowed'] = {'test': 123}
-        self.assertRaises(resource.UpdateReplace,
-                          server.update, update_template)
+        updater = scheduler.TaskRunner(server.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_server_update_properties(self):
         return_server = self.fc.servers.list()[1]
@@ -469,8 +469,8 @@ class ServersTest(HeatTestCase):
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['key_name'] = 'mustreplace'
-        self.assertRaises(resource.UpdateReplace,
-                          server.update, update_template)
+        updater = scheduler.TaskRunner(server.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_server_status_build(self):
         return_server = self.fc.servers.list()[0]

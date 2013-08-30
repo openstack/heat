@@ -254,8 +254,8 @@ class InstanceGroupTest(HeatTestCase):
         update_snippet['Properties']['Size'] = '2'
         tmpl_diff = {'Properties': {'Size': '2'}}
         prop_diff = {'Size': '2'}
-        self.assertRaises(exception.ResourceFailure,
-                          rsrc.update, update_snippet)
+        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
+        self.assertRaises(exception.ResourceFailure, updater)
 
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
 
@@ -281,8 +281,8 @@ class InstanceGroupTest(HeatTestCase):
 
         update_snippet = copy.deepcopy(rsrc.parsed_template())
         update_snippet['Metadata'] = 'notallowedforupdate'
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.update, update_snippet)
+        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
+        self.assertRaises(resource.UpdateReplace, updater)
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -302,8 +302,8 @@ class InstanceGroupTest(HeatTestCase):
 
         update_snippet = copy.deepcopy(rsrc.parsed_template())
         update_snippet['Properties']['AvailabilityZones'] = ['wibble']
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.update, update_snippet)
+        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
+        self.assertRaises(resource.UpdateReplace, updater)
 
         rsrc.delete()
         self.m.VerifyAll()

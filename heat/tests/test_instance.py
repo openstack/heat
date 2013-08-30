@@ -307,7 +307,7 @@ class InstancesTest(HeatTestCase):
 
         update_template = copy.deepcopy(instance.t)
         update_template['Metadata'] = {'test': 123}
-        self.assertEqual(None, instance.update(update_template))
+        scheduler.TaskRunner(instance.update, update_template)()
         self.assertEqual(instance.metadata, {'test': 123})
 
     def test_instance_update_instance_type(self):
@@ -337,7 +337,7 @@ class InstancesTest(HeatTestCase):
             body={'confirmResize': None}).AndReturn((202, None))
         self.m.ReplayAll()
 
-        self.assertEqual(None, instance.update(update_template))
+        scheduler.TaskRunner(instance.update, update_template)()
         self.assertEqual(instance.state, (instance.UPDATE, instance.COMPLETE))
         self.m.VerifyAll()
 
@@ -366,8 +366,8 @@ class InstancesTest(HeatTestCase):
             body={'resize': {'flavorRef': 2}}).AndReturn((202, None))
         self.m.ReplayAll()
 
-        error = self.assertRaises(exception.ResourceFailure,
-                                  instance.update, update_template)
+        updater = scheduler.TaskRunner(instance.update, update_template)
+        error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
             "Error: Resizing to 'm1.small' failed, status 'ACTIVE'",
             str(error))
@@ -381,8 +381,8 @@ class InstancesTest(HeatTestCase):
 
         update_template = copy.deepcopy(instance.t)
         update_template['Notallowed'] = {'test': 123}
-        self.assertRaises(resource.UpdateReplace,
-                          instance.update, update_template)
+        updater = scheduler.TaskRunner(instance.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_instance_update_properties(self):
         return_server = self.fc.servers.list()[1]
@@ -391,8 +391,8 @@ class InstancesTest(HeatTestCase):
 
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['KeyName'] = 'mustreplace'
-        self.assertRaises(resource.UpdateReplace,
-                          instance.update, update_template)
+        updater = scheduler.TaskRunner(instance.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_instance_status_build(self):
         return_server = self.fc.servers.list()[0]

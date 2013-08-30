@@ -23,6 +23,7 @@ from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.engine.properties import Properties
 from heat.engine import properties
+from heat.engine import scheduler
 from heat.engine import stack_resource
 
 logger = logging.getLogger(__name__)
@@ -243,7 +244,7 @@ class InstanceGroup(stack_resource.StackResource):
                         (lb,))
                 resolved_snippet = self.stack.resolve_static_data(
                     lb_resource.json_snippet)
-                lb_resource.update(resolved_snippet)
+                scheduler.TaskRunner(lb_resource.update, resolved_snippet)()
 
     def FnGetRefId(self):
         return unicode(self.name)
