@@ -17,6 +17,8 @@
 
 
 import datetime
+import json
+from oslo.config import cfg
 import stubout
 import webob
 
@@ -380,3 +382,15 @@ class JSONRequestDeserializerTest(HeatTestCase):
         actual = wsgi.JSONRequestDeserializer().default(request)
         expected = {"body": {"key": "value"}}
         self.assertEqual(actual, expected)
+
+    def test_from_json_exceeds_max_json_mb(self):
+        cfg.CONF.set_override('max_json_body_size', 10)
+        body = json.dumps(['a'] * cfg.CONF.max_json_body_size)
+        self.assertTrue(len(body) > cfg.CONF.max_json_body_size)
+        error = self.assertRaises(exception.RequestLimitExceeded,
+                                  wsgi.JSONRequestDeserializer().from_json,
+                                  body)
+        msg = 'Request limit exceeded: JSON body size ' + \
+              '(%s bytes) exceeds maximum allowed size (%s bytes).' % \
+              (len(body), cfg.CONF.max_json_body_size)
+        self.assertEqual(msg, str(error))
