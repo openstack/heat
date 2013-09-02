@@ -261,3 +261,37 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(2, len(events))
 
         self.m.VerifyAll()
+
+    def test_user_creds_password(self):
+        self.ctx.trust_id = None
+        db_creds = db_api.user_creds_create(self.ctx)
+        load_creds = db_api.user_creds_get(db_creds.id)
+
+        self.assertEqual(load_creds.get('username'), 'test_username')
+        self.assertEqual(load_creds.get('password'), 'password')
+        self.assertEqual(load_creds.get('tenant'), 'test_tenant')
+        self.assertEqual(load_creds.get('tenant_id'), 'test_tenant_id')
+        self.assertIsNotNone(load_creds.get('created_at'))
+        self.assertIsNone(load_creds.get('updated_at'))
+        self.assertEqual(load_creds.get('auth_url'),
+                         'http://_testnoexisthost_:5000/v2.0')
+        self.assertIsNone(load_creds.get('trust_id'))
+        self.assertIsNone(load_creds.get('trustor_user_id'))
+
+    def test_user_creds_trust(self):
+        self.ctx.username = None
+        self.ctx.password = None
+        self.ctx.trust_id = 'atrust123'
+        self.ctx.trustor_user_id = 'atrustor123'
+        db_creds = db_api.user_creds_create(self.ctx)
+        load_creds = db_api.user_creds_get(db_creds.id)
+
+        self.assertIsNone(load_creds.get('username'))
+        self.assertIsNone(load_creds.get('password'))
+        self.assertIsNone(load_creds.get('tenant'))
+        self.assertIsNone(load_creds.get('tenant_id'))
+        self.assertIsNotNone(load_creds.get('created_at'))
+        self.assertIsNone(load_creds.get('updated_at'))
+        self.assertIsNone(load_creds.get('auth_url'))
+        self.assertEqual(load_creds.get('trust_id'), 'atrust123')
+        self.assertEqual(load_creds.get('trustor_user_id'), 'atrustor123')

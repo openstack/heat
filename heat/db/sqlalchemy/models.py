@@ -210,6 +210,8 @@ class UserCreds(BASE, HeatBase):
     tenant = sqlalchemy.Column(sqlalchemy.String)
     auth_url = sqlalchemy.Column(sqlalchemy.String)
     tenant_id = sqlalchemy.Column(sqlalchemy.String)
+    trust_id = sqlalchemy.Column(sqlalchemy.String)
+    trustor_user_id = sqlalchemy.Column(sqlalchemy.String)
     stack = relationship(Stack, backref=backref('user_creds'))
 
 
