@@ -338,7 +338,7 @@ class ResourceTest(HeatTestCase):
             utmpl, tmpl_diff, prop_diff).AndReturn(None)
         self.m.ReplayAll()
 
-        self.assertEqual(None, res.update(utmpl))
+        scheduler.TaskRunner(res.update, utmpl)()
         self.assertEqual((res.UPDATE, res.COMPLETE), res.state)
         self.m.VerifyAll()
 
@@ -358,7 +358,8 @@ class ResourceTest(HeatTestCase):
             utmpl, tmpl_diff, prop_diff).AndRaise(resource.UpdateReplace())
         self.m.ReplayAll()
         # should be re-raised so parser.Stack can handle replacement
-        self.assertRaises(resource.UpdateReplace, res.update, utmpl)
+        updater = scheduler.TaskRunner(res.update, utmpl)
+        self.assertRaises(resource.UpdateReplace, updater)
         self.m.VerifyAll()
 
     def test_update_fail_missing_req_prop(self):
@@ -372,7 +373,8 @@ class ResourceTest(HeatTestCase):
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {}}
 
-        self.assertRaises(exception.ResourceFailure, res.update, utmpl)
+        updater = scheduler.TaskRunner(res.update, utmpl)
+        self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
 
     def test_update_fail_prop_typo(self):
@@ -385,7 +387,8 @@ class ResourceTest(HeatTestCase):
 
         utmpl = {'Type': 'GenericResourceType', 'Properties': {'Food': 'xyz'}}
 
-        self.assertRaises(exception.ResourceFailure, res.update, utmpl)
+        updater = scheduler.TaskRunner(res.update, utmpl)
+        self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
 
     def test_update_not_implemented(self):
@@ -403,7 +406,8 @@ class ResourceTest(HeatTestCase):
         generic_rsrc.ResourceWithProps.handle_update(
             utmpl, tmpl_diff, prop_diff).AndRaise(NotImplemented)
         self.m.ReplayAll()
-        self.assertRaises(exception.ResourceFailure, res.update, utmpl)
+        updater = scheduler.TaskRunner(res.update, utmpl)
+        self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
         self.m.VerifyAll()
 

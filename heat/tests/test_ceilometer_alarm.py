@@ -164,7 +164,7 @@ class CeilometerAlarmTest(HeatTestCase):
         snippet['Properties']['alarm_actions'] = []
         snippet['Properties']['ok_actions'] = ['signal_handler']
 
-        self.assertEqual(None, rsrc.update(snippet))
+        scheduler.TaskRunner(rsrc.update, snippet)()
 
         self.m.VerifyAll()
 
@@ -189,8 +189,8 @@ class CeilometerAlarmTest(HeatTestCase):
         snippet = copy.deepcopy(rsrc.parsed_template())
         snippet['Properties']['counter_name'] = 'temp'
 
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.update, snippet)
+        updater = scheduler.TaskRunner(rsrc.update, snippet)
+        self.assertRaises(resource.UpdateReplace, updater)
 
         self.m.VerifyAll()
 

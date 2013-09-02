@@ -313,7 +313,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.ReplayAll()
         update_template = copy.deepcopy(cs.t)
         update_template['Metadata'] = {'test': 123}
-        self.assertEqual(None, cs.update(update_template))
+        scheduler.TaskRunner(cs.update, update_template)()
         self.assertEqual(cs.metadata, {'test': 123})
 
     def test_cs_update_replace(self):
@@ -322,7 +322,8 @@ class RackspaceCloudServerTest(HeatTestCase):
 
         update_template = copy.deepcopy(cs.t)
         update_template['Notallowed'] = {'test': 123}
-        self.assertRaises(resource.UpdateReplace, cs.update, update_template)
+        updater = scheduler.TaskRunner(cs.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_cs_update_properties(self):
         return_server = self.fc.servers.list()[1]
@@ -330,8 +331,8 @@ class RackspaceCloudServerTest(HeatTestCase):
 
         update_template = copy.deepcopy(cs.t)
         update_template['Properties']['user_data'] = 'mustreplace'
-        self.assertRaises(resource.UpdateReplace,
-                          cs.update, update_template)
+        updater = scheduler.TaskRunner(cs.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
 
     def test_cs_status_build(self):
         return_server = self.fc.servers.list()[0]

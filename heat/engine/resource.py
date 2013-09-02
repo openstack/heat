@@ -420,7 +420,11 @@ class Resource(object):
             tmpl_diff = self.update_template_diff(after, before)
             prop_diff = self.update_template_diff_properties(after, before)
             if callable(getattr(self, 'handle_update', None)):
-                result = self.handle_update(after, tmpl_diff, prop_diff)
+                handle_data = self.handle_update(after, tmpl_diff, prop_diff)
+                yield
+                if callable(getattr(self, 'check_update_complete', None)):
+                    while not self.check_update_complete(handle_data):
+                        yield
         except UpdateReplace:
             logger.debug("Resource %s update requires replacement" % self.name)
             raise

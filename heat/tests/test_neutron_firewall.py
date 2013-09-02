@@ -213,7 +213,7 @@ class FirewallTest(HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['admin_state_up'] = False
-        self.assertEqual(None, rsrc.update(update_template))
+        scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
 
@@ -343,7 +343,7 @@ class FirewallPolicyTest(HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['firewall_rules'] = ['3', '4']
-        self.assertEqual(None, rsrc.update(update_template))
+        scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
 
@@ -475,6 +475,6 @@ class FirewallRuleTest(HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['protocol'] = 'icmp'
-        self.assertEqual(None, rsrc.update(update_template))
+        scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()

@@ -212,7 +212,7 @@ class HealthMonitorTest(HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['delay'] = 10
-        self.assertEqual(None, rsrc.update(update_template))
+        scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
 
@@ -490,7 +490,7 @@ class PoolTest(HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['admin_state_up'] = False
-        self.assertEqual(None, rsrc.update(update_template))
+        scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
 
@@ -533,7 +533,7 @@ class PoolTest(HeatTestCase):
 
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['monitors'] = ['mon123', 'mon789']
-        self.assertEqual(None, rsrc.update(update_template))
+        scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.m.VerifyAll()
 
@@ -588,7 +588,7 @@ class LoadBalancerTest(HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['members'] = ['5678']
 
-        self.assertEqual(None, rsrc.update(update_template))
+        scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()
 
     def test_update_missing_member(self):
@@ -602,7 +602,7 @@ class LoadBalancerTest(HeatTestCase):
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['members'] = []
 
-        self.assertEqual(None, rsrc.update(update_template))
+        scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
