@@ -315,8 +315,7 @@ def event_create(context, values):
 
 
 def watch_rule_get(context, watch_rule_id):
-    result = model_query(context, models.WatchRule).\
-        filter_by(id=watch_rule_id).first()
+    result = model_query(context, models.WatchRule).get(watch_rule_id)
     return result
 
 
