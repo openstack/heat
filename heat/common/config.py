@@ -89,7 +89,16 @@ engine_opts = [
                 help='List of directories to search for Plugins'),
     cfg.StrOpt('environment_dir',
                default='/etc/heat/environment.d',
-               help='The directory to search for environment files')]
+               help='The directory to search for environment files'),
+    cfg.StrOpt('deferred_auth_method',
+               choices=['password', 'trusts'],
+               default='password',
+               help=_('Select deferred auth method, '
+                      'stored password or trusts')),
+    cfg.ListOpt('trusts_delegated_roles',
+                default=['heat_stack_owner'],
+                help=_('Subset of trustor roles to be delegated to heat'))]
+
 
 rpc_opts = [
     cfg.StrOpt('host',
