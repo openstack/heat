@@ -74,6 +74,12 @@ class Port(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+
+        if self.properties['security_groups']:
+            props['security_groups'] = self.get_secgroup_uuids(
+                self.stack, self.properties, 'security_groups', self.name,
+                self.neutron())
+
         port = self.neutron().create_port({'port': props})['port']
         self.resource_id_set(port['id'])
 

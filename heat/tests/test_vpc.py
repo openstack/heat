@@ -214,26 +214,36 @@ class VPCTestBase(HeatTestCase):
             }
         })
 
-    def mock_delete_security_group(self):
+    def mock_show_security_group(self, group='eeee'):
         sg_name = utils.PhysName('test_stack', 'the_sg')
-        neutronclient.Client.show_security_group('eeee').AndReturn({
-            'security_group': {
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'name': sg_name,
-                'description': '',
-                'security_group_rules': [{
-                    'direction': 'ingress',
-                    'protocol': 'tcp',
-                    'port_range_max': '22',
-                    'id': 'bbbb',
-                    'ethertype': 'IPv4',
-                    'security_group_id': 'eeee',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': '0.0.0.0/0',
+        if group == 'eeee':
+            neutronclient.Client.show_security_group(group).AndReturn({
+                'security_group': {
                     'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                    'port_range_min': '22'
-                }],
-                'id': 'eeee'}})
+                    'name': sg_name,
+                    'description': '',
+                    'security_group_rules': [{
+                        'direction': 'ingress',
+                        'protocol': 'tcp',
+                        'port_range_max': '22',
+                        'id': 'bbbb',
+                        'ethertype': 'IPv4',
+                        'security_group_id': 'eeee',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '0.0.0.0/0',
+                        'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                        'port_range_min': '22'
+                    }],
+                    'id': 'eeee'}})
+        elif group == 'INVALID-NO-REF':
+            neutronclient.Client.show_security_group(group).AndRaise(
+                NeutronClientException(status_code=404))
+        elif group == 'RaiseException':
+            neutronclient.Client.show_security_group('eeee').AndRaise(
+                NeutronClientException(status_code=403))
+
+    def mock_delete_security_group(self):
+        self.mock_show_security_group()
         neutronclient.Client.delete_security_group_rule('bbbb').AndReturn(None)
         neutronclient.Client.delete_security_group('eeee').AndReturn(None)
 
@@ -326,6 +336,9 @@ class VPCTestBase(HeatTestCase):
         self.assertEqual(None, resource.validate())
         self.assertEqual((resource.CREATE, resource.COMPLETE), resource.state)
         self.assertEqual(ref_id, resource.FnGetRefId())
+
+    def mock_rsrc_by_refid(self, sg):
+        parser.Stack.resource_by_refid(sg).AndReturn(None)
 
 
 class VPCTest(VPCTestBase):
@@ -575,6 +588,38 @@ Resources:
 
         self.m.VerifyAll()
 
+    def test_network_interface_existing_groupset(self):
+        self.m.StubOutWithMock(parser.Stack, 'resource_by_refid')
+        self.mock_rsrc_by_refid(sg='eeee')
+
+        self.mock_keystone()
+        self.mock_create_security_group()
+        self.mock_create_network()
+        self.mock_create_subnet()
+        self.mock_show_subnet()
+        self.mock_create_network_interface()
+        self.mock_show_security_group()
+        self.mock_delete_network_interface()
+        self.mock_delete_subnet()
+        self.mock_delete_network()
+        self.mock_delete_security_group()
+
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template)
+        try:
+            self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
+            rsrc = stack['the_nic']
+            self.assertResourceState(rsrc, 'dddd')
+
+            self.assertRaises(resource.UpdateReplace,
+                              rsrc.handle_update, {}, {}, {})
+
+        finally:
+            stack.delete()
+
+        self.m.VerifyAll()
+
     def test_network_interface_no_groupset(self):
         self.mock_keystone()
         self.mock_create_network()
@@ -589,6 +634,30 @@ Resources:
 
         stack = self.create_stack(self.test_template_no_groupset)
         stack.delete()
+
+        self.m.VerifyAll()
+
+    def test_network_interface_exception(self):
+        self.m.StubOutWithMock(parser.Stack, 'resource_by_refid')
+        self.mock_rsrc_by_refid(sg='eeee')
+
+        self.mock_keystone()
+        self.mock_create_security_group()
+        self.mock_create_network()
+        self.mock_create_subnet()
+        self.mock_show_subnet()
+        self.mock_show_security_group(group='RaiseException')
+
+        self.m.ReplayAll()
+
+        try:
+            stack = self.create_stack(self.test_template)
+            rsrc = stack['the_nic']
+            self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+            reason = rsrc.status_reason
+            self.assertTrue(reason.startswith('NeutronClientException:'))
+        finally:
+            stack.delete()
 
         self.m.VerifyAll()
 
@@ -608,6 +677,7 @@ Resources:
         self.mock_create_network()
         self.mock_create_subnet()
         self.mock_show_subnet()
+        self.mock_show_security_group(group='INVALID-NO-REF')
         self.mock_delete_subnet()
         self.mock_delete_network()
 
