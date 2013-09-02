@@ -27,7 +27,7 @@ if __name__ == '__main__':
     config = ConfigParser.SafeConfigParser()
     try:
         config = ConfigParser.SafeConfigParser()
-        config.readfp(open('/etc/heat/heat-engine.conf'))
+        config.readfp(open('/etc/heat/heat.conf'))
         sql_connection = config.get('DEFAULT', 'sql_connection')
     except Exception:
         sql_connection = 'mysql://heat:heat@localhost/heat'
