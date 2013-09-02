@@ -641,16 +641,21 @@ class AutoScalingTest(HeatTestCase):
                                                     u'LoadBalancerPort': u'80',
                                                     u'Protocol': u'HTTP'}],
                                     u'AvailabilityZones': ['abc', 'xyz']}}
-        self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'update')
-        loadbalancer.LoadBalancer.update(expected).AndReturn(None)
 
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
         self._stub_create(1)
         self.m.ReplayAll()
         stack = utils.parse_stack(t, params=self.params)
-        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
 
+        lb = stack['ElasticLoadBalancer']
+        self.m.StubOutWithMock(lb, 'handle_update')
+        lb.handle_update(expected,
+                         mox.IgnoreArg(),
+                         mox.IgnoreArg()).AndReturn(None)
+        self.m.ReplayAll()
+
+        rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
         self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
         update_snippet = copy.deepcopy(rsrc.parsed_template())
@@ -678,8 +683,10 @@ class AutoScalingTest(HeatTestCase):
                 'pool_id': 'pool123',
                 'members': [u'WebServerGroup-0']}
         }
-        self.m.StubOutWithMock(neutron_lb.LoadBalancer, 'update')
-        neutron_lb.LoadBalancer.update(expected).AndReturn(None)
+        self.m.StubOutWithMock(neutron_lb.LoadBalancer, 'handle_update')
+        neutron_lb.LoadBalancer.handle_update(expected,
+                                              mox.IgnoreArg(),
+                                              mox.IgnoreArg()).AndReturn(None)
 
         now = timeutils.utcnow()
         self._stub_meta_expected(now, 'ExactCapacity : 1')
