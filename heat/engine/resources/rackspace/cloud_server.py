@@ -403,6 +403,14 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         Cloud Server.  If any other parameters changed, re-create the
         Cloud Server with the new parameters.
         """
+        # If name is the only update, fail update
+        if prop_diff.keys() == ['name'] and \
+           tmpl_diff.keys() == ['Properties']:
+            raise exception.NotSupported(feature="Cloud Server rename")
+        # Other updates were successful, so don't cause update to fail
+        elif 'name' in prop_diff:
+            logger.info("Cloud Server rename not supported.")
+
         if 'Metadata' in tmpl_diff:
             self.metadata = json_snippet['Metadata']
             metadata_string = json.dumps(self.metadata)
@@ -421,15 +429,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
             resize = scheduler.TaskRunner(nova_utils.check_resize,
                                           self.server,
                                           self.flavor)
-            resize(wait_time=1.0)
-
-        # If name is the only update, fail update
-        if prop_diff.keys() == ['name'] and \
-           tmpl_diff.keys() == ['Properties']:
-            raise exception.NotSupported(feature="Cloud Server rename")
-        # Other updates were successful, so don't cause update to fail
-        elif 'name' in prop_diff:
-            logger.info("Cloud Server rename not supported.")
+            resize.start()
+            return resize
 
     def _resolve_attribute(self, key):
         """Return the method that provides a given template attribute."""
