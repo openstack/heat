@@ -190,10 +190,10 @@ def stack_get_by_name(context, stack_name, owner_id=None):
 
 
 def stack_get(context, stack_id, admin=False, show_deleted=False):
-    result = soft_delete_aware_query(context,
-                                     models.Stack,
-                                     show_deleted=show_deleted).\
-        filter_by(id=stack_id).first()
+    result = model_query(context, models.Stack).get(stack_id)
+
+    if result is None or result.deleted_at is not None and not show_deleted:
+        return None
 
     # If the admin flag is True, we allow retrieval of a specific
     # stack without the tenant scoping
