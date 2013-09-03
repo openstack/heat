@@ -274,7 +274,7 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertIsNotNone(load_creds.get('created_at'))
         self.assertIsNone(load_creds.get('updated_at'))
         self.assertEqual(load_creds.get('auth_url'),
-                         'http://_testnoexisthost_:5000/v2.0')
+                         'http://server.test:5000/v2.0')
         self.assertIsNone(load_creds.get('trust_id'))
         self.assertIsNone(load_creds.get('trustor_user_id'))
 

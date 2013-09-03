@@ -57,7 +57,7 @@ class SignalTest(HeatTestCase):
                                  generic_resource.GenericResource)
 
         cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://_testnoexisthost_:8000/v1/waitcondition')
+                             'http://server.test:8000/v1/waitcondition')
 
         self.stack_id = 'STACKABCD1234'
         self.fc = fakes.FakeKeystoneClient()
@@ -102,7 +102,7 @@ class SignalTest(HeatTestCase):
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         expected_url = "".join([
-            'http://_testnoexisthost_:8000/v1/signal/',
+            'http://server.test:8000/v1/signal/',
             'arn%3Aopenstack%3Aheat%3A%3Atest_tenant%3Astacks%2F',
             'test_stack%2FSTACKABCD1234%2Fresources%2F',
             'signal_handler?',
@@ -111,7 +111,7 @@ class SignalTest(HeatTestCase):
             'AWSAccessKeyId=4567&',
             'SignatureVersion=2&',
             'Signature=',
-            'dPUzYOioXbSUJjdl9C%2FXtw1VLfAnJf7uj69ZJ%2BiGNv0%3D'])
+            'VW4NyvRO4WhQdsQ4rxl5JMUr0AlefHN6OLsRz9oZyls%3D'])
 
         self.assertEqual(expected_url, rsrc.FnGetAtt('AlarmUrl'))
         self.m.VerifyAll()
