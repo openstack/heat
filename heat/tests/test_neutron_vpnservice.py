@@ -49,6 +49,38 @@ vpnservice_template = '''
 }
 '''
 
+ipsec_site_connection_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test IPsec policy resource",
+  "Parameters" : {},
+  "Resources" : {
+    "IPsecSiteConnection" : {
+      "Type" : "OS::Neutron::IPsecSiteConnection",
+      "Properties" : {
+        "name" : "IPsecSiteConnection",
+        "description" : "My new VPN connection",
+        "peer_address" : "172.24.4.233",
+        "peer_id" : "172.24.4.233",
+        "peer_cidrs" : [ "10.2.0.0/24" ],
+        "mtu" : 1500,
+        "dpd" : {
+            "actions" : "hold",
+            "interval" : 30,
+            "timeout" : 120
+        },
+        "psk" : "secret",
+        "initiator" : "bi-directional",
+        "admin_state_up" : true,
+        "ikepolicy_id" : "ike123",
+        "ipsecpolicy_id" : "ips123",
+        "vpnservice_id" : "vpn123"
+      }
+    }
+  }
+}
+'''
+
 ikepolicy_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -233,6 +265,175 @@ class VPNServiceTest(HeatTestCase):
         rsrc = self.create_vpnservice()
         neutronclient.Client.update_vpnservice(
             'vpn123', {'vpnservice': {'admin_state_up': False}})
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['admin_state_up'] = False
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.m.VerifyAll()
+
+
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class IPsecSiteConnectionTest(HeatTestCase):
+
+    IPSEC_SITE_CONNECTION_CONF = {
+        'ipsec_site_connection': {
+            'name': 'IPsecSiteConnection',
+            'description': 'My new VPN connection',
+            'peer_address': '172.24.4.233',
+            'peer_id': '172.24.4.233',
+            'peer_cidrs': ['10.2.0.0/24'],
+            'mtu': 1500,
+            'dpd': {
+                'actions': 'hold',
+                'interval': 30,
+                'timeout': 120
+            },
+            'psk': 'secret',
+            'initiator': 'bi-directional',
+            'admin_state_up': True,
+            'ikepolicy_id': 'ike123',
+            'ipsecpolicy_id': 'ips123',
+            'vpnservice_id': 'vpn123'
+        }
+    }
+
+    def setUp(self):
+        super(IPsecSiteConnectionTest, self).setUp()
+        self.m.StubOutWithMock(neutronclient.Client,
+                               'create_ipsec_site_connection')
+        self.m.StubOutWithMock(neutronclient.Client,
+                               'delete_ipsec_site_connection')
+        self.m.StubOutWithMock(neutronclient.Client,
+                               'show_ipsec_site_connection')
+        self.m.StubOutWithMock(neutronclient.Client,
+                               'update_ipsec_site_connection')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        utils.setup_dummy_db()
+
+    def create_ipsec_site_connection(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_ipsec_site_connection(
+            self.IPSEC_SITE_CONNECTION_CONF).AndReturn(
+                {'ipsec_site_connection': {'id': 'con123'}})
+        snippet = template_format.parse(ipsec_site_connection_template)
+        self.stack = utils.parse_stack(snippet)
+        return vpnservice.IPsecSiteConnection(
+            'ipsec_site_connection',
+            snippet['Resources']['IPsecSiteConnection'],
+            self.stack)
+
+    @utils.stack_delete_after
+    def test_create(self):
+        rsrc = self.create_ipsec_site_connection()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_create_failed(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_ipsec_site_connection(
+            self.IPSEC_SITE_CONNECTION_CONF).AndRaise(
+                vpnservice.NeutronClientException())
+        self.m.ReplayAll()
+        snippet = template_format.parse(ipsec_site_connection_template)
+        self.stack = utils.parse_stack(snippet)
+        rsrc = vpnservice.IPsecSiteConnection(
+            'ipsec_site_connection',
+            snippet['Resources']['IPsecSiteConnection'],
+            self.stack)
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.create))
+        self.assertEqual(
+            'NeutronClientException: An unknown exception occurred.',
+            str(error))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_delete(self):
+        neutronclient.Client.delete_ipsec_site_connection('con123')
+        neutronclient.Client.show_ipsec_site_connection('con123').AndRaise(
+            vpnservice.NeutronClientException(status_code=404))
+        rsrc = self.create_ipsec_site_connection()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_delete_already_gone(self):
+        neutronclient.Client.delete_ipsec_site_connection('con123').AndRaise(
+            vpnservice.NeutronClientException(status_code=404))
+        rsrc = self.create_ipsec_site_connection()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_delete_failed(self):
+        neutronclient.Client.delete_ipsec_site_connection('con123').AndRaise(
+            vpnservice.NeutronClientException(status_code=400))
+        rsrc = self.create_ipsec_site_connection()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.delete))
+        self.assertEqual(
+            'NeutronClientException: An unknown exception occurred.',
+            str(error))
+        self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_attribute(self):
+        rsrc = self.create_ipsec_site_connection()
+        neutronclient.Client.show_ipsec_site_connection(
+            'con123').MultipleTimes().AndReturn(
+                self.IPSEC_SITE_CONNECTION_CONF)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual('IPsecSiteConnection', rsrc.FnGetAtt('name'))
+        self.assertEqual('My new VPN connection', rsrc.FnGetAtt('description'))
+        self.assertEqual('172.24.4.233', rsrc.FnGetAtt('peer_address'))
+        self.assertEqual('172.24.4.233', rsrc.FnGetAtt('peer_id'))
+        self.assertEqual(['10.2.0.0/24'], rsrc.FnGetAtt('peer_cidrs'))
+        self.assertEqual('hold', rsrc.FnGetAtt('dpd')['actions'])
+        self.assertEqual(30, rsrc.FnGetAtt('dpd')['interval'])
+        self.assertEqual(120, rsrc.FnGetAtt('dpd')['timeout'])
+        self.assertEqual('secret', rsrc.FnGetAtt('psk'))
+        self.assertEqual('bi-directional', rsrc.FnGetAtt('initiator'))
+        self.assertEqual(True, rsrc.FnGetAtt('admin_state_up'))
+        self.assertEqual('ike123', rsrc.FnGetAtt('ikepolicy_id'))
+        self.assertEqual('ips123', rsrc.FnGetAtt('ipsecpolicy_id'))
+        self.assertEqual('vpn123', rsrc.FnGetAtt('vpnservice_id'))
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_attribute_failed(self):
+        rsrc = self.create_ipsec_site_connection()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        error = self.assertRaises(exception.InvalidTemplateAttribute,
+                                  rsrc.FnGetAtt, 'non-existent_property')
+        self.assertEqual(
+            'The Referenced Attribute (ipsec_site_connection '
+            'non-existent_property) is incorrect.',
+            str(error))
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_update(self):
+        rsrc = self.create_ipsec_site_connection()
+        neutronclient.Client.update_ipsec_site_connection(
+            'con123', {'ipsec_site_connection': {'admin_state_up': False}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         update_template = copy.deepcopy(rsrc.t)

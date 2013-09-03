@@ -83,6 +83,108 @@ class VPNService(neutron.NeutronResource):
             return scheduler.TaskRunner(self._confirm_delete)()
 
 
+class IPsecSiteConnection(neutron.NeutronResource):
+    """
+    A resource for IPsec site connection in Neutron.
+    """
+
+    dpd_schema = {
+        'actions': {'Type': 'String',
+                    'AllowedValues': ['clear',
+                                      'disabled',
+                                      'hold',
+                                      'restart',
+                                      'restart-by-peer'],
+                    'Default': 'hold'},
+        'interval': {'Type': 'Integer',
+                     'Default': 30},
+        'timeout': {'Type': 'Integer',
+                    'Default': 120},
+    }
+
+    properties_schema = {'name': {'Type': 'String'},
+                         'description': {'Type': 'String'},
+                         'peer_address': {'Type': 'String',
+                                          'Required': True},
+                         'peer_id': {'Type': 'String',
+                                     'Required': True},
+                         'peer_cidrs': {'Type': 'List',
+                                        'Required': True},
+                         'mtu': {'Type': 'Integer',
+                                 'Default': 1500},
+                         'dpd': {'Type': 'Map', 'Schema': dpd_schema},
+                         'psk': {'Type': 'String',
+                                 'Required': True},
+                         'initiator': {'Type': 'String',
+                                       'AllowedValues': ['bi-directional',
+                                                         'response-only'],
+                                       'Default': 'bi-directional'},
+                         'admin_state_up': {'Type': 'Boolean',
+                                            'Default': True},
+                         'ikepolicy_id': {'Type': 'String',
+                                          'Required': True},
+                         'ipsecpolicy_id': {'Type': 'String',
+                                            'Required': True},
+                         'vpnservice_id': {'Type': 'String',
+                                           'Required': True}}
+
+    attributes_schema = {
+        'admin_state_up': 'the administrative state of the ipsec site'
+                          ' connection',
+        'auth_mode': 'authentication mode used by the ipsec site connection',
+        'description': 'description of the ipsec site connection',
+        'dpd': 'configuration of dead peer detection protocol',
+        'id': 'unique identifier for the ipsec site connection',
+        'ikepolicy_id': 'unique identifier for ike policy used to create the'
+                        ' ipsec site connection',
+        'initiator': 'initiator of the ipsec site connection',
+        'ipsecpolicy_id': 'unique identifier for ipsec policy used to create'
+                          ' the ipsec site connection',
+        'mtu': 'maximum transmission unit to address fragmentation',
+        'name': 'name for the ipsec site connection',
+        'peer_address': 'peer vpn gateway public address or FQDN',
+        'peer_cidrs': 'peer private cidrs',
+        'peer_id': 'peer identifier (name, string or FQDN)',
+        'psk': 'pre-shared-key used to create the ipsec site connection',
+        'route_mode': 'route mode used to create the ipsec site connection',
+        'status': 'the status of the ipsec site connection',
+        'tenant_id': 'tenant owning the ipsec site connection',
+        'vpnservice_id': 'unique identifier for vpn service used to create the'
+                         ' ipsec site connection'
+    }
+
+    update_allowed_keys = ('Properties',)
+
+    update_allowed_properties = ('name', 'description', 'admin_state_up',)
+
+    def _show_resource(self):
+        return self.neutron().show_ipsec_site_connection(self.resource_id)[
+            'ipsec_site_connection']
+
+    def handle_create(self):
+        props = self.prepare_properties(
+            self.properties,
+            self.physical_resource_name())
+        ipsec_site_connection = self.neutron().create_ipsec_site_connection(
+            {'ipsec_site_connection': props})['ipsec_site_connection']
+        self.resource_id_set(ipsec_site_connection['id'])
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            self.neutron().update_ipsec_site_connection(
+                self.resource_id, {'ipsec_site_connection': prop_diff})
+
+    def handle_delete(self):
+        client = self.neutron()
+        try:
+            client.delete_ipsec_site_connection(self.resource_id)
+        except NeutronClientException as ex:
+            if ex.status_code != 404:
+                raise ex
+        else:
+            return scheduler.TaskRunner(self._confirm_delete)()
+
+
 class IKEPolicy(neutron.NeutronResource):
     """
     A resource for IKE policy in Neutron.
@@ -253,6 +355,7 @@ def resource_mapping():
 
     return {
         'OS::Neutron::VPNService': VPNService,
+        'OS::Neutron::IPsecSiteConnection': IPsecSiteConnection,
         'OS::Neutron::IKEPolicy': IKEPolicy,
-        'OS::Neutron::IPsecPolicy': IPsecPolicy
+        'OS::Neutron::IPsecPolicy': IPsecPolicy,
     }
