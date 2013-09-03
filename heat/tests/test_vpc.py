@@ -668,7 +668,7 @@ Resources:
             self.test_template_error)
         expected_exception = exception.InvalidTemplateReference(
             resource='INVALID-REF-IN-TEMPLATE',
-            key='GroupSet')
+            key='the_nic.Properties.GroupSet[0]')
 
         self.assertEquals(str(expected_exception), str(real_exception))
 
