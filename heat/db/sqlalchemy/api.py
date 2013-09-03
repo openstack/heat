@@ -259,8 +259,14 @@ def stack_delete(context, stack_id):
 def user_creds_create(context):
     values = context.to_dict()
     user_creds_ref = models.UserCreds()
-    user_creds_ref.update(values)
-    user_creds_ref.password = crypt.encrypt(values['password'])
+    if values.get('trust_id'):
+        user_creds_ref.trust_id = crypt.encrypt(values.get('trust_id'))
+        user_creds_ref.trustor_user_id = values.get('trustor_user_id')
+        user_creds_ref.username = None
+        user_creds_ref.password = None
+    else:
+        user_creds_ref.update(values)
+        user_creds_ref.password = crypt.encrypt(values['password'])
     user_creds_ref.save(_session(context))
     return user_creds_ref
 
@@ -271,6 +277,7 @@ def user_creds_get(user_creds_id):
     # or it can be committed back to the DB in decrypted form
     result = dict(db_result)
     result['password'] = crypt.decrypt(result['password'])
+    result['trust_id'] = crypt.decrypt(result['trust_id'])
     return result
 
 
