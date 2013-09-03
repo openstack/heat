@@ -334,7 +334,13 @@ class Server(resource.Resource):
             flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
             server = self.nova().servers.get(self.resource_id)
             server.resize(flavor_id)
-            scheduler.TaskRunner(nova_utils.check_resize, server, flavor)()
+            checker = scheduler.TaskRunner(nova_utils.check_resize,
+                                           server, flavor)
+            checker.start()
+            return checker
+
+    def check_update_complete(self, checker):
+        return checker.step() if checker is not None else True
 
     def metadata_update(self, new_metadata=None):
         '''
