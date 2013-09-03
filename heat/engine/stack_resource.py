@@ -71,8 +71,9 @@ class StackResource(resource.Resource):
         Handle the creation of the nested stack from a given JSON template.
         '''
         if self.recursion_depth >= cfg.CONF.max_nested_stack_depth:
-            raise exception.StackRecursionLimitReached(
-                cfg.CONF.max_nested_stack_depth)
+            msg = _("Recursion depth exceeds %d.") % \
+                cfg.CONF.max_nested_stack_depth
+            raise exception.RequestLimitExceeded(message=msg)
         template = parser.Template(child_template)
         self._outputs_to_attribs(child_template)
 

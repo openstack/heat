@@ -99,8 +99,10 @@ Outputs: {}
         limit = config.cfg.CONF.max_template_size
         long_yaml = yaml.safe_dump(template)
         self.assertTrue(len(long_yaml) > limit)
-        self.assertRaises(exception.TemplateTooBig, template_format.parse,
-                          long_yaml)
+        ex = self.assertRaises(exception.RequestLimitExceeded,
+                               template_format.parse, long_yaml)
+        msg = 'Request limit exceeded: Template exceeds maximum allowed size.'
+        self.assertEqual(msg, str(ex))
 
 
 class JsonYamlResolvedCompareTest(HeatTestCase):
