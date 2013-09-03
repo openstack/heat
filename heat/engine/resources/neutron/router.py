@@ -19,6 +19,7 @@ from heat.engine import scheduler
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException
+    from neutronclient.neutron import v2_0 as neutronV20
 
 from heat.openstack.common import log as logging
 
@@ -117,7 +118,10 @@ class RouterGateway(neutron.NeutronResource):
 
     def handle_create(self):
         router_id = self.properties.get('router_id')
-        network_id = self.properties.get('network_id')
+        network_id = neutronV20.find_resourceid_by_name_or_id(
+            self.neutron(),
+            'network',
+            self.properties.get('network_id'))
         self.neutron().add_gateway_router(
             router_id,
             {'network_id': network_id})
