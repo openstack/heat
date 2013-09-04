@@ -269,29 +269,29 @@ class Resource(object):
     def __str__(self):
         return '%s "%s"' % (self.__class__.__name__, self.name)
 
-    def _add_dependencies(self, deps, head, fragment):
+    def _add_dependencies(self, deps, path, fragment):
         if isinstance(fragment, dict):
             for key, value in fragment.items():
                 if key in ('DependsOn', 'Ref', 'Fn::GetAtt'):
                     if key == 'Fn::GetAtt':
-                        value, head = value
+                        value, att = value
 
                     try:
                         target = self.stack.resources[value]
                     except KeyError:
                         raise exception.InvalidTemplateReference(
                             resource=value,
-                            key=head)
+                            key=path)
                     if key == 'DependsOn' or target.strict_dependency:
                         deps += (self, target)
                 else:
-                    self._add_dependencies(deps, key, value)
+                    self._add_dependencies(deps, '%s.%s' % (path, key), value)
         elif isinstance(fragment, list):
-            for item in fragment:
-                self._add_dependencies(deps, head, item)
+            for index, item in enumerate(fragment):
+                self._add_dependencies(deps, '%s[%d]' % (path, index), item)
 
     def add_dependencies(self, deps):
-        self._add_dependencies(deps, None, self.t)
+        self._add_dependencies(deps, self.name, self.t)
         deps += (self, None)
 
     def required_by(self):

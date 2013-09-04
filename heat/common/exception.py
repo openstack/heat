@@ -236,7 +236,7 @@ class InvalidTemplateAttribute(HeatException):
 
 
 class InvalidTemplateReference(HeatException):
-    message = _("The specified reference (%(resource)s %(key)s)"
+    message = _("The specified reference \"%(resource)s\" (in %(key)s)"
                 " is incorrect.")
 
 
