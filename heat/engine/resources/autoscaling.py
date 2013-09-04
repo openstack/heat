@@ -258,7 +258,7 @@ class InstanceGroup(stack_resource.StackResource):
         '''
         if name == 'InstanceList':
             ips = [inst.FnGetAtt('PublicIp')
-                   for inst in self._nested.resources.values()]
+                   for inst in self.nested().resources.values()]
             if ips:
                 return unicode(','.join(ips))
 
