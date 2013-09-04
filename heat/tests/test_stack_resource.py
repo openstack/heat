@@ -159,8 +159,11 @@ class StackResourceTest(HeatTestCase):
         new_templ = self.simple_template.copy()
         inst_snippet = new_templ["Resources"]["WebServer"].copy()
         new_templ["Resources"]["WebServer2"] = inst_snippet
-        update_result = self.parent_resource.update_with_template(
+        updater = self.parent_resource.update_with_template(
             new_templ, {})
+        updater.run_to_completion()
+        self.assertEqual(True,
+                         self.parent_resource.check_update_complete(updater))
         self.assertEqual(self.stack.state, ('UPDATE', 'COMPLETE'))
         self.assertEqual(set(self.stack.resources.keys()),
                          set(["WebServer", "WebServer2"]))
@@ -185,17 +188,22 @@ class StackResourceTest(HeatTestCase):
         inst_snippet = new_templ["Resources"]["WebServer"].copy()
         new_templ["Resources"]["WebServer2"] = inst_snippet
 
-        def change_state(stack):
+        def update_task():
+            yield
             self.stack.state_set(parser.Stack.UPDATE, parser.Stack.FAILED, '')
 
-        self.m.StubOutWithMock(self.stack, 'update')
-        self.stack.update(mox.IgnoreArg()).WithSideEffects(change_state)
+        self.m.StubOutWithMock(self.stack, 'update_task')
+        self.stack.update_task(mox.IgnoreArg()).AndReturn(update_task())
         self.m.ReplayAll()
 
-        try:
-            self.parent_resource.update_with_template(new_templ, {})
-        except exception.Error as ex:
-            self.assertEqual('Nested stack update failed: ', ex.message)
+        updater = self.parent_resource.update_with_template(new_templ, {})
+        updater.run_to_completion()
+        self.assertEqual((self.stack.UPDATE, self.stack.FAILED),
+                         self.stack.state)
+        ex = self.assertRaises(exception.Error,
+                               self.parent_resource.check_update_complete,
+                               updater)
+        self.assertEqual('Nested stack update failed: ', str(ex))
 
         self.m.VerifyAll()
 

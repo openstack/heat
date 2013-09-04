@@ -214,7 +214,9 @@ class InstanceGroup(stack_resource.StackResource):
         """
         new_template = self._create_template(new_capacity)
         try:
-            self.update_with_template(new_template, {})
+            updater = self.update_with_template(new_template, {})
+            updater.run_to_completion()
+            self.check_update_complete(updater)
         finally:
             # Reload the LB in any case, so it's only pointing at healthy
             # nodes.

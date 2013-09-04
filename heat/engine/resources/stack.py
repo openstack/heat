@@ -73,9 +73,9 @@ class NestedStack(stack_resource.StackResource):
         template_data = urlfetch.get(self.properties[PROP_TEMPLATE_URL])
         template = template_format.parse(template_data)
 
-        self.update_with_template(template,
-                                  self.properties[PROP_PARAMETERS],
-                                  self.properties[PROP_TIMEOUT_MINS])
+        return self.update_with_template(template,
+                                         self.properties[PROP_PARAMETERS],
+                                         self.properties[PROP_TIMEOUT_MINS])
 
 
 def resource_mapping():
