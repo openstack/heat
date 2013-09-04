@@ -36,11 +36,10 @@ def task_description(task):
     Return a human-readable string description of a task suitable for logging
     the status of the task.
     """
-    name = getattr(task, '__name__', None)
+    name = task.__name__ if hasattr(task, '__name__') else None
     if isinstance(task, types.MethodType):
-        obj = getattr(task, '__self__', None)
-        if name is not None and obj is not None:
-            return '%s from %s' % (name, obj)
+        if name is not None and hasattr(task, '__self__'):
+            return '%s from %s' % (name, task.__self__)
     elif isinstance(task, types.FunctionType):
         if name is not None:
             return str(name)
