@@ -137,3 +137,9 @@ class FakeKeystoneClient(object):
 
     def url_for(self, **kwargs):
         return 'http://example.com:1234/v1'
+
+    def create_trust_context(self):
+        pass
+
+    def delete_trust_context(self):
+        pass

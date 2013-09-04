@@ -21,7 +21,6 @@ from heat.tests import fakes
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 
@@ -72,7 +71,7 @@ class SignalTest(HeatTestCase):
     def create_stack(self, stack_name='test_stack', stub=True):
         temp = template_format.parse(test_template_signal)
         template = parser.Template(temp)
-        ctx = context.get_admin_context()
+        ctx = utils.dummy_context()
         ctx.tenant_id = 'test_tenant'
         stack = parser.Stack(ctx, stack_name, template,
                              disable_rollback=True)
@@ -85,6 +84,9 @@ class SignalTest(HeatTestCase):
             self.m.StubOutWithMock(sr.SignalResponder, 'keystone')
             sr.SignalResponder.keystone().MultipleTimes().AndReturn(
                 self.fc)
+
+        self.m.ReplayAll()
+
         return stack
 
     @utils.stack_delete_after

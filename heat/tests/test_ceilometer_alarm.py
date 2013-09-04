@@ -25,7 +25,6 @@ from heat.tests import generic_resource
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-from heat.common import context
 from heat.common import template_format
 
 from heat.openstack.common.importutils import try_import
@@ -105,7 +104,7 @@ class CeilometerAlarmTest(HeatTestCase):
             template = alarm_template
         temp = template_format.parse(template)
         template = parser.Template(temp)
-        ctx = context.get_admin_context()
+        ctx = utils.dummy_context()
         ctx.tenant_id = 'test_tenant'
         stack = parser.Stack(ctx, utils.random_name(), template,
                              disable_rollback=True)

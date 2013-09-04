@@ -24,6 +24,13 @@
 # The directory to search for environment files (string value)
 #environment_dir=/etc/heat/environment.d
 
+# Select deferred auth method, stored password or trusts
+# (string value)
+#deferred_auth_method=password
+
+# Subset of trustor roles to be delegated to heat (list value)
+#trusts_delegated_roles=heat_stack_owner
+
 # Name of the engine node. This can be an opaque identifier.It
 # is not necessarily a hostname, FQDN, or IP address. (string
 # value)
@@ -83,6 +90,17 @@
 # Cloud module to use as a backend. Defaults to OpenStack.
 # (string value)
 #cloud_backend=<None>
+
+
+#
+# Options defined in heat.openstack.common.db.sqlalchemy.session
+#
+
+# the filename to use with sqlite (string value)
+#sqlite_db=heat.sqlite
+
+# If true, use synchronous mode for sqlite (boolean value)
+#sqlite_synchronous=true
 
 
 #
@@ -458,6 +476,55 @@
 # Enable the experimental use of thread pooling for all DB API
 # calls (boolean value)
 #use_tpool=false
+
+
+#
+# Options defined in heat.openstack.common.db.sqlalchemy.session
+#
+
+# The SQLAlchemy connection string used to connect to the
+# database (string value)
+#connection=sqlite:////heat/openstack/common/db/$sqlite_db
+
+# The SQLAlchemy connection string used to connect to the
+# slave database (string value)
+#slave_connection=
+
+# timeout before idle sql connections are reaped (integer
+# value)
+#idle_timeout=3600
+
+# Minimum number of SQL connections to keep open in a pool
+# (integer value)
+#min_pool_size=1
+
+# Maximum number of SQL connections to keep open in a pool
+# (integer value)
+#max_pool_size=<None>
+
+# maximum db connection retries during startup. (setting -1
+# implies an infinite retry count) (integer value)
+#max_retries=10
+
+# interval between retries of opening a sql connection
+# (integer value)
+#retry_interval=10
+
+# If set, use this value for max_overflow with sqlalchemy
+# (integer value)
+#max_overflow=<None>
+
+# Verbosity of SQL debugging information. 0=None,
+# 100=Everything (integer value)
+#connection_debug=0
+
+# Add python stack traces to SQL as comment strings (boolean
+# value)
+#connection_trace=false
+
+# If set, use this value for pool_timeout with sqlalchemy
+# (integer value)
+#pool_timeout=<None>
 
 
 [paste_deploy]

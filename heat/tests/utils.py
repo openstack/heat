@@ -136,6 +136,7 @@ def dummy_context(user='test_username', tenant_id='test_tenant_id',
         'username': user,
         'password': password,
         'roles': roles,
+        'trust_id': 'atrust123',
         'auth_url': 'http://_testnoexisthost_:5000/v2.0',
         'auth_token': 'abcd1234'
     })
