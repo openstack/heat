@@ -378,7 +378,7 @@ class Stack(object):
         else:
             return None
 
-    def update(self, newstack, action=UPDATE):
+    def update(self, newstack):
         '''
         Compare the current stack with newstack,
         and where necessary create/update/delete the resources until
@@ -390,6 +390,11 @@ class Stack(object):
         Update will fail if it exceeds the specified timeout. The default is
         60 minutes, set in the constructor
         '''
+        updater = scheduler.TaskRunner(self.update_task, newstack)
+        updater()
+
+    @scheduler.wrappertask
+    def update_task(self, newstack, action=UPDATE):
         if action not in (self.UPDATE, self.ROLLBACK):
             logger.error("Unexpected action %s passed to update!" % action)
             self.state_set(self.UPDATE, self.FAILED,
@@ -420,7 +425,10 @@ class Stack(object):
             self.parameters = newstack.parameters
 
             try:
-                updater(timeout=self.timeout_secs())
+                updater.start(timeout=self.timeout_secs())
+                yield
+                while not updater.step():
+                    yield
             finally:
                 cur_deps = self._get_dependencies(self.resources.itervalues())
                 self.dependencies = cur_deps
@@ -442,7 +450,7 @@ class Stack(object):
                 # If rollback is enabled, we do another update, with the
                 # existing template, so we roll back to the original state
                 if not self.disable_rollback:
-                    self.update(oldstack, action=self.ROLLBACK)
+                    yield self.update_task(oldstack, action=self.ROLLBACK)
                     return
         else:
             logger.debug('Deleting backup stack')
