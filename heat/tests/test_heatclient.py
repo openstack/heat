@@ -33,7 +33,7 @@ class KeystoneClientTest(HeatTestCase):
         # Import auth_token to have keystone_authtoken settings setup.
         importutils.import_module('keystoneclient.middleware.auth_token')
 
-        dummy_url = 'http://_testnoexisthost_:5000/v2.0'
+        dummy_url = 'http://server.test:5000/v2.0'
         cfg.CONF.set_override('auth_uri', dummy_url,
                               group='keystone_authtoken')
         cfg.CONF.set_override('admin_user', 'heat',
@@ -77,22 +77,22 @@ class KeystoneClientTest(HeatTestCase):
         if method == 'token':
             self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
                 token='abcd1234', project_name='test_tenant',
-                auth_url='http://_testnoexisthost_:5000/v3',
-                endpoint='http://_testnoexisthost_:5000/v3')
+                auth_url='http://server.test:5000/v3',
+                endpoint='http://server.test:5000/v3')
         elif method == 'password':
             self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
                 username='test_username',
                 password='password',
                 project_name='test_tenant',
                 project_id='test_tenant_id',
-                auth_url='http://_testnoexisthost_:5000/v3',
-                endpoint='http://_testnoexisthost_:5000/v3')
+                auth_url='http://server.test:5000/v3',
+                endpoint='http://server.test:5000/v3')
         elif method == 'trust':
             self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
                 username='heat',
                 password='verybadpass',
                 project_name='service',
-                auth_url='http://_testnoexisthost_:5000/v3',
+                auth_url='http://server.test:5000/v3',
                 trust_id='atrust123')
 
         self.mock_ks_v3_client.authenticate().AndReturn(auth_ok)

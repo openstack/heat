@@ -108,7 +108,7 @@ class AutoScalingTest(HeatTestCase):
         super(AutoScalingTest, self).setUp()
         utils.setup_dummy_db()
         cfg.CONF.set_default('heat_waitcondition_server_url',
-                             'http://_testnoexisthost_:8000/v1/waitcondition')
+                             'http://server.test:8000/v1/waitcondition')
         self.fc = fakes.FakeKeystoneClient()
 
     def create_scaling_group(self, t, stack, resource_name):
