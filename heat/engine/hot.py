@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from string import Template
+import string
 
 from heat.common import exception
 from heat.engine import template
@@ -180,8 +180,8 @@ class HOTemplate(template.Template):
         Resolve constructs of the form { get_param: my_param }
         """
         def match_param_ref(key, value):
-            return (key == 'get_param' and
-                    isinstance(value, basestring) and
+            return (key in ['get_param', 'Ref'] and
+                    value is not None and
                     value in parameters)
 
         def handle_param_ref(ref):
@@ -198,7 +198,7 @@ class HOTemplate(template.Template):
         Resolve constructs of the form { "get_resource" : "resource" }
         '''
         def match_resource_ref(key, value):
-            return key == 'get_resource' and value in resources
+            return key in ['get_resource', 'Ref'] and value in resources
 
         def handle_resource_ref(arg):
             return resources[arg].FnGetRefId()
@@ -211,10 +211,10 @@ class HOTemplate(template.Template):
         Resolve constructs of the form { get_attr: [my_resource, my_attr] }
         """
         def match_get_attr(key, value):
-            return (key == 'get_attr' and
+            return (key in ['get_attr', 'Fn::GetAtt'] and
                     isinstance(value, list) and
                     len(value) == 2 and
-                    isinstance(value[0], basestring) and
+                    None not in value and
                     value[0] in resources)
 
         def handle_get_attr(args):
@@ -246,31 +246,41 @@ class HOTemplate(template.Template):
               <param dictionary>
         """
         def handle_str_replace(args):
-            if not isinstance(args, dict):
+            if not (isinstance(args, dict) or isinstance(args, list)):
                 raise TypeError('Arguments to "str_replace" must be a'
-                                'dictionary')
+                                'dictionary or a list')
 
             try:
-                template = args['template']
-                params = args['params']
+                if isinstance(args, dict):
+                    text = args.get('template')
+                    params = args.get('params', {})
+                elif isinstance(args, list):
+                    params, text = args
+                if text is None:
+                    raise KeyError()
             except KeyError:
                 example = ('''str_replace:
                   template: This is $var1 template $var2
                   params:
-                    - var1: a
-                    - var2: string''')
+                    var1: a
+                    var2: string''')
                 raise KeyError('"str_replace" syntax should be %s' %
                                example)
-
-            if not isinstance(template, basestring):
+            if not hasattr(text, 'replace'):
                 raise TypeError('"template" parameter must be a string')
             if not isinstance(params, dict):
                 raise TypeError(
                     '"params" parameter must be a dictionary')
+            if isinstance(args, list):
+                for key in params.iterkeys():
+                    value = params.get(key, '')
+                    text = text.replace(key, value)
+                return text
 
-            return Template(template).substitute(params)
+            return string.Template(text).safe_substitute(params)
 
-        return template._resolve(lambda k, v: k == 'str_replace',
+        match_str_replace = lambda k, v: k in ['str_replace', 'Fn::Replace']
+        return template._resolve(match_str_replace,
                                  handle_str_replace, s)
 
     def param_schemata(self):
