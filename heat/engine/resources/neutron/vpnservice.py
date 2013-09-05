@@ -164,11 +164,95 @@ class IKEPolicy(neutron.NeutronResource):
             return scheduler.TaskRunner(self._confirm_delete)()
 
 
+class IPsecPolicy(neutron.NeutronResource):
+    """
+    A resource for IPsec policy in Neutron.
+    """
+
+    lifetime_schema = {
+        'units': {'Type': 'String', 'AllowedValues': ['seconds', 'kilobytes'],
+                  'Default': 'seconds'},
+        'value': {'Type': 'Integer', 'Default': 3600},
+    }
+
+    properties_schema = {'name': {'Type': 'String'},
+                         'description': {'Type': 'String'},
+                         'transform_protocol': {'Type': 'String',
+                                                'AllowedValues': ['esp', 'ah',
+                                                                  'ah-esp'],
+                                                'Default': 'esp'},
+                         'encapsulation_mode': {'Type': 'String',
+                                                'AllowedValues': ['tunnel',
+                                                                  'transport'],
+                                                'Default': 'tunnel'},
+                         'auth_algorithm': {'Type': 'String',
+                                            'AllowedValues': ['sha1'],
+                                            'Default': 'sha1'},
+                         'encryption_algorithm': {'Type': 'String',
+                                                  'AllowedValues': ['3des',
+                                                                    'aes-128',
+                                                                    'aes-192',
+                                                                    'aes-256'],
+                                                  'Default': 'aes-128'},
+                         'lifetime': {'Type': 'Map',
+                                      'Schema': lifetime_schema},
+                         'pfs': {'Type': 'String',
+                                 'AllowedValues': ['group2', 'group5',
+                                                   'group14'],
+                                 'Default': 'group5'}}
+
+    attributes_schema = {
+        'auth_algorithm': 'authentication hash algorithm used by the ipsec'
+                          ' policy',
+        'description': 'description of the ipsec policy',
+        'encapsulation_mode': 'encapsulation mode for the ipsec policy',
+        'encryption_algorithm': 'encryption algorithm for the ipsec policy',
+        'id': 'unique identifier for this ipsec policy',
+        'lifetime': 'configuration of safety assessment lifetime for the ipsec'
+                    ' policy',
+        'name': 'name for the ipsec policy',
+        'pfs': 'perfect forward secrecy for the ipsec policy',
+        'tenant_id': 'tenant owning the ipsec policy',
+        'transform_protocol': 'transform protocol for the ipsec policy'
+    }
+
+    update_allowed_keys = ('Properties',)
+
+    update_allowed_properties = ('name', 'description',)
+
+    def _show_resource(self):
+        return self.neutron().show_ipsecpolicy(self.resource_id)['ipsecpolicy']
+
+    def handle_create(self):
+        props = self.prepare_properties(
+            self.properties,
+            self.physical_resource_name())
+        ipsecpolicy = self.neutron().create_ipsecpolicy(
+            {'ipsecpolicy': props})['ipsecpolicy']
+        self.resource_id_set(ipsecpolicy['id'])
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            self.neutron().update_ipsecpolicy(self.resource_id,
+                                              {'ipsecpolicy': prop_diff})
+
+    def handle_delete(self):
+        client = self.neutron()
+        try:
+            client.delete_ipsecpolicy(self.resource_id)
+        except NeutronClientException as ex:
+            if ex.status_code != 404:
+                raise ex
+        else:
+            return scheduler.TaskRunner(self._confirm_delete)()
+
+
 def resource_mapping():
     if clients.neutronclient is None:
         return {}
 
     return {
         'OS::Neutron::VPNService': VPNService,
-        'OS::Neutron::IKEPolicy': IKEPolicy
+        'OS::Neutron::IKEPolicy': IKEPolicy,
+        'OS::Neutron::IPsecPolicy': IPsecPolicy
     }

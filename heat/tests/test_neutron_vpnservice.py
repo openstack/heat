@@ -75,6 +75,32 @@ ikepolicy_template = '''
 }
 '''
 
+ipsecpolicy_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test IPsec policy resource",
+  "Parameters" : {},
+  "Resources" : {
+    "IPsecPolicy" : {
+      "Type" : "OS::Neutron::IPsecPolicy",
+      "Properties" : {
+        "name" : "IPsecPolicy",
+        "description" : "My new IPsec policy",
+        "transform_protocol": "esp",
+        "encapsulation_mode" : "tunnel",
+        "auth_algorithm" : "sha1",
+        "encryption_algorithm" : "3des",
+        "lifetime" : {
+            "units" : "seconds",
+            "value" : 3600
+        },
+        "pfs" : "group5"
+      }
+    }
+  }
+}
+'''
+
 
 @skipIf(neutronclient is None, 'neutronclient unavailable')
 class VPNServiceTest(HeatTestCase):
@@ -364,5 +390,158 @@ class IKEPolicyTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         update_template = copy.deepcopy(rsrc.t)
         update_template['Properties']['name'] = 'New IKEPolicy'
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.m.VerifyAll()
+
+
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class IPsecPolicyTest(HeatTestCase):
+
+    IPSEC_POLICY_CONF = {
+        'ipsecpolicy': {
+            'name': 'IPsecPolicy',
+            'description': 'My new IPsec policy',
+            'transform_protocol': 'esp',
+            'encapsulation_mode': 'tunnel',
+            'auth_algorithm': 'sha1',
+            'encryption_algorithm': '3des',
+            'lifetime': {
+                'units': 'seconds',
+                'value': 3600
+            },
+            'pfs': 'group5'
+        }
+    }
+
+    def setUp(self):
+        super(IPsecPolicyTest, self).setUp()
+        self.m.StubOutWithMock(neutronclient.Client, 'create_ipsecpolicy')
+        self.m.StubOutWithMock(neutronclient.Client, 'delete_ipsecpolicy')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_ipsecpolicy')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_ipsecpolicy')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        utils.setup_dummy_db()
+
+    def create_ipsecpolicy(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_ipsecpolicy(
+            self.IPSEC_POLICY_CONF).AndReturn(
+                {'ipsecpolicy': {'id': 'ips123'}})
+        snippet = template_format.parse(ipsecpolicy_template)
+        self.stack = utils.parse_stack(snippet)
+        return vpnservice.IPsecPolicy('ipsecpolicy',
+                                      snippet['Resources']['IPsecPolicy'],
+                                      self.stack)
+
+    @utils.stack_delete_after
+    def test_create(self):
+        rsrc = self.create_ipsecpolicy()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_create_failed(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_ipsecpolicy(
+            self.IPSEC_POLICY_CONF).AndRaise(
+                vpnservice.NeutronClientException())
+        self.m.ReplayAll()
+        snippet = template_format.parse(ipsecpolicy_template)
+        self.stack = utils.parse_stack(snippet)
+        rsrc = vpnservice.IPsecPolicy(
+            'ipsecpolicy',
+            snippet['Resources']['IPsecPolicy'],
+            self.stack)
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.create))
+        self.assertEqual(
+            'NeutronClientException: An unknown exception occurred.',
+            str(error))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_delete(self):
+        neutronclient.Client.delete_ipsecpolicy('ips123')
+        neutronclient.Client.show_ipsecpolicy('ips123').AndRaise(
+            vpnservice.NeutronClientException(status_code=404))
+        rsrc = self.create_ipsecpolicy()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_delete_already_gone(self):
+        neutronclient.Client.delete_ipsecpolicy('ips123').AndRaise(
+            vpnservice.NeutronClientException(status_code=404))
+        rsrc = self.create_ipsecpolicy()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_delete_failed(self):
+        neutronclient.Client.delete_ipsecpolicy('ips123').AndRaise(
+            vpnservice.NeutronClientException(status_code=400))
+        rsrc = self.create_ipsecpolicy()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.delete))
+        self.assertEqual(
+            'NeutronClientException: An unknown exception occurred.',
+            str(error))
+        self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_attribute(self):
+        rsrc = self.create_ipsecpolicy()
+        neutronclient.Client.show_ipsecpolicy(
+            'ips123').MultipleTimes().AndReturn(self.IPSEC_POLICY_CONF)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual('IPsecPolicy', rsrc.FnGetAtt('name'))
+        self.assertEqual('My new IPsec policy', rsrc.FnGetAtt('description'))
+        self.assertEqual('esp', rsrc.FnGetAtt('transform_protocol'))
+        self.assertEqual('tunnel', rsrc.FnGetAtt('encapsulation_mode'))
+        self.assertEqual('sha1', rsrc.FnGetAtt('auth_algorithm'))
+        self.assertEqual('3des', rsrc.FnGetAtt('encryption_algorithm'))
+        self.assertEqual('seconds', rsrc.FnGetAtt('lifetime')['units'])
+        self.assertEqual(3600, rsrc.FnGetAtt('lifetime')['value'])
+        self.assertEqual('group5', rsrc.FnGetAtt('pfs'))
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_attribute_failed(self):
+        rsrc = self.create_ipsecpolicy()
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        error = self.assertRaises(exception.InvalidTemplateAttribute,
+                                  rsrc.FnGetAtt, 'non-existent_property')
+        self.assertEqual(
+            'The Referenced Attribute (ipsecpolicy non-existent_property) is '
+            'incorrect.',
+            str(error))
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_update(self):
+        rsrc = self.create_ipsecpolicy()
+        neutronclient.Client.update_ipsecpolicy(
+            'ips123',
+            {'ipsecpolicy': {'name': 'New IPsecPolicy'}})
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['name'] = 'New IPsecPolicy'
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()
