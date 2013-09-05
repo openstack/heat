@@ -91,6 +91,7 @@ class ProviderTemplateTest(HeatTestCase):
             'Parameters': {
                 'Foo': {'Type': 'String'},
                 'AList': {'Type': 'CommaDelimitedList'},
+                'ListEmpty': {'Type': 'CommaDelimitedList'},
                 'ANum': {'Type': 'Number'},
                 'AMap': {'Type': 'Json'},
             },
@@ -106,6 +107,7 @@ class ProviderTemplateTest(HeatTestCase):
             properties_schema = {
                 "Foo": {"Type": "String"},
                 "AList": {"Type": "List"},
+                "ListEmpty": {"Type": "List"},
                 "ANum": {"Type": "Number"},
                 "AMap": {"Type": "Map"}
             }
@@ -131,6 +133,7 @@ class ProviderTemplateTest(HeatTestCase):
             "Properties": {
                 "Foo": "Bar",
                 "AList": ["one", "two", "three"],
+                "ListEmpty": [],
                 "ANum": 5,
                 "AMap": map_prop_val
             }

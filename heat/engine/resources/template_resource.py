@@ -72,7 +72,9 @@ class TemplateResource(stack_resource.StackResource):
             if val is not None:
                 # take a list and create a CommaDelimitedList
                 if v.type() == properties.LIST:
-                    if isinstance(val[0], dict):
+                    if len(val) == 0:
+                        val = ''
+                    elif isinstance(val[0], dict):
                         flattened = []
                         for (i, item) in enumerate(val):
                             for (k, v) in iter(item.items()):
