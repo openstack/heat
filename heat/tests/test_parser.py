@@ -18,6 +18,7 @@ import time
 from heat.engine import environment
 from heat.common import exception
 from heat.common import template_format
+from heat.common import urlfetch
 from heat.engine import clients
 from heat.engine import resource
 from heat.engine import parser
@@ -519,6 +520,8 @@ Mappings:
         parent_resource.metadata = '{"foo": "bar"}'
         parent_resource.t = {'DeletionPolicy': 'Retain',
                              'UpdatePolicy': '{"foo": "bar"}'}
+        parent_resource.stack = parser.Stack(self.ctx, 'toplevel_stack',
+                                             parser.Template({}))
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template({}),
                              parent_resource=parent_resource)
@@ -548,6 +551,8 @@ Mappings:
         parent_resource = DummyClass()
         parent_resource.metadata = '{"foo": "bar"}'
         parent_resource.t = {}
+        parent_resource.stack = parser.Stack(self.ctx, 'toplevel_stack',
+                                             parser.Template({}))
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template({}),
                              parent_resource=parent_resource)
@@ -625,6 +630,54 @@ class StackTest(HeatTestCase):
     def test_load_nonexistant_id(self):
         self.assertRaises(exception.NotFound, parser.Stack.load,
                           None, -1)
+
+    def test_total_resources_empty(self):
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
+                             status_reason='flimflam')
+        self.assertEqual(0, stack.total_resources())
+
+    def test_total_resources_generic(self):
+        tpl = {'Resources':
+               {'A': {'Type': 'GenericResourceType'}}}
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
+                             status_reason='blarg')
+        self.assertEqual(1, stack.total_resources())
+
+    def _setup_nested(self, name):
+        nested_tpl = ('{"Resources":{'
+                      '"A": {"Type": "GenericResourceType"},'
+                      '"B": {"Type": "GenericResourceType"}}}')
+        tpl = {'Resources':
+               {'A': {'Type': 'AWS::CloudFormation::Stack',
+                      'Properties':
+                      {'TemplateURL': 'http://server.test/nested.json'}},
+                'B': {'Type': 'GenericResourceType'}}}
+        self.m.StubOutWithMock(urlfetch, 'get')
+        urlfetch.get('http://server.test/nested.json').AndReturn(nested_tpl)
+        self.m.ReplayAll()
+        self.stack = parser.Stack(self.ctx, 'test_stack', parser.Template(tpl),
+                                  status_reason=name)
+        self.stack.store()
+        self.stack.create()
+
+    @utils.stack_delete_after
+    def test_total_resources_nested(self):
+        self._setup_nested('zyzzyx')
+        self.assertEqual(4, self.stack.total_resources())
+        self.assertNotEqual(None, self.stack.resources['A'].nested())
+        self.assertEqual(
+            2, self.stack.resources['A'].nested().total_resources())
+        self.assertEqual(
+            4,
+            self.stack.resources['A'].nested().root_stack.total_resources())
+
+    @utils.stack_delete_after
+    def test_root_stack(self):
+        self._setup_nested('toor')
+        self.assertEqual(self.stack, self.stack.root_stack)
+        self.assertNotEqual(None, self.stack.resources['A'].nested())
+        self.assertEqual(
+            self.stack, self.stack.resources['A'].nested().root_stack)
 
     @utils.stack_delete_after
     def test_load_parent_resource(self):
