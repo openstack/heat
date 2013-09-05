@@ -45,3 +45,4 @@ class HeatTestCase(testtools.TestCase):
                                'environment.d')
 
         cfg.CONF.set_default('environment_dir', env_dir)
+        self.addCleanup(cfg.CONF.reset)
