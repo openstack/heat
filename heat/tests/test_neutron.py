@@ -519,7 +519,7 @@ class NeutronSubnetTest(HeatTestCase):
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
         self.assertEqual(False, rsrc.FnGetAtt('enable_dhcp'))
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
 
@@ -698,9 +698,9 @@ class NeutronRouterTest(HeatTestCase):
                 'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'
             })
 
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_gateway_router(self):
@@ -731,9 +731,9 @@ class NeutronRouterTest(HeatTestCase):
                 'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
             })
 
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
 
@@ -808,9 +808,9 @@ class NeutronFloatingIPTest(HeatTestCase):
                          fip.FnGetAtt('id'))
         self.assertRaises(resource.UpdateReplace,
                           fip.handle_update, {}, {}, {})
-        self.assertEqual(fip.delete(), None)
+        scheduler.TaskRunner(fip.delete)()
         fip.state_set(fip.CREATE, fip.COMPLETE, 'to delete again')
-        self.assertEqual(fip.delete(), None)
+        scheduler.TaskRunner(fip.delete)()
 
         self.m.VerifyAll()
 
@@ -976,16 +976,16 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace,
                           fipa.handle_update, {}, {}, {})
 
-        self.assertEqual(fipa.delete(), None)
-        self.assertEqual(scheduler.TaskRunner(p.delete)(), None)
-        self.assertEqual(fip.delete(), None)
+        scheduler.TaskRunner(fipa.delete)()
+        scheduler.TaskRunner(p.delete)()
+        scheduler.TaskRunner(fip.delete)()
 
         fipa.state_set(fipa.CREATE, fipa.COMPLETE, 'to delete again')
         fip.state_set(fip.CREATE, fip.COMPLETE, 'to delete again')
         p.state_set(p.CREATE, p.COMPLETE, 'to delete again')
 
-        self.assertEqual(fipa.delete(), None)
+        scheduler.TaskRunner(fipa.delete)()
         self.assertEqual(scheduler.TaskRunner(p.delete)(), None)
-        self.assertEqual(fip.delete(), None)
+        scheduler.TaskRunner(fip.delete)()
 
         self.m.VerifyAll()

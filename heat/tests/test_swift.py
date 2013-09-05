@@ -160,7 +160,7 @@ class swiftTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
 
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_public_read(self):
@@ -179,7 +179,7 @@ class swiftTest(HeatTestCase):
         properties['X-Container-Read'] = '.r:*'
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_public_read_write(self):
@@ -199,7 +199,7 @@ class swiftTest(HeatTestCase):
         properties['X-Container-Write'] = '.r:*'
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_website(self):
@@ -218,7 +218,7 @@ class swiftTest(HeatTestCase):
         t = template_format.parse(swift_template)
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainerWebsite')
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_delete_exception(self):
@@ -236,7 +236,7 @@ class swiftTest(HeatTestCase):
         t = template_format.parse(swift_template)
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 
@@ -257,7 +257,7 @@ class swiftTest(HeatTestCase):
         container['DeletionPolicy'] = 'Retain'
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainer')
-        rsrc.delete()
+        scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()

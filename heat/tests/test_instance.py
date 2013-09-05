@@ -295,7 +295,7 @@ class InstancesTest(HeatTestCase):
         get().AndRaise(instances.clients.novaclient.exceptions.NotFound(404))
         mox.Replay(get)
 
-        instance.delete()
+        scheduler.TaskRunner(instance.delete)()
         self.assertTrue(instance.resource_id is None)
         self.assertEqual(instance.state, (instance.DELETE, instance.COMPLETE))
         self.m.VerifyAll()

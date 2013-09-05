@@ -20,6 +20,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources import instance as instances
 from heat.engine import parser
+from heat.engine import scheduler
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -136,7 +137,7 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertNotEqual(encrypted_key, "fake secret")
         decrypted_key = cs.my_secret
         self.assertEqual(decrypted_key, "fake secret")
-        cs.destroy()
+        scheduler.TaskRunner(cs.destroy)()
 
     def test_resource_data_delete(self):
         stack = self._setup_test_stack('stack', UUID1)[1]

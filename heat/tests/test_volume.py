@@ -146,13 +146,14 @@ class VolumeTest(HeatTestCase):
                           rsrc.handle_update, {}, {}, {})
 
         fv.status = 'in-use'
-        self.assertRaises(exception.ResourceFailure, rsrc.destroy)
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.destroy))
         fv.status = 'available'
-        self.assertEqual(rsrc.destroy(), None)
+        scheduler.TaskRunner(rsrc.destroy)()
 
         # Test when volume already deleted
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
-        self.assertEqual(rsrc.destroy(), None)
+        scheduler.TaskRunner(rsrc.destroy)()
 
         self.m.VerifyAll()
 
@@ -194,7 +195,7 @@ class VolumeTest(HeatTestCase):
         scheduler.TaskRunner(stack.create)()
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
-        self.assertEqual(stack.delete(), None)
+        scheduler.TaskRunner(stack.delete)()
 
         self.m.VerifyAll()
 
@@ -271,7 +272,7 @@ class VolumeTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
 
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 
@@ -317,7 +318,7 @@ class VolumeTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
 
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 
@@ -343,7 +344,7 @@ class VolumeTest(HeatTestCase):
         scheduler.TaskRunner(stack['DataVolume'].create)()
         rsrc = self.create_attachment(t, stack, 'MountPoint')
 
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 
@@ -373,7 +374,7 @@ class VolumeTest(HeatTestCase):
         self.assertEqual(fv.status, 'available')
         rsrc = self.create_attachment(t, stack, 'MountPoint')
 
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 
@@ -428,7 +429,7 @@ class VolumeTest(HeatTestCase):
 
         rsrc = self.create_volume(t, stack, 'DataVolume')
 
-        self.assertEqual(rsrc.destroy(), None)
+        scheduler.TaskRunner(rsrc.destroy)()
 
         self.m.VerifyAll()
 
@@ -452,7 +453,8 @@ class VolumeTest(HeatTestCase):
 
         rsrc = self.create_volume(t, stack, 'DataVolume')
 
-        self.assertRaises(exception.ResourceFailure, rsrc.destroy)
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(rsrc.destroy))
 
         self.m.VerifyAll()
 
@@ -479,7 +481,7 @@ class VolumeTest(HeatTestCase):
         create = scheduler.TaskRunner(rsrc.create)
         self.assertRaises(exception.ResourceFailure, create)
 
-        self.assertEqual(rsrc.destroy(), None)
+        scheduler.TaskRunner(rsrc.destroy)()
 
         self.m.VerifyAll()
 
@@ -713,7 +715,7 @@ class VolumeTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace, rsrc.handle_update,
                           {}, {}, {})
 
-        self.assertEqual(rsrc.delete(), None)
+        scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 

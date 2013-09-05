@@ -259,7 +259,8 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
 
         scheduler.TaskRunner._sleep(mox.IsA(int)).WithSideEffects(check_empty)
         scheduler.TaskRunner._sleep(mox.IsA(int)).WithSideEffects(post_success)
-        scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
+        scheduler.TaskRunner._sleep(mox.IsA(int)).MultipleTimes().AndReturn(
+            None)
 
         self.m.ReplayAll()
         self.stack.create()

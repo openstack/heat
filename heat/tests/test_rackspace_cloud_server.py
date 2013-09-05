@@ -300,7 +300,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         get().AndRaise(novaclient.exceptions.NotFound(404))
         mox.Replay(get)
 
-        cs.delete()
+        scheduler.TaskRunner(cs.delete)()
         self.assertTrue(cs.resource_id is None)
         self.assertEqual(cs.state, (cs.DELETE, cs.COMPLETE))
         self.m.VerifyAll()

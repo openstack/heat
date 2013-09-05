@@ -129,20 +129,20 @@ class UserTest(UserPolicyTestCase):
         self.assertEqual(None, rsrc.handle_resume())
 
         rsrc.resource_id = None
-        self.assertEqual(None, rsrc.delete())
+        scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         rsrc.resource_id = self.fc.access
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        self.assertEqual(None, rsrc.delete())
+        scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        self.assertEqual(None, rsrc.delete())
+        scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
@@ -303,7 +303,7 @@ class AccessKeyTest(UserPolicyTestCase):
 
         self.assertRaises(exception.InvalidTemplateAttribute,
                           rsrc.FnGetAtt, 'Foo')
-        self.assertEqual(None, rsrc.delete())
+        scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
     def test_access_key_deleted(self):
@@ -326,7 +326,7 @@ class AccessKeyTest(UserPolicyTestCase):
         self.fc.delete_ec2_keypair(self.fc.user_id,
                                    rsrc.resource_id).AndRaise(NotFound('Gone'))
         self.m.ReplayAll()
-        self.assertEqual(None, rsrc.delete())
+        scheduler.TaskRunner(rsrc.delete)()
 
         self.m.VerifyAll()
 
@@ -346,7 +346,7 @@ class AccessKeyTest(UserPolicyTestCase):
         self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
 
-        self.assertEqual(None, rsrc.delete())
+        scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
