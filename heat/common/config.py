@@ -97,8 +97,10 @@ engine_opts = [
                       'stored password or trusts')),
     cfg.ListOpt('trusts_delegated_roles',
                 default=['heat_stack_owner'],
-                help=_('Subset of trustor roles to be delegated to heat'))]
-
+                help=_('Subset of trustor roles to be delegated to heat')),
+    cfg.IntOpt('max_resources_per_stack',
+               default=1000,
+               help='Maximum resources allowed per top-level stack.')]
 
 rpc_opts = [
     cfg.StrOpt('host',
