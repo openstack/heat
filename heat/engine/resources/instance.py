@@ -383,6 +383,24 @@ class Instance(resource.Resource):
         # make sure the image exists.
         nova_utils.get_image_id(self.nova(), self.properties['ImageId'])
 
+    @scheduler.wrappertask
+    def _delete_server(self, server):
+        '''
+        Return a co-routine that deletes the server and waits for it to
+        disappear from Nova.
+        '''
+        yield self._detach_volumes_task()()
+        server.delete()
+
+        while True:
+            yield
+
+            try:
+                server.get()
+            except clients.novaclient.exceptions.NotFound:
+                self.resource_id = None
+                break
+
     def _detach_volumes_task(self):
         '''
         Detach volumes from the instance
@@ -400,18 +418,23 @@ class Instance(resource.Resource):
         if self.resource_id is None:
             return
 
-        scheduler.TaskRunner(self._detach_volumes_task())()
-
         try:
             server = self.nova().servers.get(self.resource_id)
         except clients.novaclient.exceptions.NotFound:
-            pass
-        else:
-            delete = scheduler.TaskRunner(
-                nova_utils.delete_server, server)
-            delete(wait_time=0.2)
+            self.resource_id = None
+            return
 
-        self.resource_id = None
+        server_delete_task = scheduler.TaskRunner(self._delete_server,
+                                                  server=server)
+        server_delete_task.start()
+        return server_delete_task
+
+    def check_delete_complete(self, server_delete_task):
+        # if the resource was already deleted, server_delete_task will be None
+        if server_delete_task is None:
+            return True
+        else:
+            return server_delete_task.step()
 
     def handle_suspend(self):
         '''
