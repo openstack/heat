@@ -23,6 +23,8 @@ import testtools
 from oslo.config import cfg
 
 import heat.engine.scheduler as scheduler
+from heat.engine import environment
+from heat.engine import resources
 
 
 class HeatTestCase(testtools.TestCase):
@@ -46,3 +48,13 @@ class HeatTestCase(testtools.TestCase):
 
         cfg.CONF.set_default('environment_dir', env_dir)
         self.addCleanup(cfg.CONF.reset)
+
+        tri = resources.global_env().get_resource_info(
+            'AWS::RDS::DBInstance',
+            registry_type=environment.TemplateResourceInfo)
+        if tri is not None:
+            cur_path = tri.template_name
+            templ_path = os.path.join(project_dir, 'etc', 'heat', 'templates')
+            if templ_path not in cur_path:
+                tri.template_name = cur_path.replace('/etc/heat/templates',
+                                                     templ_path)
