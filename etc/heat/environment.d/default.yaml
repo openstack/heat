@@ -6,3 +6,4 @@ resource_registry:
     #"AWS::CloudWatch::Alarm": "file:///etc/heat/templates/AWS_CloudWatch_Alarm.yaml"
     "AWS::CloudWatch::Alarm": "OS::Heat::CWLiteAlarm"
     "OS::Metering::Alarm": "OS::Ceilometer::Alarm"
+    "AWS::RDS::DBInstance": "file:///etc/heat/templates/AWS_RDS_DBInstance.yaml"

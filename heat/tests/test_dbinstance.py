@@ -12,15 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import mox
-
-from heat.common import exception
 from heat.common import template_format
-from heat.engine import scheduler
-from heat.engine.resources import dbinstance as dbi
+from heat.engine import resource
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from heat.engine import parser
 
 
 rds_template = '''
@@ -52,64 +48,71 @@ rds_template = '''
 '''
 
 
+class DBInstance(resource.Resource):
+    """This is copied from the old DBInstance
+    to verify the schema of the new TemplateResource.
+    """
+    properties_schema = {
+        'DBSnapshotIdentifier': {'Type': 'String',
+                                 'Implemented': False},
+        'AllocatedStorage': {'Type': 'String',
+                             'Required': True},
+        'AvailabilityZone': {'Type': 'String',
+                             'Implemented': False},
+        'BackupRetentionPeriod': {'Type': 'String',
+                                  'Implemented': False},
+        'DBInstanceClass': {'Type': 'String',
+                            'Required': True},
+        'DBName': {'Type': 'String',
+                   'Required': False},
+        'DBParameterGroupName': {'Type': 'String',
+                                 'Implemented': False},
+        'DBSecurityGroups': {'Type': 'List',
+                             'Required': False, 'Default': []},
+        'DBSubnetGroupName': {'Type': 'String',
+                              'Implemented': False},
+        'Engine': {'Type': 'String',
+                   'AllowedValues': ['MySQL'],
+                   'Required': True},
+        'EngineVersion': {'Type': 'String',
+                          'Implemented': False},
+        'LicenseModel': {'Type': 'String',
+                         'Implemented': False},
+        'MasterUsername': {'Type': 'String',
+                           'Required': True},
+        'MasterUserPassword': {'Type': 'String',
+                               'Required': True},
+        'Port': {'Type': 'String',
+                 'Default': '3306',
+                 'Required': False},
+        'PreferredBackupWindow': {'Type': 'String',
+                                  'Implemented': False},
+        'PreferredMaintenanceWindow': {'Type': 'String',
+                                       'Implemented': False},
+        'MultiAZ': {'Type': 'Boolean',
+                    'Implemented': False},
+    }
+
+    # We only support a couple of the attributes right now
+    attributes_schema = {
+        "Endpoint.Address": "Connection endpoint for the database.",
+        "Endpoint.Port": ("The port number on which the database accepts "
+                          "connections.")
+    }
+
+
 class DBInstanceTest(HeatTestCase):
     def setUp(self):
         super(DBInstanceTest, self).setUp()
         utils.setup_dummy_db()
-        self.m.StubOutWithMock(dbi.DBInstance, 'create_with_template')
-        self.m.StubOutWithMock(dbi.DBInstance, 'check_create_complete')
-        self.m.StubOutWithMock(dbi.DBInstance, 'nested')
-
-    def create_dbinstance(self, t, stack, resource_name):
-        resource = dbi.DBInstance(resource_name,
-                                  t['Resources'][resource_name],
-                                  stack)
-        self.assertEqual(None, resource.validate())
-        scheduler.TaskRunner(resource.create)()
-        self.assertEqual((resource.CREATE, resource.COMPLETE), resource.state)
-        return resource
 
     def test_dbinstance(self):
+        """test that the Template is parsable and
+        publishes the correct properties.
+        """
+        templ = parser.Template(template_format.parse(rds_template))
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             templ)
 
-        class FakeDatabaseInstance(object):
-            def _ipaddress(self):
-                return '10.0.0.1'
-
-        class FakeNested(object):
-            resources = {'DatabaseInstance': FakeDatabaseInstance()}
-
-        params = {'DBSecurityGroups': '',
-                  'MasterUsername': u'admin',
-                  'MasterUserPassword': u'admin',
-                  'DBName': u'wordpress',
-                  'KeyName': u'test',
-                  'AllocatedStorage': u'5',
-                  'DBInstanceClass': u'db.m1.small',
-                  'Port': '3306'}
-
-        dbi.DBInstance.create_with_template(mox.IgnoreArg(),
-                                            params).AndReturn(None)
-        dbi.DBInstance.check_create_complete(mox.IgnoreArg()).AndReturn(True)
-
-        fn = FakeNested()
-
-        dbi.DBInstance.nested().AndReturn(None)
-        dbi.DBInstance.nested().MultipleTimes().AndReturn(fn)
-        self.m.ReplayAll()
-
-        t = template_format.parse(rds_template)
-        s = utils.parse_stack(t)
-        resource = self.create_dbinstance(t, s, 'DatabaseServer')
-
-        self.assertEqual('0.0.0.0', resource.FnGetAtt('Endpoint.Address'))
-        self.assertEqual('10.0.0.1', resource.FnGetAtt('Endpoint.Address'))
-        self.assertEqual('3306', resource.FnGetAtt('Endpoint.Port'))
-
-        try:
-            resource.FnGetAtt('foo')
-        except exception.InvalidTemplateAttribute:
-            pass
-        else:
-            raise Exception('Expected InvalidTemplateAttribute')
-
-        self.m.VerifyAll()
+        res = stack['DatabaseServer']
+        self.assertEquals(None, res._validate_against_facade(DBInstance))
