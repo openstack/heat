@@ -21,6 +21,7 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import template as tmpl
 
 from heat.openstack.common import log as logging
 
@@ -75,6 +76,10 @@ class StackResource(resource.Resource):
                 cfg.CONF.max_nested_stack_depth
             raise exception.RequestLimitExceeded(message=msg)
         template = parser.Template(child_template)
+        if ((len(template[tmpl.RESOURCES]) +
+             self.stack.root_stack.total_resources() >
+             cfg.CONF.max_resources_per_stack)):
+            raise exception.StackResourceLimitExceeded()
         self._outputs_to_attribs(child_template)
 
         # Note we disable rollback for nested stacks, since they
