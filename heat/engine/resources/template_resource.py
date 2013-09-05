@@ -158,7 +158,7 @@ class TemplateResource(stack_resource.StackResource):
                                          self._to_parameters())
 
     def handle_delete(self):
-        self.delete_nested()
+        return self.delete_nested()
 
     def FnGetRefId(self):
         if not self.nested():

@@ -164,7 +164,22 @@ class StackResource(resource.Resource):
             logger.info("Stack not found to delete")
         else:
             if stack is not None:
-                stack.delete()
+                delete_task = scheduler.TaskRunner(stack.delete)
+                delete_task.start()
+                return delete_task
+
+    def check_delete_complete(self, delete_task):
+        if delete_task is None:
+            return True
+
+        done = delete_task.step()
+        if done:
+            nested_stack = self.nested()
+            if nested_stack.state != (nested_stack.DELETE,
+                                      nested_stack.COMPLETE):
+                raise exception.Error(nested_stack.status_reason)
+
+        return done
 
     def handle_suspend(self):
         stack = self.nested()

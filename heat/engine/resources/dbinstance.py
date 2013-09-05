@@ -223,7 +223,7 @@ class DBInstance(stack_resource.StackResource):
         return self.create_with_template(templ, self._params())
 
     def handle_delete(self):
-        self.delete_nested()
+        return self.delete_nested()
 
     def _resolve_attribute(self, name):
         '''

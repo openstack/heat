@@ -52,7 +52,7 @@ class NestedStack(stack_resource.StackResource):
                                          self.properties[PROP_TIMEOUT_MINS])
 
     def handle_delete(self):
-        self.delete_nested()
+        return self.delete_nested()
 
     def FnGetAtt(self, key):
         if key and not key.startswith('Outputs.'):
