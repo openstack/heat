@@ -300,6 +300,8 @@ class EngineService(service.Service):
         # Now parse the template and any parameters for the updated
         # stack definition.
         tmpl = parser.Template(template, files=files)
+        if len(tmpl[tpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
+            raise exception.StackResourceLimitExceeded()
         stack_name = current_stack.name
         common_params = api.extract_args(args)
         env = environment.Environment(params)
