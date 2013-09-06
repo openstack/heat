@@ -82,11 +82,6 @@ class KeystonePasswordAuthProtocolTest(HeatTestCase):
             expected_env={'HTTP_X_AUTH_URL': self.config['auth_uri']})
         self.middleware = KeystonePasswordAuthProtocol(self.app, self.config)
 
-    def tearDown(self):
-        super(KeystonePasswordAuthProtocolTest, self).tearDown()
-        cfg.CONF.clear_override('multi_cloud', 'auth_password')
-        cfg.CONF.clear_override('allowed_auth_uris', 'auth_password')
-
     def _start_fake_response(self, status, headers):
         self.response_status = int(status.split(' ', 1)[0])
         self.response_headers = dict(headers)

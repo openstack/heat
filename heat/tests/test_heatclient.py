@@ -44,15 +44,6 @@ class KeystoneClientTest(HeatTestCase):
                               group='keystone_authtoken')
         self.addCleanup(self.m.VerifyAll)
 
-    def tearDown(self):
-        super(KeystoneClientTest, self).tearDown()
-        cfg.CONF.clear_override('deferred_auth_method')
-        cfg.CONF.clear_override('auth_uri', group='keystone_authtoken')
-        cfg.CONF.clear_override('admin_user', group='keystone_authtoken')
-        cfg.CONF.clear_override('admin_password', group='keystone_authtoken')
-        cfg.CONF.clear_override('admin_tenant_name',
-                                group='keystone_authtoken')
-
     def _stubs_v2(self, method='token', auth_ok=True):
         self.m.StubOutClassWithMocks(heat_keystoneclient.kc, "Client")
         if method == 'token':
