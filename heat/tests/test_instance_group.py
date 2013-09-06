@@ -102,7 +102,8 @@ class InstanceGroupTest(HeatTestCase):
         self.m.ReplayAll()
         conf = self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
-        self.assertEqual('JobServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual('1.2.3.4', rsrc.FnGetAtt('InstanceList'))
 
         nested = rsrc.nested()
@@ -134,7 +135,8 @@ class InstanceGroupTest(HeatTestCase):
         self.m.ReplayAll()
         conf = self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
-        self.assertEqual('JobServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         rsrc.delete()
         self.m.VerifyAll()
 

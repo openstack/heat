@@ -249,7 +249,7 @@ class InstanceGroup(stack_resource.StackResource):
                 scheduler.TaskRunner(lb_resource.update, resolved_snippet)()
 
     def FnGetRefId(self):
-        return unicode(self.name)
+        return self.physical_resource_name()
 
     def _resolve_attribute(self, name):
         '''
@@ -409,9 +409,6 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                             'Value': self.FnGetRefId()}]
         return super(AutoScalingGroup, self)._tags() + autoscaling_tag
 
-    def FnGetRefId(self):
-        return unicode(self.name)
-
     def validate(self):
         res = super(AutoScalingGroup, self).validate()
         if res:
@@ -512,7 +509,8 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
                         (self.name, self.properties['Cooldown']))
             return
 
-        group = self.stack[self.properties['AutoScalingGroupName']]
+        asgn_id = self.properties['AutoScalingGroupName']
+        group = self.stack.resource_by_refid(asgn_id)
 
         logger.info('%s Alarm, adjusting Group %s by %s' %
                     (self.name, group.name,

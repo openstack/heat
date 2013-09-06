@@ -237,7 +237,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
 
-        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
         update_snippet = copy.deepcopy(rsrc.parsed_template())
         update_snippet['Properties']['AvailabilityZones'] = ['foo']
@@ -257,7 +258,8 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
@@ -288,7 +290,8 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
@@ -325,7 +328,8 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(2)
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0', 'WebServerGroup-1'],
                          rsrc.get_instance_names())
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
@@ -363,7 +367,8 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(2)
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0', 'WebServerGroup-1'],
                          rsrc.get_instance_names())
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
@@ -403,7 +408,8 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
@@ -434,7 +440,8 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
@@ -615,7 +622,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
 
-        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
         update_snippet = copy.deepcopy(rsrc.parsed_template())
         update_snippet['Properties']['Cooldown'] = '61'
@@ -656,7 +664,8 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
 
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual('WebServerGroup', rsrc.FnGetRefId())
+        self.assertEqual(utils.PhysName(stack.name, rsrc.name),
+                         rsrc.FnGetRefId())
         self.assertEqual(['WebServerGroup-0'], rsrc.get_instance_names())
         update_snippet = copy.deepcopy(rsrc.parsed_template())
         update_snippet['Properties']['Cooldown'] = '61'
