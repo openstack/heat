@@ -203,6 +203,20 @@ class SqlAlchemyTest(HeatTestCase):
         st_db = db_api.stack_get_all_by_tenant(self.ctx)
         self.assertEqual(0, len(st_db))
 
+    def test_stack_count_all_by_tenant(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        st_db = db_api.stack_count_all_by_tenant(self.ctx)
+        self.assertEqual(2, st_db)
+
+        stacks[0].delete()
+        st_db = db_api.stack_count_all_by_tenant(self.ctx)
+        self.assertEqual(1, st_db)
+
+        stacks[1].delete()
+        st_db = db_api.stack_count_all_by_tenant(self.ctx)
+        self.assertEqual(0, st_db)
+
     def test_event_get_all_by_stack(self):
         stack = self._setup_test_stack('stack', UUID1)[1]
 
