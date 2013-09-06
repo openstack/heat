@@ -20,6 +20,7 @@ from oslo.config import cfg
 import webob
 
 cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
+cfg.CONF.import_opt('max_stacks_per_tenant', 'heat.common.config')
 
 from heat.openstack.common import timeutils
 from heat.common import context
@@ -249,6 +250,11 @@ class EngineService(service.Service):
 
         if db_api.stack_get_by_name(cnxt, stack_name):
             raise exception.StackExists(stack_name=stack_name)
+        tenant_limit = cfg.CONF.max_stacks_per_tenant
+        if db_api.stack_count_all_by_tenant(cnxt) >= tenant_limit:
+            message = _("You have reached the maximum stacks per tenant, %d."
+                        " Please delete some stacks.") % tenant_limit
+            raise exception.RequestLimitExceeded(message=message)
 
         tmpl = parser.Template(template, files=files)
 

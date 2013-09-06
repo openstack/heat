@@ -35,6 +35,10 @@
 # value)
 #max_resources_per_stack=1000
 
+# Maximum number of stacks any one tenant may have active at
+# one time. (integer value)
+#max_stacks_per_tenant=100
+
 # Name of the engine node. This can be an opaque identifier.It
 # is not necessarily a hostname, FQDN, or IP address. (string
 # value)

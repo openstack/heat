@@ -100,7 +100,12 @@ engine_opts = [
                 help=_('Subset of trustor roles to be delegated to heat')),
     cfg.IntOpt('max_resources_per_stack',
                default=1000,
-               help='Maximum resources allowed per top-level stack.')]
+               help='Maximum resources allowed per top-level stack.'),
+    cfg.IntOpt('max_stacks_per_tenant',
+               default=100,
+               help=_('Maximum number of stacks any one tenant may have'
+                      ' active at one time.'))]
+
 
 rpc_opts = [
     cfg.StrOpt('host',

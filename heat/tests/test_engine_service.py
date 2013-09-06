@@ -277,12 +277,12 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
     def setUp(self):
         super(StackServiceCreateUpdateDeleteTest, self).setUp()
         utils.setup_dummy_db()
+        utils.reset_dummy_db()
         self.ctx = utils.dummy_context()
 
         self.man = service.EngineService('a-host', 'a-topic')
 
-    def test_stack_create(self):
-        stack_name = 'service_create_test_stack'
+    def _test_stack_create(self, stack_name):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
@@ -321,6 +321,23 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertTrue(isinstance(result, dict))
         self.assertTrue(result['stack_id'])
         self.m.VerifyAll()
+
+    def test_stack_create(self):
+        stack_name = 'service_create_test_stack'
+        self._test_stack_create(stack_name)
+
+    def test_stack_create_equals_max_per_tenant(self):
+        cfg.CONF.set_override('max_stacks_per_tenant', 1)
+        stack_name = 'service_create_test_stack_equals_max'
+        self._test_stack_create(stack_name)
+
+    def test_stack_create_exceeds_max_per_tenant(self):
+        cfg.CONF.set_override('max_stacks_per_tenant', 0)
+        stack_name = 'service_create_test_stack_exceeds_max'
+        exc = self.assertRaises(exception.RequestLimitExceeded,
+                                self._test_stack_create, stack_name)
+        self.assertIn("You have reached the maximum stacks per tenant",
+                      str(exc))
 
     def test_stack_create_verify_err(self):
         stack_name = 'service_create_verify_err_test_stack'
