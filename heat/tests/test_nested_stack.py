@@ -206,6 +206,86 @@ Outputs:
 
         self.m.VerifyAll()
 
+    def test_nested_stack_update_equals_resource_limit(self):
+        resource._register_class('GenericResource',
+                                 generic_rsrc.GenericResource)
+        urlfetch.get('https://server.test/the.template').MultipleTimes().\
+            AndReturn(self.nested_template)
+        urlfetch.get('https://server.test/new.template').MultipleTimes().\
+            AndReturn('''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  KeyName:
+    Type: String
+Resources:
+  NestedResource:
+    Type: GenericResource
+Outputs:
+  Bar:
+    Value: foo
+''')
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template)
+
+        cfg.CONF.set_override('max_resources_per_stack', 2)
+
+        rsrc = stack['the_nested']
+
+        original_nested_id = rsrc.resource_id
+        t = template_format.parse(self.test_template)
+        new_res = copy.deepcopy(t['Resources']['the_nested'])
+        new_res['Properties']['TemplateURL'] = (
+            'https://server.test/new.template')
+        prop_diff = {'TemplateURL': 'https://server.test/new.template'}
+        updater = rsrc.handle_update(new_res, {}, prop_diff)
+        updater.run_to_completion()
+        self.assertEqual(True, rsrc.check_update_complete(updater))
+
+        self.assertEqual('foo', rsrc.FnGetAtt('Outputs.Bar'))
+
+        rsrc.delete()
+
+        self.m.VerifyAll()
+
+    def test_nested_stack_update_exceeds_limit(self):
+        resource._register_class('GenericResource',
+                                 generic_rsrc.GenericResource)
+        urlfetch.get('https://server.test/the.template').MultipleTimes().\
+            AndReturn(self.nested_template)
+        urlfetch.get('https://server.test/new.template').MultipleTimes().\
+            AndReturn('''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  KeyName:
+    Type: String
+Resources:
+  NestedResource:
+    Type: GenericResource
+Outputs:
+  Bar:
+    Value: foo
+''')
+        self.m.ReplayAll()
+
+        stack = self.create_stack(self.test_template)
+
+        cfg.CONF.set_override('max_resources_per_stack', 1)
+
+        rsrc = stack['the_nested']
+
+        original_nested_id = rsrc.resource_id
+        t = template_format.parse(self.test_template)
+        new_res = copy.deepcopy(t['Resources']['the_nested'])
+        new_res['Properties']['TemplateURL'] = (
+            'https://server.test/new.template')
+        prop_diff = {'TemplateURL': 'https://server.test/new.template'}
+        self.assertRaises(exception.StackResourceLimitExceeded,
+                          rsrc.handle_update, new_res, {}, prop_diff)
+        rsrc.delete()
+
+        self.m.VerifyAll()
+
     def test_nested_stack_suspend_resume(self):
         urlfetch.get('https://server.test/the.template').AndReturn(
             self.nested_template)

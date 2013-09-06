@@ -124,6 +124,13 @@ class StackResource(resource.Resource):
         # on updated templates we should make sure it's optional because not
         # all subclasses want that behavior, since they may offer custom
         # attributes.
+        nested_stack = self.nested()
+        if nested_stack is not None:
+            res_diff = (
+                len(template[tmpl.RESOURCES]) - len(nested_stack.resources))
+            new_size = nested_stack.root_stack.total_resources() + res_diff
+            if new_size > cfg.CONF.max_resources_per_stack:
+                raise exception.StackResourceLimitExceeded()
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
