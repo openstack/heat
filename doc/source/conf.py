@@ -43,7 +43,7 @@ def write_autodoc_index():
         """Return a list of modules in the SOURCE directory."""
         modlist = []
         os.chdir(os.path.join(sourcedir, module_name))
-        print "SEARCHING %s" % sourcedir
+        print("SEARCHING %s" % sourcedir)
         for root, dirs, files in os.walk("."):
             for filename in files:
                 if filename.endswith(".py"):
@@ -56,7 +56,7 @@ def write_autodoc_index():
                     if not (base == "__init__"):
                         elements.append(base)
                     result = ".".join(elements)
-                    #print result
+                    #print(result)
                     modlist.append(result)
         return modlist
 
@@ -102,7 +102,7 @@ def write_autodoc_index():
             if any([module.startswith(exclude)
                     for exclude
                     in EXCLUDED_MODULES]):
-                print "Excluded module %s." % module
+                print("Excluded module %s." % module)
                 continue
             mod_path = os.path.join(path, *module.split("."))
             generated_file = os.path.join(MOD_DIR, "%s.rst" % module)
@@ -122,8 +122,8 @@ def write_autodoc_index():
             if not os.access(generated_file, os.F_OK) or \
                     os.stat(generated_file).st_mtime < \
                     os.stat(source_file).st_mtime:
-                print "Module %s updated, generating new documentation." \
-                      % module
+                print("Module %s updated, generating new documentation."
+                      % module)
                 FILEOUT = open(generated_file, "w")
                 header = "The :mod:`%s` Module" % module
                 FILEOUT.write("%s\n" % ("=" * len(header),))
@@ -142,7 +142,7 @@ def write_autodoc_index():
     for directory, subdirs, files in list(os.walk(RSTDIR)):
         for old_file in files:
             if old_file not in CURRENT_SOURCES.get(directory, []):
-                print "Removing outdated file for %s" % old_file
+                print("Removing outdated file for %s" % old_file)
                 os.remove(os.path.join(directory, old_file))
 
 
