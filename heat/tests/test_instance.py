@@ -24,10 +24,13 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources import instance as instances
+from heat.engine.resources import network_interface
 from heat.engine.resources import nova_utils
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+
+from neutronclient.v2_0 import client as neutronclient
 
 
 wp_template = '''
@@ -653,6 +656,116 @@ class InstancesTest(HeatTestCase):
             'id4',
             'id5'
         ]))
+
+    def test_build_nics_with_security_groups(self):
+        """
+        Test the security groups defined in heat template can be associated
+        to a new created port.
+        """
+        return_server = self.fc.servers.list()[1]
+        instance = self._create_test_instance(return_server,
+                                              'test_build_nics')
+
+        security_groups = ['security_group_1']
+        self._test_security_groups(instance, security_groups)
+
+        security_groups = ['fake_id_1']
+        self._test_security_groups(instance, security_groups)
+
+        security_groups = ['security_group_1', 'security_group_1']
+        self._test_security_groups(instance, security_groups)
+
+        security_groups = ['fake_id_1', 'fake_id_1']
+        self._test_security_groups(instance, security_groups)
+
+        security_groups = ['security_group_1', 'fake_id_1']
+        self._test_security_groups(instance, security_groups)
+
+        security_groups = ['security_group_1', 'fake_id_2']
+        self._test_security_groups(instance, security_groups, sg='two')
+
+        security_groups = ['wrong_group_id']
+        self._test_security_groups(instance, security_groups, sg='zero')
+
+        security_groups = ['wrong_group_id', 'fake_id_1']
+        self._test_security_groups(instance, security_groups)
+
+        security_groups = ['wrong_group_name']
+        self._test_security_groups(instance, security_groups, sg='zero')
+
+        security_groups = ['wrong_group_name', 'security_group_1']
+        self._test_security_groups(instance, security_groups)
+
+    def _test_security_groups(self, instance, security_groups, sg='one'):
+        fake_groups_list, props = self._get_fake_properties(sg)
+
+        def generate_sg_list():
+            yield fake_groups_list
+
+        nclient = neutronclient.Client()
+        self.m.StubOutWithMock(instance, 'neutron')
+        instance.neutron().MultipleTimes().AndReturn(nclient)
+
+        self.m.StubOutWithMock(neutronclient.Client, 'list_security_groups')
+        neutronclient.Client.list_security_groups(
+            instance.resource_id).AndReturn(generate_sg_list())
+
+        net_interface = network_interface.NetworkInterface
+        self.m.StubOutWithMock(net_interface, 'network_id_from_subnet_id')
+        net_interface.network_id_from_subnet_id(
+            nclient,
+            'fake_subnet_id').MultipleTimes().AndReturn('fake_network_id')
+
+        self.m.StubOutWithMock(neutronclient.Client, 'create_port')
+        neutronclient.Client.create_port(
+            {'port': props}).MultipleTimes().AndReturn(
+                {'port': {'id': 'fake_port_id'}})
+
+        self.m.ReplayAll()
+
+        self.assertEqual(
+            [{'port-id': 'fake_port_id'}],
+            instance._build_nics(None,
+                                 security_groups=security_groups,
+                                 subnet_id='fake_subnet_id'))
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+    def _get_fake_properties(self, sg='one'):
+        fake_groups_list = {
+            'security_groups': [
+                {
+                    'id': 'fake_id_1',
+                    'name': 'security_group_1',
+                    'security_group_rules': [],
+                    'description': 'no protocol'
+                },
+                {
+                    'id': 'fake_id_2',
+                    'name': 'security_group_2',
+                    'security_group_rules': [],
+                    'description': 'no protocol'
+                }
+            ]
+        }
+
+        fixed_ip = {'subnet_id': 'fake_subnet_id'}
+        props = {
+            'admin_state_up': True,
+            'network_id': 'fake_network_id',
+            'fixed_ips': [fixed_ip],
+            'security_groups': ['fake_id_1']
+        }
+
+        if sg == 'zero':
+            props['security_groups'] = []
+        elif sg == 'one':
+            props['security_groups'] = ['fake_id_1']
+        elif sg == 'two':
+            props['security_groups'] = ['fake_id_1', 'fake_id_2']
+
+        return fake_groups_list, props
 
     def test_instance_without_ip_address(self):
         return_server = self.fc.servers.list()[3]
