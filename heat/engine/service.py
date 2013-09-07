@@ -206,7 +206,13 @@ class EngineService(service.Service):
         stacks = db_api.stack_get_all_by_tenant(cnxt) or []
         return list(format_stack_details(stacks))
 
-    def _validate_mandatory_credentials(self, cnxt):
+    def _validate_deferred_auth_context(self, cnxt, stack):
+        if cfg.CONF.deferred_auth_method != 'password':
+            return
+
+        if not stack.requires_deferred_auth():
+            return
+
         if cnxt.username is None:
             raise exception.MissingCredentialError(required='X-Auth-User')
         if cnxt.password is None:
@@ -229,8 +235,6 @@ class EngineService(service.Service):
         """
         logger.info('template is %s' % template)
 
-        self._validate_mandatory_credentials(cnxt)
-
         def _stack_create(stack):
             # Create the stack, and create the periodic task if successful
             stack.create()
@@ -250,6 +254,8 @@ class EngineService(service.Service):
         env = environment.Environment(params)
         stack = parser.Stack(cnxt, stack_name, tmpl,
                              env, **common_params)
+
+        self._validate_deferred_auth_context(cnxt, stack)
 
         stack.validate()
 
@@ -280,8 +286,6 @@ class EngineService(service.Service):
         """
         logger.info('template is %s' % template)
 
-        self._validate_mandatory_credentials(cnxt)
-
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
 
@@ -296,6 +300,7 @@ class EngineService(service.Service):
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      env, **common_params)
 
+        self._validate_deferred_auth_context(cnxt, updated_stack)
         updated_stack.validate()
 
         self._start_in_thread(db_stack.id, current_stack.update, updated_stack)

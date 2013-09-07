@@ -116,6 +116,10 @@ class Resource(object):
     # that describes the appropriate resource attributes
     attributes_schema = {}
 
+    # If True, this resource may perform authenticated API requests
+    # throughout its lifecycle
+    requires_deferred_auth = False
+
     def __new__(cls, name, json, stack):
         '''Create a new Resource of the appropriate class for its type.'''
 

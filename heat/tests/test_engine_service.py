@@ -372,19 +372,46 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                           stack.t, {}, None, {})
 
     def test_stack_create_no_credentials(self):
-        stack_name = 'service_create_test_stack'
+        stack_name = 'test_stack_create_no_credentials'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        ctx = self.ctx = utils.dummy_context(password=None)
-        self.assertRaises(exception.MissingCredentialError,
-                          self.man.create_stack, ctx, stack_name, template,
-                          params, None, {})
+        stack = get_wordpress_stack(stack_name, self.ctx)
+        # force check for credentials on create
+        stack.resources['WebServer'].requires_deferred_auth = True
 
-        ctx = self.ctx = utils.dummy_context(user=None)
-        self.assertRaises(exception.MissingCredentialError,
-                          self.man.create_stack, ctx, stack_name, template,
-                          params, None, {})
+        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(environment, 'Environment')
+        self.m.StubOutWithMock(parser, 'Stack')
+
+        ctx_no_pwd = utils.dummy_context(password=None)
+        ctx_no_user = utils.dummy_context(user=None)
+
+        parser.Template(template, files=None).AndReturn(stack.t)
+        environment.Environment(params).AndReturn(stack.env)
+        parser.Stack(ctx_no_pwd, stack.name,
+                     stack.t, stack.env).AndReturn(stack)
+
+        parser.Template(template, files=None).AndReturn(stack.t)
+        environment.Environment(params).AndReturn(stack.env)
+        parser.Stack(ctx_no_user, stack.name,
+                     stack.t, stack.env).AndReturn(stack)
+
+        self.m.ReplayAll()
+
+        ex = self.assertRaises(exception.MissingCredentialError,
+                               self.man.create_stack,
+                               ctx_no_pwd, stack_name,
+                               template, params, None, {})
+        self.assertEqual(
+            'Missing required credential: X-Auth-Key', ex.message)
+
+        ex = self.assertRaises(exception.MissingCredentialError,
+                               self.man.create_stack,
+                               ctx_no_user, stack_name,
+                               template, params, None, {})
+        self.assertEqual(
+            'Missing required credential: X-Auth-User', ex.message)
 
     def test_stack_validate(self):
         stack_name = 'service_create_test_validate'
@@ -543,23 +570,82 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_update_no_credentials(self):
-        stack_name = 'service_update_nonexist_test_stack'
+        stack_name = 'test_stack_update_no_credentials'
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        # force check for credentials on create
+        old_stack.resources['WebServer'].requires_deferred_auth = True
 
-        ctx = self.ctx = utils.dummy_context(password=None)
-        self.assertRaises(exception.MissingCredentialError,
-                          self.man.update_stack,
-                          ctx, stack.identifier(), template, params,
-                          None, {})
+        sid = old_stack.store()
+        s = db_api.stack_get(self.ctx, sid)
 
-        ctx = self.ctx = utils.dummy_context(user=None)
-        self.assertRaises(exception.MissingCredentialError,
-                          self.man.update_stack,
-                          ctx, stack.identifier(), template, params,
-                          None, {})
+        self.ctx = utils.dummy_context(password=None)
+
+        self.m.StubOutWithMock(parser, 'Stack')
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(environment, 'Environment')
+
+        parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
+
+        parser.Template(template, files=None).AndReturn(old_stack.t)
+        environment.Environment(params).AndReturn(old_stack.env)
+        parser.Stack(self.ctx, old_stack.name,
+                     old_stack.t, old_stack.env).AndReturn(old_stack)
+
+        self.m.ReplayAll()
+
+        ex = self.assertRaises(exception.MissingCredentialError,
+                               self.man.update_stack, self.ctx,
+                               old_stack.identifier(),
+                               template, params, None, {})
+
+        self.assertEqual(
+            'Missing required credential: X-Auth-Key', ex.message)
+
+        self.m.VerifyAll()
+
+    def test_validate_deferred_auth_context_trusts(self):
+        stack = get_wordpress_stack('test_deferred_auth', self.ctx)
+        stack.resources['WebServer'].requires_deferred_auth = True
+        ctx = utils.dummy_context(user=None, password=None)
+        cfg.CONF.set_default('deferred_auth_method', 'trusts')
+
+        # using trusts, no username or password required
+        self.man._validate_deferred_auth_context(ctx, stack)
+
+    def test_validate_deferred_auth_context_not_required(self):
+        stack = get_wordpress_stack('test_deferred_auth', self.ctx)
+        stack.resources['WebServer'].requires_deferred_auth = False
+        ctx = utils.dummy_context(user=None, password=None)
+        cfg.CONF.set_default('deferred_auth_method', 'password')
+
+        # stack performs no deferred operations, so no username or
+        # password required
+        self.man._validate_deferred_auth_context(ctx, stack)
+
+    def test_validate_deferred_auth_context_missing_credentials(self):
+        stack = get_wordpress_stack('test_deferred_auth', self.ctx)
+        stack.resources['WebServer'].requires_deferred_auth = True
+        cfg.CONF.set_default('deferred_auth_method', 'password')
+
+        # missing username
+        ctx = utils.dummy_context(user=None)
+        ex = self.assertRaises(exception.MissingCredentialError,
+                               self.man._validate_deferred_auth_context,
+                               ctx, stack)
+        self.assertEqual(
+            'Missing required credential: X-Auth-User', ex.message)
+
+        # missing password
+        ctx = utils.dummy_context(password=None)
+        ex = self.assertRaises(exception.MissingCredentialError,
+                               self.man._validate_deferred_auth_context,
+                               ctx, stack)
+        self.assertEqual(
+            'Missing required credential: X-Auth-Key', ex.message)
 
 
 class StackServiceSuspendResumeTest(HeatTestCase):

@@ -39,6 +39,10 @@ SIGNAL_VERB = {WAITCONDITION: 'PUT',
 
 class SignalResponder(resource.Resource):
 
+    # Anything which subclasses this may trigger authenticated
+    # API operations as a consequence of handling a signal
+    requires_deferred_auth = True
+
     def handle_create(self):
         # Create a keystone user so we can create a signed URL via FnGetRefId
         user_id = self.keystone().create_stack_user(

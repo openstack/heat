@@ -271,6 +271,14 @@ class Stack(object):
             if result:
                 raise StackValidationFailed(message=result)
 
+    def requires_deferred_auth(self):
+        '''
+        Returns whether this stack may need to perform API requests
+        during its lifecycle using the configured deferred authentication
+        method.
+        '''
+        return any(res.requires_deferred_auth for res in self)
+
     def state_set(self, action, status, reason):
         '''Update the stack state in the database.'''
         if action not in self.ACTIONS:
