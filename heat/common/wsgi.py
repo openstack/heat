@@ -136,6 +136,7 @@ api_cw_group = cfg.OptGroup('heat_api_cloudwatch')
 cfg.CONF.register_group(api_cw_group)
 cfg.CONF.register_opts(api_cw_opts,
                        group=api_cw_group)
+cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
 
 
 class WritableLogger(object):
@@ -310,7 +311,8 @@ class Server(object):
                                  self.application,
                                  custom_pool=self.pool,
                                  url_length_limit=URL_LENGTH_LIMIT,
-                                 log=WritableLogger(self.logger))
+                                 log=WritableLogger(self.logger),
+                                 debug=cfg.CONF.debug)
         except socket.error as err:
             if err[0] != errno.EINVAL:
                 raise
