@@ -647,6 +647,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_err_stack_bad_reqest(self):
+        cfg.CONF.set_override('debug', True)
         template = {u'Foo': u'bar'}
         parameters = {u'InstanceType': u'm1.xlarge'}
         body = {'template': template,
