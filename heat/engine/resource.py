@@ -277,8 +277,9 @@ class Resource(object):
     def _add_dependencies(self, deps, path, fragment):
         if isinstance(fragment, dict):
             for key, value in fragment.items():
-                if key in ('DependsOn', 'Ref', 'Fn::GetAtt'):
-                    if key == 'Fn::GetAtt':
+                if key in ('DependsOn', 'Ref', 'Fn::GetAtt', 'get_attr',
+                           'get_resource'):
+                    if key in ('Fn::GetAtt', 'get_attr'):
                         value, att = value
 
                     try:
