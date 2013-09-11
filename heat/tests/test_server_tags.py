@@ -84,6 +84,42 @@ group_template = '''
 }
 '''
 
+autoscaling_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "WordPress",
+  "Parameters" : {
+    "KeyName" : {
+      "Description" : "KeyName",
+      "Type" : "String",
+      "Default" : "test"
+    }
+  },
+  "Resources" : {
+    "Config": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId"      : "CentOS 5.2",
+        "InstanceType" : "256 MB Server",
+        "KeyName"      : "test",
+        "UserData"     : "wordpress"
+      }
+    },
+
+    "WebServer": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones"      : ["nova"],
+        "LaunchConfigurationName": { "Ref": "Config" },
+        "MinSize"                : "1",
+        "MaxSize"                : "2",
+        "Tags"                   : [{"Key" : "foo", "Value" : "42"}],
+      }
+    }
+  }
+}
+'''
+
 
 class ServerTagsTest(HeatTestCase):
     def setUp(self):
@@ -153,6 +189,9 @@ class ServerTagsTest(HeatTestCase):
 
         group = stack.resources['WebServer']
 
+        nova_tags['metering.groupname'] = utils.PhysName(stack.name,
+                                                         group.name)
+
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
 
@@ -173,8 +212,59 @@ class ServerTagsTest(HeatTestCase):
     def test_group_tags(self):
         tags = [{'Key': 'Food', 'Value': 'yum'}]
         metadata = dict((tm['Key'], tm['Value']) for tm in tags)
-        metadata['metering.groupname'] = 'WebServer'
         group = self._setup_test_group(intags=tags, nova_tags=metadata)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(group.create)()
+        # we are just using mock to verify that the tags get through to the
+        # nova call.
+        self.m.VerifyAll()
+
+    def _setup_test_group_autoscaling(self, intags=None, nova_tags=None):
+        stack_name = 'tag_as_name'
+        t = template_format.parse(autoscaling_template)
+        template = parser.Template(t)
+        stack = parser.Stack(utils.dummy_context(), stack_name, template,
+                             environment.Environment({'KeyName': 'test'}),
+                             stack_id=uuidutils.generate_uuid())
+        t['Resources']['WebServer']['Properties']['Tags'] += intags
+
+        # create the launch configuration
+        conf = stack.resources['Config']
+        self.assertEqual(None, conf.validate())
+        scheduler.TaskRunner(conf.create)()
+        self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
+        group = stack.resources['WebServer']
+
+        group_refid = utils.PhysName(stack.name, group.name)
+
+        nova_tags['metering.groupname'] = group_refid
+        nova_tags['AutoScalingGroupName'] = group_refid
+
+        self.m.StubOutWithMock(group, '_cooldown_timestamp')
+        group._cooldown_timestamp(mox.IgnoreArg()).AndReturn(None)
+
+        self.m.StubOutWithMock(instances.Instance, 'nova')
+        instances.Instance.nova().MultipleTimes().AndReturn(self.fc)
+
+        group.t = group.stack.resolve_runtime_data(group.t)
+
+        # need to resolve the template functions
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=1, flavor=1, key_name='test',
+            name=mox.IgnoreArg(),
+            security_groups=None,
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=nova_tags, nics=None, availability_zone=None).AndReturn(
+                self.fc.servers.list()[1])
+
+        return group
+
+    def test_as_group_tags(self):
+        tags = [{'Key': 'Food', 'Value': 'yum'}, {'Key': 'foo', 'Value': '42'}]
+        metadata = dict((tm['Key'], tm['Value']) for tm in tags)
+        group = self._setup_test_group_autoscaling(intags=[tags[0]],
+                                                   nova_tags=metadata)
         self.m.ReplayAll()
         scheduler.TaskRunner(group.create)()
         # we are just using mock to verify that the tags get through to the
