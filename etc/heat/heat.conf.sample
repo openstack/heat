@@ -76,6 +76,15 @@
 
 
 #
+# Options defined in heat.common.wsgi
+#
+
+# Maximum raw byte size of JSON request body. Should be larger
+# than max_template_size. (integer value)
+#max_json_body_size=1048576
+
+
+#
 # Options defined in heat.db.api
 #
 

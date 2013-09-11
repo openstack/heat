@@ -330,3 +330,7 @@ class StackRecursionLimitReached(HeatException):
     def __init__(self, recursion_depth):
         self.message = self.message % recursion_depth
         super(StackRecursionLimitReached, self).__init__()
+
+
+class RequestLimitExceeded(HeatException):
+    message = _('Request limit exceeded: %(message)s')

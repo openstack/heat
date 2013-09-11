@@ -137,6 +137,12 @@ cfg.CONF.register_group(api_cw_group)
 cfg.CONF.register_opts(api_cw_opts,
                        group=api_cw_group)
 
+json_size_opt = cfg.IntOpt('max_json_body_size',
+                           default=1048576,
+                           help='Maximum raw byte size of JSON request body.'
+                                ' Should be larger than max_template_size.')
+cfg.CONF.register_opt(json_size_opt)
+
 
 class WritableLogger(object):
     """A thin wrapper that responds to `write` and logs."""
@@ -524,6 +530,12 @@ class JSONRequestDeserializer(object):
 
     def from_json(self, datastring):
         try:
+            if len(datastring) > cfg.CONF.max_json_body_size:
+                msg = _('JSON body size (%(len)s bytes) exceeds maximum '
+                        'allowed size (%(limit)s bytes).') % \
+                    {'len': len(datastring),
+                     'limit': cfg.CONF.max_json_body_size}
+                raise exception.RequestLimitExceeded(message=msg)
             return json.loads(datastring)
         except ValueError as ex:
             raise webob.exc.HTTPBadRequest(str(ex))
@@ -638,11 +650,10 @@ class Resource(object):
         # ContentType=JSON results in a JSON serialized response...
         content_type = request.params.get("ContentType")
 
-        deserialized_request = self.dispatch(self.deserializer,
-                                             action, request)
-        action_args.update(deserialized_request)
-
         try:
+            deserialized_request = self.dispatch(self.deserializer,
+                                                 action, request)
+            action_args.update(deserialized_request)
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
         except TypeError as err:
