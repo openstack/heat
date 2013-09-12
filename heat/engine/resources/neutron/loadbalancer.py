@@ -31,15 +31,40 @@ class HealthMonitor(neutron.NeutronResource):
     """
 
     properties_schema = {
-        'delay': {'Type': 'Integer', 'Required': True},
-        'type': {'Type': 'String', 'Required': True,
-                 'AllowedValues': ['PING', 'TCP', 'HTTP', 'HTTPS']},
-        'max_retries': {'Type': 'Integer', 'Required': True},
-        'timeout': {'Type': 'Integer', 'Required': True},
-        'admin_state_up': {'Default': True, 'Type': 'Boolean'},
-        'http_method': {'Type': 'String'},
-        'expected_codes': {'Type': 'String'},
-        'url_path': {'Type': 'String'},
+        'delay': {
+            'Type': 'Integer', 'Required': True,
+            'Description': _('The minimum time in seconds between regular '
+                             'connections of the member.')},
+        'type': {
+            'Type': 'String', 'Required': True,
+            'AllowedValues': ['PING', 'TCP', 'HTTP', 'HTTPS'],
+            'Description': _('One of predefined health monitor types.')},
+        'max_retries': {
+            'Type': 'Integer', 'Required': True,
+            'Description': _('Number of permissible connection failures before'
+                             ' changing the member status to INACTIVE.')},
+        'timeout': {
+            'Type': 'Integer', 'Required': True,
+            'Description': _('Maximum number of seconds for a monitor to '
+                             'wait for a connection to be established before '
+                             'it times out.')},
+        'admin_state_up': {
+            'Default': True, 'Type': 'Boolean',
+            'Description': _('The administrative state of the health '
+                             'monitor.')},
+        'http_method': {
+            'Type': 'String',
+            'Description': _('The HTTP method used for requests by the '
+                             'monitor of type HTTP.')},
+        'expected_codes': {
+            'Type': 'String',
+            'Description': _('The list of HTTP status codes expected in '
+                             'response from the member to declare it '
+                             'healthy.')},
+        'url_path': {
+            'Type': 'String',
+            'Description': _('The HTTP path used in the HTTP request used '
+                             'by the monitor to test a member health.')},
     }
 
     update_allowed_keys = ('Properties',)
@@ -48,22 +73,23 @@ class HealthMonitor(neutron.NeutronResource):
                                  'expected_codes', 'url_path')
 
     attributes_schema = {
-        'admin_state_up': 'the administrative state of this health monitor',
-        'delay': 'the minimum time in seconds between regular connections '
-                 'of the member',
-        'expected_codes': 'the list of HTTP status codes expected in '
-                          'response from the member to declare it healthy',
-        'http_method': 'the HTTP method used for requests by the monitor of '
-                       'type HTTP',
-        'id': 'unique identifier for this health monitor',
-        'max_retries': 'number of permissible connection failures before '
-                       'changing the member status to INACTIVE.',
-        'timeout': 'maximum number of seconds for a monitor to wait for a '
-                   'connection to be established before it times out',
-        'type': 'one of predefined health monitor types',
-        'url_path': 'the HTTP path used in the HTTP request used by the '
-                    'monitor to test a member health',
-        'tenant_id': 'tenant owning the health monitor',
+        'admin_state_up': _('The administrative state of this health '
+                            'monitor.'),
+        'delay': _('The minimum time in seconds between regular connections '
+                   'of the member.'),
+        'expected_codes': _('The list of HTTP status codes expected in '
+                            'response from the member to declare it healthy.'),
+        'http_method': _('The HTTP method used for requests by the monitor of '
+                         'type HTTP.'),
+        'id': _('Unique identifier for this health monitor.'),
+        'max_retries': _('Number of permissible connection failures before '
+                         'changing the member status to INACTIVE.'),
+        'timeout': _('Maximum number of seconds for a monitor to wait for a '
+                     'connection to be established before it times out.'),
+        'type': _('One of predefined health monitor types.'),
+        'url_path': _('The HTTP path used in the HTTP request used by the '
+                      'monitor to test a member health.'),
+        'tenant_id': _('Tenant owning the health monitor.'),
     }
 
     def handle_create(self):
@@ -99,26 +125,59 @@ class Pool(neutron.NeutronResource):
     """
 
     vip_schema = {
-        'name': {'Type': 'String'},
-        'description': {'Type': 'String'},
-        'address': {'Type': 'String'},
-        'connection_limit': {'Type': 'Integer'},
-        'protocol_port': {'Type': 'Integer', 'Required': True},
-        'admin_state_up': {'Default': True, 'Type': 'Boolean'},
+        'name': {
+            'Type': 'String',
+            'Description': _('Name of the vip.')},
+        'description': {
+            'Type': 'String',
+            'Description': _('Description of the vip.')},
+        'address': {
+            'Type': 'String',
+            'Description': _('IP address of the vip.')},
+        'connection_limit': {
+            'Type': 'Integer',
+            'Description': _('The maximum number of connections per second '
+                             'allowed for the vip.')},
+        'protocol_port': {
+            'Type': 'Integer', 'Required': True,
+            'Description': _('TCP port on which to listen for client traffic '
+                             'that is associated with the vip address.')},
+        'admin_state_up': {
+            'Default': True, 'Type': 'Boolean',
+            'Description': _('The administrative state of this vip.')}
     }
 
     properties_schema = {
-        'protocol': {'Type': 'String', 'Required': True,
-                     'AllowedValues': ['TCP', 'HTTP', 'HTTPS']},
-        'subnet_id': {'Type': 'String', 'Required': True},
-        'lb_method': {'Type': 'String', 'Required': True,
-                      'AllowedValues': ['ROUND_ROBIN', 'LEAST_CONNECTIONS',
-                                        'SOURCE_IP']},
-        'name': {'Type': 'String'},
-        'description': {'Type': 'String'},
-        'admin_state_up': {'Default': True, 'Type': 'Boolean'},
-        'vip': {'Type': 'Map', 'Schema': vip_schema, 'Required': True},
-        'monitors': {'Type': 'List'},
+        'protocol': {
+            'Type': 'String', 'Required': True,
+            'AllowedValues': ['TCP', 'HTTP', 'HTTPS'],
+            'Description': _('Protocol for balancing.')},
+        'subnet_id': {
+            'Type': 'String', 'Required': True,
+            'Description': _('The subnet on which the members of the pool '
+                             'will be located.')},
+        'lb_method': {
+            'Type': 'String', 'Required': True,
+            'AllowedValues': ['ROUND_ROBIN', 'LEAST_CONNECTIONS',
+                              'SOURCE_IP'],
+            'Description': _('The algorithm used to distribute load between '
+                             'the members of the pool.')},
+        'name': {
+            'Type': 'String',
+            'Description': _('Name of the pool.')},
+        'description': {
+            'Type': 'String',
+            'Description': _('Description of the pool.')},
+        'admin_state_up': {
+            'Default': True, 'Type': 'Boolean',
+            'Description': _('The administrative state of this pool.')},
+        'vip': {
+            'Type': 'Map', 'Schema': vip_schema, 'Required': True,
+            'Description': _('IP address and port of the pool.')},
+        'monitors': {
+            'Type': 'List',
+            'Description': _('List of health monitors associated with the '
+                             'pool.')},
     }
 
     update_allowed_keys = ('Properties',)
@@ -126,17 +185,17 @@ class Pool(neutron.NeutronResource):
                                  'monitors')
 
     attributes_schema = {
-        'admin_state_up': 'the administrative state of this pool',
-        'id': 'unique identifier for this pool',
-        'name': 'friendly name of the pool',
-        'protocol': 'protocol to balance',
-        'subnet_id': 'the subnet on which the members of the pool '
-                     'will be located',
-        'lb_method': 'the algorithm used to distribute load between the '
-                     'members of the pool',
-        'description': 'description of the pool',
-        'tenant_id': 'tenant owning the pool',
-        'vip': 'ip of the pool',
+        'admin_state_up': _('The administrative state of this pool.'),
+        'id': _('Unique identifier for this pool.'),
+        'name': _('Name of the pool.'),
+        'protocol': _('Protocol to balance.'),
+        'subnet_id': _('The subnet on which the members of the pool '
+                       'will be located.'),
+        'lb_method': _('The algorithm used to distribute load between the '
+                       'members of the pool.'),
+        'description': _('Description of the pool.'),
+        'tenant_id': _('Tenant owning the pool.'),
+        'vip': _('Vip associated with the pool.'),
     }
 
     def handle_create(self):
@@ -248,14 +307,14 @@ class LoadBalancer(resource.Resource):
     properties_schema = {
         'pool_id': {
             'Type': 'String', 'Required': True,
-            'Description': _('The ID of the load balancing pool')},
+            'Description': _('The ID of the load balancing pool.')},
         'protocol_port': {
             'Type': 'Integer', 'Required': True,
             'Description': _('Port number on which the servers are '
-                             'running on the members')},
+                             'running on the members.')},
         'members': {
             'Type': 'List',
-            'Description': _('The list of Nova server IDs load balanced')},
+            'Description': _('The list of Nova server IDs load balanced.')},
     }
 
     update_allowed_keys = ('Properties',)
