@@ -20,37 +20,70 @@ from heat.engine import watchrule
 
 class CeilometerAlarm(resource.Resource):
 
-    properties_schema = {'comparison_operator': {'Type': 'String',
-                                                 'Required': True,
-                                                 'AllowedValues': ['ge',
-                                                                   'gt',
-                                                                   'eq',
-                                                                   'ne',
-                                                                   'lt',
-                                                                   'le']},
-                         'evaluation_periods': {'Type': 'String',
-                                                'Required': True},
-                         'counter_name': {'Type': 'String',
-                                          'Required': True},
-                         'period': {'Type': 'String',
-                                    'Required': True},
-                         'statistic': {'Type': 'String',
-                                       'Required': True,
-                                       'AllowedValues': ['count',
-                                                         'avg',
-                                                         'sum',
-                                                         'min',
-                                                         'max']},
-                         'threshold': {'Type': 'String',
-                                       'Required': True},
-                         'alarm_actions': {'Type': 'List'},
-                         'ok_actions': {'Type': 'List'},
-                         'insufficient_data_actions': {'Type': 'List'},
-                         'description': {'Type': 'String'},
-                         'source': {'Type': 'String'},
-                         'enabled': {'Type': 'Boolean',
-                                     'Default': 'true'},
-                         'matching_metadata': {'Type': 'Map'}}
+    properties_schema = {
+        'comparison_operator': {
+            'Type': 'String',
+            'Required': True,
+            'AllowedValues': ['ge', 'gt', 'eq', 'ne', 'lt', 'le'],
+            'Description': _('Operator used to compare specified statistic '
+                             'with threshold')
+        },
+        'evaluation_periods': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('Number of periods to evaluate over')
+        },
+        'counter_name': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('Counter name watched by the alarm')
+        },
+        'period': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('Period (seconds) to evaluate over')
+        },
+        'statistic': {
+            'Type': 'String',
+            'Required': True,
+            'AllowedValues': ['count', 'avg', 'sum', 'min', 'max'],
+            'Description': _('Counter statistic to evaluate')
+        },
+        'threshold': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('Threshold to evaluate against')
+        },
+        'alarm_actions': {
+            'Type': 'List',
+            'Description': _('A list of URLs (webhooks) to invoke when state '
+                             'transitions to alarm')
+        },
+        'ok_actions': {
+            'Type': 'List',
+            'Description': _('A list of URLs (webhooks) to invoke when state '
+                             'transitions to ok')
+        },
+        'insufficient_data_actions': {
+            'Type': 'List',
+            'Description': _('A list of URLs (webhooks) to invoke when state '
+                             'transitions to insufficient-data')
+        },
+        'description': {
+            'Type': 'String',
+            'Description': _('Description for the alarm')
+        },
+        'enabled': {
+            'Type': 'Boolean',
+            'Default': 'true',
+            'Description': _('True if alarm evaluation/actioning is enabled')
+        },
+        'matching_metadata': {
+            'Type': 'Map',
+            'Description': _('Counter should match this resource metadata '
+                             '(key=value) additionally to the counter_name')
+        }
+    }
 
     update_allowed_keys = ('Properties',)
     # allow the properties that affect the watch calculation.
