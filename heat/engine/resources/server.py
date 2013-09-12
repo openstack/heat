@@ -267,10 +267,10 @@ class Server(resource.Resource):
             if (mapping.get('volume_size') or
                     mapping.get('delete_on_termination')):
 
-                mapping_parts.append(mapping.get('volume_size', 0))
+                mapping_parts.append(mapping.get('volume_size', '0'))
             if mapping.get('delete_on_termination'):
-                mapping_parts.append(mapping.get('delete_on_termination'))
-            bdm_dict[mapping.get('device_name')] = mapping_parts
+                mapping_parts.append(str(mapping.get('delete_on_termination')))
+            bdm_dict[mapping.get('device_name')] = ':'.join(mapping_parts)
 
         return bdm_dict
 

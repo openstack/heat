@@ -777,21 +777,21 @@ class ServersTest(HeatTestCase):
             None, servers.Server._build_block_device_mapping(None))
 
         self.assertEqual({
-            'vda': ['1234', ''],
-            'vdb': ['1234', 'snap'],
+            'vda': '1234:',
+            'vdb': '1234:snap',
         }, servers.Server._build_block_device_mapping([
             {'device_name': 'vda', 'volume_id': '1234'},
             {'device_name': 'vdb', 'snapshot_id': '1234'},
         ]))
 
         self.assertEqual({
-            'vdc': ['1234', '', 10],
-            'vdd': ['1234', 'snap', 0, True]
+            'vdc': '1234::10',
+            'vdd': '1234:snap:0:True'
         }, servers.Server._build_block_device_mapping([
             {
                 'device_name': 'vdc',
                 'volume_id': '1234',
-                'volume_size': 10
+                'volume_size': '10'
             },
             {
                 'device_name': 'vdd',
