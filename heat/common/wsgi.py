@@ -676,6 +676,10 @@ class Resource(object):
                           {'code': err.code, 'explanation': err.explanation})
             http_exc = translate_exception(err, request.best_match_language())
             raise exception.HTTPExceptionDisguise(http_exc)
+        except exception.HeatException as err:
+            logging.error(_("Unexpected error occurred serving API: %s") %
+                          err.message)
+            raise translate_exception(err, request.best_match_language())
         except Exception as err:
             logging.error(_("Unexpected error occurred serving API: %s") % err)
             raise translate_exception(err, request.best_match_language())
