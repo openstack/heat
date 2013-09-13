@@ -13,8 +13,56 @@
 
 Building JEOS images for use with Heat
 ======================================
+Heat's full functionality can only be used when launching cloud images that have
+the heat-cfntools_ package installed.
+This document describes some options for creating a heat-cfntools enabled image
+for yourself.
 
-There are several approaches to building images which will work with heat, but one approach, using Oz wrapped in a convenience script, is documented below
+.. _heat-cfntools: https://github.com/openstack/heat-cfntools
+
+Building an image with diskimage-builder
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+diskimage-builder_ is a tool for customizing cloud images.
+tripleo-image-elements_ is a collection of diskimage-builder elements related
+to the TripleO_ project. It includes an element for heat-cfntools which can be
+used to create heat-enabled images.
+
+.. _diskimage-builder: https://github.com/openstack/diskimage-builder
+.. _tripleo-image-elements: https://github.com/openstack/tripleo-image-elements
+.. _TripleO: https://wiki.openstack.org/wiki/TripleO
+
+Fetch the tool and elements::
+
+    git clone https://github.com/openstack/diskimage-builder.git
+    git clone https://github.com/openstack/tripleo-image-elements.git
+
+To create a heat-cfntools enabled image with the current release of Fedora x86_64::
+
+    export ELEMENTS_PATH=tripleo-image-elements/elements
+    diskimage-builder/bin/disk-image-create vm fedora heat-cfntools -a amd64 -o fedora-heat-cfntools
+
+The image may then be pushed to glance, e.g::
+
+    source ~/.openstack/keystonerc
+    glance image-create --name fedora-heat-cfntools --is-public true --disk-format qcow2 --container-format bare < fedora-heat-cfntools.qcow2
+
+To create a heat-cfntools enabled image with the current release of Ubuntu i386::
+
+    export ELEMENTS_PATH=tripleo-image-elements/elements
+    diskimage-builder/bin/disk-image-create vm ubuntu heat-cfntools -a i386 -o ubuntu-heat-cfntools
+
+If you are creating your own images you should consider creating golden images
+which contain all the packages required for the stacks that you launch. You can do
+this by writing your own diskimage-builder elements and invoking those elements
+in the call to disk-image-create.
+
+This means that the resulting heat templates only need to modify configuration
+files. This will speed stack launch time and reduce the risk of a transient
+package download failure causing the stack launch to fail.
+
+Building an image with Oz
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Another approach to building a heat-cfntools enabled image is to use Oz wrapped in a convenience script.
 
 The example below demonstrates how to build an F17 image, but there are Oz tdl templates for several other distributions provided in heat-templates/jeos
 
