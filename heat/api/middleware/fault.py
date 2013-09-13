@@ -71,6 +71,7 @@ class FaultWrapper(wsgi.Middleware):
         'NotSupported': webob.exc.HTTPBadRequest,
         'MissingCredentialError': webob.exc.HTTPBadRequest,
         'UserParameterMissing': webob.exc.HTTPBadRequest,
+        'RequestLimitExceeded': webob.exc.HTTPBadRequest,
     }
 
     def _error(self, ex):

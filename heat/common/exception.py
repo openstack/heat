@@ -302,10 +302,6 @@ class HTTPExceptionDisguise(Exception):
         self.tb = sys.exc_info()[2]
 
 
-class TemplateTooBig(HeatException):
-    message = _('Template exceeds maximum allowed size.')
-
-
 class EgressRuleNotAllowed(HeatException):
     message = _("Egress rules are only allowed when "
                 "Neutron is used and the 'VpcId' property is set.")
@@ -322,14 +318,6 @@ class NotFound(Error):
 
 class InvalidContentType(HeatException):
     message = "Invalid content type %(content_type)s"
-
-
-class StackRecursionLimitReached(HeatException):
-    message = _("Recursion depth exceeds %d.")
-
-    def __init__(self, recursion_depth):
-        self.message = self.message % recursion_depth
-        super(StackRecursionLimitReached, self).__init__()
 
 
 class RequestLimitExceeded(HeatException):

@@ -59,7 +59,8 @@ def parse(tmpl_str):
     JSON or YAML format.
     '''
     if len(tmpl_str) > cfg.CONF.max_template_size:
-        raise exception.TemplateTooBig()
+        msg = _('Template exceeds maximum allowed size.')
+        raise exception.RequestLimitExceeded(message=msg)
     if tmpl_str.startswith('{'):
         tpl = json.loads(tmpl_str)
     else:
