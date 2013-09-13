@@ -18,7 +18,8 @@ import json
 
 from oslo.config import cfg
 import webob
-
+import cProfile
+import time
 from heat.openstack.common import timeutils
 from heat.common import context
 from heat.db import api as db_api
@@ -186,11 +187,15 @@ class EngineService(service.Service):
 
     @request_context
     def list_stacks(self, cnxt):
+        cProfile.runctx('self._list_stacks(cnxt)', globals(), locals(),
+                        '/tmp/%s_service_list_stats' % str(time.time()))
+        return self._list_stacks(cnxt)
+
+    def _list_stacks(self, cnxt):
         """
         The list_stacks method returns attributes of all stacks.
         arg1 -> RPC cnxt.
         """
-
         def format_stack_details(stacks):
             for s in stacks:
                 try:
