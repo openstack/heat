@@ -799,3 +799,61 @@ class ServersTest(HeatTestCase):
                 'delete_on_termination': True
             }
         ]))
+
+    def test_validate_conflict_block_device_mapping_props(self):
+        stack_name = 'test_validate_conflict_block_device_mapping_props'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        bdm = [{'device_name': 'vdb', 'snapshot_id': '1234',
+                'volume_id': '1234'}]
+        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        self.assertRaises(exception.ResourcePropertyConflict, server.validate)
+        self.m.VerifyAll()
+
+    def test_validate_insufficient_block_device_mapping_props(self):
+        stack_name = 'test_validate_insufficient_block_device_mapping_props'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        bdm = [{'device_name': 'vdb', 'volume_size': '1',
+                'delete_on_termination': True}]
+        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               server.validate)
+        msg = 'Either volume_id or snapshot_id must be specified for device' +\
+              ' mapping vdb'
+        self.assertEqual(msg, str(ex))
+
+        self.m.VerifyAll()
+
+    def test_validate_without_image_or_bootable_volume(self):
+        stack_name = 'test_validate_without_image_or_bootable_volume'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        del t['Resources']['WebServer']['Properties']['image']
+        bdm = [{'device_name': 'vdb', 'volume_id': '1234'}]
+        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               server.validate)
+        msg = 'Neither image nor bootable volume is specified for instance %s'\
+            % server.name
+        self.assertEqual(msg, str(ex))
+
+        self.m.VerifyAll()

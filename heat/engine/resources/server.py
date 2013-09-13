@@ -360,14 +360,30 @@ class Server(resource.Resource):
         if key_name:
             nova_utils.get_keypair(self.nova(), key_name)
 
+        # either volume_id or snapshot_id needs to be specified, but not both
+        # for block device mapping.
+        bdm = self.properties.get('block_device_mapping') or []
+        bootable_vol = False
+        for mapping in bdm:
+            if mapping['device_name'] is 'vda':
+                    bootable_vol = True
+
+            if mapping.get('volume_id') and mapping.get('snapshot_id'):
+                raise exception.ResourcePropertyConflict('volume_id',
+                                                         'snapshot_id')
+            if not mapping.get('volume_id') and not mapping.get('snapshot_id'):
+                msg = _('Either volume_id or snapshot_id must be specified for'
+                        ' device mapping %s') % mapping['device_name']
+                raise exception.StackValidationFailed(message=msg)
+
         # make sure the image exists if specified.
         image = self.properties.get('image', None)
         if image:
             nova_utils.get_image_id(self.nova(), image)
-        else:
-            # TODO(sbaker) confirm block_device_mapping is populated
-            # for boot-by-volume (see LP bug #1215267)
-            pass
+        elif not image and not bootable_vol:
+            msg = _('Neither image nor bootable volume is specified for'
+                    ' instance %s') % self.name
+            raise exception.StackValidationFailed(message=msg)
 
     def handle_delete(self):
         '''
