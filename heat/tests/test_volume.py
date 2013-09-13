@@ -496,7 +496,7 @@ class VolumeTest(HeatTestCase):
     @skipIf(volume_backups is None, 'unable to import volume_backups')
     def test_create_from_snapshot(self):
         stack_name = 'test_volume_stack'
-        fv = FakeVolumeFromBackup('restoring-backup', 'available')
+        fv = FakeVolumeWithStateTransition('restoring-backup', 'available')
         fvbr = FakeBackupRestore('vol-123')
 
         # create script
@@ -525,7 +525,7 @@ class VolumeTest(HeatTestCase):
     @skipIf(volume_backups is None, 'unable to import volume_backups')
     def test_create_from_snapshot_error(self):
         stack_name = 'test_volume_stack'
-        fv = FakeVolumeFromBackup('restoring-backup', 'error')
+        fv = FakeVolumeWithStateTransition('restoring-backup', 'error')
         fvbr = FakeBackupRestore('vol-123')
 
         # create script
@@ -587,6 +587,40 @@ class VolumeTest(HeatTestCase):
             'imageRef': 'Image1',
             'snapshot_id': 'snap-123',
             'source_volid': 'vol-012',
+        }
+        stack = utils.parse_stack(t, stack_name=stack_name)
+
+        rsrc = vol.CinderVolume('DataVolume',
+                                t['Resources']['DataVolume'],
+                                stack)
+        self.assertEqual(rsrc.validate(), None)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual(fv.status, 'available')
+
+        self.m.VerifyAll()
+
+    def test_cinder_create_from_image(self):
+        fv = FakeVolumeWithStateTransition('downloading', 'available')
+        stack_name = 'test_volume_stack'
+
+        clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
+            self.cinder_fc)
+        self.cinder_fc.volumes.create(
+            size=u'1', availability_zone='nova',
+            display_description='ImageVolumeDescription',
+            display_name='ImageVolume',
+            imageRef='Image1').AndReturn(fv)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties'] = {
+            'size': '1',
+            'name': 'ImageVolume',
+            'description': 'ImageVolumeDescription',
+            'availability_zone': 'nova',
+            'imageRef': 'Image1',
         }
         stack = utils.parse_stack(t, stack_name=stack_name)
 
@@ -781,7 +815,7 @@ class FakeBackupRestore(object):
         self.volume_id = volume_id
 
 
-class FakeVolumeFromBackup(FakeVolume):
+class FakeVolumeWithStateTransition(FakeVolume):
     status = 'restoring-backup'
     get_call_count = 0
 
