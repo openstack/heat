@@ -683,10 +683,12 @@ class Properties(collections.Mapping):
         prop = self.props[key]
 
         if key in self.data:
-            value = self.resolve(self.data[key])
             try:
+                value = self.resolve(self.data[key])
                 return prop.validate_data(value)
-            except ValueError as e:
+            # the resolver function could raise any number of exceptions,
+            # so handle this generically
+            except Exception as e:
                 raise ValueError(self.error_prefix + '%s %s' % (key, str(e)))
         elif prop.has_default():
             return prop.default()
