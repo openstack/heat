@@ -30,11 +30,23 @@ logger = logging.getLogger(__name__)
 
 class Volume(resource.Resource):
 
-    properties_schema = {'AvailabilityZone': {'Type': 'String',
-                                              'Required': True},
-                         'Size': {'Type': 'Number'},
-                         'SnapshotId': {'Type': 'String'},
-                         'Tags': {'Type': 'List'}}
+    properties_schema = {
+        'AvailabilityZone': {
+            'Type': 'String', 'Required': True,
+            'Description': _('The availability zone in which the volume '
+                             'will be created')},
+        'Size': {
+            'Type': 'Number',
+            'Description': _('The size of the volume in GB')},
+        'SnapshotId': {
+            'Type': 'String',
+            'Description': _('If specified, the backup used as the source '
+                             'to create the volume')},
+        'Tags': {
+            'Type': 'List',
+            'Description': _('The list of tags to associate with the volume '
+                             ' (ignored)')}
+    }
 
     _restore_property = 'SnapshotId'
 
@@ -245,13 +257,20 @@ class VolumeDetachTask(object):
 
 
 class VolumeAttachment(resource.Resource):
-    properties_schema = {'InstanceId': {'Type': 'String',
-                                        'Required': True},
-                         'VolumeId': {'Type': 'String',
-                                      'Required': True},
-                         'Device': {'Type': 'String',
-                                    'Required': True,
-                                    'AllowedPattern': '/dev/vd[b-z]'}}
+    properties_schema = {
+        'InstanceId': {
+            'Type': 'String', 'Required': True,
+            'Description': _('The ID of the instance to which the '
+                             'volume attaches')},
+        'VolumeId': {
+            'Type': 'String', 'Required': True,
+            'Description': _('The ID of the volume to be attached')},
+        'Device': {
+            'Type': 'String', 'Required': True,
+            'AllowedPattern': '/dev/vd[b-z]',
+            'Description': _('The device where the volume is exposed on '
+                             'the instance')}
+    }
 
     _instance_property = 'InstanceId'
     _volume_property = 'VolumeId'
@@ -283,17 +302,43 @@ class VolumeAttachment(resource.Resource):
 
 class CinderVolume(Volume):
 
-    properties_schema = {'availability_zone': {'Type': 'String',
-                                               'Required': True},
-                         'size': {'Type': 'Number'},
-                         'snapshot_id': {'Type': 'String'},
-                         'backup_id': {'Type': 'String'},
-                         'name': {'Type': 'String'},
-                         'description': {'Type': 'String'},
-                         'volume_type': {'Type': 'String'},
-                         'metadata': {'Type': 'Map'},
-                         'imageRef': {'Type': 'String'},
-                         'source_volid': {'Type': 'String'}}
+    properties_schema = {
+        'availability_zone': {
+            'Type': 'String', 'Required': True,
+            'Description': _('The availability zone in which the volume '
+                             'will be created')},
+        'size': {
+            'Type': 'Number',
+            'Description': _('The size of the volume in GB')},
+        'snapshot_id': {
+            'Type': 'String',
+            'Description': _('If specified, the snapshot to create the '
+                             'volume from.')},
+        'backup_id': {
+            'Type': 'String',
+            'Description': _('If specified, the backup to create the '
+                             'volume from')},
+        'name': {
+            'Type': 'String',
+            'Description': _('A name used to distinguish the volume')},
+        'description': {
+            'Type': 'String',
+            'Description': _('A description of the volume')},
+        'volume_type': {
+            'Type': 'String',
+            'Description': _('If specified, the type of volume to use, '
+                             'mapping to a specific backend')},
+        'metadata': {
+            'Type': 'Map',
+            'Description': _('Key/value pairs to associate with the volume')},
+        'imageRef': {
+            'Type': 'String',
+            'Description': _('If specified, the image to create the volume '
+                             'from')},
+        'source_volid': {
+            'Type': 'String',
+            'Description': _('If specified, the volume to use as source')}
+    }
 
     _restore_property = 'backup_id'
 
@@ -335,12 +380,19 @@ class CinderVolume(Volume):
 
 class CinderVolumeAttachment(VolumeAttachment):
 
-    properties_schema = {'instance_uuid': {'Type': 'String',
-                                           'Required': True},
-                         'volume_id': {'Type': 'String',
-                                       'Required': True},
-                         'mountpoint': {'Type': 'String',
-                                        'Required': True}}
+    properties_schema = {
+        'instance_uuid': {
+            'Type': 'String', 'Required': True,
+            'Description': _('The ID of the server to which the '
+                             'volume attaches')},
+        'volume_id': {
+            'Type': 'String', 'Required': True,
+            'Description': _('The ID of the volume to be attached')},
+        'mountpoint': {
+            'Type': 'String', 'Required': True,
+            'Description': _('The location where the volume is exposed on '
+                             'the instance')}
+    }
 
     _instance_property = 'instance_uuid'
     _volume_property = 'volume_id'
