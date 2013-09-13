@@ -30,11 +30,14 @@ logger = logging.getLogger(__name__)
 
 
 class Restarter(signal_responder.SignalResponder):
-    properties_schema = {'InstanceId': {'Type': 'String',
-                                        'Required': True}}
+    properties_schema = {
+        'InstanceId': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('Instance ID to be restarted.')}}
     attributes_schema = {
-        "AlarmUrl": ("A signed url to handle the alarm. "
-                     "(Heat extension)")
+        "AlarmUrl": _("A signed url to handle the alarm "
+                      "(Heat extension).")
     }
 
     def _find_resource(self, resource_id):
@@ -85,55 +88,94 @@ class Instance(resource.Resource):
                    'Value': {'Type': 'String',
                              'Required': True}}
 
-    properties_schema = {'ImageId': {'Type': 'String',
-                                     'Required': True},
-                         'InstanceType': {'Type': 'String',
-                                          'Required': True},
-                         'KeyName': {'Type': 'String'},
-                         'AvailabilityZone': {'Type': 'String'},
-                         'DisableApiTermination': {'Type': 'String',
-                                                   'Implemented': False},
-                         'KernelId': {'Type': 'String',
-                                      'Implemented': False},
-                         'Monitoring': {'Type': 'Boolean',
-                                        'Implemented': False},
-                         'PlacementGroupName': {'Type': 'String',
-                                                'Implemented': False},
-                         'PrivateIpAddress': {'Type': 'String',
-                                              'Implemented': False},
-                         'RamDiskId': {'Type': 'String',
-                                       'Implemented': False},
-                         'SecurityGroups': {'Type': 'List'},
-                         'SecurityGroupIds': {'Type': 'List'},
-                         'NetworkInterfaces': {'Type': 'List'},
-                         'SourceDestCheck': {'Type': 'Boolean',
-                                             'Implemented': False},
-                         'SubnetId': {'Type': 'String'},
-                         'Tags': {'Type': 'List',
-                                  'Schema': {'Type': 'Map',
-                                             'Schema': tags_schema}},
-                         'NovaSchedulerHints': {'Type': 'List',
-                                                'Schema': {
-                                                    'Type': 'Map',
-                                                    'Schema': tags_schema
-                                                }},
-                         'Tenancy': {'Type': 'String',
-                                     'AllowedValues': ['dedicated', 'default'],
-                                     'Implemented': False},
-                         'UserData': {'Type': 'String'},
-                         'Volumes': {'Type': 'List'}}
+    properties_schema = {
+        'ImageId': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('Glance image ID or name.')},
+        'InstanceType': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('Nova instance type (flavor).')},
+        'KeyName': {
+            'Type': 'String',
+            'Description': _('Optional Nova keypair name.')},
+        'AvailabilityZone': {
+            'Type': 'String',
+            'Description': _('Availability zone to launch the instance in.')},
+        'DisableApiTermination': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'KernelId': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'Monitoring': {
+            'Type': 'Boolean',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'PlacementGroupName': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'PrivateIpAddress': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'RamDiskId': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'SecurityGroups': {
+            'Type': 'List',
+            'Description': _('Security group names to assign.')},
+        'SecurityGroupIds': {
+            'Type': 'List',
+            'Description': _('Security group IDs to assign.')},
+        'NetworkInterfaces': {
+            'Type': 'List',
+            'Description': _('Network interfaces to associate with '
+                             'instance.')},
+        'SourceDestCheck': {
+            'Type': 'Boolean',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'SubnetId': {
+            'Type': 'String',
+            'Description': _('Subnet ID to launch instance in.')},
+        'Tags': {
+            'Type': 'List',
+            'Schema': {'Type': 'Map', 'Schema': tags_schema},
+            'Description': _('Tags to attach to instance.')},
+        'NovaSchedulerHints': {
+            'Type': 'List',
+            'Schema': {'Type': 'Map', 'Schema': tags_schema},
+            'Description': _('Scheduler hints to pass '
+                             'to Nova (Heat extension).')},
+        'Tenancy': {
+            'Type': 'String',
+            'AllowedValues': ['dedicated', 'default'],
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'UserData': {
+            'Type': 'String',
+            'Description': _('User data to pass to instance.')},
+        'Volumes': {
+            'Type': 'List',
+            'Description': _('Volumes to attach to instance.')}}
 
-    attributes_schema = {'AvailabilityZone': ('The Availability Zone where the'
-                                              ' specified instance is '
-                                              'launched.'),
-                         'PrivateDnsName': ('Private DNS name of the specified'
-                                            ' instance.'),
-                         'PublicDnsName': ('Public DNS name of the specified '
-                                           'instance.'),
-                         'PrivateIp': ('Private IP address of the specified '
-                                       'instance.'),
-                         'PublicIp': ('Public IP address of the specified '
-                                      'instance.')}
+    attributes_schema = {'AvailabilityZone': _('The Availability Zone where '
+                                               'the specified instance is '
+                                               'launched.'),
+                         'PrivateDnsName': _('Private DNS name of the'
+                                             ' specified instance.'),
+                         'PublicDnsName': _('Public DNS name of the specified '
+                                            'instance.'),
+                         'PrivateIp': _('Private IP address of the specified '
+                                        'instance.'),
+                         'PublicIp': _('Public IP address of the specified '
+                                       'instance.')}
 
     update_allowed_keys = ('Metadata', 'Properties')
     update_allowed_properties = ('InstanceType',)
