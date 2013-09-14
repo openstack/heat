@@ -174,7 +174,8 @@ class Instance(resource.Resource):
         logger.info('%s._resolve_attribute(%s) == %s' % (self.name, name, res))
         return unicode(res) if res else None
 
-    def _build_nics(self, network_interfaces, subnet_id=None):
+    def _build_nics(self, network_interfaces,
+                    security_groups=None, subnet_id=None):
 
         nics = None
 
@@ -206,10 +207,40 @@ class Instance(resource.Resource):
                         'network_id': network_id,
                         'fixed_ips': [fixed_ip]
                     }
+
+                    if security_groups:
+                        props['security_groups'] = \
+                            self._get_security_groups_id(security_groups)
+
                     port = neutronclient.create_port({'port': props})['port']
                     nics = [{'port-id': port['id']}]
 
         return nics
+
+    def _get_security_groups_id(self, security_groups):
+        """Extract security_groups ids from security group list
+
+        This function will be deprecated if Neutron client resolves security
+        group name to id internally.
+
+        Args:
+            security_groups : A list contains security_groups ids or names
+        Returns:
+            A list of security_groups ids.
+        """
+        ids = []
+        response = self.neutron().list_security_groups(self.resource_id)
+        for item in response:
+            if item['security_groups'] is not None:
+                for security_group in security_groups:
+                    for groups in item['security_groups']:
+                        if groups['name'] == security_group \
+                                and groups['id'] not in ids:
+                            ids.append(groups['id'])
+                        elif groups['id'] == security_group \
+                                and groups['id'] not in ids:
+                            ids.append(groups['id'])
+        return ids
 
     def _get_security_groups(self):
         security_groups = []
@@ -259,6 +290,7 @@ class Instance(resource.Resource):
             scheduler_hints = None
 
         nics = self._build_nics(self.properties['NetworkInterfaces'],
+                                security_groups=security_groups,
                                 subnet_id=self.properties['SubnetId'])
         server = None
         try:
