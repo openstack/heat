@@ -157,6 +157,7 @@ class CeilometerAlarmTest(HeatTestCase):
         snippet['Properties']['evaluation_periods'] = '2'
         snippet['Properties']['period'] = '90'
         snippet['Properties']['enabled'] = 'true'
+        snippet['Properties']['repeat_actions'] = True
         snippet['Properties']['statistic'] = 'max'
         snippet['Properties']['threshold'] = '39'
         snippet['Properties']['insufficient_data_actions'] = []
