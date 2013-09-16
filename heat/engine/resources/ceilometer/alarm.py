@@ -33,10 +33,10 @@ class CeilometerAlarm(resource.Resource):
             'Required': True,
             'Description': _('Number of periods to evaluate over')
         },
-        'counter_name': {
+        'meter_name': {
             'Type': 'String',
             'Required': True,
-            'Description': _('Counter name watched by the alarm')
+            'Description': _('Meter name watched by the alarm')
         },
         'period': {
             'Type': 'String',
@@ -47,7 +47,7 @@ class CeilometerAlarm(resource.Resource):
             'Type': 'String',
             'Required': True,
             'AllowedValues': ['count', 'avg', 'sum', 'min', 'max'],
-            'Description': _('Counter statistic to evaluate')
+            'Description': _('Meter statistic to evaluate')
         },
         'threshold': {
             'Type': 'String',
@@ -89,8 +89,8 @@ class CeilometerAlarm(resource.Resource):
         },
         'matching_metadata': {
             'Type': 'Map',
-            'Description': _('Counter should match this resource metadata '
-                             '(key=value) additionally to the counter_name')
+            'Description': _('Meter should match this resource metadata '
+                             '(key=value) additionally to the meter_name')
         }
     }
 
