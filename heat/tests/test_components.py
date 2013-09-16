@@ -60,7 +60,7 @@ class ComponentsTest(HeatTestCase):
 
         schema['config_mysql'] = {}
         comps = Components(schema)
-        self.assertEquals(1, len(comps))
+        self.assertEqual(1, len(comps))
         comp = comps['config_mysql']
         self.assertIsInstance(comp, Component)
 

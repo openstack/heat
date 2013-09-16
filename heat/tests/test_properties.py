@@ -1366,8 +1366,8 @@ class PropertiesValidationTest(testtools.TestCase):
         param_expected = {'foo': {'Type': 'Json'}}
         (parameters, props) = \
             properties.Properties.schema_to_parameters_and_properties(schema)
-        self.assertEquals(param_expected, parameters)
-        self.assertEquals(prop_expected, props)
+        self.assertEqual(param_expected, parameters)
+        self.assertEqual(prop_expected, props)
 
     def test_schema_to_template_nested_map_list_map_schema(self):
         key_schema = {'bar': {'Type': 'Number'}}
@@ -1382,8 +1382,8 @@ class PropertiesValidationTest(testtools.TestCase):
         param_expected = {'foo': {'Type': 'CommaDelimitedList'}}
         (parameters, props) = \
             properties.Properties.schema_to_parameters_and_properties(schema)
-        self.assertEquals(param_expected, parameters)
-        self.assertEquals(prop_expected, props)
+        self.assertEqual(param_expected, parameters)
+        self.assertEqual(prop_expected, props)
 
     def test_schema_invalid_parameters_stripped(self):
         schema = {'foo': {'Type': 'String',
@@ -1395,5 +1395,5 @@ class PropertiesValidationTest(testtools.TestCase):
 
         (parameters, props) = \
             properties.Properties.schema_to_parameters_and_properties(schema)
-        self.assertEquals(param_expected, parameters)
-        self.assertEquals(prop_expected, props)
+        self.assertEqual(param_expected, parameters)
+        self.assertEqual(prop_expected, props)

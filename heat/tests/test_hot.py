@@ -46,11 +46,11 @@ class HOTemplateTest(HeatTestCase):
             self.fail('Expected KeyError for invalid section')
 
         # test defaults for valid sections
-        self.assertEquals(tmpl[hot.VERSION], '2013-05-23')
-        self.assertEquals(tmpl[hot.DESCRIPTION], 'No description')
-        self.assertEquals(tmpl[hot.PARAMETERS], {})
-        self.assertEquals(tmpl[hot.RESOURCES], {})
-        self.assertEquals(tmpl[hot.OUTPUTS], {})
+        self.assertEqual(tmpl[hot.VERSION], '2013-05-23')
+        self.assertEqual(tmpl[hot.DESCRIPTION], 'No description')
+        self.assertEqual(tmpl[hot.PARAMETERS], {})
+        self.assertEqual(tmpl[hot.RESOURCES], {})
+        self.assertEqual(tmpl[hot.OUTPUTS], {})
 
     def test_translate_parameters(self):
         """Test translation of parameters into internal engine format."""

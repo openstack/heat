@@ -254,7 +254,7 @@ Resources:
         t = template_format.parse(root_template)
         stack = self.parse_stack(t)
         stack.create()
-        self.assertEquals((stack.CREATE, stack.FAILED), stack.state)
+        self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
         self.assertIn('Recursion depth exceeds', stack.status_reason)
         self.m.VerifyAll()
 

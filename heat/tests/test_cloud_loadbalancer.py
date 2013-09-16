@@ -280,7 +280,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEquals(rsrc.validate(), {
+        self.assertEqual(rsrc.validate(), {
             'Error':
             'The halfClosed property is only available for the '
             'TCP or TCP_CLIENT_FIRST protocols'})
@@ -291,7 +291,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEquals(rsrc.validate(), None)
+        self.assertEqual(rsrc.validate(), None)
 
         #test TCP_CLIENT_FIRST protocol
         template = self._set_template(template,
@@ -301,7 +301,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEquals(rsrc.validate(), None)
+        self.assertEqual(rsrc.validate(), None)
 
     def test_validate_health_monitor(self):
         #test connect success
@@ -319,7 +319,7 @@ class LoadBalancerTest(HeatTestCase):
                                                           self.lb_name,
                                                           expected)
 
-        self.assertEquals(rsrc.validate(), None)
+        self.assertEqual(rsrc.validate(), None)
 
         #test connect failure
         #bodyRegex is only valid for type 'HTTP(S)'
@@ -331,8 +331,8 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEquals(rsrc.validate(),
-                          {'Error': 'Unknown Property bodyRegex'})
+        self.assertEqual(rsrc.validate(),
+                         {'Error': 'Unknown Property bodyRegex'})
 
         #test http fields
         health_monitor['type'] = 'HTTP'
@@ -348,7 +348,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEquals(rsrc.validate(), None)
+        self.assertEqual(rsrc.validate(), None)
 
     def test_validate_ssl_termination(self):
         ssl_termination = {
@@ -367,10 +367,10 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEquals(rsrc.validate(),
-                          {'Error':
-                          'Property error : %s: Property securePort not '
-                          'assigned' % rsrc.name})
+        self.assertEqual(rsrc.validate(),
+                         {'Error':
+                         'Property error : %s: Property securePort not '
+                         'assigned' % rsrc.name})
 
         ssl_termination['securePort'] = 443
         template = self._set_template(template,
@@ -380,7 +380,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEquals(rsrc.validate(), None)
+        self.assertEqual(rsrc.validate(), None)
 
     def test_post_creation_access_list(self):
         access_list = [{"address": '192.168.1.1/0',

@@ -115,4 +115,4 @@ class DBInstanceTest(HeatTestCase):
                              templ)
 
         res = stack['DatabaseServer']
-        self.assertEquals(None, res._validate_against_facade(DBInstance))
+        self.assertEqual(None, res._validate_against_facade(DBInstance))
