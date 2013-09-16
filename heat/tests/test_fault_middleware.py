@@ -47,6 +47,26 @@ class FaultMiddlewareTest(HeatTestCase):
                     'title': 'Internal Server Error'}
         self.assertEqual(msg, expected)
 
+    def test_exception_with_non_ascii_chars(self):
+        # We set debug to true to test the code path for serializing traces too
+        cfg.CONF.set_override('debug', True)
+        msg = u'Error with non-ascii chars \x80'
+
+        class TestException(heat_exc.HeatException):
+            message = msg
+
+        wrapper = fault.FaultWrapper(None)
+        msg = wrapper._error(TestException())
+        expected = {'code': 500,
+                    'error': {'message': u'Error with non-ascii chars \x80',
+                              'traceback': 'None\n',
+                              'type': 'TestException'},
+                    'explanation': ('The server has either erred or is '
+                                    'incapable of performing the requested '
+                                    'operation.'),
+                    'title': 'Internal Server Error'}
+        self.assertEqual(msg, expected)
+
     def test_remote_exception(self):
         # We want tracebacks
         cfg.CONF.set_override('debug', True)

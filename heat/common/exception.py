@@ -120,6 +120,9 @@ class HeatException(Exception):
     def __str__(self):
         return str(self.message)
 
+    def __unicode__(self):
+        return unicode(self.message)
+
 
 class MissingCredentialError(HeatException):
     message = _("Missing required credential: %(required)s")
