@@ -109,6 +109,26 @@ class Stack(object):
 
         self.dependencies = self._get_dependencies(self.resources.itervalues())
 
+    @property
+    def root_stack(self):
+        '''
+        Return the root stack if this is nested (otherwise return self).
+        '''
+        if (self.parent_resource and self.parent_resource.stack):
+            return self.parent_resource.stack.root_stack
+        return self
+
+    def total_resources(self):
+        '''
+        Total number of resources in a stack, including nested stacks below.
+        '''
+        total = 0
+        for res in iter(self.resources.values()):
+            if hasattr(res, 'nested') and res.nested():
+                total += res.nested().total_resources()
+            total += 1
+        return total
+
     def _set_param_stackid(self):
         '''
         Update self.parameters with the current ARN which is then provided
