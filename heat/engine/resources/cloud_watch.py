@@ -24,53 +24,101 @@ logger = logging.getLogger(__name__)
 
 
 class CloudWatchAlarm(resource.Resource):
-    properties_schema = {'ComparisonOperator': {'Type': 'String',
-                         'AllowedValues': ['GreaterThanOrEqualToThreshold',
-                         'GreaterThanThreshold', 'LessThanThreshold',
-                         'LessThanOrEqualToThreshold']},
-                         'AlarmDescription': {'Type': 'String'},
-                         'EvaluationPeriods': {'Type': 'String'},
-                         'MetricName': {'Type': 'String'},
-                         'Namespace': {'Type': 'String'},
-                         'Period': {'Type': 'String'},
-                         'Statistic': {'Type': 'String',
-                                       'AllowedValues': ['SampleCount',
-                                                         'Average',
-                                                         'Sum',
-                                                         'Minimum',
-                                                         'Maximum']},
-                         'AlarmActions': {'Type': 'List'},
-                         'OKActions': {'Type': 'List'},
-                         'Dimensions': {'Type': 'List'},
-                         'InsufficientDataActions': {'Type': 'List'},
-                         'Threshold': {'Type': 'String'},
-                         'Units': {'Type': 'String',
-                                   'AllowedValues': ['Seconds',
-                                                     'Microseconds',
-                                                     'Milliseconds',
-                                                     'Bytes',
-                                                     'Kilobytes',
-                                                     'Megabytes',
-                                                     'Gigabytes',
-                                                     'Terabytes',
-                                                     'Bits',
-                                                     'Kilobits',
-                                                     'Megabits',
-                                                     'Gigabits',
-                                                     'Terabits',
-                                                     'Percent',
-                                                     'Count',
-                                                     'Bytes/Second',
-                                                     'Kilobytes/Second',
-                                                     'Megabytes/Second',
-                                                     'Gigabytes/Second',
-                                                     'Terabytes/Second',
-                                                     'Bits/Second',
-                                                     'Kilobits/Second',
-                                                     'Megabits/Second',
-                                                     'Gigabits/Second',
-                                                     'Terabits/Second',
-                                                     'Count/Second', None]}}
+    properties_schema = {
+        'ComparisonOperator': {
+            'Type': 'String',
+            'AllowedValues': ['GreaterThanOrEqualToThreshold',
+                              'GreaterThanThreshold',
+                              'LessThanThreshold',
+                              'LessThanOrEqualToThreshold'],
+            'Description': _('Operator used to compare the specified '
+                             'Statistic with Threshold.')
+        },
+        'AlarmDescription': {
+            'Type': 'String',
+            'Description': _('Description for the alarm.')
+        },
+        'EvaluationPeriods': {
+            'Type': 'String',
+            'Description': _('Number of periods to evaluate over.')
+        },
+        'MetricName': {
+            'Type': 'String',
+            'Description': _('Metric name watched by the alarm.')
+        },
+        'Namespace': {
+            'Type': 'String',
+            'Description': _('Namespace for the metric.')
+        },
+        'Period': {
+            'Type': 'String',
+            'Description': _('Period (seconds) to evaluate over.')
+        },
+        'Statistic': {
+            'Type': 'String',
+            'AllowedValues': ['SampleCount',
+                              'Average',
+                              'Sum',
+                              'Minimum',
+                              'Maximum'],
+            'Description': _('Metric statistic to evaluate.')
+        },
+        'AlarmActions': {
+            'Type': 'List',
+            'Description': _('A list of actions to execute when state '
+                             'transitions to alarm.')
+        },
+        'OKActions': {
+            'Type': 'List',
+            'Description': _('A list of actions to execute when state '
+                             'transitions to ok.')
+        },
+        'Dimensions': {
+            'Type': 'List',
+            'Description': _('A list of dimensions (arbitrary name/value '
+                             'pairs) associated with the metric.')
+        },
+        'InsufficientDataActions': {
+            'Type': 'List',
+            'Description': _('A list of actions to execute when state '
+                             'transitions to insufficient-data.')
+        },
+        'Threshold': {
+            'Type': 'String',
+            'Description': _('Threshold to evaluate against.')
+        },
+        'Units': {
+            'Type': 'String',
+            'AllowedValues': ['Seconds',
+                              'Microseconds',
+                              'Milliseconds',
+                              'Bytes',
+                              'Kilobytes',
+                              'Megabytes',
+                              'Gigabytes',
+                              'Terabytes',
+                              'Bits',
+                              'Kilobits',
+                              'Megabits',
+                              'Gigabits',
+                              'Terabits',
+                              'Percent',
+                              'Count',
+                              'Bytes/Second',
+                              'Kilobytes/Second',
+                              'Megabytes/Second',
+                              'Gigabytes/Second',
+                              'Terabytes/Second',
+                              'Bits/Second',
+                              'Kilobits/Second',
+                              'Megabits/Second',
+                              'Gigabits/Second',
+                              'Terabits/Second',
+                              'Count/Second',
+                              None],
+            'Description': _('Unit for the metric.')
+        }
+    }
 
     strict_dependency = False
     update_allowed_keys = ('Properties',)
