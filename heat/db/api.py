@@ -129,6 +129,10 @@ def stack_get_all_by_tenant(context):
     return IMPL.stack_get_all_by_tenant(context)
 
 
+def stack_count_all_by_tenant(context):
+    return IMPL.stack_count_all_by_tenant(context)
+
+
 def stack_create(context, values):
     return IMPL.stack_create(context, values)
 

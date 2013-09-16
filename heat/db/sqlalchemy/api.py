@@ -213,11 +213,19 @@ def stack_get_all(context):
     return results
 
 
-def stack_get_all_by_tenant(context):
-    results = soft_delete_aware_query(context, models.Stack).\
+def _query_stack_get_all_by_tenant(context):
+    query = soft_delete_aware_query(context, models.Stack).\
         filter_by(owner_id=None).\
-        filter_by(tenant=context.tenant_id).all()
-    return results
+        filter_by(tenant=context.tenant_id)
+    return query
+
+
+def stack_get_all_by_tenant(context):
+    return _query_stack_get_all_by_tenant(context).all()
+
+
+def stack_count_all_by_tenant(context):
+    return _query_stack_get_all_by_tenant(context).count()
 
 
 def stack_create(context, values):
