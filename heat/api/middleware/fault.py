@@ -22,6 +22,9 @@ Cinder's faultwrapper
 
 import traceback
 import webob
+from oslo.config import cfg
+
+cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
 
 from heat.common import exception
 from heat.openstack.common import log as logging
@@ -81,7 +84,8 @@ class FaultWrapper(wsgi.Middleware):
         if isinstance(ex, exception.HTTPExceptionDisguise):
             # An HTTP exception was disguised so it could make it here
             # let's remove the disguise and set the original HTTP exception
-            trace = ''.join(traceback.format_tb(ex.tb))
+            if cfg.CONF.debug:
+                trace = ''.join(traceback.format_tb(ex.tb))
             ex = ex.exc
             webob_exc = ex
 
@@ -92,7 +96,7 @@ class FaultWrapper(wsgi.Middleware):
 
         message = str(ex.message)
 
-        if not trace:
+        if cfg.CONF.debug and not trace:
             trace = str(ex)
             if trace.find('\n') > -1:
                 unused, trace = trace.split('\n', 1)
