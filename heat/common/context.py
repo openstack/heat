@@ -40,7 +40,7 @@ class RequestContext(context.RequestContext):
                  read_only=False, show_deleted=False,
                  owner_is_tenant=True, overwrite=True,
                  trust_id=None, trustor_user_id=None,
-                 **kwargs):
+                 request_id=None, **kwargs):
         """
         :param overwrite: Set to False to ensure that the greenthread local
             copy of the index is not overwritten.
@@ -53,7 +53,7 @@ class RequestContext(context.RequestContext):
                                              is_admin=is_admin,
                                              read_only=read_only,
                                              show_deleted=show_deleted,
-                                             request_id='unused')
+                                             request_id=request_id)
 
         self.username = username
         self.password = password
@@ -88,7 +88,9 @@ class RequestContext(context.RequestContext):
                 'trustor_user_id': self.trustor_user_id,
                 'auth_url': self.auth_url,
                 'roles': self.roles,
-                'is_admin': self.is_admin}
+                'is_admin': self.is_admin,
+                'user': self.user,
+                'request_id': self.request_id}
 
     @classmethod
     def from_dict(cls, values):
