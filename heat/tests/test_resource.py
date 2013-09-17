@@ -87,6 +87,37 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(res.state, (res.INIT, res.COMPLETE))
         self.assertEqual(res.status_reason, '')
 
+    def test_resource_str_repr_stack_id_resource_id(self):
+        tmpl = {'Type': 'Foo'}
+        res = generic_rsrc.GenericResource('test_res_str_repr', tmpl,
+                                           self.stack)
+        res.stack.id = "123"
+        res.resource_id = "456"
+        expected = ('GenericResource "test_res_str_repr" [456] Stack '
+                    '"test_stack" [123]')
+        observed = str(res)
+        self.assertEqual(expected, observed)
+
+    def test_resource_str_repr_stack_id_no_resource_id(self):
+        tmpl = {'Type': 'Foo'}
+        res = generic_rsrc.GenericResource('test_res_str_repr', tmpl,
+                                           self.stack)
+        res.stack.id = "123"
+        res.resource_id = None
+        expected = ('GenericResource "test_res_str_repr" Stack "test_stack" '
+                    '[123]')
+        observed = str(res)
+        self.assertEqual(expected, observed)
+
+    def test_resource_str_repr_no_stack_id(self):
+        tmpl = {'Type': 'Foo'}
+        res = generic_rsrc.GenericResource('test_res_str_repr', tmpl,
+                                           self.stack)
+        res.stack.id = None
+        expected = ('GenericResource "test_res_str_repr"')
+        observed = str(res)
+        self.assertEqual(expected, observed)
+
     def test_state_set(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
