@@ -223,7 +223,7 @@ class ResourceTest(HeatTestCase):
         try:
             resource(request)
         except exception.HTTPExceptionDisguise as e:
-            self.assertEquals(message_es, e.exc.message)
+            self.assertEqual(message_es, e.exc.message)
         self.m.VerifyAll()
 
 

@@ -142,8 +142,8 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
         del(t2nr['Resources'])
         self.assertEqual(t1nr, t2nr)
 
-        self.assertEquals(set(stack1.resources.keys()),
-                          set(stack2.resources.keys()))
+        self.assertEqual(set(stack1.resources.keys()),
+                         set(stack2.resources.keys()))
         for key in stack1.resources:
             self.assertEqual(stack1.resources[key].t, stack2.resources[key].t)
 

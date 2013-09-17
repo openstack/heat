@@ -671,7 +671,7 @@ Resources:
             resource='INVALID-REF-IN-TEMPLATE',
             key='the_nic.Properties.GroupSet[0]')
 
-        self.assertEquals(str(expected_exception), str(real_exception))
+        self.assertEqual(str(expected_exception), str(real_exception))
 
     def test_network_interface_error_no_ref(self):
         self.mock_keystone()
