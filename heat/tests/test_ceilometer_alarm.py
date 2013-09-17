@@ -215,8 +215,8 @@ class CeilometerAlarmTest(HeatTestCase):
         self.stack.create()
         rsrc = self.stack['MEMAlarmHigh']
         scheduler.TaskRunner(rsrc.suspend)()
-        self.assertTrue((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.resume)()
-        self.assertTrue((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
