@@ -29,7 +29,8 @@ class Net(neutron.NeutronResource):
                          'value_specs': {'Type': 'Map',
                                          'Default': {}},
                          'admin_state_up': {'Default': True,
-                                            'Type': 'Boolean'}}
+                                            'Type': 'Boolean'},
+                         'tenant_id': {'Type': 'String'}}
     attributes_schema = {
         "id": "the unique identifier for this network",
         "status": "the status of the network",

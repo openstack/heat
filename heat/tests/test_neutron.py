@@ -43,7 +43,8 @@ neutron_template = '''
     "network": {
       "Type": "OS::Neutron::Net",
       "Properties": {
-        "name": "the_network"
+        "name": "the_network",
+        "tenant_id": "c1210485b2424d48804aad5d39c61b8f"
       }
     },
     "unnamed_network": {
@@ -59,6 +60,7 @@ neutron_template = '''
       "Type": "OS::Neutron::Subnet",
       "Properties": {
         "network_id": { "Ref" : "network" },
+        "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
         "ip_version": 4,
         "cidr": "10.0.3.0/24",
         "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
@@ -225,7 +227,10 @@ class NeutronNetTest(HeatTestCase):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
         neutronclient.Client.create_network({
-            'network': {'name': u'the_network', 'admin_state_up': True}
+            'network': {
+                'name': u'the_network',
+                'admin_state_up': True,
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'}
         }).AndReturn({"network": {
             "status": "BUILD",
             "subnets": [],
@@ -368,7 +373,8 @@ class NeutronSubnetTest(HeatTestCase):
                 'allocation_pools': [
                     {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
                 'ip_version': 4,
-                'cidr': u'10.0.3.0/24'
+                'cidr': u'10.0.3.0/24',
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'
             }
         }).AndReturn({
             "subnet": {
@@ -465,7 +471,8 @@ class NeutronSubnetTest(HeatTestCase):
                     {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
                 'ip_version': 4,
                 'enable_dhcp': False,
-                'cidr': u'10.0.3.0/24'
+                'cidr': u'10.0.3.0/24',
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'
             }
         }).AndReturn({
             "subnet": {
