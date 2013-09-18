@@ -65,22 +65,31 @@ class InstanceGroup(stack_resource.StackResource):
                    'Value': {'Type': 'String',
                              'Required': True}}
     properties_schema = {
-        'AvailabilityZones': {'Required': True,
-                              'Type': 'List'},
-        'LaunchConfigurationName': {'Required': True,
-                                    'Type': 'String'},
-        'Size': {'Required': True,
-                 'Type': 'Number'},
-        'LoadBalancerNames': {'Type': 'List'},
-        'Tags': {'Type': 'List',
-                 'Schema': {'Type': 'Map',
-                            'Schema': tags_schema}}
+        'AvailabilityZones': {
+            'Required': True,
+            'Type': 'List',
+            'Description': _('Not Implemented.')},
+        'LaunchConfigurationName': {
+            'Required': True,
+            'Type': 'String',
+            'Description': _('Name of LaunchConfiguration resource.')},
+        'Size': {
+            'Required': True,
+            'Type': 'Number',
+            'Description': _('Desired number of instances.')},
+        'LoadBalancerNames': {
+            'Type': 'List',
+            'Description': _('List of LoadBalancer resources.')},
+        'Tags': {
+            'Type': 'List',
+            'Schema': {'Type': 'Map', 'Schema': tags_schema},
+            'Description': _('Tags to attach to this group.')}
     }
     update_allowed_keys = ('Properties', 'UpdatePolicy',)
     update_allowed_properties = ('Size', 'LaunchConfigurationName',)
     attributes_schema = {
-        "InstanceList": ("A comma-delimited list of server ip addresses. "
-                         "(Heat extension)")
+        "InstanceList": _("A comma-delimited list of server ip addresses. "
+                          "(Heat extension).")
     }
     rolling_update_schema = {
         'MinInstancesInService': properties.Schema(properties.NUMBER,
@@ -269,25 +278,47 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                    'Value': {'Type': 'String',
                              'Required': True}}
     properties_schema = {
-        'AvailabilityZones': {'Required': True,
-                              'Type': 'List'},
-        'LaunchConfigurationName': {'Required': True,
-                                    'Type': 'String'},
-        'MaxSize': {'Required': True,
-                    'Type': 'String'},
-        'MinSize': {'Required': True,
-                    'Type': 'String'},
-        'Cooldown': {'Type': 'String'},
-        'DesiredCapacity': {'Type': 'Number'},
-        'HealthCheckGracePeriod': {'Type': 'Integer',
-                                   'Implemented': False},
-        'HealthCheckType': {'Type': 'String',
-                            'AllowedValues': ['EC2', 'ELB'],
-                            'Implemented': False},
-        'LoadBalancerNames': {'Type': 'List'},
-        'VPCZoneIdentifier': {'Type': 'List'},
-        'Tags': {'Type': 'List', 'Schema': {'Type': 'Map',
-                                            'Schema': tags_schema}}
+        'AvailabilityZones': {
+            'Required': True,
+            'Type': 'List',
+            'Description': _('Not Implemented.')},
+        'LaunchConfigurationName': {
+            'Required': True,
+            'Type': 'String',
+            'Description': _('Name of LaunchConfiguration resource.')},
+        'MaxSize': {
+            'Required': True,
+            'Type': 'String',
+            'Description': _('Maximum number of instances in the group.')},
+        'MinSize': {
+            'Required': True,
+            'Type': 'String',
+            'Description': _('Minimum number of instances in the group.')},
+        'Cooldown': {
+            'Type': 'String',
+            'Description': _('Cooldown period, in seconds.')},
+        'DesiredCapacity': {
+            'Type': 'Number',
+            'Description': _('Desired initial number of instances.')},
+        'HealthCheckGracePeriod': {
+            'Type': 'Integer',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'HealthCheckType': {
+            'Type': 'String',
+            'AllowedValues': ['EC2', 'ELB'],
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'LoadBalancerNames': {
+            'Type': 'List',
+            'Description': _('List of LoadBalancer resources.')},
+        'VPCZoneIdentifier': {
+            'Type': 'List',
+            'Description': _('List of VPC subnet identifiers.')},
+        'Tags': {
+            'Type': 'List',
+            'Schema': {'Type': 'Map', 'Schema': tags_schema},
+            'Description': _('Tags to attach to this group.')}
     }
     rolling_update_schema = {
         'MinInstancesInService': properties.Schema(properties.NUMBER,
@@ -430,22 +461,40 @@ class LaunchConfiguration(resource.Resource):
                    'Value': {'Type': 'String',
                              'Required': True}}
     properties_schema = {
-        'ImageId': {'Type': 'String',
-                    'Required': True},
-        'InstanceType': {'Type': 'String',
-                         'Required': True},
-        'KeyName': {'Type': 'String'},
-        'UserData': {'Type': 'String'},
-        'SecurityGroups': {'Type': 'List'},
-        'KernelId': {'Type': 'String',
-                     'Implemented': False},
-        'RamDiskId': {'Type': 'String',
-                      'Implemented': False},
-        'BlockDeviceMappings': {'Type': 'String',
-                                'Implemented': False},
-        'NovaSchedulerHints': {'Type': 'List',
-                               'Schema': {'Type': 'Map',
-                                          'Schema': tags_schema}},
+        'ImageId': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('Glance image ID or name.')},
+        'InstanceType': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('Nova instance type (flavor).')},
+        'KeyName': {
+            'Type': 'String',
+            'Description': _('Optional Nova keypair name.')},
+        'UserData': {
+            'Type': 'String',
+            'Description': _('User data to pass to instance.')},
+        'SecurityGroups': {
+            'Type': 'List',
+            'Description': _('Security group names to assign.')},
+        'KernelId': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'RamDiskId': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'BlockDeviceMappings': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'NovaSchedulerHints': {
+            'Type': 'List',
+            'Schema': {'Type': 'Map', 'Schema': tags_schema},
+            'Description': _('Scheduler hints to pass '
+                             'to Nova (Heat extension).')},
     }
 
     def FnGetRefId(self):
@@ -454,24 +503,32 @@ class LaunchConfiguration(resource.Resource):
 
 class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
     properties_schema = {
-        'AutoScalingGroupName': {'Type': 'String',
-                                 'Required': True},
-        'ScalingAdjustment': {'Type': 'Number',
-                              'Required': True},
-        'AdjustmentType': {'Type': 'String',
-                           'AllowedValues': ['ChangeInCapacity',
-                                             'ExactCapacity',
-                                             'PercentChangeInCapacity'],
-                           'Required': True},
-        'Cooldown': {'Type': 'Number'},
+        'AutoScalingGroupName': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('AutoScaling group name to apply policy to.')},
+        'ScalingAdjustment': {
+            'Type': 'Number',
+            'Required': True,
+            'Description': _('Size of adjustment.')},
+        'AdjustmentType': {
+            'Type': 'String',
+            'AllowedValues': ['ChangeInCapacity',
+                              'ExactCapacity',
+                              'PercentChangeInCapacity'],
+            'Required': True,
+            'Description': _('Type of adjustment (absolute or percentage).')},
+        'Cooldown': {
+            'Type': 'Number',
+            'Description': _('Cooldown period, in seconds.')},
     }
 
     update_allowed_keys = ('Properties',)
     update_allowed_properties = ('ScalingAdjustment', 'AdjustmentType',
                                  'Cooldown',)
     attributes_schema = {
-        "AlarmUrl": ("A signed url to handle the alarm. "
-                     "(Heat extension)")
+        "AlarmUrl": _("A signed url to handle the alarm. "
+                      "(Heat extension).")
     }
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
