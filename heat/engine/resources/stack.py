@@ -34,10 +34,20 @@ class NestedStack(stack_resource.StackResource):
     A Resource representing a child stack to allow composition of templates.
     '''
 
-    properties_schema = {PROP_TEMPLATE_URL: {'Type': 'String',
-                                             'Required': True},
-                         PROP_TIMEOUT_MINS: {'Type': 'Number'},
-                         PROP_PARAMETERS: {'Type': 'Map'}}
+    properties_schema = {
+        PROP_TEMPLATE_URL: {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('The URL of a template that specifies the stack'
+                             ' to be created as a resource.')},
+        PROP_TIMEOUT_MINS: {
+            'Type': 'Number',
+            'Description': _('The length of time, in minutes, to wait for the'
+                             ' nested stack creation.')},
+        PROP_PARAMETERS: {
+            'Type': 'Map',
+            'Description': _('The set of parameters passed to this nested'
+                             ' stack.')}}
 
     update_allowed_keys = ('Properties',)
     update_allowed_properties = (PROP_TEMPLATE_URL, PROP_TIMEOUT_MINS,
