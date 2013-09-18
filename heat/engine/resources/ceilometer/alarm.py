@@ -78,6 +78,15 @@ class CeilometerAlarm(resource.Resource):
             'Default': 'true',
             'Description': _('True if alarm evaluation/actioning is enabled')
         },
+        'repeat_actions': {
+            'Type': 'Boolean',
+            'Default': 'false',
+            'Description': _('True to trigger actions each time the threshold '
+                             'is reached. '
+                             'By default, actions are called when : '
+                             'the threshold is reached AND the alarm\'s state '
+                             'have changed')
+        },
         'matching_metadata': {
             'Type': 'Map',
             'Description': _('Counter should match this resource metadata '
@@ -93,12 +102,13 @@ class CeilometerAlarm(resource.Resource):
                                  'evaluation_periods', 'period', 'statistic',
                                  'alarm_actions', 'ok_actions',
                                  'insufficient_data_actions', 'threshold',
-                                 'enabled')
+                                 'enabled', 'repeat_actions')
 
     def _actions_to_urls(self, props):
         kwargs = {}
         for k, v in iter(props.items()):
-            if k.endswith('_actions') and v is not None:
+            if k in ['alarm_actions', 'ok_actions',
+                     'insufficient_data_actions'] and v is not None:
                 kwargs[k] = []
                 for act in v:
                     # if the action is a resource name
