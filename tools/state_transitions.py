@@ -23,19 +23,19 @@ actions = resource.Resource.ACTIONS
 stack_statuses = resource.Resource.STATUSES
 engine_statuses = ("Alive", "Dead")
 
-print """\
+print("""\
 | Orig action | Stack status | Engine status | New action | Behavior         |
 |-------------+--------------+---------------+------------+------------------|\
-"""
+""")
 
 for orig_action in actions:
     for stack_status in stack_statuses:
         for new_action in actions:
             if stack_status == resource.Resource.IN_PROGRESS:
                 for engine_status in engine_statuses:
-                    print "| %11s | %12s | %13s | %10s |                  |" \
-                        % (orig_action, stack_status, engine_status,
-                           new_action)
+                    print("| %11s | %12s | %13s | %10s |                  |" \
+                          % (orig_action, stack_status, engine_status,
+                          new_action))
             else:
-                print "| %11s | %12s | %13s | %10s |                  |" \
-                    % (orig_action, stack_status, "NA", new_action)
+                print("| %11s | %12s | %13s | %10s |                  |" \
+                      % (orig_action, stack_status, "NA", new_action))
