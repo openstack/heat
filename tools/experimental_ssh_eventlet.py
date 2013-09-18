@@ -9,7 +9,7 @@ import random
 
 def monitor(hostname, username, id):
 
-    print '%s %s %d' % (hostname, username, id)
+    print('%s %s %d' % (hostname, username, id))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((hostname, 22))
 
@@ -45,7 +45,7 @@ def monitor(hostname, username, id):
             #if data:
             #    stderr.append(data)
 
-        print '%d %d %s' % (id, sl, ''.join(stdout))
+        print('%d %d %s' % (id, sl, ''.join(stdout)))
         #print ''.join(stderr)
 
 
