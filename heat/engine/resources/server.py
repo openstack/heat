@@ -127,13 +127,13 @@ class Server(resource.Resource):
             'Description': _('User data script to be executed by cloud-init')},
         'reservation_id': {
             'Type': 'String',
-            'Description': _('A UUID for the set of servers being requested'),
-            'Implemented': False},
+            'Description': _('A UUID for the set of servers being requested')
+        },
         'config_drive': {
             'Type': 'String',
             'Description': _('value for config drive either boolean, or '
-                             'volume-id'),
-            'Implemented': False},
+                             'volume-id')
+        },
         # diskConfig translates to API attribute OS-DCF:diskConfig
         # hence the camel case instead of underscore to separate the words
         'diskConfig': {
