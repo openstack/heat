@@ -86,6 +86,7 @@ def get_image_id(nova_client, image_identifier):
 def get_flavor_id(nova_client, flavor):
     '''
     Get the id for the specified flavor name.
+    If the specified value is flavor id, just return it.
 
     :param nova_client: the nova client to use
     :param flavor: the name of the flavor to find
@@ -96,6 +97,9 @@ def get_flavor_id(nova_client, flavor):
     flavor_list = nova_client.flavors.list()
     for o in flavor_list:
         if o.name == flavor:
+            flavor_id = o.id
+            break
+        if o.id == flavor:
             flavor_id = o.id
             break
     if flavor_id is None:

@@ -62,6 +62,8 @@ class NovaUtilsTests(HeatTestCase):
         self.m.ReplayAll()
         self.assertEqual(flav_id, nova_utils.get_flavor_id(self.nova_client,
                                                            flav_name))
+        self.assertEqual(flav_id, nova_utils.get_flavor_id(self.nova_client,
+                                                           flav_id))
         self.assertRaises(exception.FlavorMissing, nova_utils.get_flavor_id,
                           self.nova_client, 'noflavor')
         self.m.VerifyAll()
