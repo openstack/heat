@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- (C) 2012 OpenStack LLC., All Rights Reserved -->
+<!-- (C) 2012 OpenStack Foundation, All Rights Reserved -->
 
 <application xmlns="http://wadl.dev.java.net/2009/02"
              xmlns:xsdxt="http://docs.rackspacecloud.com/xsd-ext/v1.0"
