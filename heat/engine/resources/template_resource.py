@@ -50,7 +50,14 @@ class TemplateResource(stack_resource.StackResource):
         else:
             self.allowed_schemes = ('http', 'https', 'file')
 
-        tmpl = template.Template(self.parsed_nested)
+        # parse_nested can fail if the URL in the environment is bad
+        # or otherwise inaccessible.  Suppress the error here so the
+        # stack can be deleted, and detect it at validate/create time
+        try:
+            tmpl = template.Template(self.parsed_nested)
+        except ValueError:
+            tmpl = template.Template({})
+
         self.properties_schema = (properties.Properties
             .schema_from_params(tmpl.param_schemata()))
         self.attributes_schema = (attributes.Attributes
@@ -146,6 +153,11 @@ class TemplateResource(stack_resource.StackResource):
                 raise exception.StackValidationFailed(message=msg)
 
     def validate(self):
+        try:
+            td = self.template_data
+        except ValueError as ex:
+            msg = _("Failed to retrieve template data: %s") % str(ex)
+            raise exception.StackValidationFailed(message=msg)
         cri = self.stack.env.get_resource_info(
             self.type(),
             registry_type=environment.ClassResourceInfo)
