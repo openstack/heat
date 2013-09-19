@@ -29,13 +29,20 @@ logger = logging.getLogger(__name__)
 
 
 class User(resource.Resource):
-    properties_schema = {'Path': {'Type': 'String'},
-                         'Groups': {'Type': 'List'},
-                         'LoginProfile': {'Type': 'Map',
-                                          'Schema': {
-                                              'Password': {'Type': 'String'}
-                                          }},
-                         'Policies': {'Type': 'List'}}
+    properties_schema = {
+        'Path': {
+            'Type': 'String',
+            'Description': _('Not Implemented.')},
+        'Groups': {
+            'Type': 'List',
+            'Description': _('Not Implemented.')},
+        'LoginProfile': {
+            'Type': 'Map',
+            'Schema': {'Password': {'Type': 'String'}},
+            'Description': _('A login profile for the user.')},
+        'Policies': {
+            'Type': 'List',
+            'Description': _('Access policies to apply to the user.')}}
 
     def _validate_policies(self, policies):
         for policy in (policies or []):
@@ -124,13 +131,21 @@ class User(resource.Resource):
 
 
 class AccessKey(resource.Resource):
-    properties_schema = {'Serial': {'Type': 'Integer',
-                                    'Implemented': False},
-                         'UserName': {'Type': 'String',
-                                      'Required': True},
-                         'Status': {'Type': 'String',
-                                    'Implemented': False,
-                                    'AllowedValues': ['Active', 'Inactive']}}
+    properties_schema = {
+        'Serial': {
+            'Type': 'Integer',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'UserName': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('The name of the user that the new key will'
+                             ' belong to.')},
+        'Status': {
+            'Type': 'String',
+            'Implemented': False,
+            'AllowedValues': ['Active', 'Inactive'],
+            'Description': _('Not Implemented.')}}
 
     def __init__(self, name, json_snippet, stack):
         super(AccessKey, self).__init__(name, json_snippet, stack)
@@ -231,8 +246,12 @@ class AccessKey(resource.Resource):
 
 
 class AccessPolicy(resource.Resource):
-    properties_schema = {'AllowedResources': {'Type': 'List',
-                                              'Required': True}}
+    properties_schema = {
+        'AllowedResources': {
+            'Type': 'List',
+            'Required': True,
+            'Description': _('Resources that users are allowed to access by'
+                             ' the DescribeStackResource API.')}}
 
     def handle_create(self):
         resources = self.properties['AllowedResources']
