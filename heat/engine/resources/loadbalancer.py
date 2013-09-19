@@ -197,47 +197,91 @@ lb_template = r'''
 class LoadBalancer(stack_resource.StackResource):
 
     listeners_schema = {
-        'InstancePort': {'Type': 'Number',
-                         'Required': True},
-        'LoadBalancerPort': {'Type': 'Number',
-                             'Required': True},
-        'Protocol': {'Type': 'String',
-                     'Required': True,
-                     'AllowedValues': ['TCP', 'HTTP']},
-        'SSLCertificateId': {'Type': 'String',
-                             'Implemented': False},
-        'PolicyNames': {'Type': 'List',
-                        'Implemented': False}
+        'InstancePort': {
+            'Type': 'Number',
+            'Required': True,
+            'Description': _('TCP port on which the instance server is'
+                             ' listening.')},
+        'LoadBalancerPort': {
+            'Type': 'Number',
+            'Required': True,
+            'Description': _('The external load balancer port number.')},
+        'Protocol': {
+            'Type': 'String',
+            'Required': True,
+            'AllowedValues': ['TCP', 'HTTP'],
+            'Description': _('The load balancer transport protocol to use.')},
+        'SSLCertificateId': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'PolicyNames': {
+            'Type': 'List',
+            'Implemented': False,
+            'Description': _('Not Implemented.')}
     }
     healthcheck_schema = {
-        'HealthyThreshold': {'Type': 'Number',
-                             'Required': True},
-        'Interval': {'Type': 'Number',
-                     'Required': True},
-        'Target': {'Type': 'String',
-                   'Required': True},
-        'Timeout': {'Type': 'Number',
-                    'Required': True},
-        'UnhealthyThreshold': {'Type': 'Number',
-                               'Required': True},
+        'HealthyThreshold': {
+            'Type': 'Number',
+            'Required': True,
+            'Description': _('The number of consecutive health probe successes'
+                             ' required before moving the instance to the'
+                             ' healthy state.')},
+        'Interval': {
+            'Type': 'Number',
+            'Required': True,
+            'Description': _('The approximate interval, in seconds, between'
+                             ' health checks of an individual instance.')},
+        'Target': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('The port being checked.')},
+        'Timeout': {
+            'Type': 'Number',
+            'Required': True,
+            'Description': _('Health probe timeout, in seconds.')},
+        'UnhealthyThreshold': {
+            'Type': 'Number',
+            'Required': True,
+            'Description': _('The number of consecutive health probe failures'
+                             ' required before moving the instance to the'
+                             ' unhealthy state')},
     }
 
     properties_schema = {
-        'AvailabilityZones': {'Type': 'List',
-                              'Required': True},
-        'HealthCheck': {'Type': 'Map',
-                        'Schema': healthcheck_schema},
-        'Instances': {'Type': 'List'},
-        'Listeners': {'Type': 'List', 'Required': True,
-                      'Schema': {'Type': 'Map', 'Schema': listeners_schema}},
-        'AppCookieStickinessPolicy': {'Type': 'String',
-                                      'Implemented': False},
-        'LBCookieStickinessPolicy': {'Type': 'String',
-                                     'Implemented': False},
-        'SecurityGroups': {'Type': 'String',
-                           'Implemented': False},
-        'Subnets': {'Type': 'List',
-                    'Implemented': False}
+        'AvailabilityZones': {
+            'Type': 'List',
+            'Required': True,
+            'Description': _('The Availability Zones in which to create the'
+                             ' load balancer.')},
+        'HealthCheck': {
+            'Type': 'Map',
+            'Schema': healthcheck_schema,
+            'Description': _('An application health check for the'
+                             ' instances.')},
+        'Instances': {
+            'Type': 'List',
+            'Description': _('The list of instance IDs load balanced.')},
+        'Listeners': {
+            'Type': 'List', 'Required': True,
+            'Schema': {'Type': 'Map', 'Schema': listeners_schema},
+            'Description': _('One or more listeners for this load balancer.')},
+        'AppCookieStickinessPolicy': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'LBCookieStickinessPolicy': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'SecurityGroups': {
+            'Type': 'String',
+            'Implemented': False,
+            'Description': _('Not Implemented.')},
+        'Subnets': {
+            'Type': 'List',
+            'Implemented': False,
+            'Description': _('Not Implemented.')}
     }
     attributes_schema = {
         "CanonicalHostedZoneName": ("The name of the hosted zone that is "
