@@ -116,6 +116,16 @@ def resource_data_get(resource, key):
     return result.value
 
 
+def _encrypt(value):
+    return crypt.encrypt(value.encode('utf-8'))
+
+
+def _decrypt(enc_value):
+    value = crypt.decrypt(enc_value)
+    if value is not None:
+        return unicode(value, 'utf-8')
+
+
 def resource_data_get_by_key(context, resource_id, key):
     result = (model_query(context, models.ResourceData)
               .filter_by(resource_id=resource_id)
@@ -124,14 +134,14 @@ def resource_data_get_by_key(context, resource_id, key):
     if not result:
         raise exception.NotFound('No resource data found')
     if result.redact and result.value:
-        result.value = crypt.decrypt(result.value)
+        result.value = _decrypt(result.value)
     return result
 
 
 def resource_data_set(resource, key, value, redact=False):
     """Save resource's key/value pair to database."""
     if redact:
-        value = crypt.encrypt(value)
+        value = _encrypt(value)
     try:
         current = resource_data_get_by_key(resource.context, resource.id, key)
     except exception.NotFound:
@@ -268,13 +278,13 @@ def user_creds_create(context):
     values = context.to_dict()
     user_creds_ref = models.UserCreds()
     if values.get('trust_id'):
-        user_creds_ref.trust_id = crypt.encrypt(values.get('trust_id'))
+        user_creds_ref.trust_id = _encrypt(values.get('trust_id'))
         user_creds_ref.trustor_user_id = values.get('trustor_user_id')
         user_creds_ref.username = None
         user_creds_ref.password = None
     else:
         user_creds_ref.update(values)
-        user_creds_ref.password = crypt.encrypt(values['password'])
+        user_creds_ref.password = _encrypt(values['password'])
     user_creds_ref.save(_session(context))
     return user_creds_ref
 
@@ -284,8 +294,8 @@ def user_creds_get(user_creds_id):
     # Return a dict copy of db results, do not decrypt details into db_result
     # or it can be committed back to the DB in decrypted form
     result = dict(db_result)
-    result['password'] = crypt.decrypt(result['password'])
-    result['trust_id'] = crypt.decrypt(result['trust_id'])
+    result['password'] = _decrypt(result['password'])
+    result['trust_id'] = _decrypt(result['trust_id'])
     return result
 
 
