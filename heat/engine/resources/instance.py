@@ -26,6 +26,7 @@ from oslo.config import cfg
 from heat.engine import clients
 from heat.engine import resource
 from heat.common import exception
+from heat.engine.resources.network_interface import NetworkInterface
 
 from heat.openstack.common import log as logging
 
@@ -90,8 +91,7 @@ class Instance(resource.Resource):
                          'NetworkInterfaces': {'Type': 'List'},
                          'SourceDestCheck': {'Type': 'Boolean',
                                              'Implemented': False},
-                         'SubnetId': {'Type': 'String',
-                                      'Implemented': False},
+                         'SubnetId': {'Type': 'String'},
                          'Tags': {'Type': 'List',
                                   'Schema': {'Type': 'Map',
                                              'Schema': tags_schema}},
@@ -221,22 +221,41 @@ class Instance(resource.Resource):
 
         return self.mime_string
 
-    @staticmethod
-    def _build_nics(network_interfaces):
-        if not network_interfaces:
-            return None
+    def _build_nics(self, network_interfaces, subnet_id=None):
 
-        nics = []
-        for nic in network_interfaces:
-            if isinstance(nic, basestring):
-                nics.append({
-                    'NetworkInterfaceId': nic,
-                    'DeviceIndex': len(nics)})
-            else:
-                nics.append(nic)
-        sorted_nics = sorted(nics, key=lambda nic: int(nic['DeviceIndex']))
+        nics = None
+        if network_interfaces:
+            unsorted_nics = []
+            for entry in network_interfaces:
+                nic = (entry
+                       if not isinstance(entry, basestring)
+                       else {'NetworkInterfaceId': entry,
+                             'DeviceIndex': len(unsorted_nics)})
+                unsorted_nics.append(nic)
+            sorted_nics = sorted(unsorted_nics,
+                                 key=lambda nic: int(nic['DeviceIndex']))
+            nics = [{'port-id': nic['NetworkInterfaceId']}
+                    for nic in sorted_nics]
+        else:
+            # if SubnetId property in Instance, ensure subnet exists
+            if subnet_id:
+                quantumclient = self.quantum()
+                network_id = NetworkInterface.network_id_from_subnet_id(
+                    quantumclient, subnet_id)
+                # if subnet verified, create a port to use this subnet
+                # if port is not created explicitly, nova will choose
+                # the first subnet in the given network.
+                if network_id:
+                    fixed_ip = {'subnet_id': subnet_id}
+                    props = {
+                        'admin_state_up': True,
+                        'network_id': network_id,
+                        'fixed_ips': [fixed_ip]
+                    }
+                    port = quantumclient.create_port({'port': props})['port']
+                    nics = [{'port-id': port['id']}]
 
-        return [{'port-id': nic['NetworkInterfaceId']} for nic in sorted_nics]
+        return nics
 
     def handle_create(self):
         if self.properties.get('SecurityGroups') is None:
@@ -289,7 +308,8 @@ class Instance(resource.Resource):
         else:
             scheduler_hints = None
 
-        nics = self._build_nics(self.properties['NetworkInterfaces'])
+        nics = self._build_nics(self.properties['NetworkInterfaces'],
+                                subnet_id=self.properties['SubnetId'])
 
         server_userdata = self._build_userdata(userdata)
         server = None

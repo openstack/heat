@@ -113,6 +113,21 @@ class VPCTestBase(unittest.TestCase):
             u'bbbb',
             {'subnet_id': 'cccc'}).AndReturn(None)
 
+    def mock_show_subnet(self):
+        quantumclient.Client.show_subnet('cccc').AndReturn({
+            'subnet': {
+                'name': 'test_stack.the_subnet',
+                'network_id': 'aaaa',
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'allocation_pools': [{'start': '10.0.0.2',
+                                      'end': '10.0.0.254'}],
+                'gateway_ip': '10.0.0.1',
+                'ip_version': 4,
+                'cidr': '10.0.0.0/24',
+                'id': 'cccc',
+                'enable_dhcp': False,
+            }})
+
     def mock_delete_network(self):
         quantumclient.Client.delete_router('bbbb').AndReturn(None)
         quantumclient.Client.delete_network('aaaa').AndReturn(None)
@@ -271,6 +286,7 @@ Resources:
     def test_network_interface(self):
         self.mock_create_network()
         self.mock_create_subnet()
+        self.mock_show_subnet()
         self.mock_create_network_interface()
         self.mock_delete_network_interface()
         self.mock_delete_subnet()
