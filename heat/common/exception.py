@@ -322,3 +322,7 @@ class InvalidContentType(HeatException):
 
 class RequestLimitExceeded(HeatException):
     message = _('Request limit exceeded: %(message)s')
+
+
+class StackResourceLimitExceeded(HeatException):
+    message = _('Maximum resources per stack exceeded.')

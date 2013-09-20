@@ -19,6 +19,8 @@ import json
 from oslo.config import cfg
 import webob
 
+cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
+
 from heat.openstack.common import timeutils
 from heat.common import context
 from heat.db import api as db_api
@@ -36,6 +38,7 @@ from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
+from heat.engine import template as tpl
 from heat.engine import watchrule
 
 from heat.openstack.common import log as logging
@@ -248,6 +251,9 @@ class EngineService(service.Service):
             raise exception.StackExists(stack_name=stack_name)
 
         tmpl = parser.Template(template, files=files)
+
+        if len(tmpl[tpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
+            raise exception.StackResourceLimitExceeded()
 
         # Extract the common query parameters
         common_params = api.extract_args(args)
