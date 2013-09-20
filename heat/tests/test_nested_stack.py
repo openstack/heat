@@ -15,6 +15,10 @@
 
 import copy
 
+from oslo.config import cfg
+
+cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
+
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
@@ -102,6 +106,62 @@ Outputs:
 
         rsrc.delete()
         self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
+
+        self.m.VerifyAll()
+
+    def test_nested_stack_create_exceeds_resource_limit(self):
+        cfg.CONF.set_override('max_resources_per_stack', 1)
+        resource._register_class('GenericResource',
+                                 generic_rsrc.GenericResource)
+        urlfetch.get('https://server.test/the.template').MultipleTimes().\
+            AndReturn('''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  KeyName:
+    Type: String
+Resources:
+  NestedResource:
+    Type: GenericResource
+Outputs:
+  Foo:
+    Value: bar
+''')
+        self.m.ReplayAll()
+
+        t = template_format.parse(self.test_template)
+        stack = self.parse_stack(t)
+        stack.create()
+        self.assertEquals(stack.state, (stack.CREATE, stack.FAILED))
+        self.assertIn('Maximum resources per stack exceeded',
+                      stack.status_reason)
+
+        self.m.VerifyAll()
+
+    def test_nested_stack_create_equals_resource_limit(self):
+        cfg.CONF.set_override('max_resources_per_stack', 2)
+        resource._register_class('GenericResource',
+                                 generic_rsrc.GenericResource)
+        urlfetch.get('https://server.test/the.template').MultipleTimes().\
+            AndReturn('''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  KeyName:
+    Type: String
+Resources:
+  NestedResource:
+    Type: GenericResource
+Outputs:
+  Foo:
+    Value: bar
+''')
+        self.m.ReplayAll()
+
+        t = template_format.parse(self.test_template)
+        stack = self.parse_stack(t)
+        stack.create()
+        self.assertEquals(stack.state, (stack.CREATE, stack.COMPLETE))
+        self.assertIn('NestedResource',
+                      stack.resources['the_nested'].nested().resources)
 
         self.m.VerifyAll()
 
