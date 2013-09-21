@@ -224,6 +224,8 @@ class HOTemplate(template.Template):
                 if r.state in (
                         (r.CREATE, r.IN_PROGRESS),
                         (r.CREATE, r.COMPLETE),
+                        (r.RESUME, r.IN_PROGRESS),
+                        (r.RESUME, r.COMPLETE),
                         (r.UPDATE, r.IN_PROGRESS),
                         (r.UPDATE, r.COMPLETE)):
                     return r.FnGetAtt(att)
