@@ -425,7 +425,7 @@ class ProviderTemplateTest(HeatTestCase):
 
     def test_user_template_not_retrieved_by_file(self):
         # make sure that a TemplateResource defined in the user environment
-        # can NOT be retrieved using the "file:" scheme.
+        # can NOT be retrieved using the "file:" scheme, validation should fail
         env = environment.Environment()
         test_templ_name = 'file:///etc/heatr/flippy.yaml'
         env.load({'resource_registry':
@@ -434,8 +434,64 @@ class ProviderTemplateTest(HeatTestCase):
                              parser.Template({}), env=env,
                              stack_id=uuidutils.generate_uuid())
 
-        self.assertRaises(ValueError,
-                          template_resource.TemplateResource,
-                          'test_t_res',
-                          {"Type": 'Test::Flippy'},
-                          stack)
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      {"Type": 'Test::Flippy'},
+                                                      stack)
+
+        self.assertRaises(exception.StackValidationFailed, temp_res.validate)
+
+    def test_system_template_retrieve_fail(self):
+        # make sure that a TemplateResource defined in the global environment
+        # fails gracefully if the template file specified is inaccessible
+        # we should be able to create the TemplateResource object, but
+        # validation should fail, when the second attempt to access it is
+        # made in validate()
+        g_env = resources.global_env()
+        test_templ_name = 'file:///etc/heatr/frodo.yaml'
+        g_env.load({'resource_registry':
+                   {'Test::Frodo': test_templ_name}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}),
+                             stack_id=uuidutils.generate_uuid())
+
+        self.m.StubOutWithMock(urlfetch, "get")
+        urlfetch.get(test_templ_name,
+                     allowed_schemes=('http', 'https',
+                                      'file')).AndRaise(IOError)
+        urlfetch.get(test_templ_name,
+                     allowed_schemes=('http', 'https',
+                                      'file')).AndRaise(IOError)
+        self.m.ReplayAll()
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      {"Type": 'Test::Frodo'},
+                                                      stack)
+        self.assertRaises(exception.StackValidationFailed, temp_res.validate)
+        self.m.VerifyAll()
+
+    def test_user_template_retrieve_fail(self):
+        # make sure that a TemplateResource defined in the user environment
+        # fails gracefully if the template file specified is inaccessible
+        # we should be able to create the TemplateResource object, but
+        # validation should fail, when the second attempt to access it is
+        # made in validate()
+        env = environment.Environment()
+        test_templ_name = 'http://heatr/noexist.yaml'
+        env.load({'resource_registry':
+                  {'Test::Flippy': test_templ_name}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
+        self.m.StubOutWithMock(urlfetch, "get")
+        urlfetch.get(test_templ_name,
+                     allowed_schemes=('http', 'https')).AndRaise(IOError)
+        urlfetch.get(test_templ_name,
+                     allowed_schemes=('http', 'https')).AndRaise(IOError)
+        self.m.ReplayAll()
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      {"Type": 'Test::Flippy'},
+                                                      stack)
+        self.assertRaises(exception.StackValidationFailed, temp_res.validate)
+        self.m.VerifyAll()
