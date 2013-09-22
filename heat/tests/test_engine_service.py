@@ -578,6 +578,76 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertTrue(result['stack_id'])
         self.m.VerifyAll()
 
+    def test_stack_update_equals(self):
+        stack_name = 'test_stack_update_equals_resource_limit'
+        params = {}
+        res._register_class('GenericResourceType',
+                            generic_rsrc.GenericResource)
+        tpl = {'Resources': {
+               'A': {'Type': 'GenericResourceType'},
+               'B': {'Type': 'GenericResourceType'},
+               'C': {'Type': 'GenericResourceType'}}}
+
+        template = parser.Template(tpl)
+
+        old_stack = parser.Stack(self.ctx, stack_name, template)
+        sid = old_stack.store()
+        s = db_api.stack_get(self.ctx, sid)
+
+        stack = parser.Stack(self.ctx, stack_name, template)
+
+        self.m.StubOutWithMock(parser, 'Stack')
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
+
+        self.m.StubOutWithMock(parser, 'Template')
+        self.m.StubOutWithMock(environment, 'Environment')
+
+        parser.Template(template, files=None).AndReturn(stack.t)
+        environment.Environment(params).AndReturn(stack.env)
+        parser.Stack(self.ctx, stack.name,
+                     stack.t, stack.env).AndReturn(stack)
+
+        self.m.StubOutWithMock(stack, 'validate')
+        stack.validate().AndReturn(None)
+
+        self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
+        threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
+
+        self.m.ReplayAll()
+
+        cfg.CONF.set_override('max_resources_per_stack', 3)
+
+        result = self.man.update_stack(self.ctx, old_stack.identifier(),
+                                       template, params, None, {})
+        self.assertEqual(old_stack.identifier(), result)
+        self.assertTrue(isinstance(result, dict))
+        self.assertTrue(result['stack_id'])
+        self.assertEquals(3, old_stack.root_stack.total_resources())
+        self.m.VerifyAll()
+
+    def test_stack_update_exceeds_resource_limit(self):
+        stack_name = 'test_stack_update_exceeds_resource_limit'
+        params = {}
+        res._register_class('GenericResourceType',
+                            generic_rsrc.GenericResource)
+        tpl = {'Resources': {
+               'A': {'Type': 'GenericResourceType'},
+               'B': {'Type': 'GenericResourceType'},
+               'C': {'Type': 'GenericResourceType'}}}
+
+        template = parser.Template(tpl)
+
+        old_stack = parser.Stack(self.ctx, stack_name, template)
+        sid = old_stack.store()
+        s = db_api.stack_get(self.ctx, sid)
+
+        cfg.CONF.set_override('max_resources_per_stack', 2)
+
+        self.assertRaises(exception.StackResourceLimitExceeded,
+                          self.man.update_stack, self.ctx,
+                          old_stack.identifier(), template, params, None, {})
+
     def test_stack_update_verify_err(self):
         stack_name = 'service_update_verify_err_test_stack'
         params = {'foo': 'bar'}
