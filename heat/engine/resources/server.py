@@ -149,14 +149,12 @@ class Server(resource.Resource):
                        'the API'),
         'networks': _('A dict of assigned network addresses of the form: '
                       '{"public": [ip1, ip2...], "private": [ip3, ip4]}'),
-        'first_private_address': _('Convenience attribute to fetch the first '
-                                   'assigned private network address, or an '
-                                   'empty string if nothing has been assigned '
-                                   'at this time'),
-        'first_public_address': _('Convenience attribute to fetch the first '
-                                  'assigned public network address, or an '
-                                  'empty string if nothing has been assigned '
-                                  'at this time'),
+        'first_address': _('Convenience attribute to fetch the first '
+                           'assigned network address, or an '
+                           'empty string if nothing has been assigned '
+                           'at this time. Result may not be predictable '
+                           'if the server has addresses from more than one '
+                           'network.'),
         'instance_name': _('AWS compatible instance name'),
         'accessIPv4': _('The manually assigned alternative public IPv4 '
                         'address of the server'),
@@ -293,21 +291,14 @@ class Server(resource.Resource):
         return nics
 
     def _resolve_attribute(self, name):
+        if name == 'first_address':
+            return nova_utils.server_to_ipaddress(
+                self.nova(), self.resource_id) or ''
         server = self.nova().servers.get(self.resource_id)
         if name == 'addresses':
             return server.addresses
         if name == 'networks':
             return server.networks
-        if name == 'first_private_address':
-            private = server.networks.get('private', [])
-            if len(private) > 0:
-                return private[0]
-            return ''
-        if name == 'first_public_address':
-            public = server.networks.get('public', [])
-            if len(public) > 0:
-                return public[0]
-            return ''
         if name == 'instance_name':
             return server._info.get('OS-EXT-SRV-ATTR:instance_name')
         if name == 'accessIPv4':

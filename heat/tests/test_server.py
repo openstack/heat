@@ -121,16 +121,14 @@ class ServersTest(HeatTestCase):
             server.FnGetAtt('addresses')['public'][0]['addr'], public_ip)
         self.assertEqual(
             server.FnGetAtt('networks')['public'][0], public_ip)
-        self.assertEqual(
-            server.FnGetAtt('first_public_address'), public_ip)
 
         private_ip = return_server.networks['private'][0]
         self.assertEqual(
             server.FnGetAtt('addresses')['private'][0]['addr'], private_ip)
         self.assertEqual(
             server.FnGetAtt('networks')['private'][0], private_ip)
-        self.assertEqual(
-            server.FnGetAtt('first_private_address'), private_ip)
+        self.assertIn(
+            server.FnGetAtt('first_address'), (private_ip, public_ip))
 
         self.assertEqual(return_server._info, server.FnGetAtt('show'))
         self.assertEqual('sample-server2', server.FnGetAtt('instance_name'))
@@ -157,16 +155,14 @@ class ServersTest(HeatTestCase):
             server.FnGetAtt('addresses')['public'][0]['addr'], public_ip)
         self.assertEqual(
             server.FnGetAtt('networks')['public'][0], public_ip)
-        self.assertEqual(
-            server.FnGetAtt('first_public_address'), public_ip)
 
         private_ip = return_server.networks['private'][0]
         self.assertEqual(
             server.FnGetAtt('addresses')['private'][0]['addr'], private_ip)
         self.assertEqual(
             server.FnGetAtt('networks')['private'][0], private_ip)
-        self.assertEqual(
-            server.FnGetAtt('first_private_address'), private_ip)
+        self.assertIn(
+            server.FnGetAtt('first_address'), (private_ip, public_ip))
 
         self.m.VerifyAll()
 
@@ -767,8 +763,7 @@ class ServersTest(HeatTestCase):
 
         self.assertEqual(server.FnGetAtt('addresses'), {'empty_net': []})
         self.assertEqual(server.FnGetAtt('networks'), {'empty_net': []})
-        self.assertEqual(server.FnGetAtt('first_private_address'), '')
-        self.assertEqual(server.FnGetAtt('first_public_address'), '')
+        self.assertEqual(server.FnGetAtt('first_address'), '')
 
     def test_build_block_device_mapping(self):
         self.assertEqual(
