@@ -30,7 +30,8 @@ class Net(neutron.NeutronResource):
                                          'Default': {}},
                          'admin_state_up': {'Default': True,
                                             'Type': 'Boolean'},
-                         'tenant_id': {'Type': 'String'}}
+                         'tenant_id': {'Type': 'String'},
+                         'shared': {'Type': 'Boolean'}}
     attributes_schema = {
         "id": "the unique identifier for this network",
         "status": "the status of the network",
