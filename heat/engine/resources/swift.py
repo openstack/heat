@@ -25,10 +25,34 @@ logger = logging.getLogger(__name__)
 
 class SwiftContainer(resource.Resource):
     properties_schema = {
-        'name': {'Type': 'String'},
-        'X-Container-Read': {'Type': 'String'},
-        'X-Container-Write': {'Type': 'String'},
-        'X-Container-Meta': {'Type': 'Map', 'Default': {}}}
+        'name': {
+            'Type': 'String',
+            'Description': _('Name for the container. If not specified, a '
+                             'unique name will be generated.')},
+        'X-Container-Read': {
+            'Type': 'String',
+            'Description': _('Specify the ACL permissions on who can read '
+                             'objects in the container.')},
+        'X-Container-Write': {
+            'Type': 'String',
+            'Description': _('Specify the ACL permissions on who can write '
+                             'objects to the container.')},
+        'X-Container-Meta': {
+            'Type': 'Map', 'Default': {},
+            'Description': _('A map of user-defined meta data to associate '
+                             'with the container. Each key in the map will '
+                             'set the header X-Container-Meta-{key} with the '
+                             'corresponding value.')
+        }}
+
+    attributes_schema = {
+        'DomainName': _('The host from the container URL.'),
+        'WebsiteURL': _('The URL of the container.'),
+        'RootURL': _('The parent URL of the container.'),
+        'ObjectCount': _('The number of objects stored in the container.'),
+        'BytesUsed': _('The number of bytes stored in the container.'),
+        'HeadContainer': _('A map containing all headers for the container.')
+    }
 
     def validate(self):
         '''
