@@ -367,11 +367,21 @@ class StackTest(test_parser.StackTest):
                          (parser.Stack.CREATE, parser.Stack.COMPLETE))
 
         snippet = {'Value': {'get_attr': ['resource1', 'foo']}}
-        resolved = hot.HOTemplate.resolve_attributes(snippet, self.stack)
-        # GenericResourceType has an attribute 'foo' which yields the resource
-        # name.
-        self.assertEqual(resolved, {'Value': 'resource1'})
-        # test invalid reference
+        rsrc = self.stack['resource1']
+        for action, status in (
+                (rsrc.CREATE, rsrc.IN_PROGRESS),
+                (rsrc.CREATE, rsrc.COMPLETE),
+                (rsrc.RESUME, rsrc.IN_PROGRESS),
+                (rsrc.RESUME, rsrc.COMPLETE),
+                (rsrc.UPDATE, rsrc.IN_PROGRESS),
+                (rsrc.UPDATE, rsrc.COMPLETE)):
+            rsrc.state_set(action, status)
+
+            resolved = hot.HOTemplate.resolve_attributes(snippet, self.stack)
+            # GenericResourceType has an attribute 'foo' which yields the
+            # resource name.
+            self.assertEqual(resolved, {'Value': 'resource1'})
+            # test invalid reference
         self.assertRaises(exception.InvalidTemplateAttribute,
                           hot.HOTemplate.resolve_attributes,
                           {'Value': {'get_attr': ['resource1', 'NotThere']}},
