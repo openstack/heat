@@ -18,6 +18,7 @@ import testtools
 from heat.engine import parameters
 from heat.engine import properties
 from heat.engine import resources
+from heat.engine import hot
 from heat.common import exception
 
 
@@ -1250,6 +1251,172 @@ class PropertiesTest(testtools.TestCase):
             },
         }
         params = dict((n, parameters.ParamSchema(s)) for n, s
+                      in params_snippet.items())
+        props_schemata = properties.Properties.schema_from_params(params)
+
+        self.assertEqual(expected,
+                         dict((n, dict(s)) for n, s in props_schemata.items()))
+
+    def test_schema_from_hot_params(self):
+        params_snippet = {
+            "KeyName": {
+                "Type": "String",
+                "Description": ("Name of an existing EC2 KeyPair to enable "
+                                "SSH access to the instances")
+            },
+            "InstanceType": {
+                "Default": "m1.large",
+                "Type": "String",
+                "Description": "WebServer EC2 instance type",
+                "constraints": [
+                    {"allowed_values": ["t1.micro", "m1.small", "m1.large",
+                                        "m1.xlarge", "m2.xlarge", "m2.2xlarge",
+                                        "m2.4xlarge", "c1.medium", "c1.xlarge",
+                                        "cc1.4xlarge"],
+                     "description": "Must be a valid EC2 instance type."}
+                ]
+            },
+            "LinuxDistribution": {
+                "Default": "F17",
+                "Type": "String",
+                "Description": "Distribution of choice",
+                "constraints": [
+                    {"allowed_values": ["F18", "F17", "U10", "RHEL-6.1",
+                                        "RHEL-6.2", "RHEL-6.3"],
+                     "description": "Must be a valid Linux distribution"}
+                ]
+            },
+            "DBName": {
+                "Type": "String",
+                "Description": "The WordPress database name",
+                "Default": "wordpress",
+                "constraints": [
+                    {"length": {"min": 1, "max": 64},
+                     "description": "Length must be between 1 and 64"},
+                    {"allowed_pattern": "[a-zA-Z][a-zA-Z0-9]*",
+                     "description": ("Must begin with a letter and contain "
+                                     "only alphanumeric characters.")}
+                ]
+            },
+            "DBUsername": {
+                "Type": "String",
+                "Description": "The WordPress database admin account username",
+                "Default": "admin",
+                "NoEcho": "true",
+                "constraints": [
+                    {"length": {"min": 1, "max": 16},
+                     "description": "Length must be between 1 and 16"},
+                    {"allowed_pattern": "[a-zA-Z][a-zA-Z0-9]*",
+                     "description": ("Must begin with a letter and only "
+                                     "contain alphanumeric characters")}
+                ]
+            },
+            "DBPassword": {
+                "Type": "String",
+                "Description": "The WordPress database admin account password",
+                "Default": "admin",
+                "NoEcho": "true",
+                "constraints": [
+                    {"length": {"min": 1, "max": 41},
+                     "description": "Length must be between 1 and 41"},
+                    {"allowed_pattern": "[a-zA-Z0-9]*",
+                     "description": ("Must contain only alphanumeric "
+                                     "characters")}
+                ]
+            },
+            "DBRootPassword": {
+                "Type": "String",
+                "Description": "Root password for MySQL",
+                "Default": "admin",
+                "NoEcho": "true",
+                "constraints": [
+                    {"length": {"min": 1, "max": 41},
+                     "description": "Length must be between 1 and 41"},
+                    {"allowed_pattern": "[a-zA-Z0-9]*",
+                     "description": ("Must contain only alphanumeric "
+                                     "characters")}
+                ]
+            }
+        }
+        expected = {
+            "KeyName": {
+                "type": "string",
+                "description": ("Name of an existing EC2 KeyPair to enable "
+                                "SSH access to the instances"),
+                "required": True,
+            },
+            "InstanceType": {
+                "type": "string",
+                "description": "WebServer EC2 instance type",
+                "required": False,
+                "constraints": [
+                    {"allowed_values": ["t1.micro", "m1.small", "m1.large",
+                                        "m1.xlarge", "m2.xlarge", "m2.2xlarge",
+                                        "m2.4xlarge", "c1.medium", "c1.xlarge",
+                                        "cc1.4xlarge"],
+                     "description": "Must be a valid EC2 instance type."},
+                ]
+            },
+            "LinuxDistribution": {
+                "type": "string",
+                "description": "Distribution of choice",
+                "required": False,
+                "constraints": [
+                    {"allowed_values": ["F18", "F17", "U10",
+                                        "RHEL-6.1", "RHEL-6.2", "RHEL-6.3"],
+                     "description": "Must be a valid Linux distribution"}
+                ]
+            },
+            "DBName": {
+                "type": "string",
+                "description": "The WordPress database name",
+                "required": False,
+                "constraints": [
+                    {"length": {"min": 1, "max": 64},
+                     "description": "Length must be between 1 and 64"},
+                    {"allowed_pattern": "[a-zA-Z][a-zA-Z0-9]*",
+                     "description": ("Must begin with a letter and contain "
+                                     "only alphanumeric characters.")},
+                ]
+            },
+            "DBUsername": {
+                "type": "string",
+                "description": "The WordPress database admin account username",
+                "required": False,
+                "constraints": [
+                    {"length": {"min": 1, "max": 16},
+                     "description": "Length must be between 1 and 16"},
+                    {"allowed_pattern": "[a-zA-Z][a-zA-Z0-9]*",
+                     "description": ("Must begin with a letter and only "
+                                     "contain alphanumeric characters")},
+                ]
+            },
+            "DBPassword": {
+                "type": "string",
+                "description": "The WordPress database admin account password",
+                "required": False,
+                "constraints": [
+                    {"length": {"min": 1, "max": 41},
+                     "description": "Length must be between 1 and 41"},
+                    {"allowed_pattern": "[a-zA-Z0-9]*",
+                     "description": ("Must contain only alphanumeric "
+                                     "characters")},
+                ]
+            },
+            "DBRootPassword": {
+                "type": "string",
+                "description": "Root password for MySQL",
+                "required": False,
+                "constraints": [
+                    {"length": {"min": 1, "max": 41},
+                     "description": "Length must be between 1 and 41"},
+                    {"allowed_pattern": "[a-zA-Z0-9]*",
+                     "description": ("Must contain only alphanumeric "
+                                     "characters")},
+                ]
+            }
+        }
+        params = dict((n, hot.HOTParamSchema(s)) for n, s
                       in params_snippet.items())
         props_schemata = properties.Properties.schema_from_params(params)
 
