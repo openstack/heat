@@ -94,10 +94,10 @@ class FaultWrapper(wsgi.Middleware):
         if ex_type.endswith(rpc_common._REMOTE_POSTFIX):
             ex_type = ex_type[:-len(rpc_common._REMOTE_POSTFIX)]
 
-        message = str(ex.message)
+        message = unicode(ex.message)
 
         if cfg.CONF.debug and not trace:
-            trace = str(ex)
+            trace = unicode(ex)
             if trace.find('\n') > -1:
                 unused, trace = trace.split('\n', 1)
             else:
