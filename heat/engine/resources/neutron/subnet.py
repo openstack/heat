@@ -48,7 +48,8 @@ class Subnet(neutron.NeutronResource):
                                               'Schema': {
                                               'Type': 'Map',
                                               'Schema': allocation_schema
-                                              }}}
+                                              }},
+                         'tenant_id': {'Type': 'String'}}
     attributes_schema = {
         "name": "friendly name of the subnet",
         "network_id": "parent network of the subnet",
