@@ -43,6 +43,10 @@ class StackResource(resource.Resource):
         else:
             self.recursion_depth = 0
 
+    @property
+    def requires_deferred_auth(self):
+        return self.nested().requires_deferred_auth()
+
     def _outputs_to_attribs(self, json_snippet):
         if not self.attributes and 'Outputs' in json_snippet:
             self.attributes_schema = (
