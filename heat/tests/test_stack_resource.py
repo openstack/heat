@@ -384,16 +384,3 @@ class StackResourceTest(HeatTestCase):
         self.m.VerifyAll()
         # Restore state_set to let clean up proceed
         self.stack.state_set = st_set
-
-    @utils.stack_delete_after
-    def test_requires_deferred_auth(self):
-
-        self.parent_resource.create_with_template(self.templ,
-                                                  {"KeyName": "key"})
-
-        stack = self.parent_resource.nested()
-        self.assertFalse(self.parent_resource.requires_deferred_auth)
-
-        # make the resource in the nested stack require deferred auth
-        stack['WebServer'].requires_deferred_auth = True
-        self.assertTrue(self.parent_resource.requires_deferred_auth)
