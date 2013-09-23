@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import string
-
 from heat.common import exception
 from heat.engine import template
 from heat.engine.parameters import ParamSchema
@@ -260,7 +258,7 @@ class HOTemplate(template.Template):
                     raise KeyError()
             except KeyError:
                 example = ('''str_replace:
-                  template: This is $var1 template $var2
+                  template: This is var1 template var2
                   params:
                     var1: a
                     var2: string''')
@@ -271,13 +269,10 @@ class HOTemplate(template.Template):
             if not isinstance(params, dict):
                 raise TypeError(
                     '"params" parameter must be a dictionary')
-            if isinstance(args, list):
-                for key in params.iterkeys():
-                    value = params.get(key, '')
-                    text = text.replace(key, value)
-                return text
-
-            return string.Template(text).safe_substitute(params)
+            for key in params.iterkeys():
+                value = params.get(key, '')
+                text = text.replace(key, value)
+            return text
 
         match_str_replace = lambda k, v: k in ['str_replace', 'Fn::Replace']
         return template._resolve(match_str_replace,

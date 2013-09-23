@@ -464,8 +464,8 @@ str_replace
 -----------
 The *str_replace* function allows for dynamically constructing strings by
 providing a template string with placeholders and a list of mappings to assign
-values to those placeholders at runtime. The functionality of this function is
-similar to that of Python Template strings.
+values to those placeholders at runtime. The placeholders are replaced with
+mapping values wherever a mapping key exactly matches a placeholder.
 The syntax of the str_replace function is as follows:
 
 ::
@@ -499,7 +499,7 @@ section of a template to build a URL for logging into a deployed application.
       description: The URL to log into the deployed application
       value:
         str_replace:
-          template: http://$host/MyApplication
+          template: http://host/MyApplication
           params:
             host: { get_attr: [ my_instance, PublicIp ] }
 
@@ -528,7 +528,7 @@ like scripts for initializing compute instances as shown in the example below:
               mysqladmin -u root password $db_rootpassword
               # do more things ...
             params:
-              db_rootpassword: { get_param: DBRootPassword }
+              $db_rootpassword: { get_param: DBRootPassword }
 
 In the example above, one can imagine that MySQL is being configured on a
 compute instance and the root password is going to be set based on a user

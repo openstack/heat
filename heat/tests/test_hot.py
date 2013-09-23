@@ -269,7 +269,7 @@ class HOTemplateTest(HeatTestCase):
     def test_str_replace(self):
         """Test str_replace function."""
 
-        snippet = {'str_replace': {'template': 'Template $var1 string $var2',
+        snippet = {'str_replace': {'template': 'Template var1 string var2',
                                    'params': {'var1': 'foo', 'var2': 'bar'}}}
         snippet_resolved = 'Template foo string bar'
 
@@ -297,7 +297,7 @@ class HOTemplateTest(HeatTestCase):
         validate that we get a TypeError.
         """
 
-        snippet = {'str_replace': [{'template': 'Template $var1 string $var2'},
+        snippet = {'str_replace': [{'template': 'Template var1 string var2'},
                                    {'params': {'var1': 'foo', 'var2': 'bar'}}]}
 
         tmpl = parser.Template(hot_tpl_empty)
@@ -312,14 +312,14 @@ class HOTemplateTest(HeatTestCase):
         a KeyError.
         """
 
-        snippet = {'str_replace': {'tmpl': 'Template $var1 string $var2',
+        snippet = {'str_replace': {'tmpl': 'Template var1 string var2',
                                    'params': {'var1': 'foo', 'var2': 'bar'}}}
 
         tmpl = parser.Template(hot_tpl_empty)
 
         self.assertRaises(KeyError, tmpl.resolve_replace, snippet)
 
-        snippet = {'str_replace': {'tmpl': 'Template $var1 string $var2',
+        snippet = {'str_replace': {'tmpl': 'Template var1 string var2',
                                    'parms': {'var1': 'foo', 'var2': 'bar'}}}
 
         self.assertRaises(KeyError, tmpl.resolve_replace, snippet)
@@ -339,7 +339,7 @@ class HOTemplateTest(HeatTestCase):
 
         self.assertRaises(TypeError, tmpl.resolve_replace, snippet)
 
-        snippet = {'str_replace': {'template': 'Template $var1 string $var2',
+        snippet = {'str_replace': {'template': 'Template var1 string var2',
                                    'params': ['var1', 'foo', 'var2', 'bar']}}
 
         self.assertRaises(TypeError, tmpl.resolve_replace, snippet)
