@@ -59,11 +59,15 @@ class VPCGatewayAttachment(resource.Resource):
     properties_schema = {
         'VpcId': {
             'Type': 'String',
-            'Required': True},
-        'InternetGatewayId': {'Type': 'String'},
+            'Required': True,
+            'Description': _('VPC ID for this gateway association.')},
+        'InternetGatewayId': {
+            'Type': 'String',
+            'Description': _('ID of the InternetGateway.')},
         'VpnGatewayId': {
             'Type': 'String',
-            'Implemented': False}
+            'Implemented': False,
+            'Description': _('ID of the VPNGateway to attach to the VPC.')}
     }
 
     def _vpc_route_tables(self):
