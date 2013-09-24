@@ -50,6 +50,8 @@ class Volume(resource.Resource):
 
     _restore_property = 'SnapshotId'
 
+    _volume_creating_status = ['creating', 'restoring-backup']
+
     def _display_name(self):
         return self.physical_resource_name()
 
@@ -89,9 +91,7 @@ class Volume(resource.Resource):
 
         if vol.status == 'available':
             return True
-        elif vol.status == 'creating':
-            return False
-        elif vol.status == 'restoring-backup':
+        elif vol.status in self._volume_creating_status:
             return False
         else:
             raise exception.Error(vol.status)
@@ -341,6 +341,8 @@ class CinderVolume(Volume):
     }
 
     _restore_property = 'backup_id'
+
+    _volume_creating_status = ['creating', 'restoring-backup', 'downloading']
 
     def _display_name(self):
         name = self.properties['name']
