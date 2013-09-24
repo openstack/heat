@@ -372,7 +372,7 @@ class Server(resource.Resource):
         bdm = self.properties.get('block_device_mapping') or []
         bootable_vol = False
         for mapping in bdm:
-            if mapping['device_name'] is 'vda':
+            if mapping['device_name'] == 'vda':
                     bootable_vol = True
 
             if mapping.get('volume_id') and mapping.get('snapshot_id'):
