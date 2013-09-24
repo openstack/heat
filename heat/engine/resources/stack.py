@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from requests import exceptions
+
 from heat.common import exception
 from heat.common import template_format
 from heat.common import urlfetch
@@ -54,7 +56,12 @@ class NestedStack(stack_resource.StackResource):
                                  PROP_PARAMETERS)
 
     def handle_create(self):
-        template_data = urlfetch.get(self.properties[PROP_TEMPLATE_URL])
+        try:
+            template_data = urlfetch.get(self.properties[PROP_TEMPLATE_URL])
+        except (exceptions.RequestException, IOError) as r_exc:
+            raise ValueError("Could not fetch remote template '%s': %s" %
+                             (self.properties[PROP_TEMPLATE_URL], str(r_exc)))
+
         template = template_format.parse(template_data)
 
         return self.create_with_template(template,
@@ -80,7 +87,12 @@ class NestedStack(stack_resource.StackResource):
                                      self.stack.resolve_runtime_data,
                                      self.name)
 
-        template_data = urlfetch.get(self.properties[PROP_TEMPLATE_URL])
+        try:
+            template_data = urlfetch.get(self.properties[PROP_TEMPLATE_URL])
+        except (exceptions.RequestException, IOError) as r_exc:
+            raise ValueError("Could not fetch remote template '%s': %s" %
+                             (self.properties[PROP_TEMPLATE_URL], str(r_exc)))
+
         template = template_format.parse(template_data)
 
         return self.update_with_template(template,
