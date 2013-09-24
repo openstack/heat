@@ -151,6 +151,11 @@ class EC2Token(wsgi.Middleware):
                 raise exception.HeatMissingAuthenticationTokenError()
 
         logger.info("AWS credentials found, checking against keystone.")
+
+        if not auth_uri:
+            logger.error("Ec2Token authorization failed, no auth_uri "
+                         "specified in config file")
+            raise exception.HeatInternalFailureError("Service misconfigured")
         # Make a copy of args for authentication and signature verification.
         auth_params = dict(req.params)
         # 'Signature' param Not part of authentication args

@@ -432,3 +432,18 @@ class Ec2TokenTest(HeatTestCase):
                           ec2.__call__, dummy_req)
 
         self.m.VerifyAll()
+
+    def test_call_badconf_no_authuri(self):
+        ec2 = ec2token.EC2Token(app='woot', conf={})
+        params = {'AWSAccessKeyId': 'foo', 'Signature': 'xyz'}
+        req_env = {'SERVER_NAME': 'heat',
+                   'SERVER_PORT': '8000',
+                   'PATH_INFO': '/v1'}
+        dummy_req = self._dummy_GET_request(params, req_env)
+
+        self.m.ReplayAll()
+        ex = self.assertRaises(exception.HeatInternalFailureError,
+                               ec2.__call__, dummy_req)
+        self.assertEqual(str(ex), 'Service misconfigured')
+
+        self.m.VerifyAll()
