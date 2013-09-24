@@ -69,7 +69,8 @@ class ServersTest(HeatTestCase):
                              stack_id=uuidutils.generate_uuid())
         return (t, stack)
 
-    def _setup_test_server(self, return_server, name, image_id=None):
+    def _setup_test_server(self, return_server, name, image_id=None,
+                           override_name=False):
         stack_name = '%s_stack' % name
         (t, stack) = self._setup_test_stack(stack_name)
 
@@ -77,7 +78,13 @@ class ServersTest(HeatTestCase):
             image_id or 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['flavor'] = \
             '256 MB Server'
-        server = servers.Server('%s_name' % name,
+
+        server_name = '%s_name' % name
+        if override_name:
+            t['Resources']['WebServer']['Properties']['name'] = \
+                server_name
+
+        server = servers.Server(server_name,
                                 t['Resources']['WebServer'], stack)
 
         self.m.StubOutWithMock(server, 'nova')
@@ -93,7 +100,8 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=1, flavor=1, key_name='test',
-            name=utils.PhysName(stack_name, server.name),
+            name=override_name and server.name or utils.PhysName(
+                stack_name, server.name),
             security_groups=None,
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
@@ -103,7 +111,7 @@ class ServersTest(HeatTestCase):
 
         return server
 
-    def _create_test_server(self, return_server, name):
+    def _create_test_server(self, return_server, name, override_name=False):
         server = self._setup_test_server(return_server, name)
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
@@ -142,7 +150,8 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         server = self._setup_test_server(return_server,
                                          'test_server_create_image_id',
-                                         image_id='1')
+                                         image_id='1',
+                                         override_name=True)
         self.m.StubOutWithMock(uuidutils, "is_uuid_like")
         uuidutils.is_uuid_like('1').AndReturn(True)
 

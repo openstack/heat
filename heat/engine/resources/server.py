@@ -176,6 +176,13 @@ class Server(resource.Resource):
             self.mime_string = nova_utils.build_userdata(self, userdata)
         return self.mime_string
 
+    def physical_resource_name(self):
+        name = self.properties.get('name')
+        if name:
+            return name
+
+        return super(Server, self).physical_resource_name()
+
     def handle_create(self):
         security_groups = self.properties.get('security_groups', [])
         userdata = self.properties.get('user_data', '')
