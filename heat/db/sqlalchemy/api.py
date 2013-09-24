@@ -17,8 +17,11 @@
 from datetime import datetime
 from datetime import timedelta
 
+from oslo.config import cfg
 import sqlalchemy
 from sqlalchemy.orm.session import Session
+
+cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
 
 from heat.openstack.common.gettextutils import _
 
@@ -339,7 +342,35 @@ def event_count_all_by_stack(context, stack_id):
     return _query_all_by_stack(context, stack_id).count()
 
 
+def _delete_event_rows(context, stack_id, limit):
+    # MySQL does not support LIMIT in subqueries,
+    # sqlite does not support JOIN in DELETE.
+    # So we must manually supply the IN() values.
+    # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
+    # confirmed via integration tests.
+    query = _query_all_by_stack(context, stack_id)
+    session = _session(context)
+    if 'postgres' not in session.connection().dialect.name:
+        ids = [r.id for r in query.order_by(
+            models.Event.id).limit(limit).all()]
+        q = session.query(models.Event).filter(
+            models.Event.id.in_(ids))
+    else:
+        stmt = session.query(
+            models.Event.id).filter_by(
+                stack_id=stack_id).order_by(
+                    models.Event.id).limit(limit).subquery()
+        q = query.join(stmt, models.Event.id == stmt.c.id)
+    return q.delete(synchronize_session='fetch')
+
+
 def event_create(context, values):
+    if 'stack_id' in values and cfg.CONF.max_events_per_stack:
+        if ((event_count_all_by_stack(context, values['stack_id']) >=
+             cfg.CONF.max_events_per_stack)):
+            # prune
+            _delete_event_rows(
+                context, values['stack_id'], cfg.CONF.event_purge_batch_size)
     event_ref = models.Event()
     event_ref.update(values)
     event_ref.save(_session(context))
