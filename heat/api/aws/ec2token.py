@@ -24,6 +24,7 @@ gettextutils.install('heat')
 from heat.common import wsgi
 from heat.openstack.common import jsonutils as json
 from oslo.config import cfg
+from heat.openstack.common import importutils
 
 import webob
 from heat.api.aws import exception
@@ -62,6 +63,16 @@ class EC2Token(wsgi.Middleware):
             return self.conf[name]
         else:
             return cfg.CONF.ec2authtoken[name]
+
+    def _conf_get_auth_uri(self):
+        auth_uri = self._conf_get('auth_uri')
+        if auth_uri:
+            return auth_uri
+        else:
+            # Import auth_token to have keystone_authtoken settings setup.
+            # We can use the auth_uri from the keystone_authtoken section
+            importutils.import_module('keystoneclient.middleware.auth_token')
+            return cfg.CONF.keystone_authtoken['auth_uri']
 
     @staticmethod
     def _conf_get_keystone_ec2_uri(auth_uri):
@@ -109,7 +120,7 @@ class EC2Token(wsgi.Middleware):
     @webob.dec.wsgify(RequestClass=wsgi.Request)
     def __call__(self, req):
         if not self._conf_get('multi_cloud'):
-            return self._authorize(req, self._conf_get('auth_uri'))
+            return self._authorize(req, self._conf_get_auth_uri())
         else:
             # attempt to authorize for each configured allowed_auth_uris
             # until one is successful.
@@ -209,7 +220,7 @@ class EC2Token(wsgi.Middleware):
         req.headers['X-Auth-Token'] = token_id
         req.headers['X-Tenant-Name'] = tenant
         req.headers['X-Tenant-Id'] = tenant_id
-        req.headers['X-Auth-URL'] = self._conf_get('auth_uri')
+        req.headers['X-Auth-URL'] = auth_uri
 
         metadata = result['access'].get('metadata', {})
         roles = metadata.get('roles', [])

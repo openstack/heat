@@ -23,6 +23,8 @@ from heat.api.aws import exception
 from heat.common.wsgi import Request
 from heat.api.aws import ec2token
 
+from heat.openstack.common import importutils
+
 
 class Ec2TokenTest(HeatTestCase):
     '''
@@ -445,5 +447,49 @@ class Ec2TokenTest(HeatTestCase):
         ex = self.assertRaises(exception.HeatInternalFailureError,
                                ec2.__call__, dummy_req)
         self.assertEqual(str(ex), 'Service misconfigured')
+
+        self.m.VerifyAll()
+
+    def test_call_ok_auth_uri_ec2authtoken(self):
+        dummy_url = 'http://123:5000/v2.0'
+        cfg.CONF.set_default('auth_uri', dummy_url, group='ec2authtoken')
+
+        ec2 = ec2token.EC2Token(app='woot', conf={})
+        params = {'AWSAccessKeyId': 'foo', 'Signature': 'xyz'}
+        req_env = {'SERVER_NAME': 'heat',
+                   'SERVER_PORT': '8000',
+                   'PATH_INFO': '/v1'}
+        dummy_req = self._dummy_GET_request(params, req_env)
+
+        ok_resp = json.dumps({'access': {'metadata': {}, 'token': {
+            'id': 123,
+            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
+        self._stub_http_connection(response=ok_resp,
+                                   params={'AWSAccessKeyId': 'foo'})
+        self.m.ReplayAll()
+        self.assertEqual(ec2.__call__(dummy_req), 'woot')
+
+        self.m.VerifyAll()
+
+    def test_call_ok_auth_uri_ks_authtoken(self):
+        # Import auth_token to have keystone_authtoken settings setup.
+        importutils.import_module('keystoneclient.middleware.auth_token')
+        dummy_url = 'http://123:5000/v2.0'
+        cfg.CONF.set_override('auth_uri', dummy_url,
+                              group='keystone_authtoken')
+        ec2 = ec2token.EC2Token(app='woot', conf={})
+        params = {'AWSAccessKeyId': 'foo', 'Signature': 'xyz'}
+        req_env = {'SERVER_NAME': 'heat',
+                   'SERVER_PORT': '8000',
+                   'PATH_INFO': '/v1'}
+        dummy_req = self._dummy_GET_request(params, req_env)
+
+        ok_resp = json.dumps({'access': {'metadata': {}, 'token': {
+            'id': 123,
+            'tenant': {'name': 'tenant', 'id': 'abcd1234'}}}})
+        self._stub_http_connection(response=ok_resp,
+                                   params={'AWSAccessKeyId': 'foo'})
+        self.m.ReplayAll()
+        self.assertEqual(ec2.__call__(dummy_req), 'woot')
 
         self.m.VerifyAll()
