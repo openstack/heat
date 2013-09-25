@@ -24,12 +24,30 @@ logger = logging.getLogger(__name__)
 
 
 class FloatingIP(neutron.NeutronResource):
-    properties_schema = {'floating_network_id': {'Type': 'String',
-                                                 'Required': True},
-                         'value_specs': {'Type': 'Map',
-                                         'Default': {}},
-                         'port_id': {'Type': 'String'},
-                         'fixed_ip_address': {'Type': 'String'}}
+    properties_schema = {
+        'floating_network_id': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('ID of network to allocate floating IP from.')
+        },
+        'value_specs': {
+            'Type': 'Map',
+            'Default': {},
+            'Description': _('Extra parameters to include in the '
+                             '"floatingip" object in the creation request. '
+                             'Parameters are often specific to installed '
+                             'hardware or extensions.')
+        },
+        'port_id': {
+            'Type': 'String',
+            'Description': _('ID of an existing port with at least one IP '
+                             'address to associate with this floating IP.')
+        },
+        'fixed_ip_address': {
+            'Type': 'String',
+            'Description': _('IP address to use if the port has '
+                             'multiple addresses.')
+        }}
 
     def add_dependencies(self, deps):
         super(FloatingIP, self).add_dependencies(deps)
@@ -68,11 +86,22 @@ class FloatingIP(neutron.NeutronResource):
 
 
 class FloatingIPAssociation(neutron.NeutronResource):
-    properties_schema = {'floatingip_id': {'Type': 'String',
-                                           'Required': True},
-                         'port_id': {'Type': 'String',
-                                     'Required': True},
-                         'fixed_ip_address': {'Type': 'String'}}
+    properties_schema = {
+        'floatingip_id': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('ID of the floating IP to associate.')
+        },
+        'port_id': {
+            'Type': 'String',
+            'Description': _('ID of an existing port with at least one IP '
+                             'address to associate with this floating IP.')
+        },
+        'fixed_ip_address': {
+            'Type': 'String',
+            'Description': _('IP address to use if the port has '
+                             'multiple addresses.')
+        }}
 
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
