@@ -23,5 +23,4 @@ python-cinderclient>=1.0.4
 PyYAML>=3.1.0
 paramiko>=1.8.0
 Babel>=0.9.6
--f http://tarballs.openstack.org/oslo.config/oslo.config-1.2.0a3.tar.gz#egg=oslo.config-1.2.0a3
-oslo.config>=1.2.0a3
+oslo.config>=1.2.0
