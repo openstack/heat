@@ -15,6 +15,8 @@
 
 import json
 
+import mox
+
 from testtools import skipIf
 
 from heat.common import exception
@@ -412,6 +414,29 @@ class VolumeTest(HeatTestCase):
         detach_task = scheduler.TaskRunner(rsrc.delete)
 
         self.assertRaises(exception.ResourceFailure, detach_task)
+
+        self.m.VerifyAll()
+
+    def test_volume_delete(self):
+        stack_name = 'test_volume_stack'
+        fv = FakeVolume('creating', 'available')
+        fb = FakeBackup('creating', 'available')
+
+        self._mock_create_volume(fv, stack_name)
+        self.m.ReplayAll()
+
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['DeletionPolicy'] = 'Delete'
+        stack = utils.parse_stack(t, stack_name=stack_name)
+
+        rsrc = self.create_volume(t, stack, 'DataVolume')
+
+        self.m.StubOutWithMock(rsrc, "handle_delete")
+        rsrc.handle_delete().AndReturn(None)
+        self.m.StubOutWithMock(rsrc, "check_delete_complete")
+        rsrc.check_delete_complete(mox.IgnoreArg()).AndReturn(True)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.destroy)()
 
         self.m.VerifyAll()
 

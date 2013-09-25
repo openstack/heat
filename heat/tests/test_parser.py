@@ -1628,6 +1628,58 @@ class StackTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_stack_delete_timeout(self):
+        stack = parser.Stack(self.ctx, 'delete_test',
+                             parser.Template({}))
+        stack_id = stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertNotEqual(db_s, None)
+
+        self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
+        self.m.StubOutWithMock(scheduler, 'wallclock')
+
+        def dummy_task():
+            while True:
+                yield
+
+        start_time = time.time()
+        scheduler.wallclock().AndReturn(start_time)
+        scheduler.wallclock().AndReturn(start_time + 1)
+        scheduler.DependencyTaskGroup.__call__().AndReturn(dummy_task())
+        scheduler.wallclock().AndReturn(start_time + stack.timeout_secs() + 1)
+        self.m.ReplayAll()
+        stack.delete()
+
+        self.assertEqual(stack.state,
+                         (parser.Stack.DELETE, parser.Stack.FAILED))
+        self.assertEqual(stack.status_reason, 'Delete timed out')
+
+        self.m.VerifyAll()
+
+    def test_stack_delete_resourcefailure(self):
+        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
+        exc = Exception('foo')
+        generic_rsrc.GenericResource.handle_delete().AndRaise(exc)
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(self.ctx, 'delete_test_fail',
+                                  parser.Template(tmpl))
+
+        stack_id = self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state,
+                         (self.stack.CREATE, self.stack.COMPLETE))
+
+        self.stack.delete()
+
+        self.assertEqual(self.stack.state,
+                         (self.stack.DELETE, self.stack.FAILED))
+        self.assertEqual(self.stack.status_reason,
+                         'Resource delete failed: Exception: foo')
+        self.m.VerifyAll()
+
     def test_stack_name_valid(self):
         stack = parser.Stack(self.ctx, 's', parser.Template({}))
         stack = parser.Stack(self.ctx, 'stack123', parser.Template({}))
