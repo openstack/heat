@@ -26,8 +26,7 @@ logger = logging.getLogger(__name__)
 
 class Port(neutron.NeutronResource):
 
-    fixed_ip_schema = {'subnet_id': {'Type': 'String',
-                                     'Required': True},
+    fixed_ip_schema = {'subnet_id': {'Type': 'String'},
                        'ip_address': {'Type': 'String'}}
 
     properties_schema = {'network_id': {'Type': 'String',
@@ -74,6 +73,11 @@ class Port(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+
+        for fixed_ip in props['fixed_ips']:
+            for key, value in fixed_ip.items():
+                if value is None:
+                    fixed_ip.pop(key)
 
         if self.properties['security_groups']:
             props['security_groups'] = self.get_secgroup_uuids(
