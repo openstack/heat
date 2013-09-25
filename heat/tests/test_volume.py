@@ -722,7 +722,6 @@ class VolumeTest(HeatTestCase):
                                 t['Resources']['DataVolume'],
                                 stack)
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(u'vol-123', rsrc.FnGetAtt('id'))
         self.assertEqual(u'zone1', rsrc.FnGetAtt('availability_zone'))
         self.assertEqual(u'1', rsrc.FnGetAtt('size'))
         self.assertEqual(u'snap-123', rsrc.FnGetAtt('snapshot_id'))
