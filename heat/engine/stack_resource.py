@@ -34,6 +34,11 @@ class StackResource(resource.Resource):
     as a resource in a parent stack.
     '''
 
+    # Assume True as this is evaluated before the stack is created
+    # so there is no way to know for sure without subclass-specific
+    # template parsing.
+    requires_deferred_auth = True
+
     def __init__(self, name, json_snippet, stack):
         super(StackResource, self).__init__(name, json_snippet, stack)
         self._nested = None
@@ -42,10 +47,6 @@ class StackResource(resource.Resource):
                 self.stack.parent_resource.recursion_depth + 1)
         else:
             self.recursion_depth = 0
-
-    @property
-    def requires_deferred_auth(self):
-        return self.nested().requires_deferred_auth()
 
     def _outputs_to_attribs(self, json_snippet):
         if not self.attributes and 'Outputs' in json_snippet:
