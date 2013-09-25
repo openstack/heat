@@ -51,18 +51,17 @@ class Subnet(neutron.NeutronResource):
                                               }},
                          'tenant_id': {'Type': 'String'}}
     attributes_schema = {
-        "name": "friendly name of the subnet",
-        "network_id": "parent network of the subnet",
-        "tenant_id": "tenant owning the subnet",
-        "allocation_pools": "ip allocation pools and their ranges",
-        "gateway_ip": "ip of the subnet's gateway",
-        "ip_version": "ip version for the subnet",
-        "cidr": "CIDR block notation for this subnet",
-        "id": "unique identifier for this subnet",
+        "name": _("Friendly name of the subnet."),
+        "network_id": _("Parent network of the subnet."),
+        "tenant_id": _("Tenant owning the subnet."),
+        "allocation_pools": _("Ip allocation pools and their ranges."),
+        "gateway_ip": _("Ip of the subnet's gateway."),
+        "ip_version": _("Ip version for the subnet."),
+        "cidr": _("CIDR block notation for this subnet."),
         # dns_nameservers isn't in the api docs; is it right?
-        "dns_nameservers": "list of dns nameservers",
-        "enable_dhcp": ("'true' if DHCP is enabled for this subnet; 'false'"
-                        "otherwise")
+        "dns_nameservers": _("List of dns nameservers."),
+        "enable_dhcp": _("'true' if DHCP is enabled for this subnet; 'false' "
+                         "otherwise.")
     }
 
     def handle_create(self):

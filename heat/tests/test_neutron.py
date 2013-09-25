@@ -438,8 +438,6 @@ class NeutronSubnetTest(HeatTestCase):
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          rsrc.FnGetAtt('network_id'))
         self.assertEqual('8.8.8.8', rsrc.FnGetAtt('dns_nameservers')[0])
-        self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1',
-                         rsrc.FnGetAtt('id'))
 
         # assert the dependency (implicit or explicit) between the ports
         # and the subnet
