@@ -665,8 +665,6 @@ class NeutronRouterTest(HeatTestCase):
                          rsrc.FnGetAtt('tenant_id'))
         self.assertEqual('3e21026f2dc94372b105808c0e721661',
                          rsrc.FnGetAtt('tenant_id'))
-        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8',
-                         rsrc.FnGetAtt('id'))
 
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
