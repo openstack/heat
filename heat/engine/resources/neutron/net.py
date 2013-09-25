@@ -32,13 +32,13 @@ class Net(neutron.NeutronResource):
                                             'Type': 'Boolean'},
                          'tenant_id': {'Type': 'String'},
                          'shared': {'Type': 'Boolean'}}
+
     attributes_schema = {
-        "id": "the unique identifier for this network",
-        "status": "the status of the network",
-        "name": "the name of the network",
-        "subnets": "subnets of this network",
-        "admin_state_up": "the administrative status of the network",
-        "tenant_id": "the tenant owning this network"
+        "status": "The status of the network.",
+        "name": "The name of the network.",
+        "subnets": "Subnets of this network.",
+        "admin_state_up": "The administrative status of the network.",
+        "tenant_id": "The tenant owning this network."
     }
 
     def handle_create(self):

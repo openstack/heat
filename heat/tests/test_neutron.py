@@ -327,14 +327,8 @@ class NeutronNetTest(HeatTestCase):
 
         self.assertEqual(None, rsrc.FnGetAtt('status'))
         self.assertEqual('ACTIVE', rsrc.FnGetAtt('status'))
-        try:
-            rsrc.FnGetAtt('Foo')
-            raise Exception('Expected InvalidTemplateAttribute')
-        except exception.InvalidTemplateAttribute:
-            pass
-
-        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                         rsrc.FnGetAtt('id'))
+        self.assertRaises(
+            exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
 
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
