@@ -285,6 +285,38 @@ class ServersTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_server_validate_with_bootable_vol(self):
+        stack_name = 'test_server_validate_stack'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        # create an server with bootable volume
+        web_server = t['Resources']['WebServer']
+        del web_server['Properties']['image']
+
+        def create_server(device_name):
+            web_server['Properties']['block_device_mapping'] = [{
+                "device_name": device_name,
+                "volume_id": "5d7e27da-6703-4f7e-9f94-1f67abef734c",
+                "delete_on_termination": False
+            }]
+            server = servers.Server('server_with_bootable_volume',
+                                    web_server, stack)
+            self.m.StubOutWithMock(server, 'nova')
+            server.nova().MultipleTimes().AndReturn(self.fc)
+            self.m.ReplayAll()
+            return server
+
+        server = create_server(u'vda')
+        self.assertEqual(server.validate(), None)
+        server = create_server('vda')
+        self.assertEqual(server.validate(), None)
+        server = create_server('vdb')
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               server.validate)
+        self.assertEqual('Neither image nor bootable volume is specified for '
+                         'instance server_with_bootable_volume', str(ex))
+        self.m.VerifyAll()
+
     def test_server_validate_delete_policy(self):
         stack_name = 'test_server_validate_stack'
         (t, stack) = self._setup_test_stack(stack_name)
