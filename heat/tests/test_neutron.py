@@ -44,7 +44,8 @@ neutron_template = '''
       "Type": "OS::Neutron::Net",
       "Properties": {
         "name": "the_network",
-        "tenant_id": "c1210485b2424d48804aad5d39c61b8f"
+        "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+        "shared": true
       }
     },
     "unnamed_network": {
@@ -230,13 +231,14 @@ class NeutronNetTest(HeatTestCase):
             'network': {
                 'name': u'the_network',
                 'admin_state_up': True,
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'}
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'shared': True}
         }).AndReturn({"network": {
             "status": "BUILD",
             "subnets": [],
             "name": "name",
             "admin_state_up": False,
-            "shared": False,
+            "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
@@ -248,7 +250,7 @@ class NeutronNetTest(HeatTestCase):
             "subnets": [],
             "name": "name",
             "admin_state_up": False,
-            "shared": False,
+            "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
@@ -260,7 +262,7 @@ class NeutronNetTest(HeatTestCase):
             "subnets": [],
             "name": "name",
             "admin_state_up": False,
-            "shared": False,
+            "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
@@ -276,7 +278,7 @@ class NeutronNetTest(HeatTestCase):
             "subnets": [],
             "name": "name",
             "admin_state_up": False,
-            "shared": False,
+            "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
@@ -288,7 +290,7 @@ class NeutronNetTest(HeatTestCase):
             "subnets": [],
             "name": "name",
             "admin_state_up": False,
-            "shared": False,
+            "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
