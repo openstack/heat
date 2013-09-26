@@ -15,6 +15,7 @@
 from heat.common import exception
 from heat.engine import template
 from heat.engine.parameters import ParamSchema
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 
@@ -48,7 +49,7 @@ class HOTemplate(template.Template):
         section = HOTemplate._translate(section, _CFN_TO_HOT_SECTIONS, section)
 
         if section not in SECTIONS:
-            raise KeyError('"%s" is not a valid template section' % section)
+            raise KeyError(_('"%s" is not a valid template section') % section)
 
         if section == VERSION:
             return self.t[section]
@@ -247,8 +248,8 @@ class HOTemplate(template.Template):
         """
         def handle_str_replace(args):
             if not (isinstance(args, dict) or isinstance(args, list)):
-                raise TypeError('Arguments to "str_replace" must be a'
-                                'dictionary or a list')
+                raise TypeError(_('Arguments to "str_replace" must be a'
+                                'dictionary or a list'))
 
             try:
                 if isinstance(args, dict):
@@ -260,17 +261,17 @@ class HOTemplate(template.Template):
                     raise KeyError()
             except KeyError:
                 example = ('''str_replace:
-                  template: This is var1 template var2
+                  template: This is $var1 template $var2
                   params:
                     var1: a
                     var2: string''')
-                raise KeyError('"str_replace" syntax should be %s' %
+                raise KeyError(_('"str_replace" syntax should be %s') %
                                example)
             if not hasattr(text, 'replace'):
-                raise TypeError('"template" parameter must be a string')
+                raise TypeError(_('"template" parameter must be a string'))
             if not isinstance(params, dict):
                 raise TypeError(
-                    '"params" parameter must be a dictionary')
+                    _('"params" parameter must be a dictionary'))
             for key in params.iterkeys():
                 value = params.get(key, '')
                 text = text.replace(key, value)
