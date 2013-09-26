@@ -325,11 +325,18 @@ def event_get_all_by_tenant(context):
     return results
 
 
-def event_get_all_by_stack(context, stack_id):
-    results = model_query(context, models.Event).\
-        filter_by(stack_id=stack_id).all()
+def _query_all_by_stack(context, stack_id):
+    query = model_query(context, models.Event).\
+        filter_by(stack_id=stack_id)
+    return query
 
-    return results
+
+def event_get_all_by_stack(context, stack_id):
+    return _query_all_by_stack(context, stack_id).all()
+
+
+def event_count_all_by_stack(context, stack_id):
+    return _query_all_by_stack(context, stack_id).count()
 
 
 def event_create(context, values):

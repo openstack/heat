@@ -169,6 +169,10 @@ def event_get_all_by_stack(context, stack_id):
     return IMPL.event_get_all_by_stack(context, stack_id)
 
 
+def event_count_all_by_stack(context, stack_id):
+    return IMPL.event_count_all_by_stack(context, stack_id)
+
+
 def event_create(context, values):
     return IMPL.event_create(context, values)
 
