@@ -44,17 +44,16 @@ class Port(neutron.NeutronResource):
                          'device_id': {'Type': 'String'},
                          'security_groups': {'Type': 'List'}}
     attributes_schema = {
-        "admin_state_up": "the administrative state of this port",
-        "device_id": "unique identifier for the device",
-        "device_owner": "name of the network owning the port",
-        "fixed_ips": "fixed ip addresses",
-        "id": "the unique identifier for the port",
-        "mac_address": "mac address of the port",
-        "name": "friendly name of the port",
-        "network_id": "unique identifier for the network owning the port",
-        "security_groups": "a list of security groups for the port",
-        "status": "the status of the port",
-        "tenant_id": "tenant owning the port"
+        "admin_state_up": _("The administrative state of this port."),
+        "device_id": _("Unique identifier for the device."),
+        "device_owner": _("Name of the network owning the port."),
+        "fixed_ips": _("Fixed ip addresses."),
+        "mac_address": _("Mac address of the port."),
+        "name": _("Friendly name of the port."),
+        "network_id": _("Unique identifier for the network owning the port."),
+        "security_groups": _("A list of security groups for the port."),
+        "status": _("The status of the port."),
+        "tenant_id": _("Tenant owning the port")
     }
 
     def add_dependencies(self, deps):

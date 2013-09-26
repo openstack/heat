@@ -869,14 +869,11 @@ class NeutronFloatingIPTest(HeatTestCase):
 
         self.assertEqual(None, p.FnGetAtt('status'))
         self.assertEqual('ACTIVE', p.FnGetAtt('status'))
-        try:
-            p.FnGetAtt('Foo')
-            raise Exception('Expected InvalidTemplateAttribute')
-        except exception.InvalidTemplateAttribute:
-            pass
+        self.assertRaises(
+            exception.InvalidTemplateAttribute, p.FnGetAtt, 'Foo')
 
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                         p.FnGetAtt('id'))
+                         p.resource_id)
 
         self.assertRaises(resource.UpdateReplace,
                           p.handle_update, {}, {}, {})
