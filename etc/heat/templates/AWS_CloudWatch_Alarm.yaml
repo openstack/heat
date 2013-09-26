@@ -63,7 +63,7 @@ Resources:
     Properties:
       description:
         Ref: AlarmDescription
-      counter_name:
+      meter_name:
         Ref: MetricName
       period:
         Ref: Period

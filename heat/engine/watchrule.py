@@ -268,14 +268,14 @@ class WatchRule(object):
         from heat.engine import clients
         clients = clients.Clients(self.context)
         sample = {}
-        sample['counter_type'] = 'gauge'
+        sample['meter_type'] = 'gauge'
 
         for k, d in iter(data.items()):
             if k == 'Namespace':
                 continue
-            sample['counter_name'] = k
-            sample['counter_volume'] = d['Value']
-            sample['counter_unit'] = d['Unit']
+            sample['meter_name'] = k
+            sample['sample_volume'] = d['Value']
+            sample['meter_unit'] = d['Unit']
             dims = d.get('Dimensions', {})
             if isinstance(dims, list):
                 dims = dims[0]
@@ -357,7 +357,7 @@ def rule_can_use_sample(wr, stats_data):
     if wr.state == WatchRule.SUSPENDED:
         return False
     if wr.state == WatchRule.CEILOMETER_CONTROLLED:
-        metric = wr.rule['counter_name']
+        metric = wr.rule['meter_name']
         rule_dims = {}
         for k, v in iter(wr.rule.get('matching_metadata', {}).items()):
             name = k.split('.')[-1]

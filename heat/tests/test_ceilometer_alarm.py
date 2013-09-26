@@ -46,7 +46,7 @@ alarm_template = '''
      "Type": "OS::Ceilometer::Alarm",
      "Properties": {
         "description": "Scale-up if MEM > 50% for 1 minute",
-        "counter_name": "MemoryUtilization",
+        "meter_name": "MemoryUtilization",
         "statistic": "avg",
         "period": "60",
         "evaluation_periods": "1",
@@ -187,7 +187,7 @@ class CeilometerAlarmTest(HeatTestCase):
         rsrc = self.stack['MEMAlarmHigh']
 
         snippet = copy.deepcopy(rsrc.parsed_template())
-        snippet['Properties']['counter_name'] = 'temp'
+        snippet['Properties']['meter_name'] = 'temp'
 
         updater = scheduler.TaskRunner(rsrc.update, snippet)
         self.assertRaises(resource.UpdateReplace, updater)
