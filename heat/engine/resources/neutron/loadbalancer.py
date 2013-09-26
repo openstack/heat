@@ -81,7 +81,6 @@ class HealthMonitor(neutron.NeutronResource):
                             'response from the member to declare it healthy.'),
         'http_method': _('The HTTP method used for requests by the monitor of '
                          'type HTTP.'),
-        'id': _('Unique identifier for this health monitor.'),
         'max_retries': _('Number of permissible connection failures before '
                          'changing the member status to INACTIVE.'),
         'timeout': _('Maximum number of seconds for a monitor to wait for a '
@@ -186,7 +185,6 @@ class Pool(neutron.NeutronResource):
 
     attributes_schema = {
         'admin_state_up': _('The administrative state of this pool.'),
-        'id': _('Unique identifier for this pool.'),
         'name': _('Name of the pool.'),
         'protocol': _('Protocol to balance.'),
         'subnet_id': _('The subnet on which the members of the pool '
