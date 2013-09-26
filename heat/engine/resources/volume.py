@@ -365,8 +365,6 @@ class CinderVolume(Volume):
         return arguments
 
     def FnGetAtt(self, key):
-        if key == 'id':
-            return self.resource_id
         attributes = ['availability_zone', 'size', 'snapshot_id',
                       'display_name', 'display_description', 'volume_type',
                       'metadata', 'source_volid', 'status', 'created_at',
