@@ -37,14 +37,13 @@ class Firewall(neutron.NeutronResource):
                                                 'Required': True}}
 
     attributes_schema = {
-        'id': 'unique identifier for the Firewall',
-        'name': 'name for the Firewall',
-        'description': 'description of the Firewall',
-        'admin_state_up': 'the administrative state of the Firewall',
-        'firewall_policy_id': 'unique identifier of the FirewallPolicy used to'
-                              'create the Firewall',
-        'status': 'the status of the Firewall',
-        'tenant_id': 'Id of the tenant owning the Firewall'
+        'name': _('Name for the Firewall.'),
+        'description': _('Description of the Firewall.'),
+        'admin_state_up': _('The administrative state of the Firewall.'),
+        'firewall_policy_id': _('Unique identifier of the FirewallPolicy '
+                                'used to  create the Firewall.'),
+        'status': _('The status of the Firewall.'),
+        'tenant_id': _('Id of the tenant owning the Firewall.')
     }
 
     update_allowed_keys = ('Properties',)
@@ -93,13 +92,12 @@ class FirewallPolicy(neutron.NeutronResource):
                                             'Required': True}}
 
     attributes_schema = {
-        'id': 'unique identifier for the FirewallPolicy',
-        'name': 'name for the FirewallPolicy',
-        'description': 'description of the FirewallPolicy',
-        'firewall_rules': 'list of FirewallRules in this FirewallPolicy',
-        'shared': 'shared status of this FirewallPolicy',
-        'audited': 'audit status of this FirewallPolicy',
-        'tenant_id': 'Id of the tenant owning the FirewallPolicy'
+        'name': _('Name for the FirewallPolicy.'),
+        'description': _('Description of the FirewallPolicy.'),
+        'firewall_rules': _('List of FirewallRules in this FirewallPolicy.'),
+        'shared': _('Shared status of this FirewallPolicy.'),
+        'audited': _('Audit status of this FirewallPolicy.'),
+        'tenant_id': _('Id of the tenant owning the FirewallPolicy.')
     }
 
     update_allowed_keys = ('Properties',)
@@ -165,23 +163,22 @@ class FirewallRule(neutron.NeutronResource):
                                      'Default': True}}
 
     attributes_schema = {
-        'id': 'unique identifier for the FirewallRule',
-        'name': 'name for the FirewallRule',
-        'description': 'description of the FirewallRule',
-        'firewall_policy_id': 'unique identifier of the FirewallPolicy to'
-                              'which this FirewallRule belongs',
-        'shared': 'shared status of this FirewallRule',
-        'protocol': 'protocol value for this FirewallRule',
-        'ip_version': 'ip_version for this FirewallRule',
-        'source_ip_address': 'source ip_address for this FirewallRule',
-        'destination_ip_address': 'destination ip_address for this'
-                                  'FirewallRule',
-        'source_port': 'source port range for this FirewallRule',
-        'destination_port': 'destination port range for this FirewallRule',
-        'action': 'allow or deny action for this FirewallRule',
-        'enabled': 'indicates whether this FirewallRule is enabled or not',
-        'position': 'position of the rule within the FirewallPolicy',
-        'tenant_id': 'Id of the tenant owning the Firewall'
+        'name': _('Name for the FirewallRule.'),
+        'description': _('Description of the FirewallRule.'),
+        'firewall_policy_id': _('Unique identifier of the FirewallPolicy to '
+                                'which this FirewallRule belongs.'),
+        'shared': _('Shared status of this FirewallRule.'),
+        'protocol': _('Protocol value for this FirewallRule.'),
+        'ip_version': _('Ip_version for this FirewallRule.'),
+        'source_ip_address': _('Source ip_address for this FirewallRule.'),
+        'destination_ip_address': _('Destination ip_address for this '
+                                    'FirewallRule.'),
+        'source_port': _('Source port range for this FirewallRule.'),
+        'destination_port': _('Destination port range for this FirewallRule.'),
+        'action': _('Allow or deny action for this FirewallRule.'),
+        'enabled': _('Indicates whether this FirewallRule is enabled or not.'),
+        'position': _('Position of the rule within the FirewallPolicy.'),
+        'tenant_id': _('Id of the tenant owning the Firewall.')
     }
 
     update_allowed_keys = ('Properties',)
