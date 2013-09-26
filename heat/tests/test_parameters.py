@@ -259,7 +259,13 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'CommaDelimitedList',
                   'AllowedValues': ['foo', 'bar', 'baz']}
         p = self.new_parameter('p', schema, 'baz,foo,bar')
-        self.assertEqual(p.value(), 'baz,foo,bar')
+        self.assertEqual(p.value(), 'baz,foo,bar'.split(','))
+        schema['Default'] = []
+        p = self.new_parameter('p', schema)
+        self.assertEqual(p.value(), [])
+        schema['Default'] = 'baz,foo,bar'
+        p = self.new_parameter('p', schema)
+        self.assertEqual(p.value(), 'baz,foo,bar'.split(','))
 
     def test_list_value_list_bad(self):
         schema = {'Type': 'CommaDelimitedList',
