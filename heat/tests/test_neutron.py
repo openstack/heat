@@ -151,6 +151,26 @@ neutron_floating_template = '''
 }
 '''
 
+neutron_port_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test Neutron resources",
+  "Parameters" : {},
+  "Resources" : {
+    "port": {
+      "Type": "OS::Neutron::Port",
+      "Properties": {
+        "network_id": "net1234",
+        "fixed_ips": [{
+          "subnet_id": "sub1234",
+          "ip_address": "10.0.3.21"
+        }]
+      }
+    }
+  }
+}
+'''
+
 
 class NeutronTest(HeatTestCase):
 
@@ -1029,4 +1049,77 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.assertEqual(scheduler.TaskRunner(p.delete)(), None)
         scheduler.TaskRunner(fip.delete)()
 
+        self.m.VerifyAll()
+
+
+@skipIf(neutronclient is None, 'neutronclient unavailable')
+class NeutronPortTest(HeatTestCase):
+    @skipIf(net.clients.neutronclient is None, "Missing Neutron Client")
+    def setUp(self):
+        super(NeutronPortTest, self).setUp()
+        self.m.StubOutWithMock(neutronclient.Client, 'create_port')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_port')
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        utils.setup_dummy_db()
+
+    def test_missing_subnet_id(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_port({'port': {
+            'network_id': u'net1234',
+            'fixed_ips': [
+                {'ip_address': u'10.0.3.21'}
+            ],
+            'name': utils.PhysName('test_stack', 'port'),
+            'admin_state_up': True}}
+        ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(neutron_port_template)
+        t['Resources']['port']['Properties']['fixed_ips'][0].pop('subnet_id')
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.m.VerifyAll()
+
+    def test_missing_ip_address(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_port({'port': {
+            'network_id': u'net1234',
+            'fixed_ips': [
+                {'subnet_id': u'sub1234'}
+            ],
+            'name': utils.PhysName('test_stack', 'port'),
+            'admin_state_up': True}}
+        ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(neutron_port_template)
+        t['Resources']['port']['Properties']['fixed_ips'][0].pop('ip_address')
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
         self.m.VerifyAll()
