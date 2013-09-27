@@ -525,6 +525,47 @@ class NeutronSubnetTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
+    def test_null_gateway_ip(self):
+        p = {}
+        subnet.Subnet._null_gateway_ip(p)
+        self.assertEqual({}, p)
+
+        p = {'foo': 'bar'}
+        subnet.Subnet._null_gateway_ip(p)
+        self.assertEqual({'foo': 'bar'}, p)
+
+        p = {
+            'foo': 'bar',
+            'gateway_ip': '198.51.100.0'
+        }
+        subnet.Subnet._null_gateway_ip(p)
+        self.assertEqual({
+            'foo': 'bar',
+            'gateway_ip': '198.51.100.0'
+        }, p)
+
+        p = {
+            'foo': 'bar',
+            'gateway_ip': ''
+        }
+        subnet.Subnet._null_gateway_ip(p)
+        self.assertEqual({
+            'foo': 'bar',
+            'gateway_ip': None
+        }, p)
+
+        # This should not happen as prepare_properties
+        # strips out None values, but testing anyway
+        p = {
+            'foo': 'bar',
+            'gateway_ip': None
+        }
+        subnet.Subnet._null_gateway_ip(p)
+        self.assertEqual({
+            'foo': 'bar',
+            'gateway_ip': None
+        }, p)
+
 
 @skipIf(neutronclient is None, 'neutronclient unavailable')
 class NeutronRouterTest(HeatTestCase):

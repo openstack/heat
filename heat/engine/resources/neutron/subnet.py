@@ -65,10 +65,25 @@ class Subnet(neutron.NeutronResource):
                         "otherwise")
     }
 
+    @staticmethod
+    def _null_gateway_ip(props):
+        if 'gateway_ip' not in props:
+            return
+        # Specifying null in the gateway_ip will result in
+        # a property containing an empty string.
+        # A null gateway_ip has special meaning in the API
+        # so this needs to be set back to None.
+        # See bug https://bugs.launchpad.net/heat/+bug/1226666
+        if props.get('gateway_ip') == '':
+            props['gateway_ip'] = None
+
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+
+        self._null_gateway_ip(props)
+
         subnet = self.neutron().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])
 
