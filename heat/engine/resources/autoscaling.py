@@ -132,7 +132,7 @@ class InstanceGroup(stack_resource.StackResource):
 
     def get_instances(self):
         """Get a set of all the instance resources managed by this group."""
-        return [resource for resource in self.nested()
+        return [resource for resource in self.nested().itervalues()
                 if resource.state[1] != resource.FAILED]
 
     def handle_create(self):
