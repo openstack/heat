@@ -249,6 +249,9 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
             raise ValueError(message % str(err))
         return value
 
+    def value(self):
+        return self.parsed
+
     def __len__(self):
         '''Return the length of the list.'''
         return len(self.parsed)
