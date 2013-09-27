@@ -21,8 +21,9 @@ except ImportError:
         pass
 
 from heat.common import exception
-from heat.engine.resources.rackspace import rackspace_resource
 from heat.openstack.common import log as logging
+
+from . import rackspace_resource
 
 logger = logging.getLogger(__name__)
 

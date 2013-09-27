@@ -22,8 +22,9 @@ from heat.openstack.common import log as logging
 from heat.engine import scheduler
 from heat.engine.resources import instance
 from heat.engine.resources import nova_utils
-from heat.engine.resources.rackspace import rackspace_resource
 from heat.db.sqlalchemy import api as db_api
+
+from . import rackspace_resource
 
 logger = logging.getLogger(__name__)
 

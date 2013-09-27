@@ -1,5 +1,4 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -23,8 +22,9 @@ from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
 from heat.engine import scheduler
 from heat.engine.properties import Properties
-from heat.engine.resources.rackspace import rackspace_resource
 from heat.common import exception
+
+from . import rackspace_resource
 
 logger = logging.getLogger(__name__)
 

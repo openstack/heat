@@ -20,9 +20,10 @@ import copy
 from heat.common import template_format
 from heat.engine import scheduler
 from heat.engine import resource
-from heat.engine.resources.rackspace import cloud_loadbalancer as lb
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+
+from ..engine.plugins import cloud_loadbalancer as lb
 
 # The following fakes are for pyrax
 
@@ -103,10 +104,10 @@ class FakeLoadBalancerClient(object):
         self.VirtualIP = FakeVirtualIP
         pass
 
-    def get(*args, **kwargs):
+    def get(self, *args, **kwargs):
         pass
 
-    def create(*args, **kwargs):
+    def create(self, *args, **kwargs):
         pass
 
 
@@ -120,19 +121,19 @@ class FakeLoadBalancer(object):
         self.VirtualIP = FakeVirtualIP
         self.nodes = []
 
-    def get(*args, **kwargs):
+    def get(self, *args, **kwargs):
         pass
 
-    def add_nodes(*args, **kwargs):
+    def add_nodes(self, *args, **kwargs):
         pass
 
-    def add_ssl_termination(*args, **kwargs):
+    def add_ssl_termination(self, *args, **kwargs):
         pass
 
-    def set_error_page(*args, **kwargs):
+    def set_error_page(self, *args, **kwargs):
         pass
 
-    def add_access_list(*args, **kwargs):
+    def add_access_list(self, *args, **kwargs):
         pass
 
 

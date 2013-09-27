@@ -24,12 +24,12 @@ from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import environment
-from heat.engine.resources.rackspace import cloud_server
-from heat.engine.resources.rackspace import rackspace_resource
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
+from ..engine.plugins import rackspace_resource
+from ..engine.plugins import cloud_server
 
 wp_template = '''
 {
