@@ -167,7 +167,7 @@ class StackUpdate(object):
             yield existing_res.destroy()
 
         if res_name not in self.new_stack:
-            del self.existing_stack.resources[res_name]
+            del self.existing_stack[res_name]
 
     def dependencies(self):
         '''
