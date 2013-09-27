@@ -282,6 +282,8 @@ def user_creds_create(context):
         user_creds_ref.trustor_user_id = values.get('trustor_user_id')
         user_creds_ref.username = None
         user_creds_ref.password = None
+        user_creds_ref.tenant = values.get('tenant')
+        user_creds_ref.tenant_id = values.get('tenant_id')
     else:
         user_creds_ref.update(values)
         user_creds_ref.password = _encrypt(values['password'])
