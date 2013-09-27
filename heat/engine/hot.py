@@ -14,7 +14,7 @@
 
 from heat.common import exception
 from heat.engine import template
-from heat.engine.parameters import ParamSchema
+from heat.engine import parameters
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
@@ -25,6 +25,11 @@ SECTIONS = (VERSION, DESCRIPTION, PARAMETERS,
             RESOURCES, OUTPUTS, UNDEFINED) = \
            ('heat_template_version', 'description', 'parameters',
             'resources', 'outputs', '__undefined__')
+
+PARAM_CONSTRAINTS = (CONSTRAINTS, DESCRIPTION, LENGTH, RANGE,
+                     MIN, MAX, ALLOWED_VALUES, ALLOWED_PATTERN) = \
+                    ('constraints', 'description', 'length', 'range',
+                     'min', 'max', 'allowed_values', 'allowed_pattern')
 
 _CFN_TO_HOT_SECTIONS = {template.VERSION: VERSION,
                         template.DESCRIPTION: DESCRIPTION,
@@ -87,49 +92,18 @@ class HOTemplate(template.Template):
 
         return default
 
-    def _translate_constraints(self, constraints):
-        param = {}
-
-        def add_constraint(key, val, desc):
-            cons = param.get(key, [])
-            cons.append((val, desc))
-            param[key] = cons
-
-        def add_min_max(key, val, desc):
-            minv = val.get('min')
-            maxv = val.get('max')
-            if minv:
-                add_constraint('Min%s' % key, minv, desc)
-            if maxv:
-                add_constraint('Max%s' % key, maxv, desc)
-
-        for constraint in constraints:
-            desc = constraint.get('description')
-            for key, val in constraint.iteritems():
-                key = snake_to_camel(key)
-                if key == 'Description':
-                    continue
-                elif key == 'Range':
-                    add_min_max('Value', val, desc)
-                elif key == 'Length':
-                    add_min_max(key, val, desc)
-                else:
-                    add_constraint(key, val, desc)
-
-        return param
-
     def _translate_parameters(self, parameters):
         """Get the parameters of the template translated into CFN format."""
         params = {}
         for name, attrs in parameters.iteritems():
             param = {}
             for key, val in attrs.iteritems():
-                key = snake_to_camel(key)
+                # Do not translate 'constraints' since we want to handle this
+                # specifically in HOT and not in common code.
+                if key != CONSTRAINTS:
+                    key = snake_to_camel(key)
                 if key == 'Type':
                     val = snake_to_camel(val)
-                elif key == 'Constraints':
-                    param.update(self._translate_constraints(val))
-                    continue
                 elif key == 'Hidden':
                     key = 'NoEcho'
                 param[key] = val
@@ -261,7 +235,7 @@ class HOTemplate(template.Template):
                     raise KeyError()
             except KeyError:
                 example = ('''str_replace:
-                  template: This is $var1 template $var2
+                  template: This is var1 template var2
                   params:
                     var1: a
                     var2: string''')
@@ -286,12 +260,32 @@ class HOTemplate(template.Template):
         return dict((name, HOTParamSchema(schema)) for name, schema in params)
 
 
-class HOTParamSchema(ParamSchema):
-    def do_check(self, name, val, keys):
-        for key in keys:
-            consts = self.get(key)
-            check = self.check(key)
-            if consts is None or check is None:
-                continue
-            for (const, desc) in consts:
-                check(name, val, const, desc)
+class HOTParamSchema(parameters.ParamSchema):
+    """HOT parameter schema."""
+
+    def do_check(self, name, value, keys):
+        # map ParamSchema constraint type to keys used in HOT constraints
+        constraint_map = {
+            parameters.ALLOWED_PATTERN: [ALLOWED_PATTERN],
+            parameters.ALLOWED_VALUES: [ALLOWED_VALUES],
+            parameters.MIN_LENGTH: [LENGTH, MIN],
+            parameters.MAX_LENGTH: [LENGTH, MAX],
+            parameters.MIN_VALUE: [RANGE, MIN],
+            parameters.MAX_VALUE: [RANGE, MAX]
+        }
+
+        for const_type in keys:
+            # get constraint type specific check function
+            check = self.check(const_type)
+            # get constraint type specific keys in HOT
+            const_keys = constraint_map[const_type]
+
+            for constraint in self.get(CONSTRAINTS, []):
+                const_descr = constraint.get(DESCRIPTION)
+
+                for const_key in const_keys:
+                    if const_key not in constraint:
+                        break
+                    constraint = constraint[const_key]
+                else:
+                    check(name, value, constraint, const_descr)

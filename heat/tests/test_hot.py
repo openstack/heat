@@ -92,107 +92,6 @@ class HOTemplateTest(HeatTestCase):
         tmpl = parser.Template(hot_tpl)
         self.assertEqual(tmpl[hot.PARAMETERS], expected)
 
-    def test_translate_parameters_length_range(self):
-        hot_tpl = template_format.parse('''
-        heat_template_version: 2013-05-23
-        parameters:
-          wait_time:
-            description: application wait time
-            type: number
-            default: 150
-            constraints:
-              - range: { min: 120, max: 600}
-                description: min value 120 seconds, max value 600 seconds
-          key_name:
-            description: Name of an existing EC2 KeyPair
-            type: string
-            default: heat_key
-            constraints:
-              - length: {min: 1, max: 32}
-                description: length should be between 1 and 32
-        ''')
-
-        expected = {
-            'wait_time': {
-                'Description': 'application wait time',
-                'Type': 'Number',
-                'Default': 150,
-                'MaxValue': [
-                    (600, 'min value 120 seconds, max value 600 seconds')],
-                'MinValue': [
-                    (120, 'min value 120 seconds, max value 600 seconds')]
-            },
-            'key_name': {
-                'Description': 'Name of an existing EC2 KeyPair',
-                'Type': 'String',
-                'Default': 'heat_key',
-                'MaxLength': [(32, u'length should be between 1 and 32')],
-                'MinLength': [(1, u'length should be between 1 and 32')]
-            }}
-
-        tmpl = parser.Template(hot_tpl)
-        self.assertEqual(expected, tmpl[hot.PARAMETERS])
-
-    def test_translate_parameters_allowed_values(self):
-        hot_tpl = template_format.parse('''
-        heat_template_version: 2013-05-23
-        parameters:
-          instance_type:
-            description: instance type
-            type: string
-            default: m1.small
-            constraints:
-              - allowed_values: ["m1.tiny",
-                                 "m1.small",
-                                 "m1.medium", "m1.large", "m1.xlarge"]
-                description: must be a valid EC2 instance type.
-        ''')
-        expected = {
-            'instance_type': {
-                'Description': 'instance type',
-                'Type': 'String',
-                'Default': 'm1.small',
-                'AllowedValues': [(["m1.tiny",
-                                    "m1.small",
-                                    "m1.medium",
-                                    "m1.large",
-                                    "m1.xlarge"],
-                                   'must be a valid EC2 instance type.')]}}
-
-        tmpl = parser.Template(hot_tpl)
-        self.assertEqual(expected, tmpl[hot.PARAMETERS])
-
-    def test_translate_parameters_allowed_patterns(self):
-        hot_tpl = template_format.parse('''
-        heat_template_version: 2013-05-23
-        parameters:
-          db_name:
-            description: The WordPress database name
-            type: string
-            default: wordpress
-            constraints:
-              - length: { min: 1, max: 64 }
-                description: string lenght should between 1 and 64
-              - allowed_pattern: "[a-zA-Z]+"
-                description: Value must consist of characters only
-              - allowed_pattern: "[a-z]+[a-zA-Z]*"
-                description: Value must start with a lowercase character
-        ''')
-        expected = {
-            'db_name': {
-                'Description': 'The WordPress database name',
-                'Type': 'String',
-                'Default': 'wordpress',
-                'MinLength': [(1, 'string lenght should between 1 and 64')],
-                'MaxLength': [(64, 'string lenght should between 1 and 64')],
-                'AllowedPattern': [
-                    ('[a-zA-Z]+',
-                     'Value must consist of characters only'),
-                    ('[a-z]+[a-zA-Z]*',
-                     'Value must start with a lowercase character')]}}
-        tmpl = parser.Template(hot_tpl)
-        self.assertEqual(expected, tmpl[hot.PARAMETERS])
-
     def test_translate_parameters_hidden(self):
         hot_tpl = template_format.parse('''
         heat_template_version: 2013-05-23
@@ -415,10 +314,10 @@ class StackTest(test_parser.StackTest):
 
 
 class HOTParamValidatorTest(HeatTestCase):
-    "Test HOTParamValidator"
+    """Test HOTParamValidator"""
 
     def test_multiple_constraint_descriptions(self):
-        len_desc = 'string length should between 8 and 16'
+        len_desc = 'string length should be between 8 and 16'
         pattern_desc1 = 'Value must consist of characters only'
         pattern_desc2 = 'Value must start with a lowercase character'
         param = {
@@ -426,21 +325,19 @@ class HOTParamValidatorTest(HeatTestCase):
                 'Description': 'The WordPress database name',
                 'Type': 'String',
                 'Default': 'wordpress',
-                'MinLength': [(8, len_desc)],
-                'MaxLength': [(16, len_desc)],
-                'AllowedPattern': [
-                    ('[a-zA-Z]+', pattern_desc1),
-                    ('[a-z]+[a-zA-Z]*', pattern_desc2)]}}
+                'constraints': [
+                    {'length': {'min': 6, 'max': 16},
+                     'description': len_desc},
+                    {'allowed_pattern': '[a-zA-Z]+',
+                     'description': pattern_desc1},
+                    {'allowed_pattern': '[a-z]+[a-zA-Z]*',
+                     'description': pattern_desc2}]}}
 
         name = 'db_name'
         schema = param['db_name']
 
         def v(value):
-            hot.HOTParamSchema(schema).do_check(name, value,
-                                                [parameters.ALLOWED_VALUES,
-                                                 parameters.ALLOWED_PATTERN,
-                                                 parameters.MAX_LENGTH,
-                                                 parameters.MIN_LENGTH])
+            hot.HOTParamSchema(schema).validate(name, value)
             return True
 
         value = 'wp'
@@ -466,7 +363,7 @@ class HOTParamValidatorTest(HeatTestCase):
         self.assertTrue(v(value))
 
     def test_hot_template_validate_param(self):
-        len_desc = 'string length should between 8 and 16'
+        len_desc = 'string length should be between 8 and 16'
         pattern_desc1 = 'Value must consist of characters only'
         pattern_desc2 = 'Value must start with a lowercase character'
         hot_tpl = template_format.parse('''
@@ -511,3 +408,38 @@ class HOTParamValidatorTest(HeatTestCase):
 
         value = 'abcdefghI'
         self.assertTrue(run_parameters(value))
+
+    def test_range_constraint(self):
+        range_desc = 'Value must be between 30000 and 50000'
+        param = {
+            'db_port': {
+                'Description': 'The database port',
+                'Type': 'Number',
+                'Default': 15,
+                'constraints': [
+                    {'range': {'min': 30000, 'max': 50000},
+                     'description': range_desc}]}}
+
+        name = 'db_port'
+        schema = param['db_port']
+
+        def v(value):
+            hot.HOTParamSchema(schema).validate(name, value)
+            return True
+
+        value = 29999
+        err = self.assertRaises(ValueError, v, value)
+        self.assertIn(range_desc, str(err))
+
+        value = 50001
+        err = self.assertRaises(ValueError, v, value)
+        self.assertIn(range_desc, str(err))
+
+        value = 30000
+        self.assertTrue(v(value))
+
+        value = 40000
+        self.assertTrue(v(value))
+
+        value = 50000
+        self.assertTrue(v(value))
