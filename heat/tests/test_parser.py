@@ -587,7 +587,8 @@ class StackTest(HeatTestCase):
         ctx = utils.dummy_context()
         ctx.auth_token = None
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
-        clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClient())
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            FakeKeystoneClient())
 
         self.m.ReplayAll()
         stack = parser.Stack(ctx, 'test_stack', parser.Template({}))

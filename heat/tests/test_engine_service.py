@@ -23,7 +23,6 @@ from testtools import matchers
 from oslo.config import cfg
 
 from heat.engine import environment
-from heat.common import heat_keystoneclient as hkc
 from heat.common import exception
 from heat.tests.v1_1 import fakes
 import heat.rpc.api as engine_api
@@ -300,16 +299,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(stack, 'validate')
         stack.validate().AndReturn(None)
 
-        self.m.StubOutClassWithMocks(hkc.kc, "Client")
-        mock_ks_client = hkc.kc.Client(
-            auth_url=mox.IgnoreArg(),
-            tenant_name='test_tenant',
-            token='abcd1234')
-        mock_ks_client.authenticate().AndReturn(True)
-
-        self.m.StubOutWithMock(hkc.KeystoneClient, 'create_trust_context')
-        hkc.KeystoneClient.create_trust_context().AndReturn(None)
-
         self.m.StubOutWithMock(threadgroup, 'ThreadGroup')
         threadgroup.ThreadGroup().AndReturn(DummyThreadGroup())
 
@@ -455,16 +444,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                      stack.t,
                      stack.env).AndReturn(stack)
 
-        self.m.StubOutClassWithMocks(hkc.kc, "Client")
-        mock_ks_client = hkc.kc.Client(
-            auth_url=mox.IgnoreArg(),
-            tenant_name='test_tenant',
-            token='abcd1234')
-        mock_ks_client.authenticate().AndReturn(True)
-
-        self.m.StubOutWithMock(hkc.KeystoneClient, 'create_trust_context')
-        hkc.KeystoneClient.create_trust_context().AndReturn(None)
-
         self.m.ReplayAll()
 
         cfg.CONF.set_override('max_resources_per_stack', 3)
@@ -529,16 +508,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
 
         parser.Stack.load(self.ctx, stack=s).AndReturn(stack)
-
-        self.m.StubOutClassWithMocks(hkc.kc, "Client")
-        mock_ks_client = hkc.kc.Client(
-            auth_url=mox.IgnoreArg(),
-            tenant_name='test_tenant',
-            token='abcd1234')
-        mock_ks_client.authenticate().AndReturn(True)
-
-        self.m.StubOutWithMock(hkc.KeystoneClient, 'delete_trust_context')
-        hkc.KeystoneClient.delete_trust_context().AndReturn(None)
 
         self.man.tg = DummyThreadGroup()
 
