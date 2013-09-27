@@ -304,7 +304,7 @@ class CinderVolume(Volume):
 
     properties_schema = {
         'availability_zone': {
-            'Type': 'String', 'Required': True,
+            'Type': 'String',
             'Description': _('The availability zone in which the volume '
                              'will be created.')},
         'size': {
