@@ -18,6 +18,7 @@ import re
 
 from heat.common import exception
 from heat.engine import parameters
+from heat.engine import hot
 
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
@@ -191,13 +192,13 @@ class Schema(collections.Mapping):
             parameters.JSON: MAP
         }
 
-        def constraints():
-            def get_num(key):
-                val = param.get(key)
-                if val is not None:
-                    val = Property.str_to_num(val)
-                return val
+        def get_num(key, context=param):
+            val = context.get(key)
+            if val is not None:
+                val = Property.str_to_num(val)
+            return val
 
+        def constraints():
             desc = param.get(parameters.CONSTRAINT_DESCRIPTION)
 
             if parameters.MIN_VALUE in param or parameters.MAX_VALUE in param:
@@ -212,10 +213,37 @@ class Schema(collections.Mapping):
             if parameters.ALLOWED_PATTERN in param:
                 yield AllowedPattern(param[parameters.ALLOWED_PATTERN], desc)
 
+        def constraints_hot():
+            constraints = param.get(hot.CONSTRAINTS)
+            if constraints is None:
+                return
+
+            for constraint in constraints:
+                desc = constraint.get(hot.DESCRIPTION)
+                if hot.RANGE in constraint:
+                    const_def = constraint.get(hot.RANGE)
+                    yield Range(get_num(hot.MIN, const_def),
+                                get_num(hot.MAX, const_def), desc)
+                if hot.LENGTH in constraint:
+                    const_def = constraint.get(hot.LENGTH)
+                    yield Length(get_num(hot.MIN, const_def),
+                                 get_num(hot.MAX, const_def), desc)
+                if hot.ALLOWED_VALUES in constraint:
+                    const_def = constraint.get(hot.ALLOWED_VALUES)
+                    yield AllowedValues(const_def, desc)
+                if hot.ALLOWED_PATTERN in constraint:
+                    const_def = constraint.get(hot.ALLOWED_PATTERN)
+                    yield AllowedPattern(const_def, desc)
+
+        if isinstance(param, hot.HOTParamSchema):
+            constraint_list = list(constraints_hot())
+        else:
+            constraint_list = list(constraints())
+
         return cls(param_type_map.get(param[parameters.TYPE], MAP),
                    description=param.get(parameters.DESCRIPTION),
                    required=parameters.DEFAULT not in param,
-                   constraints=list(constraints()))
+                   constraints=constraint_list)
 
     def validate_constraints(self, value):
         for constraint in self.constraints:
