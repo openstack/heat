@@ -280,8 +280,10 @@ Outputs:
         new_res['Properties']['TemplateURL'] = (
             'https://server.test/new.template')
         prop_diff = {'TemplateURL': 'https://server.test/new.template'}
-        self.assertRaises(exception.StackResourceLimitExceeded,
-                          rsrc.handle_update, new_res, {}, prop_diff)
+        ex = self.assertRaises(exception.RequestLimitExceeded,
+                               rsrc.handle_update, new_res, {}, prop_diff)
+        self.assertIn(exception.StackResourceLimitExceeded.message,
+                      str(ex))
         rsrc.delete()
 
         self.m.VerifyAll()

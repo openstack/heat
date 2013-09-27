@@ -486,9 +486,11 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                'C': {'Type': 'GenericResourceType'}}}
         template = parser.Template(tpl)
         cfg.CONF.set_override('max_resources_per_stack', 2)
-        self.assertRaises(exception.StackResourceLimitExceeded,
-                          self.man.create_stack, self.ctx, stack_name,
-                          template, params, None, {})
+        ex = self.assertRaises(exception.RequestLimitExceeded,
+                               self.man.create_stack, self.ctx, stack_name,
+                               template, params, None, {})
+        self.assertIn(exception.StackResourceLimitExceeded.message,
+                      str(ex))
 
     def test_stack_validate(self):
         stack_name = 'service_create_test_validate'
@@ -661,9 +663,12 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         cfg.CONF.set_override('max_resources_per_stack', 2)
 
-        self.assertRaises(exception.StackResourceLimitExceeded,
-                          self.man.update_stack, self.ctx,
-                          old_stack.identifier(), template, params, None, {})
+        ex = self.assertRaises(exception.RequestLimitExceeded,
+                               self.man.update_stack, self.ctx,
+                               old_stack.identifier(), template, params, None,
+                               {})
+        self.assertIn(exception.StackResourceLimitExceeded.message,
+                      str(ex))
 
     def test_stack_update_verify_err(self):
         stack_name = 'service_update_verify_err_test_stack'

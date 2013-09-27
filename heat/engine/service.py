@@ -259,7 +259,8 @@ class EngineService(service.Service):
         tmpl = parser.Template(template, files=files)
 
         if len(tmpl[tpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
-            raise exception.StackResourceLimitExceeded()
+            raise exception.RequestLimitExceeded(
+                message=exception.StackResourceLimitExceeded.message)
 
         # Extract the common query parameters
         common_params = api.extract_args(args)
@@ -307,7 +308,8 @@ class EngineService(service.Service):
         # stack definition.
         tmpl = parser.Template(template, files=files)
         if len(tmpl[tpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
-            raise exception.StackResourceLimitExceeded()
+            raise exception.RequestLimitExceeded(
+                message=exception.StackResourceLimitExceeded.message)
         stack_name = current_stack.name
         common_params = api.extract_args(args)
         env = environment.Environment(params)
