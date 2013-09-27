@@ -73,7 +73,7 @@ class Port(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
 
-        for fixed_ip in props['fixed_ips']:
+        for fixed_ip in props.get('fixed_ips', []):
             for key, value in fixed_ip.items():
                 if value is None:
                     fixed_ip.pop(key)
