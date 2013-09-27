@@ -103,7 +103,7 @@ class RouterGateway(neutron.NeutronResource):
 
     def add_dependencies(self, deps):
         super(RouterGateway, self).add_dependencies(deps)
-        for resource in self.stack.resources.itervalues():
+        for resource in self.stack.itervalues():
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
             if (resource.has_interface('OS::Neutron::RouterInterface') and

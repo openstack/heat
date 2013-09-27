@@ -165,7 +165,7 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(True,
                          self.parent_resource.check_update_complete(updater))
         self.assertEqual(self.stack.state, ('UPDATE', 'COMPLETE'))
-        self.assertEqual(set(self.stack.resources.keys()),
+        self.assertEqual(set(self.stack.keys()),
                          set(["WebServer", "WebServer2"]))
 
         # The stack's owner_id is maintained.

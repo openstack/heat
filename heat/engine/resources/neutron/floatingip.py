@@ -53,7 +53,7 @@ class FloatingIP(neutron.NeutronResource):
         super(FloatingIP, self).add_dependencies(deps)
         # depend on any RouterGateway in this template with the same
         # network_id as this floating_network_id
-        for resource in self.stack.resources.itervalues():
+        for resource in self.stack.itervalues():
             if (resource.has_interface('OS::Neutron::RouterGateway') and
                 resource.properties.get('network_id') ==
                     self.properties.get('floating_network_id')):

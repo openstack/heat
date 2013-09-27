@@ -142,9 +142,8 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
         del(t2nr['Resources'])
         self.assertEqual(t1nr, t2nr)
 
-        self.assertEqual(set(stack1.resources.keys()),
-                         set(stack2.resources.keys()))
-        for key in stack1.resources:
+        self.assertEqual(set(stack1.keys()), set(stack2.keys()))
+        for key in stack1:
             self.assertEqual(stack1[key].t, stack2[key].t)
 
     @skipIf(clients.neutronclient is None, 'neutronclient unavailable')

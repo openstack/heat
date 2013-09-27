@@ -279,7 +279,7 @@ class Stack(collections.Mapping):
         Return the resource in this stack with the specified
         refid, or None if not found
         '''
-        for r in self.resources.values():
+        for r in self.values():
             if r.state in (
                     (r.CREATE, r.IN_PROGRESS),
                     (r.CREATE, r.COMPLETE),
@@ -297,7 +297,7 @@ class Stack(collections.Mapping):
         # TODO(sdake) Should return line number of invalid reference
 
         # Check duplicate names between parameters and resources
-        dup_names = set(self.parameters.keys()) & set(self.resources.keys())
+        dup_names = set(self.parameters.keys()) & set(self.keys())
 
         if dup_names:
             logger.debug("Duplicate names %s" % dup_names)
