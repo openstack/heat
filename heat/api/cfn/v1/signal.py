@@ -38,7 +38,7 @@ class SignalController(object):
 
         return {'resource': identity.resource_name, 'metadata': md}
 
-    def signal(self, req, body, arn):
+    def signal(self, req, arn, body=None):
         con = req.context
         identity = identifier.ResourceIdentifier.from_arn(arn)
         try:
