@@ -33,12 +33,11 @@ class Router(neutron.NeutronResource):
                          'admin_state_up': {'Type': 'Boolean',
                                             'Default': True}}
     attributes_schema = {
-        "status": "the status of the router",
-        "external_gateway_info": "gateway network for the router",
-        "name": "friendly name of the router",
-        "admin_state_up": "administrative state of the router",
-        "tenant_id": "tenant owning the router",
-        "id": "unique identifier for the router"
+        "status": _("The status of the router."),
+        "external_gateway_info": _("Gateway network for the router."),
+        "name": _("Friendly name of the router."),
+        "admin_state_up": _("Administrative state of the router."),
+        "tenant_id": _("Tenant owning the router."),
     }
 
     def handle_create(self):
