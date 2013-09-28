@@ -25,13 +25,19 @@ logger = logging.getLogger(__name__)
 
 
 class ElasticIp(resource.Resource):
-    properties_schema = {'Domain': {'Type': 'String',
-                         'AllowedValues': ['vpc']},
-                         'InstanceId': {'Type': 'String'}}
+    properties_schema = {
+        'Domain': {
+            'Type': 'String',
+            'AllowedValues': ['vpc'],
+            'Description': _('Set to "vpc" to have IP address allocation '
+                             'associated to your VPC.')},
+        'InstanceId': {
+            'Type': 'String',
+            'Description': _('Instance ID to associate with EIP.')}}
     attributes_schema = {
-        "AllocationId": ("ID that AWS assigns to represent the allocation of"
-                         "the address for use with Amazon VPC. Returned only"
-                         " for VPC elastic IP addresses.")
+        'AllocationId': _('ID that AWS assigns to represent the allocation of'
+                          ' the address for use with Amazon VPC. Returned only'
+                          ' for VPC elastic IP addresses.')
     }
 
     def __init__(self, name, json_snippet, stack):
@@ -123,11 +129,21 @@ class ElasticIp(resource.Resource):
 
 
 class ElasticIpAssociation(resource.Resource):
-    properties_schema = {'InstanceId': {'Type': 'String',
-                                        'Required': False},
-                         'EIP': {'Type': 'String'},
-                         'AllocationId': {'Type': 'String'},
-                         'NetworkInterfaceId': {'Type': 'String'}}
+    properties_schema = {
+        'InstanceId': {
+            'Type': 'String',
+            'Required': False,
+            'Description': _('Instance ID to associate with EIP specified by '
+                             'EIP property.')},
+        'EIP': {
+            'Type': 'String',
+            'Description': _('EIP address to associate with instance.')},
+        'AllocationId': {
+            'Type': 'String',
+            'Description': _('Allocation ID for VPC EIP address.')},
+        'NetworkInterfaceId': {
+            'Type': 'String',
+            'Description': _('Network interface ID to associate with EIP.')}}
 
     def FnGetRefId(self):
         return unicode(self.physical_resource_name())
