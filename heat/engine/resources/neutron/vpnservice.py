@@ -61,7 +61,6 @@ class VPNService(neutron.NeutronResource):
     attributes_schema = {
         'admin_state_up': _('The administrative state of the vpn service.'),
         'description': _('The description of the vpn service.'),
-        'id': _('The unique identifier of the vpn service.'),
         'name': _('The name of the vpn service.'),
         'router_id': _('The unique identifier of the router to which the vpn '
                        'service was inserted.'),
@@ -212,7 +211,6 @@ class IPsecSiteConnection(neutron.NeutronResource):
         'description': _('The description of the ipsec site connection.'),
         'dpd': _('The dead peer detection protocol configuration of the ipsec '
                  'site connection.'),
-        'id': _('The unique identifier of the ipsec site connection.'),
         'ikepolicy_id': _('The unique identifier of ike policy associated '
                           'with the ipsec site connection.'),
         'initiator': _('The initiator of the ipsec site connection.'),
@@ -343,7 +341,6 @@ class IKEPolicy(neutron.NeutronResource):
         'description': _('The description of the ike policy.'),
         'encryption_algorithm': _('The encryption algorithm used by the ike '
                                   'policy.'),
-        'id': _('The unique identifier for the ike policy.'),
         'ike_version': _('The version of the ike policy.'),
         'lifetime': _('The safety assessment lifetime configuration for the '
                       'ike policy.'),
@@ -461,7 +458,6 @@ class IPsecPolicy(neutron.NeutronResource):
         'encapsulation_mode': _('The encapsulation mode of the ipsec policy.'),
         'encryption_algorithm': _('The encryption algorithm of the ipsec '
                                   'policy.'),
-        'id': _('The unique identifier of this ipsec policy.'),
         'lifetime': _('The safety assessment lifetime configuration of the '
                       'ipsec policy.'),
         'name': _('The name of the ipsec policy.'),
