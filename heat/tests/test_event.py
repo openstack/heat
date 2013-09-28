@@ -12,6 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
+
+cfg.CONF.import_opt('event_purge_batch_size', 'heat.common.config')
+cfg.CONF.import_opt('max_events_per_stack', 'heat.common.config')
 
 import heat.db.api as db_api
 from heat.engine import parser
@@ -99,6 +103,25 @@ class EventTest(HeatTestCase):
         self.assertEqual('Testing', loaded_e.reason)
         self.assertNotEqual(None, loaded_e.timestamp)
         self.assertEqual({'Foo': 'goo'}, loaded_e.resource_properties)
+
+    def test_store_caps_events(self):
+        cfg.CONF.set_override('event_purge_batch_size', 1)
+        cfg.CONF.set_override('max_events_per_stack', 1)
+        self.resource.resource_id_set('resource_physical_id')
+
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'alabama', self.resource.properties,
+                        self.resource.name, self.resource.type())
+        e.store()
+        self.assertEquals(1, len(db_api.event_get_all_by_stack(self.ctx,
+                                                               self.stack.id)))
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'arizona', self.resource.properties,
+                        self.resource.name, self.resource.type())
+        e.store()
+        events = db_api.event_get_all_by_stack(self.ctx, self.stack.id)
+        self.assertEquals(1, len(events))
+        self.assertEqual('arizona', events[0].physical_resource_id)
 
     def test_identifier(self):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
