@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 from testtools import skipIf
 
 from heat.engine import clients
@@ -23,7 +24,6 @@ from heat.engine import resources
 from heat.engine.resources import instance as instances
 from heat.engine import service
 from heat.openstack.common.importutils import try_import
-import heat.db.api as db_api
 from heat.engine import parser
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -551,11 +551,6 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_template_volumeattach % 'vdq')
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
 
-        self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
-        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
-                                              stack).AndReturn(None)
-
-        self.m.ReplayAll()
         volumeattach = stack.resources['MountPoint']
         self.assertTrue(volumeattach.validate() is None)
 
@@ -563,11 +558,6 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_template_volumeattach % 'sda')
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
 
-        self.m.StubOutWithMock(db_api, 'resource_get_by_name_and_stack')
-        db_api.resource_get_by_name_and_stack(None, 'test_resource_name',
-                                              stack).AndReturn(None)
-
-        self.m.ReplayAll()
         volumeattach = stack.resources['MountPoint']
         self.assertRaises(exception.StackValidationFailed,
                           volumeattach.validate)

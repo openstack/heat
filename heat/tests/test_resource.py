@@ -739,9 +739,9 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
+        stack = parser.Stack(None, 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
-                               parser.Stack,
-                               None, 'test', tmpl)
+                               getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
 
     def test_hot_ref_fail(self):
@@ -757,9 +757,9 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
+        stack = parser.Stack(None, 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
-                               parser.Stack,
-                               None, 'test', tmpl)
+                               getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
 
     def test_getatt(self):
@@ -909,9 +909,9 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
+        stack = parser.Stack(None, 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
-                               parser.Stack,
-                               None, 'test', tmpl)
+                               getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
 
     def test_hot_getatt_fail(self):
@@ -927,9 +927,9 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
+        stack = parser.Stack(None, 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
-                               parser.Stack,
-                               None, 'test', tmpl)
+                               getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
 
     def test_getatt_fail_nested_deep(self):
@@ -949,9 +949,9 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
+        stack = parser.Stack(None, 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
-                               parser.Stack,
-                               None, 'test', tmpl)
+                               getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo.Fn::Join[1][3])', str(ex))
 
     def test_hot_getatt_fail_nested_deep(self):
@@ -972,9 +972,9 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
+        stack = parser.Stack(None, 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
-                               parser.Stack,
-                               None, 'test', tmpl)
+                               getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo.Fn::Join[1][3])', str(ex))
 
     def test_dependson(self):
@@ -1005,9 +1005,9 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
+        stack = parser.Stack(None, 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
-                               parser.Stack,
-                               None, 'test', tmpl)
+                               getattr, stack, 'dependencies')
         self.assertIn('"wibble" (in foo)', str(ex))
 
 

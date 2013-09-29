@@ -65,9 +65,7 @@ class StackUpdate(object):
         try:
             yield update()
         finally:
-            prev_deps = self.previous_stack._get_dependencies(
-                self.previous_stack.resources.itervalues())
-            self.previous_stack.dependencies = prev_deps
+            self.previous_stack.reset_dependencies()
 
     def _resource_update(self, res):
         if res.name in self.new_stack and self.new_stack[res.name] is res:

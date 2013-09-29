@@ -30,6 +30,7 @@ import heat.rpc.api as engine_api
 import heat.db.api as db_api
 from heat.common import identifier
 from heat.common import template_format
+from heat.engine import dependencies
 from heat.engine import parser
 from heat.engine.resource import _register_class
 from heat.engine import service
@@ -43,7 +44,6 @@ from heat.openstack.common import threadgroup
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
-
 
 wp_template = '''
 {
@@ -1768,3 +1768,38 @@ class StackServiceTest(HeatTestCase):
         sl = self.eng.show_stack(self.ctx, None)
 
         self.assertEqual(0, len(sl))
+
+    def test_lazy_load_resources(self):
+        stack_name = 'lazy_load_test'
+        res._register_class('GenericResourceType',
+                            generic_rsrc.GenericResource)
+
+        lazy_load_template = {
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+                'bar': {
+                    'Type': 'ResourceWithPropsType',
+                    'Properties': {
+                        'Foo': {'Ref': 'foo'},
+                    }
+                }
+            }
+        }
+        templ = parser.Template(lazy_load_template)
+        stack = parser.Stack(self.ctx, stack_name, templ,
+                             environment.Environment({}))
+
+        self.assertEqual(stack._resources, None)
+        self.assertEqual(stack._dependencies, None)
+
+        resources = stack.resources
+        self.assertEqual(type(resources), dict)
+        self.assertEqual(len(resources), 2)
+        self.assertEqual(type(resources.get('foo')),
+                         generic_rsrc.GenericResource)
+        self.assertEqual(type(resources.get('bar')),
+                         generic_rsrc.ResourceWithProps)
+
+        stack_dependencies = stack.dependencies
+        self.assertEqual(type(stack_dependencies), dependencies.Dependencies)
+        self.assertEqual(len(stack_dependencies.graph()), 2)
