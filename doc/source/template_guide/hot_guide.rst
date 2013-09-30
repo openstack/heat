@@ -54,11 +54,11 @@ deploy a single compute instance.
 
   resources:
     my_instance:
-      type: OS::Nova::Compute
+      type: OS::Nova::Server
       properties:
-        KeyName: my_key
-        ImageId: F18-x86_64-cfntools
-        InstanceType: m1.small
+        key_name: my_key
+        image: F18-x86_64-cfntools
+        flavor: m1.small
 
 Each HOT template has to include the *heat_template_version* key with value
 '2013-05-23' (the current version of HOT). While the *description* is optional,
@@ -74,7 +74,7 @@ not fit on a single line, you can provide multi-line text in YAML, for example:
 
 The *resources* section is required and must contain at least one resource
 definition. In the example above, a compute instance is defined with fixed
-values for the 'KeyName', 'ImageId' and 'InstanceType' parameters.
+values for the 'key_name', 'image' and 'flavor' parameters.
 
 Note that all those elements, i.e. a key-pair with the given name, the image and
 the flavor have to exist in the OpenStack environment where the template is
@@ -115,11 +115,11 @@ follows:
 
   resources:
     my_instance:
-      type: OS::Nova::Compute
+      type: OS::Nova::Server
       properties:
-        KeyName: { get_param: key_name }
-        ImageId: { get_param: image_id }
-        InstanceType: { get_param: instance_type }
+        key_name: { get_param: key_name }
+        image: { get_param: image_id }
+        flavor: { get_param: instance_type }
 
 In the example above, three input parameters have been defined that have to be
 provided by the user upon deployment. The fixed values for the respective
@@ -216,7 +216,7 @@ compute instance as an output is shown in the following snippet:
   outputs:
     instance_ip:
       description: The IP address of the deployed instance
-      value: { get_attr: [my_instance, PublicIp] }
+      value: { get_attr: [my_instance, first_address] }
 
 Output values are typically resolved using intrinsic function such as
 the *get_attr* function in the example above (see also

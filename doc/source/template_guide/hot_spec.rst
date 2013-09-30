@@ -316,7 +316,7 @@ resource ID
     A resource block is headed by the resource ID, which must be unique within
     the resource section of a template.
 type
-    This attribute specifies the type of resource, such as OS::Nova::Compute.
+    This attribute specifies the type of resource, such as OS::Nova::Server.
 properties
     This section contains a list of resource specific properties. The property
     value can be provided in place, or can be provided via a function
@@ -333,10 +333,10 @@ property values.
 
   resources:
     my_instance:
-      type: OS::Nova::Compute
+      type: OS::Nova::Server
       properties:
-        instance_type: m1.small
-        image_id: F18-x86_64-cfntools
+        flavor: m1.small
+        image: F18-x86_64-cfntools
 
 
 .. _hot_spec_outputs:
@@ -350,28 +350,36 @@ user can be defined. Typically, this would be, for example, parameters such as
 IP addresses of deployed instances, or URLs of web applications deployed as part
 of a stack.
 
-Output parameters are defined according to the following syntax:
+Each output parameter is defined as a separate block within the outputs section
+according to the following syntax:
 
 ::
 
   outputs:
-    <parameter name>: <parameter value>
+    <parameter name>:
+      description: <description>
+      value: <parameter value>
 
 parameter name
-    The name of the output parameter is defined as a key in the outputs section.
+    An output parameter block is headed by the output parameter name, which must
+    be unique within the outputs section of a template.
+description
+    This element gives a short description of the output parameter.
 parameter value
     This element specifies the value of the output parameter. Typically, this
     will be resolved by means of a function, e.g. by getting an attribute value
     of one of the stack's resources (see also
     :ref:`hot_spec_intrinsic_functions`).
 
-The example below shows, how the public IP address of a compute resource can be
-defined as an output parameter.
+The example below shows, how the IP address of a compute resource can be defined
+as an output parameter.
 
 ::
 
   outputs:
-    instance_ip: { get_attr: [my_instance, PublicIp] }
+    instance_ip:
+      description: IP address of the deployed compute instance
+      value: { get_attr: [my_instance, first_address] }
 
 
 .. _hot_spec_intrinsic_functions:
@@ -408,9 +416,9 @@ resource definition is shown below.
 
   resources:
     my_instance:
-      type: OS::Nova::Compute
+      type: OS::Nova::Server
       properties:
-        instance_type: { get_param: instance_type}
+        flavor: { get_param: instance_type}
 
 
 get_attr
@@ -437,11 +445,13 @@ An example of using the get_attr function is shown below:
 
   resources:
     my_instance:
-      type: OS::Nova::Compute
+      type: OS::Nova::Server
       # ...
 
   outputs:
-    instance_ip: { get_attr: [my_instance, PublicIp] }
+    instance_ip:
+      description: IP address of the deployed compute instance
+      value: { get_attr: [my_instance, first_address] }
 
 
 get_resource
@@ -491,7 +501,7 @@ section of a template to build a URL for logging into a deployed application.
 
   resources:
     my_instance:
-      type: OS::Nova::Compute
+      type: OS::Nova::Server
       # general metadata and properties ...
 
   outputs:
@@ -501,7 +511,7 @@ section of a template to build a URL for logging into a deployed application.
         str_replace:
           template: http://host/MyApplication
           params:
-            host: { get_attr: [ my_instance, PublicIp ] }
+            host: { get_attr: [ my_instance, first_address ] }
 
 The str_replace function can also be used for constructing bigger chunks of text
 like scripts for initializing compute instances as shown in the example below:
@@ -516,10 +526,10 @@ like scripts for initializing compute instances as shown in the example below:
 
   resources:
     my_instance:
-      type: OS::Nova::Compute
+      type: OS::Nova::Server
       properties:
         # general properties ...
-        userdata:
+        user_data:
           str_replace:
             template: |
               #!/bin/bash
