@@ -84,7 +84,8 @@ class StackResource(resource.Resource):
         if ((len(template[tmpl.RESOURCES]) +
              self.stack.root_stack.total_resources() >
              cfg.CONF.max_resources_per_stack)):
-            raise exception.StackResourceLimitExceeded()
+            raise exception.RequestLimitExceeded(
+                message=exception.StackResourceLimitExceeded.message)
         self._outputs_to_attribs(child_template)
 
         # Note we disable rollback for nested stacks, since they
@@ -131,7 +132,8 @@ class StackResource(resource.Resource):
                 len(template[tmpl.RESOURCES]) - len(nested_stack.resources))
             new_size = nested_stack.root_stack.total_resources() + res_diff
             if new_size > cfg.CONF.max_resources_per_stack:
-                raise exception.StackResourceLimitExceeded()
+                raise exception.RequestLimitExceeded(
+                    message=exception.StackResourceLimitExceeded.message)
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
