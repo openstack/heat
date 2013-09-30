@@ -114,8 +114,14 @@ def resource_get_all(context):
 
 
 def resource_data_get(resource, key):
-    """Lookup value of resource's data by key."""
-    result = resource_data_get_by_key(resource.context, resource.id, key)
+    """Lookup value of resource's data by key. Decrypts resource data if
+    necessary.
+    """
+    result = resource_data_get_by_key(resource.context,
+                                      resource.id,
+                                      key)
+    if result.redact:
+        return _decrypt(result.value)
     return result.value
 
 
@@ -130,14 +136,15 @@ def _decrypt(enc_value):
 
 
 def resource_data_get_by_key(context, resource_id, key):
+    """Looks up resource_data by resource_id and key. Does not unencrypt
+    resource_data.
+    """
     result = (model_query(context, models.ResourceData)
               .filter_by(resource_id=resource_id)
-              .filter_by(key=key)
-              .first())
+              .filter_by(key=key).first())
+
     if not result:
         raise exception.NotFound('No resource data found')
-    if result.redact and result.value:
-        result.value = _decrypt(result.value)
     return result
 
 
