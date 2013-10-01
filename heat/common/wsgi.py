@@ -137,6 +137,7 @@ cfg.CONF.register_group(api_cw_group)
 cfg.CONF.register_opts(api_cw_opts,
                        group=api_cw_group)
 cfg.CONF.import_opt('debug', 'heat.openstack.common.log')
+cfg.CONF.import_opt('verbose', 'heat.openstack.common.log')
 
 json_size_opt = cfg.IntOpt('max_json_body_size',
                            default=1048576,
@@ -679,11 +680,10 @@ class Resource(object):
             http_exc = translate_exception(err, request.best_match_language())
             raise exception.HTTPExceptionDisguise(http_exc)
         except exception.HeatException as err:
-            logging.error(_("Unexpected error occurred serving API: %s") %
-                          err.message)
+            log_exception(err.message, sys.exc_info())
             raise translate_exception(err, request.best_match_language())
         except Exception as err:
-            logging.error(_("Unexpected error occurred serving API: %s") % err)
+            log_exception(err, sys.exc_info())
             raise translate_exception(err, request.best_match_language())
 
         # Here we support either passing in a serializer or detecting it
@@ -746,6 +746,12 @@ class Resource(object):
             pass
 
         return args
+
+
+def log_exception(err, exc_info):
+    args = {'exc_info': exc_info} if cfg.CONF.verbose or cfg.CONF.debug else {}
+    logging.error(_("Unexpected error occurred serving API: %s") % err,
+                  **args)
 
 
 def translate_exception(exc, locale):
