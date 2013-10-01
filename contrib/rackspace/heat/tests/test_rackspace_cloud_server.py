@@ -23,13 +23,13 @@ from heat.common import exception
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.engine import environment
 from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
 from ..engine.plugins import rackspace_resource  # noqa
 from ..engine.plugins import cloud_server  # noqa
+
 
 wp_template = '''
 {
@@ -39,8 +39,8 @@ wp_template = '''
     "flavor" : {
       "Description" : "Rackspace Cloud Server flavor",
       "Type" : "String",
-      "Default" : "2",
-      "AllowedValues" : [ "2", "3", "4", "5", "6", "7", "8" ],
+      "Default" : "m1.small",
+      "AllowedValues" : ["256 MB Server", "m1.small", "m1.large", "invalid"],
       "ConstraintDescription" : "must be a valid Rackspace Cloud Server flavor"
     },
   },
@@ -48,8 +48,8 @@ wp_template = '''
     "WebServer": {
       "Type": "Rackspace::Cloud::Server",
       "Properties": {
-        "image"      : "Fedora 17 (Beefy Miracle)",
-        "flavor"         : "2",
+        "image"      : "CentOS 5.2",
+        "flavor"         : "256 MB Server",
         "user_data"       : "wordpress"
       }
     }
@@ -86,27 +86,11 @@ class RackspaceCloudServerTest(HeatTestCase):
         resource._register_class("Rackspace::Cloud::Server",
                                  cloud_server.CloudServer)
 
-        f2 = self.m.CreateMockAnything()
-        f2.id = '2'
-        f3 = self.m.CreateMockAnything()
-        f3.id = '3'
-        f4 = self.m.CreateMockAnything()
-        f4.id = '4'
-        f5 = self.m.CreateMockAnything()
-        f5.id = '5'
-        f6 = self.m.CreateMockAnything()
-        f6.id = '6'
-        f7 = self.m.CreateMockAnything()
-        f7.id = '7'
-        f8 = self.m.CreateMockAnything()
-        f8.id = '8'
-        self.flavors = [f2, f3, f4, f5, f6, f7, f8]
-
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
         template = parser.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
-                             environment.Environment({'flavor': '2'}),
+                             {},
                              stack_id=uuidutils.generate_uuid())
         return (t, stack)
 
@@ -150,29 +134,26 @@ class RackspaceCloudServerTest(HeatTestCase):
         stack_name = '%s_stack' % name
         (t, stack) = self._setup_test_stack(stack_name)
 
-        cs_name = 'Fedora 17 (Beefy Miracle)'
-        t['Resources']['WebServer']['Properties']['image'] = '1'
-        t['Resources']['WebServer']['Properties']['flavor'] = '2'
+        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
+        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
+                                                   .AndReturn(self.fc)
+
+        t['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
+        t['Resources']['WebServer']['Properties']['flavor'] = '256 MB Server'
 
         cs = cloud_server.CloudServer('%s_name' % name,
                                       t['Resources']['WebServer'], stack)
         cs._private_key = rsa_key
         cs.t = cs.stack.resolve_runtime_data(cs.t)
 
-        flavor = t['Resources']['WebServer']['Properties']['flavor']
-
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(utils.PhysName(stack_name, cs.name),
-                               "1", flavor,
+                               1, 1,
                                files=mox.IgnoreArg()).AndReturn(return_server)
         return_server.adminPass = "foobar"
 
         self.m.StubOutWithMock(cloud_server.CloudServer, 'script')
         cloud_server.CloudServer.script = "foobar"
-
-        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
-        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
-                                                   .AndReturn(self.fc)
 
         self._mock_ssh_sftp(exit_code)
         return cs
@@ -226,6 +207,9 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_cs_create_image_name_err(self):
+        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
+        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
+                                                   .AndReturn(self.fc)
         stack_name = 'test_cs_create_image_name_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
@@ -233,30 +217,26 @@ class RackspaceCloudServerTest(HeatTestCase):
         t['Resources']['WebServer']['Properties']['image'] = 'Slackware'
 
         # Mock flavors
-        self.m.StubOutWithMock(cloud_server.CloudServer, "flavors")
-        cloud_server.CloudServer.flavors.__contains__('2').AndReturn(True)
         cloud_server.CloudServer.script = None
         self.m.ReplayAll()
 
         cs = cloud_server.CloudServer('cs_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.assertEqual({'Error': "user_data/metadata are not supported with "
-                          "Slackware."},
-                         cs.validate())
+        self.assertRaises(exception.ImageNotFound, cs.validate)
         self.m.VerifyAll()
 
     def test_cs_create_image_name_okay(self):
+        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
+        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
+                                                   .AndReturn(self.fc)
         stack_name = 'test_cs_create_image_name_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create a cloud server with non exist image name
-        t['Resources']['WebServer']['Properties']['image'] = 'Slackware'
+        t['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['user_data'] = ''
 
-        # Mock flavors
-        self.m.StubOutWithMock(cloud_server.CloudServer, "flavors")
-        cloud_server.CloudServer.flavors.__contains__('2').AndReturn(True)
         cloud_server.CloudServer.script = None
         self.m.ReplayAll()
 
@@ -303,22 +283,22 @@ class RackspaceCloudServerTest(HeatTestCase):
 
     def test_cs_create_flavor_err(self):
         """validate() should throw an if the flavor is invalid."""
+        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
+        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
+                                                   .AndReturn(self.fc)
         stack_name = 'test_cs_create_flavor_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create a cloud server with non exist image name
-        t['Resources']['WebServer']['Properties']['flavor'] = '1'
+        t['Resources']['WebServer']['Properties']['flavor'] = 'invalid'
 
         # Mock flavors
-        self.m.StubOutWithMock(cloud_server.CloudServer, "flavors")
-        flavors = ['2', '3', '4', '5', '6', '7', '8']
-        cloud_server.CloudServer.flavors = flavors
         self.m.ReplayAll()
 
         cs = cloud_server.CloudServer('cs_create_flavor_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.assertEqual({'Error': "flavor not found."}, cs.validate())
+        self.assertRaises(exception.FlavorMissing, cs.validate)
 
         self.m.VerifyAll()
 
