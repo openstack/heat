@@ -61,7 +61,8 @@ class Subnet(neutron.NeutronResource):
         # dns_nameservers isn't in the api docs; is it right?
         "dns_nameservers": _("List of dns nameservers."),
         "enable_dhcp": _("'true' if DHCP is enabled for this subnet; 'false' "
-                         "otherwise.")
+                         "otherwise."),
+        "show": _("All attributes."),
     }
 
     @staticmethod

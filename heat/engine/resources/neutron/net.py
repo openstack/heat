@@ -66,6 +66,7 @@ class Net(neutron.NeutronResource):
         "subnets": _("Subnets of this network."),
         "admin_state_up": _("The administrative status of the network."),
         "tenant_id": _("The tenant owning this network."),
+        "show": _("All attributes."),
     }
 
     def handle_create(self):

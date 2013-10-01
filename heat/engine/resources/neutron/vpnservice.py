@@ -68,7 +68,8 @@ class VPNService(neutron.NeutronResource):
         'subnet_id': _('The unique identifier of the subnet in which the vpn '
                        'service was created.'),
         'tenant_id': _('The unique identifier of the tenant owning the vpn '
-                       'service.')
+                       'service.'),
+        'show': _('All attributes.'),
     }
 
     update_allowed_keys = ('Properties',)

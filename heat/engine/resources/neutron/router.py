@@ -38,6 +38,7 @@ class Router(neutron.NeutronResource):
         "name": _("Friendly name of the router."),
         "admin_state_up": _("Administrative state of the router."),
         "tenant_id": _("Tenant owning the router."),
+        "show": _("All attributes."),
     }
 
     def handle_create(self):

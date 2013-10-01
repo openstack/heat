@@ -89,6 +89,7 @@ class HealthMonitor(neutron.NeutronResource):
         'url_path': _('The HTTP path used in the HTTP request used by the '
                       'monitor to test a member health.'),
         'tenant_id': _('Tenant owning the health monitor.'),
+        'show': _('All attributes.'),
     }
 
     def handle_create(self):

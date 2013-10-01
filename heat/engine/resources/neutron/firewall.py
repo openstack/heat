@@ -43,7 +43,8 @@ class Firewall(neutron.NeutronResource):
         'firewall_policy_id': _('Unique identifier of the FirewallPolicy '
                                 'used to  create the Firewall.'),
         'status': _('The status of the Firewall.'),
-        'tenant_id': _('Id of the tenant owning the Firewall.')
+        'tenant_id': _('Id of the tenant owning the Firewall.'),
+        'show': _('All attributes.'),
     }
 
     update_allowed_keys = ('Properties',)
