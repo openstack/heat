@@ -88,6 +88,8 @@ class Stack(object):
         self.timeout_mins = timeout_mins
         self.disable_rollback = disable_rollback
         self.parent_resource = parent_resource
+        self._resources = None
+        self._dependencies = None
 
         resources.initialise()
 
@@ -102,12 +104,24 @@ class Stack(object):
         else:
             self.outputs = {}
 
-        template_resources = self.t[template.RESOURCES]
-        self.resources = dict((name,
-                               resource.Resource(name, data, self))
-                              for (name, data) in template_resources.items())
+    @property
+    def resources(self):
+        if self._resources is None:
+            template_resources = self.t[template.RESOURCES]
+            self._resources = dict((name, resource.Resource(name, data, self))
+                                   for (name, data) in
+                                   template_resources.items())
+        return self._resources
 
-        self.dependencies = self._get_dependencies(self.resources.itervalues())
+    @property
+    def dependencies(self):
+        if self._dependencies is None:
+            self._dependencies = self._get_dependencies(
+                self.resources.itervalues())
+        return self._dependencies
+
+    def reset_dependencies(self):
+        self._dependencies = None
 
     @property
     def root_stack(self):
@@ -460,8 +474,7 @@ class Stack(object):
                 while not updater.step():
                     yield
             finally:
-                cur_deps = self._get_dependencies(self.resources.itervalues())
-                self.dependencies = cur_deps
+                self.reset_dependencies()
 
             if action == self.UPDATE:
                 reason = 'Stack successfully updated'
