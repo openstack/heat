@@ -14,11 +14,22 @@
 #    under the License.
 
 try:
-    from pyrax.exceptions import NotFound
+    from pyrax.exceptions import ClientException
 except ImportError:
-    # fake exception for testing without pyrax
-    class NotFound(Exception):
-        pass
+    # define exception for testing without pyrax
+    class ClientException(Exception):
+        def __init__(self, code, message=None, details=None, request_id=None):
+            self.code = code
+            self.message = message or self.__class__.message
+            self.details = details
+            self.request_id = request_id
+
+        def __str__(self):
+            formatted_string = "%s (HTTP %s)" % (self.message, self.code)
+            if self.request_id:
+                formatted_string += " (Request-ID: %s)" % self.request_id
+
+            return formatted_string
 
 from heat.common import exception
 from heat.openstack.common import log as logging
@@ -184,12 +195,11 @@ class CloudDBInstance(rackspace_resource.RackspaceResource):
         logger.debug("CloudDBInstance handle_delete called.")
         if self.resource_id is None:
             return
-
         try:
-            instances = self.cloud_db().delete(self.resource_id)
-        except NotFound:
-            pass
-        self.resource_id = None
+            self.cloud_db().delete(self.resource_id)
+        except ClientException as cexc:
+            if str(cexc.code) != "404":
+                raise cexc
 
     def validate(self):
         '''
