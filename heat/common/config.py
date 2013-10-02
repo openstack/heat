@@ -106,7 +106,12 @@ engine_opts = [
                default=1000,
                help=_('Maximum events that will be available per stack. Older'
                       ' events will be deleted when this is reached. Set to 0'
-                      ' for unlimited events per stack.'))]
+                      ' for unlimited events per stack.')),
+    cfg.IntOpt('engine_life_check_timeout',
+               default=2,
+               help=_('RPC timeout for the engine liveness check that is used'
+                      ' for stack locking.'))]
+
 rpc_opts = [
     cfg.StrOpt('host',
                default=socket.gethostname(),

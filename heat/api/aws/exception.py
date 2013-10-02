@@ -249,6 +249,16 @@ class HeatAPINotImplementedError(HeatAPIException):
     err_type = "Server"
 
 
+class HeatActionInProgressError(HeatAPIException):
+    '''
+    Cannot perform action on stack in its current state
+    '''
+    code = 400
+    title = 'InvalidAction'
+    explanation = ("Cannot perform action on stack while other actions are " +
+                   "in progress")
+
+
 def map_remote_error(ex):
         """
         Map rpc_common.RemoteError exceptions returned by the engine
@@ -273,6 +283,7 @@ def map_remote_error(ex):
         )
         denied_errors = ('Forbidden', 'NotAuthorized')
         already_exists_errors = ('StackExists')
+        invalid_action_errors = ('ActionInProgress',)
 
         ex_type = ex.__class__.__name__
 
@@ -285,6 +296,8 @@ def map_remote_error(ex):
             return HeatAccessDeniedError(detail=str(ex))
         elif ex_type in already_exists_errors:
             return AlreadyExistsError(detail=str(ex))
+        elif ex_type in invalid_action_errors:
+            return HeatActionInProgressError(detail=str(ex))
         else:
             # Map everything else to internal server error for now
             return HeatInternalFailureError(detail=str(ex))
