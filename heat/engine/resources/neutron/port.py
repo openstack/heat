@@ -52,7 +52,8 @@ class Port(neutron.NeutronResource):
         "network_id": _("Unique identifier for the network owning the port."),
         "security_groups": _("A list of security groups for the port."),
         "status": _("The status of the port."),
-        "tenant_id": _("Tenant owning the port")
+        "tenant_id": _("Tenant owning the port"),
+        "show": _("All attributes."),
     }
 
     def add_dependencies(self, deps):
