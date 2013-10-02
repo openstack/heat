@@ -10,6 +10,11 @@
 # Driver to use for controlling instances (string value)
 #instance_driver=heat.engine.nova
 
+# Engine identifier for multi-engine distributed lock.  If
+# this is set to "generate_uuid", a UUID will be generated.
+# (string value)
+#engine_id=generate_uuid
+
 # List of directories to search for Plugins (list value)
 #plugin_dirs=/usr/lib64/heat,/usr/lib/heat
 

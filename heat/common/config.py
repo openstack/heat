@@ -75,6 +75,11 @@ engine_opts = [
     cfg.StrOpt('instance_driver',
                default='heat.engine.nova',
                help='Driver to use for controlling instances'),
+    cfg.StrOpt('engine_id',
+               default="generate_uuid",
+               help=_('Engine identifier for multi-engine distributed lock.'
+                      '  If this is set to "generate_uuid", a UUID will be'
+                      ' generated.')),
     cfg.ListOpt('plugin_dirs',
                 default=['/usr/lib64/heat', '/usr/lib/heat'],
                 help='List of directories to search for Plugins'),

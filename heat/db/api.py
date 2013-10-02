@@ -139,6 +139,22 @@ def stack_delete(context, stack_id):
     return IMPL.stack_delete(context, stack_id)
 
 
+def stack_lock_get(context, stack_id):
+    return IMPL.stack_lock_get(context, stack_id)
+
+
+def stack_lock_create(context, stack_id, engine_id):
+    return IMPL.stack_lock_create(context, stack_id, engine_id)
+
+
+def stack_lock_steal(context, stack_id, engine_id):
+    return IMPL.stack_lock_steal(context, stack_id, engine_id)
+
+
+def stack_lock_release(context, stack_id):
+    return IMPL.stack_lock_release(context, stack_id)
+
+
 def user_creds_create(context):
     return IMPL.user_creds_create(context)
 
@@ -215,3 +231,7 @@ def db_sync(version=None):
 def db_version():
     """Display the current database version."""
     return IMPL.db_version()
+
+
+def current_timestamp():
+    return IMPL.current_timestamp()
