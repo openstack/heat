@@ -67,7 +67,7 @@ Launching a stack
 Now lets launch a stack, using an example template from the heat-templates repository::
 
     heat stack-create teststack -u
-    https://raw.github.com/openstack/heat-templates/master/cfn/WordPress_Single_Instance.template -P "InstanceType=m1.large;DBUsername=wp;DBPassword=verybadpassword;KeyName=heat_key;LinuxDistribution=F17"
+    https://raw.github.com/openstack/heat-templates/master/cfn/F17/WordPress_Single_Instance.template -P "InstanceType=m1.large;DBUsername=wp;DBPassword=verybadpassword;KeyName=heat_key;LinuxDistribution=F17"
 
 Which will respond::
 
