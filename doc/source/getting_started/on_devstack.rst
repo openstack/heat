@@ -32,10 +32,20 @@ URLs for any of [http://fedorapeople.org/groups/heat/prebuilt-jeos-images/ these
 
 That is all the configuration that is required. When you run `./stack.sh` the Heat processes will be launched in `screen` with the labels prefixed with `h-`.
 
-Confirming heat is responding
+Configure DevStack to enable Ceilometer (if using Alarms)
+---------------------------------------------------------
+To use Ceilometer Alarms you need to enable Ceilometer in devstack.
+Adding the following lines to your `localrc` file will enable the ceilometer services::
+
+    CEILOMETER_BACKEND=mongo
+    enable_service ceilometer-acompute ceilometer-acentral ceilometer-collector ceilometer-api
+    enable_service ceilometer-alarm-notifier ceilometer-alarm-evaluator
+
+
+Confirming Heat is responding
 -----------------------------
 
-Before any heat commands can be run, the authentication environment
+Before any Heat commands can be run, the authentication environment
 needs to be loaded::
 
     source openrc
