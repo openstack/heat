@@ -61,11 +61,11 @@ class Net(neutron.NeutronResource):
                              'administrative users only.')
         }}
     attributes_schema = {
-        "status": "The status of the network.",
-        "name": "The name of the network.",
-        "subnets": "Subnets of this network.",
-        "admin_state_up": "The administrative status of the network.",
-        "tenant_id": "The tenant owning this network."
+        "status": _("The status of the network."),
+        "name": _("The name of the network."),
+        "subnets": _("Subnets of this network."),
+        "admin_state_up": _("The administrative status of the network."),
+        "tenant_id": _("The tenant owning this network."),
     }
 
     def handle_create(self):
