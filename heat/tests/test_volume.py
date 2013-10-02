@@ -304,6 +304,10 @@ class VolumeTest(HeatTestCase):
 
         self.fc.volumes.delete_server_volume(
             'WikiDatabase', 'vol-123').AndRaise(
+                clients.novaclient.exceptions.BadRequest('Already detached'))
+
+        self.fc.volumes.delete_server_volume(
+            'WikiDatabase', 'vol-123').AndRaise(
                 clients.novaclient.exceptions.NotFound('Not found'))
 
         self.fc.volumes.delete_server_volume(
