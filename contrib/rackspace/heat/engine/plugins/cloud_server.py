@@ -60,7 +60,8 @@ chmod 600 /var/lib/cloud/seed/nocloud-net/*
 
 # Run cloud-init & cfn-init
 cloud-init start || cloud-init init
-bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1
+bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
+exit 42
 """
 
     # - Ubuntu 12.04: Verified working
@@ -141,6 +142,10 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                      'opensuse': None,
                      'rhel': rhel_script,
                      'ubuntu': ubuntu_script}
+
+    script_error_msg = ("The %(path)s script exited with a non-zero exit "
+                        "status.  To see the error message, log into the "
+                        "server and view %(log)s")
 
     # Template keys supported for handle_update.  Properties not
     # listed here trigger an UpdateReplace
@@ -270,9 +275,9 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
             ssh.connect(self.public_ip,
                         username="root",
                         key_filename=private_key_file.name)
-            stdin, stdout, stderr = ssh.exec_command(command)
-            logger.debug(stdout.read())
-            logger.debug(stderr.read())
+            chan = ssh.get_transport().open_session()
+            chan.exec_command(command)
+            return chan.recv_exit_status()
 
     def _sftp_files(self, files):
         """Transfer files to the Cloud Server via SFTP."""
@@ -376,7 +381,15 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
             # Connect via SSH and run script
             cmd = "bash -ex /root/heat-script.sh > /root/heat-script.log 2>&1"
-            self._run_ssh_command(cmd)
+            exit_code = self._run_ssh_command(cmd)
+            if exit_code == 42:
+                raise exception.Error(self.script_error_msg %
+                                      {'path': "cfn-userdata",
+                                       'log': "/root/cfn-userdata.log"})
+            elif exit_code != 0:
+                raise exception.Error(self.script_error_msg %
+                                      {'path': "heat-script.sh",
+                                       'log': "/root/heat-script.log"})
 
         return True
 
@@ -421,7 +434,11 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
             command = "bash -x /var/lib/cloud/data/cfn-userdata > " + \
                       "/root/cfn-userdata.log 2>&1"
-            self._run_ssh_command(command)
+            exit_code = self._run_ssh_command(command)
+            if exit_code != 0:
+                raise exception.Error(self.script_error_msg %
+                                      {'path': "cfn-userdata",
+                                       'log': "/root/cfn-userdata.log"})
 
         if 'flavor' in prop_diff:
             self.flavor = json_snippet['Properties']['flavor']
