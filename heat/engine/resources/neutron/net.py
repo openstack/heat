@@ -19,7 +19,7 @@ from heat.engine.resources.neutron import neutron
 from heat.engine import scheduler
 
 if clients.neutronclient is not None:
-    from neutronclient.common.exceptions import NeutronClientException
+    import neutronclient.common.exceptions as neutron_exp
 
 logger = logging.getLogger(__name__)
 
@@ -88,11 +88,16 @@ class Net(neutron.NeutronResource):
         client = self.neutron()
         try:
             client.delete_network(self.resource_id)
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+        except neutron_exp.NeutronClientException as ex:
+            self._handle_not_found_exception(ex)
         else:
             return scheduler.TaskRunner(self._confirm_delete)()
+
+    def _handle_not_found_exception(self, ex):
+        # raise any exception which is not for a not found network
+        if not (ex.status_code == 404 or
+                isinstance(ex, neutron_exp.NetworkNotFoundClient)):
+            raise ex
 
 
 def resource_mapping():

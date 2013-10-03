@@ -289,7 +289,7 @@ class NeutronNetTest(HeatTestCase):
 
         neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        ).AndRaise(qe.NetworkNotFoundClient())
 
         neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -321,11 +321,11 @@ class NeutronNetTest(HeatTestCase):
 
         neutronclient.Client.show_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        ).AndRaise(qe.NetworkNotFoundClient())
 
         neutronclient.Client.delete_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        ).AndRaise(qe.NetworkNotFoundClient())
 
         self.m.ReplayAll()
         t = template_format.parse(neutron_template)
@@ -903,7 +903,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         }})
         neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        ).AndRaise(qe.PortNotFoundClient())
         neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({'port': {
@@ -987,7 +987,7 @@ class NeutronFloatingIPTest(HeatTestCase):
 
         neutronclient.Client.show_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        ).AndRaise(qe.PortNotFoundClient())
 
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -1001,7 +1001,7 @@ class NeutronFloatingIPTest(HeatTestCase):
 
         neutronclient.Client.delete_port(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        ).AndRaise(qe.PortNotFoundClient())
 
         neutronclient.Client.delete_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
