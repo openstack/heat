@@ -24,6 +24,7 @@ from oslo.config import cfg
 
 from heat.engine import environment
 from heat.common import exception
+from heat.common import urlfetch
 from heat.tests.v1_1 import fakes
 import heat.rpc.api as engine_api
 import heat.db.api as db_api
@@ -67,6 +68,15 @@ wp_template = '''
     }
   }
 }
+'''
+
+nested_alarm_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_nested:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://server.test/alarm.template
 '''
 
 alarm_template = '''
@@ -1523,6 +1533,25 @@ class StackServiceTest(HeatTestCase):
         stack = get_stack('period_watch_task_created',
                           utils.dummy_context(),
                           alarm_template)
+        self.stack = stack
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+        self.eng.stg[stack.id] = DummyThreadGroup()
+        self.eng._start_watch_task(stack.id, self.ctx)
+        self.assertEqual([self.eng._periodic_watcher_task],
+                         self.eng.stg[stack.id].threads)
+        self.stack.delete()
+
+    def test_periodic_watch_task_created_nested(self):
+        self.m.StubOutWithMock(urlfetch, 'get')
+        urlfetch.get('https://server.test/alarm.template').MultipleTimes().\
+            AndReturn(alarm_template)
+        self.m.ReplayAll()
+
+        stack = get_stack('period_watch_task_created_nested',
+                          utils.dummy_context(),
+                          nested_alarm_template)
         self.stack = stack
         self.m.ReplayAll()
         stack.store()
