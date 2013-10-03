@@ -24,7 +24,7 @@ from heat.engine.resources import instance
 from heat.engine.resources import nova_utils
 from heat.db.sqlalchemy import api as db_api
 
-from . import rackspace_resource
+from . import rackspace_resource  # noqa
 
 logger = logging.getLogger(__name__)
 
