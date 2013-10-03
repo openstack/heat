@@ -1,7 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" 
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <!-- POM Build file for the Keystone Developer Guide -->
+  <!-- POM Build file for the Orchestration API Developer Guide -->
+  <!-- ################################################ -->
+  <!-- USE "mvn clean generate-sources" to run this POM -->
+  <!-- ################################################ -->
   <modelVersion>4.0.0</modelVersion>
   
   <groupId>org.openstack.identity</groupId>
@@ -36,7 +39,7 @@
   </profiles>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <doctools.version>1.5.1</doctools.version>
+    <doctools.version>1.11.0</doctools.version>
   </properties>
   <build>
     <plugins>
@@ -48,7 +51,7 @@
           <execution>
             <id>g1</id>
             <goals>
-              <goal>generate-html</goal>
+              <goal>generate-webhelp</goal>
             </goals>
             <phase>generate-sources</phase>
             <configuration>
@@ -67,7 +70,7 @@
           </includes>
           <profileSecurity>reviewer</profileSecurity>
           <branding>openstack</branding>
-          <trimWadlUriCount>1</trimWadlUriCount>
+          <trimWadlUriCount>2</trimWadlUriCount>
           <showXslMessages>true</showXslMessages>
         </configuration>
       </plugin>
