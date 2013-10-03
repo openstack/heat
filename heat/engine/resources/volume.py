@@ -230,8 +230,9 @@ class VolumeDetachTask(object):
 
         try:
             server_api.delete_server_volume(self.server_id, self.volume_id)
-        except clients.novaclient.exceptions.NotFound:
-            logger.warning('%s - not found' % str(self))
+        except (clients.novaclient.exceptions.BadRequest,
+                clients.novaclient.exceptions.NotFound) as e:
+            logger.warning('%s - %s' % (str(self), str(e)))
 
         yield
 
@@ -244,7 +245,8 @@ class VolumeDetachTask(object):
                 try:
                     server_api.delete_server_volume(self.server_id,
                                                     self.volume_id)
-                except clients.novaclient.exceptions.NotFound:
+                except (clients.novaclient.exceptions.BadRequest,
+                        clients.novaclient.exceptions.NotFound):
                     pass
                 vol.get()
 
