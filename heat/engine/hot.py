@@ -247,7 +247,7 @@ class HOTemplate(template.Template):
                 raise TypeError(
                     _('"params" parameter must be a dictionary'))
             for key in params.iterkeys():
-                value = params.get(key, '')
+                value = params.get(key, '') or ""
                 text = text.replace(key, value)
             return text
 
