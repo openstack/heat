@@ -82,6 +82,8 @@ class RouterInterface(neutron.NeutronResource):
         self.resource_id_set('%s:%s' % (router_id, subnet_id))
 
     def handle_delete(self):
+        if not self.resource_id:
+            return
         client = self.neutron()
         (router_id, subnet_id) = self.resource_id.split(':')
         try:
@@ -128,6 +130,8 @@ class RouterGateway(neutron.NeutronResource):
         self.resource_id_set('%s:%s' % (router_id, network_id))
 
     def handle_delete(self):
+        if not self.resource_id:
+            return
         client = self.neutron()
         (router_id, network_id) = self.resource_id.split(':')
         try:
