@@ -28,8 +28,8 @@ from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-from ..engine.plugins import rackspace_resource
-from ..engine.plugins import cloud_server
+from ..engine.plugins import rackspace_resource  # noqa
+from ..engine.plugins import cloud_server  # noqa
 
 wp_template = '''
 {

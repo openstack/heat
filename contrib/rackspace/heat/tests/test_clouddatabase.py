@@ -21,7 +21,7 @@ from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-from ..engine.plugins import clouddatabase
+from ..engine.plugins import clouddatabase  # noqa
 
 
 wp_template = '''

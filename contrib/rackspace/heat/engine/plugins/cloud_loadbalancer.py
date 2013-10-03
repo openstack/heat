@@ -24,7 +24,7 @@ from heat.engine import scheduler
 from heat.engine.properties import Properties
 from heat.common import exception
 
-from . import rackspace_resource
+from . import rackspace_resource  # noqa
 
 logger = logging.getLogger(__name__)
 

@@ -23,7 +23,7 @@ except ImportError:
 from heat.common import exception
 from heat.openstack.common import log as logging
 
-from . import rackspace_resource
+from . import rackspace_resource  # noqa
 
 logger = logging.getLogger(__name__)
 
