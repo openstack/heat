@@ -18,6 +18,8 @@ from requests import exceptions
 import urllib2
 import cStringIO
 
+from oslo.config import cfg
+
 from heat.common import urlfetch
 from heat.tests.common import HeatTestCase
 
@@ -68,8 +70,14 @@ class UrlFetchTest(HeatTestCase):
     def test_http_scheme(self):
         url = 'http://example.com/template'
         data = '{ "foo": "bar" }'
+        response = Response(data)
+        response.raw = self.m.CreateMockAnything()
+        max_template_fetch_size = 524289
+        self.m.StubOutWithMock(response.raw, 'read')
+        response.raw.read(max_template_fetch_size).\
+            AndReturn('{ "foo": "bar" }')
 
-        requests.get(url).AndReturn(Response(data))
+        requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
 
         self.assertEqual(urlfetch.get(url), data)
@@ -78,8 +86,14 @@ class UrlFetchTest(HeatTestCase):
     def test_https_scheme(self):
         url = 'https://example.com/template'
         data = '{ "foo": "bar" }'
+        response = Response(data)
+        response.raw = self.m.CreateMockAnything()
+        max_template_fetch_size = 524289
+        self.m.StubOutWithMock(response.raw, 'read')
+        response.raw.read(max_template_fetch_size).\
+            AndReturn('{ "foo": "bar" }')
 
-        requests.get(url).AndReturn(Response(data))
+        requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
 
         self.assertEqual(urlfetch.get(url), data)
@@ -88,7 +102,7 @@ class UrlFetchTest(HeatTestCase):
     def test_http_error(self):
         url = 'http://example.com/template'
 
-        requests.get(url).AndRaise(exceptions.HTTPError())
+        requests.get(url, stream=True).AndRaise(exceptions.HTTPError())
         self.m.ReplayAll()
 
         self.assertRaises(IOError, urlfetch.get, url)
@@ -97,7 +111,7 @@ class UrlFetchTest(HeatTestCase):
     def test_non_exist_url(self):
         url = 'http://non-exist.com/template'
 
-        requests.get(url).AndRaise(exceptions.Timeout())
+        requests.get(url, stream=True).AndRaise(exceptions.Timeout())
         self.m.ReplayAll()
 
         self.assertRaises(IOError, urlfetch.get, url)
@@ -106,4 +120,21 @@ class UrlFetchTest(HeatTestCase):
     def test_garbage(self):
         self.m.ReplayAll()
         self.assertRaises(IOError, urlfetch.get, 'wibble')
+        self.m.VerifyAll()
+
+    def test_max_fetch_size(self):
+        url = 'http://example.com/template'
+        data = '{ "foo": "bar" }'
+        response = Response(data)
+        response.raw = self.m.CreateMockAnything()
+        cfg.CONF.set_override('max_template_size', 5)
+        max_template_fetch_size = cfg.CONF.max_template_size + 1
+        self.m.StubOutWithMock(response.raw, 'read')
+        response.raw.read(max_template_fetch_size).AndReturn('{ "foo')
+
+        requests.get(url, stream=True).AndReturn(response)
+        self.m.ReplayAll()
+
+        exception = self.assertRaises(IOError, urlfetch.get, url)
+        self.assertTrue("Template exceeds" in str(exception))
         self.m.VerifyAll()

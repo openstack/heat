@@ -22,6 +22,10 @@ from requests import exceptions
 import urllib2
 import urlparse
 
+from oslo.config import cfg
+
+cfg.CONF.import_opt('max_template_size', 'heat.common.config')
+
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
 
@@ -51,8 +55,14 @@ def get(url, allowed_schemes=('http', 'https')):
             raise IOError('Failed to retrieve template: %s' % str(uex))
 
     try:
-        resp = requests.get(url)
+        max_size = cfg.CONF.max_template_size
+        max_fetched_size = max_size + 1
+        resp = requests.get(url, stream=True)
         resp.raise_for_status()
-        return resp.text
+        result = resp.raw.read(max_fetched_size)
+        if len(result) == max_fetched_size:
+            raise IOError("Template exceeds maximum allowed size (%s bytes)"
+                          % max_size)
+        return result
     except exceptions.RequestException as ex:
         raise IOError('Failed to retrieve template: %s' % str(ex))
