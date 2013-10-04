@@ -665,20 +665,20 @@ class StackTest(HeatTestCase):
     def test_total_resources_nested(self):
         self._setup_nested('zyzzyx')
         self.assertEqual(4, self.stack.total_resources())
-        self.assertNotEqual(None, self.stack.resources['A'].nested())
+        self.assertNotEqual(None, self.stack['A'].nested())
         self.assertEqual(
-            2, self.stack.resources['A'].nested().total_resources())
+            2, self.stack['A'].nested().total_resources())
         self.assertEqual(
             4,
-            self.stack.resources['A'].nested().root_stack.total_resources())
+            self.stack['A'].nested().root_stack.total_resources())
 
     @utils.stack_delete_after
     def test_root_stack(self):
         self._setup_nested('toor')
         self.assertEqual(self.stack, self.stack.root_stack)
-        self.assertNotEqual(None, self.stack.resources['A'].nested())
+        self.assertNotEqual(None, self.stack['A'].nested())
         self.assertEqual(
-            self.stack, self.stack.resources['A'].nested().root_stack)
+            self.stack, self.stack['A'].nested().root_stack)
 
     @utils.stack_delete_after
     def test_load_parent_resource(self):

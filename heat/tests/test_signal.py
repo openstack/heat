@@ -96,7 +96,7 @@ class SignalTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        rsrc = self.stack.resources['signal_handler']
+        rsrc = self.stack['signal_handler']
         created_time = datetime.datetime(2012, 11, 29, 13, 49, 37)
         rsrc.created_time = created_time
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
@@ -123,7 +123,7 @@ class SignalTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        rsrc = self.stack.resources['signal_handler']
+        rsrc = self.stack['signal_handler']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         first_url = rsrc.FnGetAtt('AlarmUrl')
@@ -138,7 +138,7 @@ class SignalTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        rsrc = self.stack.resources['signal_handler']
+        rsrc = self.stack['signal_handler']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         rsrc.delete()
@@ -162,7 +162,7 @@ class SignalTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        rsrc = self.stack.resources['signal_handler']
+        rsrc = self.stack['signal_handler']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         self.assertTrue(rsrc.requires_deferred_auth)
 
@@ -179,7 +179,7 @@ class SignalTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        rsrc = self.stack.resources['resource_X']
+        rsrc = self.stack['resource_X']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         err_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
@@ -197,7 +197,7 @@ class SignalTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        rsrc = self.stack.resources['signal_handler']
+        rsrc = self.stack['signal_handler']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         # manually override the action to DELETE
         rsrc.action = rsrc.DELETE
@@ -226,7 +226,7 @@ class SignalTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        rsrc = self.stack.resources['signal_handler']
+        rsrc = self.stack['signal_handler']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
         self.assertRaises(exception.ResourceFailure,

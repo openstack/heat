@@ -182,12 +182,12 @@ class ServerTagsTest(HeatTestCase):
         t['Resources']['WebServer']['Properties']['Tags'] = intags
 
         # create the launch configuration
-        conf = stack.resources['Config']
+        conf = stack['Config']
         self.assertEqual(None, conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
 
-        group = stack.resources['WebServer']
+        group = stack['WebServer']
 
         nova_tags['metering.groupname'] = utils.PhysName(stack.name,
                                                          group.name)
@@ -229,11 +229,11 @@ class ServerTagsTest(HeatTestCase):
         t['Resources']['WebServer']['Properties']['Tags'] += intags
 
         # create the launch configuration
-        conf = stack.resources['Config']
+        conf = stack['Config']
         self.assertEqual(None, conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
-        group = stack.resources['WebServer']
+        group = stack['WebServer']
 
         group_refid = utils.PhysName(stack.name, group.name)
 

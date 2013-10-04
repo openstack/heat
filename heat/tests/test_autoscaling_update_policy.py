@@ -217,18 +217,18 @@ class InstanceGroupTest(HeatTestCase):
             cookie).MultipleTimes().AndReturn(True)
 
     def get_launch_conf_name(self, stack, ig_name):
-        return stack.resources[ig_name].properties['LaunchConfigurationName']
+        return stack[ig_name].properties['LaunchConfigurationName']
 
     def test_parse_without_update_policy(self):
         tmpl = template_format.parse(asg_tmpl_without_updt_policy)
         stack = utils.parse_stack(tmpl)
-        grp = stack.resources['WebServerGroup']
+        grp = stack['WebServerGroup']
         self.assertFalse(grp.update_policy['AutoScalingRollingUpdate'])
 
     def test_parse_with_update_policy(self):
         tmpl = template_format.parse(asg_tmpl_with_updt_policy_1)
         stack = utils.parse_stack(tmpl)
-        grp = stack.resources['WebServerGroup']
+        grp = stack['WebServerGroup']
         self.assertTrue(grp.update_policy)
         self.assertTrue(len(grp.update_policy) == 1)
         self.assertTrue('AutoScalingRollingUpdate' in grp.update_policy)
@@ -241,7 +241,7 @@ class InstanceGroupTest(HeatTestCase):
     def test_parse_with_default_update_policy(self):
         tmpl = template_format.parse(asg_tmpl_with_default_updt_policy)
         stack = utils.parse_stack(tmpl)
-        grp = stack.resources['WebServerGroup']
+        grp = stack['WebServerGroup']
         self.assertTrue(grp.update_policy)
         self.assertTrue(len(grp.update_policy) == 1)
         self.assertTrue('AutoScalingRollingUpdate' in grp.update_policy)
@@ -263,7 +263,7 @@ class InstanceGroupTest(HeatTestCase):
         current_stack = utils.parse_stack(current_tmpl)
 
         # get the json snippet for the current InstanceGroup resource
-        current_grp = current_stack.resources['WebServerGroup']
+        current_grp = current_stack['WebServerGroup']
         current_snippets = dict((r.name, r.parsed_template())
                                 for r in current_stack)
         current_grp_json = current_snippets[current_grp.name]
@@ -274,7 +274,7 @@ class InstanceGroupTest(HeatTestCase):
 
         # get the updated json snippet for the InstanceGroup resource in the
         # context of the current stack
-        updated_grp = updated_stack.resources['WebServerGroup']
+        updated_grp = updated_stack['WebServerGroup']
         updated_grp_json = current_stack.resolve_runtime_data(updated_grp.t)
 
         # identify the template difference
@@ -302,28 +302,28 @@ class InstanceGroupTest(HeatTestCase):
         # setup stack from the initial template
         tmpl = template_format.parse(asg_tmpl_with_updt_policy_1)
         stack = utils.parse_stack(tmpl)
-        nested = stack.resources['WebServerGroup'].nested()
+        nested = stack['WebServerGroup'].nested()
 
         # test stack create
         # test the number of instance creation
         # test that physical resource name of launch configuration is used
-        size = int(stack.resources['WebServerGroup'].properties['MinSize'])
+        size = int(stack['WebServerGroup'].properties['MinSize'])
         self._stub_create(size)
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
         self.assertEqual(stack.state, ('CREATE', 'COMPLETE'))
-        conf = stack.resources['LaunchConfig']
+        conf = stack['LaunchConfig']
         conf_name_pattern = '%s-LaunchConfig-[a-zA-Z0-9]+$' % stack.name
         regex_pattern = re.compile(conf_name_pattern)
         self.assertTrue(regex_pattern.match(conf.FnGetRefId()))
-        nested = stack.resources['WebServerGroup'].nested()
-        self.assertTrue(len(nested.resources), size)
+        nested = stack['WebServerGroup'].nested()
+        self.assertTrue(len(nested), size)
 
         # test stack update
         # test that update policy is updated
         # test that launch configuration is replaced
-        current_grp = stack.resources['WebServerGroup']
+        current_grp = stack['WebServerGroup']
         self.assertTrue('AutoScalingRollingUpdate'
                         in current_grp.update_policy)
         current_policy = current_grp.update_policy['AutoScalingRollingUpdate']
@@ -334,7 +334,7 @@ class InstanceGroupTest(HeatTestCase):
         updated_stack = utils.parse_stack(updated_tmpl)
         stack.update(updated_stack)
         self.assertEqual(stack.state, ('UPDATE', 'COMPLETE'))
-        updated_grp = stack.resources['WebServerGroup']
+        updated_grp = stack['WebServerGroup']
         self.assertTrue('AutoScalingRollingUpdate'
                         in updated_grp.update_policy)
         updated_policy = updated_grp.update_policy['AutoScalingRollingUpdate']
@@ -348,27 +348,27 @@ class InstanceGroupTest(HeatTestCase):
         # setup stack from the initial template
         tmpl = template_format.parse(asg_tmpl_with_updt_policy_1)
         stack = utils.parse_stack(tmpl)
-        nested = stack.resources['WebServerGroup'].nested()
+        nested = stack['WebServerGroup'].nested()
 
         # test stack create
         # test the number of instance creation
         # test that physical resource name of launch configuration is used
-        size = int(stack.resources['WebServerGroup'].properties['MinSize'])
+        size = int(stack['WebServerGroup'].properties['MinSize'])
         self._stub_create(size)
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
         self.assertEqual(stack.state, ('CREATE', 'COMPLETE'))
-        conf = stack.resources['LaunchConfig']
+        conf = stack['LaunchConfig']
         conf_name_pattern = '%s-LaunchConfig-[a-zA-Z0-9]+$' % stack.name
         regex_pattern = re.compile(conf_name_pattern)
         self.assertTrue(regex_pattern.match(conf.FnGetRefId()))
-        nested = stack.resources['WebServerGroup'].nested()
-        self.assertTrue(len(nested.resources), size)
+        nested = stack['WebServerGroup'].nested()
+        self.assertTrue(len(nested), size)
 
         # test stack update
         # test that update policy is removed
-        current_grp = stack.resources['WebServerGroup']
+        current_grp = stack['WebServerGroup']
         self.assertTrue('AutoScalingRollingUpdate'
                         in current_grp.update_policy)
         current_policy = current_grp.update_policy['AutoScalingRollingUpdate']
@@ -378,5 +378,5 @@ class InstanceGroupTest(HeatTestCase):
         updated_stack = utils.parse_stack(updated_tmpl)
         stack.update(updated_stack)
         self.assertEqual(stack.state, ('UPDATE', 'COMPLETE'))
-        updated_grp = stack.resources['WebServerGroup']
+        updated_grp = stack['WebServerGroup']
         self.assertFalse(updated_grp.update_policy['AutoScalingRollingUpdate'])

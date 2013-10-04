@@ -172,8 +172,8 @@ class MetadataRefreshTest(HeatTestCase):
         self.assertEqual(self.stack.state,
                          (self.stack.CREATE, self.stack.COMPLETE))
 
-        s1 = self.stack.resources['S1']
-        s2 = self.stack.resources['S2']
+        s1 = self.stack['S1']
+        s2 = self.stack['S2']
         files = s1.metadata['AWS::CloudFormation::Init']['config']['files']
         cont = files['/tmp/random_file']['content']
         self.assertEqual((s2.CREATE, s2.COMPLETE), s2.state)
