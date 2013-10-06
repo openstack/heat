@@ -137,6 +137,10 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertNotEqual(encrypted_key, "fake secret")
         decrypted_key = cs.my_secret
         self.assertEqual(decrypted_key, "fake secret")
+
+        #do this twice to verify that the orm does not commit the unencrypted
+        #value.
+        self.assertEqual(cs.my_secret, "fake secret")
         scheduler.TaskRunner(cs.destroy)()
 
     def test_resource_data_delete(self):
