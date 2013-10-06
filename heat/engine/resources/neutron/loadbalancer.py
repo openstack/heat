@@ -318,7 +318,7 @@ class LoadBalancer(resource.Resource):
 
     update_allowed_keys = ('Properties',)
 
-    update_allowed_properties = ('members',)
+    update_allowed_properties = ('members', 'pool_id',)
 
     def handle_create(self):
         pool = self.properties['pool_id']
