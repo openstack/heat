@@ -306,10 +306,10 @@ class StackResourceTest(HeatTestCase):
 
         st_set = self.stack.state_set
         self.m.StubOutWithMock(self.stack, 'state_set')
-        self.stack.state_set(parser.Stack.CREATE, parser.Stack.IN_PROGRESS,
+        self.stack.state_set(self.stack.CREATE, self.stack.IN_PROGRESS,
                              "Stack CREATE started").WithSideEffects(st_set)
 
-        self.stack.state_set(parser.Stack.CREATE, parser.Stack.COMPLETE,
+        self.stack.state_set(self.stack.CREATE, self.stack.COMPLETE,
                              "Stack create completed successfully")
         self.m.ReplayAll()
 
