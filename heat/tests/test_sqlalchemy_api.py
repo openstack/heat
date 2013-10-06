@@ -148,7 +148,7 @@ class SqlAlchemyTest(HeatTestCase):
         self._mock_create(self.m)
         self.m.ReplayAll()
         stack.create()
-        rsrc = stack.resources['WebServer']
+        rsrc = stack['WebServer']
         db_api.resource_data_set(rsrc, 'test', 'test_data')
         self.assertEqual('test_data', db_api.resource_data_get(rsrc, 'test'))
         db_api.resource_data_delete(rsrc, 'test')

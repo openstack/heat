@@ -60,7 +60,7 @@ class User(resource.Resource):
                 continue
 
             try:
-                policy_rsrc = self.stack.resources[policy]
+                policy_rsrc = self.stack[policy]
             except KeyError:
                 logger.error("Policy %s does not exist in stack %s" %
                              (policy, self.stack.name))
@@ -124,7 +124,7 @@ class User(resource.Resource):
                 logger.warning("Ignoring policy %s, " % policy
                                + "must be string resource name")
                 continue
-            policy_rsrc = self.stack.resources[policy]
+            policy_rsrc = self.stack[policy]
             if not policy_rsrc.access_allowed(resource_name):
                 return False
         return True

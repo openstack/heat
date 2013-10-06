@@ -83,7 +83,7 @@ class InstanceGroupTest(HeatTestCase):
     def create_resource(self, t, stack, resource_name):
         # subsequent resources may need to reference previous created resources
         # use the stack's resource objects instead of instantiating new ones
-        rsrc = stack.resources[resource_name]
+        rsrc = stack[resource_name]
         self.assertEqual(None, rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -146,7 +146,7 @@ class InstanceGroupTest(HeatTestCase):
         stack = utils.parse_stack(t)
 
         conf = self.create_resource(t, stack, 'JobServerConfig')
-        rsrc = stack.resources['JobServerGroup']
+        rsrc = stack['JobServerGroup']
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         not_found = exception.ImageNotFound(image_name='bla')
@@ -218,11 +218,11 @@ class InstanceGroupTest(HeatTestCase):
             exception.ResourceFailure,
             self.create_resource, t, stack, 'JobServerGroup')
 
-        rsrc = stack.resources['JobServerGroup']
+        rsrc = stack['JobServerGroup']
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
 
         # The failed inner resource remains
-        child_resource = rsrc.nested().resources['JobServerGroup-0']
+        child_resource = rsrc.nested()['JobServerGroup-0']
         self.assertEqual((child_resource.CREATE, child_resource.FAILED),
                          child_resource.state)
 
@@ -262,7 +262,7 @@ class InstanceGroupTest(HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
 
         # The failed inner resource remains
-        child_resource = rsrc.nested().resources['JobServerGroup-1']
+        child_resource = rsrc.nested()['JobServerGroup-1']
         self.assertEqual((child_resource.CREATE, child_resource.FAILED),
                          child_resource.state)
 

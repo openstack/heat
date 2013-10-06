@@ -131,7 +131,7 @@ def setup_mocks(mocks, stack):
     mocks.StubOutWithMock(instances.Instance, 'nova')
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
 
-    instance = stack.resources['WebServer']
+    instance = stack['WebServer']
     user_data = instance.properties['UserData']
     server_userdata = nova_utils.build_userdata(instance, user_data)
     instance.mime_string = server_userdata
@@ -239,9 +239,9 @@ class StackCreateTest(HeatTestCase):
         stack.store()
         stack.create()
 
-        self.assertNotEqual(stack.resources['WebServer'], None)
-        self.assertTrue(stack.resources['WebServer'].resource_id > 0)
-        self.assertNotEqual(stack.resources['WebServer'].ipaddress, '0.0.0.0')
+        self.assertNotEqual(stack['WebServer'], None)
+        self.assertTrue(stack['WebServer'].resource_id > 0)
+        self.assertNotEqual(stack['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_delete(self):
         ctx = utils.dummy_context()
@@ -254,8 +254,8 @@ class StackCreateTest(HeatTestCase):
         db_s = db_api.stack_get(ctx, stack_id)
         self.assertNotEqual(db_s, None)
 
-        self.assertNotEqual(stack.resources['WebServer'], None)
-        self.assertTrue(stack.resources['WebServer'].resource_id > 0)
+        self.assertNotEqual(stack['WebServer'], None)
+        self.assertTrue(stack['WebServer'].resource_id > 0)
 
         self.m.StubOutWithMock(fc.client, 'get_servers_9999')
         get = fc.client.get_servers_9999
@@ -263,7 +263,7 @@ class StackCreateTest(HeatTestCase):
         mox.Replay(get)
         stack.delete()
 
-        rsrc = stack.resources['WebServer']
+        rsrc = stack['WebServer']
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual((stack.DELETE, stack.COMPLETE), rsrc.state)
         self.assertEqual(None, db_api.stack_get(ctx, stack_id))
@@ -385,7 +385,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         stack = get_wordpress_stack(stack_name, self.ctx)
         # force check for credentials on create
-        stack.resources['WebServer'].requires_deferred_auth = True
+        stack['WebServer'].requires_deferred_auth = True
 
         self.m.StubOutWithMock(parser, 'Template')
         self.m.StubOutWithMock(environment, 'Environment')
@@ -697,7 +697,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         old_stack = get_wordpress_stack(stack_name, self.ctx)
         # force check for credentials on create
-        old_stack.resources['WebServer'].requires_deferred_auth = True
+        old_stack['WebServer'].requires_deferred_auth = True
 
         sid = old_stack.store()
         s = db_api.stack_get(self.ctx, sid)
@@ -730,7 +730,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
     def test_validate_deferred_auth_context_trusts(self):
         stack = get_wordpress_stack('test_deferred_auth', self.ctx)
-        stack.resources['WebServer'].requires_deferred_auth = True
+        stack['WebServer'].requires_deferred_auth = True
         ctx = utils.dummy_context(user=None, password=None)
         cfg.CONF.set_default('deferred_auth_method', 'trusts')
 
@@ -739,7 +739,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
     def test_validate_deferred_auth_context_not_required(self):
         stack = get_wordpress_stack('test_deferred_auth', self.ctx)
-        stack.resources['WebServer'].requires_deferred_auth = False
+        stack['WebServer'].requires_deferred_auth = False
         ctx = utils.dummy_context(user=None, password=None)
         cfg.CONF.set_default('deferred_auth_method', 'password')
 
@@ -749,7 +749,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
     def test_validate_deferred_auth_context_missing_credentials(self):
         stack = get_wordpress_stack('test_deferred_auth', self.ctx)
-        stack.resources['WebServer'].requires_deferred_auth = True
+        stack['WebServer'].requires_deferred_auth = True
         cfg.CONF.set_default('deferred_auth_method', 'password')
 
         # missing username

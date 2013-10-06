@@ -551,14 +551,14 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_template_volumeattach % 'vdq')
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
 
-        volumeattach = stack.resources['MountPoint']
+        volumeattach = stack['MountPoint']
         self.assertTrue(volumeattach.validate() is None)
 
     def test_validate_volumeattach_invalid(self):
         t = template_format.parse(test_template_volumeattach % 'sda')
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
 
-        volumeattach = stack.resources['MountPoint']
+        volumeattach = stack['MountPoint']
         self.assertRaises(exception.StackValidationFailed,
                           volumeattach.validate)
 
@@ -716,7 +716,7 @@ class validateTest(HeatTestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        resource = stack.resources['Instance']
+        resource = stack['Instance']
         self.assertRaises(exception.UserKeyPairMissing, resource.validate)
 
     def test_unregistered_image(self):
@@ -731,7 +731,7 @@ class validateTest(HeatTestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        resource = stack.resources['Instance']
+        resource = stack['Instance']
         self.assertRaises(exception.ImageNotFound, resource.validate)
 
         self.m.VerifyAll()
@@ -762,7 +762,7 @@ class validateTest(HeatTestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        resource = stack.resources['Instance']
+        resource = stack['Instance']
         self.assertRaises(exception.NoUniqueImageFound, resource.validate)
 
         self.m.VerifyAll()
@@ -777,7 +777,7 @@ class validateTest(HeatTestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        resource = stack.resources['Instance']
+        resource = stack['Instance']
         self.assertRaises(exception.ResourcePropertyConflict,
                           resource.validate)
 
@@ -791,7 +791,7 @@ class validateTest(HeatTestCase):
         instances.Instance.nova().AndReturn(self.fc)
         self.m.ReplayAll()
 
-        resource = stack.resources['Instance']
+        resource = stack['Instance']
         self.assertRaises(exception.ResourcePropertyConflict,
                           resource.validate)
 

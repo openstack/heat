@@ -283,7 +283,7 @@ class Resource(object):
                         value, att = value
 
                     try:
-                        target = self.stack.resources[value]
+                        target = self.stack[value]
                     except KeyError:
                         raise exception.InvalidTemplateReference(
                             resource=value,

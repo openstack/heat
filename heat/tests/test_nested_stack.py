@@ -161,7 +161,7 @@ Outputs:
         stack.create()
         self.assertEquals(stack.state, (stack.CREATE, stack.COMPLETE))
         self.assertIn('NestedResource',
-                      stack.resources['the_nested'].nested().resources)
+                      stack['the_nested'].nested())
 
         self.m.VerifyAll()
 

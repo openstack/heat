@@ -337,7 +337,7 @@ class AccessKeyTest(UserPolicyTestCase):
         # Set the resource properties UserName to an unknown user
         t['Resources']['HostKeys']['Properties']['UserName'] = 'NonExistant'
         stack = utils.parse_stack(t)
-        stack.resources['CfnUser'].resource_id = self.fc.user_id
+        stack['CfnUser'].resource_id = self.fc.user_id
 
         rsrc = user.AccessKey('HostKeys',
                               t['Resources']['HostKeys'],
