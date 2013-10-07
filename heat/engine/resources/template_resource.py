@@ -70,31 +70,30 @@ class TemplateResource(stack_resource.StackResource):
         :return: parameter values for our nested stack based on our properties
         '''
         params = {}
-        for n, v in iter(self.properties.props.items()):
-            if not v.implemented():
+        for pname, pval in iter(self.properties.props.items()):
+            if not pval.implemented():
                 continue
 
-            val = self.properties[n]
-
+            val = self.properties[pname]
             if val is not None:
                 # take a list and create a CommaDelimitedList
-                if v.type() == properties.LIST:
+                if pval.type() == properties.LIST:
                     if len(val) == 0:
-                        val = ''
+                        params[pname] = ''
                     elif isinstance(val[0], dict):
                         flattened = []
-                        for (i, item) in enumerate(val):
-                            for (k, iv) in iter(item.items()):
-                                mem_str = '.member.%d.%s=%s' % (i, k, iv)
+                        for (count, item) in enumerate(val):
+                            for (ik, iv) in iter(item.items()):
+                                mem_str = '.member.%d.%s=%s' % (count, ik, iv)
                                 flattened.append(mem_str)
-                        params[n] = ','.join(flattened)
+                        params[pname] = ','.join(flattened)
                     else:
-                        val = ','.join(val)
-
-                # for MAP, the JSON param takes either a collection or string,
-                # so just pass it on and let the param validate as appropriate
-
-                params[n] = val
+                        params[pname] = ','.join(val)
+                else:
+                    # for MAP, the JSON param takes either a collection or
+                    # string, so just pass it on and let the param validate
+                    # as appropriate
+                    params[pname] = val
 
         return params
 
