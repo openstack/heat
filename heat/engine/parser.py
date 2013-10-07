@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import functools
 import re
 
@@ -43,7 +44,7 @@ logger = logging.getLogger(__name__)
 (PARAM_STACK_NAME, PARAM_REGION) = ('AWS::StackName', 'AWS::Region')
 
 
-class Stack(object):
+class Stack(collections.Mapping):
 
     ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME
                ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND',
@@ -237,17 +238,9 @@ class Stack(object):
 
     def __iter__(self):
         '''
-        Return an iterator over this template's resources in the order that
-        they should be started.
+        Return an iterator over the resource names.
         '''
-        return iter(self.dependencies)
-
-    def __reversed__(self):
-        '''
-        Return an iterator over this template's resources in the order that
-        they should be stopped.
-        '''
-        return reversed(self.dependencies)
+        return iter(self.resources)
 
     def __len__(self):
         '''Return the number of resources.'''
@@ -265,9 +258,13 @@ class Stack(object):
         '''Determine whether the stack contains the specified resource.'''
         return key in self.resources
 
-    def keys(self):
-        '''Return a list of resource keys for the stack.'''
-        return self.resources.keys()
+    def __eq__(self, other):
+        '''
+        Compare two Stacks for equality.
+
+        Stacks are considered equal only if they are identical.
+        '''
+        return self is other
 
     def __str__(self):
         '''Return a human-readable string representation of the stack.'''
@@ -303,7 +300,7 @@ class Stack(object):
             raise StackValidationFailed(message="Duplicate names %s" %
                                         dup_names)
 
-        for res in self:
+        for res in self.dependencies:
             try:
                 result = res.validate()
             except exception.Error as ex:
@@ -321,7 +318,7 @@ class Stack(object):
         during its lifecycle using the configured deferred authentication
         method.
         '''
-        return any(res.requires_deferred_auth for res in self)
+        return any(res.requires_deferred_auth for res in self.values())
 
     def state_set(self, action, status, reason):
         '''Update the stack state in the database.'''

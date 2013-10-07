@@ -38,8 +38,8 @@ class StackUpdate(object):
 
         self.rollback = rollback
 
-        self.existing_snippets = dict((r.name, r.parsed_template())
-                                      for r in self.existing_stack)
+        self.existing_snippets = dict((n, r.parsed_template())
+                                      for n, r in self.existing_stack.items())
 
     def __repr__(self):
         if self.rollback:
@@ -186,8 +186,8 @@ class StackUpdate(object):
             for e in existing_deps.graph(reverse=True).edges():
                 yield e
             # Don't cleanup old resources until after they have been replaced
-            for res in self.existing_stack:
-                if res.name in self.new_stack:
-                    yield (res, self.new_stack[res.name])
+            for name, res in self.existing_stack.iteritems():
+                if name in self.new_stack:
+                    yield (res, self.new_stack[name])
 
         return dependencies.Dependencies(edges())

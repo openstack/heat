@@ -590,13 +590,9 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(cnxt, stack=s)
 
-        if resource_name is not None:
-            name_match = lambda r: r.name == resource_name
-        else:
-            name_match = lambda r: True
-
         return [api.format_stack_resource(resource)
-                for resource in stack if name_match(resource)]
+                for name, resource in stack.iteritems()
+                if resource_name is None or name == resource_name]
 
     @request_context
     def list_stack_resources(self, cnxt, stack_identity):
@@ -605,7 +601,7 @@ class EngineService(service.Service):
         stack = parser.Stack.load(cnxt, stack=s)
 
         return [api.format_stack_resource(resource, detail=False)
-                for resource in stack]
+                for resource in stack.values()]
 
     @request_context
     def stack_suspend(self, cnxt, stack_identity):
@@ -671,7 +667,7 @@ class EngineService(service.Service):
         # resource_name to be a WaitCondition resource, and other
         # resources may refer to WaitCondition Fn::GetAtt Data, which
         # is updated here.
-        for res in refresh_stack:
+        for res in refresh_stack.dependencies:
             if res.name != resource_name and res.id is not None:
                 res.metadata_update()
 
