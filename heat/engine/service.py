@@ -354,6 +354,12 @@ class EngineService(service.Service):
                         'Found a [%s] instead' % type_res}
 
             ResourceClass = resource.get_class(res['Type'])
+            if ResourceClass == resources.template_resource.TemplateResource:
+                # we can't validate a TemplateResource unless we instantiate
+                # it as we need to download the template and convert the
+                # paramerters into properties_schema.
+                continue
+
             props = properties.Properties(ResourceClass.properties_schema,
                                           res.get('Properties', {}))
             try:
