@@ -16,6 +16,8 @@
 import os
 import os.path
 
+from oslo.config import cfg
+
 from heat.common import environment_format
 from heat.openstack.common import log
 from heat.openstack.common.gettextutils import _
@@ -25,10 +27,10 @@ from heat.engine import environment
 LOG = log.getLogger(__name__)
 
 
-def _register_resources(type_pairs):
+def _register_resources(env, type_pairs):
 
     for res_name, res_class in type_pairs:
-        _environment.register_class(res_name, res_class)
+        env.register_class(res_name, res_class)
 
 
 def _get_module_resources(module):
@@ -41,11 +43,11 @@ def _get_module_resources(module):
         return []
 
 
-def _register_modules(modules):
+def _register_modules(env, modules):
     import itertools
 
     resource_lists = (_get_module_resources(m) for m in modules)
-    _register_resources(itertools.chain.from_iterable(resource_lists))
+    _register_resources(env, itertools.chain.from_iterable(resource_lists))
 
 
 _environment = None
@@ -67,7 +69,16 @@ def _list_environment_files(env_dir):
         return []
 
 
-def _load_global_environment(env_dir):
+def _load_all(env):
+    _load_global_environment(env)
+    _load_global_resources(env)
+
+
+def _load_global_environment(env, env_dir=None):
+    if env_dir is None:
+        cfg.CONF.import_opt('environment_dir', 'heat.common.config')
+        env_dir = cfg.CONF.environment_dir
+
     for env_name in _list_environment_files(env_dir):
         try:
             file_path = os.path.join(env_dir, env_name)
@@ -75,7 +86,7 @@ def _load_global_environment(env_dir):
                 LOG.info('Loading %s' % file_path)
                 env_body = environment_format.parse(env_fd.read())
                 environment_format.default_for_missing(env_body)
-                _environment.load(env_body)
+                env.load(env_body)
         except ValueError as vex:
             LOG.error('Failed to parse %s/%s' % (env_dir, env_name))
             LOG.exception(vex)
@@ -88,18 +99,19 @@ def initialise():
     global _environment
     if _environment is not None:
         return
-    import sys
-    from oslo.config import cfg
-    from heat.common import plugin_loader
 
     _environment = environment.Environment({}, user_env=False)
-    cfg.CONF.import_opt('environment_dir', 'heat.common.config')
-    _load_global_environment(cfg.CONF.environment_dir)
-    _register_modules(plugin_loader.load_modules(sys.modules[__name__]))
+    _load_all(_environment)
+
+
+def _load_global_resources(env):
+    import sys
+    from heat.common import plugin_loader
+
+    # load plugin modules
+    _register_modules(env, plugin_loader.load_modules(sys.modules[__name__]))
 
     cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
-
     plugin_pkg = plugin_loader.create_subpackage(cfg.CONF.plugin_dirs,
                                                  'heat.engine')
-    _register_modules(plugin_loader.load_modules(plugin_pkg, True))
-    _initialized = True
+    _register_modules(env, plugin_loader.load_modules(plugin_pkg, True))
