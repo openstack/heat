@@ -63,7 +63,7 @@ class Port(neutron.NeutronResource):
         # It is not known which subnet a port might be assigned
         # to so all subnets in a network should be created before
         # the ports in that network.
-        for resource in self.stack.resources.itervalues():
+        for resource in self.stack.itervalues():
             if (resource.has_interface('OS::Neutron::Subnet') and
                 resource.properties.get('network_id') ==
                     self.properties.get('network_id')):

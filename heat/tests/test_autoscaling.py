@@ -307,7 +307,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
 
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
-        for i in rsrc.nested().resources.values():
+        for i in rsrc.nested().values():
             i.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
 
         scheduler.TaskRunner(rsrc.resume)()
@@ -389,7 +389,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
 
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
-        for i in rsrc.nested().resources.values():
+        for i in rsrc.nested().values():
             i.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
 
         scheduler.TaskRunner(rsrc.resume)()
@@ -454,7 +454,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
 
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
-        for i in rsrc.nested().resources.values():
+        for i in rsrc.nested().values():
             i.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
 
         sus_task = scheduler.TaskRunner(rsrc.resume)
