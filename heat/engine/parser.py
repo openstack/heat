@@ -258,6 +258,10 @@ class Stack(collections.Mapping):
         '''Set the resource with the specified name to a specific value.'''
         self.resources[key] = value
 
+    def __delitem__(self, key):
+        '''Remove the resource with the specified name.'''
+        del self.resources[key]
+
     def __contains__(self, key):
         '''Determine whether the stack contains the specified resource.'''
         return key in self.resources
