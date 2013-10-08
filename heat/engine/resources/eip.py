@@ -190,12 +190,13 @@ class ElasticIpAssociation(resource.Resource):
             subnet_rsrc = subnets['subnets'][0]
             netid = subnet_rsrc['network_id']
 
-            router_id = VPC.router_for_vpc(self.neutron(), netid)['id']
-            floatingip = self.neutron().show_floatingip(float_id)
-            floating_net_id = floatingip['floatingip']['floating_network_id']
-
-            self.neutron().add_gateway_router(
-                router_id, {'network_id': floating_net_id})
+            router = VPC.router_for_vpc(self.neutron(), netid)
+            if router is not None:
+                floatingip = self.neutron().show_floatingip(float_id)
+                floating_net_id = \
+                    floatingip['floatingip']['floating_network_id']
+                self.neutron().add_gateway_router(
+                    router['id'], {'network_id': floating_net_id})
 
             self.neutron().update_floatingip(
                 float_id, {'floatingip': {'port_id': port_id}})
