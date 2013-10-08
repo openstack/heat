@@ -266,10 +266,8 @@ class InstanceGroup(stack_resource.StackResource):
         ip addresses.
         '''
         if name == 'InstanceList':
-            ips = [inst.FnGetAtt('PublicIp')
-                   for inst in self.nested().resources.values()]
-            if ips:
-                return unicode(','.join(ips))
+            return u','.join(inst.FnGetAtt('PublicIp')
+                             for inst in self.get_instances()) or None
 
 
 class AutoScalingGroup(InstanceGroup, CooldownMixin):
