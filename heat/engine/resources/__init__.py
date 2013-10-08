@@ -70,8 +70,8 @@ def _list_environment_files(env_dir):
 
 
 def _load_all(env):
-    _load_global_environment(env)
     _load_global_resources(env)
+    _load_global_environment(env)
 
 
 def _load_global_environment(env, env_dir=None):
