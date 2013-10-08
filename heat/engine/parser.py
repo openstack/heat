@@ -137,14 +137,18 @@ class Stack(collections.Mapping):
 
     def total_resources(self):
         '''
-        Total number of resources in a stack, including nested stacks below.
+        Return the total number of resources in a stack, including nested
+        stacks below.
         '''
-        total = 0
-        for res in iter(self.resources.values()):
-            if hasattr(res, 'nested') and res.nested():
-                total += res.nested().total_resources()
-            total += 1
-        return total
+        def total_nested(res):
+            get_nested = getattr(res, 'nested', None)
+            if callable(get_nested):
+                nested_stack = get_nested()
+                if nested_stack is not None:
+                    return nested_stack.total_resources()
+            return 0
+
+        return len(self) + sum(total_nested(res) for res in self.itervalues())
 
     def _set_param_stackid(self):
         '''
