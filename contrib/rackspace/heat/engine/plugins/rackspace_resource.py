@@ -95,7 +95,7 @@ class RackspaceResource(resource.Resource):
         # current implemenation shown below authenticates using
         # username and password. Need make it work with auth-token
         if not self._authenticated:
-            pyrax.set_setting("identity_type", "keystone")
+            pyrax.set_setting("identity_type", "rackspace")
             pyrax.set_setting("auth_endpoint", self.context.auth_url)
             pyrax.set_setting("tenant_id", self.context.tenant)
             logger.info("Authenticating with username:%s" %
