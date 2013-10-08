@@ -254,9 +254,10 @@ class Stack(collections.Mapping):
         '''Get the resource with the specified name.'''
         return self.resources[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, resource):
         '''Set the resource with the specified name to a specific value.'''
-        self.resources[key] = value
+        resource.stack = self
+        self.resources[key] = resource
 
     def __delitem__(self, key):
         '''Remove the resource with the specified name.'''

@@ -84,9 +84,9 @@ class StackUpdate(object):
     def _exchange_stacks(existing_res, prev_res):
         db_api.resource_exchange_stacks(existing_res.stack.context,
                                         existing_res.id, prev_res.id)
-        existing_res.stack, prev_res.stack = prev_res.stack, existing_res.stack
-        existing_res.stack[existing_res.name] = existing_res
-        prev_res.stack[prev_res.name] = prev_res
+        prev_stack, existing_stack = prev_res.stack, existing_res.stack
+        prev_stack[existing_res.name] = existing_res
+        existing_stack[prev_res.name] = prev_res
 
     @scheduler.wrappertask
     def _create_resource(self, new_res):
@@ -113,11 +113,9 @@ class StackUpdate(object):
         if res_name in self.existing_stack:
             logger.debug("Backing up existing Resource %s" % res_name)
             existing_res = self.existing_stack[res_name]
-            existing_res.stack = self.previous_stack
             self.previous_stack[res_name] = existing_res
             existing_res.state_set(existing_res.UPDATE, existing_res.COMPLETE)
 
-        new_res.stack = self.existing_stack
         self.existing_stack[res_name] = new_res
         yield new_res.create()
 
