@@ -108,9 +108,12 @@ class NeutronResource(resource.Resource):
                 yield
                 self._show_resource()
             except NeutronClientException as ex:
-                if ex.status_code != 404:
-                    raise ex
+                self._handle_not_found_exception(ex)
                 return
+
+    def _handle_not_found_exception(self, ex):
+        if ex.status_code != 404:
+            raise ex
 
     def FnGetRefId(self):
         return unicode(self.resource_id)
