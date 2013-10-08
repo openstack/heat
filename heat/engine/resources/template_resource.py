@@ -84,8 +84,8 @@ class TemplateResource(stack_resource.StackResource):
                     elif isinstance(val[0], dict):
                         flattened = []
                         for (i, item) in enumerate(val):
-                            for (k, v) in iter(item.items()):
-                                mem_str = '.member.%d.%s=%s' % (i, k, v)
+                            for (k, iv) in iter(item.items()):
+                                mem_str = '.member.%d.%s=%s' % (i, k, iv)
                                 flattened.append(mem_str)
                         params[n] = ','.join(flattened)
                     else:
