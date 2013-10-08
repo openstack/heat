@@ -125,6 +125,10 @@ def stack_get_all(context):
     return IMPL.stack_get_all(context)
 
 
+def stack_get_all_by_owner_id(context, owner_id):
+    return IMPL.stack_get_all_by_owner_id(context, owner_id)
+
+
 def stack_get_all_by_tenant(context):
     return IMPL.stack_get_all_by_tenant(context)
 
