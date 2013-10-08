@@ -462,6 +462,14 @@ Mappings:
             parser.Template.resolve_replace(snippet),
             '"foo" is "${var3}"')
 
+    def test_replace_list_value(self):
+        snippet = {"Fn::Replace": [
+            {'$var1': 'foo', '%var2%': ['bar']},
+            '$var1 is %var2%'
+        ]}
+        self.assertRaises(TypeError, parser.Template.resolve_replace,
+                          snippet)
+
     def test_member_list2map_good(self):
         snippet = {"Fn::MemberListToMap": [
             'Name', 'Value', ['.member.0.Name=metric',
