@@ -685,12 +685,7 @@ class EngineService(service.Service):
 
         return resource.metadata
 
-    def _periodic_watcher_task(self, sid):
-        """
-        Periodic task, created for each stack, triggers watch-rule
-        evaluation for all rules defined for the stack
-        sid = stack ID
-        """
+    def _check_stack_watches(self, sid):
         # Retrieve the stored credentials & create context
         # Require admin=True to the stack_get to defeat tenant
         # scoping otherwise we fail to retrieve the stack
@@ -702,6 +697,11 @@ class EngineService(service.Service):
                          sid)
             return
         stack_context = self._load_user_creds(stack.user_creds_id)
+
+        # recurse into any nested stacks.
+        children = db_api.stack_get_all_by_owner_id(admin_context, sid)
+        for child in children:
+            self._check_stack_watches(child.id)
 
         # Get all watchrules for this stack and evaluate them
         try:
@@ -725,6 +725,14 @@ class EngineService(service.Service):
             if actions:
                 self._start_in_thread(sid, run_alarm_action, actions,
                                       rule.get_details())
+
+    def _periodic_watcher_task(self, sid):
+        """
+        Periodic task, created for each stack, triggers watch-rule
+        evaluation for all rules defined for the stack
+        sid = stack ID
+        """
+        self._check_stack_watches(sid)
 
     @request_context
     def create_watch_data(self, cnxt, watch_name, stats_data):
