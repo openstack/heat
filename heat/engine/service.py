@@ -712,7 +712,7 @@ class EngineService(service.Service):
                 action(details=details)
 
             stk = parser.Stack.load(stack_context, stack=stack)
-            for res in stk:
+            for res in stk.itervalues():
                 res.metadata_update()
 
         for wr in wrs:

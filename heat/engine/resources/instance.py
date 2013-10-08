@@ -45,7 +45,7 @@ class Restarter(signal_responder.SignalResponder):
         Return the resource with the specified instance ID, or None if it
         cannot be found.
         '''
-        for resource in self.stack:
+        for resource in self.stack.itervalues():
             if resource.resource_id == resource_id:
                 return resource
         return None
