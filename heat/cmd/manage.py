@@ -63,7 +63,8 @@ def add_command_parsers(subparsers):
 
     parser = subparsers.add_parser('purge_deleted')
     parser.set_defaults(func=purge_deleted)
-    parser.add_argument('age', nargs='?')
+    parser.add_argument('age', nargs='?',
+                        help=_('Number of days to preserve.'))
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
