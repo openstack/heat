@@ -23,6 +23,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine import scheduler
 from heat.engine.resources import instance
+from heat.engine.resources import nova_utils
 from heat.engine.resources import volume as vol
 from heat.engine import clients
 from heat.engine import resource
@@ -85,6 +86,7 @@ class VolumeTest(HeatTestCase):
         self.m.StubOutWithMock(self.cinder_fc.volumes, 'delete')
         self.m.StubOutWithMock(self.fc.volumes, 'create_server_volume')
         self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
+        self.m.StubOutWithMock(nova_utils, 'get_image_id')
         utils.setup_dummy_db()
 
     def create_volume(self, t, stack, resource_name):
@@ -594,7 +596,7 @@ class VolumeTest(HeatTestCase):
             size=u'1', availability_zone='nova',
             display_description='CustomDescription',
             display_name='CustomName',
-            imageRef='Image1',
+            imageRef='46988116-6703-4623-9dbc-2bc6d284021b',
             snapshot_id='snap-123',
             metadata={'key': 'value'},
             source_volid='vol-012',
@@ -613,7 +615,7 @@ class VolumeTest(HeatTestCase):
             # Note that specifying all these arguments doesn't work in
             # practice, as they are conflicting, but we just want to check they
             # are sent to the backend.
-            'imageRef': 'Image1',
+            'imageRef': '46988116-6703-4623-9dbc-2bc6d284021b',
             'snapshot_id': 'snap-123',
             'source_volid': 'vol-012',
         }
@@ -635,11 +637,15 @@ class VolumeTest(HeatTestCase):
 
         clients.OpenStackClients.cinder().MultipleTimes().AndReturn(
             self.cinder_fc)
+        clients.OpenStackClients.nova('compute').AndReturn(self.fc)
+        nova_utils.get_image_id(
+            self.fc, '46988116-6703-4623-9dbc-2bc6d284021b').AndReturn(
+                '46988116-6703-4623-9dbc-2bc6d284021b')
         self.cinder_fc.volumes.create(
             size=u'1', availability_zone='nova',
             display_description='ImageVolumeDescription',
             display_name='ImageVolume',
-            imageRef='Image1').AndReturn(fv)
+            imageRef='46988116-6703-4623-9dbc-2bc6d284021b').AndReturn(fv)
 
         self.m.ReplayAll()
 
@@ -649,7 +655,7 @@ class VolumeTest(HeatTestCase):
             'name': 'ImageVolume',
             'description': 'ImageVolumeDescription',
             'availability_zone': 'nova',
-            'imageRef': 'Image1',
+            'image': '46988116-6703-4623-9dbc-2bc6d284021b',
         }
         stack = utils.parse_stack(t, stack_name=stack_name)
 

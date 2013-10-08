@@ -21,6 +21,7 @@ from heat.openstack.common.importutils import try_import
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import resource
+from heat.engine.resources import nova_utils
 from heat.engine import scheduler
 
 volume_backups = try_import('cinderclient.v1.volume_backups')
@@ -335,8 +336,11 @@ class CinderVolume(Volume):
             'Description': _('Key/value pairs to associate with the volume.')},
         'imageRef': {
             'Type': 'String',
-            'Description': _('If specified, the image to create the volume '
-                             'from.')},
+            'Description': _('DEPRECATED: use "image" instead.')},
+        'image': {
+            'Type': 'String',
+            'Description': _('If specified, the name or ID of the image to '
+                             'create the volume from.')},
         'source_volid': {
             'Type': 'String',
             'Description': _('If specified, the volume to use as source.')}
@@ -377,7 +381,13 @@ class CinderVolume(Volume):
             'size': self.properties['size'],
             'availability_zone': self.properties['availability_zone']
         }
-        optionals = ['snapshot_id', 'volume_type', 'imageRef', 'source_volid',
+        if self.properties.get('image'):
+            arguments['imageRef'] = nova_utils.get_image_id(
+                self.nova(), self.properties['image'])
+        elif self.properties.get('imageRef'):
+            arguments['imageRef'] = self.properties['imageRef']
+
+        optionals = ['snapshot_id', 'volume_type', 'source_volid',
                      'metadata']
         arguments.update((prop, self.properties[prop]) for prop in optionals
                          if self.properties[prop])
