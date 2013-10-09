@@ -85,7 +85,6 @@ cfn-create-aws-symlinks
 
     # - Centos 6.4: Verified working
     centos_script = base_script % """\
-rpm -ivh http://mirror.rackspace.com/epel/6/i386/epel-release-6-8.noarch.rpm
 yum install -y cloud-init python-boto python-pip gcc python-devel \
   python-argparse
 pip-python install heat-cfntools
