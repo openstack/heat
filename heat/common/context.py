@@ -79,7 +79,7 @@ class RequestContext(context.RequestContext):
 
     def to_dict(self):
         return {'auth_token': self.auth_token,
-                'username': self.user,
+                'username': self.username,
                 'password': self.password,
                 'aws_creds': self.aws_creds,
                 'tenant': self.tenant,
