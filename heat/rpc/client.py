@@ -26,7 +26,7 @@ import heat.openstack.common.rpc.proxy
 class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
     '''Client side of the heat engine rpc API.
 
-    API version history:
+    API version history::
 
         1.0 - Initial version.
     '''
@@ -63,7 +63,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         Return detailed information about one or all stacks.
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack you want to show, or None to
-                               show all
+        show all
         """
         return self.call(ctxt, self.make_msg('show_stack',
                                              stack_identity=stack_identity))

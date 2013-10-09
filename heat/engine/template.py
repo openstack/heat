@@ -316,12 +316,14 @@ class Template(collections.Mapping):
     @staticmethod
     def resolve_replace(s):
         """
-        Resolve constructs of the form.
-        {"Fn::Replace": [
-          {'$var1': 'foo', '%var2%': 'bar'},
-          '$var1 is %var2%'
-        ]}
-        This is implemented using python str.replace on each key
+        Resolve constructs of the form::
+
+          {"Fn::Replace": [
+            {'$var1': 'foo', '%var2%': 'bar'},
+            '$var1 is %var2%'
+          ]}
+
+        This is implemented using python str.replace on each key.
         """
         def handle_replace(args):
             if not isinstance(args, (list, tuple)):
@@ -367,10 +369,12 @@ class Template(collections.Mapping):
     @staticmethod
     def resolve_member_list_to_map(s):
         '''
-        Resolve constructs of the form
-        {'Fn::MemberListToMap': ['Name', 'Value', ['.member.0.Name=key',
-                                                   '.member.0.Value=door']]}
-        the first two arguments are the names of the key and value.
+        Resolve constructs of the form::
+
+          {'Fn::MemberListToMap': ['Name', 'Value', ['.member.0.Name=key',
+                                                     '.member.0.Value=door']]}
+
+        The first two arguments are the names of the key and value.
         '''
 
         def handle_member_list_to_map(args):

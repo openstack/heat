@@ -207,7 +207,7 @@ def wrappertask(task):
 
     This is essentially a replacement for the Python 3-only "yield from"
     keyword (PEP 380), using the "yield" keyword that is supported in
-    Python 2. For example:
+    Python 2. For example::
 
         @wrappertask
         def parent_task(self):
