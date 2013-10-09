@@ -1577,7 +1577,7 @@ class StackServiceTest(HeatTestCase):
                 u'MetricName': u'ServiceFailure'}
         self.wr = []
         self.wr.append(watchrule.WatchRule(context=self.ctx,
-                                           watch_name='HttpFailureAlarm',
+                                           watch_name='show_watch_1',
                                            rule=rule,
                                            watch_data=[],
                                            stack_id=self.stack.id,
@@ -1585,20 +1585,28 @@ class StackServiceTest(HeatTestCase):
         self.wr[0].store()
 
         self.wr.append(watchrule.WatchRule(context=self.ctx,
-                                           watch_name='AnotherWatch',
+                                           watch_name='show_watch_2',
                                            rule=rule,
                                            watch_data=[],
                                            stack_id=self.stack.id,
                                            state='NORMAL'))
         self.wr[1].store()
 
-        # watch_name=None should return both watches
+        # watch_name=None should return all watches
         result = self.eng.show_watch(self.ctx, watch_name=None)
-        self.assertEqual(2, len(result))
+        result_names = [r.get('name') for r in result]
+        self.assertIn('show_watch_1', result_names)
+        self.assertIn('show_watch_2', result_names)
 
-        # watch_name="HttpFailureAlarm" should return only one
-        result = self.eng.show_watch(self.ctx, watch_name="HttpFailureAlarm")
+        result = self.eng.show_watch(self.ctx, watch_name="show_watch_1")
         self.assertEqual(1, len(result))
+        self.assertIn('name', result[0])
+        self.assertEqual('show_watch_1', result[0]['name'])
+
+        result = self.eng.show_watch(self.ctx, watch_name="show_watch_2")
+        self.assertEqual(1, len(result))
+        self.assertIn('name', result[0])
+        self.assertEqual('show_watch_2', result[0]['name'])
 
         self.assertRaises(exception.WatchRuleNotFound,
                           self.eng.show_watch,
@@ -1622,7 +1630,7 @@ class StackServiceTest(HeatTestCase):
                 u'Threshold': u'2',
                 u'MetricName': u'ServiceFailure'}
         self.wr = watchrule.WatchRule(context=self.ctx,
-                                      watch_name='HttpFailureAlarm',
+                                      watch_name='show_watch_metric_1',
                                       rule=rule,
                                       watch_data=[],
                                       stack_id=self.stack.id,
@@ -1630,7 +1638,7 @@ class StackServiceTest(HeatTestCase):
         self.wr.store()
 
         # And add a metric datapoint
-        watch = db_api.watch_rule_get_by_name(self.ctx, "HttpFailureAlarm")
+        watch = db_api.watch_rule_get_by_name(self.ctx, 'show_watch_metric_1')
         self.assertNotEqual(watch, None)
         values = {'watch_rule_id': watch.id,
                   'data': {u'Namespace': u'system/linux',
