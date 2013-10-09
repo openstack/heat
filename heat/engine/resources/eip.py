@@ -118,7 +118,10 @@ class ElasticIp(resource.Resource):
                     if e.status_code != 404:
                         raise e
             else:
-                self.nova().floating_ips.delete(self.resource_id)
+                try:
+                    self.nova().floating_ips.delete(self.resource_id)
+                except clients.novaclient.exceptions.NotFound:
+                    pass
 
     def FnGetRefId(self):
         return unicode(self._ipaddress())
