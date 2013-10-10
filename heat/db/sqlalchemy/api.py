@@ -126,7 +126,8 @@ def resource_data_get(resource, key):
 
 
 def _encrypt(value):
-    return crypt.encrypt(value.encode('utf-8'))
+    if value is not None:
+        return crypt.encrypt(value.encode('utf-8'))
 
 
 def _decrypt(enc_value):
