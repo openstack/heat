@@ -706,6 +706,23 @@ class Resource(object):
         to implement the signal, the base-class raise an exception if no
         handler is implemented.
         '''
+        def get_string_details():
+            if details is None:
+                return 'No signal details provided'
+            if isinstance(details, basestring):
+                return details
+            if isinstance(details, dict):
+                if all(k in details for k in ('previous', 'current',
+                                              'reason')):
+                    # this is from Ceilometer.
+                    auto = '%(previous)s to %(current)s (%(reason)s)' % details
+                    return 'alarm state changed from %s' % auto
+                elif 'state' in details:
+                    # this is from watchrule
+                    return 'alarm state changed to %(state)s' % details
+
+            return 'Unknown'
+
         try:
             if self.action in (self.SUSPEND, self.DELETE):
                 msg = 'Cannot signal resource during %s' % self.action
@@ -715,7 +732,7 @@ class Resource(object):
                 msg = 'Resource %s is not able to receive a signal' % str(self)
                 raise Exception(msg)
 
-            self._add_event('signal', self.status, details)
+            self._add_event('signal', self.status, get_string_details())
             self.handle_signal(details)
         except Exception as ex:
             logger.exception('signal %s : %s' % (str(self), str(ex)))
