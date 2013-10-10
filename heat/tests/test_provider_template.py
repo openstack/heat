@@ -24,6 +24,7 @@ from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
+from heat.engine import scheduler
 from heat.engine.resources import template_resource
 
 from heat.openstack.common import uuidutils
@@ -494,4 +495,74 @@ class ProviderTemplateTest(HeatTestCase):
                                                       {"Type": 'Test::Flippy'},
                                                       stack)
         self.assertRaises(exception.StackValidationFailed, temp_res.validate)
+        self.m.VerifyAll()
+
+    def create_stack(self, template):
+        t = template_format.parse(template)
+        stack = self.parse_stack(t)
+        stack.create()
+        self.assertEqual(stack.state, (stack.CREATE, stack.COMPLETE))
+        return stack
+
+    def parse_stack(self, t):
+        ctx = utils.dummy_context('test_username', 'aaaa', 'password')
+        stack_name = 'test_stack'
+        tmpl = parser.Template(t)
+        stack = parser.Stack(ctx, stack_name, tmpl)
+        stack.store()
+        return stack
+
+    def test_template_resource_update(self):
+        # assertion: updating a template resource is never destructive
+        #            as it defers to the nested stack to determine if anything
+        #            needs to be replaced.
+
+        utils.setup_dummy_db()
+        resource._register_class('GenericResource',
+                                 generic_rsrc.GenericResource)
+
+        templ_resource_name = 'http://server.test/the.yaml'
+        test_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_nested:
+    Type: %s
+    Properties:
+      one: myname
+''' % templ_resource_name
+
+        self.m.StubOutWithMock(urlfetch, "get")
+        urlfetch.get(templ_resource_name,
+                     allowed_schemes=('http',
+                                      'https')).MultipleTimes().\
+            AndReturn('''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  one:
+    Type: String
+Resources:
+  NestedResource:
+    Type: GenericResource
+Outputs:
+  Foo:
+    Value: {Ref: one}
+''')
+
+        self.m.ReplayAll()
+
+        stack = self.create_stack(test_template)
+        templ_resource = stack['the_nested']
+        self.assertEqual('myname', templ_resource.FnGetAtt('Foo'))
+
+        update_snippet = {
+            "Type": templ_resource_name,
+            "Properties": {
+                "one": "yourname"
+            }
+        }
+        # test that update() does NOT raise UpdateReplace.
+        updater = scheduler.TaskRunner(templ_resource.update, update_snippet)
+        self.assertEqual(None, updater())
+        self.assertEqual('yourname', templ_resource.FnGetAtt('Foo'))
+
         self.m.VerifyAll()

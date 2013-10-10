@@ -63,6 +63,12 @@ class TemplateResource(stack_resource.StackResource):
         self.attributes_schema = (attributes.Attributes
             .schema_from_outputs(tmpl[template.OUTPUTS]))
 
+        self.update_allowed_keys = ('Properties',)
+        # assume all properties are updatable, as they just get passed to
+        # the nested stack and that handles the updating/replacing.
+        self.update_allowed_properties = [pname
+                                          for pname in self.properties_schema]
+
         super(TemplateResource, self).__init__(name, json_snippet, stack)
 
     def _to_parameters(self):
@@ -171,6 +177,17 @@ class TemplateResource(stack_resource.StackResource):
 
     def handle_create(self):
         return self.create_with_template(self.parsed_nested,
+                                         self._to_parameters())
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        # The stack template may be changed even if the prop_diff is empty.
+        self.properties = properties.Properties(
+            self.properties_schema,
+            json_snippet.get('Properties', {}),
+            self.stack.resolve_runtime_data,
+            self.name)
+
+        return self.update_with_template(self.parsed_nested,
                                          self._to_parameters())
 
     def handle_delete(self):
