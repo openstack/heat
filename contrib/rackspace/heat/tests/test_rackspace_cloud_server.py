@@ -110,7 +110,7 @@ class RackspaceCloudServerTest(HeatTestCase):
                              stack_id=uuidutils.generate_uuid())
         return (t, stack)
 
-    def _mock_ssh_sftp(self):
+    def _mock_ssh_sftp(self, exit_code=0):
         # SSH
         self.m.StubOutWithMock(paramiko, "SSHClient")
         self.m.StubOutWithMock(paramiko, "MissingHostKeyPolicy")
@@ -121,12 +121,13 @@ class RackspaceCloudServerTest(HeatTestCase):
         ssh.connect(mox.IgnoreArg(),
                     key_filename=mox.IgnoreArg(),
                     username='root')
-        stdin = self.m.CreateMockAnything()
-        stdout = self.m.CreateMockAnything()
-        stderr = self.m.CreateMockAnything()
-        stdout.read().AndReturn("stdout")
-        stderr.read().AndReturn("stderr")
-        ssh.exec_command(mox.IgnoreArg()).AndReturn((stdin, stdout, stderr))
+        fake_chan = self.m.CreateMockAnything()
+        self.m.StubOutWithMock(paramiko.SSHClient, "get_transport")
+        chan = ssh.get_transport().AndReturn(fake_chan)
+        fake_chan_session = self.m.CreateMockAnything()
+        chan_session = chan.open_session().AndReturn(fake_chan_session)
+        chan_session.exec_command(mox.IgnoreArg())
+        chan_session.recv_exit_status().AndReturn(exit_code)
 
         # SFTP
         self.m.StubOutWithMock(paramiko, "Transport")
@@ -145,7 +146,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         sftp_file.write(mox.IgnoreArg())
         sftp_file.close()
 
-    def _setup_test_cs(self, return_server, name):
+    def _setup_test_cs(self, return_server, name, exit_code=0):
         stack_name = '%s_stack' % name
         (t, stack) = self._setup_test_stack(stack_name)
 
@@ -173,18 +174,18 @@ class RackspaceCloudServerTest(HeatTestCase):
         rackspace_resource.RackspaceResource.nova().MultipleTimes()\
                                                    .AndReturn(self.fc)
 
-        self._mock_ssh_sftp()
+        self._mock_ssh_sftp(exit_code)
         return cs
 
-    def _create_test_cs(self, return_server, name):
-        cs = self._setup_test_cs(return_server, name)
+    def _create_test_cs(self, return_server, name, exit_code=0):
+        cs = self._setup_test_cs(return_server, name, exit_code)
 
         self.m.ReplayAll()
         scheduler.TaskRunner(cs.create)()
         return cs
 
-    def _update_test_cs(self, return_server, name):
-        self._mock_ssh_sftp()
+    def _update_test_cs(self, return_server, name, exit_code=0):
+        self._mock_ssh_sftp(exit_code)
         self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
         rackspace_resource.RackspaceResource.nova().MultipleTimes()\
                                                    .AndReturn(self.fc)
@@ -264,6 +265,41 @@ class RackspaceCloudServerTest(HeatTestCase):
 
         self.assertEqual(None, cs.validate())
         self.m.VerifyAll()
+
+    def test_cs_create_heatscript_nonzero_exit_status(self):
+        return_server = self.fc.servers.list()[1]
+        cs = self._setup_test_cs(return_server, 'test_cs_create_image_id',
+                                 exit_code=1)
+        self.m.ReplayAll()
+        create = scheduler.TaskRunner(cs.create)
+        exc = self.assertRaises(exception.ResourceFailure, create)
+        self.assertTrue("The heat-script.sh script exited" in str(exc))
+        self.m.VerifyAll()
+
+    def test_cs_create_cfnuserdata_nonzero_exit_status(self):
+        return_server = self.fc.servers.list()[1]
+        cs = self._setup_test_cs(return_server, 'test_cs_create_image_id',
+                                 exit_code=42)
+        self.m.ReplayAll()
+        create = scheduler.TaskRunner(cs.create)
+        exc = self.assertRaises(exception.ResourceFailure, create)
+        self.assertTrue("The cfn-userdata script exited" in str(exc))
+        self.m.VerifyAll()
+
+    def test_cs_update_cfnuserdata_nonzero_exit_status(self):
+        return_server = self.fc.servers.list()[1]
+        cs = self._create_test_cs(return_server,
+                                  'test_cs_update_cfnuserdata_nonzero_exit')
+        self.m.UnsetStubs()
+        self._update_test_cs(return_server,
+                             'test_cs_update_cfnuserdata_nonzero_exit',
+                             exit_code=1)
+        self.m.ReplayAll()
+        update_template = copy.deepcopy(cs.t)
+        update_template['Metadata'] = {'test': 123}
+        update = scheduler.TaskRunner(cs.update, update_template)
+        exc = self.assertRaises(exception.ResourceFailure, update)
+        self.assertTrue("The cfn-userdata script exited" in str(exc))
 
     def test_cs_create_flavor_err(self):
         """validate() should throw an if the flavor is invalid."""
