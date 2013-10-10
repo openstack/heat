@@ -78,6 +78,13 @@ def generate(srcfiles):
     # The options list is a list of (module, options) tuples
     opts_by_group = {'DEFAULT': []}
 
+    for module_name in os.getenv(
+            "OSLO_CONFIG_GENERATOR_EXTRA_MODULES", "").split(','):
+        module = _import_module(module_name)
+        if module:
+            for group, opts in _list_opts(module):
+                opts_by_group.setdefault(group, []).append((module_name, opts))
+
     for pkg_name in pkg_names:
         mods = mods_by_pkg.get(pkg_name)
         mods.sort()
@@ -247,9 +254,6 @@ def _print_opt(opt):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("usage: %s [srcfile]...\n" % sys.argv[0])
-        sys.exit(0)
     generate(sys.argv[1:])
 
 if __name__ == '__main__':
