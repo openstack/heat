@@ -215,14 +215,20 @@ class NumberParam(Parameter):
 
     def __int__(self):
         '''Return an integer representation of the parameter'''
-        return int(self.value())
+        return int(super(NumberParam, self).value())
 
     def __float__(self):
         '''Return a float representation of the parameter'''
-        return float(self.value())
+        return float(super(NumberParam, self).value())
 
     def validate(self, val):
         self.schema.validate(self.name, val)
+
+    def value(self):
+        try:
+            return int(self)
+        except ValueError:
+            return float(self)
 
 
 class StringParam(Parameter):

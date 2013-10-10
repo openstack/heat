@@ -204,14 +204,14 @@ class ParameterTest(testtools.TestCase):
                   'MinValue': '3',
                   'MaxValue': '3'}
         p = self.new_parameter('p', schema, '3')
-        self.assertEqual(p.value(), '3')
+        self.assertEqual(p.value(), 3)
 
     def test_number_float_good(self):
         schema = {'Type': 'Number',
                   'MinValue': '3.0',
-                  'MaxValue': '3.0'}
-        p = self.new_parameter('p', schema, '3.0')
-        self.assertEqual(p.value(), '3.0')
+                  'MaxValue': '4.0'}
+        p = self.new_parameter('p', schema, '3.5')
+        self.assertEqual(p.value(), 3.5)
 
     def test_number_low(self):
         schema = {'Type': 'Number',
@@ -241,7 +241,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Number',
                   'AllowedValues': ['1', '3', '5']}
         p = self.new_parameter('p', schema, '5')
-        self.assertEqual(p.value(), '5')
+        self.assertEqual(p.value(), 5)
 
     def test_number_value_list_bad(self):
         schema = {'Type': 'Number',
@@ -423,7 +423,7 @@ class ParametersTest(testtools.TestCase):
 
         as_dict = dict(params)
         self.assertEqual(as_dict['Foo'], 'foo')
-        self.assertEqual(as_dict['Bar'], '42')
+        self.assertEqual(as_dict['Bar'], 42)
         self.assertEqual(as_dict['AWS::StackName'], 'test_params')
         self.assertTrue('AWS::Region' in as_dict)
 
@@ -444,7 +444,7 @@ class ParametersTest(testtools.TestCase):
         template = {'Parameters': {'Foo': {'Type': 'String'},
                                    'Bar': {'Type': 'Number'}}}
         params = self.new_parameters('test_params', template,
-                                     {'Foo': 'foo', 'Bar': 42})
+                                     {'Foo': 'foo', 'Bar': '42'})
 
         expected = {'Foo': 'foo',
                     'Bar': '42',
