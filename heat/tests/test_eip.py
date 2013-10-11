@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mox
+
 from testtools import skipIf
 
 from heat.common import exception
@@ -221,6 +223,24 @@ class EIPTest(HeatTestCase):
 
         self.assertRaises(clients.novaclient.exceptions.NotFound,
                           rsrc.handle_create)
+        self.m.VerifyAll()
+
+    def test_delete_eip_with_exception(self):
+        self.m.StubOutWithMock(self.fc.floating_ips, 'delete')
+        eip.ElasticIp.nova().MultipleTimes().AndReturn(self.fc)
+        self.fc.floating_ips.delete(mox.IsA(object)).AndRaise(
+            clients.novaclient.exceptions.NotFound('fake_falure'))
+        self.fc.servers.get(mox.IsA(object)).AndReturn(False)
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template)
+        stack = utils.parse_stack(t)
+        resource_name = 'IPAddress'
+        rsrc = eip.ElasticIp(resource_name,
+                             t['Resources'][resource_name],
+                             stack)
+        rsrc.resource_id = 'fake_id'
+        rsrc.handle_delete()
         self.m.VerifyAll()
 
 
