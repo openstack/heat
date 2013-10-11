@@ -114,6 +114,29 @@ eip_template_ipassoc2 = '''
 }
 '''
 
+eip_template_ipassoc3 = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "EIP Test",
+  "Parameters" : {},
+  "Resources" : {
+    "the_eip" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain": "vpc"
+      }
+    },
+    "IPAssoc" : {
+      "Type" : "AWS::EC2::EIPAssociation",
+      "Properties" : {
+        "AllocationId" : 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+        "InstanceId" : '1fafbe59-2332-4f5f-bfa4-517b4d6c1b65'
+      }
+    }
+  }
+}
+'''
+
 
 def force_networking(mode):
     if mode == 'nova':
@@ -376,6 +399,26 @@ class AllocTest(HeatTestCase):
                 "device_id": ""
             }]})
 
+    def mock_list_instance_ports(self, refid):
+        clients.neutronclient.Client.list_ports(device_id=refid).AndReturn(
+            {"ports": [{
+                "status": "DOWN",
+                "binding:host_id": "null",
+                "name": "wp-NIC-yu7fc7l4g5p6",
+                "admin_state_up": True,
+                "network_id": "22c26451-cf27-4d48-9031-51f5e397b84e",
+                "tenant_id": "ecf538ec1729478fa1f97f1bf4fdcf7b",
+                "binding:vif_type": "ovs",
+                "device_owner": "",
+                "binding:capabilities": {"port_filter": True},
+                "mac_address": "fa:16:3e:62:2d:4f",
+                "fixed_ips": [{"subnet_id": "mysubnetid-70ec",
+                               "ip_address": "192.168.9.2"}],
+                "id": "a000228d-b40b-4124-8394-a4082ae1b76c",
+                "security_groups": ["5c6f529d-3186-4c36-84c0-af28b8daac7b"],
+                "device_id": refid
+            }]})
+
     def mock_list_subnets(self):
         clients.neutronclient.Client.list_subnets(
             id='mysubnetid-70ec').AndReturn(
@@ -408,6 +451,12 @@ class AllocTest(HeatTestCase):
                 "routes": [],
                 "id": "bbbb"
             }]
+        })
+
+    def mock_no_router_for_vpc(self):
+        vpc_name = utils.PhysName('test_stack', 'the_vpc')
+        clients.neutronclient.Client.list_routers(name=vpc_name).AndReturn({
+            "routers": []
         })
 
     def mock_keystone(self):
@@ -463,6 +512,34 @@ class AllocTest(HeatTestCase):
         self.m.ReplayAll()
 
         t = template_format.parse(eip_template_ipassoc2)
+        stack = utils.parse_stack(t)
+
+        rsrc = self.create_eip(t, stack, 'the_eip')
+        association = self.create_association(t, stack, 'IPAssoc')
+
+        scheduler.TaskRunner(association.delete)()
+        scheduler.TaskRunner(rsrc.delete)()
+
+        self.m.VerifyAll()
+
+    def test_association_allocationid_with_instance(self):
+        self.mock_keystone()
+        self.mock_show_network()
+
+        self.mock_create_floatingip()
+        self.mock_list_instance_ports('1fafbe59-2332-4f5f-bfa4-517b4d6c1b65')
+        self.mock_list_subnets()
+
+        self.mock_no_router_for_vpc()
+        self.mock_update_floatingip(
+            port='a000228d-b40b-4124-8394-a4082ae1b76c')
+
+        self.mock_update_floatingip(port=None)
+        self.mock_delete_floatingip()
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(eip_template_ipassoc3)
         stack = utils.parse_stack(t)
 
         rsrc = self.create_eip(t, stack, 'the_eip')
