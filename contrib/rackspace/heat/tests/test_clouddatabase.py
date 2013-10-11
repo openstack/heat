@@ -23,6 +23,10 @@ from heat.tests import utils
 
 from ..engine.plugins import clouddatabase  # noqa
 
+try:
+    from pyrax.exceptions import ClientException
+except ImportError:
+    from ..engine.plugins.clouddatabase import ClientException
 
 wp_template = '''
 {
@@ -141,6 +145,16 @@ class CloudDBInstanceTest(HeatTestCase):
     def test_clouddbinstance_delete_resource_notfound(self):
         instance = self._setup_test_clouddbinstance('dbinstance_delete')
         instance.resource_id = None
+        self.m.ReplayAll()
+        instance.handle_delete()
+        self.m.VerifyAll()
+
+    def test_cloudbinstance_delete_exception(self):
+        instance = self._setup_test_clouddbinstance('dbinstance_delete')
+        fake_client = self.m.CreateMockAnything()
+        instance.cloud_db().AndReturn(fake_client)
+        client_exc = ClientException(404)
+        fake_client.delete(instance.resource_id).AndRaise(client_exc)
         self.m.ReplayAll()
         instance.handle_delete()
         self.m.VerifyAll()
