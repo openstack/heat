@@ -242,7 +242,6 @@ class EngineService(service.Service):
         :param template: Template of stack you want to create.
         :param params: Stack Input Params
         :param files: Files referenced from the template
-                      (currently provider templates).
         :param args: Request parameters/args passed from API
         """
         logger.info('template is %s' % template)

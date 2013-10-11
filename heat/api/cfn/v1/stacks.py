@@ -84,10 +84,10 @@ class StackController(object):
         Extract a dictionary of user input parameters for the stack
 
         In the AWS API parameters, each user parameter appears as two key-value
-        pairs with keys of the form below:
+        pairs with keys of the form below::
 
-        Parameters.member.1.ParameterKey
-        Parameters.member.1.ParameterValue
+          Parameters.member.1.ParameterKey
+          Parameters.member.1.ParameterValue
         """
         return api_utils.extract_param_pairs(params,
                                              prefix='Parameters',
@@ -274,8 +274,8 @@ class StackController(object):
 
     def create_or_update(self, req, action=None):
         """
-        Implements CreateStack and UpdateStack API actions
-        Create or update stack as defined in template file
+        Implements CreateStack and UpdateStack API actions.
+        Create or update stack as defined in template file.
         """
         def extract_args(params):
             """
@@ -365,8 +365,8 @@ class StackController(object):
 
     def get_template(self, req):
         """
-        Implements the GetTemplate API action
-        Get the template body for an existing stack
+        Implements the GetTemplate API action.
+        Get the template body for an existing stack.
         """
         self._enforce(req, 'GetTemplate')
 
@@ -399,8 +399,8 @@ class StackController(object):
 
     def validate_template(self, req):
         """
-        Implements the ValidateTemplate API action
-        Validates the specified template
+        Implements the ValidateTemplate API action.
+        Validates the specified template.
         """
         self._enforce(req, 'ValidateTemplate')
 
@@ -448,8 +448,8 @@ class StackController(object):
 
     def delete(self, req):
         """
-        Implements the DeleteStack API action
-        Deletes the specified stack
+        Implements the DeleteStack API action.
+        Deletes the specified stack.
         """
         self._enforce(req, 'DeleteStack')
 
@@ -468,8 +468,8 @@ class StackController(object):
 
     def events_list(self, req):
         """
-        Implements the DescribeStackEvents API action
-        Returns events related to a specified stack (or all stacks)
+        Implements the DescribeStackEvents API action.
+        Returns events related to a specified stack (or all stacks).
         """
         self._enforce(req, 'DescribeStackEvents')
 
@@ -519,15 +519,13 @@ class StackController(object):
 
     def describe_stack_resource(self, req):
         """
-        Implements the DescribeStackResource API action
+        Implements the DescribeStackResource API action.
         Return the details of the given resource belonging to the given stack.
         """
         self._enforce(req, 'DescribeStackResource')
 
         def format_resource_detail(r):
-            """
-            Reformat engine output into the AWS "StackResourceDetail" format
-            """
+            # Reformat engine output into the AWS "StackResourceDetail" format
             keymap = {
                 engine_api.RES_DESCRIPTION: 'Description',
                 engine_api.RES_UPDATED_TIME: 'LastUpdatedTimestamp',
@@ -568,9 +566,10 @@ class StackController(object):
         Implements the DescribeStackResources API action
         Return details of resources specified by the parameters.
 
-        `StackName`: returns all resources belonging to the stack
+        `StackName`: returns all resources belonging to the stack.
+
         `PhysicalResourceId`: returns all resources belonging to the stack this
-                              resource is associated with.
+        resource is associated with.
 
         Only one of the parameters may be specified.
 

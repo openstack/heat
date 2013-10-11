@@ -213,7 +213,7 @@ class HOTemplate(template.Template):
         """
         Resolve template string substitution via function str_replace
 
-        Resolves the str_replace function of the form
+        Resolves the str_replace function of the form::
 
           str_replace:
             template: <string template>
