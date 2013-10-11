@@ -14,11 +14,14 @@
 #    under the License.
 """Tests for :module:'heat.engine.resources.nova_utls'."""
 
+import testscenarios
 import uuid
 
 from heat.common import exception
 from heat.engine.resources import nova_utils
 from heat.tests.common import HeatTestCase
+
+load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class NovaUtilsTests(HeatTestCase):
@@ -84,19 +87,38 @@ class NovaUtilsTests(HeatTestCase):
                           self.nova_client, 'notakey')
         self.m.VerifyAll()
 
+
+class NovaUtilsUserdataTests(HeatTestCase):
+
+    scenarios = [
+        ('no_conf_no_prop', dict(
+            conf_user='ec2-user', instance_user=None, expect='ec2-user')),
+        ('no_conf_prop', dict(
+            conf_user='ec2-user', instance_user='fruity', expect='fruity')),
+        ('conf_no_prop', dict(
+            conf_user='nutty', instance_user=None, expect='nutty')),
+        ('conf_prop', dict(
+            conf_user='nutty', instance_user='fruity', expect='fruity')),
+    ]
+
+    def setUp(self):
+        super(NovaUtilsUserdataTests, self).setUp()
+        self.nova_client = self.m.CreateMockAnything()
+
     def test_build_userdata(self):
         """Tests the build_userdata function."""
         resource = self.m.CreateMockAnything()
         resource.t = {}
         self.m.StubOutWithMock(nova_utils.cfg, 'CONF')
         cnf = nova_utils.cfg.CONF
-        cnf.instance_user = 'testuser'
+        cnf.instance_user = self.conf_user
         cnf.heat_metadata_server_url = 'http://server.test:123'
         cnf.heat_watch_server_url = 'http://server.test:345'
         cnf.instance_connection_is_secure = False
         cnf.instance_connection_https_validate_certificates = False
         self.m.ReplayAll()
-        data = nova_utils.build_userdata(resource)
+        data = nova_utils.build_userdata(resource,
+                                         instance_user=self.instance_user)
         self.assertTrue("Content-Type: text/cloud-config;" in data)
         self.assertTrue("Content-Type: text/cloud-boothook;" in data)
         self.assertTrue("Content-Type: text/part-handler;" in data)
@@ -105,5 +127,5 @@ class NovaUtilsTests(HeatTestCase):
         self.assertTrue("http://server.test:345" in data)
         self.assertTrue("http://server.test:123" in data)
         self.assertTrue("[Boto]" in data)
-        self.assertTrue('testuser' in data)
+        self.assertTrue(self.expect in data)
         self.m.VerifyAll()

@@ -122,7 +122,7 @@ def get_keypair(nova_client, key_name):
     raise exception.UserKeyPairMissing(key_name=key_name)
 
 
-def build_userdata(resource, userdata=None):
+def build_userdata(resource, userdata=None, instance_user=None):
     '''
     Build multipart data blob for CloudInit which includes user-supplied
     Metadata, user data, and the required Heat in-instance configuration.
@@ -131,6 +131,8 @@ def build_userdata(resource, userdata=None):
     :type resource: heat.engine.Resource
     :param userdata: user data string
     :type userdata: str or None
+    :param instance_user: the user to create on the server
+    :type instance_user: string
     :returns: multipart mime as a string
     '''
 
@@ -145,7 +147,7 @@ def build_userdata(resource, userdata=None):
     def read_cloudinit_file(fn):
         data = pkgutil.get_data('heat', 'cloudinit/%s' % fn)
         data = data.replace('@INSTANCE_USER@',
-                            cfg.CONF.instance_user)
+                            instance_user or cfg.CONF.instance_user)
         return data
 
     attachments = [(read_cloudinit_file('config'), 'cloud-config'),

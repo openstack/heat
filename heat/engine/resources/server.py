@@ -13,6 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
+
+cfg.CONF.import_opt('instance_user', 'heat.common.config')
+
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import scheduler
@@ -95,6 +99,12 @@ class Server(resource.Resource):
         'key_name': {
             'Type': 'String',
             'Description': _('Name of keypair to inject into the server')},
+        'admin_user': {
+            'Type': 'String',
+            'Default': cfg.CONF.instance_user,
+            'Description': _('Name of the administrative user to use '
+                             ' on the server')},
+
         'availability_zone': {
             'Type': 'String',
             'Description': _('Name of the availability zone for server '
@@ -171,7 +181,8 @@ class Server(resource.Resource):
 
     def get_mime_string(self, userdata):
         if not self.mime_string:
-            self.mime_string = nova_utils.build_userdata(self, userdata)
+            self.mime_string = nova_utils.build_userdata(
+                self, userdata, instance_user=self.properties['admin_user'])
         return self.mime_string
 
     def physical_resource_name(self):
