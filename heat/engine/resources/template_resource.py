@@ -41,6 +41,8 @@ class TemplateResource(stack_resource.StackResource):
     def __init__(self, name, json_snippet, stack):
         self._parsed_nested = None
         self.stack = stack
+        self.validation_exception = None
+
         tri = stack.env.get_resource_info(
             json_snippet['Type'],
             registry_type=environment.TemplateResourceInfo)
@@ -55,7 +57,8 @@ class TemplateResource(stack_resource.StackResource):
         # stack can be deleted, and detect it at validate/create time
         try:
             tmpl = template.Template(self.parsed_nested)
-        except ValueError:
+        except ValueError as parse_error:
+            self.validation_exception = parse_error
             tmpl = template.Template({})
 
         self.properties_schema = (properties.Properties
@@ -158,6 +161,10 @@ class TemplateResource(stack_resource.StackResource):
                 raise exception.StackValidationFailed(message=msg)
 
     def validate(self):
+        if self.validation_exception is not None:
+            msg = str(self.validation_exception)
+            raise exception.StackValidationFailed(message=msg)
+
         try:
             td = self.template_data
         except ValueError as ex:

@@ -459,9 +459,6 @@ class ProviderTemplateTest(HeatTestCase):
         urlfetch.get(test_templ_name,
                      allowed_schemes=('http', 'https',
                                       'file')).AndRaise(IOError)
-        urlfetch.get(test_templ_name,
-                     allowed_schemes=('http', 'https',
-                                      'file')).AndRaise(IOError)
         self.m.ReplayAll()
 
         temp_res = template_resource.TemplateResource('test_t_res',
@@ -485,8 +482,6 @@ class ProviderTemplateTest(HeatTestCase):
                              stack_id=uuidutils.generate_uuid())
 
         self.m.StubOutWithMock(urlfetch, "get")
-        urlfetch.get(test_templ_name,
-                     allowed_schemes=('http', 'https')).AndRaise(IOError)
         urlfetch.get(test_templ_name,
                      allowed_schemes=('http', 'https')).AndRaise(IOError)
         self.m.ReplayAll()
