@@ -18,7 +18,9 @@ import copy
 from heat.engine import resource
 from heat.engine import signal_responder
 
+from heat.common import short_id
 from heat.common import exception
+from heat.common import timeutils as iso8601utils
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.engine.properties import Properties
@@ -120,20 +122,32 @@ class InstanceGroup(stack_resource.StackResource):
         Add validation for update_policy
         """
         super(InstanceGroup, self).validate()
+
         if self.update_policy:
             self.update_policy.validate()
+            policy_name = self.update_policy_schema.keys()[0]
+            if self.update_policy[policy_name]:
+                pause_time = self.update_policy[policy_name]['PauseTime']
+                if iso8601utils.parse_isoduration(pause_time) > 3600:
+                    raise ValueError('Maximum PauseTime is 1 hour.')
 
     def get_instance_names(self):
         """Get a list of resource names of the instances in this InstanceGroup.
 
         Failed resources will be ignored.
         """
-        return sorted(x.name for x in self.get_instances())
+        return [r.name for r in self.get_instances()]
 
     def get_instances(self):
-        """Get a set of all the instance resources managed by this group."""
-        return [resource for resource in self.nested().itervalues()
-                if resource.state[1] != resource.FAILED]
+        """Get a list of all the instance resources managed by this group.
+
+        Sort the list of instances first by created_time then by name.
+        """
+        resources = []
+        if self.nested():
+            resources = [resource for resource in self.nested().itervalues()
+                         if resource.status != resource.FAILED]
+        return sorted(resources, key=lambda r: (r.created_time, r.name))
 
     def handle_create(self):
         """Create a nested stack and add the initial resources to it."""
@@ -171,6 +185,14 @@ class InstanceGroup(stack_resource.StackResource):
                                          self.stack.resolve_runtime_data,
                                          self.name)
 
+            # Replace instances first if launch configuration has changed
+            if (self.update_policy['RollingUpdate'] and
+                    'LaunchConfigurationName' in prop_diff):
+                policy = self.update_policy['RollingUpdate']
+                self._replace(int(policy['MinInstancesInService']),
+                              int(policy['MaxBatchSize']),
+                              policy['PauseTime'])
+
             # Get the current capacity, we may need to adjust if
             # Size has changed
             if 'Size' in prop_diff:
@@ -194,11 +216,7 @@ class InstanceGroup(stack_resource.StackResource):
     def handle_delete(self):
         return self.delete_nested()
 
-    def _create_template(self, num_instances):
-        """
-        Create a template with a number of instance definitions based on the
-        launch configuration.
-        """
+    def _get_instance_definition(self):
         conf_name = self.properties['LaunchConfigurationName']
         conf = self.stack.resource_by_refid(conf_name)
         instance_definition = copy.deepcopy(conf.t)
@@ -208,18 +226,91 @@ class InstanceGroup(stack_resource.StackResource):
             instance_definition['Properties']['SubnetId'] = \
                 self.properties['VPCZoneIdentifier'][0]
         # resolve references within the context of this stack.
-        fully_parsed = self.stack.resolve_runtime_data(instance_definition)
+        return self.stack.resolve_runtime_data(instance_definition)
 
-        resources = {}
-        for i in range(num_instances):
-            resources["%s-%d" % (self.name, i)] = fully_parsed
-        return {"Resources": resources}
+    def _create_template(self, num_instances, num_replace=0):
+        """
+        Create the template for the nested stack of existing and new instances
+
+        For rolling update, if launch configuration is different, the
+        instance definition should come from the existing instance instead
+        of using the new launch configuration.
+        """
+        instances = self.get_instances()[-num_instances:]
+        instance_definition = self._get_instance_definition()
+        num_create = num_instances - len(instances)
+        num_replace -= num_create
+
+        def instance_templates(num_replace):
+            for i in range(num_instances):
+                if i < len(instances):
+                    inst = instances[i]
+                    if inst.t != instance_definition and num_replace > 0:
+                        num_replace -= 1
+                        yield inst.name, instance_definition
+                    else:
+                        yield inst.name, inst.t
+                else:
+                    yield short_id.generate_id(), instance_definition
+
+        return {"Resources": dict(instance_templates(num_replace))}
+
+    def _replace(self, min_in_service, batch_size, pause_time):
+        """
+        Replace the instances in the group using updated launch configuration
+        """
+        def changing_instances(tmpl):
+            instances = self.get_instances()
+            current = set((i.name, str(i.t)) for i in instances)
+            updated = set((k, str(v)) for k, v in tmpl['Resources'].items())
+            # includes instances to be updated and deleted
+            affected = set(k for k, v in current ^ updated)
+            return set(i.FnGetRefId() for i in instances if i.name in affected)
+
+        def pause_between_batch():
+            while True:
+                try:
+                    yield
+                except scheduler.Timeout:
+                    return
+
+        capacity = len(self.nested()) if self.nested() else 0
+        efft_bat_sz = min(batch_size, capacity)
+        efft_min_sz = min(min_in_service, capacity)
+        pause_sec = iso8601utils.parse_isoduration(pause_time)
+
+        batch_cnt = (capacity + efft_bat_sz - 1) // efft_bat_sz
+        if pause_sec * (batch_cnt - 1) >= self.stack.timeout_mins * 60:
+            raise ValueError('The current UpdatePolicy will result '
+                             'in stack update timeout.')
+
+        # effective capacity includes temporary capacity added to accomodate
+        # the minimum number of instances in service during update
+        efft_capacity = max(capacity - efft_bat_sz, efft_min_sz) + efft_bat_sz
+
+        try:
+            remainder = capacity
+            while remainder > 0 or efft_capacity > capacity:
+                if capacity - remainder >= efft_min_sz:
+                    efft_capacity = capacity
+                template = self._create_template(efft_capacity, efft_bat_sz)
+                self._lb_reload(exclude=changing_instances(template))
+                updater = self.update_with_template(template, {})
+                updater.run_to_completion()
+                self.check_update_complete(updater)
+                remainder -= efft_bat_sz
+                if remainder > 0 and pause_sec > 0:
+                    self._lb_reload()
+                    waiter = scheduler.TaskRunner(pause_between_batch)
+                    waiter(timeout=pause_sec)
+        finally:
+            self._lb_reload()
 
     def resize(self, new_capacity):
         """
         Resize the instance group to the new capacity.
 
-        When shrinking, the newest instances will be removed.
+        When shrinking, the oldest instances will be removed.
         """
         new_template = self._create_template(new_capacity)
         try:
@@ -231,7 +322,7 @@ class InstanceGroup(stack_resource.StackResource):
             # nodes.
             self._lb_reload()
 
-    def _lb_reload(self):
+    def _lb_reload(self, exclude=[]):
         '''
         Notify the LoadBalancer to reload its config to include
         the changes in instances we have just made.
@@ -240,7 +331,8 @@ class InstanceGroup(stack_resource.StackResource):
         otherwise the instances' IP addresses may not be available.
         '''
         if self.properties['LoadBalancerNames']:
-            id_list = [inst.FnGetRefId() for inst in self.get_instances()]
+            id_list = [inst.FnGetRefId() for inst in self.get_instances()
+                       if inst.FnGetRefId() not in exclude]
             for lb in self.properties['LoadBalancerNames']:
                 lb_resource = self.stack[lb]
                 if 'Instances' in lb_resource.properties_schema:
@@ -372,6 +464,14 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                                          json_snippet.get('Properties', {}),
                                          self.stack.resolve_runtime_data,
                                          self.name)
+
+            # Replace instances first if launch configuration has changed
+            if (self.update_policy['AutoScalingRollingUpdate'] and
+                    'LaunchConfigurationName' in prop_diff):
+                policy = self.update_policy['AutoScalingRollingUpdate']
+                self._replace(int(policy['MinInstancesInService']),
+                              int(policy['MaxBatchSize']),
+                              policy['PauseTime'])
 
             # Get the current capacity, we may need to adjust if
             # MinSize or MaxSize has changed
