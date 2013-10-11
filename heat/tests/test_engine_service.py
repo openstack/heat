@@ -951,7 +951,7 @@ class StackServiceTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @stack_context('service_event_list_deleted_resource_test_stack')
+    @stack_context('event_list_deleted_stack')
     def test_stack_event_list_deleted_resource(self):
         rsrs._register_class('GenericResourceType',
                              generic_rsrc.GenericResource)
@@ -1351,7 +1351,7 @@ class StackServiceTest(HeatTestCase):
                           self.eng.describe_stack_resources,
                           self.ctx, non_exist_identifier, 'WebServer')
 
-    @stack_context('service_find_physical_resource_test_stack')
+    @stack_context('find_phys_res_stack')
     def test_find_physical_resource(self):
         resources = self.eng.describe_stack_resources(self.ctx,
                                                       self.stack.identifier(),

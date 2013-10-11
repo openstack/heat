@@ -73,40 +73,42 @@ class InstancesTest(HeatTestCase):
                              stack_id=uuidutils.generate_uuid())
         return (t, stack)
 
-    def _setup_test_instance(self, return_server, name, image_id=None):
-        stack_name = '%s_stack' % name
+    def _setup_test_instance(self, return_server, name, image_id=None,
+                             stub_create=True):
+        stack_name = '%s_s' % name
         (t, stack) = self._setup_test_stack(stack_name)
 
         t['Resources']['WebServer']['Properties']['ImageId'] = \
             image_id or 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['InstanceType'] = \
             '256 MB Server'
-        instance = instances.Instance('%s_name' % name,
-                                      t['Resources']['WebServer'], stack)
+        instance = instances.Instance(name, t['Resources']['WebServer'], stack)
 
         self.m.StubOutWithMock(instance, 'nova')
         instance.nova().MultipleTimes().AndReturn(self.fc)
 
         instance.t = instance.stack.resolve_runtime_data(instance.t)
 
-        # need to resolve the template functions
-        server_userdata = nova_utils.build_userdata(
-            instance,
-            instance.t['Properties']['UserData'])
-        instance.mime_string = server_userdata
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(
-            image=1, flavor=1, key_name='test',
-            name=utils.PhysName(stack_name, instance.name),
-            security_groups=None,
-            userdata=server_userdata, scheduler_hints=None,
-            meta=None, nics=None, availability_zone=None).AndReturn(
-                return_server)
+        if stub_create:
+            # need to resolve the template functions
+            server_userdata = nova_utils.build_userdata(
+                instance,
+                instance.t['Properties']['UserData'])
+            instance.mime_string = server_userdata
+            self.m.StubOutWithMock(self.fc.servers, 'create')
+            self.fc.servers.create(
+                image=1, flavor=1, key_name='test',
+                name=utils.PhysName(stack_name, instance.name),
+                security_groups=None,
+                userdata=server_userdata, scheduler_hints=None,
+                meta=None, nics=None, availability_zone=None).AndReturn(
+                    return_server)
 
         return instance
 
-    def _create_test_instance(self, return_server, name):
-        instance = self._setup_test_instance(return_server, name)
+    def _create_test_instance(self, return_server, name, stub_create=True):
+        instance = self._setup_test_instance(return_server, name,
+                                             stub_create=stub_create)
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
         return instance
@@ -114,7 +116,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_create(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_create')
+                                              'in_create')
         # this makes sure the auto increment worked on instance creation
         self.assertTrue(instance.id > 0)
 
@@ -129,7 +131,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
         instance = self._setup_test_instance(return_server,
-                                             'test_instance_create_image_id',
+                                             'in_create_imgid',
                                              image_id='1')
         self.m.StubOutWithMock(uuidutils, "is_uuid_like")
         uuidutils.is_uuid_like('1').AndReturn(True)
@@ -245,7 +247,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_create_error_no_fault(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_create')
+                                              'in_create')
         return_server.status = 'ERROR'
 
         self.m.StubOutWithMock(return_server, 'get')
@@ -262,6 +264,21 @@ class InstancesTest(HeatTestCase):
         else:
             self.fail('Error not raised')
 
+        self.m.VerifyAll()
+
+    def test_instance_create_err_toolong(self):
+        # Attempt to create a server with a 64 character name should fail
+        # instance name is name_s-name-xxxxxxxxxxxx, so 24 characters gives
+        # a 64 character physical_resource_name
+        return_server = self.fc.servers.list()[1]
+        name = 'e' * 24
+        error = self.assertRaises(exception.ResourceFailure,
+                                  self._create_test_instance,
+                                  return_server,
+                                  name, stub_create=False)
+        substr = ('length 64 > 63 characters, '
+                  'please reduce the length of stack or resource names')
+        self.assertIn(substr, str(error))
         self.m.VerifyAll()
 
     def test_instance_validate(self):
@@ -287,7 +304,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_create_delete(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_create_delete')
+                                              'in_cr_del')
         instance.resource_id = 1234
 
         # this makes sure the auto increment worked on instance creation
@@ -306,7 +323,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_update_metadata(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_update')
+                                              'ud_md')
 
         update_template = copy.deepcopy(instance.t)
         update_template['Metadata'] = {'test': 123}
@@ -321,7 +338,7 @@ class InstancesTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.id = 1234
         instance = self._create_test_instance(return_server,
-                                              'test_instance_update')
+                                              'ud_type')
 
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['InstanceType'] = 'm1.small'
@@ -352,7 +369,7 @@ class InstancesTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.id = 1234
         instance = self._create_test_instance(return_server,
-                                              'test_instance_update')
+                                              'ud_type_f')
 
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['InstanceType'] = 'm1.small'
@@ -380,7 +397,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_update_replace(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_update')
+                                              'in_update1')
 
         update_template = copy.deepcopy(instance.t)
         update_template['Notallowed'] = {'test': 123}
@@ -390,7 +407,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_update_properties(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_update')
+                                              'in_update2')
 
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['KeyName'] = 'mustreplace'
@@ -400,7 +417,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_status_build(self):
         return_server = self.fc.servers.list()[0]
         instance = self._setup_test_instance(return_server,
-                                             'test_instance_status_build')
+                                             'in_sts_build')
         instance.resource_id = 1234
 
         # Bind fake get method which Instance.check_create_complete will call
@@ -415,7 +432,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_status_suspend_immediate(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_suspend')
+                                              'in_suspend')
 
         instance.resource_id = 1234
         self.m.ReplayAll()
@@ -436,7 +453,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_status_resume_immediate(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_resume')
+                                              'in_resume')
 
         instance.resource_id = 1234
         self.m.ReplayAll()
@@ -458,7 +475,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_status_suspend_wait(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_suspend')
+                                              'in_suspend_wait')
 
         instance.resource_id = 1234
         self.m.ReplayAll()
@@ -484,7 +501,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_status_resume_wait(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_resume')
+                                              'in_resume_wait')
 
         instance.resource_id = 1234
         self.m.ReplayAll()
@@ -512,7 +529,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_suspend_volumes_step(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_suspend')
+                                              'in_suspend_vol')
 
         instance.resource_id = 1234
         self.m.ReplayAll()
@@ -541,7 +558,7 @@ class InstancesTest(HeatTestCase):
     def test_instance_resume_volumes_step(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_resume')
+                                              'in_resume_vol')
 
         instance.resource_id = 1234
         self.m.ReplayAll()
@@ -603,7 +620,7 @@ class InstancesTest(HeatTestCase):
     def _test_instance_status_not_build_active(self, uncommon_status):
         return_server = self.fc.servers.list()[0]
         instance = self._setup_test_instance(return_server,
-                                             'test_instance_status_build')
+                                             'in_sts_bld')
         instance.resource_id = 1234
 
         # Bind fake get method which Instance.check_create_complete will call
@@ -627,7 +644,7 @@ class InstancesTest(HeatTestCase):
     def test_build_nics(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_build_nics')
+                                              'build_nics')
 
         self.assertEqual(None, instance._build_nics([]))
         self.assertEqual(None, instance._build_nics(None))
@@ -664,7 +681,7 @@ class InstancesTest(HeatTestCase):
         """
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_build_nics')
+                                              'build_nics2')
 
         security_groups = ['security_group_1']
         self._test_security_groups(instance, security_groups)
@@ -770,6 +787,6 @@ class InstancesTest(HeatTestCase):
     def test_instance_without_ip_address(self):
         return_server = self.fc.servers.list()[3]
         instance = self._create_test_instance(return_server,
-                                              'test_without_ip_address')
+                                              'wo_ipaddr')
 
         self.assertEqual(instance.FnGetAtt('PrivateIp'), '0.0.0.0')
