@@ -48,7 +48,7 @@ class nokeyTest(HeatTestCase):
 
     def test_nokey_create(self):
 
-        stack_name = 'instance_create_test_nokey_stack'
+        stack_name = 's_nokey'
         t = template_format.parse(nokey_template)
         stack = utils.parse_stack(t, stack_name=stack_name)
 
