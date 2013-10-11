@@ -151,7 +151,7 @@ class instancesTest(HeatTestCase):
         utils.setup_dummy_db()
 
     def _create_test_instance(self, return_server, name):
-        stack_name = '%s_stack' % name
+        stack_name = '%s_s' % name
         t = template_format.parse(wp_template)
         template = parser.Template(t)
         kwargs = {'KeyName': 'test',
@@ -193,7 +193,7 @@ class instancesTest(HeatTestCase):
         return instance
 
     def _create_test_instance_with_nic(self, return_server, name):
-        stack_name = '%s_stack' % name
+        stack_name = '%s_s' % name
         t = template_format.parse(wp_template_with_nic)
         template = parser.Template(t)
         kwargs = {'KeyName': 'test',
@@ -247,7 +247,7 @@ class instancesTest(HeatTestCase):
     def test_instance_create(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance(return_server,
-                                              'test_instance_create')
+                                              'in_create')
         # this makes sure the auto increment worked on instance creation
         self.assertTrue(instance.id > 0)
 
@@ -262,7 +262,7 @@ class instancesTest(HeatTestCase):
     def test_instance_create_with_nic(self):
         return_server = self.fc.servers.list()[1]
         instance = self._create_test_instance_with_nic(
-            return_server, 'test_instance_create_with_network_interface')
+            return_server, 'in_create_wnic')
 
         # this makes sure the auto increment worked on instance creation
         self.assertTrue(instance.id > 0)

@@ -70,8 +70,8 @@ class ServersTest(HeatTestCase):
         return (t, stack)
 
     def _setup_test_server(self, return_server, name, image_id=None,
-                           override_name=False):
-        stack_name = '%s_stack' % name
+                           override_name=False, stub_create=True):
+        stack_name = '%s_s' % name
         (t, stack) = self._setup_test_stack(stack_name)
 
         t['Resources']['WebServer']['Properties']['image'] = \
@@ -79,7 +79,7 @@ class ServersTest(HeatTestCase):
         t['Resources']['WebServer']['Properties']['flavor'] = \
             '256 MB Server'
 
-        server_name = '%s_name' % name
+        server_name = '%s' % name
         if override_name:
             t['Resources']['WebServer']['Properties']['name'] = \
                 server_name
@@ -92,27 +92,25 @@ class ServersTest(HeatTestCase):
 
         server.t = server.stack.resolve_runtime_data(server.t)
 
-        # need to resolve the template functions
-        #server_userdata = nova_utils.build_userdata(
-        #    server,
-        #    server.t['Properties']['user_data'])
-        #server.mime_string = server_userdata
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(
-            image=1, flavor=1, key_name='test',
-            name=override_name and server.name or utils.PhysName(
-                stack_name, server.name),
-            security_groups=None,
-            userdata=mox.IgnoreArg(), scheduler_hints=None,
-            meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None).AndReturn(
-                return_server)
+        if stub_create:
+            self.m.StubOutWithMock(self.fc.servers, 'create')
+            self.fc.servers.create(
+                image=1, flavor=1, key_name='test',
+                name=override_name and server.name or utils.PhysName(
+                    stack_name, server.name),
+                security_groups=None,
+                userdata=mox.IgnoreArg(), scheduler_hints=None,
+                meta=None, nics=None, availability_zone=None,
+                block_device_mapping=None, config_drive=None,
+                disk_config=None, reservation_id=None).AndReturn(
+                    return_server)
 
         return server
 
-    def _create_test_server(self, return_server, name, override_name=False):
-        server = self._setup_test_server(return_server, name)
+    def _create_test_server(self, return_server, name, override_name=False,
+                            stub_create=True):
+        server = self._setup_test_server(return_server, name,
+                                         stub_create=stub_create)
         self.m.ReplayAll()
         scheduler.TaskRunner(server.create)()
         return server
@@ -142,6 +140,21 @@ class ServersTest(HeatTestCase):
         self.assertEqual('sample-server2', server.FnGetAtt('instance_name'))
         self.assertEqual('192.0.2.0', server.FnGetAtt('accessIPv4'))
         self.assertEqual('::babe:4317:0A83', server.FnGetAtt('accessIPv6'))
+        self.m.VerifyAll()
+
+    def test_server_create_err_toolong(self):
+        # Attempt to create a server with a 64 character name should fail
+        # instance name is name_s-name-xxxxxxxxxxxx, so 24 characters gives
+        # a 64 character physical_resource_name
+        return_server = self.fc.servers.list()[1]
+        name = 'e' * 24
+        error = self.assertRaises(exception.ResourceFailure,
+                                  self._create_test_server,
+                                  return_server,
+                                  name, stub_create=False)
+        substr = ('length 64 > 63 characters, '
+                  'please reduce the length of stack or resource names')
+        self.assertIn(substr, str(error))
         self.m.VerifyAll()
 
     def test_server_create_with_image_id(self):
@@ -176,7 +189,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_create_image_name_err(self):
-        stack_name = 'test_server_create_image_name_err_stack'
+        stack_name = 'img_name_err'
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create an server with non exist image name
@@ -193,7 +206,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_create_duplicate_image_name_err(self):
-        stack_name = 'test_server_create_image_name_err_stack'
+        stack_name = 'img_dup_err'
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create an server with a non unique image name
@@ -214,7 +227,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_create_image_id_err(self):
-        stack_name = 'test_server_create_image_id_err_stack'
+        stack_name = 'img_id_err'
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create an server with non exist image Id
@@ -238,7 +251,7 @@ class ServersTest(HeatTestCase):
     def test_server_create_unexpected_status(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_create')
+                                          'cr_unexp_sts')
         return_server.get = lambda: None
         return_server.status = 'BOGUS'
         self.assertRaises(exception.Error,
@@ -248,7 +261,7 @@ class ServersTest(HeatTestCase):
     def test_server_create_error_status(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_create')
+                                          'cr_err_sts')
         return_server.status = 'ERROR'
         return_server.fault = {
             'message': 'NoValidHost',
@@ -266,7 +279,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_validate(self):
-        stack_name = 'test_server_validate_stack'
+        stack_name = 'srv_val'
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create an server with non exist image Id
@@ -286,7 +299,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_validate_with_bootable_vol(self):
-        stack_name = 'test_server_validate_stack'
+        stack_name = 'srv_val_bootvol'
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create an server with bootable volume
@@ -318,7 +331,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_validate_delete_policy(self):
-        stack_name = 'test_server_validate_stack'
+        stack_name = 'srv_val_delpol'
         (t, stack) = self._setup_test_stack(stack_name)
 
         # create an server with non exist image Id
@@ -338,7 +351,7 @@ class ServersTest(HeatTestCase):
     def test_server_delete(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_create_delete')
+                                          'create_delete')
         server.resource_id = 1234
 
         # this makes sure the auto increment worked on server creation
@@ -360,7 +373,7 @@ class ServersTest(HeatTestCase):
     def test_server_delete_notfound(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_create_delete')
+                                          'create_delete2')
         server.resource_id = 1234
 
         # this makes sure the auto increment worked on server creation
@@ -384,7 +397,7 @@ class ServersTest(HeatTestCase):
     def test_server_update_metadata(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_update')
+                                          'md_update')
 
         update_template = copy.deepcopy(server.t)
         update_template['Metadata'] = {'test': 123}
@@ -403,7 +416,7 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.id = 1234
         server = self._create_test_server(return_server,
-                                          'test_server_update')
+                                          'srv_update')
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['flavor'] = 'm1.small'
@@ -434,7 +447,7 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.id = 1234
         server = self._create_test_server(return_server,
-                                          'test_server_update')
+                                          'srv_update2')
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['flavor'] = 'm1.small'
@@ -460,7 +473,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_server_update_server_flavor_replace(self):
-        stack_name = 'test_server_update_flavor_replace'
+        stack_name = 'update_flvrep'
         (t, stack) = self._setup_test_stack(stack_name)
 
         t['Resources']['WebServer']['Properties'][
@@ -474,7 +487,7 @@ class ServersTest(HeatTestCase):
         self.assertRaises(resource.UpdateReplace, updater)
 
     def test_server_update_server_flavor_policy_update(self):
-        stack_name = 'test_server_update_flavor_replace'
+        stack_name = 'update_flvpol'
         (t, stack) = self._setup_test_stack(stack_name)
 
         server = servers.Server('server_server_update_flavor_replace',
@@ -492,7 +505,7 @@ class ServersTest(HeatTestCase):
     def test_server_update_replace(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_update')
+                                          'update_rep')
 
         update_template = copy.deepcopy(server.t)
         update_template['Notallowed'] = {'test': 123}
@@ -502,7 +515,7 @@ class ServersTest(HeatTestCase):
     def test_server_update_properties(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_update')
+                                          'update_prop')
 
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['key_name'] = 'mustreplace'
@@ -512,7 +525,7 @@ class ServersTest(HeatTestCase):
     def test_server_status_build(self):
         return_server = self.fc.servers.list()[0]
         server = self._setup_test_server(return_server,
-                                         'test_server_status_build')
+                                         'sts_build')
         server.resource_id = 1234
 
         # Bind fake get method which Server.check_create_complete will call
@@ -527,14 +540,14 @@ class ServersTest(HeatTestCase):
     def test_server_status_suspend_no_resource_id(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_suspend')
+                                          'srv_sus1')
 
         server.resource_id = None
         self.m.ReplayAll()
 
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.suspend))
-        self.assertEqual('Error: Cannot suspend test_server_suspend_name, '
+        self.assertEqual('Error: Cannot suspend srv_sus1, '
                          'resource_id not set',
                          str(ex))
         self.assertEqual(server.state, (server.SUSPEND, server.FAILED))
@@ -544,7 +557,7 @@ class ServersTest(HeatTestCase):
     def test_server_status_suspend_not_found(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_suspend')
+                                          'srv_sus2')
 
         server.resource_id = 1234
         self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
@@ -564,7 +577,7 @@ class ServersTest(HeatTestCase):
     def test_server_status_suspend_immediate(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_suspend')
+                                          'srv_suspend3')
 
         server.resource_id = 1234
         self.m.ReplayAll()
@@ -585,7 +598,7 @@ class ServersTest(HeatTestCase):
     def test_server_status_resume_immediate(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_resume')
+                                          'srv_resume1')
 
         server.resource_id = 1234
         self.m.ReplayAll()
@@ -607,7 +620,7 @@ class ServersTest(HeatTestCase):
     def test_server_status_suspend_wait(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_suspend')
+                                          'srv_susp_w')
 
         server.resource_id = 1234
         self.m.ReplayAll()
@@ -633,7 +646,7 @@ class ServersTest(HeatTestCase):
     def test_server_status_suspend_unknown_status(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_suspend')
+                                          'srv_susp_uk')
 
         server.resource_id = 1234
         self.m.ReplayAll()
@@ -663,7 +676,7 @@ class ServersTest(HeatTestCase):
     def test_server_status_resume_wait(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_resume')
+                                          'srv_res_w')
 
         server.resource_id = 1234
         self.m.ReplayAll()
@@ -691,7 +704,7 @@ class ServersTest(HeatTestCase):
     def test_server_status_resume_no_resource_id(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_suspend')
+                                          'srv_susp_norid')
 
         server.resource_id = None
         self.m.ReplayAll()
@@ -699,7 +712,7 @@ class ServersTest(HeatTestCase):
         server.state_set(server.SUSPEND, server.COMPLETE)
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.resume))
-        self.assertEqual('Error: Cannot resume test_server_suspend_name, '
+        self.assertEqual('Error: Cannot resume srv_susp_norid, '
                          'resource_id not set',
                          str(ex))
         self.assertEqual(server.state, (server.RESUME, server.FAILED))
@@ -709,7 +722,7 @@ class ServersTest(HeatTestCase):
     def test_server_status_resume_not_found(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
-                                          'test_server_resume')
+                                          'srv_res_nf')
 
         server.resource_id = 1234
         self.m.ReplayAll()
@@ -764,7 +777,7 @@ class ServersTest(HeatTestCase):
     def _test_server_status_not_build_active(self, uncommon_status):
         return_server = self.fc.servers.list()[0]
         server = self._setup_test_server(return_server,
-                                         'test_server_status_build')
+                                         'srv_sts_bld')
         server.resource_id = 1234
 
         check_iterations = [0]
@@ -800,7 +813,7 @@ class ServersTest(HeatTestCase):
     def test_server_without_ip_address(self):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server,
-                                          'test_without_ip_address')
+                                          'wo_ipaddr')
 
         self.assertEqual(server.FnGetAtt('addresses'), {'empty_net': []})
         self.assertEqual(server.FnGetAtt('networks'), {'empty_net': []})
@@ -837,7 +850,7 @@ class ServersTest(HeatTestCase):
         ]))
 
     def test_validate_conflict_block_device_mapping_props(self):
-        stack_name = 'test_validate_conflict_block_device_mapping_props'
+        stack_name = 'val_blkdev1'
         (t, stack) = self._setup_test_stack(stack_name)
 
         bdm = [{'device_name': 'vdb', 'snapshot_id': '1234',
@@ -853,7 +866,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_validate_insufficient_block_device_mapping_props(self):
-        stack_name = 'test_validate_insufficient_block_device_mapping_props'
+        stack_name = 'val_blkdev2'
         (t, stack) = self._setup_test_stack(stack_name)
 
         bdm = [{'device_name': 'vdb', 'volume_size': '1',
@@ -874,7 +887,7 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_validate_without_image_or_bootable_volume(self):
-        stack_name = 'test_validate_without_image_or_bootable_volume'
+        stack_name = 'val_imgvol'
         (t, stack) = self._setup_test_stack(stack_name)
 
         del t['Resources']['WebServer']['Properties']['image']

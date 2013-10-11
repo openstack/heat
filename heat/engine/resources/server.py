@@ -206,6 +206,18 @@ class Server(resource.Resource):
         config_drive = self.properties.get('config_drive')
         disk_config = self.properties.get('diskConfig')
 
+        # TODO(sdake/shardy) ensure physical_resource_name() never returns a
+        # string longer than 63 characters, as this is pretty inconvenient
+        # behavior for autoscaling groups and nested stacks where instance
+        # names can easily become quite long even with terse names.
+        physical_resource_name_len = len(self.physical_resource_name())
+        if physical_resource_name_len > 63:
+            raise exception.Error(_('Server %(server)s length %(length)d > 63'
+                                  ' characters, please reduce the length of'
+                                  ' stack or resource names') %
+                                  dict(server=self.physical_resource_name(),
+                                       length=physical_resource_name_len))
+
         server = None
         try:
             server = self.nova().servers.create(
