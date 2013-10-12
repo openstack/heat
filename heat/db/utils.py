@@ -45,5 +45,5 @@ IMPL = LazyPluggable('db_backend',
                      sqlalchemy='heat.db.sqlalchemy.api')
 
 
-def purge_deleted(age):
-    IMPL.purge_deleted(age)
+def purge_deleted(age, granularity='days'):
+    IMPL.purge_deleted(age, granularity)

@@ -470,18 +470,26 @@ def watch_data_get_all(context):
     return results
 
 
-def purge_deleted(age):
-    if age is not None:
-        try:
-            age = int(age)
-        except ValueError:
-            raise exception.Error(_("age should be an integer"))
-        if age < 0:
-            raise exception.Error(_("age should be a positive integer"))
-    else:
-        age = 90
+def purge_deleted(age, granularity='days'):
+    try:
+        age = int(age)
+    except ValueError:
+        raise exception.Error(_("age should be an integer"))
+    if age < 0:
+        raise exception.Error(_("age should be a positive integer"))
 
-    time_line = datetime.now() - timedelta(days=age)
+    if granularity not in ('days', 'hours', 'minutes', 'seconds'):
+        raise exception.Error(
+            _("granularity should be days, hours, minutes, or seconds"))
+
+    if granularity == 'days':
+        age = age * 86400
+    elif granularity == 'hours':
+        age = age * 3600
+    elif granularity == 'minutes':
+        age = age * 60
+
+    time_line = datetime.now() - timedelta(seconds=age)
     engine = get_engine()
     meta = sqlalchemy.MetaData()
     meta.bind = engine
