@@ -355,6 +355,7 @@ class Parameters(collections.Mapping):
                 yield Parameter(name, schema, value, validate_value)
 
         self.tmpl = tmpl
+        self._validate_tmpl_parameters()
         self._validate(user_params)
         self.params = dict((p.name, p) for p in parameters())
 
@@ -393,3 +394,15 @@ class Parameters(collections.Mapping):
         for param in user_params:
             if param not in schemata:
                 raise exception.UnknownUserParameter(key=param)
+
+    def _validate_tmpl_parameters(self):
+        param = None
+        for key in self.tmpl.t.keys():
+            if key == 'Parameters' or key == 'parameters':
+                param = key
+                break
+        if param is not None:
+            template_params = self.tmpl.t[key]
+            for name, attrs in template_params.iteritems():
+                if not isinstance(attrs, dict):
+                    raise exception.InvalidTemplateParameter(key=name)

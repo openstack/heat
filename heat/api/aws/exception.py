@@ -267,6 +267,7 @@ def map_remote_error(ex):
             'InvalidTemplateReference',
             'UnknownUserParameter',
             'UserParameterMissing',
+            'InvalidTemplateParameter',
         )
         denied_errors = ('Forbidden', 'NotAuthorized')
         already_exists_errors = ('StackExists')
