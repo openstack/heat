@@ -205,6 +205,10 @@ class UnknownUserParameter(HeatException):
     message = _("The Parameter (%(key)s) was not defined in template.")
 
 
+class InvalidTemplateParameter(HeatException):
+    message = _("The Parameter (%(key)s) has no attributes.")
+
+
 class InvalidTemplateAttribute(HeatException):
     message = _("The Referenced Attribute (%(resource)s %(key)s)"
                 " is incorrect.")

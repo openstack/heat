@@ -469,3 +469,12 @@ class ParametersTest(testtools.TestCase):
                           'test',
                           params_schema,
                           user_params)
+
+    def test_missing_attribute_params(self):
+        params = {'Parameters': {'Foo': {'Type': 'String'},
+                                 'NoAttr': 'No attribute.',
+                                 'Bar': {'Type': 'Number', 'Default': '1'}}}
+        self.assertRaises(exception.InvalidTemplateParameter,
+                          self.new_parameters,
+                          'test',
+                          params)
