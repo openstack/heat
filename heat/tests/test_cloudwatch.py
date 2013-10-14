@@ -82,5 +82,6 @@ class CloudWatchAlarmTest(common.HeatTestCase):
                                            watch_name=res_name)
 
         with patch.object(watchrule.WatchRule, 'destroy') as bad_destroy:
-            bad_destroy.side_effect = exception.WatchRuleNotFound
+            watch_exc = exception.WatchRuleNotFound(watch_name='test')
+            bad_destroy.side_effect = watch_exc
             self.assertEqual(None, scheduler.TaskRunner(s['test_me'].delete)())
