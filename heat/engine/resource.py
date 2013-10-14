@@ -284,16 +284,22 @@ class Resource(object):
                 if key in ('DependsOn', 'Ref', 'Fn::GetAtt', 'get_attr',
                            'get_resource'):
                     if key in ('Fn::GetAtt', 'get_attr'):
-                        value, att = value
+                        res_name, att = value
+                        res_list = [res_name]
+                    elif key == 'DependsOn' and isinstance(value, list):
+                        res_list = value
+                    else:
+                        res_list = [value]
 
-                    try:
-                        target = self.stack.resources[value]
-                    except KeyError:
-                        raise exception.InvalidTemplateReference(
-                            resource=value,
-                            key=path)
-                    if key == 'DependsOn' or target.strict_dependency:
-                        deps += (self, target)
+                    for res in res_list:
+                        try:
+                            target = self.stack[res]
+                        except KeyError:
+                            raise exception.InvalidTemplateReference(
+                                resource=res,
+                                key=path)
+                        if key == 'DependsOn' or target.strict_dependency:
+                            deps += (self, target)
                 else:
                     self._add_dependencies(deps, '%s.%s' % (path, key), value)
         elif isinstance(fragment, list):

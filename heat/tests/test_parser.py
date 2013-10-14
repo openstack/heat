@@ -1798,6 +1798,27 @@ class StackTest(HeatTestCase):
             self.assertIn(r, required_by)
 
     @utils.stack_delete_after
+    def test_resource_multi_required_by(self):
+        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'},
+                              'BResource': {'Type': 'GenericResourceType'},
+                              'CResource': {'Type': 'GenericResourceType'},
+                              'DResource': {'Type': 'GenericResourceType',
+                                            'DependsOn': ['AResource',
+                                                          'BResource',
+                                                          'CResource']}}}
+
+        self.stack = parser.Stack(self.ctx, 'depends_test_stack',
+                                  template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+
+        for r in ['AResource', 'BResource', 'CResource']:
+            self.assertEqual(['DResource'],
+                             self.stack[r].required_by())
+
+    @utils.stack_delete_after
     def test_store_saves_owner(self):
         """
         The owner_id attribute of Store is saved to the database when stored.
