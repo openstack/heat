@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-10-13 06:04+0000\n"
+"POT-Creation-Date: 2013-10-14 06:05+0000\n"
 "PO-Revision-Date: 2013-10-10 01:09+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Romanian "
@@ -1547,7 +1547,7 @@ msgstr ""
 #: heat/engine/resources/neutron/loadbalancer.py:92
 #: heat/engine/resources/neutron/net.py:69
 #: heat/engine/resources/neutron/port.py:56
-#: heat/engine/resources/neutron/router.py:41
+#: heat/engine/resources/neutron/router.py:42
 #: heat/engine/resources/neutron/subnet.py:65
 #: heat/engine/resources/neutron/vpnservice.py:72
 msgid "All attributes."
@@ -1891,24 +1891,36 @@ msgstr ""
 msgid "Tenant owning the port"
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:36
+#: heat/engine/resources/neutron/router.py:37
 msgid "The status of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:37
+#: heat/engine/resources/neutron/router.py:38
 msgid "Gateway network for the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:38
+#: heat/engine/resources/neutron/router.py:39
 msgid "Friendly name of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:39
+#: heat/engine/resources/neutron/router.py:40
 msgid "Administrative state of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:40
+#: heat/engine/resources/neutron/router.py:41
 msgid "Tenant owning the router."
+msgstr ""
+
+#: heat/engine/resources/neutron/router.py:76
+msgid "The router id."
+msgstr ""
+
+#: heat/engine/resources/neutron/router.py:79
+msgid "The subnet id, either subnet_id or port_id should be specified."
+msgstr ""
+
+#: heat/engine/resources/neutron/router.py:83
+msgid "The port id, either subnet_id or port_id should be specified."
 msgstr ""
 
 #: heat/engine/resources/neutron/subnet.py:54
