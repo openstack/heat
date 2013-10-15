@@ -71,6 +71,20 @@ class InstantiationDataTest(HeatTestCase):
                           stacks.InstantiationData.format_parse,
                           '!@#$%^&not json', 'Garbage')
 
+    def test_format_parse_invalid_message(self):
+        # make sure the parser error gets through to the caller.
+        bad_temp = '''
+parameters:
+  KeyName:
+     type: string
+    description: bla
+        '''
+
+        parse_ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                                     stacks.InstantiationData.format_parse,
+                                     bad_temp, 'foo')
+        self.assertIn('line 3, column 3', str(parse_ex))
+
     def test_stack_name(self):
         body = {'stack_name': 'wibble'}
         data = stacks.InstantiationData(body)

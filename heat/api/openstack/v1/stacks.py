@@ -71,9 +71,10 @@ class InstantiationData(object):
                 return environment_format.parse(data)
             else:
                 return template_format.parse(data)
-        except ValueError:
-            err_reason = _("%s not in valid format") % data_type
-            raise exc.HTTPBadRequest(err_reason)
+        except ValueError as parse_ex:
+            mdict = {'type': data_type, 'error': parse_ex}
+            msg = _("%(type)s not in valid format: %(error)s") % mdict
+            raise exc.HTTPBadRequest(msg)
 
     def stack_name(self):
         """
