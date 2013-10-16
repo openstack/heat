@@ -793,6 +793,12 @@ class StackServiceUpdateNotSupportedTest(HeatTestCase):
         ('suspend_in_progress', dict(action='SUSPEND', status='IN_PROGRESS')),
         ('suspend_complete', dict(action='SUSPEND', status='COMPLETE')),
         ('suspend_failed', dict(action='SUSPEND', status='FAILED')),
+        ('create_in_progress', dict(action='CREATE', status='IN_PROGRESS')),
+        ('delete_in_progress', dict(action='DELETE', status='IN_PROGRESS')),
+        ('update_in_progress', dict(action='UPDATE', status='IN_PROGRESS')),
+        ('rb_in_progress', dict(action='ROLLBACK', status='IN_PROGRESS')),
+        ('suspend_in_progress', dict(action='SUSPEND', status='IN_PROGRESS')),
+        ('resume_in_progress', dict(action='RESUME', status='IN_PROGRESS')),
     ]
 
     def setUp(self):
