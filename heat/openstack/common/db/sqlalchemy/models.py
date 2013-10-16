@@ -61,13 +61,15 @@ class ModelBase(object):
     def get(self, key, default=None):
         return getattr(self, key, default)
 
+    def _get_extra_keys(self):
+        return []
+
     def __iter__(self):
         columns = dict(object_mapper(self).columns).keys()
         # NOTE(russellb): Allow models to specify other keys that can be looked
         # up, beyond the actual db columns.  An example would be the 'name'
         # property for an Instance.
-        if hasattr(self, '_extra_keys'):
-            columns.extend(self._extra_keys())
+        columns.extend(self._get_extra_keys())
         self._i = iter(columns)
         return self
 

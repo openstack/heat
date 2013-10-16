@@ -43,3 +43,9 @@ class DBDeadlock(DBError):
 class DBInvalidUnicodeParameter(Exception):
     message = _("Invalid Parameter: "
                 "Unicode is not supported by the current database.")
+
+
+class DbMigrationError(DBError):
+    """Wraps migration specific exception."""
+    def __init__(self, message=None):
+        super(DbMigrationError, self).__init__(str(message))

@@ -18,6 +18,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import re
+
 from migrate.changeset import UniqueConstraint
 import sqlalchemy
 from sqlalchemy import Boolean
@@ -38,12 +40,20 @@ from sqlalchemy.types import NullType
 
 from heat.openstack.common.gettextutils import _  # noqa
 
-from heat.openstack.common import exception
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 
 
 LOG = logging.getLogger(__name__)
+
+_DBURL_REGEX = re.compile(r"[^:]+://([^:]+):([^@]+)@.+")
+
+
+def sanitize_db_url(url):
+    match = _DBURL_REGEX.match(url)
+    if match:
+        return '%s****:****%s' % (url[:match.start(1)], url[match.end(2):])
+    return url
 
 
 class InvalidSortKey(Exception):
@@ -175,6 +185,10 @@ def visit_insert_from_select(element, compiler, **kw):
         compiler.process(element.select))
 
 
+class ColumnError(Exception):
+    """Error raised when no column or an invalid column is found."""
+
+
 def _get_not_supported_column(col_name_col_instance, column_name):
     try:
         column = col_name_col_instance[column_name]
@@ -182,13 +196,13 @@ def _get_not_supported_column(col_name_col_instance, column_name):
         msg = _("Please specify column %s in col_name_col_instance "
                 "param. It is required because column has unsupported "
                 "type by sqlite).")
-        raise exception.OpenstackException(message=msg % column_name)
+        raise ColumnError(msg % column_name)
 
     if not isinstance(column, Column):
         msg = _("col_name_col_instance param has wrong type of "
                 "column instance for column %s It should be instance "
                 "of sqlalchemy.Column.")
-        raise exception.OpenstackException(message=msg % column_name)
+        raise ColumnError(msg % column_name)
     return column
 
 
@@ -286,8 +300,7 @@ def _get_default_deleted_value(table):
         return 0
     if isinstance(table.c.id.type, String):
         return ""
-    raise exception.OpenstackException(
-        message=_("Unsupported id columns type"))
+    raise ColumnError(_("Unsupported id columns type"))
 
 
 def _restore_indexes_on_deleted_columns(migrate_engine, table_name, indexes):
@@ -357,7 +370,7 @@ def _change_deleted_column_type_to_boolean_sqlite(migrate_engine, table_name,
 
     constraints = [constraint.copy() for constraint in table.constraints]
 
-    meta = MetaData(bind=migrate_engine)
+    meta = table.metadata
     new_table = Table(table_name + "__tmp__", meta,
                       *(columns + constraints))
     new_table.create()
