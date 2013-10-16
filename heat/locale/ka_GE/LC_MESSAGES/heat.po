@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-10-14 06:05+0000\n"
+"POT-Creation-Date: 2013-10-16 06:05+0000\n"
 "PO-Revision-Date: 2013-10-10 01:09+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Georgian (Georgia) "
@@ -22,11 +22,11 @@ msgstr ""
 msgid "Authentication Endpoint URI"
 msgstr ""
 
-#: heat/api/aws/ec2token.py:43 heat/common/config.py:130
+#: heat/api/aws/ec2token.py:43 heat/common/config.py:121
 msgid "Allow orchestration of multiple clouds"
 msgstr ""
 
-#: heat/api/aws/ec2token.py:46 heat/common/config.py:133
+#: heat/api/aws/ec2token.py:46 heat/common/config.py:124
 msgid ""
 "Allowed keystone endpoints for auth_uri when multi_cloud is enabled. At "
 "least one endpoint needs to be specified."
@@ -124,21 +124,21 @@ msgstr ""
 msgid "No event %s found"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:75
+#: heat/api/openstack/v1/stacks.py:76
 #, python-format
-msgid "%s not in valid format"
+msgid "%(type)s not in valid format: %(error)s"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:83
+#: heat/api/openstack/v1/stacks.py:84
 msgid "No stack name specified"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:101
+#: heat/api/openstack/v1/stacks.py:102
 #, python-format
 msgid "Could not retrieve template: %s"
 msgstr ""
 
-#: heat/api/openstack/v1/stacks.py:104
+#: heat/api/openstack/v1/stacks.py:105
 msgid "No template specified"
 msgstr ""
 
@@ -146,7 +146,7 @@ msgstr ""
 msgid "Invalid Stack address"
 msgstr ""
 
-#: heat/cmd/manage.py:67
+#: heat/cmd/manage.py:66
 msgid "Number of days to preserve."
 msgstr ""
 
@@ -167,26 +167,26 @@ msgstr ""
 msgid "The API paste config file to use"
 msgstr ""
 
-#: heat/common/config.py:96
+#: heat/common/config.py:87
 msgid "Select deferred auth method, stored password or trusts"
 msgstr ""
 
-#: heat/common/config.py:100
+#: heat/common/config.py:91
 msgid "Subset of trustor roles to be delegated to heat"
 msgstr ""
 
-#: heat/common/config.py:106
+#: heat/common/config.py:97
 msgid "Maximum number of stacks any one tenant may have active at one time."
 msgstr ""
 
-#: heat/common/config.py:110
+#: heat/common/config.py:101
 msgid ""
 "Controls how many events will be pruned whenever a  stack's events exceed"
 " max_events_per_stack. Set this lower to keep more events at the expense "
 "of more frequent purges."
 msgstr ""
 
-#: heat/common/config.py:116
+#: heat/common/config.py:107
 msgid ""
 "Maximum events that will be available per stack. Older events will be "
 "deleted when this is reached. Set to 0 for unlimited events per stack."
@@ -517,19 +517,19 @@ msgstr ""
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:482
+#: heat/db/sqlalchemy/api.py:492
 msgid "age should be an integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:484
+#: heat/db/sqlalchemy/api.py:494
 msgid "age should be a positive integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/migration.py:63
+#: heat/db/sqlalchemy/migration.py:69
 msgid "python-migrate is not installed. Exiting."
 msgstr ""
 
-#: heat/db/sqlalchemy/migration.py:73
+#: heat/db/sqlalchemy/migration.py:79
 msgid "version should be an integer"
 msgstr ""
 
@@ -3076,4 +3076,7 @@ msgstr ""
 #, python-format
 msgid "Testing message %(text)s"
 msgstr ""
+
+#~ msgid "%s not in valid format"
+#~ msgstr ""
 
