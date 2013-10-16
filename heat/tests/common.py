@@ -35,6 +35,9 @@ class HeatTestCase(testtools.TestCase):
         self.addCleanup(self.m.UnsetStubs)
         self.useFixture(fixtures.FakeLogger(level=logging.DEBUG))
         scheduler.ENABLE_SLEEP = False
+        self.useFixture(fixtures.MonkeyPatch(
+            'heat.common.exception._FATAL_EXCEPTION_FORMAT_ERRORS',
+            True))
 
         def enable_sleep():
             scheduler.ENABLE_SLEEP = True

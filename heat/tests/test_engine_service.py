@@ -1084,10 +1084,11 @@ class StackServiceTest(HeatTestCase):
             self.ctx.tenant_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
+        stack_not_found_exc = exception.StackNotFound(stack_name='test')
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         service.EngineService._get_stack(
             self.ctx, non_exist_identifier,
-            show_deleted=True).AndRaise(exception.StackNotFound)
+            show_deleted=True).AndRaise(stack_not_found_exc)
         self.m.ReplayAll()
 
         self.assertRaises(exception.StackNotFound,
@@ -1100,10 +1101,12 @@ class StackServiceTest(HeatTestCase):
             'wibble', 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
+        invalid_tenant_exc = exception.InvalidTenant(target='test',
+                                                     actual='test')
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         service.EngineService._get_stack(
             self.ctx, non_exist_identifier,
-            show_deleted=True).AndRaise(exception.InvalidTenant)
+            show_deleted=True).AndRaise(invalid_tenant_exc)
         self.m.ReplayAll()
 
         self.assertRaises(exception.InvalidTenant,
@@ -1221,9 +1224,10 @@ class StackServiceTest(HeatTestCase):
             'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
+        stack_not_found_exc = exception.StackNotFound(stack_name='test')
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         service.EngineService._get_stack(
-            self.ctx, non_exist_identifier).AndRaise(exception.StackNotFound)
+            self.ctx, non_exist_identifier).AndRaise(stack_not_found_exc)
         self.m.ReplayAll()
 
         self.assertRaises(exception.StackNotFound,
@@ -1400,9 +1404,10 @@ class StackServiceTest(HeatTestCase):
             self.ctx.tenant_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
+        stack_not_found_exc = exception.StackNotFound(stack_name='test')
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         service.EngineService._get_stack(
-            self.ctx, non_exist_identifier).AndRaise(exception.StackNotFound)
+            self.ctx, non_exist_identifier).AndRaise(stack_not_found_exc)
         self.m.ReplayAll()
 
         self.assertRaises(exception.StackNotFound,
@@ -1499,9 +1504,10 @@ class StackServiceTest(HeatTestCase):
             self.ctx.tenant_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
+        stack_not_found_exc = exception.StackNotFound(stack_name='test')
         self.m.StubOutWithMock(service.EngineService, '_get_stack')
         service.EngineService._get_stack(
-            self.ctx, non_exist_identifier).AndRaise(exception.StackNotFound)
+            self.ctx, non_exist_identifier).AndRaise(stack_not_found_exc)
         self.m.ReplayAll()
 
         test_metadata = {'foo': 'bar', 'baz': 'quux', 'blarg': 'wibble'}
@@ -1765,7 +1771,7 @@ class StackServiceTest(HeatTestCase):
 
         self.m.StubOutWithMock(watchrule.WatchRule, 'load')
         watchrule.WatchRule.load(self.ctx, "nonexistent")\
-            .AndRaise(exception.WatchRuleNotFound)
+            .AndRaise(exception.WatchRuleNotFound(watch_name='test'))
         self.m.ReplayAll()
 
         self.assertRaises(exception.WatchRuleNotFound,

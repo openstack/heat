@@ -372,7 +372,8 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'show_stack',
                   'args': {'stack_identity': identity},
                   'version': self.api_version},
-                 None).AndRaise(heat_exception.InvalidTenant())
+                 None).AndRaise(heat_exception.InvalidTenant(target='test',
+                                                             actual='test'))
 
         self.m.ReplayAll()
 
@@ -422,7 +423,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.StackNotFound())
+                 ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
 
         self.m.ReplayAll()
 
@@ -753,7 +754,7 @@ class CfnStackControllerTest(HeatTestCase):
                            'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.UnknownUserParameter())
+                 ).AndRaise(heat_exception.UnknownUserParameter(key='test'))
         rpc.call(dummy_req.context, self.topic,
                  {'namespace': None,
                   'method': 'create_stack',
@@ -763,7 +764,7 @@ class CfnStackControllerTest(HeatTestCase):
                            'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.UserParameterMissing())
+                 ).AndRaise(heat_exception.UserParameterMissing(key='test'))
 
         self.m.ReplayAll()
 
@@ -811,7 +812,7 @@ class CfnStackControllerTest(HeatTestCase):
                            'files': {},
                            'args': engine_args},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.StackExists())
+                 ).AndRaise(heat_exception.StackExists(stack_name='test'))
 
         self.m.ReplayAll()
 
@@ -925,7 +926,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.StackNotFound())
+                 ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
 
         self.m.ReplayAll()
 
@@ -1015,7 +1016,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.StackNotFound())
+                 ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
 
         self.m.ReplayAll()
 
@@ -1183,7 +1184,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.StackNotFound())
+                 ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
 
         self.m.ReplayAll()
 
@@ -1294,7 +1295,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.StackNotFound())
+                 ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
 
         self.m.ReplayAll()
 
@@ -1388,8 +1389,8 @@ class CfnStackControllerTest(HeatTestCase):
                  {'namespace': None,
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
-                  'version': self.api_version},
-                 None).AndRaise(heat_exception.StackNotFound())
+                  'version': self.api_version}, None
+                 ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
 
         self.m.ReplayAll()
 
@@ -1423,7 +1424,8 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'describe_stack_resource',
                   'args': args,
                   'version': self.api_version},
-                 None).AndRaise(heat_exception.ResourceNotFound())
+                 None).AndRaise(heat_exception.ResourceNotFound(
+                                resource_name='test', stack_name='test'))
 
         self.m.ReplayAll()
 
@@ -1516,7 +1518,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.StackNotFound())
+                 ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
 
         self.m.ReplayAll()
 
@@ -1613,7 +1615,7 @@ class CfnStackControllerTest(HeatTestCase):
                            'aaaaaaaa-9f88-404d-cccc-ffffffffffff'},
                   'version': self.api_version},
                  None).AndRaise(
-                     heat_exception.PhysicalResourceNotFound())
+                     heat_exception.PhysicalResourceNotFound(resource_id='1'))
 
         self.m.ReplayAll()
 
@@ -1708,7 +1710,7 @@ class CfnStackControllerTest(HeatTestCase):
                   'method': 'identify_stack',
                   'args': {'stack_name': stack_name},
                   'version': self.api_version}, None
-                 ).AndRaise(heat_exception.StackNotFound())
+                 ).AndRaise(heat_exception.StackNotFound(stack_name='test'))
 
         self.m.ReplayAll()
 
