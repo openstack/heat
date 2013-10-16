@@ -132,7 +132,7 @@ class CloudDBInstanceTest(HeatTestCase):
         fakedbinstance = FakeDBInstance()
         fake_client.create('Test',
                            flavor='1GB',
-                           volume='30').AndReturn(fakedbinstance)
+                           volume=30).AndReturn(fakedbinstance)
         self.m.ReplayAll()
         instance.handle_create()
         expected_hostname = fakedbinstance.hostname
@@ -166,7 +166,7 @@ class CloudDBInstanceTest(HeatTestCase):
         fakedbinstance = FakeDBInstance()
         fake_client.create('Test',
                            flavor='1GB',
-                           volume='30').AndReturn(fakedbinstance)
+                           volume=30).AndReturn(fakedbinstance)
         self.m.ReplayAll()
         instance.handle_create()
         self.assertEqual(instance._resolve_attribute('invalid-attrib'), None)
