@@ -18,19 +18,19 @@ SQLAlchemy models for heat data.
 import sqlalchemy
 
 from sqlalchemy.dialects import mysql
-from sqlalchemy.orm import relationship, backref, object_mapper
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import types
 from json import dumps
 from json import loads
-from heat.openstack.common import exception
 from heat.openstack.common import uuidutils
 from heat.openstack.common import timeutils
-from heat.db.sqlalchemy.session import get_session
+from heat.openstack.common.db.sqlalchemy import models
+from heat.openstack.common.db.sqlalchemy import session
 from sqlalchemy.orm.session import Session
 
 BASE = declarative_base()
+get_session = session.get_session
 
 
 class Json(types.TypeDecorator):
@@ -58,29 +58,9 @@ except ImportError:
     MutableDict.associate_with(Json)
 
 
-class HeatBase(object):
+class HeatBase(models.ModelBase, models.TimestampMixin):
     """Base class for Heat Models."""
     __table_args__ = {'mysql_engine': 'InnoDB'}
-    __table_initialized__ = False
-    created_at = sqlalchemy.Column(sqlalchemy.DateTime,
-                                   default=timeutils.utcnow)
-    updated_at = sqlalchemy.Column(sqlalchemy.DateTime,
-                                   onupdate=timeutils.utcnow)
-
-    def save(self, session=None):
-        """Save this object."""
-        if not session:
-            session = Session.object_session(self)
-            if not session:
-                session = get_session()
-        session.add(self)
-        try:
-            session.flush()
-        except IntegrityError as e:
-            if str(e).endswith('is not unique'):
-                raise exception.Duplicate(str(e))
-            else:
-                raise
 
     def expire(self, session=None, attrs=None):
         """Expire this object ()."""
@@ -107,28 +87,6 @@ class HeatBase(object):
         session.delete(self)
         session.flush()
 
-    def __setitem__(self, key, value):
-        setattr(self, key, value)
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def get(self, key, default=None):
-        return getattr(self, key, default)
-
-    def __iter__(self):
-        self._i = iter(object_mapper(self).columns)
-        return self
-
-    def next(self):
-        n = self._i.next().name
-        return n, getattr(self, n)
-
-    def update(self, values):
-        """Make the model object behave like a dict."""
-        for k, v in values.iteritems():
-            setattr(self, k, v)
-
     def update_and_save(self, values, session=None):
         if not session:
             session = Session.object_session(self)
@@ -138,17 +96,6 @@ class HeatBase(object):
         for k, v in values.iteritems():
             setattr(self, k, v)
         session.commit()
-
-    def iteritems(self):
-        """Make the model object behave like a dict.
-
-        Includes attributes from joins.
-        """
-        local = dict(self)
-        joined = dict([(k, v) for k, v in self.__dict__.iteritems()
-                      if not k[0] == '_'])
-        local.update(joined)
-        return local.iteritems()
 
 
 class SoftDelete(object):

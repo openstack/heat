@@ -24,7 +24,6 @@ gettextutils.install('heat')
 
 from oslo.config import cfg
 from heat.openstack.common import log as logging
-from heat.db import api
 from heat.db import migration
 
 LOG = logging.getLogger(__name__)
@@ -35,8 +34,6 @@ if __name__ == '__main__':
     print('Deprecated: use heat-manage db_sync instead', file=sys.stderr)
     print('*******************************************', file=sys.stderr)
     cfg.CONF(project='heat', prog='heat-engine')
-
-    api.configure()
 
     try:
         migration.db_sync()

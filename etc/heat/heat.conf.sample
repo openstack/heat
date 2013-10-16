@@ -4,14 +4,6 @@
 # Options defined in heat.common.config
 #
 
-# The SQLAlchemy connection string used to connect to the
-# database (string value)
-#sql_connection=mysql://heat:heat@localhost/heat
-
-# timeout before idle sql connections are reaped (integer
-# value)
-#sql_idle_timeout=3600
-
 # The default user for new instances (string value)
 #instance_user=ec2-user
 

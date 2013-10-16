@@ -20,13 +20,17 @@ import uuid
 
 import sqlalchemy
 
+from oslo.config import cfg
+
 from heat.common import context
 from heat.common import exception
 from heat.engine import environment
 from heat.engine import parser
 
-from heat.db.sqlalchemy.session import get_engine
 from heat.db import migration
+from heat.openstack.common.db.sqlalchemy import session
+
+get_engine = session.get_engine
 
 
 class UUIDStub(object):
@@ -112,6 +116,8 @@ def wr_delete_after(test_fn):
 
 
 def setup_dummy_db():
+    cfg.CONF.set_default('sqlite_synchronous', False)
+    session.set_defaults(sql_connection="sqlite://", sqlite_db='heat.db')
     migration.db_sync()
     engine = get_engine()
     engine.connect()
