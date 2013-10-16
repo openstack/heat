@@ -19,6 +19,7 @@ import sys
 
 import mox
 from testtools import matchers
+import testscenarios
 
 from oslo.config import cfg
 
@@ -44,6 +45,10 @@ from heat.openstack.common import threadgroup
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
+
+
+load_tests = testscenarios.load_tests_apply_scenarios
+
 
 wp_template = '''
 {
@@ -777,6 +782,48 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                ctx, stack)
         self.assertEqual(
             'Missing required credential: X-Auth-Key', ex.message)
+
+
+class StackServiceUpdateNotSupportedTest(HeatTestCase):
+
+    scenarios = [
+        ('suspend_in_progress', dict(action='SUSPEND', status='IN_PROGRESS')),
+        ('suspend_complete', dict(action='SUSPEND', status='COMPLETE')),
+        ('suspend_failed', dict(action='SUSPEND', status='FAILED')),
+    ]
+
+    def setUp(self):
+        super(StackServiceUpdateNotSupportedTest, self).setUp()
+        utils.setup_dummy_db()
+        utils.reset_dummy_db()
+        self.ctx = utils.dummy_context()
+        self.man = service.EngineService('a-host', 'a-topic')
+
+    def test_stack_update_during(self):
+        stack_name = '%s-%s' % (self.action, self.status)
+
+        old_stack = get_wordpress_stack(stack_name, self.ctx)
+        old_stack.action = self.action
+        old_stack.status = self.status
+
+        sid = old_stack.store()
+        s = db_api.stack_get(self.ctx, sid)
+
+        stack = get_wordpress_stack(stack_name, self.ctx)
+
+        self.m.StubOutWithMock(parser, 'Stack')
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
+
+        self.m.ReplayAll()
+
+        params = {'foo': 'bar'}
+        template = '{ "Resources": {} }'
+        self.assertRaises(exception.NotSupported,
+                          self.man.update_stack,
+                          self.ctx, old_stack.identifier(), template, params,
+                          None, {})
+        self.m.VerifyAll()
 
 
 class StackServiceSuspendResumeTest(HeatTestCase):
