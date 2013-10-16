@@ -307,6 +307,10 @@ class EngineService(service.Service):
 
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
 
+        if current_stack.action == current_stack.SUSPEND:
+            msg = _('Updating a stack when it is suspended')
+            raise exception.NotSupported(feature=msg)
+
         # Now parse the template and any parameters for the updated
         # stack definition.
         tmpl = parser.Template(template, files=files)
