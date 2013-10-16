@@ -45,15 +45,21 @@ class NetworkInterface(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(NetworkInterface, self).__init__(name, json_snippet, stack)
 
+    @staticmethod
+    def network_id_from_subnet_id(quantumclient, subnet_id):
+        subnet_info = quantumclient.show_subnet(subnet_id)
+        return subnet_info['subnet']['network_id']
+
     def handle_create(self):
         client = self.quantum()
 
-        subnet = self.stack.resource_by_refid(self.properties['SubnetId'])
-        fixed_ip = {'subnet_id': self.properties['SubnetId']}
+        subnet_id = self.properties['SubnetId']
+        network_id = self.network_id_from_subnet_id(client, subnet_id)
+
+        fixed_ip = {'subnet_id': subnet_id}
         if self.properties['PrivateIpAddress']:
             fixed_ip['ip_address'] = self.properties['PrivateIpAddress']
 
-        network_id = subnet.properties.get('VpcId')
         props = {
             'name': self.physical_resource_name(),
             'admin_state_up': True,
