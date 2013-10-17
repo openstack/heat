@@ -64,8 +64,12 @@ class FakeLoadBalancerManager(object):
 
 
 class FakeNode(object):
-    def __init__(self, address="0.0.0.0", port=80, condition=None, weight=None,
+    def __init__(self, address=None, port=None, condition=None, weight=None,
                  status=None, parent=None, type=None, id=None):
+        if not (address and port):
+            # This mimics the check that pyrax does on Node instantiation
+            raise TypeError("You must include an address and "
+                            "a port when creating a node.")
         self.address = address
         self.port = port
         self.condition = condition
@@ -250,6 +254,18 @@ class LoadBalancerTest(HeatTestCase):
         for k, v in kwargs.iteritems():
             expected[k] = v
         return expected
+
+    def test_nodeless(self):
+        """It's possible to create a LoadBalancer resource with no nodes."""
+        template = self._set_template(self.lb_template,
+                                      nodes=[])
+        expected_body = copy.deepcopy(self.expected_body)
+        expected_body['nodes'] = []
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(
+            template, self.lb_name, expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
 
     def test_alter_properties(self):
         #test alter properties functions
