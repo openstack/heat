@@ -398,6 +398,7 @@ class InstanceGroupTest(HeatTestCase):
         else:
             self._stub_grp_update(num_creates_expected_on_updt,
                                   num_deletes_expected_on_updt)
+        self.stub_wallclock()
         self.m.ReplayAll()
         stack.update(updated_stack)
         self.m.VerifyAll()
