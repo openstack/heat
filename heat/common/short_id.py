@@ -40,7 +40,7 @@ def get_id(source_uuid):
     if isinstance(source_uuid, basestring):
         source_uuid = uuid.UUID(source_uuid)
     if source_uuid.version != 4:
-        raise ValueError('Invalid UUID version (%d)' % source_uuid.version)
+        raise ValueError(_('Invalid UUID version (%d)') % source_uuid.version)
 
     # The "time" field of a v4 UUID contains 60 random bits
     # (see RFC4122, Section 4.4)
