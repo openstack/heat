@@ -55,14 +55,25 @@ def get(url, allowed_schemes=('http', 'https')):
             raise IOError(_('Failed to retrieve template: %s') % str(uex))
 
     try:
-        max_size = cfg.CONF.max_template_size
-        max_fetched_size = max_size + 1
         resp = requests.get(url, stream=True)
         resp.raise_for_status()
-        result = resp.raw.read(max_fetched_size)
-        if len(result) == max_fetched_size:
-            raise IOError(_("Template exceeds maximum allowed size (%s bytes)")
-                          % max_size)
+
+        # We cannot use resp.text here because it would download the
+        # entire file, and a large enough file would bring down the
+        # engine.  The 'Content-Length' header could be faked, so it's
+        # necessary to download the content in chunks to until
+        # max_template_size is reached.  The chunk_size we use needs
+        # to balance CPU-intensive string concatenation with accuracy
+        # (eg. it's possible to fetch 1000 bytes greater than
+        # max_template_size with a chunk_size of 1000).
+        reader = resp.iter_content(chunk_size=1000)
+        result = ""
+        for chunk in reader:
+            result += chunk
+            if len(result) > cfg.CONF.max_template_size:
+                raise IOError("Template exceeds maximum allowed size (%s "
+                              "bytes)" % cfg.CONF.max_template_size)
         return result
+
     except exceptions.RequestException as ex:
         raise IOError(_('Failed to retrieve template: %s') % str(ex))

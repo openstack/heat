@@ -26,11 +26,12 @@ from heat.tests.common import HeatTestCase
 
 class Response:
     def __init__(self, buf=''):
-        self._text = buf
+        self.buf = buf
 
-    @property
-    def text(self):
-        return self._text
+    def iter_content(self, chunk_size=1):
+        while self.buf:
+            yield self.buf[:chunk_size]
+            self.buf = self.buf[chunk_size:]
 
     def raise_for_status(self):
         pass
@@ -71,15 +72,8 @@ class UrlFetchTest(HeatTestCase):
         url = 'http://example.com/template'
         data = '{ "foo": "bar" }'
         response = Response(data)
-        response.raw = self.m.CreateMockAnything()
-        max_template_fetch_size = 524289
-        self.m.StubOutWithMock(response.raw, 'read')
-        response.raw.read(max_template_fetch_size).\
-            AndReturn('{ "foo": "bar" }')
-
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
-
         self.assertEqual(urlfetch.get(url), data)
         self.m.VerifyAll()
 
@@ -87,15 +81,8 @@ class UrlFetchTest(HeatTestCase):
         url = 'https://example.com/template'
         data = '{ "foo": "bar" }'
         response = Response(data)
-        response.raw = self.m.CreateMockAnything()
-        max_template_fetch_size = 524289
-        self.m.StubOutWithMock(response.raw, 'read')
-        response.raw.read(max_template_fetch_size).\
-            AndReturn('{ "foo": "bar" }')
-
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
-
         self.assertEqual(urlfetch.get(url), data)
         self.m.VerifyAll()
 
@@ -122,19 +109,23 @@ class UrlFetchTest(HeatTestCase):
         self.assertRaises(IOError, urlfetch.get, 'wibble')
         self.m.VerifyAll()
 
-    def test_max_fetch_size(self):
+    def test_max_fetch_size_okay(self):
         url = 'http://example.com/template'
         data = '{ "foo": "bar" }'
         response = Response(data)
-        response.raw = self.m.CreateMockAnything()
-        cfg.CONF.set_override('max_template_size', 5)
-        max_template_fetch_size = cfg.CONF.max_template_size + 1
-        self.m.StubOutWithMock(response.raw, 'read')
-        response.raw.read(max_template_fetch_size).AndReturn('{ "foo')
-
+        cfg.CONF.set_override('max_template_size', 500)
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
+        urlfetch.get(url)
+        self.m.VerifyAll()
 
+    def test_max_fetch_size_error(self):
+        url = 'http://example.com/template'
+        data = '{ "foo": "bar" }'
+        response = Response(data)
+        cfg.CONF.set_override('max_template_size', 5)
+        requests.get(url, stream=True).AndReturn(response)
+        self.m.ReplayAll()
         exception = self.assertRaises(IOError, urlfetch.get, url)
         self.assertTrue("Template exceeds" in str(exception))
         self.m.VerifyAll()
