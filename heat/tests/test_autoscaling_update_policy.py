@@ -473,7 +473,6 @@ class AutoScalingGroupTest(HeatTestCase):
         new_grp_tmpl = updated_tmpl['Resources']['WebServerGroup']
         new_updt_pol = new_grp_tmpl['UpdatePolicy']['AutoScalingRollingUpdate']
         new_batch_sz = int(new_updt_pol['MaxBatchSize'])
-        new_min_in_svc = int(new_updt_pol['MinInstancesInService'])
         self.assertNotEqual(new_batch_sz, init_batch_sz)
         self._stub_validate()
         if update_replace:
@@ -482,6 +481,7 @@ class AutoScalingGroupTest(HeatTestCase):
             self._stub_grp_update(num_creates_expected_on_updt,
                                   num_deletes_expected_on_updt,
                                   num_reloads_expected_on_updt)
+        self.stub_wallclock()
         self.m.ReplayAll()
         stack.update(updated_stack)
         self.m.VerifyAll()

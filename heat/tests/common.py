@@ -18,16 +18,19 @@ import logging
 import mox
 import os
 import sys
+import time
 import testtools
 
 from oslo.config import cfg
 
-import heat.engine.scheduler as scheduler
 from heat.engine import environment
 from heat.engine import resources
+from heat.engine import scheduler
 
 
 class HeatTestCase(testtools.TestCase):
+
+    TIME_STEP = 0.1
 
     def setUp(self):
         super(HeatTestCase, self).setUp()
@@ -61,3 +64,16 @@ class HeatTestCase(testtools.TestCase):
             if templ_path not in cur_path:
                 tri.template_name = cur_path.replace('/etc/heat/templates',
                                                      templ_path)
+
+    def stub_wallclock(self):
+        """
+        Overrides scheduler wallclock to speed up tests expecting timeouts.
+        """
+        self._wallclock = time.time()
+
+        def fake_wallclock():
+            self._wallclock += self.TIME_STEP
+            return self._wallclock
+
+        self.m.StubOutWithMock(scheduler, 'wallclock')
+        scheduler.wallclock = fake_wallclock
