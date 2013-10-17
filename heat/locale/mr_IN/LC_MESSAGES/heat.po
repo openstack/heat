@@ -1,19 +1,18 @@
-# Ukrainian translations for heat.
+# Marathi (India) translations for heat.
 # Copyright (C) 2013 ORGANIZATION
 # This file is distributed under the same license as the heat project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2013.
 #
-#, fuzzy
+# Translators:
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 2013.2.a430.gd264018\n"
+"Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2013-10-17 06:05+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: uk <LL@li.org>\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"PO-Revision-Date: 2013-10-16 22:17+0000\n"
+"Last-Translator: Tom Fifield <tom@openstack.org>\n"
+"Language-Team: Marathi (India) "
+"(http://www.transifex.com/projects/p/openstack/language/mr_IN/)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -3090,121 +3089,4 @@ msgstr ""
 #, python-format
 msgid "Testing message %(text)s"
 msgstr ""
-
-#~ msgid ""
-#~ msgstr ""
-
-#~ msgid "The specified reference (%(resource)s %(key)s) is incorrect."
-#~ msgstr ""
-
-#~ msgid " from %s"
-#~ msgstr ""
-
-#~ msgid " up to %s"
-#~ msgstr ""
-
-#~ msgid " from length %s"
-#~ msgstr ""
-
-#~ msgid " up to length %s"
-#~ msgstr ""
-
-#~ msgid "List contains maps with the properties:"
-#~ msgstr ""
-
-#~ msgid "Build of server %(server)s failed: %(message)s (%(code)s)"
-#~ msgstr ""
-
-#~ msgid "Nova reported unexpected instance[%(name)s] status[%(status)s]"
-#~ msgstr ""
-
-#~ msgid "The ID of the load balancing pool"
-#~ msgstr ""
-
-#~ msgid "Port number on which the servers are running on the members"
-#~ msgstr ""
-
-#~ msgid "The list of Nova server IDs load balanced"
-#~ msgstr ""
-
-#~ msgid "The availability zone in which the volume will be created"
-#~ msgstr ""
-
-#~ msgid "The size of the volume in GB"
-#~ msgstr ""
-
-#~ msgid "If specified, the backup used as the source to create the volume"
-#~ msgstr ""
-
-#~ msgid "The list of tags to associate with the volume  (ignored)"
-#~ msgstr ""
-
-#~ msgid "The ID of the instance to which the volume attaches"
-#~ msgstr ""
-
-#~ msgid "The ID of the volume to be attached"
-#~ msgstr ""
-
-#~ msgid "The device where the volume is exposed on the instance"
-#~ msgstr ""
-
-#~ msgid "If specified, the backup to create the volume from"
-#~ msgstr ""
-
-#~ msgid "A name used to distinguish the volume"
-#~ msgstr ""
-
-#~ msgid "A description of the volume"
-#~ msgstr ""
-
-#~ msgid "If specified, the type of volume to use, mapping to a specific backend"
-#~ msgstr ""
-
-#~ msgid "Key/value pairs to associate with the volume"
-#~ msgstr ""
-
-#~ msgid "If specified, the image to create the volume from"
-#~ msgstr ""
-
-#~ msgid "If specified, the volume to use as source"
-#~ msgstr ""
-
-#~ msgid "The ID of the server to which the volume attaches"
-#~ msgstr ""
-
-#~ msgid "The location where the volume is exposed on the instance"
-#~ msgstr ""
-
-#~ msgid "Counter name watched by the alarm"
-#~ msgstr ""
-
-#~ msgid "Counter statistic to evaluate"
-#~ msgstr ""
-
-#~ msgid "Unique identifier for this health monitor."
-#~ msgstr ""
-
-#~ msgid "Unique identifier for this pool."
-#~ msgstr ""
-
-#~ msgid "The unique identifier of the vpn service."
-#~ msgstr ""
-
-#~ msgid "The unique identifier of the ipsec site connection."
-#~ msgstr ""
-
-#~ msgid "The unique identifier for the ike policy."
-#~ msgstr ""
-
-#~ msgid "The unique identifier of this ipsec policy."
-#~ msgstr ""
-
-#~ msgid "There was an error building the loadbalancer:%(lb_name)s."
-#~ msgstr ""
-
-#~ msgid "If specified, the image to create the volume from."
-#~ msgstr ""
-
-#~ msgid "%s not in valid format"
-#~ msgstr ""
 
