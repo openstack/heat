@@ -431,9 +431,6 @@ class CloudLoadBalancer(rackspace_resource.RackspaceResource):
                 except exception.StackValidationFailed as svf:
                     return {'Error': str(svf)}
 
-    def FnGetRefId(self):
-        return unicode(self.name)
-
     def _public_ip(self):
         #TODO(andrew-plunk) return list here and let caller choose ip
         for ip in self.clb.get(self.resource_id).virtual_ips:
