@@ -54,15 +54,15 @@ class StackController(object):
         try:
             self.policy.enforce(req.context, action, {})
         except heat_exception.Forbidden:
-            raise exception.HeatAccessDeniedError("Action %s not allowed " %
-                                                  action + "for user")
+            msg = _('Action %s not allowed for user') % action
+            raise exception.HeatAccessDeniedError(msg)
         except Exception as ex:
             # We expect policy.enforce to either pass or raise Forbidden
             # however, if anything else happens, we want to raise
             # HeatInternalFailureError, failure to do this results in
             # the user getting a big stacktrace spew as an API response
-            raise exception.HeatInternalFailureError("Error authorizing " +
-                                                     "action %s" % action)
+            msg = _('Error authorizing action %s') % action
+            raise exception.HeatInternalFailureError(msg)
 
     @staticmethod
     def _id_format(resp):
