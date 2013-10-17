@@ -150,7 +150,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     # Template keys supported for handle_update.  Properties not
     # listed here trigger an UpdateReplace
     update_allowed_keys = ('Metadata', 'Properties')
-    update_allowed_properties = ('flavor', 'name')
+    update_allowed_properties = ('flavor')
 
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)
@@ -159,6 +159,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         self._distro = None
         self._public_ip = None
         self._private_ip = None
+        self._flavor = None
+        self._image = None
         self.rs = rackspace_resource.RackspaceResource(name,
                                                        json_snippet,
                                                        stack)
@@ -189,8 +191,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         """Get the Linux distribution for this server."""
         if not self._distro:
             logger.debug("Calling nova().images.get()")
-            image = self.nova().images.get(self.properties['image'])
-            self._distro = image.metadata['os_distro']
+            image_data = self.nova().images.get(self.image)
+            self._distro = image_data.metadata['os_distro']
         return self._distro
 
     @property
@@ -199,10 +201,19 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         return self.image_scripts[self.distro]
 
     @property
-    def flavors(self):
+    def flavor(self):
         """Get the flavors from the API."""
-        logger.debug("Calling nova().flavors.list()")
-        return [flavor.id for flavor in self.nova().flavors.list()]
+        if not self._flavor:
+            self._flavor = nova_utils.get_flavor_id(self.nova(),
+                                                    self.properties['flavor'])
+        return self._flavor
+
+    @property
+    def image(self):
+        if not self._image:
+            self._image = nova_utils.get_image_id(self.nova(),
+                                                  self.properties['image'])
+        return self._image
 
     @property
     def private_key(self):
@@ -256,14 +267,14 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
     def validate(self):
         """Validate user parameters."""
-        if self.properties['flavor'] not in self.flavors:
-            return {'Error': "flavor not found."}
+        self.flavor
+        self.image
 
         # It's okay if there's no script, as long as user_data and
         # metadata are empty
         if not self.script and self.has_userdata:
-            return {'Error': "user_data/metadata are not supported with %s." %
-                    self.properties['image']}
+            return {'Error': "user_data/metadata are not supported for image"
+                    " %s." % self.properties['image']}
 
     def _run_ssh_command(self, command):
         """Run a shell command on the Cloud Server via SSH."""
@@ -300,8 +311,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         running, so we have to transfer the user-data file to the
         server and then trigger cloud-init.
         """
-        # Retrieve server creation parameters from properties
-        flavor = self.properties['flavor']
 
         # Generate SSH public/private keypair
         if self._private_key is not None:
@@ -321,8 +330,8 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         client = self.nova().servers
         logger.debug("Calling nova().servers.create()")
         server = client.create(self.physical_resource_name(),
-                               self.properties['image'],
-                               flavor,
+                               self.image,
+                               self.flavor,
                                files=personality_files)
 
         # Save resource ID to db
@@ -416,13 +425,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         Cloud Server.  If any other parameters changed, re-create the
         Cloud Server with the new parameters.
         """
-        # If name is the only update, fail update
-        if prop_diff.keys() == ['name'] and \
-           tmpl_diff.keys() == ['Properties']:
-            raise exception.NotSupported(feature="Cloud Server rename")
-        # Other updates were successful, so don't cause update to fail
-        elif 'name' in prop_diff:
-            logger.info("Cloud Server rename not supported.")
 
         if 'Metadata' in tmpl_diff:
             self.metadata = json_snippet['Metadata']
@@ -441,11 +443,12 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                                        'log': "/root/cfn-userdata.log"})
 
         if 'flavor' in prop_diff:
-            self.flavor = json_snippet['Properties']['flavor']
-            self.server.resize(self.flavor)
+            flav = json_snippet['Properties']['flavor']
+            new_flavor = nova_utils.get_flavor_id(self.nova(), flav)
+            self.server.resize(new_flavor)
             resize = scheduler.TaskRunner(nova_utils.check_resize,
                                           self.server,
-                                          self.flavor)
+                                          flav)
             resize.start()
             return resize
 
