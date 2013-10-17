@@ -470,20 +470,6 @@ def watch_data_get_all(context):
     return results
 
 
-def watch_data_delete(context, watch_name):
-    ds = model_query(context, models.WatchRule).\
-        filter_by(name=watch_name).all()
-
-    if not ds:
-        raise exception.NotFound('Attempt to delete watch_data: %s %s' %
-                                 (watch_name, 'that does not exist'))
-
-    session = Session.object_session(ds)
-    for d in ds:
-        session.delete(d)
-    session.flush()
-
-
 def purge_deleted(age):
     if age is not None:
         try:
