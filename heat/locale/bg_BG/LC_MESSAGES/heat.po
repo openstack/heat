@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-10-16 06:05+0000\n"
+"POT-Creation-Date: 2013-10-17 06:05+0000\n"
 "PO-Revision-Date: 2013-10-10 01:09+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Bulgarian (Bulgaria) "
@@ -293,108 +293,113 @@ msgstr ""
 
 #: heat/common/exception.py:209
 #, python-format
+msgid "The Parameter (%(key)s) has no attributes."
+msgstr ""
+
+#: heat/common/exception.py:213
+#, python-format
 msgid "The Referenced Attribute (%(resource)s %(key)s) is incorrect."
 msgstr ""
 
-#: heat/common/exception.py:214
+#: heat/common/exception.py:218
 #, python-format
 msgid "The specified reference \"%(resource)s\" (in %(key)s) is incorrect."
 msgstr ""
 
-#: heat/common/exception.py:219
+#: heat/common/exception.py:223
 #, python-format
 msgid "The Key (%(key_name)s) could not be found."
 msgstr ""
 
-#: heat/common/exception.py:223
+#: heat/common/exception.py:227
 #, python-format
 msgid "The Flavor ID (%(flavor_id)s) could not be found."
 msgstr ""
 
-#: heat/common/exception.py:227
+#: heat/common/exception.py:231
 #, python-format
 msgid "The Image (%(image_name)s) could not be found."
 msgstr ""
 
-#: heat/common/exception.py:231
+#: heat/common/exception.py:235
 #, python-format
 msgid "Multiple images were found with name (%(image_name)s)."
 msgstr ""
 
-#: heat/common/exception.py:235
+#: heat/common/exception.py:239
 #, python-format
 msgid "Searching Tenant %(target)s from Tenant %(actual)s forbidden."
 msgstr ""
 
-#: heat/common/exception.py:240
+#: heat/common/exception.py:244
 #, python-format
 msgid "The Stack (%(stack_name)s) could not be found."
 msgstr ""
 
-#: heat/common/exception.py:244
+#: heat/common/exception.py:248
 #, python-format
 msgid "The Stack (%(stack_name)s) already exists."
 msgstr ""
 
-#: heat/common/exception.py:248
+#: heat/common/exception.py:252
 #, python-format
 msgid "%(message)s"
 msgstr ""
 
-#: heat/common/exception.py:252
+#: heat/common/exception.py:256
 #, python-format
 msgid ""
 "The Resource (%(resource_name)s) could not be found in Stack "
 "%(stack_name)s."
 msgstr ""
 
-#: heat/common/exception.py:257
+#: heat/common/exception.py:261
 #, python-format
 msgid "The Resource Type (%(type_name)s) could not be found."
 msgstr ""
 
-#: heat/common/exception.py:261
+#: heat/common/exception.py:265
 #, python-format
 msgid "The Resource (%(resource_name)s) is not available."
 msgstr ""
 
-#: heat/common/exception.py:265
+#: heat/common/exception.py:269
 #, python-format
 msgid "The Resource (%(resource_id)s) could not be found."
 msgstr ""
 
-#: heat/common/exception.py:269
+#: heat/common/exception.py:273
 #, python-format
 msgid "The Watch Rule (%(watch_name)s) could not be found."
 msgstr ""
 
-#: heat/common/exception.py:273
+#: heat/common/exception.py:277
 #, python-format
 msgid "%(exc_type)s: %(message)s"
 msgstr ""
 
-#: heat/common/exception.py:287
+#: heat/common/exception.py:291
 #, python-format
 msgid "%(feature)s is not supported."
 msgstr ""
 
-#: heat/common/exception.py:291
+#: heat/common/exception.py:295
 #, python-format
 msgid "Cannot define the following properties at the same time: %s."
 msgstr ""
 
-#: heat/common/exception.py:309
+#: heat/common/exception.py:313
 msgid ""
 "Egress rules are only allowed when Neutron is used and the 'VpcId' "
 "property is set."
 msgstr ""
 
-#: heat/common/exception.py:327
+#: heat/common/exception.py:331
 #, python-format
 msgid "Request limit exceeded: %(message)s"
 msgstr ""
 
-#: heat/common/exception.py:331
+#: heat/common/exception.py:335
 msgid "Maximum resources per stack exceeded."
 msgstr ""
 
@@ -683,7 +688,15 @@ msgid ""
 "stacks."
 msgstr ""
 
-#: heat/engine/service.py:340
+#: heat/engine/service.py:310
+msgid "Updating a stack when it is suspended"
+msgstr ""
+
+#: heat/engine/service.py:314
+msgid "Updating a stack when another action is in progress"
+msgstr ""
+
+#: heat/engine/service.py:348
 msgid "No Template provided."
 msgstr ""
 
