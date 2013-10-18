@@ -572,7 +572,7 @@ class AutoScalingTest(HeatTestCase):
         update_snippet['Properties']['DesiredCapacity'] = '2'
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(len(rsrc.get_instance_names()), 2)
-        self.assertEqual('2', rsrc.properties['DesiredCapacity'])
+        self.assertEqual(2, rsrc.properties['DesiredCapacity'])
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -1355,8 +1355,7 @@ class AutoScalingTest(HeatTestCase):
         update_snippet = copy.deepcopy(up_policy.parsed_template())
         update_snippet['Properties']['ScalingAdjustment'] = '2'
         scheduler.TaskRunner(up_policy.update, update_snippet)()
-        self.assertEqual('2',
-                         up_policy.properties['ScalingAdjustment'])
+        self.assertEqual(2, up_policy.properties['ScalingAdjustment'])
 
         # Now move time on 61 seconds - Cooldown in template is 60
         # so this should trigger a scale-up

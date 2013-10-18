@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import numbers
 import re
 
 from heat.common import exception
@@ -562,6 +563,8 @@ class Property(object):
 
     @staticmethod
     def str_to_num(value):
+        if isinstance(value, numbers.Number):
+            return value
         try:
             return int(value)
         except ValueError:
@@ -577,10 +580,7 @@ class Property(object):
     def _validate_number(self, value):
         if value is None:
             value = self.has_default() and self.default() or 0
-
-        num = self.str_to_num(value)
-
-        return value
+        return self.str_to_num(value)
 
     def _validate_string(self, value):
         if value is None:
