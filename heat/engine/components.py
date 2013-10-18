@@ -86,14 +86,15 @@ class Components(dict):
         deps = self.depends()
         for dep in deps:
             if dep not in self.iterkeys():
-                raise ValueError('component %s is not defined.' % dep)
+                raise ValueError(_('component %s is not defined.') % dep)
             comp = self[dep]
             if dep in comp.depends():
-                raise ValueError('component %s depends on itself.' % dep)
+                raise ValueError(_('component %s depends on itself.') % dep)
         for (name, comp) in self.iteritems():
             cdeps = comp.depends()
             for dep in cdeps:
                 if cdeps.count(dep) > 1:
-                    msg = 'duplicated %s in %s depends on.' % (dep, name)
+                    msg = _('duplicated %(dep)s in'
+                            ' %(name)s depends on.') % dict(dep=dep, name=name)
                     raise ValueError(msg)
         return True

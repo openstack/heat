@@ -181,7 +181,7 @@ class Stack(collections.Mapping):
             stack = db_api.stack_get(context, stack_id,
                                      show_deleted=show_deleted)
         if stack is None:
-            message = 'No stack exists with id "%s"' % str(stack_id)
+            message = _('No stack exists with id "%s"') % str(stack_id)
             raise exception.NotFound(message)
 
         template = Template.load(context, stack.raw_template_id)
@@ -306,7 +306,7 @@ class Stack(collections.Mapping):
 
         if dup_names:
             logger.debug("Duplicate names %s" % dup_names)
-            raise StackValidationFailed(message="Duplicate names %s" %
+            raise StackValidationFailed(message=_("Duplicate names %s") %
                                         dup_names)
 
         for res in self.dependencies:
@@ -332,10 +332,10 @@ class Stack(collections.Mapping):
     def state_set(self, action, status, reason):
         '''Update the stack state in the database.'''
         if action not in self.ACTIONS:
-            raise ValueError("Invalid action %s" % action)
+            raise ValueError(_("Invalid action %s") % action)
 
         if status not in self.STATUSES:
-            raise ValueError("Invalid status %s" % status)
+            raise ValueError(_("Invalid status %s") % status)
 
         self.action = action
         self.status = status

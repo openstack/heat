@@ -85,7 +85,8 @@ class Schema(collections.Mapping):
         self._len = None
         self.type = data_type
         if self.type not in SCHEMA_TYPES:
-            raise InvalidPropertySchemaError('Invalid type (%s)' % self.type)
+            raise InvalidPropertySchemaError(_('Invalid type (%s)') %
+                                             self.type)
 
         self.description = description
         self.required = required
@@ -93,23 +94,28 @@ class Schema(collections.Mapping):
 
         if isinstance(schema, type(self)):
             if self.type != LIST:
-                msg = 'Single schema valid only for %s, not %s' % (LIST,
-                                                                   self.type)
+                msg = _('Single schema valid only for '
+                        '%(ltype)s, not %(utype)s') % dict(ltype=LIST,
+                                                           utype=self.type)
                 raise InvalidPropertySchemaError(msg)
 
             self.schema = AnyIndexDict(schema)
         else:
             self.schema = schema
         if self.schema is not None and self.type not in (LIST, MAP):
-            msg = 'Schema valid only for %s or %s, not %s' % (LIST, MAP,
-                                                              self.type)
+            msg = _('Schema valid only for %(ltype)s or '
+                    '%(mtype)s, not %(utype)s') % dict(ltype=LIST,
+                                                       mtype=MAP,
+                                                       utype=self.type)
             raise InvalidPropertySchemaError(msg)
 
         self.constraints = constraints
         for c in constraints:
             if self.type not in c.valid_types:
-                err_msg = '%s constraint invalid for %s' % (type(c).__name__,
-                                                            self.type)
+                err_msg = _('%(name)s constraint '
+                            'invalid for %(utype)s') % dict(
+                                name=type(c).__name__,
+                                utype=self.type)
                 raise InvalidPropertySchemaError(err_msg)
 
         self.default = default
@@ -117,8 +123,10 @@ class Schema(collections.Mapping):
             try:
                 self.validate_constraints(self.default)
             except (ValueError, TypeError) as exc:
-                raise InvalidPropertySchemaError('Invalid default %s (%s)' %
-                                                 (self.default, exc))
+                raise InvalidPropertySchemaError(_('Invalid default '
+                                                   '%(default)s (%(exc)s)') %
+                                                 dict(default=self.default,
+                                                      exc=exc))
 
     @classmethod
     def from_legacy(cls, schema_dict):
@@ -132,7 +140,7 @@ class Schema(collections.Mapping):
 
         unknown = [k for k in schema_dict if k not in SCHEMA_KEYS]
         if unknown:
-            raise InvalidPropertySchemaError('Unknown key(s) %s' % unknown)
+            raise InvalidPropertySchemaError(_('Unknown key(s) %s') % unknown)
 
         def constraints():
             def get_num(key):
@@ -155,7 +163,7 @@ class Schema(collections.Mapping):
         try:
             data_type = schema_dict[TYPE]
         except KeyError:
-            raise InvalidPropertySchemaError('No %s specified' % TYPE)
+            raise InvalidPropertySchemaError(_('No %s specified') % TYPE)
 
         if SCHEMA in schema_dict:
             if data_type == LIST:
@@ -164,8 +172,11 @@ class Schema(collections.Mapping):
                 schema_dicts = schema_dict[SCHEMA].items()
                 ss = dict((n, cls.from_legacy(sd)) for n, sd in schema_dicts)
             else:
-                raise InvalidPropertySchemaError('%s supplied for %s %s' %
-                                                 (SCHEMA, TYPE, data_type))
+                raise InvalidPropertySchemaError(_('%(schema)s supplied for'
+                                                   ' %(type)s %(data)s') %
+                                                 dict(schema=SCHEMA,
+                                                      type=TYPE,
+                                                      data=data_type))
         else:
             ss = None
 
@@ -299,7 +310,7 @@ class AnyIndexDict(collections.Mapping):
 
     def __getitem__(self, key):
         if key != self.ANYTHING and not isinstance(key, (int, long)):
-            raise KeyError('Invalid key %s' % str(key))
+            raise KeyError(_('Invalid key %s') % str(key))
 
         return self.value
 
@@ -388,10 +399,11 @@ class Range(Constraint):
 
         for param in (min, max):
             if not isinstance(param, (float, int, long, type(None))):
-                raise InvalidPropertySchemaError('min/max must be numeric')
+                raise InvalidPropertySchemaError(_('min/max must be numeric'))
 
         if min is max is None:
-            raise InvalidPropertySchemaError('range must have min and/or max')
+            raise InvalidPropertySchemaError(_('range must have '
+                                               'min and/or max'))
 
     def _str(self):
         if self.max is None:
@@ -449,7 +461,7 @@ class Length(Range):
 
         for param in (min, max):
             if not isinstance(param, (int, long, type(None))):
-                msg = 'min/max length must be integral'
+                msg = _('min/max length must be integral')
                 raise InvalidPropertySchemaError(msg)
 
     def _str(self):
@@ -488,7 +500,7 @@ class AllowedValues(Constraint):
         super(AllowedValues, self).__init__(description)
         if (not isinstance(allowed, collections.Sequence) or
                 isinstance(allowed, basestring)):
-            raise InvalidPropertySchemaError('AllowedValues must be a list')
+            raise InvalidPropertySchemaError(_('AllowedValues must be a list'))
         self.allowed = tuple(allowed)
 
     def _str(self):
@@ -571,7 +583,7 @@ class Property(object):
         if value is None:
             value = self.has_default() and self.default() or 0
         if not isinstance(value, (int, long)):
-            raise TypeError('value is not an integer')
+            raise TypeError(_('value is not an integer'))
         return self._validate_number(value)
 
     def _validate_number(self, value):
@@ -586,7 +598,7 @@ class Property(object):
         if value is None:
             value = self.has_default() and self.default() or ''
         if not isinstance(value, basestring):
-            raise ValueError('Value must be a string')
+            raise ValueError(_('Value must be a string'))
         return value
 
     def _validate_children(self, child_values, keys=None):
@@ -604,7 +616,7 @@ class Property(object):
         if value is None:
             value = self.has_default() and self.default() or {}
         if not isinstance(value, collections.Mapping):
-            raise TypeError('"%s" is not a map' % value)
+            raise TypeError(_('"%s" is not a map') % value)
 
         return dict(self._validate_children(value.iteritems()))
 
@@ -613,7 +625,7 @@ class Property(object):
             value = self.has_default() and self.default() or []
         if (not isinstance(value, collections.Sequence) or
                 isinstance(value, basestring)):
-            raise TypeError('"%s" is not a list' % repr(value))
+            raise TypeError(_('"%s" is not a list') % repr(value))
 
         return [v for i, v in self._validate_children(enumerate(value),
                                                       range(len(value)))]
@@ -625,7 +637,7 @@ class Property(object):
             return value
         normalised = value.lower()
         if normalised not in ['true', 'false']:
-            raise ValueError('"%s" is not a valid boolean')
+            raise ValueError(_('"%s" is not a valid boolean') % normalised)
 
         return normalised == 'true'
 
@@ -691,22 +703,22 @@ class Properties(collections.Mapping):
                 try:
                     self[key]
                 except ValueError as e:
-                    msg = "Property error : %s" % str(e)
+                    msg = _("Property error : %s") % str(e)
                     raise exception.StackValidationFailed(message=msg)
 
             # are there unimplemented Properties
             if not prop.implemented() and key in self.data:
-                msg = "Property %s not implemented yet" % key
+                msg = _("Property %s not implemented yet") % key
                 raise exception.StackValidationFailed(message=msg)
 
         for key in self.data:
             if key not in self.props:
-                msg = "Unknown Property %s" % key
+                msg = _("Unknown Property %s") % key
                 raise exception.StackValidationFailed(message=msg)
 
     def __getitem__(self, key):
         if key not in self:
-            raise KeyError(self.error_prefix + 'Invalid Property %s' % key)
+            raise KeyError(self.error_prefix + _('Invalid Property %s') % key)
 
         prop = self.props[key]
 
@@ -722,7 +734,7 @@ class Properties(collections.Mapping):
             return prop.default()
         elif prop.required():
             raise ValueError(self.error_prefix +
-                             'Property %s not assigned' % key)
+                             _('Property %s not assigned') % key)
 
     def __len__(self):
         return len(self.props)

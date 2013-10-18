@@ -82,8 +82,8 @@ class Attributes(collections.Mapping):
 
     def __getitem__(self, key):
         if key not in self:
-            raise KeyError('%s: Invalid attribute %s' %
-                           (self._resource_name, key))
+            raise KeyError(_('%(resource)s: Invalid attribute %(key)s') %
+                           dict(resource=self._resource_name, key=key))
         return self._resolver(key)
 
     def __len__(self):

@@ -43,8 +43,10 @@ def extract_args(params):
         elif str(disable_rollback).lower() == 'false':
             kwargs[api.PARAM_DISABLE_ROLLBACK] = False
         else:
-            raise ValueError("Unexpected value for parameter %s : %s" %
-                             (api.PARAM_DISABLE_ROLLBACK, disable_rollback))
+            raise ValueError(_('Unexpected value for parameter'
+                               ' %(name)s : %(value)s') %
+                             dict(name=api.PARAM_DISABLE_ROLLBACK,
+                                  value=disable_rollback))
     return kwargs
 
 
