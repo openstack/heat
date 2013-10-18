@@ -47,15 +47,15 @@ class WatchController(object):
         try:
             self.policy.enforce(req.context, action, {})
         except heat_exception.Forbidden:
-            raise exception.HeatAccessDeniedError("Action %s not allowed " %
-                                                  action + "for user")
+            msg = _("Action %s not allowed for user") % action
+            raise exception.HeatAccessDeniedError(msg)
         except Exception as ex:
             # We expect policy.enforce to either pass or raise Forbidden
             # however, if anything else happens, we want to raise
             # HeatInternalFailureError, failure to do this results in
             # the user getting a big stacktrace spew as an API response
-            raise exception.HeatInternalFailureError("Error authorizing " +
-                                                     "action %s" % action)
+            msg = _("Error authorizing action %s") % action
+            raise exception.HeatInternalFailureError(msg)
 
     @staticmethod
     def _reformat_dimensions(dims):
@@ -319,10 +319,12 @@ class WatchController(object):
         state = api_utils.get_param_value(parms, 'StateValue')
 
         if state not in state_map:
-            logger.error("Invalid state %s, expecting one of %s" %
-                         (state, state_map.keys()))
-            return exception.HeatInvalidParameterValueError("Invalid state %s"
-                                                            % state)
+            msg = _('Invalid state %(state)s, '
+                    'expecting one of %(expect)s') % {
+                        'state': state,
+                        'expect': state_map.keys()}
+            logger.error(msg)
+            return exception.HeatInvalidParameterValueError(msg)
 
         # Check for optional parameters
         # FIXME : We don't actually do anything with these in the engine yet..
