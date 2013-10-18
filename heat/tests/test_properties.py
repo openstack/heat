@@ -817,13 +817,21 @@ class PropertyTest(testtools.TestCase):
                   'MinValue': '3',
                   'MaxValue': '3'}
         p = properties.Property(schema)
-        self.assertEqual(p.validate_data('3'), '3')
+        self.assertEqual(p.validate_data(3), 3)
+
+    def test_numbers_from_strings(self):
+        """Numbers can be converted from strings."""
+        schema = {'Type': 'Number',
+                  'MinValue': '3',
+                  'MaxValue': '3'}
+        p = properties.Property(schema)
+        self.assertEqual(p.validate_data('3'), 3)
 
     def test_number_value_list_good(self):
         schema = {'Type': 'Number',
-                  'AllowedValues': ['1', '3', '5']}
+                  'AllowedValues': [1, 3, 5]}
         p = properties.Property(schema)
-        self.assertEqual(p.validate_data('5'), '5')
+        self.assertEqual(p.validate_data('5'), 5)
 
     def test_number_value_list_bad(self):
         schema = {'Type': 'Number',
