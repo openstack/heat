@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-10-17 06:05+0000\n"
+"POT-Creation-Date: 2013-10-18 06:04+0000\n"
 "PO-Revision-Date: 2013-10-10 01:09+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Italian (Italy) "
@@ -522,11 +522,11 @@ msgstr ""
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:492
+#: heat/db/sqlalchemy/api.py:478
 msgid "age should be an integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:494
+#: heat/db/sqlalchemy/api.py:480
 msgid "age should be a positive integer"
 msgstr ""
 
@@ -1078,6 +1078,31 @@ msgstr ""
 
 #: heat/engine/resources/loadbalancer.py:268
 msgid "One or more listeners for this load balancer."
+msgstr ""
+
+#: heat/engine/resources/nova_keypair.py:42
+msgid "The name of the key pair."
+msgstr ""
+
+#: heat/engine/resources/nova_keypair.py:47
+msgid ""
+"True if the system should remember a generated private key; False "
+"otherwise."
+msgstr ""
+
+#: heat/engine/resources/nova_keypair.py:53
+msgid ""
+"The optional public key. This allows users to supply the public key from "
+"a pre-existing key pair. If not supplied, a new key pair will be "
+"generated."
+msgstr ""
+
+#: heat/engine/resources/nova_keypair.py:62
+msgid "The public key."
+msgstr ""
+
+#: heat/engine/resources/nova_keypair.py:63
+msgid "The private key if it has been saved."
 msgstr ""
 
 #: heat/engine/resources/nova_utils.py:227
