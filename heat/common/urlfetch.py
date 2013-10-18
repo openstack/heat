@@ -46,13 +46,13 @@ def get(url, allowed_schemes=('http', 'https')):
     components = urlparse.urlparse(url)
 
     if components.scheme not in allowed_schemes:
-        raise IOError('Invalid URL scheme %s' % components.scheme)
+        raise IOError(_('Invalid URL scheme %s') % components.scheme)
 
     if components.scheme == 'file':
         try:
             return urllib2.urlopen(url).read()
         except urllib2.URLError as uex:
-            raise IOError('Failed to retrieve template: %s' % str(uex))
+            raise IOError(_('Failed to retrieve template: %s') % str(uex))
 
     try:
         max_size = cfg.CONF.max_template_size
@@ -61,8 +61,8 @@ def get(url, allowed_schemes=('http', 'https')):
         resp.raise_for_status()
         result = resp.raw.read(max_fetched_size)
         if len(result) == max_fetched_size:
-            raise IOError("Template exceeds maximum allowed size (%s bytes)"
+            raise IOError(_("Template exceeds maximum allowed size (%s bytes)")
                           % max_size)
         return result
     except exceptions.RequestException as ex:
-        raise IOError('Failed to retrieve template: %s' % str(ex))
+        raise IOError(_('Failed to retrieve template: %s') % str(ex))

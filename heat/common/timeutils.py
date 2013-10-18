@@ -31,8 +31,8 @@ def parse_isoduration(duration):
     """
     result = iso_duration_re.match(duration)
     if not result:
-        raise ValueError('Only ISO 8601 duration format of the form '
-                         'PT#H#M#S is supported.')
+        raise ValueError(_('Only ISO 8601 duration format of the form '
+                           'PT#H#M#S is supported.'))
 
     t = 0
     t += (3600 * int(result.group(1))) if result.group(1) else 0

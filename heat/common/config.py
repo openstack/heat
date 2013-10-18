@@ -181,7 +181,7 @@ def load_paste_app(app_name=None):
 
     conf_file = _get_deployment_config_file()
     if conf_file is None:
-        raise RuntimeError("Unable to locate config file")
+        raise RuntimeError(_("Unable to locate config file"))
 
     try:
         app = wsgi.paste_deploy_app(conf_file, app_name, cfg.CONF)
@@ -193,8 +193,8 @@ def load_paste_app(app_name=None):
 
         return app
     except (LookupError, ImportError) as e:
-        raise RuntimeError("Unable to load %(app_name)s from "
-                           "configuration file %(conf_file)s."
-                           "\nGot: %(e)r" % {'app_name': app_name,
-                                             'conf_file': conf_file,
-                                             'e': e})
+        raise RuntimeError(_("Unable to load %(app_name)s from "
+                             "configuration file %(conf_file)s."
+                             "\nGot: %(e)r") % {'app_name': app_name,
+                                                'conf_file': conf_file,
+                                                'e': e})

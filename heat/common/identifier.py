@@ -37,7 +37,7 @@ class HeatIdentifier(collections.Mapping):
             path = '/' + path
 
         if '/' in stack_name:
-            raise ValueError('Stack name may not contain "/"')
+            raise ValueError(_('Stack name may not contain "/"'))
 
         self.identity = {
             self.TENANT: tenant,
@@ -53,13 +53,13 @@ class HeatIdentifier(collections.Mapping):
         '''
         fields = arn.split(':')
         if len(fields) < 6 or fields[0].lower() != 'arn':
-            raise ValueError('"%s" is not a valid ARN' % arn)
+            raise ValueError(_('"%s" is not a valid ARN') % arn)
 
         id_fragment = ':'.join(fields[5:])
         path = cls.path_re.match(id_fragment)
 
         if fields[1] != 'openstack' or fields[2] != 'heat' or not path:
-            raise ValueError('"%s" is not a valid Heat ARN' % arn)
+            raise ValueError(_('"%s" is not a valid Heat ARN') % arn)
 
         return cls(urllib.unquote(fields[4]),
                    urllib.unquote(path.group(1)),
@@ -76,13 +76,13 @@ class HeatIdentifier(collections.Mapping):
         urlp = urlparse.urlparse(url)
         if (urlp.scheme not in ('http', 'https') or
                 not urlp.netloc or not urlp.path):
-            raise ValueError('"%s" is not a valid URL' % url)
+            raise ValueError(_('"%s" is not a valid URL') % url)
 
         # Remove any query-string and extract the ARN
         arn_url_prefix = '/arn%3Aopenstack%3Aheat%3A%3A'
         match = re.search(arn_url_prefix, urlp.path, re.IGNORECASE)
         if match is None:
-            raise ValueError('"%s" is not a valid ARN URL' % url)
+            raise ValueError(_('"%s" is not a valid ARN URL') % url)
         # the +1 is to skip the leading /
         url_arn = urlp.path[match.start() + 1:]
         arn = urllib.unquote(url_arn)
@@ -129,14 +129,14 @@ class HeatIdentifier(collections.Mapping):
         attribute.
         '''
         if attr not in self.FIELDS:
-            raise AttributeError('Unknown attribute "%s"' % attr)
+            raise AttributeError(_('Unknown attribute "%s"') % attr)
 
         return self.identity[attr]
 
     def __getitem__(self, key):
         '''Return one of the components of the identity.'''
         if key not in self.FIELDS:
-            raise KeyError('Unknown attribute "%s"' % key)
+            raise KeyError(_('Unknown attribute "%s"') % key)
 
         return self.identity[key]
 
@@ -167,7 +167,7 @@ class ResourceIdentifier(HeatIdentifier):
         '''
         if resource_name is not None:
             if '/' in resource_name:
-                raise ValueError('Resource name may not contain "/"')
+                raise ValueError(_('Resource name may not contain "/"'))
             path = '/'.join([path.rstrip('/'), 'resources', resource_name])
         super(ResourceIdentifier, self).__init__(tenant,
                                                  stack_name,
