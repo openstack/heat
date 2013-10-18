@@ -117,7 +117,7 @@ fi
 if [ "$coverage" == 1 ]; then
     echo "Generating coverage report in ./cover"
     python setup.py testr --coverage --slowest
-    coverage report -m
+    python -m coverage report --show-missing
 fi
 
 exit $result
