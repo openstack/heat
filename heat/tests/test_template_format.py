@@ -12,8 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from testtools import skipIf
+import mock
 import os
+import testtools
+import testscenarios
 import yaml
 
 from heat.engine import clients
@@ -22,6 +24,8 @@ from heat.common import exception
 from heat.common import template_format
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+
+load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class JsonToYamlTest(HeatTestCase):
@@ -105,6 +109,25 @@ Outputs: {}
         self.assertEqual(msg, str(ex))
 
 
+class YamlParseExceptions(HeatTestCase):
+
+    scenarios = [
+        ('scanner', dict(raised_exception=yaml.scanner.ScannerError())),
+        ('parser', dict(raised_exception=yaml.parser.ParserError())),
+        ('reader',
+         dict(raised_exception=yaml.reader.ReaderError('', '', '', '', ''))),
+    ]
+
+    def test_parse_to_value_exception(self):
+        text = 'not important'
+
+        with mock.patch.object(yaml, 'load') as yaml_loader:
+            yaml_loader.side_effect = self.raised_exception
+
+            self.assertRaises(ValueError,
+                              template_format.parse, text)
+
+
 class JsonYamlResolvedCompareTest(HeatTestCase):
 
     def setUp(self):
@@ -146,7 +169,8 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
         for key in stack1:
             self.assertEqual(stack1[key].t, stack2[key].t)
 
-    @skipIf(clients.neutronclient is None, 'neutronclient unavailable')
+    @testtools.skipIf(clients.neutronclient is None,
+                      'neutronclient unavailable')
     def test_neutron_resolved(self):
         self.compare_stacks('Neutron.template', 'Neutron.yaml', {})
 

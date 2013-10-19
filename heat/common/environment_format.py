@@ -29,8 +29,8 @@ def parse(env_str):
     '''
     try:
         env = yaml.load(env_str, Loader=yaml_loader)
-    except (yaml.scanner.ScannerError, yaml.parser.ParserError) as e:
-        raise ValueError(e)
+    except yaml.YAMLError as yea:
+        raise ValueError(yea)
     else:
         if env is None:
             env = {}
