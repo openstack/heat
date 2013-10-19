@@ -3,11 +3,11 @@ pycrypto>=2.6
 eventlet>=0.13.0
 greenlet>=0.3.2
 httplib2
-iso8601>=0.1.4
+iso8601==0.1.4
 kombu>=2.4.8
 argparse
 lxml>=2.3
-netaddr
+netaddr>=0.7.6
 six>=1.4.1
 sqlalchemy-migrate>=0.7.2
 python-novaclient>=2.15.0
@@ -20,7 +20,7 @@ python-keystoneclient>=0.4.1
 python-swiftclient>=1.5
 python-neutronclient>=2.3.0,<3
 python-ceilometerclient>=1.0.6
-python-cinderclient>=1.0.5
+python-cinderclient>=1.0.6
 PyYAML>=3.1.0
 paramiko>=1.8.0
 Babel>=1.3
