@@ -319,7 +319,7 @@ class WatchRule(object):
         Persistently store the watch state
         '''
         if state not in self.WATCH_STATES:
-            raise ValueError("Invalid watch state %s" % state)
+            raise ValueError(_("Invalid watch state %s") % state)
 
         self.state = state
         self.store()
@@ -331,7 +331,7 @@ class WatchRule(object):
         '''
 
         if state not in self.WATCH_STATES:
-            raise ValueError('Unknown watch state %s' % state)
+            raise ValueError(_('Unknown watch state %s') % state)
 
         actions = []
         if state != self.state:

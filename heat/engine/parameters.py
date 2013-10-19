@@ -151,7 +151,7 @@ class Parameter(object):
         elif param_type == JSON:
             ParamClass = JsonParam
         else:
-            raise ValueError('Invalid Parameter type "%s"' % param_type)
+            raise ValueError(_('Invalid Parameter type "%s"') % param_type)
 
         return ParamClass(name, schema, value, validate_value)
 
@@ -180,7 +180,7 @@ class Parameter(object):
         if self.has_default():
             return self.default()
 
-        raise KeyError('Missing parameter %s' % self.name)
+        raise KeyError(_('Missing parameter %s') % self.name)
 
     def no_echo(self):
         '''
@@ -251,7 +251,7 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
             if value:
                 return value.split(',')
         except (KeyError, AttributeError) as err:
-            message = 'Value must be a comma-delimited list string: %s'
+            message = _('Value must be a comma-delimited list string: %s')
             raise ValueError(message % str(err))
         return value
 
@@ -287,7 +287,7 @@ class JsonParam(Parameter, collections.Mapping):
             if val:
                 return json.loads(val)
         except (ValueError, TypeError) as err:
-            message = 'Value must be valid JSON: %s' % str(err)
+            message = _('Value must be valid JSON: %s') % str(err)
             raise ValueError(message)
         return value
 
@@ -298,7 +298,7 @@ class JsonParam(Parameter, collections.Mapping):
                 val = json.dumps(val)
                 self.user_value = val
             except (ValueError, TypeError) as err:
-                message = 'Value must be valid JSON'
+                message = _('Value must be valid JSON')
                 raise ValueError("%s: %s" % (message, str(err)))
         return val
 

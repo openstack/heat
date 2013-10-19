@@ -68,7 +68,7 @@ class Template(collections.Mapping):
     def __getitem__(self, section):
         '''Get the relevant section in the template.'''
         if section not in SECTIONS:
-            raise KeyError('"%s" is not a valid template section' % section)
+            raise KeyError(_('"%s" is not a valid template section') % section)
         if section == VERSION:
             return self.t[section]
 
@@ -186,16 +186,18 @@ class Template(collections.Mapping):
         '''
         def handle_join(args):
             if not isinstance(args, (list, tuple)):
-                raise TypeError('Arguments to "Fn::Join" must be a list')
+                raise TypeError(_('Arguments to "Fn::Join" must be a list'))
             try:
                 delim, items = args
             except ValueError as ex:
                 example = '"Fn::Join" : [ " ", [ "str1", "str2"]]'
-                raise ValueError('Incorrect arguments to "Fn::Join" %s: %s' %
-                                ('should be', example))
+                raise ValueError(_('Incorrect arguments to '
+                                   '"Fn::Join" should be: %s') %
+                                 example)
 
             if not isinstance(items, (list, tuple)):
-                raise TypeError('Arguments to "Fn::Join" not fully resolved')
+                raise TypeError(_('Arguments to "Fn::Join" '
+                                  'not fully resolved'))
             reduced = []
             contiguous = []
             for item in items:
@@ -228,14 +230,15 @@ class Template(collections.Mapping):
         '''
         def handle_select(args):
             if not isinstance(args, (list, tuple)):
-                raise TypeError('Arguments to "Fn::Select" must be a list')
+                raise TypeError(_('Arguments to "Fn::Select" must be a list'))
 
             try:
                 lookup, strings = args
             except ValueError as ex:
                 example = '"Fn::Select" : [ "4", [ "str1", "str2"]]'
-                raise ValueError('Incorrect arguments to "Fn::Select" %s: %s' %
-                                ('should be', example))
+                raise ValueError(_('Incorrect arguments to '
+                                   '"Fn::Select" should be: %s') %
+                                 example)
 
             try:
                 index = int(lookup)
@@ -254,7 +257,7 @@ class Template(collections.Mapping):
             if strings is None:
                 return ''
 
-            raise TypeError('Arguments to "Fn::Select" not fully resolved')
+            raise TypeError(_('Arguments to "Fn::Select" not fully resolved'))
 
         return _resolve(lambda k, v: k == 'Fn::Select', handle_select, s)
 
@@ -266,17 +269,19 @@ class Template(collections.Mapping):
         '''
         def handle_join(args):
             if not isinstance(args, (list, tuple)):
-                raise TypeError('Arguments to "Fn::Join" must be a list')
+                raise TypeError(_('Arguments to "Fn::Join" must be a list'))
 
             try:
                 delim, strings = args
             except ValueError as ex:
                 example = '"Fn::Join" : [ " ", [ "str1", "str2"]]'
-                raise ValueError('Incorrect arguments to "Fn::Join" %s: %s' %
-                                ('should be', example))
+                raise ValueError(_('Incorrect arguments to '
+                                   '"Fn::Join" should be: %s') %
+                                 example)
 
             if not isinstance(strings, (list, tuple)):
-                raise TypeError('Arguments to "Fn::Join" not fully resolved')
+                raise TypeError(_('Arguments to "Fn::Join" '
+                                  'not fully resolved'))
 
             def empty_for_none(v):
                 if v is None:
@@ -299,17 +304,18 @@ class Template(collections.Mapping):
         '''
         def handle_split(args):
             if not isinstance(args, (list, tuple)):
-                raise TypeError('Arguments to "Fn::Split" must be a list')
+                raise TypeError(_('Arguments to "Fn::Split" must be a list'))
 
             example = '"Fn::Split" : [ ",", "str1, str2"]]'
             try:
                 delim, strings = args
             except ValueError as ex:
-                raise ValueError('Incorrect arguments to "Fn::Split" %s: %s' %
-                                ('should be', example))
+                raise ValueError(_('Incorrect arguments to "Fn::Split" '
+                                   'should be: %s') % example)
             if not isinstance(strings, basestring):
-                raise TypeError('Incorrect arguments to "Fn::Split" %s: %s' %
-                                ('should be', example))
+                raise TypeError(_('Incorrect arguments to '
+                                  '"Fn::Split" should be: %s') %
+                                example)
             return strings.split(delim)
         return _resolve(lambda k, v: k == 'Fn::Split', handle_split, s)
 
@@ -327,7 +333,7 @@ class Template(collections.Mapping):
         """
         def handle_replace(args):
             if not isinstance(args, (list, tuple)):
-                raise TypeError('Arguments to "Fn::Replace" must be a list')
+                raise TypeError(_('Arguments to "Fn::Replace" must be a list'))
 
             try:
                 mapping, string = args
@@ -335,24 +341,25 @@ class Template(collections.Mapping):
                 example = ('{"Fn::Replace": '
                            '[ {"$var1": "foo", "%var2%": "bar"}, '
                            '"$var1 is %var2%"]}')
-                raise ValueError(
-                    'Incorrect arguments to "Fn::Replace" %s: %s' %
-                    ('should be', example))
+                raise ValueError(_('Incorrect arguments to '
+                                   '"Fn::Replace" should be: %s') %
+                                 example)
 
             if not isinstance(mapping, dict):
                 raise TypeError(
-                    'Arguments to "Fn::Replace" not fully resolved')
+                    _('Arguments to "Fn::Replace" not fully resolved'))
             if not isinstance(string, basestring):
                 raise TypeError(
-                    'Arguments to "Fn::Replace" not fully resolved')
+                    _('Arguments to "Fn::Replace" not fully resolved'))
 
             for k, v in mapping.items():
                 if v is None:
                     v = ''
                 if not isinstance(v, basestring):
                     raise TypeError(
-                        '"Fn::Replace" value(%s) for "%s" is not a string' %
-                        (str(v), k))
+                        _('"Fn::Replace" value(%(value)s) for'
+                          ' "%(key)s" is not a string') %
+                        dict(value=str(v), key=k))
                 string = string.replace(k, v)
             return string
 
@@ -365,7 +372,8 @@ class Template(collections.Mapping):
         '''
         def handle_base64(string):
             if not isinstance(string, basestring):
-                raise TypeError('Arguments to "Fn::Base64" not fully resolved')
+                raise TypeError(_('Arguments to "Fn::Base64" '
+                                  'not fully resolved'))
             return string
 
         return _resolve(lambda k, v: k == 'Fn::Base64', handle_base64, s)
@@ -388,15 +396,15 @@ class Template(collections.Mapping):
                                       '.member.0.Value=door']]}
             '''
             if not isinstance(args, (list, tuple)):
-                raise TypeError('Wrong Arguments try: "%s"' % correct)
+                raise TypeError(_('Wrong Arguments try: "%s"') % correct)
             if len(args) != 3:
-                raise TypeError('Wrong Arguments try: "%s"' % correct)
+                raise TypeError(_('Wrong Arguments try: "%s"') % correct)
             if not isinstance(args[0], basestring):
-                raise TypeError('Wrong Arguments try: "%s"' % correct)
+                raise TypeError(_('Wrong Arguments try: "%s"') % correct)
             if not isinstance(args[1], basestring):
-                raise TypeError('Wrong Arguments try: "%s"' % correct)
+                raise TypeError(_('Wrong Arguments try: "%s"') % correct)
             if not isinstance(args[2], (list, tuple)):
-                raise TypeError('Wrong Arguments try: "%s"' % correct)
+                raise TypeError(_('Wrong Arguments try: "%s"') % correct)
 
             partial = {}
             for item in args[2]:
@@ -420,14 +428,14 @@ class Template(collections.Mapping):
         def handle_resource_facade(arg):
             if arg not in resource_attributes:
                 raise ValueError(
-                    'Incorrect arguments to "Fn::ResourceFacade" %s: %s' %
-                    ('should be one of', str(resource_attributes)))
+                    _('Incorrect arguments to "Fn::ResourceFacade" '
+                      'should be one of: %s') % str(resource_attributes))
             try:
                 if arg == 'Metadata':
                     return stack.parent_resource.metadata
                 return stack.parent_resource.t[arg]
             except KeyError:
-                raise KeyError('"%s" is not specified in parent resource' %
+                raise KeyError(_('"%s" is not specified in parent resource') %
                                arg)
 
         return _resolve(lambda k, v: k == 'Fn::ResourceFacade',
