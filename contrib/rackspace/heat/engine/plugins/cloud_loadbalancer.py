@@ -271,7 +271,7 @@ class CloudLoadBalancer(rackspace_resource.RackspaceResource):
             del node['ref']
             node_list.append(node)
 
-        nodes = self._setup_properties(node_list, self.clb.Node)
+        nodes = [self.clb.Node(**node) for node in node_list]
         virtual_ips = self._setup_properties(self.properties.get('virtualIps'),
                                              self.clb.VirtualIP)
 
