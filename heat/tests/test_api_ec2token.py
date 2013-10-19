@@ -74,8 +74,8 @@ class Ec2TokenTest(HeatTestCase):
     def test_get_signature_header_space(self):
         req_env = {'HTTP_AUTHORIZATION':
                    ('Authorization: foo  Credential=foo/bar, '
-                   'SignedHeaders=content-type;host;x-amz-date, '
-                   'Signature=xyz')}
+                    'SignedHeaders=content-type;host;x-amz-date, '
+                    'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
         self.assertEqual(ec2._get_signature(dummy_req), 'xyz')
@@ -92,8 +92,8 @@ class Ec2TokenTest(HeatTestCase):
     def test_get_signature_header_nospace(self):
         req_env = {'HTTP_AUTHORIZATION':
                    ('Authorization: foo  Credential=foo/bar,'
-                   'SignedHeaders=content-type;host;x-amz-date,'
-                   'Signature=xyz')}
+                    'SignedHeaders=content-type;host;x-amz-date,'
+                    'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
         self.assertEqual(ec2._get_signature(dummy_req), 'xyz')
@@ -113,8 +113,8 @@ class Ec2TokenTest(HeatTestCase):
     def test_get_access_header_space(self):
         req_env = {'HTTP_AUTHORIZATION':
                    ('Authorization: foo  Credential=foo/bar, '
-                   'SignedHeaders=content-type;host;x-amz-date, '
-                   'Signature=xyz')}
+                    'SignedHeaders=content-type;host;x-amz-date, '
+                    'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
         self.assertEqual(ec2._get_access(dummy_req), 'foo')
@@ -122,8 +122,8 @@ class Ec2TokenTest(HeatTestCase):
     def test_get_access_header_nospace(self):
         req_env = {'HTTP_AUTHORIZATION':
                    ('Authorization: foo  Credential=foo/bar,'
-                   'SignedHeaders=content-type;host;x-amz-date,'
-                   'Signature=xyz')}
+                    'SignedHeaders=content-type;host;x-amz-date,'
+                    'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
         self.assertEqual(ec2._get_access(dummy_req), 'foo')
@@ -131,8 +131,8 @@ class Ec2TokenTest(HeatTestCase):
     def test_get_access_header_last(self):
         req_env = {'HTTP_AUTHORIZATION':
                    ('Authorization: foo '
-                   'SignedHeaders=content-type;host;x-amz-date,'
-                   'Signature=xyz,Credential=foo/bar')}
+                    'SignedHeaders=content-type;host;x-amz-date,'
+                    'Signature=xyz,Credential=foo/bar')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
         self.assertEqual(ec2._get_access(dummy_req), 'foo')
@@ -146,7 +146,7 @@ class Ec2TokenTest(HeatTestCase):
     def test_call_auth_nosig(self):
         req_env = {'HTTP_AUTHORIZATION':
                    ('Authorization: foo  Credential=foo/bar, '
-                   'SignedHeaders=content-type;host;x-amz-date')}
+                    'SignedHeaders=content-type;host;x-amz-date')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app='xyz', conf={})
         self.assertRaises(exception.HeatIncompleteSignatureError,
@@ -155,8 +155,8 @@ class Ec2TokenTest(HeatTestCase):
     def test_call_auth_nouser(self):
         req_env = {'HTTP_AUTHORIZATION':
                    ('Authorization: foo '
-                   'SignedHeaders=content-type;host;x-amz-date,'
-                   'Signature=xyz')}
+                    'SignedHeaders=content-type;host;x-amz-date,'
+                    'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app='xyz', conf={})
         self.assertRaises(exception.HeatMissingAuthenticationTokenError,
@@ -175,8 +175,8 @@ class Ec2TokenTest(HeatTestCase):
         req_env = {'HTTP_X_AUTH_USER': 'foo',
                    'HTTP_AUTHORIZATION':
                    ('Authorization: foo '
-                   'SignedHeaders=content-type;host;x-amz-date,'
-                   'Signature=xyz')}
+                    'SignedHeaders=content-type;host;x-amz-date,'
+                    'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app='xyz', conf={})
         self.assertEqual(ec2.__call__(dummy_req), 'xyz')

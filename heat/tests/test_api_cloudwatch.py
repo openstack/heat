@@ -434,15 +434,15 @@ class WatchControllerTest(HeatTestCase):
         rpc.call(dummy_req.context, self.topic,
                  {'args':
                   {'stats_data':
-                  {'Namespace': u'system/linux',
-                  u'ServiceFailure':
-                  {'Value': u'1',
-                   'Unit': u'Count',
-                   'Dimensions': []}},
-                 'watch_name': u'HttpFailureAlarm'},
-                 'namespace': None,
-                 'method': 'create_watch_data',
-                 'version': self.api_version},
+                      {'Namespace': u'system/linux',
+                       u'ServiceFailure':
+                       {'Value': u'1',
+                        'Unit': u'Count',
+                        'Dimensions': []}},
+                   'watch_name': u'HttpFailureAlarm'},
+                  'namespace': None,
+                  'method': 'create_watch_data',
+                  'version': self.api_version},
                  None).AndReturn(engine_resp)
 
         self.m.ReplayAll()

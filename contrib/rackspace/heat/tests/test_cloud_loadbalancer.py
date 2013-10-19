@@ -370,8 +370,8 @@ class LoadBalancerTest(HeatTestCase):
                                                           expected)
         self.assertEqual(rsrc.validate(),
                          {'Error':
-                         'Property error : %s: Property securePort not '
-                         'assigned' % rsrc.name})
+                          'Property error : %s: Property securePort not '
+                          'assigned' % rsrc.name})
 
         ssl_termination['securePort'] = 443
         template = self._set_template(template,

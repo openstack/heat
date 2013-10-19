@@ -205,7 +205,7 @@ class AccessKey(resource.Resource):
             if not self.resource_id:
                 logger.warn('could not get secret for %s Error:%s' %
                             (self.properties['UserName'],
-                            "resource_id not yet set"))
+                             "resource_id not yet set"))
             else:
                 try:
                     user_id = self._get_user().resource_id
