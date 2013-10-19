@@ -1406,13 +1406,13 @@ class StackTest(HeatTestCase):
                               'Properties': {'Foo': 'abc'}},
                 'BResource': {'Type': 'ResourceWithPropsType',
                               'Properties': {
-                              'Foo': {'Ref': 'AResource'}}}}}
+                                  'Foo': {'Ref': 'AResource'}}}}}
         tmpl2 = {'Resources': {
                  'AResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {'Foo': 'smelly'}},
                  'BResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {
-                               'Foo': {'Ref': 'AResource'}}}}}
+                                   'Foo': {'Ref': 'AResource'}}}}}
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl))
@@ -1460,13 +1460,13 @@ class StackTest(HeatTestCase):
                               'Properties': {'Foo': 'abc'}},
                 'BResource': {'Type': 'ResourceWithPropsType',
                               'Properties': {
-                              'Foo': {'Ref': 'AResource'}}}}}
+                                  'Foo': {'Ref': 'AResource'}}}}}
         tmpl2 = {'Resources': {
                  'AResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {'Foo': 'smelly'}},
                  'BResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {
-                               'Foo': {'Ref': 'AResource'}}}}}
+                                   'Foo': {'Ref': 'AResource'}}}}}
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),
@@ -1531,13 +1531,13 @@ class StackTest(HeatTestCase):
                               'Properties': {'Foo': 'abc'}},
                 'BResource': {'Type': 'ResourceWithPropsType',
                               'Properties': {
-                              'Foo': {'Ref': 'AResource'}}}}}
+                                  'Foo': {'Ref': 'AResource'}}}}}
         tmpl2 = {'Resources': {
                  'AResource': {'Type': 'ResourceTypeA',
                                'Properties': {'Foo': 'smelly'}},
                  'BResource': {'Type': 'ResourceWithPropsType',
                                'Properties': {
-                               'Foo': {'Ref': 'AResource'}}}}}
+                                   'Foo': {'Ref': 'AResource'}}}}}
 
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl),

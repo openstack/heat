@@ -1706,7 +1706,7 @@ class StackServiceTest(HeatTestCase):
         values = {'watch_rule_id': watch.id,
                   'data': {u'Namespace': u'system/linux',
                            u'ServiceFailure': {
-                           u'Units': u'Counter', u'Value': 1}}}
+                               u'Units': u'Counter', u'Value': 1}}}
         watch = db_api.watch_data_create(self.ctx, values)
 
         # Check there is one result returned

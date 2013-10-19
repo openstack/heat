@@ -1532,8 +1532,8 @@ class PropertiesValidationTest(testtools.TestCase):
         nested_schema = {'Key': {'Type': 'String',
                          'Required': True},
                          'Value': {'Type': 'String',
-                         'Required': True,
-                         'Default': 'fewaf'}}
+                                   'Required': True,
+                                   'Default': 'fewaf'}}
         schema = {'foo': {'Type': 'Map', 'Schema': {'Type': 'Map',
                   'Schema': nested_schema}}}
 
@@ -1549,7 +1549,7 @@ class PropertiesValidationTest(testtools.TestCase):
         nested_schema = {'Key': {'Type': 'Map', 'Schema': {'Type': 'Map',
                          'Schema': key_schema}},
                          'Value': {'Type': 'String',
-                         'Required': True}}
+                                   'Required': True}}
         schema = {'foo': {'Type': 'List', 'Schema': {'Type': 'Map',
                   'Schema': nested_schema}}}
 

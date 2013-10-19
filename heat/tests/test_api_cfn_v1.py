@@ -130,13 +130,13 @@ class CfnStackControllerTest(HeatTestCase):
         result = self.controller.list(dummy_req)
         expected = {'ListStacksResponse': {'ListStacksResult':
                     {'StackSummaries':
-                    [{u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1',
-                      u'LastUpdatedTime': u'2012-07-09T09:13:11Z',
-                      u'TemplateDescription': u'blah',
-                      u'StackStatusReason': u'Stack successfully created',
-                      u'CreationTime': u'2012-07-09T09:12:45Z',
-                      u'StackName': u'wordpress',
-                      u'StackStatus': u'CREATE_COMPLETE'}]}}}
+                     [{u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1',
+                       u'LastUpdatedTime': u'2012-07-09T09:13:11Z',
+                       u'TemplateDescription': u'blah',
+                       u'StackStatusReason': u'Stack successfully created',
+                       u'CreationTime': u'2012-07-09T09:12:45Z',
+                       u'StackName': u'wordpress',
+                       u'StackStatus': u'CREATE_COMPLETE'}]}}}
         self.assertEqual(result, expected)
         self.m.VerifyAll()
 
@@ -843,10 +843,10 @@ class CfnStackControllerTest(HeatTestCase):
                  {'namespace': None,
                   'method': 'create_stack',
                   'args': {'stack_name': stack_name,
-                  'template': template,
-                  'params': engine_parms,
-                  'files': {},
-                  'args': engine_args},
+                           'template': template,
+                           'params': engine_parms,
+                           'files': {},
+                           'args': engine_args},
                   'version': self.api_version}, None).AndRaise(
                       heat_exception.StackValidationFailed(
                           message='Something went wrong'))
@@ -1358,18 +1358,18 @@ class CfnStackControllerTest(HeatTestCase):
 
         expected = {'DescribeStackResourceResponse':
                     {'DescribeStackResourceResult':
-                    {'StackResourceDetail':
-                    {'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                    'ResourceStatus': u'CREATE_COMPLETE',
-                    'Description': u'',
-                    'ResourceType': u'AWS::EC2::Instance',
-                    'ResourceStatusReason': None,
-                    'LastUpdatedTimestamp': u'2012-07-23T13:06:00Z',
-                    'StackName': u'wordpress',
-                    'PhysicalResourceId':
-                    u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                    'Metadata': {u'wordpress': []},
-                    'LogicalResourceId': u'WikiDatabase'}}}}
+                     {'StackResourceDetail':
+                      {'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
+                       'ResourceStatus': u'CREATE_COMPLETE',
+                       'Description': u'',
+                       'ResourceType': u'AWS::EC2::Instance',
+                       'ResourceStatusReason': None,
+                       'LastUpdatedTimestamp': u'2012-07-23T13:06:00Z',
+                       'StackName': u'wordpress',
+                       'PhysicalResourceId':
+                       u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                       'Metadata': {u'wordpress': []},
+                       'LogicalResourceId': u'WikiDatabase'}}}}
 
         self.assertEqual(response, expected)
         self.m.VerifyAll()
@@ -1488,17 +1488,17 @@ class CfnStackControllerTest(HeatTestCase):
 
         expected = {'DescribeStackResourcesResponse':
                     {'DescribeStackResourcesResult':
-                    {'StackResources':
-                     [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                       'ResourceStatus': u'CREATE_COMPLETE',
-                       'Description': u'',
-                       'ResourceType': u'AWS::EC2::Instance',
-                       'Timestamp': u'2012-07-23T13:06:00Z',
-                       'ResourceStatusReason': None,
-                       'StackName': u'wordpress',
-                       'PhysicalResourceId':
-                       u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                       'LogicalResourceId': u'WikiDatabase'}]}}}
+                     {'StackResources':
+                      [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
+                        'ResourceStatus': u'CREATE_COMPLETE',
+                        'Description': u'',
+                        'ResourceType': u'AWS::EC2::Instance',
+                        'Timestamp': u'2012-07-23T13:06:00Z',
+                        'ResourceStatusReason': None,
+                        'StackName': u'wordpress',
+                        'PhysicalResourceId':
+                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                        'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(response, expected)
         self.m.VerifyAll()
@@ -1582,17 +1582,17 @@ class CfnStackControllerTest(HeatTestCase):
 
         expected = {'DescribeStackResourcesResponse':
                     {'DescribeStackResourcesResult':
-                    {'StackResources':
-                     [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                       'ResourceStatus': u'CREATE_COMPLETE',
-                       'Description': u'',
-                       'ResourceType': u'AWS::EC2::Instance',
-                       'Timestamp': u'2012-07-23T13:06:00Z',
-                       'ResourceStatusReason': None,
-                       'StackName': u'wordpress',
-                       'PhysicalResourceId':
-                       u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                       'LogicalResourceId': u'WikiDatabase'}]}}}
+                     {'StackResources':
+                      [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
+                        'ResourceStatus': u'CREATE_COMPLETE',
+                        'Description': u'',
+                        'ResourceType': u'AWS::EC2::Instance',
+                        'Timestamp': u'2012-07-23T13:06:00Z',
+                        'ResourceStatusReason': None,
+                        'StackName': u'wordpress',
+                        'PhysicalResourceId':
+                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
+                        'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(response, expected)
         self.m.VerifyAll()
@@ -1676,8 +1676,8 @@ class CfnStackControllerTest(HeatTestCase):
         rpc.call(dummy_req.context, self.topic,
                  {'namespace': None,
                   'method': 'list_stack_resources',
-                 'args': {'stack_identity': identity},
-                 'version': self.api_version}, None).AndReturn(engine_resp)
+                  'args': {'stack_identity': identity},
+                  'version': self.api_version}, None).AndReturn(engine_resp)
 
         self.m.ReplayAll()
 

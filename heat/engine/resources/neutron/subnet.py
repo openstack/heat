@@ -46,8 +46,8 @@ class Subnet(neutron.NeutronResource):
                          'enable_dhcp': {'Type': 'Boolean'},
                          'allocation_pools': {'Type': 'List',
                                               'Schema': {
-                                              'Type': 'Map',
-                                              'Schema': allocation_schema
+                                                  'Type': 'Map',
+                                                  'Schema': allocation_schema
                                               }},
                          'tenant_id': {'Type': 'String'}}
     attributes_schema = {

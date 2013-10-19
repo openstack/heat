@@ -563,8 +563,7 @@ class ResourceTest(HeatTestCase):
         }
         self.assertEqual(expected_template,
                          TestResource.resource_to_template(
-                         'Test::Resource::resource')
-                         )
+                             'Test::Resource::resource'))
 
 
 class ResourceDependenciesTest(HeatTestCase):
