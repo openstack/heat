@@ -131,6 +131,15 @@ class Server(resource.Resource):
                              'server. A maximum of five entries is allowed, '
                              'and both keys and values must be 255 characters '
                              'or less.')},
+        'user_data_format': {
+            'Type': 'String',
+            'Default': 'HEAT_CFNTOOLS',
+            'Description': _('How the user_data should be formatted for the '
+                             'server. For HEAT_CFNTOOLS, the user_data is '
+                             'bundled as part of the heat-cfntools '
+                             'cloud-init boot configuration data. For RAW, '
+                             'the user_data is passed to Nova unmodified.'),
+            'AllowedValues': ['HEAT_CFNTOOLS', 'RAW']},
         'user_data': {
             'Type': 'String',
             'Description': _('User data script to be executed by '
@@ -194,7 +203,14 @@ class Server(resource.Resource):
 
     def handle_create(self):
         security_groups = self.properties.get('security_groups', [])
-        userdata = self.properties.get('user_data', '')
+
+        user_data_format = self.properties.get('user_data_format')
+        if user_data_format == 'HEAT_CFNTOOLS':
+            userdata = self.get_mime_string(
+                self.properties.get('user_data', ''))
+        else:
+            userdata = self.properties.get('user_data', '')
+
         flavor = self.properties['flavor']
         availability_zone = self.properties['availability_zone']
 
@@ -237,7 +253,7 @@ class Server(resource.Resource):
                 flavor=flavor_id,
                 key_name=key_name,
                 security_groups=security_groups,
-                userdata=self.get_mime_string(userdata),
+                userdata=userdata,
                 meta=instance_meta,
                 scheduler_hints=scheduler_hints,
                 nics=nics,
