@@ -54,6 +54,8 @@ class ResourceInfo(object):
         self.user_resource = True
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return (self.path == other.path and
                 self.value == other.value and
                 self.user_resource == other.user_resource)
@@ -154,7 +156,9 @@ class ResourceRegistry(object):
 
     def _load_registry(self, path, registry):
         for k, v in iter(registry.items()):
-            if isinstance(v, dict):
+            if v is None:
+                self._register_info(path + [k], None)
+            elif isinstance(v, dict):
                 self._load_registry(path + [k], v)
             else:
                 self._register_info(path + [k],
@@ -172,6 +176,24 @@ class ResourceRegistry(object):
             if key not in registry:
                 registry[key] = {}
             registry = registry[key]
+
+        if info is None:
+            if name.endswith('*'):
+                # delete all matching entries.
+                for res_name in registry.keys():
+                    if isinstance(registry[res_name], ResourceInfo) and \
+                       res_name.startswith(name[:-1]):
+                        LOG.warn(_('Removing %(item)s from %(path)s') % {
+                            'item': res_name,
+                            'path': descriptive_path})
+                        del registry[res_name]
+            else:
+                # delete this entry.
+                LOG.warn(_('Removing %(item)s from %(path)s') % {
+                    'item': name,
+                    'path': descriptive_path})
+                del registry[name]
+            return
 
         if name in registry and isinstance(registry[name], ResourceInfo):
             details = {
