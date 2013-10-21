@@ -66,8 +66,8 @@ def parse(tmpl_str):
     else:
         try:
             tpl = yaml.load(tmpl_str, Loader=yaml_loader)
-        except (yaml.scanner.ScannerError, yaml.parser.ParserError) as e:
-            raise ValueError(e)
+        except yaml.YAMLError as yea:
+            raise ValueError(yea)
         else:
             if tpl is None:
                 tpl = {}
