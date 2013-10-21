@@ -22,7 +22,7 @@ import sys
 
 from oslo.config import cfg
 
-from heat.db import migration
+from heat.db import api
 from heat.db import utils
 from heat.openstack.common import log
 from heat import version
@@ -33,7 +33,7 @@ CONF = cfg.CONF
 
 def do_db_version():
     """Print database's current migration level."""
-    print(migration.db_version())
+    print(api.db_version())
 
 
 def do_db_sync():
@@ -41,7 +41,7 @@ def do_db_sync():
     Place a database under migration control and upgrade,
     creating first if necessary.
     """
-    migration.db_sync(CONF.command.version)
+    api.db_sync(CONF.command.version)
 
 
 def purge_deleted():

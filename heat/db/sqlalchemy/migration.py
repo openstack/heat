@@ -16,8 +16,6 @@ import distutils.version as dist_version
 import os
 import sys
 
-from heat.db import migration
-
 import sqlalchemy
 import migrate
 from migrate.versioning import util as migrate_util
@@ -27,6 +25,7 @@ from heat.openstack.common.db.sqlalchemy.session import get_engine
 from heat.openstack.common.gettextutils import _
 
 _REPOSITORY = None
+INIT_VERSION = 14
 
 
 def get_backend():
@@ -100,7 +99,7 @@ def db_version():
         if len(tables):
             raise exc
 
-        db_version_control(migration.INIT_VERSION)
+        db_version_control(INIT_VERSION)
         return versioning_api.db_version(get_engine(), repository)
 
 

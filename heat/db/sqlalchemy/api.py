@@ -28,6 +28,7 @@ from heat.openstack.common.gettextutils import _
 
 from heat.common import crypt
 from heat.common import exception
+from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
 from heat.openstack.common.db.sqlalchemy import session as db_session
 
@@ -507,3 +508,13 @@ def purge_deleted(age):
         engine.execute(raw_template_del)
         user_creds_del = user_creds.delete().where(user_creds.c.id == s[2])
         engine.execute(user_creds_del)
+
+
+def db_sync(version=None):
+    """Migrate the database to `version` or the most recent version."""
+    return migration.db_sync(version=version)
+
+
+def db_version():
+    """Display the current database version."""
+    return migration.db_version()

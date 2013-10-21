@@ -27,7 +27,7 @@ from heat.common import exception
 from heat.engine import environment
 from heat.engine import parser
 
-from heat.db import migration
+from heat.db import api as db_api
 from heat.openstack.common.db.sqlalchemy import session
 
 get_engine = session.get_engine
@@ -118,7 +118,7 @@ def wr_delete_after(test_fn):
 def setup_dummy_db():
     cfg.CONF.set_default('sqlite_synchronous', False)
     session.set_defaults(sql_connection="sqlite://", sqlite_db='heat.db')
-    migration.db_sync()
+    db_api.db_sync()
     engine = get_engine()
     engine.connect()
 
