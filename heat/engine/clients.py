@@ -46,11 +46,12 @@ except ImportError:
     ceilometerclient = None
     logger.info('ceilometerclient not available')
 
+_default_backend = "heat.engine.clients.OpenStackClients"
 
 cloud_opts = [
     cfg.StrOpt('cloud_backend',
-               default=None,
-               help="Cloud module to use as a backend. Defaults to OpenStack.")
+               default=_default_backend,
+               help="Fully qualified class name to use as a client backend.")
 ]
 cfg.CONF.register_opts(cloud_opts)
 
@@ -59,7 +60,6 @@ class OpenStackClients(object):
     '''
     Convenience class to create and cache client instances.
     '''
-
     def __init__(self, context):
         self.context = context
         self._nova = {}
@@ -210,10 +210,18 @@ class OpenStackClients(object):
         return self._ceilometer
 
 
-if cfg.CONF.cloud_backend:
-    cloud_backend_module = importutils.import_module(cfg.CONF.cloud_backend)
-    Clients = cloud_backend_module.Clients
-else:
-    Clients = OpenStackClients
+class ClientBackend(object):
+    '''Delay choosing the backend client module until the client's class needs
+    to be initialized.
+    '''
+    def __new__(cls, context):
+        if cfg.CONF.cloud_backend == _default_backend:
+            return OpenStackClients(context)
+        else:
+            return importutils.import_object(
+                cfg.CONF.cloud_backend,
+                context
+            )
 
-logger.debug('Using backend %s' % Clients)
+
+Clients = ClientBackend

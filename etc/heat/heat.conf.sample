@@ -107,9 +107,9 @@
 # Options defined in heat.engine.clients
 #
 
-# Cloud module to use as a backend. Defaults to OpenStack.
+# Fully qualified class name to use as a client backend.
 # (string value)
-#cloud_backend=<None>
+#cloud_backend=heat.engine.clients.OpenStackClients
 
 
 #
