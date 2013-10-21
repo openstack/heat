@@ -35,7 +35,7 @@ Usage
 
   {Ref: my_server}
 
-Returns ``instance-0003``
+Returns the nova instance ID. For example, ``d8093de0-850f-4513-b202-7979de6c0d55``
 
 ----------
 Fn::Base64
