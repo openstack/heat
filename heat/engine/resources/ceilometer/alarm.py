@@ -26,57 +26,57 @@ class CeilometerAlarm(resource.Resource):
             'Required': True,
             'AllowedValues': ['ge', 'gt', 'eq', 'ne', 'lt', 'le'],
             'Description': _('Operator used to compare specified statistic '
-                             'with threshold')
+                             'with threshold.')
         },
         'evaluation_periods': {
             'Type': 'String',
             'Required': True,
-            'Description': _('Number of periods to evaluate over')
+            'Description': _('Number of periods to evaluate over.')
         },
         'meter_name': {
             'Type': 'String',
             'Required': True,
-            'Description': _('Meter name watched by the alarm')
+            'Description': _('Meter name watched by the alarm.')
         },
         'period': {
             'Type': 'String',
             'Required': True,
-            'Description': _('Period (seconds) to evaluate over')
+            'Description': _('Period (seconds) to evaluate over.')
         },
         'statistic': {
             'Type': 'String',
             'Required': True,
             'AllowedValues': ['count', 'avg', 'sum', 'min', 'max'],
-            'Description': _('Meter statistic to evaluate')
+            'Description': _('Meter statistic to evaluate.')
         },
         'threshold': {
             'Type': 'String',
             'Required': True,
-            'Description': _('Threshold to evaluate against')
+            'Description': _('Threshold to evaluate against.')
         },
         'alarm_actions': {
             'Type': 'List',
             'Description': _('A list of URLs (webhooks) to invoke when state '
-                             'transitions to alarm')
+                             'transitions to alarm.')
         },
         'ok_actions': {
             'Type': 'List',
             'Description': _('A list of URLs (webhooks) to invoke when state '
-                             'transitions to ok')
+                             'transitions to ok.')
         },
         'insufficient_data_actions': {
             'Type': 'List',
             'Description': _('A list of URLs (webhooks) to invoke when state '
-                             'transitions to insufficient-data')
+                             'transitions to insufficient-data.')
         },
         'description': {
             'Type': 'String',
-            'Description': _('Description for the alarm')
+            'Description': _('Description for the alarm.')
         },
         'enabled': {
             'Type': 'Boolean',
             'Default': 'true',
-            'Description': _('True if alarm evaluation/actioning is enabled')
+            'Description': _('True if alarm evaluation/actioning is enabled.')
         },
         'repeat_actions': {
             'Type': 'Boolean',
@@ -85,12 +85,12 @@ class CeilometerAlarm(resource.Resource):
                              'is reached. '
                              'By default, actions are called when : '
                              'the threshold is reached AND the alarm\'s state '
-                             'have changed')
+                             'have changed.')
         },
         'matching_metadata': {
             'Type': 'Map',
             'Description': _('Meter should match this resource metadata '
-                             '(key=value) additionally to the meter_name')
+                             '(key=value) additionally to the meter_name.')
         }
     }
 
