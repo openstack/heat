@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat 2013.2.a430.gd264018\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-10-18 06:04+0000\n"
+"POT-Creation-Date: 2013-10-21 06:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: zh_Hant_TW <LL@li.org>\n"
@@ -30,6 +30,20 @@ msgstr ""
 msgid ""
 "Allowed keystone endpoints for auth_uri when multi_cloud is enabled. At "
 "least one endpoint needs to be specified."
+msgstr ""
+
+#: heat/api/aws/ec2token.py:169
+msgid "Service misconfigured"
+msgstr ""
+
+#: heat/api/cfn/v1/stacks.py:57 heat/api/cloudwatch/watch.py:50
+#, python-format
+msgid "Action %s not allowed for user"
+msgstr ""
+
+#: heat/api/cfn/v1/stacks.py:64 heat/api/cloudwatch/watch.py:57
+#, python-format
+msgid "Error authorizing action %s"
 msgstr ""
 
 #: heat/api/cfn/v1/stacks.py:258
@@ -60,6 +74,11 @@ msgstr ""
 
 #: heat/api/cfn/v1/stacks.py:381
 msgid "stack not not found"
+msgstr ""
+
+#: heat/api/cloudwatch/watch.py:322
+#, python-format
+msgid "Invalid state %(state)s, expecting one of %(expect)s"
 msgstr ""
 
 #: heat/api/middleware/version_negotiation.py:49
@@ -190,6 +209,22 @@ msgstr ""
 msgid ""
 "Maximum events that will be available per stack. Older events will be "
 "deleted when this is reached. Set to 0 for unlimited events per stack."
+msgstr ""
+
+#: heat/common/config.py:184
+msgid "Unable to locate config file"
+msgstr ""
+
+#: heat/common/config.py:196
+#, python-format
+msgid ""
+"Unable to load %(app_name)s from configuration file %(conf_file)s.\n"
+"Got: %(e)r"
+msgstr ""
+
+#: heat/common/environment_format.py:39
+#, python-format
+msgid "environment has wrong section \"%s\""
 msgstr ""
 
 #: heat/common/exception.py:102
@@ -403,18 +438,70 @@ msgstr ""
 msgid "Maximum resources per stack exceeded."
 msgstr ""
 
+#: heat/common/identifier.py:40
+msgid "Stack name may not contain \"/\""
+msgstr ""
+
+#: heat/common/identifier.py:56
+#, python-format
+msgid "\"%s\" is not a valid ARN"
+msgstr ""
+
+#: heat/common/identifier.py:62
+#, python-format
+msgid "\"%s\" is not a valid Heat ARN"
+msgstr ""
+
+#: heat/common/identifier.py:79
+#, python-format
+msgid "\"%s\" is not a valid URL"
+msgstr ""
+
+#: heat/common/identifier.py:85
+#, python-format
+msgid "\"%s\" is not a valid ARN URL"
+msgstr ""
+
+#: heat/common/identifier.py:132 heat/common/identifier.py:139
+#, python-format
+msgid "Unknown attribute \"%s\""
+msgstr ""
+
+#: heat/common/identifier.py:170 heat/engine/resource.py:137
+msgid "Resource name may not contain \"/\""
+msgstr ""
+
 #: heat/common/plugin_loader.py:94
 #, python-format
 msgid "Failed to import module %s"
+msgstr ""
+
+#: heat/common/short_id.py:43
+#, python-format
+msgid "Invalid UUID version (%d)"
 msgstr ""
 
 #: heat/common/template_format.py:62
 msgid "Template exceeds maximum allowed size."
 msgstr ""
 
+#: heat/common/timeutils.py:34
+msgid "Only ISO 8601 duration format of the form PT#H#M#S is supported."
+msgstr ""
+
 #: heat/common/urlfetch.py:44
 #, python-format
 msgid "Fetching data from %s"
+msgstr ""
+
+#: heat/common/urlfetch.py:49
+#, python-format
+msgid "Invalid URL scheme %s"
+msgstr ""
+
+#: heat/common/urlfetch.py:55 heat/common/urlfetch.py:79
+#, python-format
+msgid "Failed to retrieve template: %s"
 msgstr ""
 
 #: heat/common/wsgi.py:55 heat/common/wsgi.py:84 heat/common/wsgi.py:113
@@ -535,6 +622,7 @@ msgid "python-migrate is not installed. Exiting."
 msgstr ""
 
 #: heat/db/sqlalchemy/migration.py:79
+#: heat/openstack/common/db/sqlalchemy/migration.py:219
 msgid "version should be an integer"
 msgstr ""
 
@@ -583,6 +671,31 @@ msgstr ""
 msgid "Attributes"
 msgstr ""
 
+#: heat/engine/api.py:46
+#, python-format
+msgid "Unexpected value for parameter %(name)s : %(value)s"
+msgstr ""
+
+#: heat/engine/attributes.py:85
+#, python-format
+msgid "%(resource)s: Invalid attribute %(key)s"
+msgstr ""
+
+#: heat/engine/components.py:89
+#, python-format
+msgid "component %s is not defined."
+msgstr ""
+
+#: heat/engine/components.py:92
+#, python-format
+msgid "component %s depends on itself."
+msgstr ""
+
+#: heat/engine/components.py:97
+#, python-format
+msgid "duplicated %(dep)s in %(name)s depends on."
+msgstr ""
+
 #: heat/engine/dependencies.py:25
 #, python-format
 msgid "Circular Dependency Found: %(cycle)s"
@@ -598,7 +711,7 @@ msgstr ""
 msgid "Registering %(path)s -> %(value)s"
 msgstr ""
 
-#: heat/engine/hot.py:57
+#: heat/engine/hot.py:57 heat/engine/template.py:71
 #, python-format
 msgid "\"%s\" is not a valid template section"
 msgstr ""
@@ -620,6 +733,30 @@ msgstr ""
 msgid "\"params\" parameter must be a dictionary"
 msgstr ""
 
+#: heat/engine/parameters.py:154
+#, python-format
+msgid "Invalid Parameter type \"%s\""
+msgstr ""
+
+#: heat/engine/parameters.py:183
+#, python-format
+msgid "Missing parameter %s"
+msgstr ""
+
+#: heat/engine/parameters.py:254
+#, python-format
+msgid "Value must be a comma-delimited list string: %s"
+msgstr ""
+
+#: heat/engine/parameters.py:290
+#, python-format
+msgid "Value must be valid JSON: %s"
+msgstr ""
+
+#: heat/engine/parameters.py:301
+msgid "Value must be valid JSON"
+msgstr ""
+
 #: heat/engine/parser.py:77
 #, python-format
 msgid ""
@@ -627,53 +764,178 @@ msgid ""
 "characters, must start with alpha"
 msgstr ""
 
-#: heat/engine/properties.py:398
+#: heat/engine/parser.py:184
+#, python-format
+msgid "No stack exists with id \"%s\""
+msgstr ""
+
+#: heat/engine/parser.py:309
+#, python-format
+msgid "Duplicate names %s"
+msgstr ""
+
+#: heat/engine/parser.py:335
+#, python-format
+msgid "Invalid action %s"
+msgstr ""
+
+#: heat/engine/parser.py:338
+#, python-format
+msgid "Invalid status %s"
+msgstr ""
+
+#: heat/engine/properties.py:89
+#, python-format
+msgid "Invalid type (%s)"
+msgstr ""
+
+#: heat/engine/properties.py:98
+#, python-format
+msgid "Single schema valid only for %(ltype)s, not %(utype)s"
+msgstr ""
+
+#: heat/engine/properties.py:107
+#, python-format
+msgid "Schema valid only for %(ltype)s or %(mtype)s, not %(utype)s"
+msgstr ""
+
+#: heat/engine/properties.py:116
+#, python-format
+msgid "%(name)s constraint invalid for %(utype)s"
+msgstr ""
+
+#: heat/engine/properties.py:127
+#, python-format
+msgid "Invalid default %(default)s (%(exc)s)"
+msgstr ""
+
+#: heat/engine/properties.py:144
+#, python-format
+msgid "Unknown key(s) %s"
+msgstr ""
+
+#: heat/engine/properties.py:167
+#, python-format
+msgid "No %s specified"
+msgstr ""
+
+#: heat/engine/properties.py:176
+#, python-format
+msgid "%(schema)s supplied for %(type)s %(data)s"
+msgstr ""
+
+#: heat/engine/properties.py:314
+#, python-format
+msgid "Invalid key %s"
+msgstr ""
+
+#: heat/engine/properties.py:403
+msgid "min/max must be numeric"
+msgstr ""
+
+#: heat/engine/properties.py:406
+msgid "range must have min and/or max"
+msgstr ""
+
+#: heat/engine/properties.py:411
 #, python-format
 msgid "The value must be at least %(min)s."
 msgstr ""
 
-#: heat/engine/properties.py:400
+#: heat/engine/properties.py:413
 #, python-format
 msgid "The value must be no greater than %(max)s."
 msgstr ""
 
-#: heat/engine/properties.py:402
+#: heat/engine/properties.py:415
 #, python-format
 msgid "The value must be in the range %(min)s to %(max)s."
 msgstr ""
 
-#: heat/engine/properties.py:457
+#: heat/engine/properties.py:465
+msgid "min/max length must be integral"
+msgstr ""
+
+#: heat/engine/properties.py:470
 #, python-format
 msgid "The length must be at least %(min)s."
 msgstr ""
 
-#: heat/engine/properties.py:459
+#: heat/engine/properties.py:472
 #, python-format
 msgid "The length must be no greater than %(max)s."
 msgstr ""
 
-#: heat/engine/properties.py:461
+#: heat/engine/properties.py:474
 #, python-format
 msgid "The length must be in the range %(min)s to %(max)s."
 msgstr ""
 
-#: heat/engine/properties.py:496
+#: heat/engine/properties.py:504
+msgid "AllowedValues must be a list"
+msgstr ""
+
+#: heat/engine/properties.py:509
 #, python-format
 msgid "Allowed values: %s"
 msgstr ""
 
-#: heat/engine/properties.py:529
+#: heat/engine/properties.py:542
 #, python-format
 msgid "Value must match pattern: %s"
+msgstr ""
+
+#: heat/engine/properties.py:589
+msgid "value is not an integer"
+msgstr ""
+
+#: heat/engine/properties.py:601
+msgid "Value must be a string"
+msgstr ""
+
+#: heat/engine/properties.py:619
+#, python-format
+msgid "\"%s\" is not a map"
+msgstr ""
+
+#: heat/engine/properties.py:628
+#, python-format
+msgid "\"%s\" is not a list"
+msgstr ""
+
+#: heat/engine/properties.py:640
+#, python-format
+msgid "\"%s\" is not a valid boolean"
+msgstr ""
+
+#: heat/engine/properties.py:706
+#, python-format
+msgid "Property error : %s"
+msgstr ""
+
+#: heat/engine/properties.py:711
+#, python-format
+msgid "Property %s not implemented yet"
+msgstr ""
+
+#: heat/engine/properties.py:716
+#, python-format
+msgid "Unknown Property %s"
+msgstr ""
+
+#: heat/engine/properties.py:721
+#, python-format
+msgid "Invalid Property %s"
+msgstr ""
+
+#: heat/engine/properties.py:737
+#, python-format
+msgid "Property %s not assigned"
 msgstr ""
 
 #: heat/engine/resource.py:56 heat/engine/resource.py:59
 #, python-format
 msgid "The Resource %s requires replacement."
-msgstr ""
-
-#: heat/engine/resource.py:137
-msgid "Resource name may not contain \"/\""
 msgstr ""
 
 #: heat/engine/scheduler.py:64
@@ -718,6 +980,90 @@ msgstr ""
 #: heat/engine/stack_resource.py:229
 #, python-format
 msgid "Cannot resume %s, stack not created"
+msgstr ""
+
+#: heat/engine/template.py:189 heat/engine/template.py:272
+msgid "Arguments to \"Fn::Join\" must be a list"
+msgstr ""
+
+#: heat/engine/template.py:194 heat/engine/template.py:278
+#, python-format
+msgid "Incorrect arguments to \"Fn::Join\" should be: %s"
+msgstr ""
+
+#: heat/engine/template.py:199 heat/engine/template.py:283
+msgid "Arguments to \"Fn::Join\" not fully resolved"
+msgstr ""
+
+#: heat/engine/template.py:233
+msgid "Arguments to \"Fn::Select\" must be a list"
+msgstr ""
+
+#: heat/engine/template.py:239
+#, python-format
+msgid "Incorrect arguments to \"Fn::Select\" should be: %s"
+msgstr ""
+
+#: heat/engine/template.py:260
+msgid "Arguments to \"Fn::Select\" not fully resolved"
+msgstr ""
+
+#: heat/engine/template.py:307
+msgid "Arguments to \"Fn::Split\" must be a list"
+msgstr ""
+
+#: heat/engine/template.py:313 heat/engine/template.py:316
+#, python-format
+msgid "Incorrect arguments to \"Fn::Split\" should be: %s"
+msgstr ""
+
+#: heat/engine/template.py:336
+msgid "Arguments to \"Fn::Replace\" must be a list"
+msgstr ""
+
+#: heat/engine/template.py:344
+#, python-format
+msgid "Incorrect arguments to \"Fn::Replace\" should be: %s"
+msgstr ""
+
+#: heat/engine/template.py:350 heat/engine/template.py:353
+msgid "Arguments to \"Fn::Replace\" not fully resolved"
+msgstr ""
+
+#: heat/engine/template.py:360
+#, python-format
+msgid "\"Fn::Replace\" value(%(value)s) for \"%(key)s\" is not a string"
+msgstr ""
+
+#: heat/engine/template.py:375
+msgid "Arguments to \"Fn::Base64\" not fully resolved"
+msgstr ""
+
+#: heat/engine/template.py:399 heat/engine/template.py:401
+#: heat/engine/template.py:403 heat/engine/template.py:405
+#: heat/engine/template.py:407
+#, python-format
+msgid "Wrong Arguments try: \"%s\""
+msgstr ""
+
+#: heat/engine/template.py:431
+#, python-format
+msgid "Incorrect arguments to \"Fn::ResourceFacade\" should be one of: %s"
+msgstr ""
+
+#: heat/engine/template.py:438
+#, python-format
+msgid "\"%s\" is not specified in parent resource"
+msgstr ""
+
+#: heat/engine/watchrule.py:322
+#, python-format
+msgid "Invalid watch state %s"
+msgstr ""
+
+#: heat/engine/watchrule.py:334
+#, python-format
+msgid "Unknown watch state %s"
 msgstr ""
 
 #: heat/engine/resources/__init__.py:41
@@ -2345,10 +2691,6 @@ msgstr ""
 msgid "Eventlet backdoor listening on %(port)s for process %(pid)d"
 msgstr ""
 
-#: heat/openstack/common/exception.py:102
-msgid "Uncaught exception"
-msgstr ""
-
 #: heat/openstack/common/excutils.py:62
 #, python-format
 msgid "Original exception being dropped: %s"
@@ -2602,52 +2944,56 @@ msgstr ""
 msgid "Invalid Parameter: Unicode is not supported by the current database."
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/session.py:552
+#: heat/openstack/common/db/sqlalchemy/migration.py:251
+msgid "Upgrade DB using Essex release first."
+msgstr ""
+
+#: heat/openstack/common/db/sqlalchemy/session.py:553
 msgid "DB exception wrapped."
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/session.py:614
+#: heat/openstack/common/db/sqlalchemy/session.py:616
 #, python-format
 msgid "Got mysql server has gone away: %s"
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/session.py:694
+#: heat/openstack/common/db/sqlalchemy/session.py:696
 #, python-format
 msgid "SQL connection failed. %s attempts left."
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/utils.py:50
+#: heat/openstack/common/db/sqlalchemy/utils.py:60
 msgid "Sort key supplied was not valid."
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/utils.py:89
+#: heat/openstack/common/db/sqlalchemy/utils.py:99
 msgid "Id not in sort_keys; is sort_keys unique?"
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/utils.py:111
+#: heat/openstack/common/db/sqlalchemy/utils.py:121
 msgid "Unknown sort direction, must be 'desc' or 'asc'"
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/utils.py:182
+#: heat/openstack/common/db/sqlalchemy/utils.py:196
 #, python-format
 msgid ""
 "Please specify column %s in col_name_col_instance param. It is required "
 "because column has unsupported type by sqlite)."
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/utils.py:188
+#: heat/openstack/common/db/sqlalchemy/utils.py:202
 #, python-format
 msgid ""
 "col_name_col_instance param has wrong type of column instance for column "
 "%s It should be instance of sqlalchemy.Column."
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/utils.py:268
+#: heat/openstack/common/db/sqlalchemy/utils.py:282
 #, python-format
 msgid "Deleting duplicated row with id: %(id)s from table: %(table)s"
 msgstr ""
 
-#: heat/openstack/common/db/sqlalchemy/utils.py:290
+#: heat/openstack/common/db/sqlalchemy/utils.py:303
 msgid "Unsupported id columns type"
 msgstr ""
 
@@ -3230,5 +3576,8 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "%s not in valid format"
+#~ msgstr ""
+
+#~ msgid "Uncaught exception"
 #~ msgstr ""
 
