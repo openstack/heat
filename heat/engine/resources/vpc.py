@@ -29,17 +29,25 @@ class VPC(resource.Resource):
                              'Required': True}}
 
     properties_schema = {
-        'CidrBlock': {'Type': 'String'},
+        'CidrBlock': {
+            'Type': 'String',
+            'Description': _('CIDR block to apply to the VPC.')},
         'InstanceTenancy': {
             'Type': 'String',
             'AllowedValues': ['default',
                               'dedicated'],
             'Default': 'default',
-            'Implemented': False},
+            'Implemented': False,
+            'Description': _('Allowed tenancy of instances launched in the '
+                             'VPC. default - any tenancy; dedicated - '
+                             'instance will be dedicated, regardless of '
+                             'the tenancy option specified at instance '
+                             'launch.')},
         'Tags': {'Type': 'List', 'Schema': {
             'Type': 'Map',
             'Implemented': False,
-            'Schema': tags_schema}}
+            'Schema': tags_schema,
+            'Description': _('List of tags to attach to the instance.')}}
     }
 
     def handle_create(self):
