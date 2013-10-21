@@ -10,9 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mox
+from datetime import datetime
+from datetime import timedelta
+
+import fixtures
 from json import loads
 from json import dumps
+import mox
+
 
 from heat.db.sqlalchemy import api as db_api
 from heat.engine import environment
@@ -658,6 +663,45 @@ class DBAPIStackTest(HeatTestCase):
                       **val) for val in values]
 
         self.assertEqual(2, db_api.stack_count_all_by_tenant(self.ctx))
+
+    def test_purge_deleted(self):
+        now = datetime.now()
+        delta = timedelta(seconds=3600 * 7)
+        deleted = [now - delta * i for i in range(1, 6)]
+        templates = [create_raw_template(self.ctx) for i in range(5)]
+        creds = [create_user_creds(self.ctx) for i in range(5)]
+        stacks = [create_stack(self.ctx, templates[i], creds[i],
+                               deleted_at=deleted[i]) for i in range(5)]
+
+        class MyDatetime():
+            def now(self):
+                return now
+        self.useFixture(fixtures.MonkeyPatch('heat.db.sqlalchemy.api.datetime',
+                                             MyDatetime()))
+
+        db_api.purge_deleted(age=1, granularity='days')
+        self._deleted_stack_existance(utils.dummy_context(), stacks,
+                                      (0, 1, 2), (3, 4))
+
+        db_api.purge_deleted(age=22, granularity='hours')
+        self._deleted_stack_existance(utils.dummy_context(), stacks,
+                                      (0, 1, 2), (3, 4))
+
+        db_api.purge_deleted(age=1100, granularity='minutes')
+        self._deleted_stack_existance(utils.dummy_context(), stacks,
+                                      (0, 1), (2, 3, 4))
+
+        db_api.purge_deleted(age=3600, granularity='seconds')
+        self._deleted_stack_existance(utils.dummy_context(), stacks,
+                                      (), (0, 1, 2, 3, 4))
+
+    def _deleted_stack_existance(self, ctx, stacks, existing, deleted):
+        for s in existing:
+            self.assertIsNotNone(db_api.stack_get(ctx, stacks[s].id,
+                                                  show_deleted=True))
+        for s in deleted:
+            self.assertIsNone(db_api.stack_get(ctx, stacks[s].id,
+                                               show_deleted=True))
 
 
 class DBAPIResourceTest(HeatTestCase):
