@@ -28,19 +28,28 @@ class NetworkInterface(resource.Resource):
                              'Required': True}}
 
     properties_schema = {
-        'Description': {'Type': 'String'},
-        'GroupSet': {'Type': 'List'},
+        'Description': {
+            'Type': 'String',
+            'Description': _('Description for this interface.')},
+        'GroupSet': {
+            'Type': 'List',
+            'Description': _('List of security group IDs associated '
+                             'with this interface.')},
         'PrivateIpAddress': {'Type': 'String'},
         'SourceDestCheck': {
             'Type': 'Boolean',
-            'Implemented': False},
+            'Implemented': False,
+            'Description': _('Flag indicating if traffic to or from '
+                             'instance is validated.')},
         'SubnetId': {
             'Type': 'String',
-            'Required': True},
+            'Required': True,
+            'Description': _('Subnet ID to associate with this interface.')},
         'Tags': {'Type': 'List', 'Schema': {
             'Type': 'Map',
             'Implemented': False,
-            'Schema': tags_schema}}
+            'Schema': tags_schema,
+            'Description': _('List of tags associated with this interface.')}}
     }
 
     @staticmethod
