@@ -14,6 +14,7 @@
 
 
 import copy
+import json
 
 from oslo.config import cfg
 
@@ -107,6 +108,20 @@ Outputs:
         rsrc.delete()
         self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
 
+        self.m.VerifyAll()
+
+    def test_nested_stack_create_with_timeout(self):
+        urlfetch.get('https://server.test/the.template').MultipleTimes().\
+            AndReturn(self.nested_template)
+        self.m.ReplayAll()
+
+        timeout_template = template_format.parse(
+            copy.deepcopy(self.test_template))
+        props = timeout_template['Resources']['the_nested']['Properties']
+        props['TimeoutInMinutes'] = '50'
+
+        stack = self.create_stack(json.dumps(timeout_template))
+        self.assertEquals(stack.state, (stack.CREATE, stack.COMPLETE))
         self.m.VerifyAll()
 
     def test_nested_stack_create_exceeds_resource_limit(self):
