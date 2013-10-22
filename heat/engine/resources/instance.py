@@ -431,9 +431,8 @@ class Instance(resource.Resource):
             flavor = prop_diff['InstanceType']
             flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
             server = self.nova().servers.get(self.resource_id)
-            server.resize(flavor_id)
-            checker = scheduler.TaskRunner(nova_utils.check_resize,
-                                           server, flavor)
+            checker = scheduler.TaskRunner(nova_utils.resize, server, flavor,
+                                           flavor_id)
             checker.start()
             return checker
 

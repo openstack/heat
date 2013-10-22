@@ -27,6 +27,7 @@ from oslo.config import cfg
 
 from heat.common import exception
 from heat.engine import clients
+from heat.engine import scheduler
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
 
@@ -210,12 +211,18 @@ def delete_server(server):
             break
 
 
-def check_resize(server, flavor):
+@scheduler.wrappertask
+def resize(server, flavor, flavor_id):
+    """Resize the server and then call check_resize task to verify."""
+    server.resize(flavor_id)
+    yield check_resize(server, flavor, flavor_id)
+
+
+def check_resize(server, flavor, flavor_id):
     """
-    Verify that the server is properly resized. If that's the case, confirm
-    the resize, if not raise an error.
+    Verify that a resizing server is properly resized.
+    If that's the case, confirm the resize, if not raise an error.
     """
-    yield
     server.get()
     while server.status == 'RESIZE':
         yield
