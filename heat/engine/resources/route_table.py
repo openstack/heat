@@ -34,11 +34,13 @@ class RouteTable(resource.Resource):
     properties_schema = {
         'VpcId': {
             'Type': 'String',
-            'Required': True},
+            'Required': True,
+            'Description': _('VPC ID for where the route table is created.')},
         'Tags': {'Type': 'List', 'Schema': {
             'Type': 'Map',
             'Implemented': False,
-            'Schema': tags_schema}}
+            'Schema': tags_schema,
+            'Description': _('List of tags to be attached to this resource.')}}
     }
 
     def handle_create(self):
@@ -88,10 +90,12 @@ class SubnetRouteTableAssocation(resource.Resource):
     properties_schema = {
         'RouteTableId': {
             'Type': 'String',
-            'Required': True},
+            'Required': True,
+            'Description': _('Route table ID.')},
         'SubnetId': {
             'Type': 'String',
-            'Required': True}
+            'Required': True,
+            'Description': _('Subnet ID.')}
     }
 
     def handle_create(self):
