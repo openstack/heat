@@ -36,50 +36,50 @@ class Server(resource.Resource):
             'Required': True,
             'Description': _('A device name where the volume will be '
                              'attached in the system at /dev/device_name. '
-                             'This value is typically vda')},
+                             'This value is typically vda.')},
         'volume_id': {
             'Type': 'String',
             'Description': _('The ID of the volume to boot from. Only one of '
-                             'volume_id or snapshot_id should be provided')},
+                             'volume_id or snapshot_id should be provided.')},
         'snapshot_id': {
             'Type': 'String',
             'Description': _('The ID of the snapshot to create a volume '
-                             'from')},
+                             'from.')},
         'volume_size': {
             'Type': 'String',
             'Description': _('The size of the volume, in GB. It is safe to '
                              'leave this blank and have the Compute service '
-                             'infer the size')},
+                             'infer the size.')},
         'delete_on_termination': {
             'Type': 'Boolean',
             'Description': _('Indicate whether the volume should be deleted '
-                             'when the server is terminated')}
+                             'when the server is terminated.')}
     }
 
     networks_schema = {
         'uuid': {
             'Type': 'String',
-            'Description': _('ID of network to create a port on')},
+            'Description': _('ID of network to create a port on.')},
         'fixed_ip': {
             'Type': 'String',
             'Description': _('Fixed IP address to specify for the port '
-                             'created on the requested network')},
+                             'created on the requested network.')},
         'port': {
             'Type': 'String',
             'Description': _('ID of an existing port to associate with '
-                             'this server')},
+                             'this server.')},
     }
 
     properties_schema = {
         'name': {
             'Type': 'String',
-            'Description': _('Optional server name')},
+            'Description': _('Optional server name.')},
         'image': {
             'Type': 'String',
-            'Description': _('The ID or name of the image to boot with')},
+            'Description': _('The ID or name of the image to boot with.')},
         'block_device_mapping': {
             'Type': 'List',
-            'Description': _('Block device mappings for this server'),
+            'Description': _('Block device mappings for this server.'),
             'Schema': {
                 'Type': 'Map',
                 'Schema': block_mapping_schema
@@ -87,36 +87,35 @@ class Server(resource.Resource):
         },
         'flavor': {
             'Type': 'String',
-            'Description': _('The ID or name of the flavor to boot onto'),
+            'Description': _('The ID or name of the flavor to boot onto.'),
             'Required': True},
         'flavor_update_policy': {
             'Type': 'String',
             'Description': _('Policy on how to apply a flavor update; either '
                              'by requesting a server resize or by replacing '
-                             'the entire server'),
+                             'the entire server.'),
             'Default': 'RESIZE',
             'AllowedValues': ['RESIZE', 'REPLACE']},
         'key_name': {
             'Type': 'String',
-            'Description': _('Name of keypair to inject into the server')},
+            'Description': _('Name of keypair to inject into the server.')},
         'admin_user': {
             'Type': 'String',
             'Default': cfg.CONF.instance_user,
             'Description': _('Name of the administrative user to use '
-                             ' on the server')},
-
+                             'on the server.')},
         'availability_zone': {
             'Type': 'String',
             'Description': _('Name of the availability zone for server '
-                             'placement')},
+                             'placement.')},
         'security_groups': {
             'Type': 'List',
-            'Description': _('List of security group names')},
+            'Description': _('List of security group names.')},
         'networks': {
             'Type': 'List',
             'Description': _('An ordered list of nics to be '
                              'added to this server, with information about '
-                             'connected networks, fixed ips, port etc'),
+                             'connected networks, fixed ips, port etc.'),
             'Schema': {
                 'Type': 'Map',
                 'Schema': networks_schema
@@ -125,51 +124,52 @@ class Server(resource.Resource):
         'scheduler_hints': {
             'Type': 'Map',
             'Description': _('Arbitrary key-value pairs specified by the '
-                             'client to help boot a server')},
+                             'client to help boot a server.')},
         'metadata': {
             'Type': 'Map',
             'Description': _('Arbitrary key/value metadata to store for this '
                              'server. A maximum of five entries is allowed, '
                              'and both keys and values must be 255 characters '
-                             'or less')},
+                             'or less.')},
         'user_data': {
             'Type': 'String',
-            'Description': _('User data script to be executed by cloud-init')},
+            'Description': _('User data script to be executed by '
+                             'cloud-init.')},
         'reservation_id': {
             'Type': 'String',
-            'Description': _('A UUID for the set of servers being requested')
+            'Description': _('A UUID for the set of servers being requested.')
         },
         'config_drive': {
             'Type': 'String',
             'Description': _('value for config drive either boolean, or '
-                             'volume-id')
+                             'volume-id.')
         },
         # diskConfig translates to API attribute OS-DCF:diskConfig
         # hence the camel case instead of underscore to separate the words
         'diskConfig': {
             'Type': 'String',
             'Description': _('Control how the disk is partitioned when the '
-                             'server is created'),
+                             'server is created.'),
             'AllowedValues': ['AUTO', 'MANUAL']}
     }
 
     attributes_schema = {
-        'show': _('A dict of all server details as returned by the API'),
+        'show': _('A dict of all server details as returned by the API.'),
         'addresses': _('A dict of all network addresses as returned by '
-                       'the API'),
+                       'the API.'),
         'networks': _('A dict of assigned network addresses of the form: '
-                      '{"public": [ip1, ip2...], "private": [ip3, ip4]}'),
+                      '{"public": [ip1, ip2...], "private": [ip3, ip4]}.'),
         'first_address': _('Convenience attribute to fetch the first '
                            'assigned network address, or an '
                            'empty string if nothing has been assigned '
                            'at this time. Result may not be predictable '
                            'if the server has addresses from more than one '
                            'network.'),
-        'instance_name': _('AWS compatible instance name'),
+        'instance_name': _('AWS compatible instance name.'),
         'accessIPv4': _('The manually assigned alternative public IPv4 '
-                        'address of the server'),
+                        'address of the server.'),
         'accessIPv6': _('The manually assigned alternative public IPv6 '
-                        'address of the server'),
+                        'address of the server.'),
     }
 
     update_allowed_keys = ('Metadata', 'Properties')
