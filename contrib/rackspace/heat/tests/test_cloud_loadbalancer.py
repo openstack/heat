@@ -417,6 +417,18 @@ class LoadBalancerTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.m.VerifyAll()
 
+    def test_ref_id(self):
+        """The Reference ID of the resource is the resource ID."""
+        template = self._set_template(self.lb_template)
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.m.VerifyAll()
+
+        self.assertEqual(rsrc.FnGetRefId(), rsrc.resource_id)
+
     def test_post_creation_error_page(self):
         error_page = "REALLY BIG ERROR"
 
