@@ -235,6 +235,27 @@ def check_resize(server, flavor, flavor_id):
             dict(flavor=flavor, status=server.status))
 
 
+@scheduler.wrappertask
+def rebuild(server, image_id):
+    """Rebuild the server and call check_rebuild to verify."""
+    server.rebuild(image_id)
+    yield check_rebuild(server, image_id)
+
+
+def check_rebuild(server, image_id):
+    """
+    Verify that a rebuilding server is rebuilt.
+    Raise error if it ends up in an ERROR state.
+    """
+    server.get()
+    while server.status == 'REBUILD':
+        yield
+        server.get()
+    if server.status == 'ERROR':
+        raise exception.Error(
+            _("Rebuilding server failed, status '%s'") % server.status)
+
+
 def server_to_ipaddress(client, server):
     '''
     Return the server's IP address, fetching it from Nova.

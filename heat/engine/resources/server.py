@@ -96,6 +96,13 @@ class Server(resource.Resource):
                              'the entire server.'),
             'Default': 'RESIZE',
             'AllowedValues': ['RESIZE', 'REPLACE']},
+        'image_update_policy': {
+            'Type': 'String',
+            'Default': 'REPLACE',
+            'Description': _('Policy on how to apply an image-id update; '
+                             'either by requesting a server rebuild or by '
+                             'replacing the entire server'),
+            'AllowedValues': ['REBUILD', 'REPLACE']},
         'key_name': {
             'Type': 'String',
             'Description': _('Name of keypair to inject into the server.')},
@@ -173,7 +180,8 @@ class Server(resource.Resource):
     }
 
     update_allowed_keys = ('Metadata', 'Properties')
-    update_allowed_properties = ('flavor', 'flavor_update_policy')
+    update_allowed_properties = ('flavor', 'flavor_update_policy',
+                                 'image', 'image_update_policy')
 
     def __init__(self, name, json_snippet, stack):
         super(Server, self).__init__(name, json_snippet, stack)
@@ -342,6 +350,8 @@ class Server(resource.Resource):
         if 'Metadata' in tmpl_diff:
             self.metadata = tmpl_diff['Metadata']
 
+        checkers = []
+        server = None
         if 'flavor' in prop_diff:
 
             flavor_update_policy = (
@@ -356,11 +366,37 @@ class Server(resource.Resource):
             server = self.nova().servers.get(self.resource_id)
             checker = scheduler.TaskRunner(nova_utils.resize, server, flavor,
                                            flavor_id)
-            checker.start()
-            return checker
+            checkers.append(checker)
 
-    def check_update_complete(self, checker):
-        return checker.step() if checker is not None else True
+        if 'image' in prop_diff:
+            image_update_policy = (
+                prop_diff.get('image_update_policy') or
+                self.properties.get('image_update_policy'))
+            if image_update_policy == 'REPLACE':
+                raise resource.UpdateReplace(self.name)
+            image = prop_diff['image']
+            image_id = nova_utils.get_image_id(self.nova(), image)
+            if not server:
+                server = self.nova().servers.get(self.resource_id)
+            checker = scheduler.TaskRunner(nova_utils.rebuild, server,
+                                           image_id)
+            checkers.append(checker)
+
+        # Optimization: make sure the first task is started before
+        # check_update_complete.
+        if checkers:
+            checkers[0].start()
+
+        return checkers
+
+    def check_update_complete(self, checkers):
+        '''Push all checkers to completion in list order.'''
+        for checker in checkers:
+            if not checker.started():
+                checker.start()
+            if not checker.step():
+                return False
+        return True
 
     def metadata_update(self, new_metadata=None):
         '''
