@@ -219,12 +219,16 @@ class Template(collections.Mapping):
         (for a list lookup)
         { "Fn::Select" : [ "2", [ "apples", "grapes", "mangoes" ] ] }
         returns "mangoes"
+        { "Fn::Select" : [ "3", [ "apples", "grapes", "mangoes" ] ] }
+        returns ""
 
         (for a dict lookup)
         { "Fn::Select" : [ "red", {"red": "a", "flu": "b"} ] }
         returns "a"
+        { "Fn::Select" : [ "blue", {"red": "a", "flu": "b"} ] }
+        returns ""
 
-        Note: can raise IndexError, KeyError, ValueError and TypeError
+        Note: can raise ValueError and TypeError
         '''
         def handle_select(args):
             if not isinstance(args, (list, tuple)):
@@ -242,15 +246,24 @@ class Template(collections.Mapping):
             except ValueError as ex:
                 index = lookup
 
+            if strings == '':
+                # an empty string is a common response from other
+                # functions when result is not currently available.
+                # Handle by returning an empty string
+                return ''
+
             if isinstance(strings, basestring):
                 # might be serialized json.
                 # if not allow it to raise a ValueError
                 strings = json.loads(strings)
 
             if isinstance(strings, (list, tuple)) and isinstance(index, int):
-                return strings[index]
+                try:
+                    return strings[index]
+                except IndexError:
+                    return ''
             if isinstance(strings, dict) and isinstance(index, basestring):
-                return strings[index]
+                return strings.get(index, '')
             if strings is None:
                 return ''
 

@@ -239,9 +239,12 @@ Mappings:
                           data)
 
     def test_select_from_list_out_of_bound(self):
-        data = {"Fn::Select": ["3", ["foo", "bar"]]}
-        self.assertRaises(IndexError, parser.Template.resolve_select,
-                          data)
+        data = {"Fn::Select": ["0", ["foo", "bar"]]}
+        self.assertEqual(parser.Template.resolve_select(data), "foo")
+        data = {"Fn::Select": ["1", ["foo", "bar"]]}
+        self.assertEqual(parser.Template.resolve_select(data), "bar")
+        data = {"Fn::Select": ["2", ["foo", "bar"]]}
+        self.assertEqual(parser.Template.resolve_select(data), "")
 
     def test_select_from_dict(self):
         data = {"Fn::Select": ["red", {"red": "robin", "re": "foo"}]}
@@ -258,8 +261,7 @@ Mappings:
 
     def test_select_from_dict_not_existing(self):
         data = {"Fn::Select": ["green", {"red": "robin", "re": "foo"}]}
-        self.assertRaises(KeyError, parser.Template.resolve_select,
-                          data)
+        self.assertEqual(parser.Template.resolve_select(data), "")
 
     def test_select_from_serialized_json_map(self):
         js = json.dumps({"red": "robin", "re": "foo"})
@@ -287,6 +289,14 @@ Mappings:
         join3 = {"Fn::Select": ["foo", {"foo": "bar"}, ""]}
         self.assertRaises(ValueError, parser.Template.resolve_select,
                           join3)
+
+    def test_select_empty_string(self):
+        data = {"Fn::Select": ["0", '']}
+        self.assertEqual(parser.Template.resolve_select(data), "")
+        data = {"Fn::Select": ["1", '']}
+        self.assertEqual(parser.Template.resolve_select(data), "")
+        data = {"Fn::Select": ["one", '']}
+        self.assertEqual(parser.Template.resolve_select(data), "")
 
     def test_join_reduce(self):
         join = {"Fn::Join": [" ", ["foo", "bar", "baz", {'Ref': 'baz'},
