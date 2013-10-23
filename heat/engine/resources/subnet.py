@@ -29,17 +29,24 @@ class Subnet(resource.Resource):
                              'Required': True}}
 
     properties_schema = {
-        'AvailabilityZone': {'Type': 'String'},
+        'AvailabilityZone': {
+            'Type': 'String',
+            'Description': _('Availablity zone in which you want the '
+                             'subnet.')},
         'CidrBlock': {
             'Type': 'String',
-            'Required': True},
+            'Required': True,
+            'Description': _('CIDR block to apply to subnet.')},
         'VpcId': {
             'Type': 'String',
-            'Required': True},
+            'Required': True,
+            'Description': _('Ref structure that contains the ID of the '
+                             'VPC on which you want to create the subnet.')},
         'Tags': {'Type': 'List', 'Schema': {
             'Type': 'Map',
             'Implemented': False,
-            'Schema': tags_schema}}
+            'Schema': tags_schema,
+            'Description': _('List of tags to attach to this resource.')}}
     }
 
     def handle_create(self):
