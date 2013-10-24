@@ -121,7 +121,7 @@ Outputs:
         props['TimeoutInMinutes'] = '50'
 
         stack = self.create_stack(json.dumps(timeout_template))
-        self.assertEquals(stack.state, (stack.CREATE, stack.COMPLETE))
+        self.assertEqual(stack.state, (stack.CREATE, stack.COMPLETE))
         self.m.VerifyAll()
 
     def test_nested_stack_create_exceeds_resource_limit(self):
@@ -146,7 +146,7 @@ Outputs:
         t = template_format.parse(self.test_template)
         stack = self.parse_stack(t)
         stack.create()
-        self.assertEquals(stack.state, (stack.CREATE, stack.FAILED))
+        self.assertEqual(stack.state, (stack.CREATE, stack.FAILED))
         self.assertIn('Maximum resources per stack exceeded',
                       stack.status_reason)
 
@@ -174,7 +174,7 @@ Outputs:
         t = template_format.parse(self.test_template)
         stack = self.parse_stack(t)
         stack.create()
-        self.assertEquals(stack.state, (stack.CREATE, stack.COMPLETE))
+        self.assertEqual(stack.state, (stack.CREATE, stack.COMPLETE))
         self.assertIn('NestedResource',
                       stack['the_nested'].nested())
 

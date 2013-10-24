@@ -466,8 +466,8 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         result = self.man.create_stack(self.ctx, stack_name, template, params,
                                        None, {})
         self.m.VerifyAll()
-        self.assertEquals(stack.identifier(), result)
-        self.assertEquals(3, stack.total_resources())
+        self.assertEqual(stack.identifier(), result)
+        self.assertEqual(3, stack.total_resources())
         stack.delete()
 
     def test_stack_create_total_resources_exceeds_max(self):
@@ -627,7 +627,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         self.assertEqual(old_stack.identifier(), result)
         self.assertTrue(isinstance(result, dict))
         self.assertTrue(result['stack_id'])
-        self.assertEquals(3, old_stack.root_stack.total_resources())
+        self.assertEqual(3, old_stack.root_stack.total_resources())
         self.m.VerifyAll()
 
     def test_stack_update_exceeds_resource_limit(self):
