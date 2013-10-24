@@ -124,7 +124,7 @@ class Volume(resource.Resource):
                     yield
                     vol.get()
             except clients.cinderclient.exceptions.NotFound:
-                self.resource_id = None
+                self.resource_id_set(None)
 
     if volume_backups is not None:
         def handle_snapshot_delete(self, state):

@@ -484,7 +484,7 @@ class Instance(resource.Resource):
             try:
                 server.get()
             except clients.novaclient.exceptions.NotFound:
-                self.resource_id = None
+                self.resource_id_set(None)
                 break
 
     def _detach_volumes_task(self):
@@ -507,7 +507,7 @@ class Instance(resource.Resource):
         try:
             server = self.nova().servers.get(self.resource_id)
         except clients.novaclient.exceptions.NotFound:
-            self.resource_id = None
+            self.resource_id_set(None)
             return
 
         server_delete_task = scheduler.TaskRunner(self._delete_server,
