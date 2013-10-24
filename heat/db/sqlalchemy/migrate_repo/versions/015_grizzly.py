@@ -26,6 +26,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('created_at', sqlalchemy.DateTime),
         sqlalchemy.Column('updated_at', sqlalchemy.DateTime),
         sqlalchemy.Column('template', sqlalchemy.Text),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
     )
 
     user_creds = sqlalchemy.Table(
@@ -43,6 +45,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('aws_auth_url', sqlalchemy.Text),
         sqlalchemy.Column('tenant_id', sqlalchemy.String(256)),
         sqlalchemy.Column('aws_creds', sqlalchemy.Text),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
     )
 
     stack = sqlalchemy.Table(
@@ -68,6 +72,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('tenant', sqlalchemy.String(256)),
         sqlalchemy.Column('disable_rollback', sqlalchemy.Boolean,
                           nullable=False),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
     )
 
     resource = sqlalchemy.Table(
@@ -83,6 +89,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('stack_id', sqlalchemy.String(36),
                           sqlalchemy.ForeignKey('stack.id'), nullable=False),
         sqlalchemy.Column('rsrc_metadata', sqlalchemy.Text),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
     )
 
     event = sqlalchemy.Table(
@@ -99,6 +107,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('resource_status_reason', sqlalchemy.String(255)),
         sqlalchemy.Column('resource_type', sqlalchemy.String(255)),
         sqlalchemy.Column('resource_properties', sqlalchemy.PickleType),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
     )
 
     watch_rule = sqlalchemy.Table(
@@ -113,6 +123,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('last_evaluated', sqlalchemy.DateTime),
         sqlalchemy.Column('stack_id', sqlalchemy.String(36),
                           sqlalchemy.ForeignKey('stack.id'), nullable=False),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
     )
 
     watch_data = sqlalchemy.Table(
@@ -125,6 +137,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('watch_rule_id', sqlalchemy.Integer,
                           sqlalchemy.ForeignKey('watch_rule.id'),
                           nullable=False),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
     )
 
     tables = (
@@ -148,4 +162,5 @@ def upgrade(migrate_engine):
 
 
 def downgrade(migrate_engine):
-    raise Exception('Database downgrade not supported - would drop all tables')
+    raise NotImplementedError('Database downgrade not supported - '
+                              'would drop all tables')

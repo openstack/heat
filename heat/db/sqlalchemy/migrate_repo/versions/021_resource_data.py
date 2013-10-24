@@ -31,7 +31,9 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('resource_id',
                           sqlalchemy.String(36),
                           sqlalchemy.ForeignKey('resource.id'),
-                          nullable=False)
+                          nullable=False),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
     )
     sqlalchemy.Table('resource', meta, autoload=True)
     resource_data.create()

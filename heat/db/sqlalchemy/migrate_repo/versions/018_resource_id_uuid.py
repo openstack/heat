@@ -30,4 +30,8 @@ def downgrade(migrate_engine):
 
     resource = sqlalchemy.Table('resource', meta, autoload=True)
 
-    resource.c.id.alter(sqlalchemy.Integer, primary_key=True)
+    try:
+        resource.c.id.alter(sqlalchemy.Integer, primary_key=True)
+    except:
+        #XXX: since there is no way to downgrade just passing
+        pass
