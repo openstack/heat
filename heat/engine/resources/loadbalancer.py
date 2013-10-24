@@ -261,6 +261,7 @@ class LoadBalancer(stack_resource.StackResource):
                              ' instances.')},
         'Instances': {
             'Type': 'List',
+            'UpdateAllowed': True,
             'Description': _('The list of instance IDs load balanced.')},
         'Listeners': {
             'Type': 'List', 'Required': True,
@@ -296,7 +297,6 @@ class LoadBalancer(stack_resource.StackResource):
         "SourceSecurityGroup.OwnerAlias": "Owner of the source security group."
     }
     update_allowed_keys = ('Properties',)
-    update_allowed_properties = ('Instances',)
 
     def _haproxy_config(self, templ, instances):
         # initial simplifications:

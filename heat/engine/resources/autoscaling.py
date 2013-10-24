@@ -74,10 +74,12 @@ class InstanceGroup(stack_resource.StackResource):
         'LaunchConfigurationName': {
             'Required': True,
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Name of LaunchConfiguration resource.')},
         'Size': {
             'Required': True,
             'Type': 'Number',
+            'UpdateAllowed': True,
             'Description': _('Desired number of instances.')},
         'LoadBalancerNames': {
             'Type': 'List',
@@ -88,7 +90,6 @@ class InstanceGroup(stack_resource.StackResource):
             'Description': _('Tags to attach to this group.')}
     }
     update_allowed_keys = ('Properties', 'UpdatePolicy',)
-    update_allowed_properties = ('Size', 'LaunchConfigurationName',)
     attributes_schema = {
         "InstanceList": _("A comma-delimited list of server ip addresses. "
                           "(Heat extension).")
@@ -375,20 +376,25 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         'LaunchConfigurationName': {
             'Required': True,
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Name of LaunchConfiguration resource.')},
         'MaxSize': {
             'Required': True,
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Maximum number of instances in the group.')},
         'MinSize': {
             'Required': True,
+            'UpdateAllowed': True,
             'Type': 'String',
             'Description': _('Minimum number of instances in the group.')},
         'Cooldown': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Cooldown period, in seconds.')},
         'DesiredCapacity': {
             'Type': 'Number',
+            'UpdateAllowed': True,
             'Description': _('Desired initial number of instances.')},
         'HealthCheckGracePeriod': {
             'Type': 'Integer',
@@ -422,13 +428,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         'AutoScalingRollingUpdate': properties.Schema(
             properties.MAP, schema=rolling_update_schema)
     }
-
-    # template keys and properties supported for handle_update,
-    # note trailing comma is required for a single item to get a tuple
-    update_allowed_keys = ('Properties', 'UpdatePolicy',)
-    update_allowed_properties = ('LaunchConfigurationName',
-                                 'MaxSize', 'MinSize',
-                                 'Cooldown', 'DesiredCapacity',)
+    update_allowed_keys = ('Properties', 'UpdatePolicy')
 
     def handle_create(self):
         if self.properties['DesiredCapacity']:
@@ -608,6 +608,7 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
         'ScalingAdjustment': {
             'Type': 'Number',
             'Required': True,
+            'UpdateAllowed': True,
             'Description': _('Size of adjustment.')},
         'AdjustmentType': {
             'Type': 'String',
@@ -615,15 +616,15 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
                               'ExactCapacity',
                               'PercentChangeInCapacity'],
             'Required': True,
+            'UpdateAllowed': True,
             'Description': _('Type of adjustment (absolute or percentage).')},
         'Cooldown': {
             'Type': 'Number',
+            'UpdateAllowed': True,
             'Description': _('Cooldown period, in seconds.')},
     }
 
     update_allowed_keys = ('Properties',)
-    update_allowed_properties = ('ScalingAdjustment', 'AdjustmentType',
-                                 'Cooldown',)
     attributes_schema = {
         "AlarmUrl": _("A signed url to handle the alarm. "
                       "(Heat extension).")

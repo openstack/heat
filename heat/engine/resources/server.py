@@ -76,7 +76,8 @@ class Server(resource.Resource):
             'Description': _('Optional server name.')},
         'image': {
             'Type': 'String',
-            'Description': _('The ID or name of the image to boot with.')},
+            'Description': _('The ID or name of the image to boot with.'),
+            'UpdateAllowed': True},
         'block_device_mapping': {
             'Type': 'List',
             'Description': _('Block device mappings for this server.'),
@@ -88,21 +89,24 @@ class Server(resource.Resource):
         'flavor': {
             'Type': 'String',
             'Description': _('The ID or name of the flavor to boot onto.'),
-            'Required': True},
+            'Required': True,
+            'UpdateAllowed': True},
         'flavor_update_policy': {
             'Type': 'String',
             'Description': _('Policy on how to apply a flavor update; either '
                              'by requesting a server resize or by replacing '
                              'the entire server.'),
             'Default': 'RESIZE',
-            'AllowedValues': ['RESIZE', 'REPLACE']},
+            'AllowedValues': ['RESIZE', 'REPLACE'],
+            'UpdateAllowed': True},
         'image_update_policy': {
             'Type': 'String',
             'Default': 'REPLACE',
             'Description': _('Policy on how to apply an image-id update; '
                              'either by requesting a server rebuild or by '
                              'replacing the entire server'),
-            'AllowedValues': ['REBUILD', 'REPLACE']},
+            'AllowedValues': ['REBUILD', 'REPLACE'],
+            'UpdateAllowed': True},
         'key_name': {
             'Type': 'String',
             'Description': _('Name of keypair to inject into the server.')},
@@ -189,8 +193,6 @@ class Server(resource.Resource):
     }
 
     update_allowed_keys = ('Metadata', 'Properties')
-    update_allowed_properties = ('flavor', 'flavor_update_policy',
-                                 'image', 'image_update_policy')
 
     def __init__(self, name, json_snippet, stack):
         super(Server, self).__init__(name, json_snippet, stack)

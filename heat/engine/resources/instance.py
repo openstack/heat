@@ -96,6 +96,7 @@ class Instance(resource.Resource):
         'InstanceType': {
             'Type': 'String',
             'Required': True,
+            'UpdateAllowed': True,
             'Description': _('Nova instance type (flavor).')},
         'KeyName': {
             'Type': 'String',
@@ -178,7 +179,6 @@ class Instance(resource.Resource):
                                        'instance.')}
 
     update_allowed_keys = ('Metadata', 'Properties')
-    update_allowed_properties = ('InstanceType',)
 
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
