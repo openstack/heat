@@ -533,6 +533,93 @@ class ServersTest(HeatTestCase):
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
 
+    def test_server_update_image_replace(self):
+        stack_name = 'update_imgrep'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties'][
+            'image_update_policy'] = 'REPLACE'
+        server = servers.Server('server_update_image_replace',
+                                t['Resources']['WebServer'], stack)
+
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['image'] = self.getUniqueString()
+        updater = scheduler.TaskRunner(server.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
+
+    def _test_server_update_image_rebuild(self, status):
+        # Server.handle_update supports changing the image, and makes
+        # the change making a rebuild API call against Nova.
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        server = self._create_test_server(return_server,
+                                          'srv_updimgrbld')
+
+        new_image = 'F17-x86_64-gold'
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['image'] = new_image
+        server.t['Properties']['image_update_policy'] = 'REBUILD'
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).MultipleTimes().AndReturn(return_server)
+        self.m.StubOutWithMock(self.fc.servers, 'rebuild')
+        # 744 is a static lookup from the fake images list
+        self.fc.servers.rebuild(return_server, 744, password=None)
+        self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
+        for stat in status:
+            def activate_status(serv):
+                serv.status = stat
+            return_server.get = activate_status.__get__(return_server)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
+        self.m.VerifyAll()
+
+    def test_server_update_image_rebuild_status_rebuild(self):
+        # Normally we will see 'REBUILD' first and then 'ACTIVE".
+        self._test_server_update_image_rebuild(status=('REBUILD', 'ACTIVE'))
+
+    def test_server_update_image_rebuild_status_active(self):
+        # It is possible for us to miss the REBUILD status.
+        self._test_server_update_image_rebuild(status=('ACTIVE',))
+
+    def test_server_update_image_rebuild_failed(self):
+        # If the status after a rebuild is not REBUILD or ACTIVE, it means the
+        # rebuild call failed, so we raise an explicit error.
+        return_server = self.fc.servers.list()[1]
+        return_server.id = 1234
+        server = self._create_test_server(return_server,
+                                          'srv_updrbldfail')
+
+        new_image = 'F17-x86_64-gold'
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['image'] = new_image
+        server.t['Properties']['image_update_policy'] = 'REBUILD'
+
+        self.m.StubOutWithMock(self.fc.servers, 'get')
+        self.fc.servers.get(1234).MultipleTimes().AndReturn(return_server)
+        self.m.StubOutWithMock(self.fc.servers, 'rebuild')
+        # 744 is a static lookup from the fake images list
+        self.fc.servers.rebuild(return_server, 744, password=None)
+        self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
+
+        def activate_status(server):
+            server.status = 'REBUILD'
+        return_server.get = activate_status.__get__(return_server)
+
+        def activate_status2(server):
+            server.status = 'ERROR'
+        return_server.get = activate_status2.__get__(return_server)
+        self.m.ReplayAll()
+        updater = scheduler.TaskRunner(server.update, update_template)
+        error = self.assertRaises(exception.ResourceFailure, updater)
+        self.assertEqual(
+            "Error: Rebuilding server failed, status 'ERROR'",
+            str(error))
+        self.assertEqual(server.state, (server.UPDATE, server.FAILED))
+        self.m.VerifyAll()
+
     def test_server_update_replace(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
