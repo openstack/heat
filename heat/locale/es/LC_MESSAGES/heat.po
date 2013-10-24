@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat 2013.2.a430.gd264018\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-10-23 06:05+0000\n"
+"POT-Creation-Date: 2013-10-24 06:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: es <LL@li.org>\n"
@@ -1340,7 +1340,7 @@ msgstr ""
 msgid "Public IP address of the specified instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:345 heat/engine/resources/server.py:226
+#: heat/engine/resources/instance.py:345 heat/engine/resources/server.py:250
 #, python-format
 msgid ""
 "Server %(server)s length %(length)d > 63 characters, please reduce the "
@@ -1352,27 +1352,27 @@ msgstr ""
 msgid "Creation of server %(server)s failed: %(message)s (%(code)s)"
 msgstr ""
 
-#: heat/engine/resources/instance.py:408 heat/engine/resources/server.py:276
+#: heat/engine/resources/instance.py:408 heat/engine/resources/server.py:300
 #, python-format
 msgid "Creation of server %(server)s failed with unknown status: %(status)s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:533 heat/engine/resources/server.py:433
+#: heat/engine/resources/instance.py:532 heat/engine/resources/server.py:484
 #, python-format
 msgid "Cannot suspend %s, resource_id not set"
 msgstr ""
 
-#: heat/engine/resources/instance.py:539 heat/engine/resources/instance.py:593
+#: heat/engine/resources/instance.py:538 heat/engine/resources/instance.py:592
 #, python-format
 msgid "Failed to find instance %s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:570
+#: heat/engine/resources/instance.py:569
 #, python-format
 msgid " nova reported unexpected instance[%(instance)s] status[%(status)s]"
 msgstr ""
 
-#: heat/engine/resources/instance.py:587 heat/engine/resources/server.py:478
+#: heat/engine/resources/instance.py:586 heat/engine/resources/server.py:529
 #, python-format
 msgid "Cannot resume %s, resource_id not set"
 msgstr ""
@@ -1443,6 +1443,26 @@ msgstr ""
 msgid "One or more listeners for this load balancer."
 msgstr ""
 
+#: heat/engine/resources/network_interface.py:33
+msgid "Description for this interface."
+msgstr ""
+
+#: heat/engine/resources/network_interface.py:36
+msgid "List of security group IDs associated with this interface."
+msgstr ""
+
+#: heat/engine/resources/network_interface.py:42
+msgid "Flag indicating if traffic to or from instance is validated."
+msgstr ""
+
+#: heat/engine/resources/network_interface.py:47
+msgid "Subnet ID to associate with this interface."
+msgstr ""
+
+#: heat/engine/resources/network_interface.py:52
+msgid "List of tags associated with this interface."
+msgstr ""
+
 #: heat/engine/resources/nova_keypair.py:42
 msgid "The name of the key pair."
 msgstr ""
@@ -1468,9 +1488,14 @@ msgstr ""
 msgid "The private key if it has been saved."
 msgstr ""
 
-#: heat/engine/resources/nova_utils.py:227
+#: heat/engine/resources/nova_utils.py:234
 #, python-format
 msgid "Resizing to '%(flavor)s' failed, status '%(status)s'"
+msgstr ""
+
+#: heat/engine/resources/nova_utils.py:256
+#, python-format
+msgid "Rebuilding server failed, status '%s'"
 msgstr ""
 
 #: heat/engine/resources/random_string.py:33
@@ -1506,6 +1531,22 @@ msgstr ""
 
 #: heat/engine/resources/route_table.py:98
 msgid "Subnet ID."
+msgstr ""
+
+#: heat/engine/resources/security_group.py:38
+msgid "Description of the security group."
+msgstr ""
+
+#: heat/engine/resources/security_group.py:41
+msgid "Physical ID of the VPC."
+msgstr ""
+
+#: heat/engine/resources/security_group.py:47
+msgid "List of security group ingress rules."
+msgstr ""
+
+#: heat/engine/resources/security_group.py:53
+msgid "List of security group egress rules."
 msgstr ""
 
 #: heat/engine/resources/server.py:37
@@ -1570,109 +1611,122 @@ msgid ""
 "resize or by replacing the entire server."
 msgstr ""
 
-#: heat/engine/resources/server.py:101
+#: heat/engine/resources/server.py:102
+msgid ""
+"Policy on how to apply an image-id update; either by requesting a server "
+"rebuild or by replacing the entire server"
+msgstr ""
+
+#: heat/engine/resources/server.py:108
 msgid "Name of keypair to inject into the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:105
+#: heat/engine/resources/server.py:112
 msgid "Name of the administrative user to use on the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:109
+#: heat/engine/resources/server.py:116
 msgid "Name of the availability zone for server placement."
 msgstr ""
 
-#: heat/engine/resources/server.py:113
+#: heat/engine/resources/server.py:120
 msgid "List of security group names."
 msgstr ""
 
-#: heat/engine/resources/server.py:116
+#: heat/engine/resources/server.py:123
 msgid ""
 "An ordered list of nics to be added to this server, with information "
 "about connected networks, fixed ips, port etc."
 msgstr ""
 
-#: heat/engine/resources/server.py:126
+#: heat/engine/resources/server.py:133
 msgid "Arbitrary key-value pairs specified by the client to help boot a server."
 msgstr ""
 
-#: heat/engine/resources/server.py:130
+#: heat/engine/resources/server.py:137
 msgid ""
 "Arbitrary key/value metadata to store for this server. A maximum of five "
 "entries is allowed, and both keys and values must be 255 characters or "
 "less."
 msgstr ""
 
-#: heat/engine/resources/server.py:136
+#: heat/engine/resources/server.py:144
+msgid ""
+"How the user_data should be formatted for the server. For HEAT_CFNTOOLS, "
+"the user_data is bundled as part of the heat-cfntools cloud-init boot "
+"configuration data. For RAW, the user_data is passed to Nova unmodified."
+msgstr ""
+
+#: heat/engine/resources/server.py:152
 msgid "User data script to be executed by cloud-init."
 msgstr ""
 
-#: heat/engine/resources/server.py:140
+#: heat/engine/resources/server.py:156
 msgid "A UUID for the set of servers being requested."
 msgstr ""
 
-#: heat/engine/resources/server.py:144
+#: heat/engine/resources/server.py:160
 msgid "value for config drive either boolean, or volume-id."
 msgstr ""
 
-#: heat/engine/resources/server.py:151
+#: heat/engine/resources/server.py:167
 msgid "Control how the disk is partitioned when the server is created."
 msgstr ""
 
-#: heat/engine/resources/server.py:157
+#: heat/engine/resources/server.py:173
 msgid "A dict of all server details as returned by the API."
 msgstr ""
 
-#: heat/engine/resources/server.py:158
+#: heat/engine/resources/server.py:174
 msgid "A dict of all network addresses as returned by the API."
 msgstr ""
 
-#: heat/engine/resources/server.py:160
+#: heat/engine/resources/server.py:176
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
 "ip2...], \"private\": [ip3, ip4]}."
 msgstr ""
 
-#: heat/engine/resources/server.py:162
+#: heat/engine/resources/server.py:178
 msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be"
 " predictable if the server has addresses from more than one network."
 msgstr ""
 
-#: heat/engine/resources/server.py:168
+#: heat/engine/resources/server.py:184
 msgid "AWS compatible instance name."
 msgstr ""
 
-#: heat/engine/resources/server.py:169
+#: heat/engine/resources/server.py:185
 msgid "The manually assigned alternative public IPv4 address of the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:171
+#: heat/engine/resources/server.py:187
 msgid "The manually assigned alternative public IPv6 address of the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:272
+#: heat/engine/resources/server.py:296
 #, python-format
 msgid "Creation of server %s failed."
 msgstr ""
 
-#: heat/engine/resources/server.py:396
+#: heat/engine/resources/server.py:447
 #, python-format
 msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:405
+#: heat/engine/resources/server.py:456
 #, python-format
 msgid "Neither image nor bootable volume is specified for instance %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:439 heat/engine/resources/server.py:484
+#: heat/engine/resources/server.py:490 heat/engine/resources/server.py:535
 #, python-format
 msgid "Failed to find server %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:465
+#: heat/engine/resources/server.py:516
 #, python-format
 msgid "Suspend of server %(server)s failed with unknown status: %(status)s"
 msgstr ""
@@ -1689,6 +1743,24 @@ msgstr ""
 
 #: heat/engine/resources/stack.py:51
 msgid "The set of parameters passed to this nested stack."
+msgstr ""
+
+#: heat/engine/resources/subnet.py:34
+msgid "Availablity zone in which you want the subnet."
+msgstr ""
+
+#: heat/engine/resources/subnet.py:39
+msgid "CIDR block to apply to subnet."
+msgstr ""
+
+#: heat/engine/resources/subnet.py:43
+msgid ""
+"Ref structure that contains the ID of the VPC on which you want to create"
+" the subnet."
+msgstr ""
+
+#: heat/engine/resources/subnet.py:49
+msgid "List of tags to attach to this resource."
 msgstr ""
 
 #: heat/engine/resources/swift.py:30
@@ -1870,7 +1942,22 @@ msgstr ""
 msgid "The location where the volume is exposed on the instance."
 msgstr ""
 
-#: heat/engine/resources/vpc.py:72
+#: heat/engine/resources/vpc.py:34
+msgid "CIDR block to apply to the VPC."
+msgstr ""
+
+#: heat/engine/resources/vpc.py:41
+msgid ""
+"Allowed tenancy of instances launched in the VPC. default - any tenancy; "
+"dedicated - instance will be dedicated, regardless of the tenancy option "
+"specified at instance launch."
+msgstr ""
+
+#: heat/engine/resources/vpc.py:50
+msgid "List of tags to attach to the instance."
+msgstr ""
+
+#: heat/engine/resources/vpc.py:80
 #, python-format
 msgid "Multiple routers found with name %s"
 msgstr ""
@@ -1907,12 +1994,12 @@ msgstr ""
 
 #: heat/engine/resources/ceilometer/alarm.py:84
 msgid ""
-"True to trigger actions each time the threshold is reached. By default, "
-"actions are called when : the threshold is reached AND the alarm's state "
-"have changed."
+"False to trigger actions when the threshold is reached AND the alarm's "
+"state has changed. By default, actions are called each time the threshold"
+" is reached. "
 msgstr ""
 
-#: heat/engine/resources/ceilometer/alarm.py:92
+#: heat/engine/resources/ceilometer/alarm.py:91
 msgid ""
 "Meter should match this resource metadata (key=value) additionally to the"
 " meter_name."
@@ -3601,42 +3688,10 @@ msgstr ""
 #~ msgid "Number of days to preserve."
 #~ msgstr ""
 
-#~ msgid ""
-#~ "A device name where the volume "
-#~ "will be attached in the system at"
-#~ " /dev/device_name. This value is typically"
-#~ " vda"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "The ID of the volume to boot "
-#~ "from. Only one of volume_id or "
-#~ "snapshot_id should be provided"
-#~ msgstr ""
-
 #~ msgid "The ID of the snapshot to create a volume from"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "The size of the volume, in GB. "
-#~ "It is safe to leave this blank "
-#~ "and have the Compute service infer "
-#~ "the size"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Indicate whether the volume should be"
-#~ " deleted when the server is "
-#~ "terminated"
-#~ msgstr ""
-
 #~ msgid "ID of network to create a port on"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Fixed IP address to specify for "
-#~ "the port created on the requested "
-#~ "network"
 #~ msgstr ""
 
 #~ msgid "ID of an existing port to associate with this server"
@@ -3654,13 +3709,6 @@ msgstr ""
 #~ msgid "The ID or name of the flavor to boot onto"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "Policy on how to apply a flavor"
-#~ " update; either by requesting a "
-#~ "server resize or by replacing the "
-#~ "entire server"
-#~ msgstr ""
-
 #~ msgid "Name of keypair to inject into the server"
 #~ msgstr ""
 
@@ -3673,22 +3721,7 @@ msgstr ""
 #~ msgid "List of security group names"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "An ordered list of nics to be "
-#~ "added to this server, with information"
-#~ " about connected networks, fixed ips, "
-#~ "port etc"
-#~ msgstr ""
-
 #~ msgid "Arbitrary key-value pairs specified by the client to help boot a server"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Arbitrary key/value metadata to store "
-#~ "for this server. A maximum of five"
-#~ " entries is allowed, and both keys"
-#~ " and values must be 255 characters"
-#~ " or less"
 #~ msgstr ""
 
 #~ msgid "User data script to be executed by cloud-init"
@@ -3707,12 +3740,6 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "A dict of all network addresses as returned by the API"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "A dict of assigned network addresses "
-#~ "of the form: {\"public\": [ip1, ip2...],"
-#~ " \"private\": [ip3, ip4]}"
 #~ msgstr ""
 
 #~ msgid "AWS compatible instance name"
@@ -3748,16 +3775,13 @@ msgstr ""
 #~ msgid "A list of URLs (webhooks) to invoke when state transitions to ok"
 #~ msgstr ""
 
-#~ msgid ""
-#~ "A list of URLs (webhooks) to "
-#~ "invoke when state transitions to "
-#~ "insufficient-data"
-#~ msgstr ""
-
 #~ msgid "Description for the alarm"
 #~ msgstr ""
 
 #~ msgid "True if alarm evaluation/actioning is enabled"
+#~ msgstr ""
+
+#~ msgid "Tenant owning the port"
 #~ msgstr ""
 
 #~ msgid ""
@@ -3765,15 +3789,6 @@ msgstr ""
 #~ "the threshold is reached. By default,"
 #~ " actions are called when : the "
 #~ "threshold is reached AND the alarm's "
-#~ "state have changed"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "Meter should match this resource "
-#~ "metadata (key=value) additionally to the "
-#~ "meter_name"
-#~ msgstr ""
-
-#~ msgid "Tenant owning the port"
+#~ "state have changed."
 #~ msgstr ""
 
