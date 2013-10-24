@@ -26,6 +26,7 @@ from oslo.config import cfg
 from heat.engine import environment
 from heat.common import exception
 from heat.common import urlfetch
+from heat.tests import fakes as test_fakes
 from heat.tests.v1_1 import fakes
 import heat.rpc.api as engine_api
 import heat.db.api as db_api
@@ -141,10 +142,17 @@ def get_stack(stack_name, ctx, template):
     return stack
 
 
+def setup_keystone_mocks(mocks, stack):
+    fkc = test_fakes.FakeKeystoneClient()
+    mocks.StubOutWithMock(stack.clients, 'keystone')
+    stack.clients.keystone().MultipleTimes().AndReturn(fkc)
+
+
 def setup_mocks(mocks, stack):
     fc = fakes.FakeClient()
     mocks.StubOutWithMock(instances.Instance, 'nova')
     instances.Instance.nova().MultipleTimes().AndReturn(fc)
+    setup_keystone_mocks(mocks, stack)
 
     instance = stack['WebServer']
     user_data = instance.properties['UserData']
@@ -1475,6 +1483,7 @@ class StackServiceTest(HeatTestCase):
                           self.ctx,
                           policy_template)
         self.stack = stack
+        setup_keystone_mocks(self.m, stack)
         self.m.ReplayAll()
         stack.store()
         stack.create()
@@ -1504,6 +1513,7 @@ class StackServiceTest(HeatTestCase):
         stack = get_stack('signal_reception_no_resource',
                           self.ctx,
                           policy_template)
+        setup_keystone_mocks(self.m, stack)
         self.stack = stack
         self.m.ReplayAll()
         stack.store()
@@ -1615,6 +1625,7 @@ class StackServiceTest(HeatTestCase):
         stack = get_stack('period_watch_task_created_nested',
                           utils.dummy_context(),
                           nested_alarm_template)
+        setup_keystone_mocks(self.m, stack)
         self.stack = stack
         self.m.ReplayAll()
         stack.store()
