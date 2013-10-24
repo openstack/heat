@@ -31,7 +31,7 @@ class FaultMiddlewareTest(HeatTestCase):
                               'type': 'StackNotFound'},
                     'explanation': 'The resource could not be found.',
                     'title': 'Not Found'}
-        self.assertEqual(msg, expected)
+        self.assertEqual(expected, msg)
 
     def test_openstack_exception_without_kwargs(self):
         wrapper = fault.FaultWrapper(None)
@@ -45,7 +45,7 @@ class FaultMiddlewareTest(HeatTestCase):
                                    'incapable of performing the requested '
                                    'operation.',
                     'title': 'Internal Server Error'}
-        self.assertEqual(msg, expected)
+        self.assertEqual(expected, msg)
 
     def test_exception_with_non_ascii_chars(self):
         # We set debug to true to test the code path for serializing traces too
@@ -65,7 +65,7 @@ class FaultMiddlewareTest(HeatTestCase):
                                     'incapable of performing the requested '
                                     'operation.'),
                     'title': 'Internal Server Error'}
-        self.assertEqual(msg, expected)
+        self.assertEqual(expected, msg)
 
     def test_remote_exception(self):
         # We want tracebacks
@@ -84,4 +84,4 @@ class FaultMiddlewareTest(HeatTestCase):
                               'type': 'StackNotFound'},
                     'explanation': 'The resource could not be found.',
                     'title': 'Not Found'}
-        self.assertEqual(msg, expected)
+        self.assertEqual(expected, msg)
