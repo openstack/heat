@@ -80,12 +80,11 @@ class CeilometerAlarm(resource.Resource):
         },
         'repeat_actions': {
             'Type': 'Boolean',
-            'Default': 'false',
-            'Description': _('True to trigger actions each time the threshold '
-                             'is reached. '
-                             'By default, actions are called when : '
-                             'the threshold is reached AND the alarm\'s state '
-                             'have changed.')
+            'Default': 'true',
+            'Description': _('False to trigger actions when the threshold is '
+                             'reached AND the alarm\'s state has changed. '
+                             'By default, actions are called each time '
+                             'the threshold is reached. ')
         },
         'matching_metadata': {
             'Type': 'Map',

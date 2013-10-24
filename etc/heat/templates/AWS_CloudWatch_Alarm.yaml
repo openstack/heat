@@ -69,6 +69,7 @@ Resources:
         Ref: Period
       evaluation_periods:
         Ref: EvaluationPeriods
+      repeat_actions: true
       threshold:
         Ref: Threshold
       alarm_actions:
