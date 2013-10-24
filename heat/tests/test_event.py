@@ -113,14 +113,14 @@ class EventTest(HeatTestCase):
                         'alabama', self.resource.properties,
                         self.resource.name, self.resource.type())
         e.store()
-        self.assertEquals(1, len(db_api.event_get_all_by_stack(self.ctx,
-                                                               self.stack.id)))
+        self.assertEqual(1, len(db_api.event_get_all_by_stack(self.ctx,
+                                                              self.stack.id)))
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
                         'arizona', self.resource.properties,
                         self.resource.name, self.resource.type())
         e.store()
         events = db_api.event_get_all_by_stack(self.ctx, self.stack.id)
-        self.assertEquals(1, len(events))
+        self.assertEqual(1, len(events))
         self.assertEqual('arizona', events[0].physical_resource_id)
 
     def test_identifier(self):
