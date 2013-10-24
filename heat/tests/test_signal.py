@@ -211,8 +211,16 @@ class SignalTest(HeatTestCase):
             rsrc.signal(details=test_d)
 
         self.m.VerifyAll()
-        # so we don't have to stub out deletion events.
         self.m.UnsetStubs()
+
+        # Since we unset the stubs above we must re-stub keystone to keep the
+        # test isolated from keystoneclient. The unset stubs is done so that we
+        # do not have to mock out all of the deleting that the
+        # stack_delete_after decorator will do during cleanup.
+        self.m.StubOutWithMock(self.stack.clients, 'keystone')
+        self.stack.clients.keystone().AndReturn(self.fc)
+
+        self.m.ReplayAll()
 
     @utils.stack_delete_after
     def test_signal_wrong_resource(self):
