@@ -20,6 +20,8 @@ from oslo.config import cfg
 
 cfg.CONF.import_opt('environment_dir', 'heat.common.config')
 
+from heat.common import environment_format
+
 from heat.engine import environment
 from heat.engine import resources
 
@@ -252,3 +254,19 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         # 4. make sure we haven't removed something we shouldn't have
         self.assertEqual(resources.server.Server,
                          g_env.get_resource_info('OS::Nova::Server').value)
+
+    def test_env_user_cant_disable_sys_resource(self):
+        # prove a user can't disable global resources from the user environment
+
+        u_env_content = '''
+        resource_registry:
+            "AWS::*":
+        '''
+        # 1. load user env
+        u_env = environment.Environment()
+        u_env.load(environment_format.parse(u_env_content))
+
+        # 2. assert global resources are NOT gone.
+        self.assertEqual(
+            resources.instance.Instance,
+            u_env.get_resource_info('AWS::EC2::Instance').value)
