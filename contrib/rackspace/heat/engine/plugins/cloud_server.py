@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 class CloudServer(instance.Instance):
     """Resource for Rackspace Cloud Servers."""
 
-    properties_schema = {'flavor': {'Type': 'String', 'Required': True},
+    properties_schema = {'flavor': {'Type': 'String', 'Required': True,
+                                    'UpdateAllowed': True},
                          'image': {'Type': 'String', 'Required': True},
                          'user_data': {'Type': 'String'},
                          'key_name': {'Type': 'String'},
@@ -151,7 +152,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     # Template keys supported for handle_update.  Properties not
     # listed here trigger an UpdateReplace
     update_allowed_keys = ('Metadata', 'Properties')
-    update_allowed_properties = ('flavor')
 
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)

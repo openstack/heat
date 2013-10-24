@@ -152,6 +152,7 @@ class CloudLoadBalancer(rackspace_resource.RackspaceResource):
     properties_schema = {
         'name': {'Type': 'String', 'Required': False},
         'nodes': {'Type': 'List', 'Required': True,
+                  'UpdateAllowed': True,
                   'Schema': {'Type': 'Map', 'Schema': nodes_schema}},
         'protocol': {'Type': 'String', 'Required': True,
                      'AllowedValues': protocol_values},
@@ -185,7 +186,6 @@ class CloudLoadBalancer(rackspace_resource.RackspaceResource):
                      'instance.')}
 
     update_allowed_keys = ('Properties',)
-    update_allowed_properties = ('nodes',)
 
     def __init__(self, name, json_snippet, stack):
         super(CloudLoadBalancer, self).__init__(name, json_snippet, stack)
