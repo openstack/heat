@@ -502,8 +502,8 @@ Outputs:
 '''
 
     def setUp(self):
-        resource._register_class("res.data.resource", ResDataResource)
         super(ResDataNestedStackTest, self).setUp()
+        resource._register_class("res.data.resource", ResDataResource)
 
     def test_res_data_delete(self):
         urlfetch.get('https://server.test/the.template').AndReturn(
