@@ -278,6 +278,37 @@ class ServersTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_server_create_raw_userdata(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'raw_userdata_s'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['user_data_format'] = \
+            'RAW'
+
+        server = servers.Server('WebServer',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=744, flavor=3, key_name='test',
+            name=utils.PhysName(stack_name, server.name),
+            security_groups=None,
+            userdata='wordpress', scheduler_hints=None,
+            meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None).AndReturn(
+                return_server)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(server.create)()
+        self.m.VerifyAll()
+
     def test_server_validate(self):
         stack_name = 'srv_val'
         (t, stack) = self._setup_test_stack(stack_name)
