@@ -105,7 +105,7 @@ class HeatException(Exception):
         self.kwargs = kwargs
 
         try:
-            self.message = self.message % kwargs
+            self.message = self.msg_fmt % kwargs
         except KeyError:
             exc_info = sys.exc_info()
             #kwargs doesn't match a variable in the message
@@ -125,156 +125,156 @@ class HeatException(Exception):
 
 
 class MissingCredentialError(HeatException):
-    message = _("Missing required credential: %(required)s")
+    msg_fmt = _("Missing required credential: %(required)s")
 
 
 class BadAuthStrategy(HeatException):
-    message = _("Incorrect auth strategy, expected \"%(expected)s\" but "
+    msg_fmt = _("Incorrect auth strategy, expected \"%(expected)s\" but "
                 "received \"%(received)s\"")
 
 
 class AuthBadRequest(HeatException):
-    message = _("Connect error/bad request to Auth service at URL %(url)s.")
+    msg_fmt = _("Connect error/bad request to Auth service at URL %(url)s.")
 
 
 class AuthUrlNotFound(HeatException):
-    message = _("Auth service at URL %(url)s not found.")
+    msg_fmt = _("Auth service at URL %(url)s not found.")
 
 
 class AuthorizationFailure(HeatException):
-    message = _("Authorization failed.")
+    msg_fmt = _("Authorization failed.")
 
 
 class NotAuthenticated(HeatException):
-    message = _("You are not authenticated.")
+    msg_fmt = _("You are not authenticated.")
 
 
 class Forbidden(HeatException):
-    message = _("You are not authorized to complete this action.")
+    msg_fmt = _("You are not authorized to complete this action.")
 
 
 #NOTE(bcwaldon): here for backwards-compatability, need to deprecate.
 class NotAuthorized(Forbidden):
-    message = _("You are not authorized to complete this action.")
+    msg_fmt = _("You are not authorized to complete this action.")
 
 
 class Invalid(HeatException):
-    message = _("Data supplied was not valid: %(reason)s")
+    msg_fmt = _("Data supplied was not valid: %(reason)s")
 
 
 class AuthorizationRedirect(HeatException):
-    message = _("Redirecting to %(uri)s for authorization.")
+    msg_fmt = _("Redirecting to %(uri)s for authorization.")
 
 
 class ClientConfigurationError(HeatException):
-    message = _("There was an error configuring the client.")
+    msg_fmt = _("There was an error configuring the client.")
 
 
 class RequestUriTooLong(HeatException):
-    message = _("The URI was too long.")
+    msg_fmt = _("The URI was too long.")
 
 
 class ServerError(HeatException):
-    message = _("The request returned 500 Internal Server Error"
+    msg_fmt = _("The request returned 500 Internal Server Error"
                 "\n\nThe response body:\n%(body)s")
 
 
 class MaxRedirectsExceeded(HeatException):
-    message = _("Maximum redirects (%(redirects)s) was exceeded.")
+    msg_fmt = _("Maximum redirects (%(redirects)s) was exceeded.")
 
 
 class InvalidRedirect(HeatException):
-    message = _("Received invalid HTTP redirect.")
+    msg_fmt = _("Received invalid HTTP redirect.")
 
 
 class NoServiceEndpoint(HeatException):
-    message = _("Response from Keystone does not contain a Heat endpoint.")
+    msg_fmt = _("Response from Keystone does not contain a Heat endpoint.")
 
 
 class RegionAmbiguity(HeatException):
-    message = _("Multiple 'image' service matches for region %(region)s. This "
+    msg_fmt = _("Multiple 'image' service matches for region %(region)s. This "
                 "generally means that a region is required and you have not "
                 "supplied one.")
 
 
 class UserParameterMissing(HeatException):
-    message = _("The Parameter (%(key)s) was not provided.")
+    msg_fmt = _("The Parameter (%(key)s) was not provided.")
 
 
 class UnknownUserParameter(HeatException):
-    message = _("The Parameter (%(key)s) was not defined in template.")
+    msg_fmt = _("The Parameter (%(key)s) was not defined in template.")
 
 
 class InvalidTemplateParameter(HeatException):
-    message = _("The Parameter (%(key)s) has no attributes.")
+    msg_fmt = _("The Parameter (%(key)s) has no attributes.")
 
 
 class InvalidTemplateAttribute(HeatException):
-    message = _("The Referenced Attribute (%(resource)s %(key)s)"
+    msg_fmt = _("The Referenced Attribute (%(resource)s %(key)s)"
                 " is incorrect.")
 
 
 class InvalidTemplateReference(HeatException):
-    message = _("The specified reference \"%(resource)s\" (in %(key)s)"
+    msg_fmt = _("The specified reference \"%(resource)s\" (in %(key)s)"
                 " is incorrect.")
 
 
 class UserKeyPairMissing(HeatException):
-    message = _("The Key (%(key_name)s) could not be found.")
+    msg_fmt = _("The Key (%(key_name)s) could not be found.")
 
 
 class FlavorMissing(HeatException):
-    message = _("The Flavor ID (%(flavor_id)s) could not be found.")
+    msg_fmt = _("The Flavor ID (%(flavor_id)s) could not be found.")
 
 
 class ImageNotFound(HeatException):
-    message = _("The Image (%(image_name)s) could not be found.")
+    msg_fmt = _("The Image (%(image_name)s) could not be found.")
 
 
 class NoUniqueImageFound(HeatException):
-    message = _("Multiple images were found with name (%(image_name)s).")
+    msg_fmt = _("Multiple images were found with name (%(image_name)s).")
 
 
 class InvalidTenant(HeatException):
-    message = _("Searching Tenant %(target)s "
+    msg_fmt = _("Searching Tenant %(target)s "
                 "from Tenant %(actual)s forbidden.")
 
 
 class StackNotFound(HeatException):
-    message = _("The Stack (%(stack_name)s) could not be found.")
+    msg_fmt = _("The Stack (%(stack_name)s) could not be found.")
 
 
 class StackExists(HeatException):
-    message = _("The Stack (%(stack_name)s) already exists.")
+    msg_fmt = _("The Stack (%(stack_name)s) already exists.")
 
 
 class StackValidationFailed(HeatException):
-    message = _("%(message)s")
+    msg_fmt = _("%(message)s")
 
 
 class ResourceNotFound(HeatException):
-    message = _("The Resource (%(resource_name)s) could not be found "
+    msg_fmt = _("The Resource (%(resource_name)s) could not be found "
                 "in Stack %(stack_name)s.")
 
 
 class ResourceTypeNotFound(HeatException):
-    message = _("The Resource Type (%(type_name)s) could not be found.")
+    msg_fmt = _("The Resource Type (%(type_name)s) could not be found.")
 
 
 class ResourceNotAvailable(HeatException):
-    message = _("The Resource (%(resource_name)s) is not available.")
+    msg_fmt = _("The Resource (%(resource_name)s) is not available.")
 
 
 class PhysicalResourceNotFound(HeatException):
-    message = _("The Resource (%(resource_id)s) could not be found.")
+    msg_fmt = _("The Resource (%(resource_id)s) could not be found.")
 
 
 class WatchRuleNotFound(HeatException):
-    message = _("The Watch Rule (%(watch_name)s) could not be found.")
+    msg_fmt = _("The Watch Rule (%(watch_name)s) could not be found.")
 
 
 class ResourceFailure(HeatException):
-    message = _("%(exc_type)s: %(message)s")
+    msg_fmt = _("%(exc_type)s: %(message)s")
 
     def __init__(self, exception, resource, action=None):
         if isinstance(exception, ResourceFailure):
@@ -288,14 +288,14 @@ class ResourceFailure(HeatException):
 
 
 class NotSupported(HeatException):
-    message = _("%(feature)s is not supported.")
+    msg_fmt = _("%(feature)s is not supported.")
 
 
 class ResourcePropertyConflict(HeatException):
-    message = _('Cannot define the following properties at the same time: %s.')
+    msg_fmt = _('Cannot define the following properties at the same time: %s.')
 
     def __init__(self, *args):
-        self.message = self.message % ", ".join(args)
+        self.msg_fmt = self.msg_fmt % ", ".join(args)
         super(ResourcePropertyConflict, self).__init__()
 
 
@@ -310,7 +310,7 @@ class HTTPExceptionDisguise(Exception):
 
 
 class EgressRuleNotAllowed(HeatException):
-    message = _("Egress rules are only allowed when "
+    msg_fmt = _("Egress rules are only allowed when "
                 "Neutron is used and the 'VpcId' property is set.")
 
 
@@ -324,12 +324,12 @@ class NotFound(Error):
 
 
 class InvalidContentType(HeatException):
-    message = "Invalid content type %(content_type)s"
+    msg_fmt = "Invalid content type %(content_type)s"
 
 
 class RequestLimitExceeded(HeatException):
-    message = _('Request limit exceeded: %(message)s')
+    msg_fmt = _('Request limit exceeded: %(message)s')
 
 
 class StackResourceLimitExceeded(HeatException):
-    message = _('Maximum resources per stack exceeded.')
+    msg_fmt = _('Maximum resources per stack exceeded.')

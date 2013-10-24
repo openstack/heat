@@ -22,7 +22,7 @@ from heat.openstack.common.gettextutils import _
 
 
 class CircularDependencyException(exception.HeatException):
-    message = _("Circular Dependency Found: %(cycle)s")
+    msg_fmt = _("Circular Dependency Found: %(cycle)s")
 
 
 class Node(object):

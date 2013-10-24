@@ -53,7 +53,7 @@ class FaultMiddlewareTest(HeatTestCase):
         msg = u'Error with non-ascii chars \x80'
 
         class TestException(heat_exc.HeatException):
-            message = msg
+            msg_fmt = msg
 
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(TestException())

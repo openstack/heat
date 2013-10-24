@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class LoadbalancerBuildError(exception.HeatException):
-    message = _("There was an error building the loadbalancer:%(lb_name)s.")
+    msg_fmt = _("There was an error building the loadbalancer:%(lb_name)s.")
 
 
 class CloudLoadBalancer(rackspace_resource.RackspaceResource):

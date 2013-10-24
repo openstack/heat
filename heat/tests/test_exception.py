@@ -21,7 +21,7 @@ from heat.tests import common
 
 
 class TestException(exception.HeatException):
-    message = _("Testing message %(text)s")
+    msg_fmt = _("Testing message %(text)s")
 
 
 class TestHeatException(common.HeatTestCase):

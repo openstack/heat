@@ -297,7 +297,7 @@ Outputs:
         prop_diff = {'TemplateURL': 'https://server.test/new.template'}
         ex = self.assertRaises(exception.RequestLimitExceeded,
                                rsrc.handle_update, new_res, {}, prop_diff)
-        self.assertIn(exception.StackResourceLimitExceeded.message,
+        self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
                       str(ex))
         rsrc.delete()
 

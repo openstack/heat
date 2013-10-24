@@ -484,7 +484,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         ex = self.assertRaises(exception.RequestLimitExceeded,
                                self.man.create_stack, self.ctx, stack_name,
                                template, params, None, {})
-        self.assertIn(exception.StackResourceLimitExceeded.message,
+        self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
                       str(ex))
 
     def test_stack_validate(self):
@@ -652,7 +652,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                self.man.update_stack, self.ctx,
                                old_stack.identifier(), template, params, None,
                                {})
-        self.assertIn(exception.StackResourceLimitExceeded.message,
+        self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
                       str(ex))
 
     def test_stack_update_verify_err(self):
