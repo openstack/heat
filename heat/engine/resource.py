@@ -252,6 +252,9 @@ class Resource(object):
         properties are not in the update_allowed_properties
         '''
         update_allowed_set = set(self.update_allowed_properties)
+        for (psk, psv) in self.properties.props.iteritems():
+            if psv.update_allowed():
+                update_allowed_set.add(psk)
 
         # Create a set containing the keys in both current and update template
         current_properties = before.get('Properties', {})

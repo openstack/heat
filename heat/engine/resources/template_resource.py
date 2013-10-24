@@ -65,12 +65,7 @@ class TemplateResource(stack_resource.StackResource):
             .schema_from_params(tmpl.param_schemata()))
         self.attributes_schema = (attributes.Attributes
             .schema_from_outputs(tmpl[template.OUTPUTS]))
-
         self.update_allowed_keys = ('Properties',)
-        # assume all properties are updatable, as they just get passed to
-        # the nested stack and that handles the updating/replacing.
-        self.update_allowed_properties = [pname
-                                          for pname in self.properties_schema]
 
         super(TemplateResource, self).__init__(name, json_snippet, stack)
 

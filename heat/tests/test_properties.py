@@ -95,6 +95,7 @@ class SchemaTest(testtools.TestCase):
             'description': 'A string',
             'default': 'wibble',
             'required': True,
+            'update_allowed': False,
             'constraints': [
                 {'length': {'min': 4, 'max': 8}},
             ]
@@ -114,12 +115,14 @@ class SchemaTest(testtools.TestCase):
                     'description': 'A string',
                     'default': 'wibble',
                     'required': True,
+                    'update_allowed': False,
                     'constraints': [
                         {'length': {'min': 4, 'max': 8}},
                     ]
                 }
             },
             'required': False,
+            'update_allowed': False
         }
         s = properties.Schema(properties.STRING, 'A string',
                               default='wibble', required=True,
@@ -138,12 +141,14 @@ class SchemaTest(testtools.TestCase):
                     'description': 'A string',
                     'default': 'wibble',
                     'required': True,
+                    'update_allowed': False,
                     'constraints': [
                         {'length': {'min': 4, 'max': 8}},
                     ]
                 }
             },
             'required': False,
+            'update_allowed': False,
         }
         s = properties.Schema(properties.STRING, 'A string',
                               default='wibble', required=True,
@@ -166,15 +171,18 @@ class SchemaTest(testtools.TestCase):
                             'description': 'A string',
                             'default': 'wibble',
                             'required': True,
+                            'update_allowed': False,
                             'constraints': [
                                 {'length': {'min': 4, 'max': 8}},
                             ]
                         }
                     },
                     'required': False,
+                    'update_allowed': False,
                 }
             },
             'required': False,
+            'update_allowed': False,
         }
         s = properties.Schema(properties.STRING, 'A string',
                               default='wibble', required=True,
@@ -1184,6 +1192,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "The WordPress database admin account username",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"length": {"min": 1, "max": 16}},
                     {"allowed_pattern": "[a-zA-Z][a-zA-Z0-9]*",
@@ -1195,6 +1204,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "Distribution of choice",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"allowed_values": ["F18", "F17", "U10",
                                         "RHEL-6.1", "RHEL-6.2", "RHEL-6.3"]}
@@ -1204,6 +1214,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "WebServer EC2 instance type",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"allowed_values": ["t1.micro",
                                         "m1.small",
@@ -1222,6 +1233,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "Root password for MySQL",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"length": {"min": 1, "max": 41}},
                     {"allowed_pattern": "[a-zA-Z0-9]*",
@@ -1234,11 +1246,13 @@ class PropertiesTest(testtools.TestCase):
                 "description": ("Name of an existing EC2 KeyPair to enable "
                                 "SSH access to the instances"),
                 "required": True,
+                'update_allowed': True,
             },
             "DBPassword": {
                 "type": "string",
                 "description": "The WordPress database admin account password",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"length": {"min": 1, "max": 41}},
                     {"allowed_pattern": "[a-zA-Z0-9]*",
@@ -1250,6 +1264,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "The WordPress database name",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"length": {"min": 1, "max": 64}},
                     {"allowed_pattern": "[a-zA-Z][a-zA-Z0-9]*",
@@ -1352,11 +1367,13 @@ class PropertiesTest(testtools.TestCase):
                 "description": ("Name of an existing EC2 KeyPair to enable "
                                 "SSH access to the instances"),
                 "required": True,
+                'update_allowed': True,
             },
             "InstanceType": {
                 "type": "string",
                 "description": "WebServer EC2 instance type",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"allowed_values": ["t1.micro", "m1.small", "m1.large",
                                         "m1.xlarge", "m2.xlarge", "m2.2xlarge",
@@ -1369,6 +1386,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "Distribution of choice",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"allowed_values": ["F18", "F17", "U10",
                                         "RHEL-6.1", "RHEL-6.2", "RHEL-6.3"],
@@ -1379,6 +1397,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "The WordPress database name",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"length": {"min": 1, "max": 64},
                      "description": "Length must be between 1 and 64"},
@@ -1391,6 +1410,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "The WordPress database admin account username",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"length": {"min": 1, "max": 16},
                      "description": "Length must be between 1 and 16"},
@@ -1403,6 +1423,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "The WordPress database admin account password",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"length": {"min": 1, "max": 41},
                      "description": "Length must be between 1 and 41"},
@@ -1415,6 +1436,7 @@ class PropertiesTest(testtools.TestCase):
                 "type": "string",
                 "description": "Root password for MySQL",
                 "required": False,
+                'update_allowed': True,
                 "constraints": [
                     {"length": {"min": 1, "max": 41},
                      "description": "Length must be between 1 and 41"},
