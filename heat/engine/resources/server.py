@@ -472,7 +472,7 @@ class Server(resource.Resource):
             delete = scheduler.TaskRunner(nova_utils.delete_server, server)
             delete(wait_time=0.2)
 
-        self.resource_id = None
+        self.resource_id_set(None)
 
     def handle_suspend(self):
         '''

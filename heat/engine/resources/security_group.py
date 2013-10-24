@@ -189,7 +189,7 @@ class SecurityGroup(resource.Resource):
                         pass
 
                 self.nova().security_groups.delete(self.resource_id)
-            self.resource_id = None
+            self.resource_id_set(None)
 
     def _handle_delete_neutron(self):
         from neutronclient.common.exceptions import NeutronClientException
@@ -215,7 +215,7 @@ class SecurityGroup(resource.Resource):
                 except NeutronClientException as ex:
                     if ex.status_code != 404:
                         raise
-            self.resource_id = None
+            self.resource_id_set(None)
 
     def FnGetRefId(self):
         if self.properties['VpcId']:
