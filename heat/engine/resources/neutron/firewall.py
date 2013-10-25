@@ -29,12 +29,16 @@ class Firewall(neutron.NeutronResource):
     A resource for the Firewall resource in Neutron FWaaS.
     """
 
-    properties_schema = {'name': {'Type': 'String'},
-                         'description': {'Type': 'String'},
+    properties_schema = {'name': {'Type': 'String',
+                                  'UpdateAllowed': True},
+                         'description': {'Type': 'String',
+                                         'UpdateAllowed': True},
                          'admin_state_up': {'Type': 'Boolean',
-                                            'Default': True},
+                                            'Default': True,
+                                            'UpdateAllowed': True},
                          'firewall_policy_id': {'Type': 'String',
-                                                'Required': True}}
+                                                'Required': True,
+                                                'UpdateAllowed': True}}
 
     attributes_schema = {
         'name': _('Name for the Firewall.'),
@@ -48,8 +52,6 @@ class Firewall(neutron.NeutronResource):
     }
 
     update_allowed_keys = ('Properties',)
-    update_allowed_properties = ('name', 'description', 'admin_state_up',
-                                 'firewall_policy_id')
 
     def _show_resource(self):
         return self.neutron().show_firewall(self.resource_id)['firewall']
@@ -83,14 +85,19 @@ class FirewallPolicy(neutron.NeutronResource):
     A resource for the FirewallPolicy resource in Neutron FWaaS.
     """
 
-    properties_schema = {'name': {'Type': 'String'},
-                         'description': {'Type': 'String'},
+    properties_schema = {'name': {'Type': 'String',
+                                  'UpdateAllowed': True},
+                         'description': {'Type': 'String',
+                                         'UpdateAllowed': True},
                          'shared': {'Type': 'Boolean',
-                                    'Default': False},
+                                    'Default': False,
+                                    'UpdateAllowed': True},
                          'audited': {'Type': 'Boolean',
-                                     'Default': False},
+                                     'Default': False,
+                                     'UpdateAllowed': True},
                          'firewall_rules': {'Type': 'List',
-                                            'Required': True}}
+                                            'Required': True,
+                                            'UpdateAllowed': True}}
 
     attributes_schema = {
         'name': _('Name for the FirewallPolicy.'),
@@ -102,8 +109,6 @@ class FirewallPolicy(neutron.NeutronResource):
     }
 
     update_allowed_keys = ('Properties',)
-    update_allowed_properties = ('name', 'description', 'shared',
-                                 'audited', 'firewall_rules')
 
     def _show_resource(self):
         return self.neutron().show_firewall_policy(self.resource_id)[
@@ -138,29 +143,40 @@ class FirewallRule(neutron.NeutronResource):
     A resource for the FirewallRule resource in Neutron FWaaS.
     """
 
-    properties_schema = {'name': {'Type': 'String'},
-                         'description': {'Type': 'String'},
+    properties_schema = {'name': {'Type': 'String',
+                                  'UpdateAllowed': True},
+                         'description': {'Type': 'String',
+                                         'UpdateAllowed': True},
                          'shared': {'Type': 'Boolean',
-                                    'Default': False},
+                                    'Default': False,
+                                    'UpdateAllowed': True},
                          'protocol': {'Type': 'String',
                                       'AllowedValues': ['tcp', 'udp', 'icmp',
                                                         None],
+                                      'UpdateAllowed': True,
                                       'Default': None},
                          'ip_version': {'Type': 'String',
+                                        'UpdateAllowed': True,
                                         'AllowedValues': ['4', '6'],
                                         'Default': '4'},
                          'source_ip_address': {'Type': 'String',
+                                               'UpdateAllowed': True,
                                                'Default': None},
                          'destination_ip_address': {'Type': 'String',
+                                                    'UpdateAllowed': True,
                                                     'Default': None},
                          'source_port': {'Type': 'String',
+                                         'UpdateAllowed': True,
                                          'Default': None},
                          'destination_port': {'Type': 'String',
+                                              'UpdateAllowed': True,
                                               'Default': None},
                          'action': {'Type': 'String',
                                     'AllowedValues': ['allow', 'deny'],
-                                    'Default': 'deny'},
+                                    'Default': 'deny',
+                                    'UpdateAllowed': True},
                          'enabled': {'Type': 'Boolean',
+                                     'UpdateAllowed': True,
                                      'Default': True}}
 
     attributes_schema = {
@@ -183,10 +199,6 @@ class FirewallRule(neutron.NeutronResource):
     }
 
     update_allowed_keys = ('Properties',)
-    update_allowed_properties = ('name', 'description', 'shared',
-                                 'protocol', 'ip_version', 'source_ip_address',
-                                 'destination_ip_address', 'source_port',
-                                 'destination_port', 'action', 'enabled')
 
     def _show_resource(self):
         return self.neutron().show_firewall_rule(

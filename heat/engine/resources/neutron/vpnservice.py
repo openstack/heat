@@ -33,15 +33,18 @@ class VPNService(neutron.NeutronResource):
     properties_schema = {
         'name': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Name for the vpn service.')
         },
         'description': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Description for the vpn service.')
         },
         'admin_state_up': {
             'Type': 'Boolean',
             'Default': True,
+            'UpdateAllowed': True,
             'Description': _('Administrative state for the vpn service.')
         },
         'subnet_id': {
@@ -73,8 +76,6 @@ class VPNService(neutron.NeutronResource):
     }
 
     update_allowed_keys = ('Properties',)
-
-    update_allowed_properties = ('name', 'description', 'admin_state_up',)
 
     def _show_resource(self):
         return self.neutron().show_vpnservice(self.resource_id)['vpnservice']
@@ -131,10 +132,12 @@ class IPsecSiteConnection(neutron.NeutronResource):
     properties_schema = {
         'name': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Name for the ipsec site connection.')
         },
         'description': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Description for the ipsec site connection.')
         },
         'peer_address': {
@@ -180,6 +183,7 @@ class IPsecSiteConnection(neutron.NeutronResource):
         },
         'admin_state_up': {
             'Type': 'Boolean',
+            'UpdateAllowed': True,
             'Default': True,
             'Description': _('Administrative state for the ipsec site '
                              'connection.')
@@ -237,8 +241,6 @@ class IPsecSiteConnection(neutron.NeutronResource):
 
     update_allowed_keys = ('Properties',)
 
-    update_allowed_properties = ('name', 'description', 'admin_state_up',)
-
     def _show_resource(self):
         return self.neutron().show_ipsec_site_connection(self.resource_id)[
             'ipsec_site_connection']
@@ -290,10 +292,12 @@ class IKEPolicy(neutron.NeutronResource):
     properties_schema = {
         'name': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Name for the ike policy.')
         },
         'description': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Description for the ike policy.')
         },
         'auth_algorithm': {
@@ -355,8 +359,6 @@ class IKEPolicy(neutron.NeutronResource):
 
     update_allowed_keys = ('Properties',)
 
-    update_allowed_properties = ('name', 'description',)
-
     def _show_resource(self):
         return self.neutron().show_ikepolicy(self.resource_id)['ikepolicy']
 
@@ -407,10 +409,12 @@ class IPsecPolicy(neutron.NeutronResource):
     properties_schema = {
         'name': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Name for the ipsec policy.')
         },
         'description': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Description for the ipsec policy.')
         },
         'transform_protocol': {
@@ -469,8 +473,6 @@ class IPsecPolicy(neutron.NeutronResource):
     }
 
     update_allowed_keys = ('Properties',)
-
-    update_allowed_properties = ('name', 'description',)
 
     def _show_resource(self):
         return self.neutron().show_ipsecpolicy(self.resource_id)['ipsecpolicy']
