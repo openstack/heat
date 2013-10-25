@@ -95,14 +95,15 @@ class FaultWrapper(wsgi.Middleware):
         if ex_type.endswith(rpc_common._REMOTE_POSTFIX):
             ex_type = ex_type[:-len(rpc_common._REMOTE_POSTFIX)]
 
-        message = unicode(ex.message)
+        full_message = unicode(ex)
+        if full_message.find('\n') > -1:
+            message, msg_trace = full_message.split('\n', 1)
+        else:
+            msg_trace = traceback.format_exc()
+            message = full_message
 
         if cfg.CONF.debug and not trace:
-            trace = unicode(ex)
-            if trace.find('\n') > -1:
-                unused, trace = trace.split('\n', 1)
-            else:
-                trace = traceback.format_exc()
+            trace = msg_trace
 
         if not webob_exc:
             webob_exc = self.error_map.get(ex_type,

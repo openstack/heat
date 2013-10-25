@@ -426,14 +426,14 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                ctx_no_pwd, stack_name,
                                template, params, None, {})
         self.assertEqual(
-            'Missing required credential: X-Auth-Key', ex.message)
+            'Missing required credential: X-Auth-Key', str(ex))
 
         ex = self.assertRaises(exception.MissingCredentialError,
                                self.man.create_stack,
                                ctx_no_user, stack_name,
                                template, params, None, {})
         self.assertEqual(
-            'Missing required credential: X-Auth-User', ex.message)
+            'Missing required credential: X-Auth-User', str(ex))
 
     def test_stack_create_total_resources_equals_max(self):
         stack_name = 'service_create_stack_total_resources_equals_max'
@@ -743,7 +743,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                template, params, None, {})
 
         self.assertEqual(
-            'Missing required credential: X-Auth-Key', ex.message)
+            'Missing required credential: X-Auth-Key', str(ex))
 
         self.m.VerifyAll()
 
@@ -777,7 +777,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                self.man._validate_deferred_auth_context,
                                ctx, stack)
         self.assertEqual(
-            'Missing required credential: X-Auth-User', ex.message)
+            'Missing required credential: X-Auth-User', str(ex))
 
         # missing password
         ctx = utils.dummy_context(password=None)
@@ -785,7 +785,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
                                self.man._validate_deferred_auth_context,
                                ctx, stack)
         self.assertEqual(
-            'Missing required credential: X-Auth-Key', ex.message)
+            'Missing required credential: X-Auth-Key', str(ex))
 
 
 class StackServiceUpdateNotSupportedTest(HeatTestCase):

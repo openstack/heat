@@ -278,11 +278,11 @@ def map_remote_error(ex):
             ex_type = ex_type[:-len(rpc_common._REMOTE_POSTFIX)]
 
         if ex_type in inval_param_errors:
-            return HeatInvalidParameterValueError(detail=str(ex.message))
+            return HeatInvalidParameterValueError(detail=str(ex))
         elif ex_type in denied_errors:
-            return HeatAccessDeniedError(detail=str(ex.message))
+            return HeatAccessDeniedError(detail=str(ex))
         elif ex_type in already_exists_errors:
-            return AlreadyExistsError(detail=str(ex.message))
+            return AlreadyExistsError(detail=str(ex))
         else:
             # Map everything else to internal server error for now
-            return HeatInternalFailureError(detail=str(ex.message))
+            return HeatInternalFailureError(detail=str(ex))
