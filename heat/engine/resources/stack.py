@@ -40,20 +40,21 @@ class NestedStack(stack_resource.StackResource):
         PROP_TEMPLATE_URL: {
             'Type': 'String',
             'Required': True,
+            'UpdateAllowed': True,
             'Description': _('The URL of a template that specifies the stack'
                              ' to be created as a resource.')},
         PROP_TIMEOUT_MINS: {
             'Type': 'Number',
+            'UpdateAllowed': True,
             'Description': _('The length of time, in minutes, to wait for the'
                              ' nested stack creation.')},
         PROP_PARAMETERS: {
             'Type': 'Map',
+            'UpdateAllowed': True,
             'Description': _('The set of parameters passed to this nested'
                              ' stack.')}}
 
     update_allowed_keys = ('Properties',)
-    update_allowed_properties = (PROP_TEMPLATE_URL, PROP_TIMEOUT_MINS,
-                                 PROP_PARAMETERS)
 
     def handle_create(self):
         try:
