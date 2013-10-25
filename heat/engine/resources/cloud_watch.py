@@ -32,15 +32,18 @@ class CloudWatchAlarm(resource.Resource):
                               'LessThanThreshold',
                               'LessThanOrEqualToThreshold'],
             'Description': _('Operator used to compare the specified '
-                             'Statistic with Threshold.')
+                             'Statistic with Threshold.'),
+            'UpdateAllowed': True,
         },
         'AlarmDescription': {
             'Type': 'String',
-            'Description': _('Description for the alarm.')
+            'Description': _('Description for the alarm.'),
+            'UpdateAllowed': True,
         },
         'EvaluationPeriods': {
             'Type': 'String',
-            'Description': _('Number of periods to evaluate over.')
+            'Description': _('Number of periods to evaluate over.'),
+            'UpdateAllowed': True,
         },
         'MetricName': {
             'Type': 'String',
@@ -52,7 +55,8 @@ class CloudWatchAlarm(resource.Resource):
         },
         'Period': {
             'Type': 'String',
-            'Description': _('Period (seconds) to evaluate over.')
+            'Description': _('Period (seconds) to evaluate over.'),
+            'UpdateAllowed': True,
         },
         'Statistic': {
             'Type': 'String',
@@ -61,17 +65,20 @@ class CloudWatchAlarm(resource.Resource):
                               'Sum',
                               'Minimum',
                               'Maximum'],
-            'Description': _('Metric statistic to evaluate.')
+            'Description': _('Metric statistic to evaluate.'),
+            'UpdateAllowed': True,
         },
         'AlarmActions': {
             'Type': 'List',
             'Description': _('A list of actions to execute when state '
-                             'transitions to alarm.')
+                             'transitions to alarm.'),
+            'UpdateAllowed': True,
         },
         'OKActions': {
             'Type': 'List',
             'Description': _('A list of actions to execute when state '
-                             'transitions to ok.')
+                             'transitions to ok.'),
+            'UpdateAllowed': True,
         },
         'Dimensions': {
             'Type': 'List',
@@ -81,11 +88,13 @@ class CloudWatchAlarm(resource.Resource):
         'InsufficientDataActions': {
             'Type': 'List',
             'Description': _('A list of actions to execute when state '
-                             'transitions to insufficient-data.')
+                             'transitions to insufficient-data.'),
+            'UpdateAllowed': True,
         },
         'Threshold': {
             'Type': 'String',
-            'Description': _('Threshold to evaluate against.')
+            'Description': _('Threshold to evaluate against.'),
+            'UpdateAllowed': True,
         },
         'Units': {
             'Type': 'String',
@@ -116,19 +125,13 @@ class CloudWatchAlarm(resource.Resource):
                               'Terabits/Second',
                               'Count/Second',
                               None],
-            'Description': _('Unit for the metric.')
+            'Description': _('Unit for the metric.'),
+            'UpdateAllowed': True,
         }
     }
 
     strict_dependency = False
     update_allowed_keys = ('Properties',)
-    # allow the properties that affect the watch calculation.
-    # note: when using in-instance monitoring you can only change the
-    # metric name if you re-configure the instance too.
-    update_allowed_properties = ('ComparisonOperator', 'AlarmDescription',
-                                 'EvaluationPeriods', 'Period', 'Statistic',
-                                 'AlarmActions', 'OKActions', 'Units'
-                                 'InsufficientDataActions', 'Threshold')
 
     def handle_create(self):
         wr = watchrule.WatchRule(context=self.context,
