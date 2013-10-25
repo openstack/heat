@@ -23,5 +23,4 @@ include heat/tests/policy/notallowed.json
 graft contrib
 graft etc
 graft doc
-graft docs
 graft tools
