@@ -24,11 +24,11 @@ from heat.engine import hot
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
     ALLOWED_PATTERN, MIN_VALUE, MAX_VALUE, ALLOWED_VALUES,
-    MIN_LENGTH, MAX_LENGTH, DESCRIPTION,
+    MIN_LENGTH, MAX_LENGTH, DESCRIPTION, UPDATE_ALLOWED,
 ) = (
     'Required', 'Implemented', 'Default', 'Type', 'Schema',
     'AllowedPattern', 'MinValue', 'MaxValue', 'AllowedValues',
-    'MinLength', 'MaxLength', 'Description',
+    'MinLength', 'MaxLength', 'Description', 'UpdateAllowed',
 )
 
 SCHEMA_TYPES = (
@@ -75,14 +75,16 @@ class Schema(collections.Mapping):
 
     KEYS = (
         TYPE, DESCRIPTION, DEFAULT, SCHEMA, REQUIRED, CONSTRAINTS,
+        UPDATE_ALLOWED,
     ) = (
         'type', 'description', 'default', 'schema', 'required', 'constraints',
+        'update_allowed',
     )
 
     def __init__(self, data_type, description=None,
                  default=None, schema=None,
                  required=False, constraints=[],
-                 implemented=True):
+                 implemented=True, update_allowed=False):
         self._len = None
         self.type = data_type
         if self.type not in SCHEMA_TYPES:
@@ -92,6 +94,7 @@ class Schema(collections.Mapping):
         self.description = description
         self.required = required
         self.implemented = implemented
+        self.update_allowed = update_allowed
 
         if isinstance(schema, type(self)):
             if self.type != LIST:
@@ -187,7 +190,8 @@ class Schema(collections.Mapping):
                    schema=ss,
                    required=schema_dict.get(REQUIRED, False),
                    constraints=list(constraints()),
-                   implemented=schema_dict.get(IMPLEMENTED, True))
+                   implemented=schema_dict.get(IMPLEMENTED, True),
+                   update_allowed=schema_dict.get(UPDATE_ALLOWED, False))
 
     @classmethod
     def from_parameter(cls, param):
@@ -252,10 +256,13 @@ class Schema(collections.Mapping):
         else:
             constraint_list = list(constraints())
 
+        # make update_allowed true by default on TemplateResources
+        # as the template should deal with this.
         return cls(param_type_map.get(param[parameters.TYPE], MAP),
                    description=param.get(parameters.DESCRIPTION),
                    required=parameters.DEFAULT not in param,
-                   constraints=constraint_list)
+                   constraints=constraint_list,
+                   update_allowed=True)
 
     def validate_constraints(self, value):
         for constraint in self.constraints:
@@ -278,6 +285,8 @@ class Schema(collections.Mapping):
         elif key == self.CONSTRAINTS:
             if self.constraints:
                 return [dict(c) for c in self.constraints]
+        elif key == self.UPDATE_ALLOWED:
+            return self.update_allowed
 
         raise KeyError(key)
 
@@ -563,6 +572,9 @@ class Property(object):
 
     def implemented(self):
         return self.schema.implemented
+
+    def update_allowed(self):
+        return self.schema.update_allowed
 
     def has_default(self):
         return self.schema.default is not None

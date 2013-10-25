@@ -1237,6 +1237,7 @@ class StackServiceTest(HeatTestCase):
                 'Foo': {
                     'type': 'string',
                     'required': False,
+                    'update_allowed': False,
                 },
             },
             'attributes': {
