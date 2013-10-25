@@ -142,8 +142,10 @@ class CeilometerAlarmTest(HeatTestCase):
         self.stack = self.create_stack(template=json.dumps(t))
         self.m.StubOutWithMock(self.fa.alarms, 'update')
         al2 = {}
-        for k in alarm.CeilometerAlarm.update_allowed_properties:
-            al2[k] = mox.IgnoreArg()
+        for k in alarm.CeilometerAlarm.properties_schema:
+            if alarm.CeilometerAlarm.properties_schema[k].get('UpdateAllowed',
+                                                              False):
+                al2[k] = mox.IgnoreArg()
         al2['alarm_id'] = mox.IgnoreArg()
         self.fa.alarms.update(**al2).AndReturn(None)
 

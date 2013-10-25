@@ -24,6 +24,7 @@ class CeilometerAlarm(resource.Resource):
         'comparison_operator': {
             'Type': 'String',
             'Required': True,
+            'UpdateAllowed': True,
             'AllowedValues': ['ge', 'gt', 'eq', 'ne', 'lt', 'le'],
             'Description': _('Operator used to compare specified statistic '
                              'with threshold.')
@@ -31,6 +32,7 @@ class CeilometerAlarm(resource.Resource):
         'evaluation_periods': {
             'Type': 'String',
             'Required': True,
+            'UpdateAllowed': True,
             'Description': _('Number of periods to evaluate over.')
         },
         'meter_name': {
@@ -41,46 +43,55 @@ class CeilometerAlarm(resource.Resource):
         'period': {
             'Type': 'String',
             'Required': True,
+            'UpdateAllowed': True,
             'Description': _('Period (seconds) to evaluate over.')
         },
         'statistic': {
             'Type': 'String',
             'Required': True,
+            'UpdateAllowed': True,
             'AllowedValues': ['count', 'avg', 'sum', 'min', 'max'],
             'Description': _('Meter statistic to evaluate.')
         },
         'threshold': {
             'Type': 'String',
             'Required': True,
+            'UpdateAllowed': True,
             'Description': _('Threshold to evaluate against.')
         },
         'alarm_actions': {
             'Type': 'List',
+            'UpdateAllowed': True,
             'Description': _('A list of URLs (webhooks) to invoke when state '
                              'transitions to alarm.')
         },
         'ok_actions': {
             'Type': 'List',
+            'UpdateAllowed': True,
             'Description': _('A list of URLs (webhooks) to invoke when state '
                              'transitions to ok.')
         },
         'insufficient_data_actions': {
             'Type': 'List',
+            'UpdateAllowed': True,
             'Description': _('A list of URLs (webhooks) to invoke when state '
                              'transitions to insufficient-data.')
         },
         'description': {
             'Type': 'String',
+            'UpdateAllowed': True,
             'Description': _('Description for the alarm.')
         },
         'enabled': {
             'Type': 'Boolean',
+            'UpdateAllowed': True,
             'Default': 'true',
             'Description': _('True if alarm evaluation/actioning is enabled.')
         },
         'repeat_actions': {
             'Type': 'Boolean',
             'Default': 'true',
+            'UpdateAllowed': True,
             'Description': _('False to trigger actions when the threshold is '
                              'reached AND the alarm\'s state has changed. '
                              'By default, actions are called each time '
@@ -94,14 +105,6 @@ class CeilometerAlarm(resource.Resource):
     }
 
     update_allowed_keys = ('Properties',)
-    # allow the properties that affect the watch calculation.
-    # note: when using in-instance monitoring you can only change the
-    # metric name if you re-configure the instance too.
-    update_allowed_properties = ('comparison_operator', 'description',
-                                 'evaluation_periods', 'period', 'statistic',
-                                 'alarm_actions', 'ok_actions',
-                                 'insufficient_data_actions', 'threshold',
-                                 'enabled', 'repeat_actions')
 
     def _actions_to_urls(self, props):
         kwargs = {}
