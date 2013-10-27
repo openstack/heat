@@ -222,7 +222,7 @@ class KeystoneClient(object):
             username = username[-64:]
         user = self.client_v2.users.create(username,
                                            password,
-                                           '%s@heat-api.org' %
+                                           '%s@openstack.org' %
                                            username,
                                            tenant_id=self.context.tenant_id,
                                            enabled=True)
