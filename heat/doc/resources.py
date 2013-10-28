@@ -170,6 +170,14 @@ Resources:
             para = nodes.paragraph('', prop.description)
             definition.append(para)
 
+        if prop.update_allowed:
+            para = nodes.paragraph('',
+                                   _('Can be updated without replacement.'))
+            definition.append(para)
+        else:
+            para = nodes.paragraph('', _('Updates cause replacement.'))
+            definition.append(para)
+
         if prop.required:
             para = nodes.paragraph('', _('Required property.'))
         elif prop.default is not None:
