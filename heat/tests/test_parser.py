@@ -406,10 +406,11 @@ Mappings:
     def test_resource_facade_invalid_arg(self):
         snippet = {'Fn::ResourceFacade': 'wibble'}
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
-        self.assertRaises(ValueError,
-                          parser.Template.resolve_resource_facade,
-                          snippet,
-                          stack)
+        error = self.assertRaises(ValueError,
+                                  parser.Template.resolve_resource_facade,
+                                  snippet,
+                                  stack)
+        self.assertIn(snippet.keys()[0], str(error))
 
     def test_resource_facade_missing_key(self):
         snippet = {'Fn::ResourceFacade': 'DeletionPolicy'}
@@ -424,10 +425,11 @@ Mappings:
         stack = parser.Stack(self.ctx, 'test_stack',
                              parser.Template({}),
                              parent_resource=parent_resource)
-        self.assertRaises(KeyError,
-                          parser.Template.resolve_resource_facade,
-                          snippet,
-                          stack)
+        error = self.assertRaises(KeyError,
+                                  parser.Template.resolve_resource_facade,
+                                  snippet,
+                                  stack)
+        self.assertIn(snippet.keys()[0], str(error))
 
 
 class TemplateFnErrorTest(HeatTestCase):
@@ -575,9 +577,10 @@ class TemplateFnErrorTest(HeatTestCase):
     ]
 
     def test_bad_input(self):
-        self.assertRaises(self.expect,
-                          self.resolve_fn,
-                          self.snippet)
+        error = self.assertRaises(self.expect,
+                                  self.resolve_fn,
+                                  self.snippet)
+        self.assertIn(self.snippet.keys()[0], str(error))
 
 
 class StackTest(HeatTestCase):
