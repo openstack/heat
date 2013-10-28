@@ -249,8 +249,33 @@ if [ "${MYSQL_HEAT_PW}" != "${MYSQL_HEAT_PW_DEFAULT}" ] ; then
 	sed -i -e "s/mysql:\/\/heat:\(.*\)@/mysql:\/\/heat:${MYSQL_HEAT_PW}@/" ${HEAT_CONFIG}
 fi
 
-heat-manage db_sync
+# override the logging config in heat.conf
+log_conf=$(mktemp /tmp/heat-logging.XXXXXXXXXX.conf)
+cat <<EOF > $log_conf
+[loggers]
+keys=root
 
+[handlers]
+keys=consoleHandler
+
+[formatters]
+keys=simpleFormatter
+
+[logger_root]
+level=INFO
+handlers=consoleHandler
+
+[handler_consoleHandler]
+class=StreamHandler
+formatter=simpleFormatter
+args=(sys.stdout,)
+
+[formatter_simpleFormatter]
+format=%(name)s - %(levelname)s - %(message)s
+EOF
+
+heat-manage --log-config=$log_conf db_sync
+rm $log_conf
 
 # Do a final sanity check on the database.
 
