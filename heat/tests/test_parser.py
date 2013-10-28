@@ -15,6 +15,8 @@
 import json
 import time
 
+import testscenarios
+
 from heat.engine import environment
 from heat.common import exception
 from heat.common import template_format
@@ -33,6 +35,8 @@ from heat.tests.v1_1 import fakes
 from heat.tests import generic_resource as generic_rsrc
 
 import heat.db.api as db_api
+
+load_tests = testscenarios.load_tests_apply_scenarios
 
 
 def join(raw):
@@ -233,11 +237,6 @@ Mappings:
         data = {"Fn::Select": ["1", ["foo", "bar"]]}
         self.assertEqual(parser.Template.resolve_select(data), "bar")
 
-    def test_select_from_list_not_int(self):
-        data = {"Fn::Select": ["one", ["foo", "bar"]]}
-        self.assertRaises(TypeError, parser.Template.resolve_select,
-                          data)
-
     def test_select_from_list_out_of_bound(self):
         data = {"Fn::Select": ["0", ["foo", "bar"]]}
         self.assertEqual(parser.Template.resolve_select(data), "foo")
@@ -254,11 +253,6 @@ Mappings:
         data = {"Fn::Select": ["red", None]}
         self.assertEqual(parser.Template.resolve_select(data), "")
 
-    def test_select_from_dict_not_str(self):
-        data = {"Fn::Select": ["1", {"red": "robin", "re": "foo"}]}
-        self.assertRaises(TypeError, parser.Template.resolve_select,
-                          data)
-
     def test_select_from_dict_not_existing(self):
         data = {"Fn::Select": ["green", {"red": "robin", "re": "foo"}]}
         self.assertEqual(parser.Template.resolve_select(data), "")
@@ -272,23 +266,6 @@ Mappings:
         js = json.dumps(["foo", "fee", "fum"])
         data = {"Fn::Select": ["0", js]}
         self.assertEqual(parser.Template.resolve_select(data), "foo")
-
-    def test_select_from_serialized_json_wrong(self):
-        js = "this is really not serialized json"
-        data = {"Fn::Select": ["not", js]}
-        self.assertRaises(ValueError, parser.Template.resolve_select,
-                          data)
-
-    def test_select_wrong_num_args(self):
-        join0 = {"Fn::Select": []}
-        self.assertRaises(ValueError, parser.Template.resolve_select,
-                          join0)
-        join1 = {"Fn::Select": ["4"]}
-        self.assertRaises(ValueError, parser.Template.resolve_select,
-                          join1)
-        join3 = {"Fn::Select": ["foo", {"foo": "bar"}, ""]}
-        self.assertRaises(ValueError, parser.Template.resolve_select,
-                          join3)
 
     def test_select_empty_string(self):
         data = {"Fn::Select": ["0", '']}
@@ -320,49 +297,6 @@ Mappings:
         join = {"Fn::Join": [" ", ["foo", "bar"]]}
         self.assertEqual(parser.Template.resolve_joins(join), "foo bar")
 
-    def test_join_string(self):
-        join = {"Fn::Join": [" ", "foo"]}
-        self.assertRaises(TypeError, parser.Template.resolve_joins,
-                          join)
-
-    def test_join_dict(self):
-        join = {"Fn::Join": [" ", {"foo": "bar"}]}
-        self.assertRaises(TypeError, parser.Template.resolve_joins,
-                          join)
-
-    def test_join_wrong_num_args(self):
-        join0 = {"Fn::Join": []}
-        self.assertRaises(ValueError, parser.Template.resolve_joins,
-                          join0)
-        join1 = {"Fn::Join": [" "]}
-        self.assertRaises(ValueError, parser.Template.resolve_joins,
-                          join1)
-        join3 = {"Fn::Join": [" ", {"foo": "bar"}, ""]}
-        self.assertRaises(ValueError, parser.Template.resolve_joins,
-                          join3)
-
-    def test_join_string_nodelim(self):
-        join1 = {"Fn::Join": "o"}
-        self.assertRaises(TypeError, parser.Template.resolve_joins,
-                          join1)
-        join2 = {"Fn::Join": "oh"}
-        self.assertRaises(TypeError, parser.Template.resolve_joins,
-                          join2)
-        join3 = {"Fn::Join": "ohh"}
-        self.assertRaises(TypeError, parser.Template.resolve_joins,
-                          join3)
-
-    def test_join_dict_nodelim(self):
-        join1 = {"Fn::Join": {"foo": "bar"}}
-        self.assertRaises(TypeError, parser.Template.resolve_joins,
-                          join1)
-        join2 = {"Fn::Join": {"foo": "bar", "blarg": "wibble"}}
-        self.assertRaises(TypeError, parser.Template.resolve_joins,
-                          join2)
-        join3 = {"Fn::Join": {"foo": "bar", "blarg": "wibble", "baz": "quux"}}
-        self.assertRaises(TypeError, parser.Template.resolve_joins,
-                          join3)
-
     def test_split_ok(self):
         data = {"Fn::Split": [";", "foo; bar; achoo"]}
         self.assertEqual(parser.Template.resolve_split(data),
@@ -373,29 +307,11 @@ Mappings:
         self.assertEqual(parser.Template.resolve_split(data),
                          ['foo, bar, achoo'])
 
-    def test_split_no_delim(self):
-        data = {"Fn::Split": ["foo, bar, achoo"]}
-        self.assertRaises(ValueError, parser.Template.resolve_split, data)
-
-    def test_split_no_list(self):
-        data = {"Fn::Split": "foo, bar, achoo"}
-        self.assertRaises(TypeError, parser.Template.resolve_split, data)
-
     def test_base64(self):
         snippet = {"Fn::Base64": "foobar"}
         # For now, the Base64 function just returns the original text, and
         # does not convert to base64 (see issue #133)
         self.assertEqual(parser.Template.resolve_base64(snippet), "foobar")
-
-    def test_base64_list(self):
-        list_snippet = {"Fn::Base64": ["foobar"]}
-        self.assertRaises(TypeError, parser.Template.resolve_base64,
-                          list_snippet)
-
-    def test_base64_dict(self):
-        dict_snippet = {"Fn::Base64": {"foo": "bar"}}
-        self.assertRaises(TypeError, parser.Template.resolve_base64,
-                          dict_snippet)
 
     def test_get_azs(self):
         snippet = {"Fn::GetAZs": ""}
@@ -423,37 +339,6 @@ Mappings:
             parser.Template.resolve_replace(snippet),
             'foo is bar')
 
-    def test_replace_list_mapping(self):
-        snippet = {"Fn::Replace": [
-            ['var1', 'foo', 'var2', 'bar'],
-            '$var1 is ${var2}'
-        ]}
-        self.assertRaises(TypeError, parser.Template.resolve_replace,
-                          snippet)
-
-    def test_replace_dict(self):
-        snippet = {"Fn::Replace": {}}
-        self.assertRaises(TypeError, parser.Template.resolve_replace,
-                          snippet)
-
-    def test_replace_missing_template(self):
-        snippet = {"Fn::Replace": [['var1', 'foo', 'var2', 'bar']]}
-        self.assertRaises(ValueError, parser.Template.resolve_replace,
-                          snippet)
-
-    def test_replace_none_template(self):
-        snippet = {"Fn::Replace": [['var1', 'foo', 'var2', 'bar'], None]}
-        self.assertRaises(TypeError, parser.Template.resolve_replace,
-                          snippet)
-
-    def test_replace_list_string(self):
-        snippet = {"Fn::Replace": [
-            {'var1': 'foo', 'var2': 'bar'},
-            ['$var1 is ${var2}']
-        ]}
-        self.assertRaises(TypeError, parser.Template.resolve_replace,
-                          snippet)
-
     def test_replace_none_values(self):
         snippet = {"Fn::Replace": [
             {'$var1': None, '${var2}': None},
@@ -471,14 +356,6 @@ Mappings:
         self.assertEqual(
             parser.Template.resolve_replace(snippet),
             '"foo" is "${var3}"')
-
-    def test_replace_list_value(self):
-        snippet = {"Fn::Replace": [
-            {'$var1': 'foo', '%var2%': ['bar']},
-            '$var1 is %var2%'
-        ]}
-        self.assertRaises(TypeError, parser.Template.resolve_replace,
-                          snippet)
 
     def test_member_list2map_good(self):
         snippet = {"Fn::MemberListToMap": [
@@ -499,33 +376,6 @@ Mappings:
         self.assertEqual(
             {'metric': 'cpu', 'size': '56'},
             parser.Template.resolve_member_list_to_map(snippet))
-
-    def test_member_list2map_no_key_or_val(self):
-        snippet = {"Fn::MemberListToMap": [
-            'Key', ['.member.2.Key=metric',
-                    '.member.2.Value=cpu',
-                    '.member.5.Key=size',
-                    '.member.5.Value=56']]}
-        self.assertRaises(TypeError,
-                          parser.Template.resolve_member_list_to_map,
-                          snippet)
-
-    def test_member_list2map_no_list(self):
-        snippet = {"Fn::MemberListToMap": [
-            'Key', '.member.2.Key=metric']}
-        self.assertRaises(TypeError,
-                          parser.Template.resolve_member_list_to_map,
-                          snippet)
-
-    def test_member_list2map_not_string(self):
-        snippet = {"Fn::MemberListToMap": [
-            'Name', ['Value'], ['.member.0.Name=metric',
-                                '.member.0.Value=cpu',
-                                '.member.1.Name=size',
-                                '.member.1.Value=56']]}
-        self.assertRaises(TypeError,
-                          parser.Template.resolve_member_list_to_map,
-                          snippet)
 
     def test_resource_facade(self):
         metadata_snippet = {'Fn::ResourceFacade': 'Metadata'}
@@ -578,6 +428,156 @@ Mappings:
                           parser.Template.resolve_resource_facade,
                           snippet,
                           stack)
+
+
+class TemplateFnErrorTest(HeatTestCase):
+    scenarios = [
+        ('select_from_list_not_int',
+         dict(resolve_fn=parser.Template.resolve_select,
+              expect=TypeError,
+              snippet={"Fn::Select": ["one", ["foo", "bar"]]})),
+        ('select_from_dict_not_str',
+         dict(resolve_fn=parser.Template.resolve_select,
+              expect=TypeError,
+              snippet={"Fn::Select": ["1", {"red": "robin", "re": "foo"}]})),
+        ('select_from_serialized_json_wrong',
+         dict(resolve_fn=parser.Template.resolve_select,
+              expect=ValueError,
+              snippet={"Fn::Select": ["not", "no json"]})),
+        ('select_wrong_num_args_1',
+         dict(resolve_fn=parser.Template.resolve_select,
+              expect=ValueError,
+              snippet={"Fn::Select": []})),
+        ('select_wrong_num_args_2',
+         dict(resolve_fn=parser.Template.resolve_select,
+              expect=ValueError,
+              snippet={"Fn::Select": ["4"]})),
+        ('select_wrong_num_args_3',
+         dict(resolve_fn=parser.Template.resolve_select,
+              expect=ValueError,
+              snippet={"Fn::Select": ["foo", {"foo": "bar"}, ""]})),
+        ('select_wrong_num_args_4',
+         dict(resolve_fn=parser.Template.resolve_select,
+              expect=TypeError,
+              snippet={'Fn::Select': [['f'], {'f': 'food'}]})),
+        ('split_no_delim',
+         dict(resolve_fn=parser.Template.resolve_split,
+              expect=ValueError,
+              snippet={"Fn::Split": ["foo, bar, achoo"]})),
+        ('split_no_list',
+         dict(resolve_fn=parser.Template.resolve_split,
+              expect=TypeError,
+              snippet={"Fn::Split": "foo, bar, achoo"})),
+        ('base64_list',
+         dict(resolve_fn=parser.Template.resolve_base64,
+              expect=TypeError,
+              snippet={"Fn::Base64": ["foobar"]})),
+        ('base64_dict',
+         dict(resolve_fn=parser.Template.resolve_base64,
+              expect=TypeError,
+              snippet={"Fn::Base64": {"foo": "bar"}})),
+        ('replace_list_value',
+         dict(resolve_fn=parser.Template.resolve_replace,
+              expect=TypeError,
+              snippet={"Fn::Replace": [
+                  {'$var1': 'foo', '%var2%': ['bar']},
+                  '$var1 is %var2%']})),
+        ('replace_list_mapping',
+         dict(resolve_fn=parser.Template.resolve_replace,
+              expect=TypeError,
+              snippet={"Fn::Replace": [
+                  ['var1', 'foo', 'var2', 'bar'],
+                  '$var1 is ${var2}']})),
+        ('replace_dict',
+         dict(resolve_fn=parser.Template.resolve_replace,
+              expect=TypeError,
+              snippet={"Fn::Replace": {}})),
+        ('replace_missing_template',
+         dict(resolve_fn=parser.Template.resolve_replace,
+              expect=ValueError,
+              snippet={"Fn::Replace": [['var1', 'foo', 'var2', 'bar']]})),
+        ('replace_none_template',
+         dict(resolve_fn=parser.Template.resolve_replace,
+              expect=TypeError,
+              snippet={"Fn::Replace": [['var2', 'bar'], None]})),
+        ('replace_list_string',
+         dict(resolve_fn=parser.Template.resolve_replace,
+              expect=TypeError,
+              snippet={"Fn::Replace": [
+                  {'var1': 'foo', 'var2': 'bar'},
+                  ['$var1 is ${var2}']]})),
+        ('join_string',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=TypeError,
+              snippet={"Fn::Join": [" ", "foo"]})),
+        ('join_dict',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=TypeError,
+              snippet={"Fn::Join": [" ", {"foo": "bar"}]})),
+        ('join_wrong_num_args_1',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=ValueError,
+              snippet={"Fn::Join": []})),
+        ('join_wrong_num_args_2',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=ValueError,
+              snippet={"Fn::Join": [" "]})),
+        ('join_wrong_num_args_3',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=ValueError,
+              snippet={"Fn::Join": [" ", {"foo": "bar"}, ""]})),
+        ('join_string_nodelim',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=TypeError,
+              snippet={"Fn::Join": "o"})),
+        ('join_string_nodelim_1',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=TypeError,
+              snippet={"Fn::Join": "oh"})),
+        ('join_string_nodelim_2',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=TypeError,
+              snippet={"Fn::Join": "ohh"})),
+        ('join_dict_nodelim1',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=TypeError,
+              snippet={"Fn::Join": {"foo": "bar"}})),
+        ('join_dict_nodelim2',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=TypeError,
+              snippet={"Fn::Join": {"foo": "bar", "blarg": "wibble"}})),
+        ('join_dict_nodelim3',
+         dict(resolve_fn=parser.Template.resolve_joins,
+              expect=TypeError,
+              snippet={"Fn::Join": {"foo": "bar", "blarg": "wibble",
+                                    "baz": "quux"}})),
+        ('member_list2map_no_key_or_val',
+         dict(resolve_fn=parser.Template.resolve_member_list_to_map,
+              expect=TypeError,
+              snippet={"Fn::MemberListToMap": [
+                  'Key', ['.member.2.Key=metric',
+                          '.member.2.Value=cpu',
+                          '.member.5.Key=size',
+                          '.member.5.Value=56']]})),
+        ('member_list2map_no_list',
+         dict(resolve_fn=parser.Template.resolve_member_list_to_map,
+              expect=TypeError,
+              snippet={"Fn::MemberListToMap": [
+                  'Key', '.member.2.Key=metric']})),
+        ('member_list2map_not_string',
+         dict(resolve_fn=parser.Template.resolve_member_list_to_map,
+              expect=TypeError,
+              snippet={"Fn::MemberListToMap": [
+                  'Name', ['Value'], ['.member.0.Name=metric',
+                                      '.member.0.Value=cpu',
+                                      '.member.1.Name=size',
+                                      '.member.1.Value=56']]})),
+    ]
+
+    def test_bad_input(self):
+        self.assertRaises(self.expect,
+                          self.resolve_fn,
+                          self.snippet)
 
 
 class StackTest(HeatTestCase):
