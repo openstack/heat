@@ -233,17 +233,21 @@ class Template(collections.Mapping):
         Note: can raise ValueError and TypeError
         '''
         def handle_select(args):
+            example = '"Fn::Select": ["4", ["str1", "str2"]]'
             if not isinstance(args, (list, tuple)):
                 raise TypeError(_('Arguments to "Fn::Select" must be a list'))
 
             try:
                 lookup, strings = args
             except ValueError as ex:
-                example = '"Fn::Select" : [ "4", [ "str1", "str2"]]'
                 raise ValueError(_('Incorrect arguments to '
                                    '"Fn::Select" should be: %s') %
                                  example)
 
+            if not isinstance(lookup, basestring):
+                raise TypeError(_('Index to "Fn::Select" '
+                                  'should be a string: %s') %
+                                example)
             try:
                 index = int(lookup)
             except ValueError as ex:
@@ -257,8 +261,10 @@ class Template(collections.Mapping):
 
             if isinstance(strings, basestring):
                 # might be serialized json.
-                # if not allow it to raise a ValueError
-                strings = json.loads(strings)
+                try:
+                    strings = json.loads(strings)
+                except ValueError as json_ex:
+                    raise ValueError(_('"Fn::Select" %s') % json_ex)
 
             if isinstance(strings, (list, tuple)) and isinstance(index, int):
                 try:
@@ -448,7 +454,8 @@ class Template(collections.Mapping):
                     return stack.parent_resource.metadata
                 return stack.parent_resource.t[arg]
             except KeyError:
-                raise KeyError(_('"%s" is not specified in parent resource') %
+                raise KeyError(_('"Fn::ResourceFacade" "%s" is not '
+                                 'specified in parent resource') %
                                arg)
 
         return _resolve(lambda k, v: k == 'Fn::ResourceFacade',
