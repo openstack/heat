@@ -141,6 +141,27 @@ def format_event(event):
     return result
 
 
+def format_notification_body(stack):
+    # some other posibilities here are:
+    # - template name
+    # - template size
+    # - resource count
+    if stack.status is not None and stack.action is not None:
+        state = '_'.join(stack.state)
+    else:
+        state = 'Unknown'
+    result = {
+        api.NOTIFY_TENANT_ID: stack.context.tenant_id,
+        api.NOTIFY_USER_ID: stack.context.user,
+        api.NOTIFY_STACK_ID: stack.identifier().arn(),
+        api.NOTIFY_STACK_NAME: stack.name,
+        api.NOTIFY_STATE: state,
+        api.NOTIFY_STATE_REASON: stack.status_reason,
+        api.NOTIFY_CREATE_AT: timeutils.isotime(stack.created_time),
+    }
+    return result
+
+
 def format_watch(watch):
 
     result = {
