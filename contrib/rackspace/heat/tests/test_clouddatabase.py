@@ -26,7 +26,7 @@ from ..engine.plugins import clouddatabase  # noqa
 try:
     from pyrax.exceptions import ClientException
 except ImportError:
-    from ..engine.plugins.clouddatabase import ClientException
+    from ..engine.plugins.clouddatabase import ClientException  # noqa
 
 wp_template = '''
 {
