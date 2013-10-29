@@ -237,6 +237,10 @@ Mappings:
         data = {"Fn::Select": ["1", ["foo", "bar"]]}
         self.assertEqual(parser.Template.resolve_select(data), "bar")
 
+    def test_select_from_list_integer_index(self):
+        data = {"Fn::Select": [1, ["foo", "bar"]]}
+        self.assertEqual(parser.Template.resolve_select(data), "bar")
+
     def test_select_from_list_out_of_bound(self):
         data = {"Fn::Select": ["0", ["foo", "bar"]]}
         self.assertEqual(parser.Template.resolve_select(data), "foo")

@@ -233,7 +233,7 @@ class Template(collections.Mapping):
         Note: can raise ValueError and TypeError
         '''
         def handle_select(args):
-            example = '"Fn::Select": ["4", ["str1", "str2"]]'
+            example = '"Fn::Select": [1, ["str1", "str2"]]'
             if not isinstance(args, (list, tuple)):
                 raise TypeError(_('Arguments to "Fn::Select" must be a list'))
 
@@ -244,9 +244,9 @@ class Template(collections.Mapping):
                                    '"Fn::Select" should be: %s') %
                                  example)
 
-            if not isinstance(lookup, basestring):
-                raise TypeError(_('Index to "Fn::Select" '
-                                  'should be a string: %s') %
+            if not isinstance(lookup, (basestring, int)):
+                raise TypeError(_('Index to "Fn::Select" should be either a '
+                                  'string or an integer value: %s') %
                                 example)
             try:
                 index = int(lookup)
