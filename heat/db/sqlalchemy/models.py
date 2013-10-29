@@ -120,27 +120,27 @@ class Stack(BASE, HeatBase, SoftDelete):
 
     __tablename__ = 'stack'
 
-    id = sqlalchemy.Column(sqlalchemy.String, primary_key=True,
+    id = sqlalchemy.Column(sqlalchemy.String(36), primary_key=True,
                            default=uuidutils.generate_uuid)
-    name = sqlalchemy.Column(sqlalchemy.String)
+    name = sqlalchemy.Column(sqlalchemy.String(255))
     raw_template_id = sqlalchemy.Column(
         sqlalchemy.Integer,
         sqlalchemy.ForeignKey('raw_template.id'),
         nullable=False)
     raw_template = relationship(RawTemplate, backref=backref('stack'))
-    username = sqlalchemy.Column(sqlalchemy.String)
-    tenant = sqlalchemy.Column(sqlalchemy.String)
-    action = sqlalchemy.Column('action', sqlalchemy.String)
-    status = sqlalchemy.Column('status', sqlalchemy.String)
-    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String)
+    username = sqlalchemy.Column(sqlalchemy.String(256))
+    tenant = sqlalchemy.Column(sqlalchemy.String(256))
+    action = sqlalchemy.Column('action', sqlalchemy.String(255))
+    status = sqlalchemy.Column('status', sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
     parameters = sqlalchemy.Column('parameters', Json)
     user_creds_id = sqlalchemy.Column(
         sqlalchemy.Integer,
         sqlalchemy.ForeignKey('user_creds.id'),
         nullable=False)
-    owner_id = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    owner_id = sqlalchemy.Column(sqlalchemy.String(36), nullable=True)
     timeout = sqlalchemy.Column(sqlalchemy.Integer)
-    disable_rollback = sqlalchemy.Column(sqlalchemy.Boolean)
+    disable_rollback = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False)
 
 
 class UserCreds(BASE, HeatBase):
@@ -152,13 +152,13 @@ class UserCreds(BASE, HeatBase):
     __tablename__ = 'user_creds'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    username = sqlalchemy.Column(sqlalchemy.String)
-    password = sqlalchemy.Column(sqlalchemy.String)
-    tenant = sqlalchemy.Column(sqlalchemy.String)
+    username = sqlalchemy.Column(sqlalchemy.String(255))
+    password = sqlalchemy.Column(sqlalchemy.String(255))
+    tenant = sqlalchemy.Column(sqlalchemy.String(1024))
     auth_url = sqlalchemy.Column(sqlalchemy.String)
-    tenant_id = sqlalchemy.Column(sqlalchemy.String)
-    trust_id = sqlalchemy.Column(sqlalchemy.String)
-    trustor_user_id = sqlalchemy.Column(sqlalchemy.String)
+    tenant_id = sqlalchemy.Column(sqlalchemy.String(256))
+    trust_id = sqlalchemy.Column(sqlalchemy.String(255))
+    trustor_user_id = sqlalchemy.Column(sqlalchemy.String(64))
     stack = relationship(Stack, backref=backref('user_creds'))
 
 
@@ -168,17 +168,17 @@ class Event(BASE, HeatBase):
     __tablename__ = 'event'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    stack_id = sqlalchemy.Column(sqlalchemy.String,
+    stack_id = sqlalchemy.Column(sqlalchemy.String(36),
                                  sqlalchemy.ForeignKey('stack.id'),
                                  nullable=False)
     stack = relationship(Stack, backref=backref('events'))
 
-    resource_action = sqlalchemy.Column(sqlalchemy.String)
-    resource_status = sqlalchemy.Column(sqlalchemy.String)
-    resource_name = sqlalchemy.Column(sqlalchemy.String)
-    physical_resource_id = sqlalchemy.Column(sqlalchemy.String)
-    resource_status_reason = sqlalchemy.Column(sqlalchemy.String)
-    resource_type = sqlalchemy.Column(sqlalchemy.String)
+    resource_action = sqlalchemy.Column(sqlalchemy.String(255))
+    resource_status = sqlalchemy.Column(sqlalchemy.String(255))
+    resource_name = sqlalchemy.Column(sqlalchemy.String(255))
+    physical_resource_id = sqlalchemy.Column(sqlalchemy.String(255))
+    resource_status_reason = sqlalchemy.Column(sqlalchemy.String(255))
+    resource_type = sqlalchemy.Column(sqlalchemy.String(255))
     resource_properties = sqlalchemy.Column(sqlalchemy.PickleType)
 
 
@@ -191,11 +191,11 @@ class ResourceData(BASE, HeatBase):
                            sqlalchemy.Integer,
                            primary_key=True,
                            nullable=False)
-    key = sqlalchemy.Column('key', sqlalchemy.String)
+    key = sqlalchemy.Column('key', sqlalchemy.String(255))
     value = sqlalchemy.Column('value', sqlalchemy.String)
     redact = sqlalchemy.Column('redact', sqlalchemy.Boolean)
     resource_id = sqlalchemy.Column('resource_id',
-                                    sqlalchemy.String,
+                                    sqlalchemy.String(36),
                                     sqlalchemy.ForeignKey('resource.id'),
                                     nullable=False)
 
@@ -205,18 +205,18 @@ class Resource(BASE, HeatBase):
 
     __tablename__ = 'resource'
 
-    id = sqlalchemy.Column(sqlalchemy.String,
+    id = sqlalchemy.Column(sqlalchemy.String(36),
                            primary_key=True,
                            default=uuidutils.generate_uuid)
-    action = sqlalchemy.Column('action', sqlalchemy.String)
-    status = sqlalchemy.Column('status', sqlalchemy.String)
-    name = sqlalchemy.Column('name', sqlalchemy.String, nullable=False)
-    nova_instance = sqlalchemy.Column('nova_instance', sqlalchemy.String)
-    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String)
+    action = sqlalchemy.Column('action', sqlalchemy.String(255))
+    status = sqlalchemy.Column('status', sqlalchemy.String(255))
+    name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
+    nova_instance = sqlalchemy.Column('nova_instance', sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
     # odd name as "metadata" is reserved
     rsrc_metadata = sqlalchemy.Column('rsrc_metadata', Json)
 
-    stack_id = sqlalchemy.Column(sqlalchemy.String,
+    stack_id = sqlalchemy.Column(sqlalchemy.String(36),
                                  sqlalchemy.ForeignKey('stack.id'),
                                  nullable=False)
     stack = relationship(Stack, backref=backref('resources'))
@@ -231,13 +231,13 @@ class WatchRule(BASE, HeatBase):
     __tablename__ = 'watch_rule'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    name = sqlalchemy.Column('name', sqlalchemy.String, nullable=False)
+    name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)
     rule = sqlalchemy.Column('rule', Json)
-    state = sqlalchemy.Column('state', sqlalchemy.String)
+    state = sqlalchemy.Column('state', sqlalchemy.String(255))
     last_evaluated = sqlalchemy.Column(sqlalchemy.DateTime,
                                        default=timeutils.utcnow)
 
-    stack_id = sqlalchemy.Column(sqlalchemy.String,
+    stack_id = sqlalchemy.Column(sqlalchemy.String(36),
                                  sqlalchemy.ForeignKey('stack.id'),
                                  nullable=False)
     stack = relationship(Stack, backref=backref('watch_rule'))
