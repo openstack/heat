@@ -221,18 +221,13 @@ def stack_get_by_name(context, stack_name, owner_id=None):
     return query.first()
 
 
-def stack_get(context, stack_id, admin=False, show_deleted=False):
+def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
     result = model_query(context, models.Stack).get(stack_id)
 
     if result is None or result.deleted_at is not None and not show_deleted:
         return None
 
-    # If the admin flag is True, we allow retrieval of a specific
-    # stack without the tenant scoping
-    if admin:
-        return result
-
-    if (result is not None and context is not None and
+    if (tenant_safe and result is not None and context is not None and
             result.tenant != context.tenant_id):
         return None
 
