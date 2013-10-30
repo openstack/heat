@@ -68,7 +68,10 @@ exit 42
     # - Ubuntu 12.04: Verified working
     ubuntu_script = base_script % """\
 apt-get update
-apt-get install -y cloud-init python-boto python-pip gcc python-dev
+export DEBIAN_FRONTEND=noninteractive
+apt-get install -y -o Dpkg::Options::="--force-confdef" -o \
+  Dpkg::Options::="--force-confold" cloud-init python-boto python-pip gcc \
+  python-dev
 pip install heat-cfntools
 cfn-create-aws-symlinks --source /usr/local/bin
 """
@@ -104,15 +107,14 @@ pip-python install heat-cfntools
 cfn-create-aws-symlinks
 """
 
-    # - Debian 7: Not working (heat-cfntools patch submitted)
-    # TODO(jason): Test with Debian 7 as soon as heat-cfntools patch
-    # is in https://review.openstack.org/#/c/38822/
     debian_script = base_script % """\
 echo "deb http://mirror.rackspace.com/debian wheezy-backports main" >> \
   /etc/apt/sources.list
 apt-get update
 apt-get -t wheezy-backports install -y cloud-init
-apt-get install -y python-pip gcc python-dev
+export DEBIAN_FRONTEND=noninteractive
+apt-get install -y -o Dpkg::Options::="--force-confdef" -o \
+  Dpkg::Options::="--force-confold" python-pip gcc python-dev
 pip install heat-cfntools
 """
 
