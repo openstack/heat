@@ -30,6 +30,10 @@ logger = logging.getLogger(__name__)
 
 
 class Volume(resource.Resource):
+    tags_schema = {'Key': {'Type': 'String',
+                           'Required': True},
+                   'Value': {'Type': 'String',
+                             'Required': True}}
 
     properties_schema = {
         'AvailabilityZone': {
@@ -45,8 +49,9 @@ class Volume(resource.Resource):
                              'to create the volume.')},
         'Tags': {
             'Type': 'List',
-            'Description': _('The list of tags to associate with the volume '
-                             ' (ignored).')}
+            'Description': _('The list of tags to associate '
+                             'with the volume.')},
+            'Schema': {'Type': 'Map', 'Schema': tags_schema},
     }
 
     _restore_property = 'SnapshotId'
@@ -60,9 +65,16 @@ class Volume(resource.Resource):
         return self.physical_resource_name()
 
     def _create_arguments(self):
+        if self.properties['Tags']:
+            tags = dict((tm['Key'], tm['Value'])
+                        for tm in self.properties['Tags'])
+        else:
+            tags = None
+
         return {
             'size': self.properties['Size'],
             'availability_zone': self.properties['AvailabilityZone'] or None,
+            'metadata': tags
         }
 
     def handle_create(self):

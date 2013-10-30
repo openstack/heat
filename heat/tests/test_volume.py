@@ -114,7 +114,8 @@ class VolumeTest(HeatTestCase):
         self.cinder_fc.volumes.create(
             size=1, availability_zone='nova',
             display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+            display_name=vol_name,
+            metadata={u'Usage': u'Wiki Data Volume'}).AndReturn(fv)
 
     def _stubout_delete_volume(self, fv):
         self.m.StubOutWithMock(fv, 'delete')
@@ -185,7 +186,8 @@ class VolumeTest(HeatTestCase):
         self.cinder_fc.volumes.create(
             size=1, availability_zone=None,
             display_description=vol_name,
-            display_name=vol_name).AndReturn(fv)
+            display_name=vol_name,
+            metadata={u'Usage': u'Wiki Data Volume'}).AndReturn(fv)
         vol.VolumeAttachment.handle_create().AndReturn(None)
         vol.VolumeAttachment.check_create_complete(None).AndReturn(True)
 
