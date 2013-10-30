@@ -48,6 +48,9 @@ class Thread(object):
     def wait(self):
         return self.thread.wait()
 
+    def link(self, func, *args, **kwargs):
+        self.thread.link(func, *args, **kwargs)
+
 
 class ThreadGroup(object):
     """The point of the ThreadGroup classis to:
@@ -79,6 +82,7 @@ class ThreadGroup(object):
         gt = self.pool.spawn(callback, *args, **kwargs)
         th = Thread(gt, self)
         self.threads.append(th)
+        return th
 
     def thread_done(self, thread):
         self.threads.remove(thread)
