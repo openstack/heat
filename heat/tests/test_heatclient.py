@@ -51,7 +51,11 @@ class KeystoneClientTest(HeatTestCase):
             self.mock_ks_client = heat_keystoneclient.kc.Client(
                 auth_url=mox.IgnoreArg(),
                 tenant_name='test_tenant',
-                token='abcd1234')
+                token='abcd1234',
+                cacert=None,
+                cert=None,
+                insecure=False,
+                key=None)
             self.mock_ks_client.authenticate().AndReturn(auth_ok)
         elif method == 'password':
             self.mock_ks_client = heat_keystoneclient.kc.Client(
@@ -59,14 +63,22 @@ class KeystoneClientTest(HeatTestCase):
                 tenant_name='test_tenant',
                 tenant_id='test_tenant_id',
                 username='test_username',
-                password='password')
+                password='password',
+                cacert=None,
+                cert=None,
+                insecure=False,
+                key=None)
             self.mock_ks_client.authenticate().AndReturn(auth_ok)
         if method == 'trust':
             self.mock_ks_client = heat_keystoneclient.kc.Client(
                 auth_url='http://server.test:5000/v2.0',
                 password='verybadpass',
                 tenant_name='service',
-                username='heat')
+                username='heat',
+                cacert=None,
+                cert=None,
+                insecure=False,
+                key=None)
             self.mock_ks_client.authenticate(trust_id='atrust123',
                                              tenant_id='test_tenant_id'
                                              ).AndReturn(auth_ok)
@@ -81,7 +93,11 @@ class KeystoneClientTest(HeatTestCase):
             self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
                 token='abcd1234', project_name='test_tenant',
                 auth_url='http://server.test:5000/v3',
-                endpoint='http://server.test:5000/v3')
+                endpoint='http://server.test:5000/v3',
+                cacert=None,
+                cert=None,
+                insecure=False,
+                key=None)
         elif method == 'password':
             self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
                 username='test_username',
@@ -89,13 +105,21 @@ class KeystoneClientTest(HeatTestCase):
                 project_name='test_tenant',
                 project_id='test_tenant_id',
                 auth_url='http://server.test:5000/v3',
-                endpoint='http://server.test:5000/v3')
+                endpoint='http://server.test:5000/v3',
+                cacert=None,
+                cert=None,
+                insecure=False,
+                key=None)
         elif method == 'trust':
             self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
                 username='heat',
                 password='verybadpass',
                 project_name='service',
-                auth_url='http://server.test:5000/v3')
+                auth_url='http://server.test:5000/v3',
+                cacert=None,
+                cert=None,
+                insecure=False,
+                key=None)
         self.mock_ks_v3_client.authenticate().AndReturn(auth_ok)
 
     def test_username_length(self):
