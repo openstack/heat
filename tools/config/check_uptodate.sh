@@ -1,5 +1,5 @@
 #!/bin/sh
-TEMPDIR=`mktemp -d`
+TEMPDIR=`mktemp -d /tmp/tmp.XXXXXXXXXX`
 CFGFILE=heat.conf.sample
 tools/config/generate_sample.sh -b ./ -p heat -o $TEMPDIR
 if ! diff $TEMPDIR/$CFGFILE etc/heat/$CFGFILE
