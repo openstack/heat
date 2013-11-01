@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-10-30 06:05+0000\n"
+"POT-Creation-Date: 2013-11-01 06:05+0000\n"
 "PO-Revision-Date: 2013-10-10 01:09+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Malay "
@@ -1852,116 +1852,116 @@ msgid ""
 "API."
 msgstr ""
 
-#: heat/engine/resources/volume.py:37 heat/engine/resources/volume.py:311
+#: heat/engine/resources/volume.py:41 heat/engine/resources/volume.py:323
 msgid "The availability zone in which the volume will be created."
 msgstr ""
 
-#: heat/engine/resources/volume.py:41 heat/engine/resources/volume.py:315
-#: heat/engine/resources/volume.py:352
+#: heat/engine/resources/volume.py:45 heat/engine/resources/volume.py:327
+#: heat/engine/resources/volume.py:364
 msgid "The size of the volume in GB."
 msgstr ""
 
-#: heat/engine/resources/volume.py:44
+#: heat/engine/resources/volume.py:48
 msgid "If specified, the backup used as the source to create the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:48
-msgid "The list of tags to associate with the volume  (ignored)."
+#: heat/engine/resources/volume.py:52
+msgid "The list of tags to associate with the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:266
+#: heat/engine/resources/volume.py:278
 msgid "The ID of the instance to which the volume attaches."
 msgstr ""
 
-#: heat/engine/resources/volume.py:270 heat/engine/resources/volume.py:412
+#: heat/engine/resources/volume.py:282 heat/engine/resources/volume.py:424
 msgid "The ID of the volume to be attached."
 msgstr ""
 
-#: heat/engine/resources/volume.py:274
+#: heat/engine/resources/volume.py:286
 msgid "The device where the volume is exposed on the instance."
 msgstr ""
 
-#: heat/engine/resources/volume.py:318
+#: heat/engine/resources/volume.py:330
 msgid "If specified, the snapshot to create the volume from."
 msgstr ""
 
-#: heat/engine/resources/volume.py:322
+#: heat/engine/resources/volume.py:334
 msgid "If specified, the backup to create the volume from."
 msgstr ""
 
-#: heat/engine/resources/volume.py:326
+#: heat/engine/resources/volume.py:338
 msgid "A name used to distinguish the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:329
+#: heat/engine/resources/volume.py:341
 msgid "A description of the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:332
+#: heat/engine/resources/volume.py:344
 msgid "If specified, the type of volume to use, mapping to a specific backend."
 msgstr ""
 
-#: heat/engine/resources/volume.py:336
+#: heat/engine/resources/volume.py:348
 msgid "Key/value pairs to associate with the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:339
+#: heat/engine/resources/volume.py:351
 msgid "DEPRECATED: use \"image\" instead."
 msgstr ""
 
-#: heat/engine/resources/volume.py:342
+#: heat/engine/resources/volume.py:354
 msgid "If specified, the name or ID of the image to create the volume from."
 msgstr ""
 
-#: heat/engine/resources/volume.py:346
+#: heat/engine/resources/volume.py:358
 msgid "If specified, the volume to use as source."
 msgstr ""
 
-#: heat/engine/resources/volume.py:350
+#: heat/engine/resources/volume.py:362
 msgid "The availability zone in which the volume is  located."
 msgstr ""
 
-#: heat/engine/resources/volume.py:353
+#: heat/engine/resources/volume.py:365
 msgid "The snapshot the volume was created from, if any."
 msgstr ""
 
-#: heat/engine/resources/volume.py:354
+#: heat/engine/resources/volume.py:366
 msgid "Name of the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:355
+#: heat/engine/resources/volume.py:367
 msgid "Description of the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:356
+#: heat/engine/resources/volume.py:368
 msgid "The type of the volume mapping to a backend, if any."
 msgstr ""
 
-#: heat/engine/resources/volume.py:358
+#: heat/engine/resources/volume.py:370
 msgid "Key/value pairs associated with the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:359
+#: heat/engine/resources/volume.py:371
 msgid "The volume used as source, if any."
 msgstr ""
 
-#: heat/engine/resources/volume.py:360
+#: heat/engine/resources/volume.py:372
 msgid "The current status of the volume."
 msgstr ""
 
-#: heat/engine/resources/volume.py:361
+#: heat/engine/resources/volume.py:373
 msgid "The timestamp indicating volume creation."
 msgstr ""
 
-#: heat/engine/resources/volume.py:362
+#: heat/engine/resources/volume.py:374
 msgid "Boolean indicating if the volume can be booted or not."
 msgstr ""
 
-#: heat/engine/resources/volume.py:408
+#: heat/engine/resources/volume.py:420
 msgid "The ID of the server to which the volume attaches."
 msgstr ""
 
-#: heat/engine/resources/volume.py:415
+#: heat/engine/resources/volume.py:427
 msgid "The location where the volume is exposed on the instance."
 msgstr ""
 
@@ -3697,5 +3697,8 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "\"%s\" is not specified in parent resource"
+#~ msgstr ""
+
+#~ msgid "The list of tags to associate with the volume  (ignored)."
 #~ msgstr ""
 
