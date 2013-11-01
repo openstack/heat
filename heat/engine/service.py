@@ -696,11 +696,11 @@ class EngineService(service.Service):
 
     def _check_stack_watches(self, sid):
         # Retrieve the stored credentials & create context
-        # Require admin=True to the stack_get to defeat tenant
+        # Require tenant_safe=False to the stack_get to defeat tenant
         # scoping otherwise we fail to retrieve the stack
         logger.debug("Periodic watcher task for stack %s" % sid)
         admin_context = context.get_admin_context()
-        stack = db_api.stack_get(admin_context, sid, admin=True)
+        stack = db_api.stack_get(admin_context, sid, tenant_safe=False)
         if not stack:
             logger.error("Unable to retrieve stack %s for periodic task" %
                          sid)

@@ -533,7 +533,8 @@ class DBAPIStackTest(HeatTestCase):
         stack_id = stack.id
         resource = create_resource(self.ctx, stack)
         db_api.stack_delete(self.ctx, stack_id)
-        self.assertIsNone(db_api.stack_get(self.ctx, stack_id, False, False))
+        self.assertIsNone(db_api.stack_get(self.ctx, stack_id,
+                                           show_deleted=False))
         self.assertRaises(exception.NotFound, db_api.resource_get,
                           self.ctx, resource.id)
 
@@ -541,7 +542,7 @@ class DBAPIStackTest(HeatTestCase):
                           self.ctx, stack_id)
 
         #Testing soft delete
-        ret_stack = db_api.stack_get(self.ctx, stack_id, False, True)
+        ret_stack = db_api.stack_get(self.ctx, stack_id, show_deleted=True)
         self.assertIsNotNone(ret_stack)
         self.assertEqual(stack_id, ret_stack.id)
         self.assertEqual('db_test_stack_name', ret_stack.name)
@@ -570,19 +571,28 @@ class DBAPIStackTest(HeatTestCase):
         self.assertRaises(exception.NotFound, db_api.stack_update, self.ctx,
                           UUID2, values)
 
-    def test_stack_get(self):
+    def test_stack_get_returns_a_stack(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
-        ret_stack = db_api.stack_get(self.ctx, stack.id, False, False)
+        ret_stack = db_api.stack_get(self.ctx, stack.id, show_deleted=False)
         self.assertIsNotNone(ret_stack)
         self.assertEqual(stack.id, ret_stack.id)
         self.assertEqual('db_test_stack_name', ret_stack.name)
 
-        self.assertIsNone(db_api.stack_get(self.ctx, UUID1, False, False))
+    def test_stack_get_returns_none_if_stack_does_not_exist(self):
+        stack = db_api.stack_get(self.ctx, UUID1, show_deleted=False)
+        self.assertIsNone(stack)
 
+    def test_stack_get_returns_none_if_tenant_id_does_not_match(self):
+        stack = create_stack(self.ctx, self.template, self.user_creds)
         self.ctx.tenant_id = 'abc'
-        self.assertIsNone(db_api.stack_get(self.ctx, stack.id, False, False))
+        stack = db_api.stack_get(self.ctx, UUID1, show_deleted=False)
+        self.assertIsNone(stack)
 
-        ret_stack = db_api.stack_get(self.ctx, stack.id, True, False)
+    def test_stack_get_can_return_a_stack_from_different_tenant(self):
+        stack = create_stack(self.ctx, self.template, self.user_creds)
+        self.ctx.tenant_id = 'abc'
+        ret_stack = db_api.stack_get(self.ctx, stack.id,
+                                     show_deleted=False, tenant_safe=False)
         self.assertEqual(stack.id, ret_stack.id)
         self.assertEqual('db_test_stack_name', ret_stack.name)
 
