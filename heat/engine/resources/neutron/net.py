@@ -30,7 +30,8 @@ class Net(neutron.NeutronResource):
             'Type': 'String',
             'Description': _('A string specifying a symbolic name for '
                              'the network, which is not required to be '
-                             'unique.')
+                             'unique.'),
+            'UpdateAllowed': True
         },
         'value_specs': {
             'Type': 'Map',
@@ -38,13 +39,15 @@ class Net(neutron.NeutronResource):
             'Description': _('Extra parameters to include in the "network" '
                              'object in the creation request. Parameters '
                              'are often specific to installed hardware or '
-                             'extensions.')
+                             'extensions.'),
+            'UpdateAllowed': True
         },
         'admin_state_up': {
             'Default': True,
             'Type': 'Boolean',
             'Description': _('A boolean value specifying the administrative '
-                             'status of the network.')
+                             'status of the network.'),
+            'UpdateAllowed': True
         },
         'tenant_id': {
             'Type': 'String',
@@ -58,7 +61,9 @@ class Net(neutron.NeutronResource):
             'Description': _('Whether this network should be shared across '
                              'all tenants. Note that the default policy '
                              'setting restricts usage of this attribute to '
-                             'administrative users only.')
+                             'administrative users only.'),
+            'UpdateAllowed': True,
+            'Default': False
         }}
     attributes_schema = {
         "status": _("The status of the network."),
@@ -68,6 +73,8 @@ class Net(neutron.NeutronResource):
         "tenant_id": _("The tenant owning this network."),
         "show": _("All attributes."),
     }
+
+    update_allowed_keys = ('Properties',)
 
     def handle_create(self):
         props = self.prepare_properties(
@@ -92,6 +99,15 @@ class Net(neutron.NeutronResource):
             self._handle_not_found_exception(ex)
         else:
             return scheduler.TaskRunner(self._confirm_delete)()
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        props = self.prepare_update_properties(json_snippet)
+
+        self.neutron().update_network(self.resource_id, {'network': props})
+
+    def check_update_complete(self, *args):
+        attributes = self._show_resource()
+        return self.is_built(attributes)
 
     def _handle_not_found_exception(self, ex):
         # raise any exception which is not for a not found network

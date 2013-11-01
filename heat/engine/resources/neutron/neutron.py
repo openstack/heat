@@ -16,6 +16,7 @@
 from neutronclient.common.exceptions import NeutronClientException
 
 from heat.common import exception
+from heat.engine.properties import Properties
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
@@ -54,7 +55,7 @@ class NeutronResource(resource.Resource):
     def prepare_properties(properties, name):
         '''
         Prepares the property values so that they can be passed directly to
-        the Neutron call.
+        the Neutron create call.
 
         Removes None values and value_specs, merges value_specs with the main
         values.
@@ -68,6 +69,26 @@ class NeutronResource(resource.Resource):
         if 'value_specs' in properties.keys():
             props.update(properties.get('value_specs'))
 
+        return props
+
+    def prepare_update_properties(self, json_snippet):
+        '''
+        Prepares the property values so that they can be passed directly to
+        the Neutron update call.
+
+        Removes any properties which are not update_allowed, then processes
+        as for prepare_properties.
+        '''
+        p = Properties(self.properties_schema,
+                       json_snippet.get('Properties', {}),
+                       self._resolve_runtime_data,
+                       self.name)
+        update_props = dict((k, v) for k, v in p.items()
+                            if p.props.get(k).schema.update_allowed)
+
+        props = self.prepare_properties(
+            update_props,
+            self.physical_resource_name())
         return props
 
     @staticmethod
