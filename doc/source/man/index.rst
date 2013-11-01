@@ -21,5 +21,6 @@ Heat utilities
 .. toctree::
    :maxdepth: 2
 
+   heat-manage
    heat-db-setup
    heat-keystone-setup
