@@ -126,6 +126,28 @@ def resource_get_all(context):
     return results
 
 
+def resource_data_get_all(resource):
+    """
+    Looks up resource_data by resource.id.  If data is encrypted,
+    this method will decrypt the results.
+    """
+    result = (model_query(resource.context, models.ResourceData)
+              .filter_by(resource_id=resource.id))
+
+    if not result:
+        raise exception.NotFound(_('no resource data found'))
+
+    ret = {}
+
+    for res in result:
+        if res.redact:
+            ret[res.key] = _decrypt(res.value)
+        else:
+            ret[res.key] = res.value
+
+    return ret
+
+
 def resource_data_get(resource, key):
     """Lookup value of resource's data by key. Decrypts resource data if
     necessary.

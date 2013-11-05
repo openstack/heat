@@ -331,7 +331,9 @@ class LoadBalancer(resource.Resource):
         client = self.neutron()
         nova_client = self.nova()
         protocol_port = self.properties['protocol_port']
-        for member in self.properties.get('members', []):
+        members = self.properties.get('members') or []
+
+        for member in members:
             address = nova_utils.server_to_ipaddress(nova_client, member)
             lb_member = client.create_member({
                 'member': {
@@ -343,10 +345,11 @@ class LoadBalancer(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'members' in prop_diff:
             members = set(prop_diff['members'])
-            old_members = set(self.t['Properties'].get('members', []))
+            rd_members = db_api.resource_data_get_all(self)
+            old_members = set(rd_members.keys())
             client = self.neutron()
             for member in old_members - members:
-                member_id = db_api.resource_data_get(self, member)
+                member_id = rd_members[member]
                 try:
                     client.delete_member(member_id)
                 except NeutronClientException as ex:

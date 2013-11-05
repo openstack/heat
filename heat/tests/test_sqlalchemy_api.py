@@ -883,6 +883,11 @@ class DBAPIResourceDataTest(HeatTestCase):
         val = db_api.resource_data_get(self.resource, 'encryped_resource_key')
         self.assertEqual('test_value', val)
 
+        vals = db_api.resource_data_get_all(self.resource)
+        self.assertEqual(len(vals), 2)
+        self.assertEqual('foo', vals.get('test_resource_key'))
+        self.assertEqual('test_value', vals.get('encryped_resource_key'))
+
     def test_resource_data_delete(self):
         create_resource_data(self.ctx, self.resource)
         res_data = db_api.resource_data_get_by_key(self.ctx, self.resource.id,

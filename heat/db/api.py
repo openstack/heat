@@ -55,6 +55,10 @@ def raw_template_create(context, values):
     return IMPL.raw_template_create(context, values)
 
 
+def resource_data_get_all(resource):
+    return IMPL.resource_data_get_all(resource)
+
+
 def resource_data_get(resource, key):
     return IMPL.resource_data_get(resource, key)
 
