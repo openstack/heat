@@ -31,15 +31,21 @@ except ImportError:
 
             return formatted_string
 
+    def resource_mapping():
+        return {}
+else:
+
+    def resource_mapping():
+        return {'Rackspace::Cloud::DBInstance': CloudDBInstance}
+
 from heat.common import exception
 from heat.openstack.common import log as logging
-
-from . import rackspace_resource  # noqa
+from heat.engine import resource
 
 logger = logging.getLogger(__name__)
 
 
-class CloudDBInstance(rackspace_resource.RackspaceResource):
+class CloudDBInstance(resource.Resource):
     '''
     Rackspace cloud database resource.
     '''
@@ -131,6 +137,9 @@ class CloudDBInstance(rackspace_resource.RackspaceResource):
         super(CloudDBInstance, self).__init__(name, json_snippet, stack)
         self.hostname = None
         self.href = None
+
+    def cloud_db(self):
+        return self.stack.clients.cloud_db()
 
     def handle_create(self):
         '''
@@ -263,14 +272,3 @@ class CloudDBInstance(rackspace_resource.RackspaceResource):
             return self._href()
         else:
             return None
-
-
-# pyrax module is required to work with Rackspace cloud database provider.
-# If it is not installed, don't register clouddatabase provider
-def resource_mapping():
-    if rackspace_resource.PYRAX_INSTALLED:
-        return {
-            'Rackspace::Cloud::DBInstance': CloudDBInstance,
-        }
-    else:
-        return {}

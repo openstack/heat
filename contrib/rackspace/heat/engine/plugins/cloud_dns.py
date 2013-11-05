@@ -17,16 +17,21 @@ except ImportError:
     class NotFound(Exception):
         pass
 
+    def resource_mapping():
+        return {}
+else:
+
+    def resource_mapping():
+        return {'Rackspace::Cloud::DNS': CloudDns}
 
 from heat.common import exception
+from heat.engine import resource
 from heat.openstack.common import log as logging
-
-from . import rackspace_resource
 
 logger = logging.getLogger(__name__)
 
 
-class CloudDns(rackspace_resource.RackspaceResource):
+class CloudDns(resource.Resource):
 
     record_schema = {
         'name': {
@@ -119,6 +124,9 @@ class CloudDns(rackspace_resource.RackspaceResource):
 
     update_allowed_keys = ('Properties',)
 
+    def cloud_dns(self):
+        return self.stack.clients.cloud_dns()
+
     def handle_create(self):
         """
         Create a Rackspace CloudDns Instance.
@@ -171,12 +179,3 @@ class CloudDns(rackspace_resource.RackspaceResource):
             except NotFound:
                 pass
         self.resource_id_set(None)
-
-
-# pyrax module is required to work with Rackspace cloud server provider.
-# If it is not installed, don't register cloud server provider
-def resource_mapping():
-    if rackspace_resource.PYRAX_INSTALLED:
-        return {'Rackspace::Cloud::DNS': CloudDns}
-    else:
-        return {}

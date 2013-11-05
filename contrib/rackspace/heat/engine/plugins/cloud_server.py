@@ -24,7 +24,16 @@ from heat.engine.resources import instance
 from heat.engine.resources import nova_utils
 from heat.db.sqlalchemy import api as db_api
 
-from . import rackspace_resource  # noqa
+try:
+    import pyrax  # noqa
+except ImportError:
+
+    def resource_mapping():
+        return {}
+else:
+
+    def resource_mapping():
+        return {'Rackspace::Cloud::Server': CloudServer}
 
 logger = logging.getLogger(__name__)
 
@@ -170,9 +179,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         self._private_ip = None
         self._flavor = None
         self._image = None
-        self.rs = rackspace_resource.RackspaceResource(name,
-                                                       json_snippet,
-                                                       stack)
 
     def physical_resource_name(self):
         name = self.properties.get('name')
@@ -180,12 +186,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
             return name
 
         return super(CloudServer, self).physical_resource_name()
-
-    def nova(self):
-        return self.rs.nova()  # Override the Instance method
-
-    def cinder(self):
-        return self.rs.cinder()
 
     @property
     def server(self):
@@ -320,7 +320,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         running, so we have to transfer the user-data file to the
         server and then trigger cloud-init.
         """
-
         # Generate SSH public/private keypair
         if self._private_key is not None:
             rsa = RSA.importKey(self._private_key)
@@ -531,12 +530,3 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         logger.info('%s._resolve_attribute(%s) == %s'
                     % (self.name, key, function))
         return unicode(function)
-
-
-# pyrax module is required to work with Rackspace cloud server provider.
-# If it is not installed, don't register cloud server provider
-def resource_mapping():
-    if rackspace_resource.PYRAX_INSTALLED:
-        return {'Rackspace::Cloud::Server': CloudServer}
-    else:
-        return {}

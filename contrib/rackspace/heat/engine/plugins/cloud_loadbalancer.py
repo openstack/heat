@@ -18,13 +18,19 @@ except ImportError:
     class NotFound(Exception):
         pass
 
+    def resource_mapping():
+        return {}
+else:
+
+    def resource_mapping():
+        return {'Rackspace::Cloud::LoadBalancer': CloudLoadBalancer}
+
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
 from heat.engine import scheduler
+from heat.engine import resource
 from heat.engine.properties import Properties
 from heat.common import exception
-
-from . import rackspace_resource  # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +39,7 @@ class LoadbalancerBuildError(exception.HeatException):
     msg_fmt = _("There was an error building the loadbalancer:%(lb_name)s.")
 
 
-class CloudLoadBalancer(rackspace_resource.RackspaceResource):
+class CloudLoadBalancer(resource.Resource):
 
     protocol_values = ["DNS_TCP", "DNS_UDP", "FTP", "HTTP", "HTTPS", "IMAPS",
                        "IMAPv4", "LDAP", "LDAPS", "MYSQL", "POP3", "POP3S",
@@ -190,6 +196,9 @@ class CloudLoadBalancer(rackspace_resource.RackspaceResource):
     def __init__(self, name, json_snippet, stack):
         super(CloudLoadBalancer, self).__init__(name, json_snippet, stack)
         self.clb = self.cloud_lb()
+
+    def cloud_lb(self):
+        return self.stack.clients.cloud_lb()
 
     def _setup_properties(self, properties, function):
         """Use defined schema properties as kwargs for loadbalancer objects."""
@@ -447,12 +456,3 @@ class CloudLoadBalancer(rackspace_resource.RackspaceResource):
         function = attribute_function[key]
         logger.info('%s.GetAtt(%s) == %s' % (self.name, key, function))
         return unicode(function)
-
-
-def resource_mapping():
-    if rackspace_resource.PYRAX_INSTALLED:
-        return {
-            'Rackspace::Cloud::LoadBalancer': CloudLoadBalancer
-        }
-    else:
-        return {}
