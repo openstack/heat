@@ -90,7 +90,10 @@ cfn-create-aws-symlinks
 
     # - Centos 6.4: Verified working
     centos_script = base_script % """\
-rpm -ivh http://mirror.rackspace.com/epel/6/i386/epel-release-6-8.noarch.rpm
+if ! (yum repolist 2> /dev/null | egrep -q "^[\!\*]?epel ");
+then
+ rpm -ivh http://mirror.rackspace.com/epel/6/i386/epel-release-6-8.noarch.rpm
+fi
 yum install -y cloud-init python-boto python-pip gcc python-devel \
   python-argparse
 pip-python install heat-cfntools
@@ -98,7 +101,10 @@ pip-python install heat-cfntools
 
     # - RHEL 6.4: Verified working
     rhel_script = base_script % """\
-rpm -ivh http://mirror.rackspace.com/epel/6/i386/epel-release-6-8.noarch.rpm
+if ! (yum repolist 2> /dev/null | egrep -q "^[\!\*]?epel ");
+then
+ rpm -ivh http://mirror.rackspace.com/epel/6/i386/epel-release-6-8.noarch.rpm
+fi
 # The RPM DB stays locked for a few secs
 while fuser /var/lib/rpm/*; do sleep 1; done
 yum install -y cloud-init python-boto python-pip gcc python-devel \
