@@ -20,6 +20,7 @@ from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import notification
 from heat.engine import parser
 from heat.engine.resources import user
 from heat.engine.resources import instance
@@ -242,6 +243,9 @@ class AutoScalingGroupTest(HeatTestCase):
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
         self.m.StubOutWithMock(instance.Instance, 'check_create_complete')
 
+        self.m.StubOutWithMock(notification, 'send')
+        notification.send(mox.IgnoreArg()).MultipleTimes().AndReturn(None)
+
         cookie = object()
 
         # for load balancer setup
@@ -265,6 +269,9 @@ class AutoScalingGroupTest(HeatTestCase):
         """
         # for load balancer setup
         self._stub_lb_reload(num_reloads_expected_on_updt)
+
+        self.m.StubOutWithMock(notification, 'send')
+        notification.send(mox.IgnoreArg()).MultipleTimes().AndReturn(None)
 
         # for instances in the group
         self.m.StubOutWithMock(instance.Instance, 'handle_create')

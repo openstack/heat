@@ -82,6 +82,24 @@ EVENT_KEYS = (
     'resource_properties',
 )
 
+NOTIFY_KEYS = (
+    NOTIFY_TENANT_ID,
+    NOTIFY_USER_ID,
+    NOTIFY_STACK_ID,
+    NOTIFY_STACK_NAME,
+    NOTIFY_STATE,
+    NOTIFY_STATE_REASON,
+    NOTIFY_CREATE_AT,
+) = (
+    'tenant_id',
+    'user_id',
+    STACK_ID,
+    STACK_NAME,
+    'state',
+    'state_reason',
+    'create_at',
+)
+
 # This is the representation of a watch we expose to the API via RPC
 WATCH_KEYS = (
     WATCH_ACTIONS_ENABLED, WATCH_ALARM_ACTIONS, WATCH_TOPIC,
