@@ -1,4 +1,4 @@
-# Filipino translations for heat.
+# Basque translations for heat.
 # Copyright (C) 2013 ORGANIZATION
 # This file is distributed under the same license as the heat project.
 #
@@ -8,11 +8,11 @@ msgstr ""
 "Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2013-11-08 06:05+0000\n"
-"PO-Revision-Date: 2013-10-10 01:09+0000\n"
-"Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
-"Language-Team: Filipino "
-"(http://www.transifex.com/projects/p/openstack/language/fil/)\n"
-"Plural-Forms: nplurals=2; plural=(n > 1)\n"
+"PO-Revision-Date: 2013-11-06 03:20+0000\n"
+"Last-Translator: Tom Fifield <tom@openstack.org>\n"
+"Language-Team: Basque "
+"(http://www.transifex.com/projects/p/openstack/language/eu/)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -3587,118 +3587,4 @@ msgstr ""
 #, python-format
 msgid "Testing message %(text)s"
 msgstr ""
-
-#~ msgid "%s not in valid format"
-#~ msgstr ""
-
-#~ msgid "Uncaught exception"
-#~ msgstr ""
-
-#~ msgid "Number of days to preserve."
-#~ msgstr ""
-
-#~ msgid ""
-#~ msgstr ""
-
-#~ msgid "The ID of the snapshot to create a volume from"
-#~ msgstr ""
-
-#~ msgid "ID of network to create a port on"
-#~ msgstr ""
-
-#~ msgid "ID of an existing port to associate with this server"
-#~ msgstr ""
-
-#~ msgid "Optional server name"
-#~ msgstr ""
-
-#~ msgid "The ID or name of the image to boot with"
-#~ msgstr ""
-
-#~ msgid "Block device mappings for this server"
-#~ msgstr ""
-
-#~ msgid "The ID or name of the flavor to boot onto"
-#~ msgstr ""
-
-#~ msgid "Name of keypair to inject into the server"
-#~ msgstr ""
-
-#~ msgid "Name of the administrative user to use  on the server"
-#~ msgstr ""
-
-#~ msgid "Name of the availability zone for server placement"
-#~ msgstr ""
-
-#~ msgid "List of security group names"
-#~ msgstr ""
-
-#~ msgid "Arbitrary key-value pairs specified by the client to help boot a server"
-#~ msgstr ""
-
-#~ msgid "User data script to be executed by cloud-init"
-#~ msgstr ""
-
-#~ msgid "A UUID for the set of servers being requested"
-#~ msgstr ""
-
-#~ msgid "value for config drive either boolean, or volume-id"
-#~ msgstr ""
-
-#~ msgid "Control how the disk is partitioned when the server is created"
-#~ msgstr ""
-
-#~ msgid "A dict of all server details as returned by the API"
-#~ msgstr ""
-
-#~ msgid "A dict of all network addresses as returned by the API"
-#~ msgstr ""
-
-#~ msgid "AWS compatible instance name"
-#~ msgstr ""
-
-#~ msgid "The manually assigned alternative public IPv4 address of the server"
-#~ msgstr ""
-
-#~ msgid "The manually assigned alternative public IPv6 address of the server"
-#~ msgstr ""
-
-#~ msgid "Operator used to compare specified statistic with threshold"
-#~ msgstr ""
-
-#~ msgid "Number of periods to evaluate over"
-#~ msgstr ""
-
-#~ msgid "Meter name watched by the alarm"
-#~ msgstr ""
-
-#~ msgid "Period (seconds) to evaluate over"
-#~ msgstr ""
-
-#~ msgid "Meter statistic to evaluate"
-#~ msgstr ""
-
-#~ msgid "Threshold to evaluate against"
-#~ msgstr ""
-
-#~ msgid "A list of URLs (webhooks) to invoke when state transitions to alarm"
-#~ msgstr ""
-
-#~ msgid "A list of URLs (webhooks) to invoke when state transitions to ok"
-#~ msgstr ""
-
-#~ msgid "Description for the alarm"
-#~ msgstr ""
-
-#~ msgid "True if alarm evaluation/actioning is enabled"
-#~ msgstr ""
-
-#~ msgid "Tenant owning the port"
-#~ msgstr ""
-
-#~ msgid "\"%s\" is not specified in parent resource"
-#~ msgstr ""
-
-#~ msgid "The list of tags to associate with the volume  (ignored)."
-#~ msgstr ""
 

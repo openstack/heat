@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-11-01 06:05+0000\n"
+"POT-Creation-Date: 2013-11-08 06:05+0000\n"
 "PO-Revision-Date: 2013-10-11 04:52+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Turkish (Turkey) "
@@ -613,15 +613,15 @@ msgstr ""
 msgid "Unexpected error occurred serving API: %s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:478
+#: heat/db/sqlalchemy/api.py:473
 msgid "age should be an integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:480
+#: heat/db/sqlalchemy/api.py:475
 msgid "age should be a positive integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:484
+#: heat/db/sqlalchemy/api.py:479
 msgid "granularity should be days, hours, minutes, or seconds"
 msgstr ""
 
