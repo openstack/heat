@@ -23,21 +23,34 @@ logger = logging.getLogger(__name__)
 
 
 class S3Bucket(resource.Resource):
-    website_schema = {'IndexDocument': {'Type': 'String'},
-                      'ErrorDocument': {'Type': 'String'}}
-    properties_schema = {'AccessControl': {
-                         'Type': 'String',
-                         'AllowedValues': ['Private',
-                                           'PublicRead',
-                                           'PublicReadWrite',
-                                           'AuthenticatedRead',
-                                           'BucketOwnerRead',
-                                           'BucketOwnerFullControl']},
-                         'WebsiteConfiguration': {'Type': 'Map',
-                                                  'Schema': website_schema}}
+    website_schema = {
+        'IndexDocument': {
+            'Type': 'String',
+            'Description': _('The name of the index document.')},
+        'ErrorDocument': {
+            'Type': 'String',
+            'Description': _('The name of the error document.')}}
+
+    properties_schema = {
+        'AccessControl': {
+            'Type': 'String',
+            'AllowedValues': ['Private',
+                              'PublicRead',
+                              'PublicReadWrite',
+                              'AuthenticatedRead',
+                              'BucketOwnerRead',
+                              'BucketOwnerFullControl'],
+            'Description': _('A predefined access control list (ACL) that'
+                             ' grants permissions on the bucket.')},
+        'WebsiteConfiguration': {
+            'Type': 'Map',
+            'Schema': website_schema,
+            'Description': _('Information used to configure the bucket as '
+                             'a static website.')},
+    }
     attributes_schema = {
-        "DomainName": "The DNS name of the specified bucket.",
-        "WebsiteURL": "The website endpoint for the specified bucket."
+        'DomainName': _('The DNS name of the specified bucket.'),
+        'WebsiteURL': _('The website endpoint for the specified bucket.')
     }
 
     def validate(self):
