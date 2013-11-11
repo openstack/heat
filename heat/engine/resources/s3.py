@@ -30,6 +30,12 @@ class S3Bucket(resource.Resource):
         'ErrorDocument': {
             'Type': 'String',
             'Description': _('The name of the error document.')}}
+    tags_schema = {'Key': {'Type': 'String',
+                           'Description': _('The tag key name.'),
+                           'Required': True},
+                   'Value': {'Type': 'String',
+                             'Description': _('The tag value.'),
+                             'Required': True}}
 
     properties_schema = {
         'AccessControl': {
@@ -47,6 +53,11 @@ class S3Bucket(resource.Resource):
             'Schema': website_schema,
             'Description': _('Information used to configure the bucket as '
                              'a static website.')},
+        'Tags': {
+            'Type': 'List',
+            'Schema': {'Type': 'Map', 'Schema': tags_schema},
+            'Required': False,
+            'Description': _('Tags to attach to the bucket.')},
     }
     attributes_schema = {
         'DomainName': _('The DNS name of the specified bucket.'),
@@ -62,10 +73,17 @@ class S3Bucket(resource.Resource):
             return {'Error':
                     'S3 services unavailable because of missing swiftclient.'}
 
+    def tags_to_headers(self):
+        if self.properties['Tags'] is None:
+            return {}
+        return dict(
+            ('X-Container-Meta-S3-Tag-' + tm['Key'], tm['Value'])
+            for tm in self.properties['Tags'])
+
     def handle_create(self):
         """Create a bucket."""
         container = self.physical_resource_name()
-        headers = {}
+        headers = self.tags_to_headers()
         logger.debug('S3Bucket create container %s with headers %s' %
                      (container, headers))
         if self.properties['WebsiteConfiguration'] is not None:
