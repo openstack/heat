@@ -206,7 +206,8 @@ class NeutronTest(HeatTestCase):
         props = qr.prepare_properties(p, 'resource_name')
         self.assertEqual({'name': 'resource_name',
                           'router:external': True,
-                          'admin_state_up': False}, props)
+                          'admin_state_up': False,
+                          'shared': False}, props)
 
     def test_is_built(self):
         self.assertTrue(qr.is_built({
@@ -235,6 +236,7 @@ class NeutronNetTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_network')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
         self.m.StubOutWithMock(neutronclient.Client, 'show_network')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_network')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         utils.setup_dummy_db()
 
@@ -247,6 +249,8 @@ class NeutronNetTest(HeatTestCase):
     def test_net(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
+
+        # Create script
         neutronclient.Client.create_network({
             'network': {
                 'name': u'the_network',
@@ -257,7 +261,7 @@ class NeutronNetTest(HeatTestCase):
             "status": "BUILD",
             "subnets": [],
             "name": "name",
-            "admin_state_up": False,
+            "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -269,7 +273,7 @@ class NeutronNetTest(HeatTestCase):
             "status": "BUILD",
             "subnets": [],
             "name": "name",
-            "admin_state_up": False,
+            "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -281,7 +285,7 @@ class NeutronNetTest(HeatTestCase):
             "status": "ACTIVE",
             "subnets": [],
             "name": "name",
-            "admin_state_up": False,
+            "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -297,7 +301,7 @@ class NeutronNetTest(HeatTestCase):
             "status": "ACTIVE",
             "subnets": [],
             "name": "name",
-            "admin_state_up": False,
+            "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -309,12 +313,22 @@ class NeutronNetTest(HeatTestCase):
             "status": "ACTIVE",
             "subnets": [],
             "name": "name",
-            "admin_state_up": False,
+            "admin_state_up": True,
             "shared": True,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
+        # Update script
+        neutronclient.Client.update_network(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'network': {
+                'shared': True,
+                'name': 'mynet',
+                'admin_state_up': True
+            }}).AndReturn(None)
+
+        # Delete script
         neutronclient.Client.delete_network(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn(None)
@@ -350,8 +364,15 @@ class NeutronNetTest(HeatTestCase):
         self.assertRaises(
             exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
 
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
+        update_snippet = {
+            "Type": "OS::Neutron::Net",
+            "Properties": {
+                "name": "mynet",
+                "shared": True,
+                "admin_state_up": True
+            }
+        }
+        rsrc.handle_update(update_snippet, {}, {})
 
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
