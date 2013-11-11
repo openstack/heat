@@ -41,6 +41,7 @@ class RackspaceResource(resource.Resource):
         self._cloud_server = None
         self._cloud_nw = None
         self._cloud_blockstore = None
+        self._cloud_as = None
         self._authenticated = False
 
     def cloud_db(self):
@@ -58,6 +59,14 @@ class RackspaceResource(resource.Resource):
             self._cloud_lb = self.pyrax.cloud_loadbalancers
 
         return self._cloud_lb
+
+    def auto_scale(self):
+        """Rackspace Auto Scale client."""
+        if not self._cloud_as:
+            self.__authenticate()
+            self._cloud_as = self.pyrax.autoscale
+
+        return self._cloud_as
 
     def cloud_dns(self):
         '''Rackspace cloud dns client.'''
