@@ -388,6 +388,40 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         if not self._check_active(cookie):
             return False
 
+        server = cookie[0]
+        if 'rack_connect' in self.context.roles:  # Account has RackConnect
+            if 'rackconnect_automation_status' not in server.metadata:
+                logger.debug("RackConnect server does not have the "
+                             "rackconnect_automation_status metadata tag yet")
+                return False
+
+            rc_status = server.metadata['rackconnect_automation_status']
+            logger.debug("RackConnect automation status: " + rc_status)
+
+            if rc_status == 'DEPLOYING':
+                return False
+
+            elif rc_status == 'DEPLOYED':
+                self._public_ip = None  # The public IP changed, forget old one
+
+            elif rc_status == 'FAILED':
+                raise exception.Error("RackConnect automation FAILED")
+
+            elif rc_status == 'UNPROCESSABLE':
+                reason = server.metadata.get(
+                    "rackconnect_unprocessable_reason", None)
+                if reason is not None:
+                    logger.warning("RackConnect unprocessable reason: "
+                                   + reason)
+                # UNPROCESSABLE means the RackConnect automation was
+                # not attempted (eg. Cloud Server in a different DC
+                # than dedicated gear, so RackConnect does not apply).
+                # It is okay if we do not raise an exception.
+
+            else:
+                raise exception.Error("Unknown RackConnect automation status: "
+                                      + rc_status)
+
         if self.has_userdata:
             # Create heat-script and userdata files on server
             raw_userdata = self.properties['user_data'] or ''

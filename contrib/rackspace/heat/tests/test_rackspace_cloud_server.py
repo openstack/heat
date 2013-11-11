@@ -458,3 +458,50 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.assertNotEqual(encrypted_key, "fake private key")
         decrypted_key = cs.private_key
         self.assertEqual(decrypted_key, "fake private key")
+
+    def test_rackconnect_deployed(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.metadata = {'rackconnect_automation_status': 'DEPLOYED'}
+        cs = self._setup_test_cs(return_server, 'test_rackconnect_deployed')
+        cs.context.roles = ['rack_connect']
+        self.m.ReplayAll()
+        scheduler.TaskRunner(cs.create)()
+        self.assertEqual(cs.action, 'CREATE')
+        self.assertEqual(cs.status, 'COMPLETE')
+        self.m.VerifyAll()
+
+    def test_rackconnect_failed(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.metadata = {'rackconnect_automation_status': 'FAILED'}
+        cs = self._setup_test_cs(return_server, 'test_rackconnect_failed')
+        cs.context.roles = ['rack_connect']
+        self.m.ReplayAll()
+        create = scheduler.TaskRunner(cs.create)
+        exc = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual('Error: RackConnect automation FAILED', str(exc))
+
+    def test_rackconnect_unprocessable(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.metadata = {'rackconnect_automation_status':
+                                  'UNPROCESSABLE',
+                                  'rackconnect_unprocessable_reason':
+                                  'Fake reason'}
+        cs = self._setup_test_cs(return_server,
+                                 'test_rackconnect_unprocessable')
+        cs.context.roles = ['rack_connect']
+        self.m.ReplayAll()
+        scheduler.TaskRunner(cs.create)()
+        self.assertEqual(cs.action, 'CREATE')
+        self.assertEqual(cs.status, 'COMPLETE')
+        self.m.VerifyAll()
+
+    def test_rackconnect_unknown(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.metadata = {'rackconnect_automation_status': 'FOO'}
+        cs = self._setup_test_cs(return_server, 'test_rackconnect_unknown')
+        cs.context.roles = ['rack_connect']
+        self.m.ReplayAll()
+        create = scheduler.TaskRunner(cs.create)
+        exc = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual('Error: Unknown RackConnect automation status: FOO',
+                         str(exc))
