@@ -128,14 +128,26 @@ class WaitConditionTimeout(Exception):
 
 
 class WaitCondition(resource.Resource):
-    properties_schema = {'Handle': {'Type': 'String',
-                                    'Required': True},
-                         'Timeout': {'Type': 'Number',
-                                     'Required': True,
-                                     'MinValue': '1',
-                                     'MaxValue': '43200'},
-                         'Count': {'Type': 'Number',
-                                   'MinValue': '1'}}
+    properties_schema = {
+        'Handle': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('A reference to the wait condition handle used'
+                             ' to signal this wait condition.')},
+        'Timeout': {
+            'Type': 'Number',
+            'Required': True,
+            'MinValue': '1',
+            'MaxValue': '43200',
+            'Description': _('The number of seconds to wait for the'
+                             ' correct number of signals to arrive.')},
+        'Count': {
+            'Type': 'Number',
+            'MinValue': '1',
+            'Description': _('The number of success signals that must be'
+                             ' received before the stack creation process'
+                             ' continues.')}
+    }
 
     def __init__(self, name, json_snippet, stack):
         super(WaitCondition, self).__init__(name, json_snippet, stack)
