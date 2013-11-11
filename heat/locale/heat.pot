@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: heat jenkins.heat.propose.translation.update.46\n"
+"Project-Id-Version: heat jenkins.heat.propose.translation.update.49\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-11-08 06:05+0000\n"
+"POT-Creation-Date: 2013-11-11 06:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -777,29 +777,29 @@ msgstr ""
 msgid "Value must be valid JSON"
 msgstr ""
 
-#: heat/engine/parser.py:77
+#: heat/engine/parser.py:78
 #, python-format
 msgid ""
 "Invalid stack name %s must contain only alphanumeric or \"_-.\" "
 "characters, must start with alpha"
 msgstr ""
 
-#: heat/engine/parser.py:184
+#: heat/engine/parser.py:185
 #, python-format
 msgid "No stack exists with id \"%s\""
 msgstr ""
 
-#: heat/engine/parser.py:309
+#: heat/engine/parser.py:310
 #, python-format
 msgid "Duplicate names %s"
 msgstr ""
 
-#: heat/engine/parser.py:335
+#: heat/engine/parser.py:336
 #, python-format
 msgid "Invalid action %s"
 msgstr ""
 
-#: heat/engine/parser.py:338
+#: heat/engine/parser.py:339
 #, python-format
 msgid "Invalid status %s"
 msgstr ""
