@@ -20,6 +20,7 @@ from heat.engine.properties import Properties
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
+from heat.openstack.common import uuidutils
 
 logger = logging.getLogger(__name__)
 
@@ -140,31 +141,26 @@ class NeutronResource(resource.Resource):
         return unicode(self.resource_id)
 
     @staticmethod
-    def get_secgroup_uuids(stack, props, props_name, rsrc_name, client):
+    def get_secgroup_uuids(security_groups, client):
         '''
-        Returns security group names in UUID form.
-
+        Returns a list of security group UUIDs.
         Args:
-            stack: stack associated with given resource
-            props: properties described in the template
-            props_name: name of security group property
-            rsrc_name: name of the given resource
+            security_groups: List of security group names or UUIDs
             client: reference to neutronclient
         '''
         seclist = []
-        for sg in props.get(props_name):
-            resource = stack.resource_by_refid(sg)
-            if resource is not None:
-                seclist.append(resource.resource_id)
+        all_groups = None
+        for sg in security_groups:
+            if uuidutils.is_uuid_like(sg):
+                seclist.append(sg)
             else:
-                try:
-                    client.show_security_group(sg)
-                    seclist.append(sg)
-                except NeutronClientException as e:
-                    if e.status_code == 404:
-                        raise exception.InvalidTemplateAttribute(
-                            resource=rsrc_name,
-                            key=props_name)
-                    else:
-                        raise
+                if not all_groups:
+                    response = client.list_security_groups()
+                    all_groups = response['security_groups']
+                groups = [g['id'] for g in all_groups if g['name'] == sg]
+                if len(groups) == 0:
+                    raise exception.PhysicalResourceNotFound(resource_id=sg)
+                if len(groups) > 1:
+                    raise exception.PhysicalResourceNameAmbiguity(name=sg)
+                seclist.append(groups[0])
         return seclist

@@ -114,8 +114,7 @@ class Port(neutron.NeutronResource):
 
         if props.get('security_groups'):
             props['security_groups'] = self.get_secgroup_uuids(
-                self.stack, props, 'security_groups', props.get('name'),
-                self.neutron())
+                props.get('security_groups'), self.neutron())
 
     def _show_resource(self):
         return self.neutron().show_port(
