@@ -36,6 +36,7 @@ Getting Started
     getting_started/index
     templates/index
     template_guide/index
+    scaleout_apis
     glossary
 
 Man Pages
