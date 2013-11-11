@@ -53,7 +53,7 @@ def get_image_id(nova_client, image_identifier):
     :param nova_client: the nova client to use
     :param image_identifier: image name or a UUID-like identifier
     :returns: the id of the requested :image_identifier:
-    :raises: exception.ImageNotFound, exception.NoUniqueImageFound
+    :raises: exception.ImageNotFound, exception.PhysicalResourceNameAmbiguity
     '''
     image_id = None
     if uuidutils.is_uuid_like(image_identifier):
@@ -79,7 +79,8 @@ def get_image_id(nova_client, image_identifier):
         elif len(image_names) > 1:
             logger.info("Mulitple images %s were found in glance with name"
                         % image_identifier)
-            raise exception.NoUniqueImageFound(image_name=image_identifier)
+            raise exception.PhysicalResourceNameAmbiguity(
+                name=image_identifier)
         image_id = image_names.popitem()[0]
     return image_id
 

@@ -222,7 +222,8 @@ class ServersTest(HeatTestCase):
                              {'id': 4, 'name': 'CentOS 5.2'}]}))
         self.m.ReplayAll()
 
-        self.assertRaises(exception.NoUniqueImageFound, server.handle_create)
+        self.assertRaises(exception.PhysicalResourceNameAmbiguity,
+                          server.handle_create)
 
         self.m.VerifyAll()
 
