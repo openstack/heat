@@ -388,6 +388,7 @@ class NeutronSubnetTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_subnet')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_subnet')
         self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_subnet')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         utils.setup_dummy_db()
 
@@ -411,7 +412,8 @@ class NeutronSubnetTest(HeatTestCase):
                     {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
                 'ip_version': 4,
                 'cidr': u'10.0.3.0/24',
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'enable_dhcp': True
             }
         }).AndReturn({
             "subnet": {
@@ -453,6 +455,17 @@ class NeutronSubnetTest(HeatTestCase):
         neutronclient.Client.show_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1').AndReturn(sn)
 
+        # Update script
+        neutronclient.Client.update_subnet(
+            '91e47a57-7508-46fe-afc9-fc454e8580e1',
+            {'subnet': {
+                'dns_nameservers': ['8.8.8.8', '192.168.1.254'],
+                'name': 'mysubnet',
+                'enable_dhcp': True
+            }}
+        )
+
+        # Delete script
         neutronclient.Client.delete_subnet(
             '91e47a57-7508-46fe-afc9-fc454e8580e1'
         ).AndReturn(None)
@@ -485,8 +498,20 @@ class NeutronSubnetTest(HeatTestCase):
         self.assertIn(stack['port'], stack.dependencies[stack['subnet']])
         self.assertIn(stack['port2'], stack.dependencies[stack['subnet']])
 
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
+        update_snippet = {
+            "Type": "OS::Neutron::Subnet",
+            "Properties": {
+                "name": 'mysubnet',
+                "network_id": {"Ref": "network"},
+                "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+                "ip_version": 4,
+                "cidr": "10.0.3.0/24",
+                "allocation_pools": [
+                    {"start": "10.0.3.20", "end": "10.0.3.150"}],
+                "dns_nameservers": ["8.8.8.8", "192.168.1.254"]
+            }
+        }
+        rsrc.handle_update(update_snippet, {}, {})
 
         self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')

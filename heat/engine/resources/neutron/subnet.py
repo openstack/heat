@@ -36,20 +36,28 @@ class Subnet(neutron.NeutronResource):
                          'cidr': {'Type': 'String',
                                   'Required': True},
                          'value_specs': {'Type': 'Map',
-                                         'Default': {}},
-                         'name': {'Type': 'String'},
+                                         'Default': {},
+                                         'UpdateAllowed': True},
+                         'name': {'Type': 'String',
+                                  'UpdateAllowed': True},
                          'ip_version': {'Type': 'Integer',
                                         'AllowedValues': [4, 6],
                                         'Default': 4},
-                         'dns_nameservers': {'Type': 'List'},
-                         'gateway_ip': {'Type': 'String'},
-                         'enable_dhcp': {'Type': 'Boolean'},
+                         'dns_nameservers': {'Type': 'List',
+                                             'UpdateAllowed': True,
+                                             'Default': []},
+                         'gateway_ip': {'Type': 'String',
+                                        'UpdateAllowed': True},
+                         'enable_dhcp': {'Type': 'Boolean',
+                                         'UpdateAllowed': True,
+                                         'Default': True},
                          'allocation_pools': {'Type': 'List',
                                               'Schema': {
                                                   'Type': 'Map',
                                                   'Schema': allocation_schema
                                               }},
                          'tenant_id': {'Type': 'String'}}
+
     attributes_schema = {
         "name": _("Friendly name of the subnet."),
         "network_id": _("Parent network of the subnet."),
@@ -64,6 +72,8 @@ class Subnet(neutron.NeutronResource):
                          "otherwise."),
         "show": _("All attributes."),
     }
+
+    update_allowed_keys = ('Properties',)
 
     @staticmethod
     def _null_gateway_ip(props):
@@ -99,6 +109,11 @@ class Subnet(neutron.NeutronResource):
 
     def _show_resource(self):
         return self.neutron().show_subnet(self.resource_id)['subnet']
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        props = self.prepare_update_properties(json_snippet)
+        self.neutron().update_subnet(
+            self.resource_id, {'subnet': props})
 
 
 def resource_mapping():
