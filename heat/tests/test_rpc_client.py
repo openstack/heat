@@ -19,6 +19,7 @@ Unit Tests for heat.rpc.client
 """
 
 
+import mock
 from oslo.config import cfg
 import stubout
 import testtools
@@ -65,23 +66,18 @@ class EngineRpcAPITestCase(testtools.TestCase):
         if rpc_method == 'call' and method in cast_and_call:
             kwargs['cast'] = False
 
-        self.fake_args = None
-        self.fake_kwargs = None
+        with mock.patch.object(rpc, rpc_method) as mock_rpc_method:
+            mock_rpc_method.return_value = expected_retval
 
-        def _fake_rpc_method(*args, **kwargs):
-            self.fake_args = args
-            self.fake_kwargs = kwargs
-            if expected_retval:
-                return expected_retval
+            retval = getattr(rpcapi, method)(ctxt, **kwargs)
 
-        self.stubs.Set(rpc, rpc_method, _fake_rpc_method)
-
-        retval = getattr(rpcapi, method)(ctxt, **kwargs)
-
-        self.assertEqual(retval, expected_retval)
-        expected_args = [ctxt, expected_topic, expected_msg]
-        for arg, expected_arg in zip(self.fake_args, expected_args):
-            self.assertEqual(arg, expected_arg)
+            self.assertEqual(retval, expected_retval)
+            expected_args = [ctxt, expected_topic, expected_msg,
+                             mock.ANY]
+            actual_args, _ = mock_rpc_method.call_args
+            for expected_arg, actual_arg in zip(expected_args,
+                                                actual_args):
+                self.assertEqual(expected_arg, actual_arg)
 
     def test_authenticated_to_backend(self):
         self._test_engine_api('authenticated_to_backend', 'call')

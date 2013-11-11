@@ -291,7 +291,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         cfgopts = DummyConfig()
         self.controller = stacks.StackController(options=cfgopts)
 
-    def test_index(self):
+    @mock.patch.object(rpc, 'call')
+    def test_index(self, mock_call):
         req = self._get('/stacks')
 
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
@@ -315,14 +316,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                 u'timeout_mins': 60,
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_stacks',
-                  'args': {},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
-        self.m.ReplayAll()
+        mock_call.return_value = engine_resp
 
         result = self.controller.index(req, tenant_id=identity.tenant)
 
@@ -342,9 +336,15 @@ class StackControllerTest(ControllerTest, HeatTestCase):
             ]
         }
         self.assertEqual(result, expected)
-        self.m.VerifyAll()
+        mock_call.assert_called_once_with(req.context, self.topic,
+                                          {'namespace': None,
+                                          'method': 'list_stacks',
+                                          'args': {},
+                                          'version': self.api_version},
+                                          None)
 
-    def test_detail(self):
+    @mock.patch.object(rpc, 'call')
+    def test_detail(self, mock_call):
         req = self._get('/stacks/detail')
 
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
@@ -368,14 +368,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                 u'timeout_mins': 60,
             }
         ]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_stacks',
-                  'args': {},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
-        self.m.ReplayAll()
+        mock_call.return_value = engine_resp
 
         result = self.controller.detail(req, tenant_id=identity.tenant)
 
@@ -403,19 +396,18 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         }
 
         self.assertEqual(result, expected)
-        self.m.VerifyAll()
+        mock_call.assert_called_once_with(req.context, self.topic,
+                                          {'namespace': None,
+                                          'method': 'list_stacks',
+                                          'args': {},
+                                          'version': self.api_version},
+                                          None)
 
-    def test_index_rmt_aterr(self):
+    @mock.patch.object(rpc, 'call')
+    def test_index_rmt_aterr(self, mock_call):
         req = self._get('/stacks')
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_stacks',
-                  'args': {},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(AttributeError()))
-        self.m.ReplayAll()
+        mock_call.side_effect = to_remote_error(AttributeError())
 
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.index,
@@ -423,19 +415,18 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.assertEqual(resp.json['code'], 400)
         self.assertEqual(resp.json['error']['type'], 'AttributeError')
-        self.m.VerifyAll()
+        mock_call.assert_called_once_with(req.context, self.topic,
+                                          {'namespace': None,
+                                          'method': 'list_stacks',
+                                          'args': {},
+                                          'version': self.api_version},
+                                          None)
 
-    def test_index_rmt_interr(self):
+    @mock.patch.object(rpc, 'call')
+    def test_index_rmt_interr(self, mock_call):
         req = self._get('/stacks')
 
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_stacks',
-                  'args': {},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(Exception()))
-        self.m.ReplayAll()
+        mock_call.side_effect = to_remote_error(Exception())
 
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.index,
@@ -443,7 +434,12 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.assertEqual(resp.json['code'], 500)
         self.assertEqual(resp.json['error']['type'], 'Exception')
-        self.m.VerifyAll()
+        mock_call.assert_called_once_with(req.context, self.topic,
+                                          {'namespace': None,
+                                          'method': 'list_stacks',
+                                          'args': {},
+                                          'version': self.api_version},
+                                          None)
 
     def test_create(self):
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
