@@ -183,8 +183,14 @@ class StackController(object):
         """
         Lists summary information for all stacks
         """
-
-        stacks = self.engine.list_stacks(req.context)
+        whitelist = {
+            'limit': 'single',
+            'marker': 'single',
+            'sort_dir': 'single',
+            'sort_keys': 'multi',
+        }
+        params = util.get_allowed_params(req.params, whitelist)
+        stacks = self.engine.list_stacks(req.context, **params)
 
         summary_keys = (engine_api.STACK_ID,
                         engine_api.STACK_NAME,

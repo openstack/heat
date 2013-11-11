@@ -197,7 +197,8 @@ class EngineService(service.Service):
         return [format_stack_detail(s) for s in stacks]
 
     @request_context
-    def list_stacks(self, cnxt):
+    def list_stacks(self, cnxt, limit=None, sort_keys=None, marker=None,
+                    sort_dir=None):
         """
         The list_stacks method returns attributes of all stacks.
         arg1 -> RPC cnxt.
@@ -215,7 +216,8 @@ class EngineService(service.Service):
                 else:
                     yield api.format_stack(stack)
 
-        stacks = db_api.stack_get_all_by_tenant(cnxt) or []
+        stacks = db_api.stack_get_all_by_tenant(cnxt, limit, sort_keys, marker,
+                                                sort_dir) or []
         return list(format_stack_details(stacks))
 
     def _validate_deferred_auth_context(self, cnxt, stack):

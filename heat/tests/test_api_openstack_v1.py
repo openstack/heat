@@ -239,16 +239,20 @@ class ControllerTest(object):
             'wsgi.url_scheme': 'http',
         }
 
-    def _simple_request(self, path, method='GET'):
+    def _simple_request(self, path, params=None, method='GET'):
         environ = self._environ(path)
         environ['REQUEST_METHOD'] = method
+
+        if params:
+            qs = "&".join(["=".join([k, str(params[k])]) for k in params])
+            environ['QUERY_STRING'] = qs
 
         req = Request(environ)
         req.context = utils.dummy_context('api_test_user', self.tenant)
         return req
 
-    def _get(self, path):
-        return self._simple_request(path)
+    def _get(self, path, params=None):
+        return self._simple_request(path, params=params)
 
     def _delete(self, path):
         return self._simple_request(path, method='DELETE')
@@ -336,12 +340,37 @@ class StackControllerTest(ControllerTest, HeatTestCase):
             ]
         }
         self.assertEqual(result, expected)
+        default_args = {'limit': None, 'sort_keys': None, 'marker': None,
+                        'sort_dir': None}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                           'method': 'list_stacks',
-                                          'args': {},
+                                          'args': default_args,
                                           'version': self.api_version},
                                           None)
+
+    @mock.patch.object(rpc, 'call')
+    def test_index_whitelists_request_params(self, mock_call):
+        params = {
+            'limit': 'fake limit',
+            'sort_keys': 'fake sort keys',
+            'marker': 'fake marker',
+            'sort_dir': 'fake sort dir',
+            'balrog': 'you shall not pass!'
+        }
+        req = self._get('/stacks', params=params)
+        mock_call.return_value = []
+
+        result = self.controller.index(req, tenant_id='fake_tenant_id')
+
+        rpc_call_args, _ = mock_call.call_args
+        engine_args = rpc_call_args[2]['args']
+        self.assertEqual(4, len(engine_args))
+        self.assertIn('limit', engine_args)
+        self.assertIn('sort_keys', engine_args)
+        self.assertIn('marker', engine_args)
+        self.assertIn('sort_dir', engine_args)
+        self.assertNotIn('balrog', engine_args)
 
     @mock.patch.object(rpc, 'call')
     def test_detail(self, mock_call):
@@ -396,10 +425,12 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         }
 
         self.assertEqual(result, expected)
+        default_args = {'limit': None, 'sort_keys': None, 'marker': None,
+                        'sort_dir': None}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                           'method': 'list_stacks',
-                                          'args': {},
+                                          'args': default_args,
                                           'version': self.api_version},
                                           None)
 
@@ -418,7 +449,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                           'method': 'list_stacks',
-                                          'args': {},
+                                          'args': mock.ANY,
                                           'version': self.api_version},
                                           None)
 
@@ -437,7 +468,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                           'method': 'list_stacks',
-                                          'args': {},
+                                          'args': mock.ANY,
                                           'version': self.api_version},
                                           None)
 
