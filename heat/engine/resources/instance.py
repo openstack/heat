@@ -17,6 +17,7 @@ from heat.engine import signal_responder
 from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine.resources.neutron import neutron
 from heat.engine.resources import nova_utils
 from heat.engine.resources import volume
 
@@ -252,37 +253,13 @@ class Instance(resource.Resource):
 
                     if security_groups:
                         props['security_groups'] = \
-                            self._get_security_groups_id(security_groups)
+                            neutron.NeutronResource.get_secgroup_uuids(
+                                security_groups, self.neutron())
 
                     port = neutronclient.create_port({'port': props})['port']
                     nics = [{'port-id': port['id']}]
 
         return nics
-
-    def _get_security_groups_id(self, security_groups):
-        """Extract security_groups ids from security group list
-
-        This function will be deprecated if Neutron client resolves security
-        group name to id internally.
-
-        Args:
-            security_groups : A list contains security_groups ids or names
-        Returns:
-            A list of security_groups ids.
-        """
-        ids = []
-        response = self.neutron().list_security_groups(self.resource_id)
-        for item in response:
-            if item['security_groups'] is not None:
-                for security_group in security_groups:
-                    for groups in item['security_groups']:
-                        if groups['name'] == security_group \
-                                and groups['id'] not in ids:
-                            ids.append(groups['id'])
-                        elif groups['id'] == security_group \
-                                and groups['id'] not in ids:
-                            ids.append(groups['id'])
-        return ids
 
     def _get_security_groups(self):
         security_groups = []
