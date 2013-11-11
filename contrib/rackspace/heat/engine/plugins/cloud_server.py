@@ -423,6 +423,28 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                 raise exception.Error("Unknown RackConnect automation status: "
                                       + rc_status)
 
+        if 'rax_managed' in self.context.roles:  # Managed Cloud account
+            if 'rax_service_level_automation' not in server.metadata:
+                logger.debug("Managed Cloud server does not have the "
+                             "rax_service_level_automation metadata tag yet")
+                return False
+
+            mc_status = server.metadata['rax_service_level_automation']
+            logger.debug("Managed Cloud automation status: " + mc_status)
+
+            if mc_status == 'In Progress':
+                return False
+
+            elif mc_status == 'Complete':
+                pass
+
+            elif mc_status == 'Build Error':
+                raise exception.Error("Managed Cloud automation failed")
+
+            else:
+                raise exception.Error("Unknown Managed Cloud automation "
+                                      "status: " + mc_status)
+
         if self.has_userdata:
             # Create heat-script and userdata files on server
             raw_userdata = self.properties['user_data'] or ''
