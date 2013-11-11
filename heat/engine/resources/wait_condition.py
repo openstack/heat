@@ -132,7 +132,8 @@ class WaitCondition(resource.Resource):
                                     'Required': True},
                          'Timeout': {'Type': 'Number',
                                      'Required': True,
-                                     'MinValue': '1'},
+                                     'MinValue': '1',
+                                     'MaxValue': '43200'},
                          'Count': {'Type': 'Number',
                                    'MinValue': '1'}}
 
