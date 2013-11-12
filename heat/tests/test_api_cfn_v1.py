@@ -13,6 +13,7 @@
 #    under the License.
 
 import json
+import mock
 import os
 
 from oslo.config import cfg
@@ -99,7 +100,8 @@ class CfnStackControllerTest(HeatTestCase):
                           self.controller._enforce, dummy_req, 'ListStacks')
         self.m.VerifyAll()
 
-    def test_list(self):
+    @mock.patch.object(rpc, 'call')
+    def test_list(self, mock_call):
         # Format a dummy GET request to pass into the WSGI handler
         params = {'Action': 'ListStacks'}
         dummy_req = self._dummy_GET_request(params)
@@ -116,15 +118,7 @@ class CfnStackControllerTest(HeatTestCase):
                         u'stack_name': u'wordpress',
                         u'stack_action': u'CREATE',
                         u'stack_status': u'COMPLETE'}]
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_stacks',
-                  'args': {},
-                  'version': self.api_version},
-                 None).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        mock_call.return_value = engine_resp
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
@@ -138,50 +132,51 @@ class CfnStackControllerTest(HeatTestCase):
                        u'StackName': u'wordpress',
                        u'StackStatus': u'CREATE_COMPLETE'}]}}}
         self.assertEqual(result, expected)
-        self.m.VerifyAll()
+        mock_call.assert_called_once_with(dummy_req.context, self.topic,
+                                          {'namespace': None,
+                                           'method': 'list_stacks',
+                                           'args': {},
+                                           'version': self.api_version},
+                                          None)
 
-    def test_list_rmt_aterr(self):
+    @mock.patch.object(rpc, 'call')
+    def test_list_rmt_aterr(self, mock_call):
         params = {'Action': 'ListStacks'}
         dummy_req = self._dummy_GET_request(params)
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_stacks',
-                  'args': {},
-                  'version': self.api_version},
-                 None).AndRaise(AttributeError())
-
-        self.m.ReplayAll()
+        mock_call.side_effect = AttributeError
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
         self.assertEqual(type(result),
                          exception.HeatInvalidParameterValueError)
-        self.m.VerifyAll()
+        mock_call.assert_called_once_with(dummy_req.context, self.topic,
+                                          {'namespace': None,
+                                           'method': 'list_stacks',
+                                           'args': {},
+                                           'version': self.api_version},
+                                          None)
 
-    def test_list_rmt_interr(self):
+    @mock.patch.object(rpc, 'call')
+    def test_list_rmt_interr(self, mock_call):
         params = {'Action': 'ListStacks'}
         dummy_req = self._dummy_GET_request(params)
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(dummy_req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'list_stacks',
-                  'args': {},
-                  'version': self.api_version},
-                 None).AndRaise(Exception())
-
-        self.m.ReplayAll()
+        mock_call.side_effect = Exception()
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
         self.assertEqual(type(result), exception.HeatInternalFailureError)
-        self.m.VerifyAll()
+        mock_call.assert_called_once_with(dummy_req.context, self.topic,
+                                          {'namespace': None,
+                                           'method': 'list_stacks',
+                                           'args': {},
+                                           'version': self.api_version},
+                                          None)
 
     def test_describe(self):
         # Format a dummy GET request to pass into the WSGI handler
