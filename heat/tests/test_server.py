@@ -142,21 +142,6 @@ class ServersTest(HeatTestCase):
         self.assertEqual('::babe:4317:0A83', server.FnGetAtt('accessIPv6'))
         self.m.VerifyAll()
 
-    def test_server_create_err_toolong(self):
-        # Attempt to create a server with a 64 character name should fail
-        # instance name is name_s-name-xxxxxxxxxxxx, so 24 characters gives
-        # a 64 character physical_resource_name
-        return_server = self.fc.servers.list()[1]
-        name = 'e' * 24
-        error = self.assertRaises(exception.ResourceFailure,
-                                  self._create_test_server,
-                                  return_server,
-                                  name, stub_create=False)
-        substr = ('length 64 > 63 characters, '
-                  'please reduce the length of stack or resource names')
-        self.assertIn(substr, str(error))
-        self.m.VerifyAll()
-
     def test_server_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
         server = self._setup_test_server(return_server,

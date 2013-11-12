@@ -14,6 +14,8 @@
 
 import itertools
 
+import testscenarios
+
 from heat.common import exception
 from heat.engine import dependencies
 from heat.engine import parser
@@ -27,6 +29,9 @@ import heat.db.api as db_api
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+
+
+load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class ResourceTest(HeatTestCase):
@@ -1034,3 +1039,70 @@ class MetadataTest(HeatTestCase):
         test_data = {'Test': 'Newly-written data'}
         self.res.metadata = test_data
         self.assertEqual(self.res.metadata, test_data)
+
+
+class ReducePhysicalResourceNameTest(HeatTestCase):
+    scenarios = [
+        ('one', dict(
+            limit=10,
+            original='one',
+            reduced='one')),
+        ('limit_plus_one', dict(
+            will_reduce=True,
+            limit=10,
+            original='onetwothree',
+            reduced='on-wothree')),
+        ('limit_exact', dict(
+            limit=11,
+            original='onetwothree',
+            reduced='onetwothree')),
+        ('limit_minus_one', dict(
+            limit=12,
+            original='onetwothree',
+            reduced='onetwothree')),
+        ('limit_four', dict(
+            will_reduce=True,
+            limit=4,
+            original='onetwothree',
+            reduced='on-e')),
+        ('limit_three', dict(
+            will_raise=ValueError,
+            limit=3,
+            original='onetwothree')),
+        ('three_nested_stacks', dict(
+            will_reduce=True,
+            limit=63,
+            original=('ElasticSearch-MasterCluster-ccicxsm25ug6-MasterSvr1'
+                      '-men65r4t53hh-MasterServer-gxpc3wqxy4el'),
+            reduced=('El-icxsm25ug6-MasterSvr1-men65r4t53hh-'
+                     'MasterServer-gxpc3wqxy4el'))),
+        ('big_names', dict(
+            will_reduce=True,
+            limit=63,
+            original=('MyReallyQuiteVeryLongStackName-'
+                      'MyExtraordinarilyLongResourceName-ccicxsm25ug6'),
+            reduced=('My-LongStackName-'
+                     'MyExtraordinarilyLongResourceName-ccicxsm25ug6'))),
+    ]
+
+    will_raise = None
+
+    will_reduce = False
+
+    def test_reduce(self):
+        if self.will_raise:
+            self.assertRaises(
+                self.will_raise,
+                resource.Resource.reduce_physical_resource_name,
+                self.original,
+                self.limit)
+        else:
+            reduced = resource.Resource.reduce_physical_resource_name(
+                self.original, self.limit)
+            self.assertEqual(self.reduced, reduced)
+            if self.will_reduce:
+                # check it has been truncated to exactly the limit
+                self.assertEqual(len(reduced), self.limit)
+            else:
+                # check that nothing has changed
+                self.assertEqual(self.original, reduced)

@@ -101,7 +101,7 @@ class Server(resource.Resource):
                              'placement')},
         'security_groups': {
             'Type': 'List',
-            'Description': _('List of security group names')},
+            'Description': _('List of security group names or IDs.')},
         'networks': {
             'Type': 'List',
             'Description': _('An ordered list of nics to be '
@@ -165,6 +165,10 @@ class Server(resource.Resource):
     update_allowed_keys = ('Metadata', 'Properties')
     update_allowed_properties = ('flavor', 'flavor_update_policy')
 
+    # Server host name limit to 53 characters by due to typical default
+    # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name
+    physical_resource_name_limit = 53
+
     def __init__(self, name, json_snippet, stack):
         super(Server, self).__init__(name, json_snippet, stack)
         self.mime_string = None
@@ -205,18 +209,6 @@ class Server(resource.Resource):
         reservation_id = self.properties.get('reservation_id')
         config_drive = self.properties.get('config_drive')
         disk_config = self.properties.get('diskConfig')
-
-        # TODO(sdake/shardy) ensure physical_resource_name() never returns a
-        # string longer than 63 characters, as this is pretty inconvenient
-        # behavior for autoscaling groups and nested stacks where instance
-        # names can easily become quite long even with terse names.
-        physical_resource_name_len = len(self.physical_resource_name())
-        if physical_resource_name_len > 63:
-            raise exception.Error(_('Server %(server)s length %(length)d > 63'
-                                  ' characters, please reduce the length of'
-                                  ' stack or resource names') %
-                                  dict(server=self.physical_resource_name(),
-                                       length=physical_resource_name_len))
 
         server = None
         try:
