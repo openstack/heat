@@ -763,7 +763,8 @@ class validateTest(HeatTestCase):
         self.m.ReplayAll()
 
         resource = stack['Instance']
-        self.assertRaises(exception.NoUniqueImageFound, resource.validate)
+        self.assertRaises(exception.PhysicalResourceNameAmbiguity,
+                          resource.validate)
 
         self.m.VerifyAll()
 

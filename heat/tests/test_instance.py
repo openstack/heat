@@ -184,7 +184,8 @@ class InstancesTest(HeatTestCase):
                              {'id': 4, 'name': 'CentOS 5.2'}]}))
         self.m.ReplayAll()
 
-        self.assertRaises(exception.NoUniqueImageFound, instance.handle_create)
+        self.assertRaises(exception.PhysicalResourceNameAmbiguity,
+                          instance.handle_create)
 
         self.m.VerifyAll()
 

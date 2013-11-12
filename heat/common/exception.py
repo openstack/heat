@@ -231,8 +231,9 @@ class ImageNotFound(HeatException):
     msg_fmt = _("The Image (%(image_name)s) could not be found.")
 
 
-class NoUniqueImageFound(HeatException):
-    msg_fmt = _("Multiple images were found with name (%(image_name)s).")
+class PhysicalResourceNameAmbiguity(HeatException):
+    msg_fmt = _(
+        "Multiple physical resources were found with name (%(name)s).")
 
 
 class InvalidTenant(HeatException):
