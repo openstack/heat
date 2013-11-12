@@ -29,19 +29,44 @@ class Port(neutron.NeutronResource):
     fixed_ip_schema = {'subnet_id': {'Type': 'String'},
                        'ip_address': {'Type': 'String'}}
 
-    properties_schema = {'network_id': {'Type': 'String',
-                                        'Required': True},
-                         'name': {'Type': 'String'},
-                         'value_specs': {'Type': 'Map',
-                                         'Default': {}},
-                         'admin_state_up': {'Default': True,
-                                            'Type': 'Boolean'},
-                         'fixed_ips': {'Type': 'List',
-                                       'Schema': {'Type': 'Map',
-                                                  'Schema': fixed_ip_schema}},
-                         'mac_address': {'Type': 'String'},
-                         'device_id': {'Type': 'String'},
-                         'security_groups': {'Type': 'List'}}
+    properties_schema = {
+        'network_id': {
+            'Type': 'String',
+            'Required': True
+        },
+        'name': {
+            'Type': 'String'
+        },
+        'value_specs': {
+            'Type': 'Map',
+            'Default': {},
+        },
+        'admin_state_up': {
+            'Default': True,
+            'Type': 'Boolean',
+            'UpdateAllowed': True
+        },
+        'fixed_ips': {
+            'Type': 'List',
+            'Default': [],
+            'UpdateAllowed': True,
+            'Schema': {
+                'Type': 'Map',
+                'Schema': fixed_ip_schema
+            }
+        },
+        'mac_address': {
+            'Type': 'String'
+        },
+        'device_id': {
+            'Type': 'String'
+        },
+        'security_groups': {
+            'Type': 'List',
+            'UpdateAllowed': True,
+            'Default': [],
+        }
+    }
     attributes_schema = {
         "admin_state_up": _("The administrative state of this port."),
         "device_id": _("Unique identifier for the device."),
@@ -55,6 +80,8 @@ class Port(neutron.NeutronResource):
         "tenant_id": _("Tenant owning the port."),
         "show": _("All attributes."),
     }
+
+    update_allowed_keys = ('Properties',)
 
     def add_dependencies(self, deps):
         super(Port, self).add_dependencies(deps)
@@ -74,18 +101,21 @@ class Port(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
 
+        self._prepare_list_properties(props)
+
+        port = self.neutron().create_port({'port': props})['port']
+        self.resource_id_set(port['id'])
+
+    def _prepare_list_properties(self, props):
         for fixed_ip in props.get('fixed_ips', []):
             for key, value in fixed_ip.items():
                 if value is None:
                     fixed_ip.pop(key)
 
-        if self.properties['security_groups']:
+        if props.get('security_groups'):
             props['security_groups'] = self.get_secgroup_uuids(
-                self.stack, self.properties, 'security_groups', self.name,
+                self.stack, props, 'security_groups', props.get('name'),
                 self.neutron())
-
-        port = self.neutron().create_port({'port': props})['port']
-        self.resource_id_set(port['id'])
 
     def _show_resource(self):
         return self.neutron().show_port(
@@ -109,6 +139,18 @@ class Port(neutron.NeutronResource):
         if not (ex.status_code == 404 or
                 isinstance(ex, neutron_exp.PortNotFoundClient)):
             raise ex
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        props = self.prepare_update_properties(json_snippet)
+
+        self._prepare_list_properties(props)
+
+        logger.debug('updating port with %s' % props)
+        self.neutron().update_port(self.resource_id, {'port': props})
+
+    def check_update_complete(self, *args):
+        attributes = self._show_resource()
+        return self.is_built(attributes)
 
 
 def resource_mapping():

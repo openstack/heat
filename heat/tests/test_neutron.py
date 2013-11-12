@@ -119,7 +119,7 @@ neutron_floating_template = '''
       "Properties": {
         "network_id": "xyz1234",
         "fixed_ips": [{
-          "subnet_id": "12.12.12.0",
+          "subnet_id": "sub1234",
           "ip_address": "10.0.0.10"
         }]
       }
@@ -969,6 +969,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'update_floatingip')
         self.m.StubOutWithMock(neutronclient.Client, 'create_port')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_port')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_port')
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         utils.setup_dummy_db()
@@ -1042,9 +1043,10 @@ class NeutronFloatingIPTest(HeatTestCase):
         neutronclient.Client.create_port({'port': {
             'network_id': u'xyz1234',
             'fixed_ips': [
-                {'subnet_id': u'12.12.12.0', 'ip_address': u'10.0.0.10'}
+                {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
+            'security_groups': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1072,6 +1074,18 @@ class NeutronFloatingIPTest(HeatTestCase):
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
         }})
 
+        neutronclient.Client.update_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766', {
+                'port': {
+                    'fixed_ips': [
+                        {'subnet_id': 'sub1234', 'ip_address': '10.0.0.11'}
+                    ],
+                    'security_groups': [],
+                    'admin_state_up': True
+                }
+            }
+        ).AndReturn(None)
+
         self.m.ReplayAll()
 
         t = template_format.parse(neutron_floating_template)
@@ -1093,8 +1107,18 @@ class NeutronFloatingIPTest(HeatTestCase):
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          p.resource_id)
 
-        self.assertRaises(resource.UpdateReplace,
-                          p.handle_update, {}, {}, {})
+        update_snippet = {
+            "Type": "OS::Neutron::Port",
+            "Properties": {
+                "network_id": "xyz1234",
+                "fixed_ips": [{
+                    "subnet_id": "sub1234",
+                    "ip_address": "10.0.0.11"
+                }]
+            }
+        }
+
+        p.handle_update(update_snippet, {}, {})
 
         self.m.VerifyAll()
 
@@ -1112,9 +1136,10 @@ class NeutronFloatingIPTest(HeatTestCase):
         neutronclient.Client.create_port({'port': {
             'network_id': u'xyz1234',
             'fixed_ips': [
-                {'subnet_id': u'12.12.12.0', 'ip_address': u'10.0.0.10'}
+                {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
+            'security_groups': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1228,6 +1253,7 @@ class NeutronPortTest(HeatTestCase):
                 {'ip_address': u'10.0.3.21'}
             ],
             'name': utils.PhysName('test_stack', 'port'),
+            'security_groups': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1248,6 +1274,7 @@ class NeutronPortTest(HeatTestCase):
 
         port = stack['port']
         scheduler.TaskRunner(port.create)()
+
         self.m.VerifyAll()
 
     def test_missing_ip_address(self):
@@ -1259,6 +1286,7 @@ class NeutronPortTest(HeatTestCase):
                 {'subnet_id': u'sub1234'}
             ],
             'name': utils.PhysName('test_stack', 'port'),
+            'security_groups': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1287,6 +1315,8 @@ class NeutronPortTest(HeatTestCase):
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
+            'security_groups': [],
+            'fixed_ips': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
