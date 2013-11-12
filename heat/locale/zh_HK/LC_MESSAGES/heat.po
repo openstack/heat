@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-11-11 06:05+0000\n"
+"POT-Creation-Date: 2013-11-12 06:05+0000\n"
 "PO-Revision-Date: 2013-10-10 01:09+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Chinese (Hong Kong) "
@@ -1557,6 +1557,7 @@ msgid "Subnet ID."
 msgstr ""
 
 #: heat/engine/resources/security_group.py:38
+#: heat/engine/resources/neutron/security_group.py:97
 msgid "Description of the security group."
 msgstr ""
 
@@ -1985,6 +1986,22 @@ msgstr ""
 msgid "Multiple routers found with name %s"
 msgstr ""
 
+#: heat/engine/resources/wait_condition.py:135
+msgid ""
+"A reference to the wait condition handle used to signal this wait "
+"condition."
+msgstr ""
+
+#: heat/engine/resources/wait_condition.py:142
+msgid "The number of seconds to wait for the correct number of signals to arrive."
+msgstr ""
+
+#: heat/engine/resources/wait_condition.py:147
+msgid ""
+"The number of success signals that must be received before the stack "
+"creation process continues."
+msgstr ""
+
 #: heat/engine/resources/ceilometer/alarm.py:29
 msgid "Operator used to compare specified statistic with threshold."
 msgstr ""
@@ -2055,10 +2072,10 @@ msgstr ""
 
 #: heat/engine/resources/neutron/firewall.py:51
 #: heat/engine/resources/neutron/loadbalancer.py:96
-#: heat/engine/resources/neutron/net.py:69
-#: heat/engine/resources/neutron/port.py:56
-#: heat/engine/resources/neutron/router.py:42
-#: heat/engine/resources/neutron/subnet.py:65
+#: heat/engine/resources/neutron/net.py:74
+#: heat/engine/resources/neutron/port.py:81
+#: heat/engine/resources/neutron/router.py:45
+#: heat/engine/resources/neutron/subnet.py:73
 #: heat/engine/resources/neutron/vpnservice.py:75
 msgid "All attributes."
 msgstr ""
@@ -2316,156 +2333,220 @@ msgid ""
 "required to be unique."
 msgstr ""
 
-#: heat/engine/resources/neutron/net.py:38
+#: heat/engine/resources/neutron/net.py:39
 msgid ""
 "Extra parameters to include in the \"network\" object in the creation "
 "request. Parameters are often specific to installed hardware or "
 "extensions."
 msgstr ""
 
-#: heat/engine/resources/neutron/net.py:46
+#: heat/engine/resources/neutron/net.py:48
 msgid "A boolean value specifying the administrative status of the network."
 msgstr ""
 
-#: heat/engine/resources/neutron/net.py:51
+#: heat/engine/resources/neutron/net.py:54
 msgid ""
 "The ID of the tenant which will own the network. Only administrative "
 "users can set the tenant identifier; this cannot be changed using "
 "authorization policies."
 msgstr ""
 
-#: heat/engine/resources/neutron/net.py:58
+#: heat/engine/resources/neutron/net.py:61
 msgid ""
 "Whether this network should be shared across all tenants. Note that the "
 "default policy setting restricts usage of this attribute to "
 "administrative users only."
 msgstr ""
 
-#: heat/engine/resources/neutron/net.py:64
+#: heat/engine/resources/neutron/net.py:69
 msgid "The status of the network."
 msgstr ""
 
-#: heat/engine/resources/neutron/net.py:65
+#: heat/engine/resources/neutron/net.py:70
 msgid "The name of the network."
 msgstr ""
 
-#: heat/engine/resources/neutron/net.py:66
+#: heat/engine/resources/neutron/net.py:71
 msgid "Subnets of this network."
 msgstr ""
 
-#: heat/engine/resources/neutron/net.py:67
+#: heat/engine/resources/neutron/net.py:72
 msgid "The administrative status of the network."
 msgstr ""
 
-#: heat/engine/resources/neutron/net.py:68
+#: heat/engine/resources/neutron/net.py:73
 msgid "The tenant owning this network."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:46
+#: heat/engine/resources/neutron/port.py:71
 msgid "The administrative state of this port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:47
+#: heat/engine/resources/neutron/port.py:72
 msgid "Unique identifier for the device."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:48
+#: heat/engine/resources/neutron/port.py:73
 msgid "Name of the network owning the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:49
+#: heat/engine/resources/neutron/port.py:74
 msgid "Fixed ip addresses."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:50
+#: heat/engine/resources/neutron/port.py:75
 msgid "Mac address of the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:51
+#: heat/engine/resources/neutron/port.py:76
 msgid "Friendly name of the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:52
+#: heat/engine/resources/neutron/port.py:77
 msgid "Unique identifier for the network owning the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:53
+#: heat/engine/resources/neutron/port.py:78
 msgid "A list of security groups for the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:54
+#: heat/engine/resources/neutron/port.py:79
 msgid "The status of the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/port.py:55
+#: heat/engine/resources/neutron/port.py:80
 msgid "Tenant owning the port."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:37
+#: heat/engine/resources/neutron/router.py:40
 msgid "The status of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:38
+#: heat/engine/resources/neutron/router.py:41
 msgid "Gateway network for the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:39
+#: heat/engine/resources/neutron/router.py:42
 msgid "Friendly name of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:40
+#: heat/engine/resources/neutron/router.py:43
 msgid "Administrative state of the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:41
+#: heat/engine/resources/neutron/router.py:44
 msgid "Tenant owning the router."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:76
+#: heat/engine/resources/neutron/router.py:86
 msgid "The router id."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:79
+#: heat/engine/resources/neutron/router.py:89
 msgid "The subnet id, either subnet_id or port_id should be specified."
 msgstr ""
 
-#: heat/engine/resources/neutron/router.py:83
+#: heat/engine/resources/neutron/router.py:93
 msgid "The port id, either subnet_id or port_id should be specified."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:54
-msgid "Friendly name of the subnet."
+#: heat/engine/resources/neutron/security_group.py:33
+msgid ""
+"The direction in which the security group rule is applied. For a compute "
+"instance, an ingress security group rule matches traffic that is incoming"
+" (ingress) for that instance. An egress rule is applied to traffic "
+"leaving the instance."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:55
-msgid "Parent network of the subnet."
+#: heat/engine/resources/neutron/security_group.py:43
+msgid "Ethertype of the traffic."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:56
-msgid "Tenant owning the subnet."
+#: heat/engine/resources/neutron/security_group.py:49
+msgid ""
+"The minimum port number in the range that is matched by the security "
+"group rule. If the protocol is TCP or UDP, this value must be less than "
+"or equal to the value of the port_range_max attribute. If the protocol is"
+" ICMP, this value must be an ICMP type."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:57
-msgid "Ip allocation pools and their ranges."
+#: heat/engine/resources/neutron/security_group.py:57
+msgid ""
+"The maximum port number in the range that is matched by the security "
+"group rule. The port_range_min attribute constrains the port_range_max "
+"attribute. If the protocol is ICMP, this value must be an ICMP type."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:58
-msgid "Ip of the subnet's gateway."
+#: heat/engine/resources/neutron/security_group.py:64
+msgid ""
+"The protocol that is matched by the security group rule. Valid values "
+"include tcp, udp, and icmp."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:59
-msgid "Ip version for the subnet."
+#: heat/engine/resources/neutron/security_group.py:69
+msgid "Whether to specify a remote group or a remote IP prefix."
 msgstr ""
 
-#: heat/engine/resources/neutron/subnet.py:60
-msgid "CIDR block notation for this subnet."
+#: heat/engine/resources/neutron/security_group.py:76
+msgid ""
+"The remote group ID to be associated with this security group rule. If no"
+" value is specified then this rule will use this security group for the "
+"remote_group_id."
+msgstr ""
+
+#: heat/engine/resources/neutron/security_group.py:82
+msgid ""
+"The remote IP prefix (CIDR) to be associated with this security group "
+"rule."
+msgstr ""
+
+#: heat/engine/resources/neutron/security_group.py:90
+msgid ""
+"A string specifying a symbolic name for the security group, which is not "
+"required to be unique."
+msgstr ""
+
+#: heat/engine/resources/neutron/security_group.py:102
+msgid "List of security group rules."
+msgstr ""
+
+#: heat/engine/resources/neutron/security_group.py:122
+msgid "Security groups cannot be assigned the name \"default\"."
 msgstr ""
 
 #: heat/engine/resources/neutron/subnet.py:62
-msgid "List of dns nameservers."
+msgid "Friendly name of the subnet."
 msgstr ""
 
 #: heat/engine/resources/neutron/subnet.py:63
+msgid "Parent network of the subnet."
+msgstr ""
+
+#: heat/engine/resources/neutron/subnet.py:64
+msgid "Tenant owning the subnet."
+msgstr ""
+
+#: heat/engine/resources/neutron/subnet.py:65
+msgid "Ip allocation pools and their ranges."
+msgstr ""
+
+#: heat/engine/resources/neutron/subnet.py:66
+msgid "Ip of the subnet's gateway."
+msgstr ""
+
+#: heat/engine/resources/neutron/subnet.py:67
+msgid "Ip version for the subnet."
+msgstr ""
+
+#: heat/engine/resources/neutron/subnet.py:68
+msgid "CIDR block notation for this subnet."
+msgstr ""
+
+#: heat/engine/resources/neutron/subnet.py:70
+msgid "List of dns nameservers."
+msgstr ""
+
+#: heat/engine/resources/neutron/subnet.py:71
 msgid "'true' if DHCP is enabled for this subnet; 'false' otherwise."
 msgstr ""
 
