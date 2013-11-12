@@ -33,6 +33,7 @@ import heat.api.openstack.v1.stacks as stacks
 import heat.api.openstack.v1.resources as resources
 import heat.api.openstack.v1.events as events
 import heat.api.openstack.v1.actions as actions
+import heat.api.openstack.v1.build_info as build_info
 from heat.tests import utils
 
 import heat.api.middleware.fault as fault
@@ -2432,6 +2433,16 @@ class RoutesTest(HeatTestCase):
                 'event_id': 'dddd'
             })
 
+    def test_build_info(self):
+        self.assertRoute(
+            self.m,
+            '/fake_tenant/build_info',
+            'GET',
+            'build_info',
+            'BuildInfoController',
+            {'tenant_id': 'fake_tenant'}
+        )
+
 
 class ActionControllerTest(ControllerTest, HeatTestCase):
     '''
@@ -2595,3 +2606,39 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
                           stack_id=stack_identity.stack_id,
                           body=body)
         self.m.VerifyAll()
+
+
+class BuildInfoControllerTest(HeatTestCase):
+    def test_theres_a_default_api_build_revision(self):
+        req = mock.Mock()
+        controller = build_info.BuildInfoController({})
+        controller.engine = mock.Mock()
+
+        response = controller.build_info(req, tenant_id='tenant_id')
+        self.assertIn('api', response)
+        self.assertIn('revision', response['api'])
+        self.assertEqual('unknown', response['api']['revision'])
+
+    @mock.patch.object(build_info.cfg, 'CONF')
+    def test_response_api_build_revision_from_config_file(self, mock_conf):
+        req = mock.Mock()
+        controller = build_info.BuildInfoController({})
+        mock_engine = mock.Mock()
+        mock_engine.get_revision.return_value = 'engine_revision'
+        controller.engine = mock_engine
+        mock_conf.revision = {'heat_revision': 'test'}
+
+        response = controller.build_info(req, tenant_id='tenant_id')
+        self.assertEqual('test', response['api']['revision'])
+
+    def test_retrieves_build_revision_from_the_engine(self):
+        req = mock.Mock()
+        controller = build_info.BuildInfoController({})
+        mock_engine = mock.Mock()
+        mock_engine.get_revision.return_value = 'engine_revision'
+        controller.engine = mock_engine
+
+        response = controller.build_info(req, tenant_id='tenant_id')
+        self.assertIn('engine', response)
+        self.assertIn('revision', response['engine'])
+        self.assertEqual('engine_revision', response['engine']['revision'])

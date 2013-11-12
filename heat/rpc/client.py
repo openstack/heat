@@ -322,3 +322,6 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt, self.make_msg('set_watch_state',
                                              watch_name=watch_name,
                                              state=state))
+
+    def get_revision(self, ctxt):
+        return self.call(ctxt, self.make_msg('get_revision'))
