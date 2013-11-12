@@ -177,6 +177,18 @@ class HOTemplateTest(HeatTestCase):
         self.assertEqual(snippet_resolved,
                          tmpl.resolve_replace(snippet))
 
+    def test_str_replace_number(self):
+        """Test str_replace function with numbers."""
+
+        snippet = {'str_replace': {'template': 'Template number string bar',
+                                   'params': {'number': 1}}}
+        snippet_resolved = 'Template 1 string bar'
+
+        tmpl = parser.Template(hot_tpl_empty)
+
+        self.assertEqual(snippet_resolved,
+                         tmpl.resolve_replace(snippet))
+
     def test_str_fn_replace(self):
         """Test Fn:Replace function."""
 
