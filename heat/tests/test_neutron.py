@@ -639,6 +639,7 @@ class NeutronRouterTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'create_router')
         self.m.StubOutWithMock(neutronclient.Client, 'delete_router')
         self.m.StubOutWithMock(neutronclient.Client, 'show_router')
+        self.m.StubOutWithMock(neutronclient.Client, 'update_router')
         self.m.StubOutWithMock(neutronclient.Client, 'add_interface_router')
         self.m.StubOutWithMock(neutronclient.Client, 'remove_interface_router')
         self.m.StubOutWithMock(neutronclient.Client, 'add_gateway_router')
@@ -745,6 +746,16 @@ class NeutronRouterTest(HeatTestCase):
                 }
             })
 
+        # Update script
+        neutronclient.Client.update_router(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'router': {
+                'name': 'myrouter',
+                'admin_state_up': False
+            }}
+        )
+
+        # Delete script
         neutronclient.Client.delete_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8'
         ).AndReturn(None)
@@ -771,8 +782,14 @@ class NeutronRouterTest(HeatTestCase):
         self.assertEqual('3e21026f2dc94372b105808c0e721661',
                          rsrc.FnGetAtt('tenant_id'))
 
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
+        update_snippet = {
+            "Type": "OS::Neutron::Router",
+            "Properties": {
+                "admin_state_up": False,
+                "name": "myrouter"
+            }
+        }
+        rsrc.handle_update(update_snippet, {}, {})
 
         self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')

@@ -28,11 +28,14 @@ logger = logging.getLogger(__name__)
 
 
 class Router(neutron.NeutronResource):
-    properties_schema = {'name': {'Type': 'String'},
+    properties_schema = {'name': {'Type': 'String',
+                                  'UpdateAllowed': True},
                          'value_specs': {'Type': 'Map',
-                                         'Default': {}},
+                                         'Default': {},
+                                         'UpdateAllowed': True},
                          'admin_state_up': {'Type': 'Boolean',
-                                            'Default': True}}
+                                            'Default': True,
+                                            'UpdateAllowed': True}}
     attributes_schema = {
         "status": _("The status of the router."),
         "external_gateway_info": _("Gateway network for the router."),
@@ -41,6 +44,8 @@ class Router(neutron.NeutronResource):
         "tenant_id": _("Tenant owning the router."),
         "show": _("All attributes."),
     }
+
+    update_allowed_keys = ('Properties',)
 
     def handle_create(self):
         props = self.prepare_properties(
@@ -66,6 +71,11 @@ class Router(neutron.NeutronResource):
                 raise ex
         else:
             return scheduler.TaskRunner(self._confirm_delete)()
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        props = self.prepare_update_properties(json_snippet)
+        self.neutron().update_router(
+            self.resource_id, {'router': props})
 
 
 class RouterInterface(neutron.NeutronResource):
