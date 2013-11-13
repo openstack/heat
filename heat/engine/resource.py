@@ -120,6 +120,10 @@ class Resource(object):
     # throughout its lifecycle
     requires_deferred_auth = False
 
+    # Limit to apply to physical_resource_name() size reduction algorithm.
+    # If set to None no limit will be applied.
+    physical_resource_name_limit = 255
+
     def __new__(cls, name, json, stack):
         '''Create a new Resource of the appropriate class for its type.'''
 
@@ -488,9 +492,37 @@ class Resource(object):
         if self.id is None:
             return None
 
-        return '%s-%s-%s' % (self.stack.name,
+        name = '%s-%s-%s' % (self.stack.name,
                              self.name,
                              short_id.get_id(self.id))
+
+        if self.physical_resource_name_limit:
+            name = self.reduce_physical_resource_name(
+                name, self.physical_resource_name_limit)
+        return name
+
+    @staticmethod
+    def reduce_physical_resource_name(name, limit):
+        '''
+        Reduce length of physical resource name to a limit.
+
+        The reduced name will consist of the following:
+        * the first 2 characters of the name
+        * a hyphen
+        * the end of the name, truncated on the left to bring
+          the name length within the limit
+        :param name: The name to reduce the length of
+        :param limit:
+        :returns: A name whose length is less than or equal to the limit
+        '''
+        if len(name) <= limit:
+            return name
+
+        if limit < 4:
+            raise ValueError(_('limit cannot be less than 4'))
+
+        postfix_length = limit - 3
+        return name[0:2] + '-' + name[-postfix_length:]
 
     def validate(self):
         logger.info('Validating %s' % str(self))

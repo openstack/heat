@@ -132,9 +132,10 @@ class LoadBalancerTest(HeatTestCase):
         self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
         wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(self.fkc)
 
-        server_name = utils.PhysName(utils.PhysName('test_stack',
-                                                    'LoadBalancer'),
-                                     'LB_instance')
+        server_name = utils.PhysName(
+            utils.PhysName('test_stack', 'LoadBalancer'),
+            'LB_instance',
+            limit=instance.Instance.physical_resource_name_limit)
         clients.OpenStackClients.nova(
             "compute").MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
