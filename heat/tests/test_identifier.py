@@ -227,6 +227,10 @@ class IdentifierTest(testtools.TestCase):
         hi = identifier.HeatIdentifier('t', 's', 'i')
         self.assertEqual(hi.url_path(), 't/stacks/s/i')
 
+    def test_url_path_with_unicode_path(self):
+        hi = identifier.HeatIdentifier('t', 's', 'i', u'\u5de5')
+        self.assertEqual(hi.url_path(), 't/stacks/s/i/%E5%B7%A5')
+
     def test_tenant_escape(self):
         hi = identifier.HeatIdentifier(':/', 's', 'i')
         self.assertEqual(hi.tenant, ':/')

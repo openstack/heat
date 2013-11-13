@@ -17,6 +17,8 @@ import urllib
 import urlparse
 import collections
 
+from heat.openstack.common import strutils
+
 
 class HeatIdentifier(collections.Mapping):
 
@@ -117,7 +119,8 @@ class HeatIdentifier(collections.Mapping):
         '''
         return 'stacks/%s/%s%s' % (urllib.quote(self.stack_name, ''),
                                    urllib.quote(self.stack_id, ''),
-                                   urllib.quote(self.path))
+                                   urllib.quote(strutils.safe_encode(
+                                                self.path)))
 
     def _path_components(self):
         '''Return a list of the path components.'''
