@@ -828,7 +828,8 @@ class AutoScalingTest(HeatTestCase):
         rsrc.delete()
         self.m.VerifyAll()
 
-    def test_scaling_group_percent(self):
+    def _do_test_scaling_group_percent(self, decrease, lowest,
+                                       increase, create, highest):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=self.params)
 
@@ -844,23 +845,34 @@ class AutoScalingTest(HeatTestCase):
         stack['WebServerGroup'] = rsrc
         self.assertEqual(len(rsrc.get_instance_names()), 2)
 
-        # reduce by 50%
-        self._stub_lb_reload(1)
-        self._stub_meta_expected(now, 'PercentChangeInCapacity : -50')
+        # reduce by decrease %
+        self._stub_lb_reload(lowest)
+        adjust = 'PercentChangeInCapacity : %d' % decrease
+        self._stub_meta_expected(now, adjust)
         self._stub_validate()
         self.m.ReplayAll()
-        rsrc.adjust(-50, 'PercentChangeInCapacity')
-        self.assertEqual(len(rsrc.get_instance_names()), 1)
+        rsrc.adjust(decrease, 'PercentChangeInCapacity')
+        self.assertEqual(len(rsrc.get_instance_names()), lowest)
 
-        # raise by 200%
-        self._stub_lb_reload(3)
-        self._stub_meta_expected(now, 'PercentChangeInCapacity : 200')
-        self._stub_create(2)
+        # raise by increase %
+        self._stub_lb_reload(highest)
+        adjust = 'PercentChangeInCapacity : %d' % increase
+        self._stub_meta_expected(now, adjust)
+        self._stub_create(create)
         self.m.ReplayAll()
-        rsrc.adjust(200, 'PercentChangeInCapacity')
-        self.assertEqual(len(rsrc.get_instance_names()), 3)
+        rsrc.adjust(increase, 'PercentChangeInCapacity')
+        self.assertEqual(len(rsrc.get_instance_names()), highest)
 
         rsrc.delete()
+
+    def test_scaling_group_percent(self):
+        self._do_test_scaling_group_percent(-50, 1, 200, 2, 3)
+
+    def test_scaling_group_percent_round_up(self):
+        self._do_test_scaling_group_percent(-33, 1, 33, 1, 2)
+
+    def test_scaling_group_percent_round_down(self):
+        self._do_test_scaling_group_percent(-66, 1, 225, 2, 3)
 
     def test_scaling_group_cooldown_toosoon(self):
         t = template_format.parse(as_template)
