@@ -11,7 +11,7 @@
 #    under the License.
 
 from heat.common import exception
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.engine import resource
 from heat.engine.resources import nova_utils
 from heat.openstack.common.gettextutils import _
