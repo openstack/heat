@@ -334,8 +334,3 @@ class RequestLimitExceeded(HeatException):
 
 class StackResourceLimitExceeded(HeatException):
     msg_fmt = _('Maximum resources per stack exceeded.')
-
-
-class ActionInProgress(HeatException):
-    msg_fmt = _("Stack %(stack_name)s already has an action (%(action)s) "
-                "in progress.")

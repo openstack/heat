@@ -58,7 +58,6 @@ class FaultWrapper(wsgi.Middleware):
 
     error_map = {
         'AttributeError': webob.exc.HTTPBadRequest,
-        'ActionInProgress': webob.exc.HTTPConflict,
         'ValueError': webob.exc.HTTPBadRequest,
         'StackNotFound': webob.exc.HTTPNotFound,
         'ResourceNotFound': webob.exc.HTTPNotFound,
