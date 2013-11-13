@@ -425,6 +425,64 @@ class ServersTest(HeatTestCase):
         server.metadata_update()
         self.assertEqual(server.metadata, {'test': 456})
 
+    def test_server_update_nova_metadata(self):
+        return_server = self.fc.servers.list()[1]
+        server = self._create_test_server(return_server,
+                                          'md_update')
+
+        new_meta = {'test': 123}
+        self.m.StubOutWithMock(self.fc.servers, 'set_meta')
+        self.fc.servers.set_meta(return_server,
+                                 new_meta).AndReturn(None)
+        self.m.ReplayAll()
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['metadata'] = new_meta
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
+        self.m.VerifyAll()
+
+    def test_server_update_nova_metadata_with_delete(self):
+        return_server = self.fc.servers.list()[1]
+        server = self._create_test_server(return_server,
+                                          'md_update')
+
+        # part one, add some metadata
+        new_meta = {'test': '123', 'this': 'that'}
+        self.m.StubOutWithMock(self.fc.servers, 'set_meta')
+        self.fc.servers.set_meta(return_server,
+                                 new_meta).AndReturn(None)
+        self.m.ReplayAll()
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['metadata'] = new_meta
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        # part two change the metadata (test removing the old key)
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        new_meta = {'new_key': 'yeah'}
+
+        self.m.StubOutWithMock(self.fc.servers, 'delete_meta')
+        new_return_server = self.fc.servers.list()[5]
+        self.fc.servers.delete_meta(new_return_server,
+                                    ['test', 'this']).AndReturn(None)
+
+        self.m.StubOutWithMock(self.fc.servers, 'set_meta')
+        self.fc.servers.set_meta(new_return_server,
+                                 new_meta).AndReturn(None)
+        self.m.ReplayAll()
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['metadata'] = new_meta
+
+        # new fake with the correct metadata
+        server.resource_id = '56789'
+
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
+        self.m.VerifyAll()
+
     def test_server_update_server_flavor(self):
         """
         Server.handle_update supports changing the flavor, and makes

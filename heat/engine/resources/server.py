@@ -138,6 +138,7 @@ class Server(resource.Resource):
                              'client to help boot a server.')},
         'metadata': {
             'Type': 'Map',
+            'UpdateAllowed': True,
             'Description': _('Arbitrary key/value metadata to store for this '
                              'server. A maximum of five entries is allowed, '
                              'and both keys and values must be 255 characters '
@@ -362,6 +363,13 @@ class Server(resource.Resource):
 
         checkers = []
         server = None
+
+        if 'metadata' in prop_diff:
+            server = self.nova().servers.get(self.resource_id)
+            nova_utils.meta_update(self.nova(),
+                                   server,
+                                   prop_diff['metadata'])
+
         if 'flavor' in prop_diff:
 
             flavor_update_policy = (
@@ -373,7 +381,8 @@ class Server(resource.Resource):
 
             flavor = prop_diff['flavor']
             flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
-            server = self.nova().servers.get(self.resource_id)
+            if not server:
+                server = self.nova().servers.get(self.resource_id)
             checker = scheduler.TaskRunner(nova_utils.resize, server, flavor,
                                            flavor_id)
             checkers.append(checker)

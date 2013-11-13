@@ -259,6 +259,16 @@ def check_rebuild(server, image_id):
             _("Rebuilding server failed, status '%s'") % server.status)
 
 
+def meta_update(client, server, metadata):
+    """Delete/Add the metadata in nova as needed."""
+    current_md = server.metadata
+    to_del = [key for key in current_md.keys() if key not in metadata]
+    if len(to_del) > 0:
+        client.servers.delete_meta(server, to_del)
+
+    client.servers.set_meta(server, metadata)
+
+
 def server_to_ipaddress(client, server):
     '''
     Return the server's IP address, fetching it from Nova.

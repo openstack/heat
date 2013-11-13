@@ -158,7 +158,7 @@ class FakeHTTPClient(base_client.HTTPClient):
                                                     "addr": "5.6.9.8"}],
                                         "private": [{"version": 4,
                                                      "addr": "10.13.12.13"}]},
-                          "metadata": {"Server Label": "DB 1"}},
+                          "metadata": {}},
                          {"id": 9101,
                           "name": "hard-reboot",
                           "OS-EXT-SRV-ATTR:instance_name":
@@ -203,7 +203,24 @@ class FakeHTTPClient(base_client.HTTPClient):
                                          {"version": 4, "addr": "5.6.9.8"}],
                               "private": [{"version": 4,
                                            "addr": "10.13.12.13"}]},
-                          "metadata": {"Server Label": "DB 1"}}]})
+                          "metadata": {"Server Label": "DB 1"}},
+                         {"id": 56789,
+                          "name": "server-with-metadata",
+                          "OS-EXT-SRV-ATTR:instance_name":
+                          "sample-server2",
+                          "image": {"id": 2, "name": "sample image"},
+                          "flavor": {"id": 1, "name": "256 MB Server"},
+                          "hostId": "9e107d9d372bb6826bd81d3542a419d6",
+                          "status": "ACTIVE",
+                          "accessIPv4": "192.0.2.0",
+                          "accessIPv6": "::babe:4317:0A83",
+                          "addresses": {"public": [{"version": 4,
+                                                    "addr": "4.5.6.7"},
+                                                   {"version": 4,
+                                                    "addr": "5.6.9.8"}],
+                                        "private": [{"version": 4,
+                                                     "addr": "10.13.12.13"}]},
+                          "metadata": {'test': '123', 'this': 'that'}}]})
 
     def post_servers(self, body, **kw):
         assert body.keys() == ['server']
@@ -217,6 +234,10 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def get_servers_1234(self, **kw):
         r = {'server': self.get_servers_detail()[1]['servers'][0]}
+        return (200, r)
+
+    def get_servers_56789(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][5]}
         return (200, r)
 
     def get_servers_WikiServerOne(self, **kw):
@@ -262,6 +283,9 @@ class FakeHTTPClient(base_client.HTTPClient):
         return (204, None)
 
     def delete_servers_5678_metadata_key2(self, **kw):
+        return (204, None)
+
+    def delete_servers_56789(self, **kw):
         return (204, None)
 
     def get_servers_9999(self, **kw):
