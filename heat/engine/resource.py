@@ -90,6 +90,29 @@ class Metadata(object):
         rs.update_and_save({'rsrc_metadata': metadata})
 
 
+class SupportStatus(object):
+    SUPPORT_STATUSES = (UNKNOWN, SUPPORTED, PROTOTYPE, DEPRECATED,
+                        UNSUPPORTED) = ('UNKNOWN', 'SUPPORTED', 'PROTOTYPE',
+                                        'DEPRECATED', 'UNSUPPORTED')
+
+    def __init__(self, status=SUPPORTED, message=None, version=None):
+        if status in self.SUPPORT_STATUSES:
+            self.status = status
+            self.message = message
+            self.version = version
+        else:
+            self.status = self.UNKNOWN
+            self.message = _("Specified status is invalid, defaulting to"
+                             " %s") % self.UNKNOWN
+
+            self.version = None
+
+    def to_dict(self):
+            return {'status': self.status,
+                    'message': self.message,
+                    'version': self.version}
+
+
 class Resource(object):
     ACTIONS = (INIT, CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME
                ) = ('INIT', 'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
@@ -125,6 +148,8 @@ class Resource(object):
     # Limit to apply to physical_resource_name() size reduction algorithm.
     # If set to None no limit will be applied.
     physical_resource_name_limit = 255
+
+    support_status = SupportStatus()
 
     def __new__(cls, name, json, stack):
         '''Create a new Resource of the appropriate class for its type.'''
