@@ -462,6 +462,8 @@ class RackspaceCloudServerTest(HeatTestCase):
     def test_rackconnect_deployed(self):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rackconnect_automation_status': 'DEPLOYED'}
+        self.m.StubOutWithMock(return_server, 'get')
+        return_server.get()
         cs = self._setup_test_cs(return_server, 'test_rackconnect_deployed')
         cs.context.roles = ['rack_connect']
         self.m.ReplayAll()
@@ -473,6 +475,8 @@ class RackspaceCloudServerTest(HeatTestCase):
     def test_rackconnect_failed(self):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rackconnect_automation_status': 'FAILED'}
+        self.m.StubOutWithMock(return_server, 'get')
+        return_server.get()
         cs = self._setup_test_cs(return_server, 'test_rackconnect_failed')
         cs.context.roles = ['rack_connect']
         self.m.ReplayAll()
@@ -486,6 +490,8 @@ class RackspaceCloudServerTest(HeatTestCase):
                                   'UNPROCESSABLE',
                                   'rackconnect_unprocessable_reason':
                                   'Fake reason'}
+        self.m.StubOutWithMock(return_server, 'get')
+        return_server.get()
         cs = self._setup_test_cs(return_server,
                                  'test_rackconnect_unprocessable')
         cs.context.roles = ['rack_connect']
@@ -498,6 +504,8 @@ class RackspaceCloudServerTest(HeatTestCase):
     def test_rackconnect_unknown(self):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rackconnect_automation_status': 'FOO'}
+        self.m.StubOutWithMock(return_server, 'get')
+        return_server.get()
         cs = self._setup_test_cs(return_server, 'test_rackconnect_unknown')
         cs.context.roles = ['rack_connect']
         self.m.ReplayAll()

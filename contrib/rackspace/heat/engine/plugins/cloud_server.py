@@ -389,6 +389,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
             return False
 
         server = cookie[0]
+        server.get()
         if 'rack_connect' in self.context.roles:  # Account has RackConnect
             if 'rackconnect_automation_status' not in server.metadata:
                 logger.debug("RackConnect server does not have the "
