@@ -383,6 +383,36 @@ def stack_delete(context, stack_id):
     session.flush()
 
 
+def stack_lock_create(stack_id, engine_id):
+    session = get_session()
+    with session.begin():
+        lock = session.query(models.StackLock).get(stack_id)
+        if lock is not None:
+            return lock.engine_id
+        session.add(models.StackLock(stack_id=stack_id, engine_id=engine_id))
+
+
+def stack_lock_steal(stack_id, old_engine_id, new_engine_id):
+    session = get_session()
+    with session.begin():
+        lock = session.query(models.StackLock).get(stack_id)
+        rows_affected = session.query(models.StackLock).\
+            filter_by(stack_id=stack_id, engine_id=old_engine_id).\
+            update({"engine_id": new_engine_id})
+    if not rows_affected:
+        return lock.engine_id if lock is not None else True
+
+
+def stack_lock_release(stack_id, engine_id):
+    session = get_session()
+    with session.begin():
+        rows_affected = session.query(models.StackLock).\
+            filter_by(stack_id=stack_id, engine_id=engine_id).\
+            delete()
+    if not rows_affected:
+        return True
+
+
 def user_creds_create(context):
     values = context.to_dict()
     user_creds_ref = models.UserCreds()
