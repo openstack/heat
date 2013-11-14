@@ -165,7 +165,7 @@ def setup_mocks(mocks, stack):
                       userdata=server_userdata, scheduler_hints=None,
                       meta=None, nics=None,
                       availability_zone=None).AndReturn(
-                          fc.servers.list()[-1])
+                          fc.servers.list()[4])
     return fc
 
 
