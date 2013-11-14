@@ -29,6 +29,7 @@ from heat.common import exception
 from heat.engine import clients
 from heat.engine import scheduler
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import uuidutils
 
 logger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ def get_image_id(nova_client, image_identifier):
         try:
             image_id = nova_client.images.get(image_identifier).id
         except clients.novaclient.exceptions.NotFound:
-            logger.info("Image %s was not found in glance"
+            logger.info(_("Image %s was not found in glance")
                         % image_identifier)
             raise exception.ImageNotFound(image_name=image_identifier)
     else:
@@ -68,16 +69,17 @@ def get_image_id(nova_client, image_identifier):
             image_list = nova_client.images.list()
         except clients.novaclient.exceptions.ClientException as ex:
             raise exception.Error(
-                message="Error retrieving image list from nova: %s" % str(ex))
+                message=(_("Error retrieving image list from nova: %s") %
+                         str(ex)))
         image_names = dict(
             (o.id, o.name)
             for o in image_list if o.name == image_identifier)
         if len(image_names) == 0:
-            logger.info("Image %s was not found in glance" %
+            logger.info(_("Image %s was not found in glance") %
                         image_identifier)
             raise exception.ImageNotFound(image_name=image_identifier)
         elif len(image_names) > 1:
-            logger.info("Mulitple images %s were found in glance with name"
+            logger.info(_("Mulitple images %s were found in glance with name")
                         % image_identifier)
             raise exception.PhysicalResourceNameAmbiguity(
                 name=image_identifier)
@@ -264,7 +266,8 @@ def server_to_ipaddress(client, server):
     try:
         server = client.servers.get(server)
     except clients.novaclient.exceptions.NotFound as ex:
-        logger.warn('Instance (%s) not found: %s' % (server, str(ex)))
+        logger.warn(_('Instance (%(server)s) not found: %(ex)s') % {
+                    'server': server, 'ex': str(ex)})
     else:
         for n in server.networks:
             if len(server.networks[n]) > 0:

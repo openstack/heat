@@ -16,6 +16,7 @@
 from heat.engine import clients
 from heat.common import exception
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 from heat.engine import resource
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class InternetGateway(resource.Resource):
             # add a heat configuration variable to set the ID of
             # the default one
             raise exception.Error(
-                'Expected 1 external network, found %d' % len(ext_nets))
+                _('Expected 1 external network, found %d') % len(ext_nets))
         external_network_id = ext_nets[0]['id']
         return external_network_id
 

@@ -26,6 +26,7 @@ from heat.rpc import api as engine_api
 
 import heat.openstack.common.rpc.common as rpc_common
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
@@ -213,7 +214,7 @@ class WatchController(object):
                         # Filter criteria not met, return None
                         return
                 except KeyError:
-                    logger.warning("Invalid filter key %s, ignoring" % f)
+                    logger.warning(_("Invalid filter key %s, ignoring") % f)
 
             return result
 
@@ -222,7 +223,7 @@ class WatchController(object):
         # FIXME : Don't yet handle filtering by Dimensions
         filter_result = dict((k, v) for (k, v) in parms.iteritems() if k in
                              ("MetricName", "Namespace"))
-        logger.debug("filter parameters : %s" % filter_result)
+        logger.debug(_("filter parameters : %s") % filter_result)
 
         try:
             # Engine does not currently support query by namespace/metric
@@ -268,7 +269,7 @@ class WatchController(object):
         # need to process (each dict) for dimensions
         metric_data = api_utils.extract_param_list(parms, prefix='MetricData')
         if not len(metric_data):
-            logger.error("Request does not contain required MetricData")
+            logger.error(_("Request does not contain required MetricData"))
             return exception.HeatMissingParameterError("MetricData list")
 
         watch_name = None
@@ -335,7 +336,8 @@ class WatchController(object):
         if 'StateReasonData' in parms:
             state_reason_data = parms['StateReasonData']
 
-        logger.debug("setting %s to %s" % (name, state_map[state]))
+        logger.debug(_("setting %(name)s to %(state)s") % {
+                     'name': name, 'state': state_map[state]})
         try:
             self.engine_rpcapi.set_watch_state(con, watch_name=name,
                                                state=state_map[state])

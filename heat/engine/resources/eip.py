@@ -20,6 +20,7 @@ from heat.common import exception
 
 from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
@@ -52,14 +53,14 @@ class ElasticIp(resource.Resource):
                     ips = self.neutron().show_floatingip(self.resource_id)
                 except ne as e:
                     if e.status_code == 404:
-                        logger.warn("Floating IPs not found: %s" % str(e))
+                        logger.warn(_("Floating IPs not found: %s") % str(e))
                 else:
                     self.ipaddress = ips['floatingip']['floating_ip_address']
             else:
                 try:
                     ips = self.nova().floating_ips.get(self.resource_id)
                 except clients.novaclient.exceptions.NotFound as ex:
-                    logger.warn("Floating IPs not found: %s" % str(ex))
+                    logger.warn(_("Floating IPs not found: %s") % str(ex))
                 else:
                     self.ipaddress = ips.ip
         return self.ipaddress or ''
@@ -76,24 +77,24 @@ class ElasticIp(resource.Resource):
                 'floatingip': props})['floatingip']
             self.ipaddress = ips['floating_ip_address']
             self.resource_id_set(ips['id'])
-            logger.info('ElasticIp create %s' % str(ips))
+            logger.info(_('ElasticIp create %s') % str(ips))
         else:
             if self.properties['Domain']:
-                raise exception.Error('Domain property can not be set on '
-                                      'resource %s without Neutron available' %
-                                      self.name)
+                raise exception.Error(_('Domain property can not be set on '
+                                      'resource %s without Neutron available')
+                                      % self.name)
             try:
                 ips = self.nova().floating_ips.create()
             except clients.novaclient.exceptions.NotFound:
                 with excutils.save_and_reraise_exception():
-                    msg = ("No default floating IP pool configured."
-                           "Set 'default_floating_pool' in nova.conf.")
+                    msg = _("No default floating IP pool configured. "
+                            "Set 'default_floating_pool' in nova.conf.")
                     logger.error(msg)
 
             if ips:
                 self.ipaddress = ips.ip
                 self.resource_id_set(ips.id)
-                logger.info('ElasticIp create %s' % str(ips))
+                logger.info(_('ElasticIp create %s') % str(ips))
 
         if self.properties['InstanceId']:
             server = self.nova().servers.get(self.properties['InstanceId'])
@@ -160,7 +161,8 @@ class ElasticIpAssociation(resource.Resource):
 
         if self.properties['EIP']:
             if not self.properties['InstanceId']:
-                logger.warn('Skipping association, InstanceId not specified')
+                logger.warn(_('Skipping association, InstanceId not '
+                            'specified'))
                 return
             server = self.nova().servers.get(self.properties['InstanceId'])
             server.add_floating_ip(self.properties['EIP'])
@@ -181,7 +183,7 @@ class ElasticIpAssociation(resource.Resource):
                 port_rsrc = ports['ports'][0]
                 port_id = port_rsrc['id']
             else:
-                logger.warn('Skipping association, resource not specified')
+                logger.warn(_('Skipping association, resource not specified'))
                 return
 
             float_id = self.properties['AllocationId']

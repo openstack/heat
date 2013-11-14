@@ -716,7 +716,8 @@ class Resource(object):
                     err_body = action_result.get_unserialized_body()
                     serializer.default(action_result, err_body)
                 except Exception:
-                    logging.warning("Unable to serialize exception response")
+                    logging.warning(_("Unable to serialize exception "
+                                    "response"))
 
             return action_result
 

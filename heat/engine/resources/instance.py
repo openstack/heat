@@ -56,19 +56,21 @@ class Restarter(signal_responder.SignalResponder):
         else:
             alarm_state = details.get('state', 'alarm').lower()
 
-        logger.info('%s Alarm, new state %s' % (self.name, alarm_state))
+        logger.info(_('%(name)s Alarm, new state %(state)s') % {
+                    'name': self.name, 'state': alarm_state})
 
         if alarm_state != 'alarm':
             return
 
         victim = self._find_resource(self.properties['InstanceId'])
         if victim is None:
-            logger.info('%s Alarm, can not find instance %s' %
-                       (self.name, self.properties['InstanceId']))
+            logger.info(_('%(name)s Alarm, can not find instance '
+                        '%(instance)s') % {'name': self.name,
+                        'instance': self.properties['InstanceId']})
             return
 
-        logger.info('%s Alarm, restarting resource: %s' %
-                    (self.name, victim.name))
+        logger.info(_('%(name)s Alarm, restarting resource: %(victim)s') % {
+                    'name': self.name, 'victim': victim.name})
         self.stack.restart_resource(victim.name)
 
     def _resolve_attribute(self, name):
@@ -536,7 +538,7 @@ class Instance(resource.Resource):
             raise exception.NotFound(_('Failed to find instance %s') %
                                      self.resource_id)
         else:
-            logger.debug("suspending instance %s" % self.resource_id)
+            logger.debug(_("suspending instance %s") % self.resource_id)
             # We want the server.suspend to happen after the volume
             # detachement has finished, so pass both tasks and the server
             suspend_runner = scheduler.TaskRunner(server.suspend)
@@ -590,7 +592,7 @@ class Instance(resource.Resource):
             raise exception.NotFound(_('Failed to find instance %s') %
                                      self.resource_id)
         else:
-            logger.debug("resuming instance %s" % self.resource_id)
+            logger.debug(_("resuming instance %s") % self.resource_id)
             server.resume()
             return server, scheduler.TaskRunner(self._attach_volumes_task())
 

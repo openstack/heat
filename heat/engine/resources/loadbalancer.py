@@ -18,6 +18,7 @@ from heat.engine import stack_resource
 from heat.engine.resources import nova_utils
 
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
@@ -353,7 +354,7 @@ class LoadBalancer(stack_resource.StackResource):
         client = self.nova()
         for i in instances:
             ip = nova_utils.server_to_ipaddress(client, i) or '0.0.0.0'
-            logger.debug('haproxy server:%s' % ip)
+            logger.debug(_('haproxy server:%s') % ip)
             servers.append('%sserver server%d %s:%s %s' % (spaces, n,
                                                            ip, inst_port,
                                                            check))

@@ -64,7 +64,7 @@ def _list_environment_files(env_dir):
     try:
         return os.listdir(env_dir)
     except OSError as osex:
-        LOG.error('Failed to read %s' % (env_dir))
+        LOG.error(_('Failed to read %s') % env_dir)
         LOG.exception(osex)
         return []
 
@@ -83,15 +83,17 @@ def _load_global_environment(env, env_dir=None):
         try:
             file_path = os.path.join(env_dir, env_name)
             with open(file_path) as env_fd:
-                LOG.info('Loading %s' % file_path)
+                LOG.info(_('Loading %s') % file_path)
                 env_body = environment_format.parse(env_fd.read())
                 environment_format.default_for_missing(env_body)
                 env.load(env_body)
         except ValueError as vex:
-            LOG.error('Failed to parse %s/%s' % (env_dir, env_name))
+            LOG.error(_('Failed to parse %(dir)s/%(name)s') % {
+                      'dir': env_dir, 'name': env_name})
             LOG.exception(vex)
         except IOError as ioex:
-            LOG.error('Failed to read %s/%s' % (env_dir, env_name))
+            LOG.error(_('Failed to read %(dir)s/%(name)s') % {
+                      'dir': env_dir, 'name': env_name})
             LOG.exception(ioex)
 
 

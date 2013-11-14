@@ -24,6 +24,7 @@ from oslo.config import cfg
 
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger('heat.common.keystoneclient')
 
@@ -97,8 +98,8 @@ class KeystoneClient(object):
             kwargs['tenant_name'] = self.context.tenant
             kwargs['tenant_id'] = self.context.tenant_id
         else:
-            logger.error("Keystone v2 API connection failed, no password or "
-                         "auth_token!")
+            logger.error(_("Keystone v2 API connection failed, no password "
+                         "or auth_token!"))
             raise exception.AuthorizationFailure()
         client_v2 = kc.Client(**kwargs)
 
@@ -108,7 +109,7 @@ class KeystoneClient(object):
         if auth_kwargs:
             # Sanity check
             if not client_v2.auth_ref.trust_scoped:
-                logger.error("v2 trust token re-scoping failed!")
+                logger.error(_("v2 trust token re-scoping failed!"))
                 raise exception.AuthorizationFailure()
             # All OK so update the context with the token
             self.context.auth_token = client_v2.auth_ref.auth_token
@@ -157,8 +158,8 @@ class KeystoneClient(object):
             kwargs['auth_url'] = self.context.auth_url.replace('v2.0', 'v3')
             kwargs['endpoint'] = kwargs['auth_url']
         else:
-            logger.error("Keystone v3 API connection failed, no password or "
-                         "auth_token!")
+            logger.error(_("Keystone v3 API connection failed, no password "
+                         "or auth_token!"))
             raise exception.AuthorizationFailure()
 
         client = kc_v3.Client(**kwargs)
@@ -216,8 +217,8 @@ class KeystoneClient(object):
         Returns the keystone ID of the resulting user
         """
         if(len(username) > 64):
-            logger.warning("Truncating the username %s to the last 64 "
-                           "characters." % username)
+            logger.warning(_("Truncating the username %s to the last 64 "
+                           "characters.") % username)
             #get the last 64 characters of the username
             username = username[-64:]
         user = self.client_v2.users.create(username,
@@ -236,12 +237,14 @@ class KeystoneClient(object):
                            if r.name == cfg.CONF.heat_stack_user_role]
         if len(stack_user_role) == 1:
             role_id = stack_user_role[0]
-            logger.debug("Adding user %s to role %s" % (user.id, role_id))
+            logger.debug(_("Adding user %(user)s to role %(role)s") % {
+                         'user': user.id, 'role': role_id})
             self.client_v2.roles.add_user_role(user.id, role_id,
                                                self.context.tenant_id)
         else:
-            logger.error("Failed to add user %s to role %s, check role exists!"
-                         % (username, cfg.CONF.heat_stack_user_role))
+            logger.error(_("Failed to add user %(user)s to role %(role)s, "
+                         "check role exists!") % {'user': username,
+                         'role': cfg.CONF.heat_stack_user_role})
 
         return user.id
 
@@ -265,8 +268,9 @@ class KeystoneClient(object):
                     status = 'DELETED'
                 except Exception as ce:
                     reason = str(ce)
-                    logger.warning("Problem deleting user %s: %s" %
-                                   (user_id, reason))
+                    logger.warning(_("Problem deleting user %(user)s: "
+                                     "%(reason)s") % {'user': user_id,
+                                                      'reason': reason})
                     eventlet.sleep(1)
         except eventlet.Timeout as t:
             if t is not tmo:
@@ -294,8 +298,9 @@ class KeystoneClient(object):
         if len(cred) == 1:
             return cred[0]
         else:
-            logger.error("Unexpected number of ec2 credentials %s for %s" %
-                         (len(cred), user_id))
+            logger.error(_("Unexpected number of ec2 credentials %(len)s "
+                           "for %(user)s") % {'len': len(cred),
+                                              'user': user_id})
 
     def disable_stack_user(self, user_id):
         # FIXME : This won't work with the v3 keystone API

@@ -498,8 +498,10 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         Adjust the size of the scaling group if the cooldown permits.
         """
         if self._cooldown_inprogress():
-            logger.info("%s NOT performing scaling adjustment, cooldown %s" %
-                        (self.name, self.properties['Cooldown']))
+            logger.info(_("%(name)s NOT performing scaling adjustment, "
+                        "cooldown %(cooldown)s") % {
+                        'name': self.name,
+                        'cooldown': self.properties['Cooldown']})
             return
 
         capacity = len(self.get_instances())
@@ -519,14 +521,15 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             new_capacity = capacity + rounded
 
         if new_capacity > int(self.properties['MaxSize']):
-            logger.warn('can not exceed %s' % self.properties['MaxSize'])
+            logger.warn(_('can not exceed %s') % self.properties['MaxSize'])
             return
         if new_capacity < int(self.properties['MinSize']):
-            logger.warn('can not be less than %s' % self.properties['MinSize'])
+            logger.warn(_('can not be less than %s') %
+                        self.properties['MinSize'])
             return
 
         if new_capacity == capacity:
-            logger.debug('no change in capacity %d' % capacity)
+            logger.debug(_('no change in capacity %d') % capacity)
             return
 
         result = self.resize(new_capacity)
@@ -664,21 +667,25 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
             alarm_state = details.get('current',
                                       details.get('state', 'alarm')).lower()
 
-        logger.info('%s Alarm, new state %s' % (self.name, alarm_state))
+        logger.info(_('%(name)s Alarm, new state %(state)s') % {
+                    'name': self.name, 'state': alarm_state})
 
         if alarm_state != 'alarm':
             return
         if self._cooldown_inprogress():
-            logger.info("%s NOT performing scaling action, cooldown %s" %
-                        (self.name, self.properties['Cooldown']))
+            logger.info(_("%(name)s NOT performing scaling action, "
+                        "cooldown %(cooldown)s") % {
+                        'name': self.name,
+                        'cooldown': self.properties['Cooldown']})
             return
 
         asgn_id = self.properties['AutoScalingGroupName']
         group = self.stack.resource_by_refid(asgn_id)
 
-        logger.info('%s Alarm, adjusting Group %s by %s' %
-                    (self.name, group.name,
-                     self.properties['ScalingAdjustment']))
+        logger.info(_('%(name)s Alarm, adjusting Group %(group)s '
+                    'by %(filter)s') % {
+                    'name': self.name, 'group': group.name,
+                    'filter': self.properties['ScalingAdjustment']})
         group.adjust(int(self.properties['ScalingAdjustment']),
                      self.properties['AdjustmentType'])
 

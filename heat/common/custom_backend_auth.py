@@ -21,6 +21,7 @@ Middleware for authenticating against custom backends.
 
 import logging
 
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import local
 from heat.rpc import client as rpc_client
 import webob.exc
@@ -41,7 +42,7 @@ class AuthProtocol(object):
         Authenticate send downstream on success. Reject request if
         we can't authenticate.
         """
-        LOG.debug('Authenticating user token')
+        LOG.debug(_('Authenticating user token'))
         context = local.store.context
         engine = rpc_client.EngineClient()
         authenticated = engine.authenticated_to_backend(context)
@@ -58,7 +59,8 @@ class AuthProtocol(object):
         :param start_response: wsgi response callback
         :returns HTTPUnauthorized http response
         """
-        resp = webob.exc.HTTPUnauthorized("Backend authentication failed", [])
+        resp = webob.exc.HTTPUnauthorized(_("Backend authentication failed"),
+                                          [])
         return resp(env, start_response)
 
 

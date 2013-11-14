@@ -73,7 +73,7 @@ def raw_template_get(context, template_id):
     result = model_query(context, models.RawTemplate).get(template_id)
 
     if not result:
-        raise exception.NotFound('raw template with id %s not found' %
+        raise exception.NotFound(_('raw template with id %s not found') %
                                  template_id)
 
     return result
@@ -90,7 +90,8 @@ def resource_get(context, resource_id):
     result = model_query(context, models.Resource).get(resource_id)
 
     if not result:
-        raise exception.NotFound("resource with id %s not found" % resource_id)
+        raise exception.NotFound(_("resource with id %s not found") %
+                                 resource_id)
 
     return result
 
@@ -119,7 +120,7 @@ def resource_get_all(context):
     results = model_query(context, models.Resource).all()
 
     if not results:
-        raise exception.NotFound('no resources were found')
+        raise exception.NotFound(_('no resources were found'))
 
     return results
 
@@ -156,7 +157,7 @@ def resource_data_get_by_key(context, resource_id, key):
               .filter_by(key=key).first())
 
     if not result:
-        raise exception.NotFound('No resource data found')
+        raise exception.NotFound(_('No resource data found'))
     return result
 
 
@@ -206,8 +207,8 @@ def resource_get_all_by_stack(context, stack_id):
         filter_by(stack_id=stack_id).all()
 
     if not results:
-        raise exception.NotFound("no resources for stack_id %s were found" %
-                                 stack_id)
+        raise exception.NotFound(_("no resources for stack_id %s were found")
+                                 % stack_id)
 
     return results
 
@@ -272,8 +273,10 @@ def stack_update(context, stack_id, values):
     stack = stack_get(context, stack_id)
 
     if not stack:
-        raise exception.NotFound('Attempt to update a stack with id: %s %s' %
-                                 (stack_id, 'that does not exist'))
+        raise exception.NotFound(_('Attempt to update a stack with id: '
+                                 '%(id)s %(msg)s') % {
+                                 'id': stack_id,
+                                 'msg': 'that does not exist'})
 
     old_template_id = stack.raw_template_id
 
@@ -284,8 +287,10 @@ def stack_update(context, stack_id, values):
 def stack_delete(context, stack_id):
     s = stack_get(context, stack_id)
     if not s:
-        raise exception.NotFound('Attempt to delete a stack with id: %s %s' %
-                                 (stack_id, 'that does not exist'))
+        raise exception.NotFound(_('Attempt to delete a stack with id: '
+                                 '%(id)s %(msg)s') % {
+                                 'id': stack_id,
+                                 'msg': 'that does not exist'})
 
     session = Session.object_session(s)
 
@@ -432,8 +437,10 @@ def watch_rule_update(context, watch_id, values):
     wr = watch_rule_get(context, watch_id)
 
     if not wr:
-        raise exception.NotFound('Attempt to update a watch with id: %s %s' %
-                                 (watch_id, 'that does not exist'))
+        raise exception.NotFound(_('Attempt to update a watch with id: '
+                                 '%(id)s %(msg)s') % {
+                                 'id': watch_id,
+                                 'msg': 'that does not exist'})
 
     wr.update(values)
     wr.save(_session(context))
@@ -442,9 +449,10 @@ def watch_rule_update(context, watch_id, values):
 def watch_rule_delete(context, watch_id):
     wr = watch_rule_get(context, watch_id)
     if not wr:
-        raise exception.NotFound('Attempt to delete watch_rule: %s %s' %
-                                 (watch_id, 'that does not exist'))
-
+        raise exception.NotFound(_('Attempt to delete watch_rule: '
+                                 '%(id)s %(msg)s') % {
+                                 'id': watch_id,
+                                 'msg': 'that does not exist'})
     session = Session.object_session(wr)
 
     for d in wr.watch_data:
