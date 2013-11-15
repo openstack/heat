@@ -420,6 +420,21 @@ class Resource(object):
                                      self.name)
         return self._do_action(action, self.properties.validate)
 
+    def set_deletion_policy(self, policy):
+        self.t['DeletionPolicy'] = policy
+
+    def get_abandon_data(self):
+        return {
+            'name': self.name,
+            'resource_id': self.resource_id,
+            'type': self.type(),
+            'action': self.action,
+            'status': self.status,
+            'metadata': self.metadata,
+            'resource_data': dict((r.key, r.value)
+                                  for r in db_api.resource_data_get_all(self))
+        }
+
     def update(self, after, before=None):
         '''
         update the resource. Subclasses should provide a handle_update() method

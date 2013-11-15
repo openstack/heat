@@ -446,13 +446,33 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(cnxt, stack=st)
 
+        self._delete_stack_on_thread(st, stack)
+
+    def _delete_stack_on_thread(self, st, stack):
         # Kill any pending threads by calling ThreadGroup.stop()
         if st.id in self.stg:
             self.stg[st.id].stop()
             del self.stg[st.id]
         # use the service ThreadGroup for deletes
         self.tg.add_thread(stack.delete)
-        return None
+
+    @request_context
+    def abandon_stack(self, cnxt, stack_identity):
+        """
+        The abandon_stack method abandons a given stack.
+        :param cnxt: RPC context.
+        :param stack_identity: Name of the stack you want to abandon.
+        """
+        st = self._get_stack(cnxt, stack_identity)
+        logger.info(_('abandoning stack %s') % st.name)
+        stack = parser.Stack.load(cnxt, stack=st)
+
+        # Get stack details before deleting it.
+        stack_info = stack.get_abandon_data()
+        # Set deletion policy to 'Retain' for all resources in the stack.
+        stack.set_deletion_policy(resource.RETAIN)
+        self._delete_stack_on_thread(st, stack)
+        return stack_info
 
     def list_resource_types(self, cnxt):
         """

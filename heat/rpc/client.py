@@ -163,6 +163,18 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                           self.make_msg('delete_stack',
                                         stack_identity=stack_identity))
 
+    def abandon_stack(self, ctxt, stack_identity):
+        """
+        The abandon_stack method deletes a given stack but
+        resources would not be deleted.
+
+        :param ctxt: RPC context.
+        :param stack_identity: Name of the stack you want to abandon.
+        """
+        return self.call(ctxt,
+                         self.make_msg('abandon_stack',
+                                       stack_identity=stack_identity))
+
     def list_resource_types(self, ctxt):
         """
         Get a list of valid resource types.

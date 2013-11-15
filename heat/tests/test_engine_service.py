@@ -1154,6 +1154,31 @@ class StackServiceTest(HeatTestCase):
                                                         filters
                                                         )
 
+    @stack_context('service_abandon_stack')
+    def test_abandon_stack(self):
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.ctx,
+                          stack=mox.IgnoreArg()).AndReturn(self.stack)
+        expected_res = {
+            u'WebServer': {
+                'action': 'CREATE',
+                'metadata': {},
+                'name': u'WebServer',
+                'resource_data': {},
+                'resource_id': 9999,
+                'status': 'COMPLETE',
+                'type': u'AWS::EC2::Instance'}}
+        self.m.ReplayAll()
+        ret = self.eng.abandon_stack(self.ctx, self.stack.identifier())
+        self.assertEqual(6, len(ret))
+        self.assertEqual('CREATE', ret['action'])
+        self.assertEqual('COMPLETE', ret['status'])
+        self.assertEqual('service_abandon_stack', ret['name'])
+        self.assertTrue('id' in ret)
+        self.assertEqual(expected_res, ret['resources'])
+        self.assertEqual(self.stack.t.t, ret['template'])
+        self.m.VerifyAll()
+
     def test_stack_describe_nonexistent(self):
         non_exist_identifier = identifier.HeatIdentifier(
             self.ctx.tenant_id, 'wibble',
