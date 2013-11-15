@@ -55,6 +55,13 @@ swift_template = '''
       "Properties" : {
         "AccessControl" : "Private"
       }
+    },
+    "S3Bucket_with_tags" : {
+      "Type" : "AWS::S3::Bucket",
+      "Properties" : {
+        "Tags" : [{"Key": "greeting", "Value": "hello"},
+                  {"Key": "location", "Value": "here"}]
+      }
     }
   }
 }
@@ -136,6 +143,26 @@ class s3Test(HeatTestCase):
         properties['AccessControl'] = 'PublicRead'
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'S3Bucket')
+        scheduler.TaskRunner(rsrc.delete)()
+        self.m.VerifyAll()
+
+    def test_tags(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        swiftclient.Connection.put_container(
+            utils.PhysName('test_stack', 'test_resource'),
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant:test_username',
+             'X-Container-Meta-S3-Tag-greeting': 'hello',
+             'X-Container-Meta-S3-Tag-location': 'here'}).AndReturn(None)
+        swiftclient.Connection.delete_container(
+            container_name).AndReturn(None)
+
+        self.m.ReplayAll()
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'S3Bucket_with_tags')
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
