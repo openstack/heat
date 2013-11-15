@@ -513,3 +513,37 @@ class RackspaceCloudServerTest(HeatTestCase):
         exc = self.assertRaises(exception.ResourceFailure, create)
         self.assertEqual('Error: Unknown RackConnect automation status: FOO',
                          str(exc))
+
+    def test_managed_cloud_complete(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.metadata = {'rax_service_level_automation': 'Complete'}
+        cs = self._setup_test_cs(return_server, 'test_managed_cloud_complete')
+        cs.context.roles = ['rax_managed']
+        self.m.ReplayAll()
+        scheduler.TaskRunner(cs.create)()
+        self.assertEqual(cs.action, 'CREATE')
+        self.assertEqual(cs.status, 'COMPLETE')
+        self.m.VerifyAll()
+
+    def test_managed_cloud_build_error(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.metadata = {'rax_service_level_automation':
+                                  'Build Error'}
+        cs = self._setup_test_cs(return_server,
+                                 'test_managed_cloud_build_error')
+        cs.context.roles = ['rax_managed']
+        self.m.ReplayAll()
+        create = scheduler.TaskRunner(cs.create)
+        exc = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual('Error: Managed Cloud automation failed', str(exc))
+
+    def test_managed_cloud_unknown(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.metadata = {'rax_service_level_automation': 'FOO'}
+        cs = self._setup_test_cs(return_server, 'test_managed_cloud_unknown')
+        cs.context.roles = ['rax_managed']
+        self.m.ReplayAll()
+        create = scheduler.TaskRunner(cs.create)
+        exc = self.assertRaises(exception.ResourceFailure, create)
+        self.assertEqual('Error: Unknown Managed Cloud automation status: FOO',
+                         str(exc))
