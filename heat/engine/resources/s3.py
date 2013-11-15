@@ -84,8 +84,9 @@ class S3Bucket(resource.Resource):
         """Create a bucket."""
         container = self.physical_resource_name()
         headers = self.tags_to_headers()
-        logger.debug('S3Bucket create container %s with headers %s' %
-                     (container, headers))
+        logger.debug(_('S3Bucket create container %(container)s with headers '
+                     '%(headers)s') % {
+                     'container': container, 'headers': headers})
         if self.properties['WebsiteConfiguration'] is not None:
             sc = self.properties['WebsiteConfiguration']
             # we will assume that swift is configured for the staticweb
@@ -113,12 +114,12 @@ class S3Bucket(resource.Resource):
 
     def handle_delete(self):
         """Perform specified delete policy."""
-        logger.debug('S3Bucket delete container %s' % self.resource_id)
+        logger.debug(_('S3Bucket delete container %s') % self.resource_id)
         if self.resource_id is not None:
             try:
                 self.swift().delete_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
-                logger.warn("Delete container failed: %s" % str(ex))
+                logger.warn(_("Delete container failed: %s") % str(ex))
 
     def FnGetRefId(self):
         return unicode(self.resource_id)

@@ -17,6 +17,7 @@ from heat.db import api as db_api
 from heat.common import exception
 from heat.common import identifier
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ class Event(object):
         ev = event if event is not None else\
             db_api.event_get(context, event_id)
         if ev is None:
-            message = 'No event exists with id "%s"' % str(event_id)
+            message = _('No event exists with id "%s"') % str(event_id)
             raise exception.NotFound(message)
 
         st = stack if stack is not None else\
@@ -83,7 +84,7 @@ class Event(object):
             ev['created_at'] = self.timestamp
 
         if self.id is not None:
-            logger.warning('Duplicating event')
+            logger.warning(_('Duplicating event'))
 
         new_ev = db_api.event_create(self.context, ev)
         self.id = new_ev.id

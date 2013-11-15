@@ -17,6 +17,7 @@ from oslo.config import cfg
 
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
@@ -28,23 +29,23 @@ try:
     from swiftclient import client as swiftclient
 except ImportError:
     swiftclient = None
-    logger.info('swiftclient not available')
+    logger.info(_('swiftclient not available'))
 try:
     from neutronclient.v2_0 import client as neutronclient
 except ImportError:
     neutronclient = None
-    logger.info('neutronclient not available')
+    logger.info(_('neutronclient not available'))
 try:
     from cinderclient import client as cinderclient
 except ImportError:
     cinderclient = None
-    logger.info('cinderclient not available')
+    logger.info(_('cinderclient not available'))
 
 try:
     from ceilometerclient.v2 import client as ceilometerclient
 except ImportError:
     ceilometerclient = None
-    logger.info('ceilometerclient not available')
+    logger.info(_('ceilometerclient not available'))
 
 _default_backend = "heat.engine.clients.OpenStackClients"
 
@@ -91,7 +92,7 @@ class OpenStackClients(object):
 
         con = self.context
         if self.auth_token is None:
-            logger.error("Nova connection failed, no auth_token!")
+            logger.error(_("Nova connection failed, no auth_token!"))
             return None
 
         computeshell = novashell.OpenStackComputeShell()
@@ -123,7 +124,7 @@ class OpenStackClients(object):
 
         con = self.context
         if self.auth_token is None:
-            logger.error("Swift connection failed, no auth_token!")
+            logger.error(_("Swift connection failed, no auth_token!"))
             return None
 
         args = {
@@ -146,7 +147,7 @@ class OpenStackClients(object):
 
         con = self.context
         if self.auth_token is None:
-            logger.error("Neutron connection failed, no auth_token!")
+            logger.error(_("Neutron connection failed, no auth_token!"))
             return None
 
         args = {
@@ -168,7 +169,7 @@ class OpenStackClients(object):
 
         con = self.context
         if self.auth_token is None:
-            logger.error("Cinder connection failed, no auth_token!")
+            logger.error(_("Cinder connection failed, no auth_token!"))
             return None
 
         args = {
@@ -193,7 +194,7 @@ class OpenStackClients(object):
             return self._ceilometer
 
         if self.auth_token is None:
-            logger.error("Ceilometer connection failed, no auth_token!")
+            logger.error(_("Ceilometer connection failed, no auth_token!"))
             return None
         con = self.context
         args = {

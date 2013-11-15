@@ -384,7 +384,7 @@ class Resource(object):
                     self.state_set(action, self.FAILED,
                                    '%s aborted' % action)
                 except Exception:
-                    logger.exception('Error marking resource as failed')
+                    logger.exception(_('Error marking resource as failed'))
         else:
             self.state_set(action, self.COMPLETE)
 
@@ -395,7 +395,7 @@ class Resource(object):
         '''
         action = self.CREATE
         if (self.action, self.status) != (self.INIT, self.COMPLETE):
-            exc = exception.Error('State %s invalid for create'
+            exc = exception.Error(_('State %s invalid for create')
                                   % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
@@ -424,7 +424,7 @@ class Resource(object):
 
         if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
                                           (self.UPDATE, self.IN_PROGRESS)):
-            exc = Exception('Resource update already requested')
+            exc = Exception(_('Resource update already requested'))
             raise exception.ResourceFailure(exc, self, action)
 
         logger.info('updating %s' % str(self))
@@ -445,7 +445,8 @@ class Resource(object):
                     while not self.check_update_complete(handle_data):
                         yield
         except UpdateReplace:
-            logger.debug("Resource %s update requires replacement" % self.name)
+            logger.debug(_("Resource %s update requires replacement") %
+                         self.name)
             raise
         except Exception as ex:
             logger.exception('update %s : %s' % (str(self), str(ex)))
@@ -465,11 +466,11 @@ class Resource(object):
 
         # Don't try to suspend the resource unless it's in a stable state
         if (self.action == self.DELETE or self.status != self.COMPLETE):
-            exc = exception.Error('State %s invalid for suspend'
+            exc = exception.Error(_('State %s invalid for suspend')
                                   % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
-        logger.info('suspending %s' % str(self))
+        logger.info(_('suspending %s') % str(self))
         return self._do_action(action)
 
     def resume(self):
@@ -481,11 +482,11 @@ class Resource(object):
 
         # Can't resume a resource unless it's SUSPEND_COMPLETE
         if self.state != (self.SUSPEND, self.COMPLETE):
-            exc = exception.Error('State %s invalid for resume'
+            exc = exception.Error(_('State %s invalid for resume')
                                   % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
-        logger.info('resuming %s' % str(self))
+        logger.info(_('resuming %s') % str(self))
         return self._do_action(action)
 
     def physical_resource_name(self):
@@ -525,7 +526,7 @@ class Resource(object):
         return name[0:2] + '-' + name[-postfix_length:]
 
     def validate(self):
-        logger.info('Validating %s' % str(self))
+        logger.info(_('Validating %s') % str(self))
 
         self.validate_deletion_policy(self.t)
         return self.properties.validate()
@@ -534,11 +535,11 @@ class Resource(object):
     def validate_deletion_policy(cls, template):
         deletion_policy = template.get('DeletionPolicy', 'Delete')
         if deletion_policy not in ('Delete', 'Retain', 'Snapshot'):
-            msg = 'Invalid DeletionPolicy %s' % deletion_policy
+            msg = _('Invalid DeletionPolicy %s') % deletion_policy
             raise exception.StackValidationFailed(message=msg)
         elif deletion_policy == 'Snapshot':
             if not callable(getattr(cls, 'handle_snapshot_delete', None)):
-                msg = 'Snapshot DeletionPolicy not supported'
+                msg = _('Snapshot DeletionPolicy not supported')
                 raise exception.StackValidationFailed(message=msg)
 
     def delete(self):
@@ -556,7 +557,7 @@ class Resource(object):
 
         initial_state = self.state
 
-        logger.info('deleting %s' % str(self))
+        logger.info(_('deleting %s') % str(self))
 
         try:
             self.state_set(action, self.IN_PROGRESS)
@@ -578,7 +579,7 @@ class Resource(object):
                     yield
 
         except Exception as ex:
-            logger.exception('Delete %s', str(self))
+            logger.exception(_('Delete %s'), str(self))
             failure = exception.ResourceFailure(ex, self, self.action)
             self.state_set(action, self.FAILED, str(failure))
             raise failure
@@ -588,7 +589,8 @@ class Resource(object):
                     self.state_set(action, self.FAILED,
                                    'Deletion aborted')
                 except Exception:
-                    logger.exception('Error marking resource deletion failed')
+                    logger.exception(_('Error marking resource deletion '
+                                     'failed'))
         else:
             self.state_set(action, self.COMPLETE)
 
@@ -618,7 +620,7 @@ class Resource(object):
                 rs = db_api.resource_get(self.context, self.id)
                 rs.update_and_save({'nova_instance': self.resource_id})
             except Exception as ex:
-                logger.warn('db error %s' % str(ex))
+                logger.warn(_('db error %s') % str(ex))
 
     def _store(self):
         '''Create the resource in the database.'''
@@ -639,7 +641,7 @@ class Resource(object):
             self.stack.updated_time = datetime.utcnow()
 
         except Exception as ex:
-            logger.error('DB error %s' % str(ex))
+            logger.error(_('DB error %s') % str(ex))
 
     def _add_event(self, action, status, reason):
         '''Add a state change event to the database.'''
@@ -650,7 +652,7 @@ class Resource(object):
         try:
             ev.store()
         except Exception as ex:
-            logger.error('DB error %s' % str(ex))
+            logger.error(_('DB error %s') % str(ex))
 
     def _store_or_update(self, action, status, reason):
         self.action = action
@@ -668,7 +670,7 @@ class Resource(object):
 
                 self.stack.updated_time = datetime.utcnow()
             except Exception as ex:
-                logger.error('DB error %s' % str(ex))
+                logger.error(_('DB error %s') % str(ex))
 
         # store resource in DB on transition to CREATE_IN_PROGRESS
         # all other transistions (other than to DELETE_COMPLETE)
@@ -696,10 +698,10 @@ class Resource(object):
 
     def state_set(self, action, status, reason="state changed"):
         if action not in self.ACTIONS:
-            raise ValueError("Invalid action %s" % action)
+            raise ValueError(_("Invalid action %s") % action)
 
         if status not in self.STATUSES:
-            raise ValueError("Invalid status %s" % status)
+            raise ValueError(_("Invalid status %s") % status)
 
         old_state = (self.action, self.status)
         new_state = (action, status)
@@ -766,17 +768,19 @@ class Resource(object):
 
         try:
             if self.action in (self.SUSPEND, self.DELETE):
-                msg = 'Cannot signal resource during %s' % self.action
+                msg = _('Cannot signal resource during %s') % self.action
                 raise Exception(msg)
 
             if not callable(getattr(self, 'handle_signal', None)):
-                msg = 'Resource %s is not able to receive a signal' % str(self)
+                msg = (_('Resource %s is not able to receive a signal') %
+                       str(self))
                 raise Exception(msg)
 
             self._add_event('signal', self.status, get_string_details())
             self.handle_signal(details)
         except Exception as ex:
-            logger.exception('signal %s : %s' % (str(self), str(ex)))
+            logger.exception(_('signal %(name)s : %(msg)s') %
+                             {'name': str(self), 'msg': str(ex)})
             failure = exception.ResourceFailure(ex, self)
             raise failure
 
@@ -788,8 +792,8 @@ class Resource(object):
         No-op for resources which don't explicitly override this method
         '''
         if new_metadata:
-            logger.warning("Resource %s does not implement metadata update" %
-                           self.name)
+            logger.warning(_("Resource %s does not implement metadata update")
+                           % self.name)
 
     @classmethod
     def resource_to_template(cls, resource_type):

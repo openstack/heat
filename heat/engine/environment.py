@@ -16,6 +16,7 @@
 import itertools
 
 from heat.openstack.common import log
+from heat.openstack.common.gettextutils import _
 from heat.common import exception
 
 
@@ -275,7 +276,7 @@ class ResourceRegistry(object):
         info = self.get_resource_info(resource_type,
                                       resource_name=resource_name)
         if info is None:
-            msg = "Unknown resource Type : %s" % resource_type
+            msg = _("Unknown resource Type : %s") % resource_type
             raise exception.StackValidationFailed(message=msg)
         return info.get_class()
 

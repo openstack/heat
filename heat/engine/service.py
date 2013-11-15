@@ -246,7 +246,7 @@ class EngineService(service.Service):
         :param files: Files referenced from the template
         :param args: Request parameters/args passed from API
         """
-        logger.info('template is %s' % template)
+        logger.info(_('template is %s') % template)
 
         def _stack_create(stack):
             # Create the stack, and create the periodic task if successful
@@ -255,7 +255,8 @@ class EngineService(service.Service):
                 # Schedule a periodic watcher task for this stack
                 self._start_watch_task(stack.id, cnxt)
             else:
-                logger.warning("Stack create failed, status %s" % stack.status)
+                logger.warning(_("Stack create failed, status %s") %
+                               stack.status)
 
         if db_api.stack_get_by_name(cnxt, stack_name):
             raise exception.StackExists(stack_name=stack_name)
@@ -301,7 +302,7 @@ class EngineService(service.Service):
         arg4 -> Stack Input Params
         arg4 -> Request parameters/args passed from API
         """
-        logger.info('template is %s' % template)
+        logger.info(_('template is %s') % template)
 
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
@@ -345,7 +346,7 @@ class EngineService(service.Service):
         arg3 -> Template of stack you want to create.
         arg4 -> Stack Input Params
         """
-        logger.info('validate_template')
+        logger.info(_('validate_template'))
         if template is None:
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
@@ -425,7 +426,7 @@ class EngineService(service.Service):
         """
         st = self._get_stack(cnxt, stack_identity)
 
-        logger.info('deleting stack %s' % st.name)
+        logger.info(_('deleting stack %s') % st.name)
 
         stack = parser.Stack.load(cnxt, stack=st)
 
@@ -530,7 +531,7 @@ class EngineService(service.Service):
             try:
                 akey_rsrc = self.find_physical_resource(cnxt, access_key)
             except exception.PhysicalResourceNotFound:
-                logger.warning("access_key % not found!" % access_key)
+                logger.warning(_("access_key % not found!") % access_key)
                 return False
 
             akey_rsrc_id = identifier.ResourceIdentifier(**akey_rsrc)
@@ -540,9 +541,9 @@ class EngineService(service.Service):
                 ak_akey_rsrc = stack[akey_rsrc_id.resource_name]
                 return ak_akey_rsrc.access_allowed(resource_name)
             else:
-                logger.warning("Cannot access resource from wrong stack!")
+                logger.warning(_("Cannot access resource from wrong stack!"))
         else:
-            logger.warning("Cannot access resource, invalid credentials!")
+            logger.warning(_("Cannot access resource, invalid credentials!"))
 
         return False
 
@@ -553,7 +554,8 @@ class EngineService(service.Service):
 
         if cfg.CONF.heat_stack_user_role in cnxt.roles:
             if not self._authorize_stack_user(cnxt, stack, resource_name):
-                logger.warning("Access denied to resource %s" % resource_name)
+                logger.warning(_("Access denied to resource %s")
+                               % resource_name)
                 raise exception.Forbidden()
 
         if resource_name not in stack:
@@ -632,7 +634,7 @@ class EngineService(service.Service):
         Handle request to perform suspend action on a stack
         '''
         def _stack_suspend(stack):
-            logger.debug("suspending stack %s" % stack.name)
+            logger.debug(_("suspending stack %s") % stack.name)
             stack.suspend()
 
         s = self._get_stack(cnxt, stack_identity)
@@ -646,7 +648,7 @@ class EngineService(service.Service):
         Handle request to perform a resume action on a stack
         '''
         def _stack_resume(stack):
-            logger.debug("resuming stack %s" % stack.name)
+            logger.debug(_("resuming stack %s") % stack.name)
             stack.resume()
 
         s = self._get_stack(cnxt, stack_identity)
@@ -700,11 +702,11 @@ class EngineService(service.Service):
         # Retrieve the stored credentials & create context
         # Require tenant_safe=False to the stack_get to defeat tenant
         # scoping otherwise we fail to retrieve the stack
-        logger.debug("Periodic watcher task for stack %s" % sid)
+        logger.debug(_("Periodic watcher task for stack %s") % sid)
         admin_context = context.get_admin_context()
         stack = db_api.stack_get(admin_context, sid, tenant_safe=False)
         if not stack:
-            logger.error("Unable to retrieve stack %s for periodic task" %
+            logger.error(_("Unable to retrieve stack %s for periodic task") %
                          sid)
             return
         stack_context = self._load_user_creds(stack.user_creds_id)
@@ -718,8 +720,8 @@ class EngineService(service.Service):
         try:
             wrs = db_api.watch_rule_get_all_by_stack(stack_context, sid)
         except Exception as ex:
-            logger.warn('periodic_task db error (%s) %s' %
-                        ('watch rule removed?', str(ex)))
+            logger.warn(_('periodic_task db error (%(msg)s) %(ex)s') % {
+                        'msg': 'watch rule removed?', 'ex': str(ex)})
             return
 
         def run_alarm_action(actions, details):
@@ -784,7 +786,7 @@ class EngineService(service.Service):
             try:
                 wrn = [w.name for w in db_api.watch_rule_get_all(cnxt)]
             except Exception as ex:
-                logger.warn('show_watch (all) db error %s' % str(ex))
+                logger.warn(_('show_watch (all) db error %s') % str(ex))
                 return
 
         wrs = [watchrule.WatchRule.load(cnxt, w) for w in wrn]
@@ -804,13 +806,13 @@ class EngineService(service.Service):
         # namespace/metric, but we will want this at some point
         # for now, the API can query all metric data and filter locally
         if metric_namespace is not None or metric_name is not None:
-            logger.error("Filtering by namespace/metric not yet supported")
+            logger.error(_("Filtering by namespace/metric not yet supported"))
             return
 
         try:
             wds = db_api.watch_data_get_all(cnxt)
         except Exception as ex:
-            logger.warn('show_metric (all) db error %s' % str(ex))
+            logger.warn(_('show_metric (all) db error %s') % str(ex))
             return
 
         result = [api.format_watch_data(w) for w in wds]

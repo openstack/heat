@@ -128,8 +128,8 @@ class Volume(resource.Resource):
                     vol.get()
 
                 if vol.status == 'in-use':
-                    logger.warn('cant delete volume when in-use')
-                    raise exception.Error('Volume in use')
+                    logger.warn(_('cant delete volume when in-use'))
+                    raise exception.Error(_('Volume in use'))
 
                 vol.delete()
                 while True:
@@ -196,14 +196,15 @@ class VolumeAttachTask(object):
 
         vol = self.clients.cinder().volumes.get(self.volume_id)
         while vol.status == 'available' or vol.status == 'attaching':
-            logger.debug('%s - volume status: %s' % (str(self), vol.status))
+            logger.debug(_('%(name)s - volume status: %(status)s') % {
+                         'name': str(self), 'status': vol.status})
             yield
             vol.get()
 
         if vol.status != 'in-use':
             raise exception.Error(vol.status)
 
-        logger.info('%s - complete' % str(self))
+        logger.info(_('%s - complete') % str(self))
 
 
 class VolumeDetachTask(object):
@@ -236,7 +237,7 @@ class VolumeDetachTask(object):
         try:
             vol = self.clients.cinder().volumes.get(self.volume_id)
         except clients.cinderclient.exceptions.NotFound:
-            logger.warning('%s - volume not found' % str(self))
+            logger.warning(_('%s - volume not found') % str(self))
             return
 
         server_api = self.clients.nova().volumes
@@ -252,7 +253,7 @@ class VolumeDetachTask(object):
         try:
             vol.get()
             while vol.status in ('in-use', 'detaching'):
-                logger.debug('%s - volume still in use' % str(self))
+                logger.debug(_('%s - volume still in use') % str(self))
                 yield
 
                 try:
@@ -263,12 +264,13 @@ class VolumeDetachTask(object):
                     pass
                 vol.get()
 
-            logger.info('%s - status: %s' % (str(self), vol.status))
+            logger.info(_('%(name)s - status: %(status)s') % {
+                        'name': str(self), 'status': vol.status})
             if vol.status != 'available':
                 raise exception.Error(vol.status)
 
         except clients.cinderclient.exceptions.NotFound:
-            logger.warning('%s - volume not found' % str(self))
+            logger.warning(_('%s - volume not found') % str(self))
 
 
 class VolumeAttachment(resource.Resource):

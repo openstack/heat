@@ -484,7 +484,7 @@ class Server(resource.Resource):
             raise exception.NotFound(_('Failed to find server %s') %
                                      self.resource_id)
         else:
-            logger.debug('suspending server %s' % self.resource_id)
+            logger.debug(_('suspending server %s') % self.resource_id)
             # We want the server.suspend to happen after the volume
             # detachement has finished, so pass both tasks and the server
             suspend_runner = scheduler.TaskRunner(server.suspend)
@@ -501,8 +501,9 @@ class Server(resource.Resource):
                 return True
 
             server.get()
-            logger.debug('%s check_suspend_complete status = %s' %
-                         (self.name, server.status))
+            logger.debug(_('%(name)s check_suspend_complete status '
+                         '= %(status)s') % {
+                         'name': self.name, 'status': server.status})
             if server.status in list(nova_utils.deferred_server_statuses +
                                      ['ACTIVE']):
                 return server.status == 'SUSPENDED'
@@ -529,7 +530,7 @@ class Server(resource.Resource):
             raise exception.NotFound(_('Failed to find server %s') %
                                      self.resource_id)
         else:
-            logger.debug('resuming server %s' % self.resource_id)
+            logger.debug(_('resuming server %s') % self.resource_id)
             server.resume()
             return server
 
