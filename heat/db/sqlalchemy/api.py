@@ -31,6 +31,7 @@ from heat.common import exception
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
 from heat.openstack.common.db.sqlalchemy import session as db_session
+from heat.openstack.common.db.sqlalchemy import utils
 
 
 get_engine = db_session.get_engine
@@ -247,15 +248,46 @@ def stack_get_all_by_owner_id(context, owner_id):
     return results
 
 
+def _paginate_query(context, query, model, limit=None, sort_keys=None,
+                    marker=None, sort_dir=None):
+    default_sort_keys = ['created_at']
+    if not sort_keys:
+        sort_keys = default_sort_keys
+        if not sort_dir:
+            sort_dir = 'desc'
+    elif not isinstance(sort_keys, list):
+        sort_keys = [sort_keys]
+
+    # This assures the order of the stacks will always be the same
+    # even for sort_key values that are not unique in the database
+    sort_keys = sort_keys + ['id']
+
+    model_marker = None
+    if marker:
+        model_marker = model_query(context, model).get(marker)
+
+    try:
+        query = utils.paginate_query(query, model, limit, sort_keys,
+                                     model_marker, sort_dir)
+    except utils.InvalidSortKey as exc:
+        raise exception.Invalid(reason=exc.message)
+
+    return query
+
+
 def _query_stack_get_all_by_tenant(context):
     query = soft_delete_aware_query(context, models.Stack).\
         filter_by(owner_id=None).\
         filter_by(tenant=context.tenant_id)
+
     return query
 
 
-def stack_get_all_by_tenant(context):
-    return _query_stack_get_all_by_tenant(context).all()
+def stack_get_all_by_tenant(context, limit=None, sort_keys=None, marker=None,
+                            sort_dir=None):
+    query = _query_stack_get_all_by_tenant(context)
+    return _paginate_query(context, query, models.Stack, limit, sort_keys,
+                           marker, sort_dir).all()
 
 
 def stack_count_all_by_tenant(context):

@@ -50,13 +50,16 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
         return self.call(ctxt, self.make_msg('identify_stack',
                                              stack_name=stack_name))
 
-    def list_stacks(self, ctxt):
+    def list_stacks(self, ctxt, limit=None, sort_keys=None, marker=None,
+                    sort_dir=None):
         """
         The list_stacks method returns the attributes of all stacks.
 
         :param ctxt: RPC context.
         """
-        return self.call(ctxt, self.make_msg('list_stacks'))
+        return self.call(ctxt, self.make_msg('list_stacks', limit=limit,
+                         sort_keys=sort_keys, marker=marker,
+                         sort_dir=sort_dir))
 
     def show_stack(self, ctxt, stack_identity):
         """

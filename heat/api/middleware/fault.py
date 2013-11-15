@@ -76,6 +76,7 @@ class FaultWrapper(wsgi.Middleware):
         'UserParameterMissing': webob.exc.HTTPBadRequest,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
         'InvalidTemplateParameter': webob.exc.HTTPBadRequest,
+        'Invalid': webob.exc.HTTPBadRequest,
     }
 
     def _error(self, ex):

@@ -217,6 +217,61 @@ class SqlAlchemyTest(HeatTestCase):
         st_db = db_api.stack_get_all_by_tenant(self.ctx)
         self.assertEqual(1, len(st_db))
 
+    def test_stack_get_all_by_tenant_default_sort_keys_and_dir(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        st_db = db_api.stack_get_all_by_tenant(self.ctx)
+        self.assertEqual(3, len(st_db))
+        self.assertEqual(stacks[2].id, st_db[0].id)
+        self.assertEqual(stacks[1].id, st_db[1].id)
+        self.assertEqual(stacks[0].id, st_db[2].id)
+
+    def test_stack_get_all_by_tenant_default_sort_dir(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        st_db = db_api.stack_get_all_by_tenant(self.ctx, sort_dir='asc')
+        self.assertEqual(3, len(st_db))
+        self.assertEqual(stacks[0].id, st_db[0].id)
+        self.assertEqual(stacks[1].id, st_db[1].id)
+        self.assertEqual(stacks[2].id, st_db[2].id)
+
+    def test_stack_get_all_by_tenant_str_sort_keys(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        st_db = db_api.stack_get_all_by_tenant(self.ctx,
+                                               sort_keys='created_at')
+        self.assertEqual(3, len(st_db))
+        self.assertEqual(stacks[0].id, st_db[0].id)
+        self.assertEqual(stacks[1].id, st_db[1].id)
+        self.assertEqual(stacks[2].id, st_db[2].id)
+
+    def test_stack_get_all_by_tenant_marker(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        st_db = db_api.stack_get_all_by_tenant(self.ctx, marker=stacks[1].id)
+        self.assertEqual(1, len(st_db))
+        self.assertEqual(stacks[0].id, st_db[0].id)
+
+    def test_stack_get_all_by_tenant_non_existing_marker(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+
+        uuid = 'this stack doesnt exist'
+        st_db = db_api.stack_get_all_by_tenant(self.ctx, marker=uuid)
+        self.assertEqual(3, len(st_db))
+
+    def test_stack_get_all_by_tenant_handles_invalid_sort_key(self):
+        self.assertRaises(exception.Invalid,
+                          db_api.stack_get_all_by_tenant,
+                          self.ctx,
+                          sort_keys=['foo'])
+
+    def test_stack_get_all_by_tenant_doesnt_mutate_sort_keys(self):
+        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        sort_keys = ['id']
+
+        st_db = db_api.stack_get_all_by_tenant(self.ctx, sort_keys=sort_keys)
+        self.assertEqual(['id'], sort_keys)
+
     def test_stack_count_all_by_tenant(self):
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
 

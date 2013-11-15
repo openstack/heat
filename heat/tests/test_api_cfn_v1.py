@@ -132,10 +132,12 @@ class CfnStackControllerTest(HeatTestCase):
                        u'StackName': u'wordpress',
                        u'StackStatus': u'CREATE_COMPLETE'}]}}}
         self.assertEqual(result, expected)
+        default_args = {'limit': None, 'sort_keys': None, 'marker': None,
+                        'sort_dir': None}
         mock_call.assert_called_once_with(dummy_req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',
-                                           'args': {},
+                                           'args': default_args,
                                            'version': self.api_version},
                                           None)
 
@@ -155,7 +157,7 @@ class CfnStackControllerTest(HeatTestCase):
         mock_call.assert_called_once_with(dummy_req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',
-                                           'args': {},
+                                           'args': mock.ANY,
                                            'version': self.api_version},
                                           None)
 
@@ -174,7 +176,7 @@ class CfnStackControllerTest(HeatTestCase):
         mock_call.assert_called_once_with(dummy_req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',
-                                           'args': {},
+                                           'args': mock.ANY,
                                            'version': self.api_version},
                                           None)
 
