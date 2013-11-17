@@ -150,6 +150,7 @@ class Instance(resource.Resource):
             'Description': _('Subnet ID to launch instance in.')},
         'Tags': {
             'Type': 'List',
+            'UpdateAllowed': True,
             'Schema': {'Type': 'Map', 'Schema': tags_schema},
             'Description': _('Tags to attach to instance.')},
         'NovaSchedulerHints': {
@@ -282,6 +283,13 @@ class Instance(resource.Resource):
             self.mime_string = nova_utils.build_userdata(self, userdata)
         return self.mime_string
 
+    def _get_nova_metadata(self, properties):
+        if properties is None or properties.get('Tags') is None:
+            return None
+
+        return dict((tm['Key'], tm['Value'])
+                    for tm in properties['Tags'])
+
     def handle_create(self):
         security_groups = self._get_security_groups()
 
@@ -299,13 +307,6 @@ class Instance(resource.Resource):
         image_id = nova_utils.get_image_id(self.nova(), image_name)
 
         flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
-
-        tags = {}
-        if self.properties['Tags']:
-            for tm in self.properties['Tags']:
-                tags[tm['Key']] = tm['Value']
-        else:
-            tags = None
 
         scheduler_hints = {}
         if self.properties['NovaSchedulerHints']:
@@ -327,7 +328,7 @@ class Instance(resource.Resource):
                 key_name=key_name,
                 security_groups=security_groups,
                 userdata=self.get_mime_string(userdata),
-                meta=tags,
+                meta=self._get_nova_metadata(self.properties),
                 scheduler_hints=scheduler_hints,
                 nics=nics,
                 availability_zone=availability_zone)
@@ -398,10 +399,19 @@ class Instance(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
             self.metadata = tmpl_diff['Metadata']
+
+        server = None
+        if 'Tags' in prop_diff:
+            server = self.nova().servers.get(self.resource_id)
+            nova_utils.meta_update(self.nova(),
+                                   server,
+                                   self._get_nova_metadata(prop_diff))
+
         if 'InstanceType' in prop_diff:
             flavor = prop_diff['InstanceType']
             flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
-            server = self.nova().servers.get(self.resource_id)
+            if not server:
+                server = self.nova().servers.get(self.resource_id)
             checker = scheduler.TaskRunner(nova_utils.resize, server, flavor,
                                            flavor_id)
             checker.start()
