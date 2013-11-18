@@ -55,19 +55,20 @@ class User(resource.Resource):
             # ignore the policy (don't reject it because we previously ignored
             # and we don't want to break templates which previously worked
             if not isinstance(policy, basestring):
-                logger.warning("Ignoring policy %s, " % policy
-                               + "must be string resource name")
+                logger.warning(_("Ignoring policy %s, must be string "
+                               "resource name") % policy)
                 continue
 
             try:
                 policy_rsrc = self.stack[policy]
             except KeyError:
-                logger.error("Policy %s does not exist in stack %s" %
-                             (policy, self.stack.name))
+                logger.error(_("Policy %(policy)s does not exist in stack "
+                             "%(stack)s") % {
+                             'policy': policy, 'stack': self.stack.name})
                 return False
 
             if not callable(getattr(policy_rsrc, 'access_allowed', None)):
-                logger.error("Policy %s is not an AccessPolicy resource" %
+                logger.error(_("Policy %s is not an AccessPolicy resource") %
                              policy)
                 return False
 
@@ -90,7 +91,8 @@ class User(resource.Resource):
 
     def handle_delete(self):
         if self.resource_id is None:
-            logger.error("Cannot delete User resource before user created!")
+            logger.error(_("Cannot delete User resource before user "
+                         "created!"))
             return
         try:
             self.keystone().delete_stack_user(self.resource_id)
@@ -99,13 +101,15 @@ class User(resource.Resource):
 
     def handle_suspend(self):
         if self.resource_id is None:
-            logger.error("Cannot suspend User resource before user created!")
+            logger.error(_("Cannot suspend User resource before user "
+                         "created!"))
             return
         self.keystone().disable_stack_user(self.resource_id)
 
     def handle_resume(self):
         if self.resource_id is None:
-            logger.error("Cannot resume User resource before user created!")
+            logger.error(_("Cannot resume User resource before user "
+                         "created!"))
             return
         self.keystone().enable_stack_user(self.resource_id)
 
@@ -121,8 +125,8 @@ class User(resource.Resource):
         policies = (self.properties['Policies'] or [])
         for policy in policies:
             if not isinstance(policy, basestring):
-                logger.warning("Ignoring policy %s, " % policy
-                               + "must be string resource name")
+                logger.warning(_("Ignoring policy %s, must be string "
+                               "resource name") % policy)
                 continue
             policy_rsrc = self.stack[policy]
             if not policy_rsrc.access_allowed(resource_name):
@@ -168,12 +172,12 @@ class AccessKey(resource.Resource):
     def handle_create(self):
         user = self._get_user()
         if user is None:
-            raise exception.NotFound('could not find user %s' %
+            raise exception.NotFound(_('could not find user %s') %
                                      self.properties['UserName'])
 
         kp = self.keystone().get_ec2_keypair(user.resource_id)
         if not kp:
-            raise exception.Error("Error creating ec2 keypair for user %s" %
+            raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user)
 
         self.resource_id_set(kp.access)
@@ -186,7 +190,7 @@ class AccessKey(resource.Resource):
 
         user = self._get_user()
         if user is None:
-            logger.warning('Error deleting %s - user not found' % str(self))
+            logger.warning(_('Error deleting %s - user not found') % str(self))
             return
         user_id = user.resource_id
         if user_id:
@@ -203,23 +207,26 @@ class AccessKey(resource.Resource):
         '''
         if self._secret is None:
             if not self.resource_id:
-                logger.warn('could not get secret for %s Error:%s' %
-                            (self.properties['UserName'],
-                             "resource_id not yet set"))
+                logger.warn(_('could not get secret for %(username)s '
+                            'Error:%(msg)s') % {
+                            'username': self.properties['UserName'],
+                            'msg': "resource_id not yet set"})
             else:
                 try:
                     user_id = self._get_user().resource_id
                     kp = self.keystone().get_ec2_keypair(user_id)
                 except Exception as ex:
-                    logger.warn('could not get secret for %s Error:%s' %
-                                (self.properties['UserName'],
-                                 str(ex)))
+                    logger.warn(_('could not get secret for %(username)s '
+                                'Error:%(msg)s') % {
+                                'username': self.properties['UserName'],
+                                'msg': str(ex)})
                 else:
                     if kp.access == self.resource_id:
                         self._secret = kp.secret
                     else:
-                        msg = ("Unexpected ec2 keypair, for %s access %s" %
-                               (user_id, kp.access))
+                        msg = (_("Unexpected ec2 keypair, for %(id)s access "
+                               "%(access)s") % {
+                               'id': user_id, 'access': kp.access})
                         logger.error(msg)
 
         return self._secret or '000-000-000'
@@ -258,7 +265,7 @@ class AccessPolicy(resource.Resource):
         # All of the provided resource names must exist in this stack
         for resource in resources:
             if resource not in self.stack:
-                logger.error("AccessPolicy resource %s not in stack" %
+                logger.error(_("AccessPolicy resource %s not in stack") %
                              resource)
                 raise exception.ResourceNotFound(resource_name=resource,
                                                  stack_name=self.stack.name)

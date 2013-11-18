@@ -90,20 +90,22 @@ class SwiftContainer(resource.Resource):
             headers['X-Container-Read'] = self.properties['X-Container-Read']
         if 'X-Container-Write' in self.properties.keys():
             headers['X-Container-Write'] = self.properties['X-Container-Write']
-        logger.debug('SwiftContainer create container %s with headers %s' %
-                     (container, headers))
+        logger.debug(_('SwiftContainer create container %(container)s with '
+                     'headers %(headers)s') % {
+                     'container': container, 'headers': headers})
 
         self.swift().put_container(container, headers)
         self.resource_id_set(container)
 
     def handle_delete(self):
         """Perform specified delete policy."""
-        logger.debug('SwiftContainer delete container %s' % self.resource_id)
+        logger.debug(_('SwiftContainer delete container %s') %
+                     self.resource_id)
         if self.resource_id is not None:
             try:
                 self.swift().delete_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
-                logger.warn("Delete container failed: %s" % str(ex))
+                logger.warn(_("Delete container failed: %s") % str(ex))
 
     def FnGetRefId(self):
         return unicode(self.resource_id)
@@ -123,7 +125,7 @@ class SwiftContainer(resource.Resource):
             try:
                 headers = self.swift().head_container(self.resource_id)
             except clients.swiftclient.ClientException as ex:
-                logger.warn("Head container failed: %s" % str(ex))
+                logger.warn(_("Head container failed: %s") % str(ex))
                 return None
             else:
                 if key == 'ObjectCount':

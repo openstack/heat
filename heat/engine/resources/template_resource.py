@@ -115,8 +115,10 @@ class TemplateResource(stack_resource.StackResource):
                 t_data = urlfetch.get(self.template_name,
                                       allowed_schemes=self.allowed_schemes)
             except (exceptions.RequestException, IOError) as r_exc:
-                raise ValueError("Could not fetch remote template '%s': %s" %
-                                 (self.template_name, str(r_exc)))
+                raise ValueError(_("Could not fetch remote template "
+                                 "'%(name)s': %(exc)s") % {
+                                 'name': self.template_name,
+                                 'exc': str(r_exc)})
             else:
                 # TODO(Randall) Whoops, misunderstanding on my part; this
                 # doesn't actually persist to the db like I thought.
@@ -129,30 +131,33 @@ class TemplateResource(stack_resource.StackResource):
 
         for n, fs in facade_schemata.items():
             if fs.required and n not in self.properties_schema:
-                msg = ("Required property %s for facade %s "
-                       "missing in provider") % (n, self.type())
+                msg = (_("Required property %(n)s for facade %(type)s "
+                       "missing in provider") % {'n': n, 'type': self.type()})
                 raise exception.StackValidationFailed(message=msg)
 
             ps = self.properties_schema.get(n)
             if (n in self.properties_schema and
                     (fs.type != ps.type)):
                 # Type mismatch
-                msg = ("Property %s type mismatch between facade %s (%s) "
-                       "and provider (%s)") % (n, self.type(),
-                                               fs.type, ps.type)
+                msg = (_("Property %(n)s type mismatch between facade %(type)s"
+                       " (%(fs_type)s) and provider (%(ps_type)s)") % {
+                       'n': n, 'type': self.type(),
+                       'fs_type': fs.type, 'ps_type': ps.type})
                 raise exception.StackValidationFailed(message=msg)
 
         for n, ps in self.properties_schema.items():
             if ps.required and n not in facade_schemata:
                 # Required property for template not present in facade
-                msg = ("Provider requires property %s "
-                       "unknown in facade %s") % (n, self.type())
+                msg = (_("Provider requires property %(n)s "
+                       "unknown in facade %(type)s") % {
+                       'n': n, 'type': self.type()})
                 raise exception.StackValidationFailed(message=msg)
 
         for attr in facade_cls.attributes_schema:
             if attr not in self.attributes_schema:
-                msg = ("Attribute %s for facade %s "
-                       "missing in provider") % (attr, self.type())
+                msg = (_("Attribute %(attr)s for facade %(type)s "
+                       "missing in provider") % {
+                       'attr': attr, 'type': self.type()})
                 raise exception.StackValidationFailed(message=msg)
 
     def validate(self):

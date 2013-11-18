@@ -26,6 +26,7 @@ from heat.engine import clients
 from heat.engine import resource
 
 from heat.openstack.common import log
+from heat.openstack.common.gettextutils import _
 
 LOG = log.getLogger(__name__)
 SIGNAL_TYPES = (
@@ -49,7 +50,7 @@ class SignalResponder(resource.Resource):
             self.physical_resource_name())
         kp = self.keystone().get_ec2_keypair(user_id)
         if not kp:
-            raise exception.Error("Error creating ec2 keypair for user %s" %
+            raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user_id)
         else:
             self.resource_id_set(user_id)

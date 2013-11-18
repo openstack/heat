@@ -161,7 +161,7 @@ class Stack(collections.Mapping):
         try:
             stack_arn = self.identifier().arn()
         except (AttributeError, ValueError, TypeError):
-            logger.warning("Unable to set parameters StackId identifier")
+            logger.warning(_("Unable to set parameters StackId identifier"))
         else:
             self.parameters.set_stack_id(stack_arn)
 
@@ -306,7 +306,7 @@ class Stack(collections.Mapping):
         dup_names = set(self.parameters.keys()) & set(self.keys())
 
         if dup_names:
-            logger.debug("Duplicate names %s" % dup_names)
+            logger.debug(_("Duplicate names %s") % dup_names)
             raise StackValidationFailed(message=_("Duplicate names %s") %
                                         dup_names)
 
@@ -427,13 +427,13 @@ class Stack(collections.Mapping):
         s = db_api.stack_get_by_name(self.context, self._backup_name(),
                                      owner_id=self.id)
         if s is not None:
-            logger.debug('Loaded existing backup stack')
+            logger.debug(_('Loaded existing backup stack'))
             return self.load(self.context, stack=s)
         elif create_if_missing:
             prev = type(self)(self.context, self.name, self.t, self.env,
                               owner_id=self.id)
             prev.store(backup=True)
-            logger.debug('Created new backup stack')
+            logger.debug(_('Created new backup stack'))
             return prev
         else:
             return None
@@ -456,7 +456,7 @@ class Stack(collections.Mapping):
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE):
         if action not in (self.UPDATE, self.ROLLBACK):
-            logger.error("Unexpected action %s passed to update!" % action)
+            logger.error(_("Unexpected action %s passed to update!") % action)
             self.state_set(self.UPDATE, self.FAILED,
                            "Invalid action %s" % action)
             return
@@ -464,7 +464,7 @@ class Stack(collections.Mapping):
         if self.status != self.COMPLETE:
             if (action == self.ROLLBACK and
                     self.state == (self.UPDATE, self.IN_PROGRESS)):
-                logger.debug("Starting update rollback for %s" % self.name)
+                logger.debug(_("Starting update rollback for %s") % self.name)
             else:
                 self.state_set(action, self.FAILED,
                                'State invalid for %s' % action)
@@ -512,7 +512,7 @@ class Stack(collections.Mapping):
                     yield self.update_task(oldstack, action=self.ROLLBACK)
                     return
         else:
-            logger.debug('Deleting backup stack')
+            logger.debug(_('Deleting backup stack'))
             backup_stack.delete()
 
         self.state_set(action, stack_status, reason)
@@ -535,7 +535,7 @@ class Stack(collections.Mapping):
         differently.
         '''
         if action not in (self.DELETE, self.ROLLBACK):
-            logger.error("Unexpected action %s passed to delete!" % action)
+            logger.error(_("Unexpected action %s passed to delete!") % action)
             self.state_set(self.DELETE, self.FAILED,
                            "Invalid action %s" % action)
             return
@@ -626,7 +626,7 @@ class Stack(collections.Mapping):
                 scheduler.TaskRunner(res.destroy)()
             except exception.ResourceFailure as ex:
                 failed = True
-                logger.error('delete: %s' % str(ex))
+                logger.error(_('delete: %s') % str(ex))
 
         for res in deps:
             if not failed:
@@ -634,7 +634,7 @@ class Stack(collections.Mapping):
                     res.state_reset()
                     scheduler.TaskRunner(res.create)()
                 except exception.ResourceFailure as ex:
-                    logger.exception('create')
+                    logger.exception(_('create'))
                     failed = True
             else:
                 res.state_set(res.CREATE, res.FAILED,

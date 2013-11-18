@@ -105,7 +105,7 @@ class TaskRunner(object):
     def _sleep(self, wait_time):
         """Sleep for the specified number of seconds."""
         if ENABLE_SLEEP and wait_time is not None:
-            logger.debug('%s sleeping' % str(self))
+            logger.debug(_('%s sleeping') % str(self))
             eventlet.sleep(wait_time)
 
     def __call__(self, wait_time=1, timeout=None):
@@ -128,7 +128,7 @@ class TaskRunner(object):
         """
         assert self._runner is None, "Task already started"
 
-        logger.debug('%s starting' % str(self))
+        logger.debug(_('%s starting') % str(self))
 
         if timeout is not None:
             self._timeout = Timeout(self, timeout)
@@ -140,7 +140,7 @@ class TaskRunner(object):
         else:
             self._runner = False
             self._done = True
-            logger.debug('%s done (not resumable)' % str(self))
+            logger.debug(_('%s done (not resumable)') % str(self))
 
     def step(self):
         """
@@ -151,7 +151,7 @@ class TaskRunner(object):
             assert self._runner is not None, "Task not started"
 
             if self._timeout is not None and self._timeout.expired():
-                logger.info('%s timed out' % str(self))
+                logger.info(_('%s timed out') % str(self))
 
                 try:
                     self._runner.throw(self._timeout)
@@ -161,13 +161,13 @@ class TaskRunner(object):
                     # Clean up in case task swallows exception without exiting
                     self.cancel()
             else:
-                logger.debug('%s running' % str(self))
+                logger.debug(_('%s running') % str(self))
 
                 try:
                     next(self._runner)
                 except StopIteration:
                     self._done = True
-                    logger.debug('%s complete' % str(self))
+                    logger.debug(_('%s complete') % str(self))
 
         return self._done
 
@@ -184,7 +184,7 @@ class TaskRunner(object):
     def cancel(self):
         """Cancel the task if it is running."""
         if self.started() and not self.done():
-            logger.debug('%s cancelled' % str(self))
+            logger.debug(_('%s cancelled') % str(self))
             self._runner.close()
             self._done = True
 

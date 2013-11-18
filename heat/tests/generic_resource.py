@@ -16,6 +16,7 @@ from heat.engine import resource
 from heat.engine import signal_responder
 
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
@@ -29,22 +30,27 @@ class GenericResource(resource.Resource):
                          'Foo': 'Another generic attribute'}
 
     def handle_create(self):
-        logger.warning('Creating generic resource (Type "%s")' % self.type())
+        logger.warning(_('Creating generic resource (Type "%s")') %
+                       self.type())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        logger.warning('Updating generic resource (Type "%s")' % self.type())
+        logger.warning(_('Updating generic resource (Type "%s")') %
+                       self.type())
 
     def handle_delete(self):
-        logger.warning('Deleting generic resource (Type "%s")' % self.type())
+        logger.warning(_('Deleting generic resource (Type "%s")') %
+                       self.type())
 
     def _resolve_attribute(self, name):
         return self.name
 
     def handle_suspend(self):
-        logger.warning('Suspending generic resource (Type "%s")' % self.type())
+        logger.warning(_('Suspending generic resource (Type "%s")') %
+                       self.type())
 
     def handle_resume(self):
-        logger.warning('Resuming generic resource (Type "%s")' % self.type())
+        logger.warning(_('Resuming generic resource (Type "%s")') %
+                       self.type())
 
 
 class ResourceWithProps(GenericResource):
@@ -61,8 +67,8 @@ class SignalResource(signal_responder.SignalResponder):
     attributes_schema = {'AlarmUrl': 'Get a signed webhook'}
 
     def handle_signal(self, details=None):
-        logger.warning('Signaled resource (Type "%s") %s' % (self.type(),
-                                                             details))
+        logger.warning(_('Signaled resource (Type "%(type)s") %(details)s')
+                       % {'type': self.type(), 'details': details})
 
     def _resolve_attribute(self, name):
         if name == 'AlarmUrl' and self.resource_id is not None:

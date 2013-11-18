@@ -71,8 +71,8 @@ class WaitConditionHandle(signal_responder.SignalResponder):
         if self._metadata_format_ok(new_metadata):
             rsrc_metadata = self.metadata
             if new_metadata['UniqueId'] in rsrc_metadata:
-                logger.warning("Overwriting Metadata item for UniqueId %s!" %
-                               new_metadata['UniqueId'])
+                logger.warning(_("Overwriting Metadata item for UniqueId %s!")
+                               % new_metadata['UniqueId'])
             safe_metadata = {}
             for k in ('Data', 'Reason', 'Status'):
                 safe_metadata[k] = new_metadata[k]
@@ -81,8 +81,8 @@ class WaitConditionHandle(signal_responder.SignalResponder):
             rsrc_metadata.update({new_metadata['UniqueId']: safe_metadata})
             self.metadata = rsrc_metadata
         else:
-            logger.error("Metadata failed validation for %s" % self.name)
-            raise ValueError("Metadata format invalid")
+            logger.error(_("Metadata failed validation for %s") % self.name)
+            raise ValueError(_("Metadata format invalid"))
 
     def get_status(self):
         '''
@@ -120,7 +120,8 @@ class WaitConditionFailure(Exception):
 class WaitConditionTimeout(Exception):
     def __init__(self, wait_condition, handle):
         reasons = handle.get_status_reason(STATUS_SUCCESS)
-        message = '%d of %d received' % (len(reasons), wait_condition.count)
+        message = (_('%(len)d of %(count)d received') % {
+                   'len': len(reasons), 'count': wait_condition.count})
         if reasons:
             message += ' - %s' % reasons
 
@@ -158,20 +159,20 @@ class WaitCondition(resource.Resource):
         handle_url = self.properties['Handle']
         handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
         if handle_id.tenant != self.stack.context.tenant_id:
-            raise ValueError("WaitCondition invalid Handle tenant %s" %
+            raise ValueError(_("WaitCondition invalid Handle tenant %s") %
                              handle_id.tenant)
         if handle_id.stack_name != self.stack.name:
-            raise ValueError("WaitCondition invalid Handle stack %s" %
+            raise ValueError(_("WaitCondition invalid Handle stack %s") %
                              handle_id.stack_name)
         if handle_id.stack_id != self.stack.id:
-            raise ValueError("WaitCondition invalid Handle stack %s" %
+            raise ValueError(_("WaitCondition invalid Handle stack %s") %
                              handle_id.stack_id)
         if handle_id.resource_name not in self.stack:
-            raise ValueError("WaitCondition invalid Handle %s" %
+            raise ValueError(_("WaitCondition invalid Handle %s") %
                              handle_id.resource_name)
         if not isinstance(self.stack[handle_id.resource_name],
                           WaitConditionHandle):
-            raise ValueError("WaitCondition invalid Handle %s" %
+            raise ValueError(_("WaitCondition invalid Handle %s") %
                              handle_id.resource_name)
 
     def _get_handle_resource_name(self):
@@ -185,18 +186,20 @@ class WaitCondition(resource.Resource):
                 yield
             except scheduler.Timeout:
                 timeout = WaitConditionTimeout(self, handle)
-                logger.info('%s Timed out (%s)' % (str(self), str(timeout)))
+                logger.info(_('%(name)s Timed out (%(timeout)s)') % {
+                            'name': str(self), 'timeout': str(timeout)})
                 raise timeout
 
             handle_status = handle.get_status()
 
             if any(s != STATUS_SUCCESS for s in handle_status):
                 failure = WaitConditionFailure(self, handle)
-                logger.info('%s Failed (%s)' % (str(self), str(failure)))
+                logger.info(_('%(name)s Failed (%(failure)s)') % {
+                            'name': str(self), 'failure': str(failure)})
                 raise failure
 
             if len(handle_status) >= self.count:
-                logger.info("%s Succeeded" % str(self))
+                logger.info(_("%s Succeeded") % str(self))
                 return
 
     def handle_create(self):
