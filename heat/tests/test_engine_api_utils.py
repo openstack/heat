@@ -14,6 +14,8 @@
 
 import uuid
 
+import mock
+
 import heat.engine.api as api
 
 from heat.common import template_format
@@ -633,3 +635,50 @@ class FormatValidateParameterTest(HeatTestCase):
         param = tmpl_params.params[self.param_name]
         param_formated = api.format_validate_parameter(param)
         self.assertEqual(self.expected, param_formated)
+
+    def _dummy_software_config(self):
+        config = mock.Mock()
+        config.name = 'config_mysql'
+        config.group = 'Heat::Shell'
+        config.config = '#!/bin/bash\n'
+        config.id = str(uuid.uuid4())
+        config.io = {
+            'inputs': [{'name': 'bar'}],
+            'outputs': [{'name': 'result'}],
+            'options': {}
+        }
+        return config
+
+    def _dummy_software_deployment(self):
+        config = self._dummy_software_config()
+        deployment = mock.Mock()
+        deployment.config = config
+        deployment.id = str(uuid.uuid4())
+        deployment.server_id = str(uuid.uuid4())
+        deployment.input_values = {'bar': 'baaaaa'}
+        deployment.output_values = {'result': '0'}
+        deployment.action = 'INIT'
+        deployment.status = 'COMPLETE'
+        deployment.status_reason = None
+        deployment.signal_id = None
+        return deployment
+
+    def test_format_software_config(self):
+        config = self._dummy_software_config()
+        result = api.format_software_config(config)
+        self.assertIsNotNone(result)
+        self.assertEqual([{'name': 'bar'}], result['inputs'])
+        self.assertEqual([{'name': 'result'}], result['outputs'])
+        self.assertEqual({}, result['options'])
+
+    def test_format_software_deployment(self):
+        deployment = self._dummy_software_deployment()
+        result = api.format_software_deployment(deployment)
+        self.assertIsNotNone(result)
+        self.assertEqual(deployment.config.id, result['config_id'])
+        self.assertEqual(
+            deployment.config.io['inputs'], result['inputs'])
+        self.assertEqual(
+            deployment.config.io['outputs'], result['outputs'])
+        self.assertEqual(
+            deployment.config.io['options'], result['options'])

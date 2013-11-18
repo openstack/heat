@@ -17,6 +17,7 @@ import functools
 from eventlet import greenpool
 import json
 import sys
+import uuid
 
 import mock
 import mox
@@ -2321,3 +2322,182 @@ class StackServiceTest(HeatTestCase):
         stack_dependencies = stack.dependencies
         self.assertIsInstance(stack_dependencies, dependencies.Dependencies)
         self.assertEqual(2, len(stack_dependencies.graph()))
+
+
+class SoftwareConfigServiceTest(HeatTestCase):
+
+    def setUp(self):
+        super(SoftwareConfigServiceTest, self).setUp()
+        self.ctx = utils.dummy_context()
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+        self.engine = service.EngineService('a-host', 'a-topic')
+        utils.setup_dummy_db()
+
+    def _create_software_config(
+            self, group='Heat::Shell', name='config_mysql', config=None,
+            inputs=[], outputs=[], options={}):
+        return self.engine.create_software_config(
+            self.ctx, group, name, config, inputs, outputs, options)
+
+    def test_show_software_config(self):
+        config_id = str(uuid.uuid4())
+        self.assertIsNone(
+            self.engine.show_software_config(self.ctx, config_id))
+        config = self._create_software_config()
+        config_id = config['id']
+        self.assertEqual(
+            config, self.engine.show_software_config(self.ctx, config_id))
+
+    def test_create_software_config(self):
+        config = self._create_software_config()
+        self.assertIsNotNone(config)
+        config_id = config['id']
+        config = self._create_software_config()
+        self.assertNotEqual(config_id, config['id'])
+        kwargs = {
+            'group': 'Heat::Chef',
+            'name': 'config_heat',
+            'config': '...',
+            'inputs': [{'name': 'mode'}],
+            'outputs': [{'name': 'endpoint'}],
+            'options': {}
+        }
+        config = self._create_software_config(**kwargs)
+        config_id = config['id']
+        config = self.engine.show_software_config(self.ctx, config_id)
+        self.assertEqual(kwargs['group'], config['group'])
+        self.assertEqual(kwargs['name'], config['name'])
+        self.assertEqual(kwargs['config'], config['config'])
+        self.assertEqual(kwargs['inputs'], config['inputs'])
+        self.assertEqual(kwargs['outputs'], config['outputs'])
+        self.assertEqual(kwargs['options'], config['options'])
+
+    def test_delete_software_config(self):
+        config = self._create_software_config()
+        self.assertIsNotNone(config)
+        config_id = config['id']
+        self.engine.delete_software_config(self.ctx, config_id)
+        config = self.engine.show_software_config(self.ctx, config_id)
+        self.assertIsNone(config)
+
+    def _create_software_deployment(self, config_id=None, input_values={},
+                                    signal_id=None, action='INIT',
+                                    status='COMPLETE', status_reason=''):
+        if config_id is None:
+            config = self._create_software_config()
+            config_id = config['id']
+        return self.engine.create_software_deployment(
+            self.ctx, str(uuid.uuid4()), config_id, input_values, signal_id,
+            action, status, status_reason)
+
+    def test_list_software_deployments(self):
+        deployment = self._create_software_deployment()
+        deployment_id = deployment['id']
+        self.assertIsNotNone(deployment)
+        deployments = self.engine.list_software_deployments(
+            self.ctx, server_id=None)
+        self.assertIsNotNone(deployments)
+        deployment_ids = [x['id'] for x in deployments]
+        self.assertIn(deployment_id, deployment_ids)
+        self.assertIn(deployment, deployments)
+        deployments = self.engine.list_software_deployments(
+            self.ctx, server_id=str(uuid.uuid4()))
+        self.assertEqual([], deployments)
+
+    def test_show_software_deployment(self):
+        deployment_id = str(uuid.uuid4())
+        self.assertIsNone(
+            self.engine.show_software_deployment(self.ctx, deployment_id))
+        deployment = self._create_software_deployment()
+        self.assertIsNotNone(deployment)
+        deployment_id = deployment['id']
+        self.assertEqual(
+            deployment,
+            self.engine.show_software_deployment(self.ctx, deployment_id))
+
+    def test_create_software_deployment(self):
+        kwargs = {
+            'group': 'Heat::Chef',
+            'name': 'config_heat',
+            'config': '...',
+            'inputs': [{'name': 'mode'}],
+            'outputs': [{'name': 'endpoint'}],
+            'options': {}
+        }
+        config = self._create_software_config(**kwargs)
+        config_id = config['id']
+        kwargs = {
+            'config_id': config_id,
+            'input_values': {'mode': 'standalone'},
+            'signal_id': None,
+            'action': 'INIT',
+            'status': 'COMPLETE',
+            'status_reason': ''
+        }
+        deployment = self._create_software_deployment(**kwargs)
+        deployment_id = deployment['id']
+        deployment = self.engine.show_software_deployment(
+            self.ctx, deployment_id)
+        self.assertEqual(deployment_id, deployment['id'])
+        self.assertEqual(config['inputs'], deployment['inputs'])
+        self.assertEqual(kwargs['input_values'], deployment['input_values'])
+
+    def test_update_software_deployment(self):
+        deployment = self._create_software_deployment()
+        self.assertIsNotNone(deployment)
+        deployment_id = deployment['id']
+        deployment_action = deployment['action']
+        self.assertEqual('INIT', deployment_action)
+        config_id = deployment['config_id']
+        self.assertIsNotNone(config_id)
+        updated = self.engine.update_software_deployment(
+            self.ctx, deployment_id=deployment_id, config_id=config_id,
+            input_values={}, output_values={}, action='DEPLOY',
+            status='WAITING', status_reason='')
+        self.assertIsNotNone(updated)
+        self.assertEqual(config_id, updated['config_id'])
+        self.assertEqual('DEPLOY', updated['action'])
+        self.assertEqual('WAITING', updated['status'])
+
+        def check_software_deployment_updated(**kwargs):
+            values = {
+                'config_id': None,
+                'input_values': {},
+                'output_values': {},
+                'action': {},
+                'status': 'WAITING',
+                'status_reason': ''
+            }
+            values.update(kwargs)
+            updated = self.engine.update_software_deployment(
+                self.ctx, deployment_id, **values)
+            for key, value in kwargs.iteritems():
+                self.assertEqual(value, updated[key])
+
+        check_software_deployment_updated(config_id=config_id)
+        check_software_deployment_updated(input_values={'foo': 'fooooo'})
+        check_software_deployment_updated(output_values={'bar': 'baaaaa'})
+        check_software_deployment_updated(action='DEPLOY')
+        check_software_deployment_updated(status='COMPLETE')
+        check_software_deployment_updated(status_reason='Done!')
+
+    def test_delete_software_deployment(self):
+        deployment_id = str(uuid.uuid4())
+        self.assertRaises(exception.NotFound,
+                          self.engine.delete_software_deployment,
+                          self.ctx, deployment_id)
+        deployment = self._create_software_deployment()
+        self.assertIsNotNone(deployment)
+        deployment_id = deployment['id']
+        deployments = self.engine.list_software_deployments(
+            self.ctx, server_id=None)
+        deployment_ids = [x['id'] for x in deployments]
+        self.assertIn(deployment_id, deployment_ids)
+        self.engine.delete_software_deployment(self.ctx, deployment_id)
+        deployments = self.engine.list_software_deployments(
+            self.ctx, server_id=None)
+        deployment_ids = [x['id'] for x in deployments]
+        self.assertNotIn(deployment_id, deployment_ids)

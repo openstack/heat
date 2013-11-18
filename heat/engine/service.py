@@ -967,3 +967,78 @@ class EngineService(service.Service):
         result = api.format_watch(wr)
         result[rpc_api.WATCH_STATE_VALUE] = state
         return result
+
+    @request_context
+    def show_software_config(self, cnxt, config_id):
+        sc = db_api.software_config_get(cnxt, config_id)
+        return api.format_software_config(sc)
+
+    @request_context
+    def create_software_config(self, cnxt, group, name, config,
+                               inputs, outputs, options):
+        sc = db_api.software_config_create(cnxt, {
+            'group': group,
+            'name': name,
+            'config': config,
+            'io': {
+                'inputs': inputs,
+                'outputs': outputs,
+                'options': options
+            },
+            'tenant': cnxt.tenant_id})
+        return api.format_software_config(sc)
+
+    @request_context
+    def delete_software_config(self, cnxt, config_id):
+        db_api.software_config_delete(cnxt, config_id)
+
+    @request_context
+    def list_software_deployments(self, cnxt, server_id):
+        all_sd = db_api.software_deployment_get_all(cnxt, server_id)
+        result = [api.format_software_deployment(sd) for sd in all_sd]
+        return result
+
+    @request_context
+    def show_software_deployment(self, cnxt, deployment_id):
+        sd = db_api.software_deployment_get(cnxt, deployment_id)
+        return api.format_software_deployment(sd)
+
+    @request_context
+    def create_software_deployment(self, cnxt, server_id, config_id,
+                                   input_values, signal_id, action, status,
+                                   status_reason):
+        sd = db_api.software_deployment_create(cnxt, {
+            'config_id': config_id,
+            'server_id': server_id,
+            'input_values': input_values,
+            'signal_id': signal_id,
+            'tenant': cnxt.tenant_id,
+            'action': action,
+            'status': status,
+            'status_reason': status_reason})
+        return api.format_software_deployment(sd)
+
+    @request_context
+    def update_software_deployment(self, cnxt, deployment_id, config_id,
+                                   input_values, output_values, action,
+                                   status, status_reason):
+        update_data = {}
+        if config_id:
+            update_data['config_id'] = config_id
+        if input_values:
+            update_data['input_values'] = input_values
+        if output_values:
+            update_data['output_values'] = output_values
+        if action:
+            update_data['action'] = action
+        if status:
+            update_data['status'] = status
+        if status_reason:
+            update_data['status_reason'] = status_reason
+        sd = db_api.software_deployment_update(cnxt,
+                                               deployment_id, update_data)
+        return api.format_software_deployment(sd)
+
+    @request_context
+    def delete_software_deployment(self, cnxt, deployment_id):
+        db_api.software_deployment_delete(cnxt, deployment_id)

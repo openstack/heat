@@ -179,3 +179,45 @@ VALIDATE_PARAM_TYPES = (
     'String', 'Number', 'CommaDelimitedList',
     'Json'
 )
+
+SOFTWARE_CONFIG_KEYS = (
+    SOFTWARE_CONFIG_ID,
+    SOFTWARE_CONFIG_NAME,
+    SOFTWARE_CONFIG_GROUP,
+    SOFTWARE_CONFIG_CONFIG,
+    SOFTWARE_CONFIG_INPUTS,
+    SOFTWARE_CONFIG_OUTPUTS,
+    SOFTWARE_CONFIG_OPTIONS,
+) = (
+    'id',
+    'name',
+    'group',
+    'config',
+    'inputs',
+    'outputs',
+    'options',
+)
+
+SOFTWARE_DEPLOYMENT_KEYS = (
+    SOFTWARE_DEPLOYMENT_ID,
+    SOFTWARE_DEPLOYMENT_CONFIG,
+    SOFTWARE_DEPLOYMENT_CONFIG_ID,
+    SOFTWARE_DEPLOYMENT_SERVER_ID,
+    SOFTWARE_DEPLOYMENT_INPUT_VALUES,
+    SOFTWARE_DEPLOYMENT_OUTPUT_VALUES,
+    SOFTWARE_DEPLOYMENT_SIGNAL_ID,
+    SOFTWARE_DEPLOYMENT_ACTION,
+    SOFTWARE_DEPLOYMENT_STATUS,
+    SOFTWARE_DEPLOYMENT_STATUS_REASON
+) = (
+    'id',
+    'config',
+    'config_id',
+    'server_id',
+    'input_values',
+    'output_values',
+    'signal_id',
+    'action',
+    'status',
+    'status_reason'
+)
