@@ -281,6 +281,15 @@ class StackController(object):
 
         raise exc.HTTPNoContent()
 
+    @util.identified_stack
+    def abandon(self, req, identity):
+        """
+        Abandons specified stack by deleting the stack and it's resources
+        from the database, but underlying resources will not be deleted.
+        """
+        return self.engine.abandon_stack(req.context,
+                                         identity)
+
     @util.tenant_local
     def validate_template(self, req, body):
         """

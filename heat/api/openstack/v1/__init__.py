@@ -110,6 +110,12 @@ class API(wsgi.Router):
                                  action="delete",
                                  conditions={'method': 'DELETE'})
 
+            # Stack abandon
+            stack_mapper.connect("stack_abandon",
+                                 "/stacks/{stack_name}/{stack_id}/abandon",
+                                 action="abandon",
+                                 conditions={'method': 'DELETE'})
+
         # Resources
         resources_resource = resources.create_resource(conf)
         stack_path = "/{tenant_id}/stacks/{stack_name}/{stack_id}"

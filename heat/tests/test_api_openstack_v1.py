@@ -257,6 +257,9 @@ class ControllerTest(object):
     def _delete(self, path):
         return self._simple_request(path, method='DELETE')
 
+    def _abandon(self, path):
+        return self._simple_request(path, method='DELETE')
+
     def _data_request(self, path, data, content_type='application/json',
                       method='POST'):
         environ = self._environ(path)
@@ -1115,6 +1118,31 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                           req, tenant_id=identity.tenant,
                           stack_name=identity.stack_name,
                           stack_id=identity.stack_id)
+        self.m.VerifyAll()
+
+    def test_abandon(self):
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        template = {u'Foo': u'bar'}
+        json_template = json.dumps(template)
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        req = self._abandon('/stacks/%(stack_name)s/%(stack_id)s' % identity)
+
+        self.m.StubOutWithMock(rpc, 'call')
+        # Engine returns json data on abandon completion
+        expected = {"name": "test", "id": "123"}
+        rpc.call(req.context, self.topic,
+                 {'namespace': None,
+                  'method': 'abandon_stack',
+                  'args': {'stack_identity': dict(identity)},
+                  'version': self.api_version},
+                 None).AndReturn(expected)
+        self.m.ReplayAll()
+
+        ret = self.controller.abandon(req,
+                                      tenant_id=identity.tenant,
+                                      stack_name=identity.stack_name,
+                                      stack_id=identity.stack_id)
+        self.assertEqual(expected, ret)
         self.m.VerifyAll()
 
     def test_delete_bad_name(self):
