@@ -271,3 +271,50 @@ class WatchData(BASE, HeatBase):
         sqlalchemy.ForeignKey('watch_rule.id'),
         nullable=False)
     watch_rule = relationship(WatchRule, backref=backref('watch_data'))
+
+
+class SoftwareConfig(BASE, HeatBase):
+    """
+    Represents a software configuration resource to be applied to
+    one or more servers.
+    """
+
+    __tablename__ = 'software_config'
+
+    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    name = sqlalchemy.Column('name', sqlalchemy.String(255),
+                             nullable=True)
+    group = sqlalchemy.Column('group', sqlalchemy.String(255))
+    config = sqlalchemy.Column('config', sqlalchemy.Text)
+    io = sqlalchemy.Column('io', Json)
+    tenant = sqlalchemy.Column(
+        'tenant', sqlalchemy.String(256), nullable=False)
+
+
+class SoftwareDeployment(BASE, HeatBase):
+    """
+    Represents applying a software configuration resource to a
+    single server resource.
+    """
+
+    __tablename__ = 'software_deployment'
+
+    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    config_id = sqlalchemy.Column(
+        'config_id',
+        sqlalchemy.String(36),
+        sqlalchemy.ForeignKey('software_config.id'),
+        nullable=False)
+    config = relationship(SoftwareConfig, backref=backref('deployments'))
+    server_id = sqlalchemy.Column('server_id', sqlalchemy.String(36),
+                                  nullable=False)
+    input_values = sqlalchemy.Column('input_values', Json)
+    output_values = sqlalchemy.Column('output_values', Json)
+    signal_id = sqlalchemy.Column(sqlalchemy.String(1024))
+    tenant = sqlalchemy.Column(
+        'tenant', sqlalchemy.String(256), nullable=False)
+    action = sqlalchemy.Column('action', sqlalchemy.String(255))
+    status = sqlalchemy.Column('status', sqlalchemy.String(255))
+    status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))

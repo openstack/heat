@@ -312,7 +312,6 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
     model_marker = None
     if marker:
         model_marker = model_query(context, model).get(marker)
-
     try:
         query = utils.paginate_query(query, model, limit, sort_keys,
                                      model_marker, sort_dir)
@@ -615,6 +614,85 @@ def watch_data_create(context, values):
 def watch_data_get_all(context):
     results = model_query(context, models.WatchData).all()
     return results
+
+
+def software_config_create(context, values):
+    obj_ref = models.SoftwareConfig()
+    obj_ref.update(values)
+    obj_ref.save(_session(context))
+    return obj_ref
+
+
+def software_config_get(context, config_id):
+    result = model_query(context, models.SoftwareConfig).get(config_id)
+    if (result is not None and context is not None and
+            result.tenant != context.tenant_id):
+        return None
+
+    return result
+
+
+def software_config_delete(context, config_id):
+    config = software_config_get(context, config_id)
+    if not config:
+        raise exception.NotFound(
+            _('Attempt to delete software config with '
+              '%(id)s %(msg)s') % {'id': config_id,
+                                   'msg': 'that does not exist'})
+    session = Session.object_session(config)
+    session.delete(config)
+    session.flush()
+
+
+def software_deployment_create(context, values):
+    obj_ref = models.SoftwareDeployment()
+    obj_ref.update(values)
+    obj_ref.save(_session(context))
+    return obj_ref
+
+
+def software_deployment_get(context, deployment_id):
+    result = model_query(context, models.SoftwareDeployment).get(deployment_id)
+    if (result is not None and context is not None and
+            result.tenant != context.tenant_id):
+        return None
+
+    return result
+
+
+def software_deployment_get_all(context, server_id=None):
+    query = model_query(context, models.SoftwareDeployment).\
+        filter_by(tenant=context.tenant_id).\
+        order_by(models.SoftwareDeployment.created_at)
+    if server_id:
+        query = query.filter_by(server_id=server_id)
+    return query.all()
+
+
+def software_deployment_update(context, deployment_id, values):
+    deployment = software_deployment_get(context, deployment_id)
+
+    if not deployment:
+        raise exception.NotFound(
+            _('Attempt to update sofware deployment with '
+              'id: %(id)s %(msg)s') % {'id': deployment_id,
+                                       'msg': 'that does not exist'})
+
+    deployment.update(values)
+    deployment.save(_session(context))
+    return deployment
+
+
+def software_deployment_delete(context, deployment_id):
+    deployment = software_deployment_get(context, deployment_id)
+    if not deployment:
+        raise exception.NotFound(
+            _('Attempt to delete software deployment '
+              'with %(id)s %(msg)s') % {'id': deployment_id,
+                                        'msg': 'that does not exist'})
+    session = Session.object_session(deployment)
+    session.delete(deployment)
+    session.flush()
 
 
 def purge_deleted(age, granularity='days'):
