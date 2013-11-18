@@ -517,6 +517,8 @@ class RackspaceCloudServerTest(HeatTestCase):
     def test_managed_cloud_complete(self):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rax_service_level_automation': 'Complete'}
+        self.m.StubOutWithMock(return_server, 'get')
+        return_server.get()
         cs = self._setup_test_cs(return_server, 'test_managed_cloud_complete')
         cs.context.roles = ['rax_managed']
         self.m.ReplayAll()
@@ -529,6 +531,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rax_service_level_automation':
                                   'Build Error'}
+        self.m.StubOutWithMock(return_server, 'get')
+        return_server.get()
         cs = self._setup_test_cs(return_server,
                                  'test_managed_cloud_build_error')
         cs.context.roles = ['rax_managed']
@@ -540,6 +544,8 @@ class RackspaceCloudServerTest(HeatTestCase):
     def test_managed_cloud_unknown(self):
         return_server = self.fc.servers.list()[1]
         return_server.metadata = {'rax_service_level_automation': 'FOO'}
+        self.m.StubOutWithMock(return_server, 'get')
+        return_server.get()
         cs = self._setup_test_cs(return_server, 'test_managed_cloud_unknown')
         cs.context.roles = ['rax_managed']
         self.m.ReplayAll()
