@@ -79,6 +79,15 @@ class FaultWrapper(wsgi.Middleware):
         'Invalid': webob.exc.HTTPBadRequest,
     }
 
+    def _map_exception_to_error(self, class_exception):
+        if class_exception == Exception:
+            return webob.exc.HTTPInternalServerError
+
+        if class_exception.__name__ not in self.error_map:
+            return self._map_exception_to_error(class_exception.__base__)
+
+        return self.error_map[class_exception.__name__]
+
     def _error(self, ex):
 
         trace = None
@@ -107,8 +116,7 @@ class FaultWrapper(wsgi.Middleware):
             trace = msg_trace
 
         if not webob_exc:
-            webob_exc = self.error_map.get(ex_type,
-                                           webob.exc.HTTPInternalServerError)
+            webob_exc = self._map_exception_to_error(ex.__class__)
 
         error = {
             'code': webob_exc.code,
