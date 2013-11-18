@@ -228,14 +228,15 @@ Running API Services
 
 For each machine, B and C, you must do the following steps:
 
-    1. Clone the `Heat repository https://github.com/openstack/heat`_;
+    1. Clone the Heat repository https://github.com/openstack/heat;
     2. Create a local copy of the configuration file */etc/heat/heat.conf* from
        the machine A;
     3. Make required changes on the configuration file;
     4. Enter the Heat local repository and run:
-::                                                                                                                                                                         
-                                                                                                                                                                           
-    python bin/heat-api --config-file=/etc/heat/heat.conf                                                                                                                  
+
+::
+
+    python bin/heat-api --config-file=/etc/heat/heat.conf
     python bin/heat-api-cfn --config-file=/etc/heat/heat.conf
 
 Changes On Configuration
