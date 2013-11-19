@@ -37,6 +37,7 @@ import heat.api.openstack.v1.events as events
 import heat.api.openstack.v1.actions as actions
 import heat.api.openstack.v1.build_info as build_info
 import heat.api.openstack.v1.software_configs as software_configs
+import heat.api.openstack.v1.software_deployments as software_deployments
 from heat.tests import utils
 
 import heat.api.middleware.fault as fault
@@ -2990,6 +2991,56 @@ class RoutesTest(HeatTestCase):
                 'config_id': 'bbbb'
             })
 
+    def test_software_deployments(self):
+        self.assertRoute(
+            self.m,
+            '/aaaa/software_deployments',
+            'GET',
+            'index',
+            'SoftwareDeploymentController',
+            {
+                'tenant_id': 'aaaa'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/software_deployments',
+            'POST',
+            'create',
+            'SoftwareDeploymentController',
+            {
+                'tenant_id': 'aaaa'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/software_deployments/bbbb',
+            'GET',
+            'show',
+            'SoftwareDeploymentController',
+            {
+                'tenant_id': 'aaaa',
+                'deployment_id': 'bbbb'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/software_deployments/bbbb',
+            'PUT',
+            'update',
+            'SoftwareDeploymentController',
+            {
+                'tenant_id': 'aaaa',
+                'deployment_id': 'bbbb'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/software_deployments/bbbb',
+            'DELETE',
+            'delete',
+            'SoftwareDeploymentController',
+            {
+                'tenant_id': 'aaaa',
+                'deployment_id': 'bbbb'
+            })
+
     def test_build_info(self):
         self.assertRoute(
             self.m,
@@ -3320,3 +3371,156 @@ class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
             self.assertRaises(
                 webob.exc.HTTPBadRequest, self.controller.delete,
                 req, config_id=config_id, tenant_id=self.tenant)
+
+
+class SoftwareDeploymentControllerTest(ControllerTest, HeatTestCase):
+
+    def setUp(self):
+        super(SoftwareDeploymentControllerTest, self).setUp()
+        self.controller = software_deployments.SoftwareDeploymentController({})
+
+    def test_default(self):
+        self.assertRaises(
+            webob.exc.HTTPNotFound, self.controller.default, None)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_index(self, mock_enforce):
+        self._mock_enforce_setup(
+            mock_enforce, 'index', expected_request_count=2)
+        req = self._get('/software_deployments')
+        return_value = []
+        with mock.patch.object(
+                self.controller.engine,
+                'list_software_deployments',
+                return_value=return_value) as mock_call:
+            resp = self.controller.index(req, tenant_id=self.tenant)
+            self.assertEqual(
+                {'software_deployments': []}, resp)
+            whitelist = mock_call.call_args[1]
+            self.assertEqual({}, whitelist)
+        server_id = 'fb322564-7927-473d-8aad-68ae7fbf2abf'
+        req = self._get('/software_deployments', {'server_id': server_id})
+        with mock.patch.object(
+                self.controller.engine,
+                'list_software_deployments',
+                return_value=return_value) as mock_call:
+            resp = self.controller.index(req, tenant_id=self.tenant)
+            self.assertEqual(
+                {'software_deployments': []}, resp)
+            whitelist = mock_call.call_args[1]
+            self.assertEqual({'server_id': server_id}, whitelist)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_show(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show')
+        deployment_id = '38eccf10-97e5-4ae8-9d37-b577c9801750'
+        config_id = 'd00ba4aa-db33-42e1-92f4-2a6469260107'
+        server_id = 'fb322564-7927-473d-8aad-68ae7fbf2abf'
+        req = self._get('/software_deployments/%s' % deployment_id)
+        return_value = {
+            'id': deployment_id,
+            'server_id': server_id,
+            'input_values': {},
+            'output_values': {},
+            'action': 'INIT',
+            'status': 'COMPLETE',
+            'status_reason': None,
+            'signal_id': None,
+            'config_id': config_id,
+            'config': '#!/bin/bash',
+            'name': 'config_mysql',
+            'group': 'Heat::Shell',
+            'inputs': [],
+            'outputs': [],
+            'options': []}
+
+        expected = {'software_deployment': return_value}
+        with mock.patch.object(
+                self.controller.engine,
+                'show_software_deployment',
+                return_value=return_value):
+            resp = self.controller.show(
+                req, deployment_id=config_id, tenant_id=self.tenant)
+            self.assertEqual(expected, resp)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_create(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create')
+        config_id = 'd00ba4aa-db33-42e1-92f4-2a6469260107'
+        server_id = 'fb322564-7927-473d-8aad-68ae7fbf2abf'
+        body = {
+            'server_id': server_id,
+            'input_values': {},
+            'action': 'INIT',
+            'status': 'COMPLETE',
+            'status_reason': None,
+            'signal_id': None,
+            'config_id': config_id}
+        return_value = body.copy()
+        deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        return_value['id'] = deployment_id
+        req = self._post('/software_deployments', json.dumps(body))
+
+        expected = {'software_deployment': return_value}
+        with mock.patch.object(
+                self.controller.engine,
+                'create_software_deployment',
+                return_value=return_value):
+            resp = self.controller.create(
+                req, body=body, tenant_id=self.tenant)
+            self.assertEqual(expected, resp)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_update(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update')
+        config_id = 'd00ba4aa-db33-42e1-92f4-2a6469260107'
+        server_id = 'fb322564-7927-473d-8aad-68ae7fbf2abf'
+        body = {
+            'input_values': {},
+            'action': 'INIT',
+            'status': 'COMPLETE',
+            'status_reason': None,
+            'signal_id': None,
+            'config_id': config_id}
+        return_value = body.copy()
+        deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        return_value['id'] = deployment_id
+        req = self._put('/software_deployments/%s', json.dumps(body))
+        return_value['server_id'] = server_id
+        expected = {'software_deployment': return_value}
+        with mock.patch.object(
+                self.controller.engine,
+                'update_software_deployment',
+                return_value=return_value):
+            resp = self.controller.update(
+                req, deployment_id=deployment_id,
+                body=body, tenant_id=self.tenant)
+            self.assertEqual(expected, resp)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_delete(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete')
+        deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        req = self._delete('/software_deployments/%s' % deployment_id)
+        return_value = None
+        with mock.patch.object(
+                self.controller.engine,
+                'delete_software_deployment',
+                return_value=return_value):
+            self.assertRaises(
+                webob.exc.HTTPNoContent, self.controller.delete,
+                req, deployment_id=deployment_id, tenant_id=self.tenant)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_delete_error(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete')
+        deployment_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        req = self._delete('/software_deployments/%s' % deployment_id)
+        return_value = {'Error': 'something wrong'}
+        with mock.patch.object(
+                self.controller.engine,
+                'delete_software_deployment',
+                return_value=return_value):
+            self.assertRaises(
+                webob.exc.HTTPBadRequest, self.controller.delete,
+                req, deployment_id=deployment_id, tenant_id=self.tenant)
