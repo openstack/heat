@@ -167,6 +167,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.coverage',
               'sphinx.ext.pngmath',
               'sphinx.ext.viewcode',
+              'sphinx.ext.doctest',
               'oslo.sphinx',
               'ext.resources']
 
