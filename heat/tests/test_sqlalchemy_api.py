@@ -217,6 +217,41 @@ class SqlAlchemyTest(HeatTestCase):
         st_db = db_api.stack_get_all_by_tenant(self.ctx)
         self.assertEqual(1, len(st_db))
 
+    def test_stack_get_all_by_tenant_and_filters(self):
+        stack1 = self._setup_test_stack('foo', UUIDs[0])
+        stack2 = self._setup_test_stack('bar', UUIDs[1])
+        stacks = [stack1, stack2]
+
+        filters = {'name': 'foo'}
+        results = db_api.stack_get_all_by_tenant(self.ctx,
+                                                 filters=filters)
+
+        self.assertEqual(1, len(results))
+        self.assertEqual('foo', results[0]['name'])
+
+    def test_stack_get_all_by_tenant_filter_matches_in_list(self):
+        stack1 = self._setup_test_stack('foo', UUIDs[0])
+        stack2 = self._setup_test_stack('bar', UUIDs[1])
+        stacks = [stack1, stack2]
+
+        filters = {'name': ['bar', 'quux']}
+        results = db_api.stack_get_all_by_tenant(self.ctx,
+                                                 filters=filters)
+
+        self.assertEqual(1, len(results))
+        self.assertEqual('bar', results[0]['name'])
+
+    def test_stack_get_all_by_tenant_returns_all_if_no_filters(self):
+        stack1 = self._setup_test_stack('foo', UUIDs[0])
+        stack2 = self._setup_test_stack('bar', UUIDs[1])
+        stacks = [stack1, stack2]
+
+        filters = None
+        results = db_api.stack_get_all_by_tenant(self.ctx,
+                                                 filters=filters)
+
+        self.assertEqual(2, len(results))
+
     def test_stack_get_all_by_tenant_default_sort_keys_and_dir(self):
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
 
