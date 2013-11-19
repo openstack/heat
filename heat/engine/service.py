@@ -197,11 +197,20 @@ class EngineService(service.Service):
         return [format_stack_detail(s) for s in stacks]
 
     @request_context
-    def list_stacks(self, cnxt, limit=None, sort_keys=None, marker=None,
-                    sort_dir=None):
+    def list_stacks(self, cnxt, limit=None, marker=None, sort_keys=None,
+                    sort_dir=None, filters=None):
         """
-        The list_stacks method returns attributes of all stacks.
-        arg1 -> RPC cnxt.
+        The list_stacks method returns attributes of all stacks.  It supports
+        pagination (``limit`` and ``marker``), sorting (``sort_keys`` and
+        ``sort_dir``) and filtering (``filters``) of the results.
+
+        :param cnxt: RPC context
+        :param limit: the number of stacks to list (integer or string)
+        :param marker: the ID of the last item in the previous page
+        :param sort_keys: an array of fields used to sort the list
+        :param sort_dir: the direction of the sort ('asc' or 'desc')
+        :param filters: a dict with attribute:value to filter the list
+        :returns: a list of formatted stacks
         """
 
         def format_stack_details(stacks):
@@ -217,7 +226,7 @@ class EngineService(service.Service):
                     yield api.format_stack(stack)
 
         stacks = db_api.stack_get_all_by_tenant(cnxt, limit, sort_keys, marker,
-                                                sort_dir) or []
+                                                sort_dir, filters) or []
         return list(format_stack_details(stacks))
 
     def _validate_deferred_auth_context(self, cnxt, stack):

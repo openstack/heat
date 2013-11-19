@@ -87,7 +87,8 @@ class EngineRpcAPITestCase(testtools.TestCase):
             'limit': mock.ANY,
             'sort_keys': mock.ANY,
             'marker': mock.ANY,
-            'sort_dir': mock.ANY
+            'sort_dir': mock.ANY,
+            'filters': mock.ANY
         }
         self._test_engine_api('list_stacks', 'call', **default_args)
 

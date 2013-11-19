@@ -133,7 +133,7 @@ class CfnStackControllerTest(HeatTestCase):
                        u'StackStatus': u'CREATE_COMPLETE'}]}}}
         self.assertEqual(result, expected)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None}
+                        'sort_dir': None, 'filters': None}
         mock_call.assert_called_once_with(dummy_req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',

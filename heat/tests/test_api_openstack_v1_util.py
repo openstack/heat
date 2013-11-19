@@ -58,6 +58,21 @@ class TestGetAllowedParams(HeatTestCase):
         self.assertIn('foo value', result['foo'])
         self.assertIn('foo value 2', result['foo'])
 
+    def test_handles_mixed_value_param_with_multiple_entries(self):
+        self.whitelist = {'foo': 'mixed'}
+        self.params.add('foo', 'foo value 2')
+
+        result = util.get_allowed_params(self.params, self.whitelist)
+        self.assertEqual(2, len(result['foo']))
+        self.assertIn('foo value', result['foo'])
+        self.assertIn('foo value 2', result['foo'])
+
+    def test_handles_mixed_value_param_with_single_entry(self):
+        self.whitelist = {'foo': 'mixed'}
+
+        result = util.get_allowed_params(self.params, self.whitelist)
+        self.assertEqual('foo value', result['foo'])
+
     def test_ignores_bogus_whitelist_items(self):
         self.whitelist = {'foo': 'blah'}
         result = util.get_allowed_params(self.params, self.whitelist)

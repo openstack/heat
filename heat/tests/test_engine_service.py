@@ -17,6 +17,7 @@ import functools
 import json
 import sys
 
+import mock
 import mox
 from testtools import matchers
 import testscenarios
@@ -1140,6 +1141,19 @@ class StackServiceTest(HeatTestCase):
             self.assertNotEqual(s['description'].find('WordPress'), -1)
 
         self.m.VerifyAll()
+
+    @mock.patch.object(db_api, 'stack_get_all_by_tenant')
+    def test_stack_list_passes_filtering_info(self, mock_stack_get_all_by_t):
+
+        filters = {'foo': 'bar'}
+        self.eng.list_stacks(self.ctx, filters=filters)
+        mock_stack_get_all_by_t.assert_called_once_with(mock.ANY,
+                                                        mock.ANY,
+                                                        mock.ANY,
+                                                        mock.ANY,
+                                                        mock.ANY,
+                                                        filters
+                                                        )
 
     def test_stack_describe_nonexistent(self):
         non_exist_identifier = identifier.HeatIdentifier(

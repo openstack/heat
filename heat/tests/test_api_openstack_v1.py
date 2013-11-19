@@ -341,7 +341,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         }
         self.assertEqual(result, expected)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None}
+                        'sort_dir': None, 'filters': {}}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                           'method': 'list_stacks',
@@ -350,7 +350,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                           None)
 
     @mock.patch.object(rpc, 'call')
-    def test_index_whitelists_request_params(self, mock_call):
+    def test_index_whitelists_pagination_params(self, mock_call):
         params = {
             'limit': 'fake limit',
             'sort_keys': 'fake sort keys',
@@ -365,12 +365,34 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[2]['args']
-        self.assertEqual(4, len(engine_args))
+        self.assertEqual(5, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort_dir', engine_args)
         self.assertNotIn('balrog', engine_args)
+
+    @mock.patch.object(rpc, 'call')
+    def test_index_whitelist_filter_params(self, mock_call):
+        params = {
+            'status': 'fake status',
+            'name': 'fake name',
+            'balrog': 'you shall not pass!'
+        }
+        req = self._get('/stacks', params=params)
+        mock_call.return_value = []
+
+        result = self.controller.index(req, tenant_id='fake_tenant_id')
+
+        rpc_call_args, _ = mock_call.call_args
+        engine_args = rpc_call_args[2]['args']
+        self.assertIn('filters', engine_args)
+
+        filters = engine_args['filters']
+        self.assertEqual(2, len(filters))
+        self.assertIn('status', filters)
+        self.assertIn('name', filters)
+        self.assertNotIn('balrog', filters)
 
     @mock.patch.object(rpc, 'call')
     def test_detail(self, mock_call):
@@ -426,7 +448,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.assertEqual(result, expected)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None}
+                        'sort_dir': None, 'filters': None}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                           'method': 'list_stacks',
