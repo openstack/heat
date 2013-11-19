@@ -16,6 +16,7 @@
 import collections
 import functools
 import re
+import six
 
 from oslo.config import cfg
 
@@ -37,6 +38,7 @@ from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common import strutils
 
 from heat.common.exception import StackValidationFailed
 
@@ -318,7 +320,8 @@ class Stack(collections.Mapping):
                 raise ex
             except Exception as ex:
                 logger.exception(ex)
-                raise StackValidationFailed(message=str(ex))
+                raise StackValidationFailed(message=strutils.safe_decode(
+                                            six.text_type(ex)))
             if result:
                 raise StackValidationFailed(message=result)
 
