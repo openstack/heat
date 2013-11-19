@@ -72,9 +72,7 @@ class SignalResponder(resource.Resource):
 
         This uses the created user for the credentials.
 
-        See http://docs.amazonwebservices.com/AWSECommerceService/latest/DG/
-        restarter-signature.html
-        Also see boto/auth.py::QuerySignatureV2AuthHandler
+        See boto/auth.py::QuerySignatureV2AuthHandler
 
         :param signal_type: either WAITCONDITION or SIGNAL.
         """

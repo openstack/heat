@@ -88,8 +88,6 @@ class EC2Token(wsgi.Middleware):
         - params['Signature'] == version 0,1,2,3
         - params['X-Amz-Signature'] == version 4
         - header 'Authorization' == version 4
-        see http://docs.aws.amazon.com/general/latest/gr/
-            sigv4-signed-request-examples.html
         """
         sig = req.params.get('Signature') or req.params.get('X-Amz-Signature')
         if sig is None and 'Authorization' in req.headers:

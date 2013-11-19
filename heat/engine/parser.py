@@ -299,8 +299,7 @@ class Stack(collections.Mapping):
 
     def validate(self):
         '''
-        http://docs.amazonwebservices.com/AWSCloudFormation/latest/\
-        APIReference/API_ValidateTemplate.html
+        Validates the template.
         '''
         # TODO(sdake) Should return line number of invalid reference
 

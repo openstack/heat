@@ -64,9 +64,6 @@ class HeatAPIException(webob.exc.HTTPError):
 
 
 # Common Error Subclasses:
-# As defined in http://docs.amazonwebservices.com/AWSCloudFormation/
-# latest/APIReference/CommonErrors.html
-
 
 class HeatIncompleteSignatureError(HeatAPIException):
     '''
