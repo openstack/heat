@@ -36,6 +36,7 @@ import heat.api.openstack.v1.resources as resources
 import heat.api.openstack.v1.events as events
 import heat.api.openstack.v1.actions as actions
 import heat.api.openstack.v1.build_info as build_info
+import heat.api.openstack.v1.software_configs as software_configs
 from heat.tests import utils
 
 import heat.api.middleware.fault as fault
@@ -2958,6 +2959,37 @@ class RoutesTest(HeatTestCase):
                 'event_id': 'dddd'
             })
 
+    def test_software_configs(self):
+        self.assertRoute(
+            self.m,
+            '/aaaa/software_configs',
+            'POST',
+            'create',
+            'SoftwareConfigController',
+            {
+                'tenant_id': 'aaaa'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/software_configs/bbbb',
+            'GET',
+            'show',
+            'SoftwareConfigController',
+            {
+                'tenant_id': 'aaaa',
+                'config_id': 'bbbb'
+            })
+        self.assertRoute(
+            self.m,
+            '/aaaa/software_configs/bbbb',
+            'DELETE',
+            'delete',
+            'SoftwareConfigController',
+            {
+                'tenant_id': 'aaaa',
+                'config_id': 'bbbb'
+            })
+
     def test_build_info(self):
         self.assertRoute(
             self.m,
@@ -3202,3 +3234,89 @@ class BuildInfoControllerTest(ControllerTest, HeatTestCase):
                                        req, tenant_id=self.tenant)
         self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', str(resp))
+
+
+class SoftwareConfigControllerTest(ControllerTest, HeatTestCase):
+
+    def setUp(self):
+        super(SoftwareConfigControllerTest, self).setUp()
+        self.controller = software_configs.SoftwareConfigController({})
+
+    def test_default(self):
+        self.assertRaises(
+            webob.exc.HTTPNotFound, self.controller.default, None)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_show(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'show')
+        config_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        req = self._get('/software_configs/%s' % config_id)
+        return_value = {
+            'id': config_id,
+            'name': 'config_mysql',
+            'group': 'Heat::Shell',
+            'config': '#!/bin/bash',
+            'inputs': [],
+            'ouputs': [],
+            'options': []}
+
+        expected = {'software_config': return_value}
+        with mock.patch.object(
+                self.controller.engine,
+                'show_software_config',
+                return_value=return_value):
+            resp = self.controller.show(
+                req, config_id=config_id, tenant_id=self.tenant)
+            self.assertEqual(expected, resp)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_create(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create')
+        body = {
+            'name': 'config_mysql',
+            'group': 'Heat::Shell',
+            'config': '#!/bin/bash',
+            'inputs': [],
+            'ouputs': [],
+            'options': []}
+        return_value = body.copy()
+        config_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        return_value['id'] = config_id
+        req = self._post('/software_configs', json.dumps(body))
+
+        expected = {'software_config': return_value}
+        with mock.patch.object(
+                self.controller.engine,
+                'create_software_config',
+                return_value=return_value):
+            resp = self.controller.create(
+                req, body=body, tenant_id=self.tenant)
+            self.assertEqual(expected, resp)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_delete(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete')
+        config_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        req = self._delete('/software_configs/%s' % config_id)
+        return_value = None
+        with mock.patch.object(
+                self.controller.engine,
+                'delete_software_config',
+                return_value=return_value):
+            self.assertRaises(
+                webob.exc.HTTPNoContent, self.controller.delete,
+                req, config_id=config_id, tenant_id=self.tenant)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_delete_error(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'delete')
+        config_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
+        req = self._delete('/software_configs/%s' % config_id)
+        return_value = {'Error': 'something wrong'}
+        with mock.patch.object(
+                self.controller.engine,
+                'delete_software_config',
+                return_value=return_value):
+            self.assertRaises(
+                webob.exc.HTTPBadRequest, self.controller.delete,
+                req, config_id=config_id, tenant_id=self.tenant)
