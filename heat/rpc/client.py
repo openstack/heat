@@ -29,6 +29,7 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
     API version history::
 
         1.0 - Initial version.
+        1.1 - Add support_status argument to list_resource_types()
     '''
 
     BASE_RPC_API_VERSION = '1.0'
@@ -185,13 +186,15 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                          self.make_msg('abandon_stack',
                                        stack_identity=stack_identity))
 
-    def list_resource_types(self, ctxt):
+    def list_resource_types(self, ctxt, support_status=None):
         """
         Get a list of valid resource types.
 
         :param ctxt: RPC context.
         """
-        return self.call(ctxt, self.make_msg('list_resource_types'))
+        return self.call(ctxt, self.make_msg('list_resource_types',
+                                             support_status=support_status),
+                         version='1.1')
 
     def resource_schema(self, ctxt, type_name):
         """

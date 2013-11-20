@@ -1272,8 +1272,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'list_resource_types',
-                  'args': {},
-                  'version': self.api_version},
+                  'args': {'support_status': None},
+                  'version': '1.1'},
                  None).AndReturn(engine_response)
         self.m.ReplayAll()
         response = self.controller.list_resource_types(req,
@@ -1289,8 +1289,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         rpc.call(req.context, self.topic,
                  {'namespace': None,
                   'method': 'list_resource_types',
-                  'args': {},
-                  'version': self.api_version},
+                  'args': {'support_status': None},
+                  'version': '1.1'},
                  None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
