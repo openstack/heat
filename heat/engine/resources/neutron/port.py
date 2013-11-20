@@ -29,6 +29,9 @@ class Port(neutron.NeutronResource):
     fixed_ip_schema = {'subnet_id': {'Type': 'String'},
                        'ip_address': {'Type': 'String'}}
 
+    address_pair_schema = {'mac_address': {'Type': 'String'},
+                           'ip_address': {'Type': 'String', 'Required': True}}
+
     properties_schema = {
         'network_id': {
             'Type': 'String',
@@ -65,8 +68,16 @@ class Port(neutron.NeutronResource):
             'Type': 'List',
             'UpdateAllowed': True,
             'Default': [],
+        },
+        'allowed_address_pairs': {
+            'Type': 'List',
+            'Schema': {
+                'Type': 'Map',
+                'Schema': address_pair_schema
+            }
         }
     }
+
     attributes_schema = {
         "admin_state_up": _("The administrative state of this port."),
         "device_id": _("Unique identifier for the device."),
@@ -78,6 +89,8 @@ class Port(neutron.NeutronResource):
         "security_groups": _("A list of security groups for the port."),
         "status": _("The status of the port."),
         "tenant_id": _("Tenant owning the port."),
+        "allowed_address_pairs": _("Additional mac/ip address pairs allowed "
+                                   "to pass through a port"),
         "show": _("All attributes."),
     }
 
@@ -111,6 +124,12 @@ class Port(neutron.NeutronResource):
             for key, value in fixed_ip.items():
                 if value is None:
                     fixed_ip.pop(key)
+
+        # delete empty MAC addresses so that Neutron validation code
+        # wouldn't fail as it not accepts Nones
+        for pair in props.get('allowed_address_pairs', []):
+            if 'mac_address' in pair and pair['mac_address'] is None:
+                del pair['mac_address']
 
         if props.get('security_groups'):
             props['security_groups'] = self.get_secgroup_uuids(
