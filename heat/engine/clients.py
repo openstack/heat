@@ -108,6 +108,7 @@ class OpenStackClients(object):
         computeshell = novashell.OpenStackComputeShell()
         extensions = computeshell._discover_extensions("1.1")
 
+        endpoint_type = self._get_client_option('nova', 'endpoint_type')
         args = {
             'project_id': con.tenant,
             'auth_url': con.auth_url,
@@ -115,13 +116,15 @@ class OpenStackClients(object):
             'username': None,
             'api_key': None,
             'extensions': extensions,
+            'endpoint_type': endpoint_type,
             'cacert': self._get_client_option('nova', 'ca_file'),
             'insecure': self._get_client_option('nova', 'insecure')
         }
 
         client = novaclient.Client(1.1, **args)
 
-        management_url = self.url_for(service_type=service_type)
+        management_url = self.url_for(service_type=service_type,
+                                      endpoint_type=endpoint_type)
         client.client.auth_token = self.auth_token
         client.client.management_url = management_url
 
@@ -139,6 +142,7 @@ class OpenStackClients(object):
             logger.error(_("Swift connection failed, no auth_token!"))
             return None
 
+        endpoint_type = self._get_client_option('swift', 'endpoint_type')
         args = {
             'auth_version': '2.0',
             'tenant_name': con.tenant,
@@ -146,7 +150,9 @@ class OpenStackClients(object):
             'key': None,
             'authurl': None,
             'preauthtoken': self.auth_token,
-            'preauthurl': self.url_for(service_type='object-store'),
+            'preauthurl': self.url_for(service_type='object-store',
+                                       endpoint_type=endpoint_type),
+            'os_options': {'endpoint_type': endpoint_type},
             'cacert': self._get_client_option('swift', 'ca_file'),
             'insecure': self._get_client_option('swift', 'insecure')
         }
@@ -164,11 +170,14 @@ class OpenStackClients(object):
             logger.error(_("Neutron connection failed, no auth_token!"))
             return None
 
+        endpoint_type = self._get_client_option('neutron', 'endpoint_type')
         args = {
             'auth_url': con.auth_url,
             'service_type': 'network',
             'token': self.auth_token,
-            'endpoint_url': self.url_for(service_type='network'),
+            'endpoint_url': self.url_for(service_type='network',
+                                         endpoint_type=endpoint_type),
+            'endpoint_type': endpoint_type,
             'ca_cert': self._get_client_option('neutron', 'ca_file'),
             'insecure': self._get_client_option('neutron', 'insecure')
         }
@@ -188,18 +197,21 @@ class OpenStackClients(object):
             logger.error(_("Cinder connection failed, no auth_token!"))
             return None
 
+        endpoint_type = self._get_client_option('cinder', 'endpoint_type')
         args = {
             'service_type': 'volume',
             'auth_url': con.auth_url,
             'project_id': con.tenant,
             'username': None,
             'api_key': None,
+            'endpoint_type': endpoint_type,
             'cacert': self._get_client_option('cinder', 'ca_file'),
             'insecure': self._get_client_option('cinder', 'insecure')
         }
 
         self._cinder = cinderclient.Client('1', **args)
-        management_url = self.url_for(service_type='volume')
+        management_url = self.url_for(service_type='volume',
+                                      endpoint_type=endpoint_type)
         self._cinder.client.auth_token = self.auth_token
         self._cinder.client.management_url = management_url
 
@@ -216,6 +228,7 @@ class OpenStackClients(object):
             logger.error(_("Trove connection failed, no auth_token!"))
             return None
 
+        endpoint_type = self._get_client_option('trove', 'endpoint_type')
         args = {
             'service_type': service_type,
             'auth_url': con.auth_url,
@@ -223,11 +236,13 @@ class OpenStackClients(object):
             'username': None,
             'password': None,
             'cacert': self._get_client_option('trove', 'ca_file'),
-            'insecure': self._get_client_option('trove', 'insecure')
+            'insecure': self._get_client_option('trove', 'insecure'),
+            'endpoint_type': endpoint_type
         }
 
         self._trove = troveclient.Client('1.0', **args)
-        management_url = self.url_for(service_type=service_type)
+        management_url = self.url_for(service_type=service_type,
+                                      endpoint_type=endpoint_type)
         self._trove.client.auth_token = con.auth_token
         self._trove.client.management_url = management_url
 
@@ -243,12 +258,16 @@ class OpenStackClients(object):
             logger.error(_("Ceilometer connection failed, no auth_token!"))
             return None
         con = self.context
+
+        endpoint_type = self._get_client_option('ceilometer', 'endpoint_type')
         args = {
             'auth_url': con.auth_url,
             'service_type': 'metering',
             'project_id': con.tenant,
             'token': lambda: self.auth_token,
-            'endpoint': self.url_for(service_type='metering'),
+            'endpoint': self.url_for(service_type='metering',
+                                     endpoint_type=endpoint_type),
+            'endpoint_type': endpoint_type,
             'ca_file': self._get_client_option('ceilometer', 'ca_file'),
             'cert_file': self._get_client_option('ceilometer', 'cert_file'),
             'key_file': self._get_client_option('ceilometer', 'key_file'),
@@ -286,6 +305,7 @@ class OpenStackClients(object):
             logger.error(_("Heat connection failed, no auth_token!"))
             return None
 
+        endpoint_type = self._get_client_option('heat', 'endpoint_type')
         args = {
             'auth_url': con.auth_url,
             'token': self.auth_token,
@@ -299,8 +319,8 @@ class OpenStackClients(object):
 
         endpoint = self._get_heat_url()
         if not endpoint:
-            endpoint = self.url_for(service_type='orchestration')
-
+            endpoint = self.url_for(service_type='orchestration',
+                                    endpoint_type=endpoint_type)
         self._heat = heatclient.Client('1', endpoint, **args)
 
         return self._heat
