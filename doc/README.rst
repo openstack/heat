@@ -7,29 +7,51 @@ For user and admin docs, go to the directory `doc/docbkx`.
 Dependencies
 ============
 
-Sphinx_
-  You'll need sphinx (the python one) and if you are
-  using the virtualenv you'll need to install it in the virtualenv
-  specifically so that it can load the cinder modules.
+You'll need to install python *Sphinx* package and *oslo-sphinx*
+package:
 
-  ::
+::
 
-    sudo yum install python-sphinx
-    sudo pip-python install sphinxcontrib-httpdomain
+   sudo pip install sphinx oslo-sphinx
 
-Use `make`
-==========
+If you are using the virtualenv you'll need to install them in the
+virtualenv.
 
-Just type make::
+Get Help
+========
 
-  make
+Just type make to get help:
 
-Look in the Makefile for more targets.
+::
+
+   make
+
+It will list available build targets.
+
+Build Doc
+=========
 
 To build the man pages:
 
-  make man
+::
+
+   make man
 
 To build the developer documentation as HTML:
 
-  make html
+::
+
+   make html
+
+Type *make* for more formats.
+
+Test Doc
+========
+
+If you modify doc files, you can type:
+
+::
+
+   make doctest
+
+to check whether the format has problem.
