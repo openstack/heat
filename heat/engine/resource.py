@@ -508,12 +508,14 @@ class Resource(object):
         Reduce length of physical resource name to a limit.
 
         The reduced name will consist of the following:
+
         * the first 2 characters of the name
         * a hyphen
         * the end of the name, truncated on the left to bring
           the name length within the limit
+
         :param name: The name to reduce the length of
-        :param limit:
+        :param limit: The max length limit
         :returns: A name whose length is less than or equal to the limit
         '''
         if len(name) <= limit:
