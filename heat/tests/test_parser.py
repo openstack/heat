@@ -15,6 +15,8 @@
 import json
 import time
 
+from oslo.config import cfg
+
 from heat.engine import environment
 from heat.common import exception
 from heat.common import template_format
@@ -1845,6 +1847,47 @@ class StackTest(HeatTestCase):
         db_stack = db_api.stack_get(self.ctx, self.stack.id)
         user_creds_id = db_stack.user_creds_id
         self.assertIsNotNone(user_creds_id)
+
+        # should've stored the username/password in the context
+        user_creds = db_api.user_creds_get(user_creds_id)
+        self.assertEqual(self.ctx.username, user_creds.get('username'))
+        self.assertEqual(self.ctx.password, user_creds.get('password'))
+        self.assertIsNone(user_creds.get('trust_id'))
+        self.assertIsNone(user_creds.get('trustor_user_id'))
+
+        # Store again, ID should not change
+        self.stack.store()
+        self.assertEqual(user_creds_id, db_stack.user_creds_id)
+
+    @utils.stack_delete_after
+    def test_store_saves_creds_trust(self):
+        """
+        A user_creds entry is created on first stack store
+        """
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            FakeKeystoneClient())
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(
+            self.ctx, 'creds_stack', template.Template({}))
+        self.stack.store()
+
+        # The store should've created a user_creds row and set user_creds_id
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        user_creds_id = db_stack.user_creds_id
+        self.assertIsNotNone(user_creds_id)
+
+        # should've stored the trust_id and trustor_user_id returned from
+        # FakeKeystoneClient.create_trust_context, username/password should
+        # not have been stored
+        user_creds = db_api.user_creds_get(user_creds_id)
+        self.assertIsNone(user_creds.get('username'))
+        self.assertIsNone(user_creds.get('password'))
+        self.assertEqual('atrust', user_creds.get('trust_id'))
+        self.assertEqual('auser123', user_creds.get('trustor_user_id'))
 
         # Store again, ID should not change
         self.stack.store()
