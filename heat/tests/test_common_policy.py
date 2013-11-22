@@ -173,3 +173,17 @@ class TestPolicyEnforcer(HeatTestCase):
                                    exc=None, default_rule=default_rule)
         action = 'no_such_action'
         self.assertFalse(enforcer.enforce(ctx, action))
+
+    def test_check_admin(self):
+        self.stub_policyfile('check_admin.json')
+
+        enforcer = policy.Enforcer()
+
+        ctx = utils.dummy_context(roles=[])
+        self.assertFalse(enforcer.check_is_admin(ctx))
+
+        ctx = utils.dummy_context(roles=['not_admin'])
+        self.assertFalse(enforcer.check_is_admin(ctx))
+
+        ctx = utils.dummy_context(roles=['admin'])
+        self.assertTrue(enforcer.check_is_admin(ctx))

@@ -95,5 +95,13 @@ class Enforcer(object):
         """
         return self._check(context, action, target)
 
+    def check_is_admin(self, context):
+        """Whether or not roles contains 'admin' role according to policy.json
+
+           :param context: Heat request context
+           :returns: A non-False value if the user is admin according to policy
+        """
+        return self._check(context, 'context_is_admin', target={}, exc=None)
+
     def clear(self):
         self.enforcer.clear()
