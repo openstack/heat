@@ -28,6 +28,7 @@ from heat.openstack.common.gettextutils import _
 
 from heat.common import crypt
 from heat.common import exception
+from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
 from heat.openstack.common.db.sqlalchemy import session as db_session
@@ -306,8 +307,12 @@ def _query_stack_get_all_by_tenant(context):
 
 
 def stack_get_all_by_tenant(context, limit=None, sort_keys=None, marker=None,
-                            sort_dir=None):
+                            sort_dir=None, filters=None):
+    if filters is None:
+        filters = {}
+
     query = _query_stack_get_all_by_tenant(context)
+    query = db_filters.exact_filter(query, models.Stack, filters)
     return _paginate_query(context, query, models.Stack, limit, sort_keys,
                            marker, sort_dir).all()
 

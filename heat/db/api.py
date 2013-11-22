@@ -124,9 +124,9 @@ def stack_get_all_by_owner_id(context, owner_id):
 
 
 def stack_get_all_by_tenant(context, limit=None, sort_keys=None,
-                            marker=None, sort_dir=None):
+                            marker=None, sort_dir=None, filters=None):
     return IMPL.stack_get_all_by_tenant(context, limit, sort_keys,
-                                        marker, sort_dir)
+                                        marker, sort_dir, filters)
 
 
 def stack_count_all_by_tenant(context):
