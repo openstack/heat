@@ -77,8 +77,8 @@ class VersionNegotiationFilter(wsgi.Middleware):
                 return self.versions_app
 
         accept = str(req.accept)
-        if accept.startswith('application/vnd.openstack.images-'):
-            token_loc = len('application/vnd.openstack.images-')
+        if accept.startswith('application/vnd.openstack.orchestration-'):
+            token_loc = len('application/vnd.openstack.orchestration-')
             accept_version = accept[token_loc:]
             match = self._match_version_string(accept_version, req)
             if match:
