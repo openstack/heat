@@ -22,3 +22,4 @@ Getting Started Guides
    on_ubuntu
    on_other
    jeos_building
+   standalone
