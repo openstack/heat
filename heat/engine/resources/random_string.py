@@ -16,6 +16,7 @@
 from heat.db import api as db_api
 from heat.engine import resource
 from heat.engine import properties
+from heat.engine import constraints
 
 import random
 import string
@@ -29,19 +30,19 @@ class RandomString(resource.Resource):
     '''
     properties_schema = {
         'length': properties.Schema(
-            properties.INTEGER,
+            properties.Schema.INTEGER,
             _('Length of the string to generate.'),
             default=32,
-            constraints=[properties.Range(1, 512)]),
+            constraints=[constraints.Range(1, 512)]),
         'sequence': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('Sequence of characters to build the random string from.'),
             default='lettersdigits',
-            constraints=[properties.AllowedValues((
+            constraints=[constraints.AllowedValues((
                 'lettersdigits', 'letters', 'lowercase', 'uppercase', 'digits',
                 'hexdigits', 'octdigits'))]),
         'salt': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('Value which can be set or changed on stack update to trigger '
               'the resource for replacement with a new random string . '
               'The salt value itself is ignored by the random generator.'))

@@ -226,8 +226,9 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
-            properties_schema = {"Foo": properties.Schema(properties.STRING,
-                                                          required=True)}
+            properties_schema = {"Foo":
+                                 properties.Schema(properties.Schema.STRING,
+                                                   required=True)}
             attributes_schema = {}
 
         json_snippet = {
@@ -258,8 +259,9 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
-            properties_schema = {"Foo": properties.Schema(properties.STRING,
-                                                          required=True)}
+            properties_schema = {"Foo":
+                                 properties.Schema(properties.Schema.STRING,
+                                                   required=True)}
             attributes_schema = {}
 
         json_snippet = {
@@ -320,7 +322,8 @@ class ProviderTemplateTest(HeatTestCase):
         files = {'test_resource.template': json.dumps(provider)}
 
         class DummyResource(object):
-            properties_schema = {"Foo": properties.Schema(properties.MAP)}
+            properties_schema = {"Foo":
+                                 properties.Schema(properties.Schema.MAP)}
             attributes_schema = {}
 
         json_snippet = {
