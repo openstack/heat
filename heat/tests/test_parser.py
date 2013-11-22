@@ -811,6 +811,29 @@ class StackTest(HeatTestCase):
                          (parser.Stack.DELETE, parser.Stack.COMPLETE))
 
     @utils.stack_delete_after
+    def test_delete_trust(self):
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            FakeKeystoneClient())
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(
+            self.ctx, 'delete_trust', template.Template({}))
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertNotEqual(db_s, None)
+
+        self.stack.delete()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertEqual(db_s, None)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.DELETE, parser.Stack.COMPLETE))
+
+    @utils.stack_delete_after
     def test_suspend_resume(self):
         self.m.ReplayAll()
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
