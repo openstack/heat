@@ -220,10 +220,9 @@ class ResourceTest(HeatTestCase):
         self.stubs.SmartSet(wsgi,
                             'translate_exception', fake_translate_exception)
 
-        try:
-            resource(request)
-        except exception.HTTPExceptionDisguise as e:
-            self.assertEqual(message_es, e.exc.message)
+        e = self.assertRaises(exception.HTTPExceptionDisguise,
+                              resource, request)
+        self.assertEqual(message_es, str(e.exc))
         self.m.VerifyAll()
 
 
