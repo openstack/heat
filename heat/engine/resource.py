@@ -34,6 +34,8 @@ from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
+DELETION_POLICY = (DELETE, RETAIN, SNAPSHOT) = ('Delete', 'Retain', 'Snapshot')
+
 
 def get_types():
     '''Return an iterator over the list of valid resource types.'''
@@ -535,11 +537,11 @@ class Resource(object):
 
     @classmethod
     def validate_deletion_policy(cls, template):
-        deletion_policy = template.get('DeletionPolicy', 'Delete')
-        if deletion_policy not in ('Delete', 'Retain', 'Snapshot'):
+        deletion_policy = template.get('DeletionPolicy', DELETE)
+        if deletion_policy not in DELETION_POLICY:
             msg = _('Invalid DeletionPolicy %s') % deletion_policy
             raise exception.StackValidationFailed(message=msg)
-        elif deletion_policy == 'Snapshot':
+        elif deletion_policy == SNAPSHOT:
             if not callable(getattr(cls, 'handle_snapshot_delete', None)):
                 msg = _('Snapshot DeletionPolicy not supported')
                 raise exception.StackValidationFailed(message=msg)
@@ -564,18 +566,18 @@ class Resource(object):
         try:
             self.state_set(action, self.IN_PROGRESS)
 
-            deletion_policy = self.t.get('DeletionPolicy', 'Delete')
+            deletion_policy = self.t.get('DeletionPolicy', DELETE)
             handle_data = None
-            if deletion_policy == 'Delete':
+            if deletion_policy == DELETE:
                 if callable(getattr(self, 'handle_delete', None)):
                     handle_data = self.handle_delete()
                     yield
-            elif deletion_policy == 'Snapshot':
+            elif deletion_policy == SNAPSHOT:
                 if callable(getattr(self, 'handle_snapshot_delete', None)):
                     handle_data = self.handle_snapshot_delete(initial_state)
                     yield
 
-            if (deletion_policy != 'Retain' and
+            if (deletion_policy != RETAIN and
                     callable(getattr(self, 'check_delete_complete', None))):
                 while not self.check_delete_complete(handle_data):
                     yield
