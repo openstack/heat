@@ -465,6 +465,43 @@
 #matchmaker_heartbeat_ttl=600
 
 
+[clients_swift]
+
+#
+# Options defined in heat.common.config
+#
+
+# Optional CA cert file to use in SSL connections (string
+# value)
+#ca_file=<None>
+
+# Optional PEM-formatted certificate chain file (string value)
+#cert_file=<None>
+
+# Optional PEM-formatted file that contains the private key
+# (string value)
+#key_file=<None>
+
+# If set then the server's certificate will not be verified
+# (boolean value)
+#insecure=false
+
+
+[auth_password]
+
+#
+# Options defined in heat.common.config
+#
+
+# Allow orchestration of multiple clouds (boolean value)
+#multi_cloud=false
+
+# Allowed keystone endpoints for auth_uri when multi_cloud is
+# enabled. At least one endpoint needs to be specified. (list
+# value)
+#allowed_auth_uris=
+
+
 [ssl]
 
 #
@@ -558,6 +595,104 @@
 
 # The API paste config file to use (string value)
 #api_paste_config=api-paste.ini
+
+
+[clients_cinder]
+
+#
+# Options defined in heat.common.config
+#
+
+# Optional CA cert file to use in SSL connections (string
+# value)
+#ca_file=<None>
+
+# Optional PEM-formatted certificate chain file (string value)
+#cert_file=<None>
+
+# Optional PEM-formatted file that contains the private key
+# (string value)
+#key_file=<None>
+
+# If set then the server's certificate will not be verified
+# (boolean value)
+#insecure=false
+
+
+[clients]
+
+#
+# Options defined in heat.common.config
+#
+
+# Optional CA cert file to use in SSL connections (string
+# value)
+#ca_file=<None>
+
+# Optional PEM-formatted certificate chain file (string value)
+#cert_file=<None>
+
+# Optional PEM-formatted file that contains the private key
+# (string value)
+#key_file=<None>
+
+# If set then the server's certificate will not be verified
+# (boolean value)
+#insecure=false
+
+
+[clients_nova]
+
+#
+# Options defined in heat.common.config
+#
+
+# Optional CA cert file to use in SSL connections (string
+# value)
+#ca_file=<None>
+
+# Optional PEM-formatted certificate chain file (string value)
+#cert_file=<None>
+
+# Optional PEM-formatted file that contains the private key
+# (string value)
+#key_file=<None>
+
+# If set then the server's certificate will not be verified
+# (boolean value)
+#insecure=false
+
+
+[matchmaker_ring]
+
+#
+# Options defined in heat.openstack.common.rpc.matchmaker_ring
+#
+
+# Matchmaker ring file (JSON) (string value)
+#ringfile=/etc/oslo/matchmaker_ring.json
+
+
+[clients_ceilometer]
+
+#
+# Options defined in heat.common.config
+#
+
+# Optional CA cert file to use in SSL connections (string
+# value)
+#ca_file=<None>
+
+# Optional PEM-formatted certificate chain file (string value)
+#cert_file=<None>
+
+# Optional PEM-formatted file that contains the private key
+# (string value)
+#key_file=<None>
+
+# If set then the server's certificate will not be verified
+# (boolean value)
+#insecure=false
 
 
 [rpc_notifier2]
@@ -788,29 +923,26 @@
 #memcache_secret_key=<None>
 
 
-[auth_password]
+[clients_neutron]
 
 #
 # Options defined in heat.common.config
 #
 
-# Allow orchestration of multiple clouds (boolean value)
-#multi_cloud=false
-
-# Allowed keystone endpoints for auth_uri when multi_cloud is
-# enabled. At least one endpoint needs to be specified. (list
+# Optional CA cert file to use in SSL connections (string
 # value)
-#allowed_auth_uris=
+#ca_file=<None>
 
+# Optional PEM-formatted certificate chain file (string value)
+#cert_file=<None>
 
-[matchmaker_ring]
+# Optional PEM-formatted file that contains the private key
+# (string value)
+#key_file=<None>
 
-#
-# Options defined in heat.openstack.common.rpc.matchmaker_ring
-#
-
-# Matchmaker ring file (JSON) (string value)
-#ringfile=/etc/oslo/matchmaker_ring.json
+# If set then the server's certificate will not be verified
+# (boolean value)
+#insecure=false
 
 
 [matchmaker_redis]
@@ -827,5 +959,27 @@
 
 # Password for Redis server. (optional) (string value)
 #password=<None>
+
+
+[clients_keystone]
+
+#
+# Options defined in heat.common.config
+#
+
+# Optional CA cert file to use in SSL connections (string
+# value)
+#ca_file=<None>
+
+# Optional PEM-formatted certificate chain file (string value)
+#cert_file=<None>
+
+# Optional PEM-formatted file that contains the private key
+# (string value)
+#key_file=<None>
+
+# If set then the server's certificate will not be verified
+# (boolean value)
+#insecure=false
 
 

@@ -104,7 +104,9 @@ class OpenStackClients(object):
             'service_type': service_type,
             'username': None,
             'api_key': None,
-            'extensions': extensions
+            'extensions': extensions,
+            'cacert': self._get_client_option('nova', 'ca_file'),
+            'insecure': self._get_client_option('nova', 'insecure')
         }
 
         client = novaclient.Client(1.1, **args)
@@ -134,7 +136,9 @@ class OpenStackClients(object):
             'key': None,
             'authurl': None,
             'preauthtoken': self.auth_token,
-            'preauthurl': self.url_for(service_type='object-store')
+            'preauthurl': self.url_for(service_type='object-store'),
+            'cacert': self._get_client_option('swift', 'ca_file'),
+            'insecure': self._get_client_option('swift', 'insecure')
         }
         self._swift = swiftclient.Connection(**args)
         return self._swift
@@ -154,7 +158,9 @@ class OpenStackClients(object):
             'auth_url': con.auth_url,
             'service_type': 'network',
             'token': self.auth_token,
-            'endpoint_url': self.url_for(service_type='network')
+            'endpoint_url': self.url_for(service_type='network'),
+            'ca_cert': self._get_client_option('neutron', 'ca_file'),
+            'insecure': self._get_client_option('neutron', 'insecure')
         }
 
         self._neutron = neutronclient.Client(**args)
@@ -177,7 +183,9 @@ class OpenStackClients(object):
             'auth_url': con.auth_url,
             'project_id': con.tenant,
             'username': None,
-            'api_key': None
+            'api_key': None,
+            'cacert': self._get_client_option('cinder', 'ca_file'),
+            'insecure': self._get_client_option('cinder', 'insecure')
         }
 
         self._cinder = cinderclient.Client('1', **args)
@@ -203,12 +211,26 @@ class OpenStackClients(object):
             'project_id': con.tenant,
             'token': lambda: self.auth_token,
             'endpoint': self.url_for(service_type='metering'),
+            'ca_file': self._get_client_option('ceilometer', 'ca_file'),
+            'cert_file': self._get_client_option('ceilometer', 'cert_file'),
+            'key_file': self._get_client_option('ceilometer', 'key_file'),
+            'insecure': self._get_client_option('ceilometer', 'insecure')
         }
 
         client = ceilometerclient.Client(**args)
 
         self._ceilometer = client
         return self._ceilometer
+
+    def _get_client_option(self, client, option):
+        try:
+            group_name = 'clients_' + client
+            cfg.CONF.import_opt(option, 'heat.common.config',
+                                group=group_name)
+            return getattr(getattr(cfg.CONF, group_name), option)
+        except (cfg.NoSuchGroupError, cfg.NoSuchOptError):
+            cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
+            return getattr(cfg.CONF.clients, option)
 
 
 class ClientBackend(object):
