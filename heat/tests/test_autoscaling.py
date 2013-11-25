@@ -801,7 +801,7 @@ class AutoScalingTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_scaling_group_nochange(self):
+    def test_scaling_group_truncate_adjustment(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=self.params)
 
@@ -819,32 +819,38 @@ class AutoScalingTest(HeatTestCase):
                          rsrc.get_instance_names())
 
         # raise above the max
+        self._stub_lb_reload(5)
+        self._stub_meta_expected(now, 'ChangeInCapacity : 4')
+        self._stub_create(3)
+        self.m.ReplayAll()
         rsrc.adjust(4)
-        self.assertEqual(['WebServerGroup-0', 'WebServerGroup-1'],
-                         rsrc.get_instance_names())
+        self._verify_instance_names(rsrc, 5)
 
         # lower below the min
-        rsrc.adjust(-2)
-        self.assertEqual(['WebServerGroup-0', 'WebServerGroup-1'],
-                         rsrc.get_instance_names())
+        self._stub_lb_reload(1)
+        self._stub_validate()
+        self._stub_meta_expected(now, 'ChangeInCapacity : -5')
+        self.m.ReplayAll()
+        rsrc.adjust(-5)
+        self._verify_instance_names(rsrc, 1)
 
         # no change
         rsrc.adjust(0)
-        self.assertEqual(['WebServerGroup-0', 'WebServerGroup-1'],
-                         rsrc.get_instance_names())
+        self._verify_instance_names(rsrc, 1)
+
         rsrc.delete()
         self.m.VerifyAll()
+
+    def _verify_instance_names(self, group, bound):
+        instance_names = group.get_instance_names()
+        self.assertEqual(len(instance_names), bound)
+        for i in xrange(bound):
+            self.assertEqual('WebServerGroup-%d' % i, instance_names[i])
 
     def _do_test_scaling_group_percent(self, decrease, lowest,
                                        increase, create, highest):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=self.params)
-
-        def _verify_instance_names(bound):
-            instance_names = rsrc.get_instance_names()
-            self.assertEqual(len(instance_names), bound)
-            for i in xrange(bound):
-                self.assertEqual('WebServerGroup-%d' % i, instance_names[i])
 
         # Create initial group, 2 instances
         properties = t['Resources']['WebServerGroup']['Properties']
@@ -856,7 +862,7 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
         stack.resources['WebServerGroup'] = rsrc
-        _verify_instance_names(2)
+        self._verify_instance_names(rsrc, 2)
 
         # reduce by decrease %
         self._stub_lb_reload(lowest)
@@ -865,7 +871,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_validate()
         self.m.ReplayAll()
         rsrc.adjust(decrease, 'PercentChangeInCapacity')
-        _verify_instance_names(lowest)
+        self._verify_instance_names(rsrc, lowest)
 
         # raise by increase %
         self._stub_lb_reload(highest)
@@ -874,7 +880,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(create)
         self.m.ReplayAll()
         rsrc.adjust(increase, 'PercentChangeInCapacity')
-        _verify_instance_names(highest)
+        self._verify_instance_names(rsrc, highest)
 
         rsrc.delete()
 
