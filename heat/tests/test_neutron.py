@@ -171,6 +171,26 @@ neutron_port_template = '''
 }
 '''
 
+neutron_port_with_address_pair_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test Neutron resources",
+  "Parameters" : {},
+  "Resources" : {
+    "port": {
+      "Type": "OS::Neutron::Port",
+      "Properties": {
+        "network_id": "abcd1234",
+        "allowed_address_pairs": [{
+          "ip_address": "10.0.3.21",
+          "mac_address": "00-B0-D0-86-BB-F7"
+        }]
+      }
+    }
+  }
+}
+'''
+
 
 class NeutronTest(HeatTestCase):
 
@@ -1333,6 +1353,74 @@ class NeutronPortTest(HeatTestCase):
 
         t = template_format.parse(neutron_port_template)
         t['Resources']['port']['Properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.m.VerifyAll()
+
+    def test_allowed_address_pair(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_port({'port': {
+            'network_id': u'abcd1234',
+            'allowed_address_pairs': [{
+                'ip_address': u'10.0.3.21',
+                'mac_address': u'00-B0-D0-86-BB-F7'
+            }],
+            'name': utils.PhysName('test_stack', 'port'),
+            'security_groups': [],
+            'fixed_ips': [],
+            'admin_state_up': True}}
+        ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(neutron_port_with_address_pair_template)
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.m.VerifyAll()
+
+    def test_missing_mac_address(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_port({'port': {
+            'network_id': u'abcd1234',
+            'allowed_address_pairs': [{
+                'ip_address': u'10.0.3.21',
+            }],
+            'name': utils.PhysName('test_stack', 'port'),
+            'security_groups': [],
+            'fixed_ips': [],
+            'admin_state_up': True}}
+        ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(neutron_port_with_address_pair_template)
+        t['Resources']['port']['Properties']['allowed_address_pairs'][0].pop(
+            'mac_address'
+        )
         stack = utils.parse_stack(t)
 
         port = stack['port']
