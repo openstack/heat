@@ -764,6 +764,37 @@ class StackTest(HeatTestCase):
         self.m.VerifyAll()
 
     @utils.stack_delete_after
+    def test_set_param_id_update(self):
+        tmpl = {'Resources': {
+                'AResource': {'Type': 'ResourceWithPropsType',
+                              'Metadata': {'Bar': {'Ref': 'AWS::StackId'}},
+                              'Properties': {'Foo': 'abc'}}}}
+
+        self.stack = parser.Stack(self.ctx, 'update_stack_arn_test',
+                                  template.Template(tmpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+
+        stack_arn = self.stack.parameters['AWS::StackId']
+
+        tmpl2 = {'Resources': {
+                 'AResource': {'Type': 'ResourceWithPropsType',
+                               'Metadata': {'Bar': {'Ref': 'AWS::StackId'}},
+                               'Properties': {'Foo': 'xyz'}}}}
+
+        updated_stack = parser.Stack(self.ctx, 'updated_stack',
+                                     template.Template(tmpl2))
+
+        self.stack.update(updated_stack)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
+        self.assertEqual(self.stack['AResource'].properties['Foo'], 'xyz')
+
+        self.assertEqual(self.stack['AResource'].metadata['Bar'], stack_arn)
+
+    @utils.stack_delete_after
     def test_load_param_id(self):
         self.stack = parser.Stack(self.ctx, 'param_load_arn_test',
                                   parser.Template({}))
