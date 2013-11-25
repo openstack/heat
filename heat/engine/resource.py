@@ -104,7 +104,7 @@ class Resource(object):
     created_time = timestamp.Timestamp(db_api.resource_get, 'created_at')
     updated_time = timestamp.Timestamp(db_api.resource_get, 'updated_at')
 
-    metadata = Metadata()
+    _metadata = Metadata()
 
     # Resource implementation set this to the subset of template keys
     # which are supported for handle_update, used by update_template_diff
@@ -191,6 +191,14 @@ class Resource(object):
         if result is NotImplemented:
             return result
         return not result
+
+    @property
+    def metadata(self):
+        return self._metadata
+
+    @metadata.setter
+    def metadata(self, metadata):
+        self._metadata = metadata
 
     def type(self):
         return self.t['Type']
