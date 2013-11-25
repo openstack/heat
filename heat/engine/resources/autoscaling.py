@@ -16,6 +16,7 @@
 import copy
 import math
 
+from heat.engine import environment
 from heat.engine import resource
 from heat.engine import signal_responder
 
@@ -30,6 +31,9 @@ from heat.engine import scheduler
 from heat.engine import stack_resource
 
 logger = logging.getLogger(__name__)
+
+
+(SCALED_RESOURCE_TYPE,) = ('OS::Heat::ScaledResource',)
 
 
 class CooldownMixin(object):
@@ -151,11 +155,20 @@ class InstanceGroup(stack_resource.StackResource):
                          if resource.status != resource.FAILED]
         return sorted(resources, key=lambda r: (r.created_time, r.name))
 
+    def _environment(self):
+        """Return the environment for the nested stack."""
+        return {
+            environment.PARAMETERS: {},
+            environment.RESOURCE_REGISTRY: {
+                SCALED_RESOURCE_TYPE: 'AWS::EC2::Instance',
+            },
+        }
+
     def handle_create(self):
         """Create a nested stack and add the initial resources to it."""
         num_instances = int(self.properties['Size'])
         initial_template = self._create_template(num_instances)
-        return self.create_with_template(initial_template, {})
+        return self.create_with_template(initial_template, self._environment())
 
     def check_create_complete(self, task):
         """
@@ -222,7 +235,7 @@ class InstanceGroup(stack_resource.StackResource):
         conf_name = self.properties['LaunchConfigurationName']
         conf = self.stack.resource_by_refid(conf_name)
         instance_definition = copy.deepcopy(conf.t)
-        instance_definition['Type'] = 'AWS::EC2::Instance'
+        instance_definition['Type'] = SCALED_RESOURCE_TYPE
         instance_definition['Properties']['Tags'] = self._tags()
         if self.properties.get('VPCZoneIdentifier'):
             instance_definition['Properties']['SubnetId'] = \
@@ -297,7 +310,8 @@ class InstanceGroup(stack_resource.StackResource):
                     efft_capacity = capacity
                 template = self._create_template(efft_capacity, efft_bat_sz)
                 self._lb_reload(exclude=changing_instances(template))
-                updater = self.update_with_template(template, {})
+                updater = self.update_with_template(template,
+                                                    self._environment())
                 updater.run_to_completion()
                 self.check_update_complete(updater)
                 remainder -= efft_bat_sz
@@ -316,7 +330,8 @@ class InstanceGroup(stack_resource.StackResource):
         """
         new_template = self._create_template(new_capacity)
         try:
-            updater = self.update_with_template(new_template, {})
+            updater = self.update_with_template(new_template,
+                                                self._environment())
             updater.run_to_completion()
             self.check_update_complete(updater)
         finally:
@@ -437,7 +452,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         else:
             num_to_create = int(self.properties['MinSize'])
         initial_template = self._create_template(num_to_create)
-        return self.create_with_template(initial_template, {})
+        return self.create_with_template(initial_template,
+                                         self._environment())
 
     def check_create_complete(self, task):
         """Invoke the cooldown after creation succeeds."""
