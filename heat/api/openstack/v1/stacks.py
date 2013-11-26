@@ -155,6 +155,10 @@ class StackController(object):
         """
         Lists summary information for all stacks
         """
+        filter_whitelist = {
+            'status': 'mixed',
+            'name': 'mixed',
+        }
         whitelist = {
             'limit': 'single',
             'marker': 'single',
@@ -162,7 +166,9 @@ class StackController(object):
             'sort_keys': 'multi',
         }
         params = util.get_allowed_params(req.params, whitelist)
-        stacks = self.engine.list_stacks(req.context, **params)
+        filter_params = util.get_allowed_params(req.params, filter_whitelist)
+        stacks = self.engine.list_stacks(req.context, filters=filter_params,
+                                         **params)
 
         return stacks_view.collection(req, stacks)
 

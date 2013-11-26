@@ -85,6 +85,10 @@ def get_allowed_params(params, whitelist):
             value = params.get(key)
         elif get_type == 'multi':
             value = params.getall(key)
+        elif get_type == 'mixed':
+            value = params.getall(key)
+            if isinstance(value, list) and len(value) == 1:
+                value = value.pop()
 
         if value:
             allowed_params[key] = value
