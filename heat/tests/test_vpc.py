@@ -53,6 +53,7 @@ class VPCTestBase(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'remove_interface_router')
         self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
         self.m.StubOutWithMock(neutronclient.Client, 'show_network')
+        self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(neutronclient.Client, 'show_router')
         self.m.StubOutWithMock(neutronclient.Client, 'create_security_group')
         self.m.StubOutWithMock(neutronclient.Client, 'show_security_group')
@@ -563,6 +564,29 @@ Resources:
             }
         })
 
+    def mock_show_network_interface(self):
+        self.nic_name = utils.PhysName('test_stack', 'the_nic')
+        neutronclient.Client.show_port('dddd').AndReturn({
+            'port': {
+                'admin_state_up': True,
+                'device_id': '',
+                'device_owner': '',
+                'fixed_ips': [
+                    {
+                        'ip_address': '10.0.0.100',
+                        'subnet_id': 'cccc'
+                    }
+                ],
+                'id': 'dddd',
+                'mac_address': 'fa:16:3e:25:32:5d',
+                'name': self.nic_name,
+                'network_id': 'aaaa',
+                'security_groups': ['0389f747-7785-4757-b7bb-2ab07e4b09c3'],
+                'status': 'ACTIVE',
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f'
+            }
+        })
+
     def mock_delete_network_interface(self):
         neutronclient.Client.delete_port('dddd').AndReturn(None)
 
@@ -573,6 +597,7 @@ Resources:
         self.mock_create_subnet()
         self.mock_show_subnet()
         self.mock_create_network_interface()
+        self.mock_show_network_interface()
         self.mock_delete_network_interface()
         self.mock_delete_subnet()
         self.mock_delete_network()
@@ -585,6 +610,7 @@ Resources:
             self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
             rsrc = stack['the_nic']
             self.assertResourceState(rsrc, 'dddd')
+            self.assertEqual(rsrc.FnGetAtt('PrivateIpAddress'), '10.0.0.100')
 
             self.assertRaises(resource.UpdateReplace,
                               rsrc.handle_update, {}, {}, {})

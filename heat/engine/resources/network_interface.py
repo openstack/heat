@@ -52,10 +52,17 @@ class NetworkInterface(resource.Resource):
             'Description': _('List of tags associated with this interface.')}}
     }
 
+    attributes_schema = {'PrivateIpAddress': _('Private IP address of the '
+                                               'network interface.')}
+
     @staticmethod
     def network_id_from_subnet_id(neutronclient, subnet_id):
         subnet_info = neutronclient.show_subnet(subnet_id)
         return subnet_info['subnet']['network_id']
+
+    def __init__(self, name, json_snippet, stack):
+        super(NetworkInterface, self).__init__(name, json_snippet, stack)
+        self.fixed_ip_address = None
 
     def handle_create(self):
         client = self.neutron()
@@ -90,6 +97,25 @@ class NetworkInterface(resource.Resource):
         except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
+
+    def _get_fixed_ip_address(self, ):
+        if self.fixed_ip_address is None:
+            from neutronclient.common.exceptions import NeutronClientException
+
+            client = self.neutron()
+            try:
+                port = client.show_port(self.resource_id)['port']
+                if port['fixed_ips'] and len(port['fixed_ips']) > 0:
+                    self.fixed_ip_address = port['fixed_ips'][0]['ip_address']
+            except NeutronClientException as ex:
+                if ex.status_code != 404:
+                    raise ex
+
+        return self.fixed_ip_address
+
+    def _resolve_attribute(self, name):
+        if name == 'PrivateIpAddress':
+            return self._get_fixed_ip_address()
 
 
 def resource_mapping():
