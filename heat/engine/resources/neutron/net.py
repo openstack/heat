@@ -116,10 +116,55 @@ class Net(neutron.NeutronResource):
             raise ex
 
 
+class NetDHCPAgent(neutron.NeutronResource):
+    properties_schema = {
+        'network_id': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('The ID of the network you want to be scheduled '
+                             'by the dhcp_agent. Note that the default policy '
+                             'setting in Neutron restricts usage of this '
+                             'property to administrative users only.'),
+        },
+        'dhcp_agent_id': {
+            'Type': 'String',
+            'Required': True,
+            'Description': _('The ID of the dhcp-agent to schedule '
+                             'the network. Note that the default policy '
+                             'setting in Neutron restricts usage of this '
+                             'property to administrative users only.'),
+        }
+    }
+
+    def handle_create(self):
+        network_id = self.properties['network_id']
+        dhcp_agent_id = self.properties['dhcp_agent_id']
+        self.neutron().add_network_to_dhcp_agent(
+            dhcp_agent_id, {'network_id': network_id})
+        self.resource_id_set('%(net)s:%(agt)s' %
+                             {'net': network_id, 'agt': dhcp_agent_id})
+
+    def handle_delete(self):
+        if not self.resource_id:
+            return
+        client = self.neutron()
+        network_id, dhcp_agent_id = self.resource_id.split(':')
+        try:
+            client.remove_network_from_dhcp_agent(
+                dhcp_agent_id, network_id)
+        except neutron_exp.NeutronClientException as ex:
+            # assume 2 patterns about status_code following:
+            #  404: the network or agent is already gone
+            #  409: the network isn't scheduled by the dhcp_agent
+            if ex.status_code not in (404, 409):
+                raise ex
+
+
 def resource_mapping():
     if clients.neutronclient is None:
         return {}
 
     return {
         'OS::Neutron::Net': Net,
+        'OS::Neutron::NetDHCPAgent': NetDHCPAgent,
     }
