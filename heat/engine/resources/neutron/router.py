@@ -15,6 +15,7 @@
 
 from heat.common import exception
 from heat.engine import clients
+from heat.engine.resource import SupportStatus
 from heat.engine.resources.neutron import neutron
 from heat.engine import properties
 from heat.engine import scheduler
@@ -29,14 +30,52 @@ logger = logging.getLogger(__name__)
 
 
 class Router(neutron.NeutronResource):
-    properties_schema = {'name': {'Type': 'String',
-                                  'UpdateAllowed': True},
-                         'value_specs': {'Type': 'Map',
-                                         'Default': {},
-                                         'UpdateAllowed': True},
-                         'admin_state_up': {'Type': 'Boolean',
-                                            'Default': True,
-                                            'UpdateAllowed': True}}
+
+    external_gateway_info_schema = {
+        'network': {
+            'Type': 'String',
+            'UpdateAllowed': True,
+            'Required': True,
+            'Description': _('ID or name of the external network for the '
+                             'gateway.')
+        },
+        'enable_snat': {
+            'Type': 'Boolean',
+            'Default': True,
+            'UpdateAllowed': True,
+            'Description': _('Enables Source NAT on the router gateway.')
+        }
+    }
+
+    properties_schema = {
+        'name': {
+            'Type': 'String',
+            'UpdateAllowed': True,
+            'Description': _('Name of router to create.')
+        },
+        'external_gateway_info': {
+            'Type': 'Map',
+            'Schema': external_gateway_info_schema,
+            'UpdateAllowed': True,
+            'Description': _('External network gateway configuration for a '
+                             'router.')
+        },
+        'value_specs': {
+            'Type': 'Map',
+            'Default': {},
+            'UpdateAllowed': True,
+            'Description': _('Extra parameters to include in the "router" '
+                             'object in the creation request.')
+        },
+        'admin_state_up': {
+            'Type': 'Boolean',
+            'Default': True,
+            'UpdateAllowed': True,
+            'Description': _('A boolean value specifying the administrative '
+                             'status of the network.')
+        }
+    }
+
     attributes_schema = {
         "status": _("The status of the router."),
         "external_gateway_info": _("Gateway network for the router."),
@@ -47,6 +86,16 @@ class Router(neutron.NeutronResource):
     }
 
     update_allowed_keys = ('Properties',)
+
+    def prepare_properties(self, properties, name):
+        props = super(Router, self).prepare_properties(properties, name)
+        gateway = props.get('external_gateway_info')
+        if gateway:
+            gateway['network_id'] = neutronV20.find_resourceid_by_name_or_id(
+                self.neutron(),
+                'network',
+                gateway.pop('network'))
+        return props
 
     def handle_create(self):
         props = self.prepare_properties(
@@ -147,6 +196,14 @@ class RouterInterface(neutron.NeutronResource):
 
 
 class RouterGateway(neutron.NeutronResource):
+
+    support_status = SupportStatus(
+        SupportStatus.DEPRECATED,
+        _('RouterGateway resource is deprecated and should not be used. '
+          'Instead use the `external_gateway_info` property in the router '
+          'resource to set up the gateway.')
+    )
+
     properties_schema = {'router_id': {'Type': 'String',
                                        'Required': True},
                          'network_id': {'Type': 'String',
