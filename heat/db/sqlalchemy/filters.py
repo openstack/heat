@@ -30,6 +30,8 @@ def exact_filter(query, model, filters):
     """
 
     filter_dict = {}
+    if filters is None:
+        filters = {}
 
     for key, value in filters.iteritems():
         if isinstance(value, (list, tuple, set, frozenset)):

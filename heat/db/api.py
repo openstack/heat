@@ -129,8 +129,8 @@ def stack_get_all_by_tenant(context, limit=None, sort_keys=None,
                                         marker, sort_dir, filters)
 
 
-def stack_count_all_by_tenant(context):
-    return IMPL.stack_count_all_by_tenant(context)
+def stack_count_all_by_tenant(context, filters=None):
+    return IMPL.stack_count_all_by_tenant(context, filters=filters)
 
 
 def stack_create(context, values):

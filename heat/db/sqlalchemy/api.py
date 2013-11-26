@@ -336,8 +336,10 @@ def stack_get_all_by_tenant(context, limit=None, sort_keys=None, marker=None,
                            marker, sort_dir).all()
 
 
-def stack_count_all_by_tenant(context):
-    return _query_stack_get_all_by_tenant(context).count()
+def stack_count_all_by_tenant(context, filters=None):
+    query = _query_stack_get_all_by_tenant(context)
+    query = db_filters.exact_filter(query, models.Stack, filters)
+    return query.count()
 
 
 def stack_create(context, values):

@@ -219,8 +219,8 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(1, len(st_db))
 
     def test_stack_get_all_by_tenant_and_filters(self):
-        stack1 = self._setup_test_stack('foo', UUIDs[0])
-        stack2 = self._setup_test_stack('bar', UUIDs[1])
+        stack1 = self._setup_test_stack('foo', UUID1)
+        stack2 = self._setup_test_stack('bar', UUID2)
         stacks = [stack1, stack2]
 
         filters = {'name': 'foo'}
@@ -231,8 +231,8 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual('foo', results[0]['name'])
 
     def test_stack_get_all_by_tenant_filter_matches_in_list(self):
-        stack1 = self._setup_test_stack('foo', UUIDs[0])
-        stack2 = self._setup_test_stack('bar', UUIDs[1])
+        stack1 = self._setup_test_stack('foo', UUID1)
+        stack2 = self._setup_test_stack('bar', UUID2)
         stacks = [stack1, stack2]
 
         filters = {'name': ['bar', 'quux']}
@@ -243,8 +243,8 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual('bar', results[0]['name'])
 
     def test_stack_get_all_by_tenant_returns_all_if_no_filters(self):
-        stack1 = self._setup_test_stack('foo', UUIDs[0])
-        stack2 = self._setup_test_stack('bar', UUIDs[1])
+        stack1 = self._setup_test_stack('foo', UUID1)
+        stack2 = self._setup_test_stack('bar', UUID2)
         stacks = [stack1, stack2]
 
         filters = None
@@ -327,6 +327,15 @@ class SqlAlchemyTest(HeatTestCase):
         stacks[1].delete()
         st_db = db_api.stack_count_all_by_tenant(self.ctx)
         self.assertEqual(1, st_db)
+
+    def test_stack_count_all_by_tenant_with_filters(self):
+        stack1 = self._setup_test_stack('foo', UUID1)
+        stack2 = self._setup_test_stack('bar', UUID2)
+        stack3 = self._setup_test_stack('bar', UUID3)
+        filters = {'name': 'bar'}
+
+        st_db = db_api.stack_count_all_by_tenant(self.ctx, filters=filters)
+        self.assertEqual(2, st_db)
 
     def test_event_get_all_by_stack(self):
         stack = self._setup_test_stack('stack', UUID1)[1]

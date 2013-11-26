@@ -134,3 +134,25 @@ class TestStacksViewBuilder(HeatTestCase):
         mock_get_collection_links.return_value = None
         stack_view = stacks_view.collection(self.request, stacks)
         self.assertNotIn('links', stack_view)
+
+    @mock.patch.object(stacks_view.views_common, 'get_collection_links')
+    def test_append_collection_count(self, mock_get_collection_links):
+        stacks = [self.stack1]
+        count = 1
+        stack_view = stacks_view.collection(self.request, stacks, count)
+        self.assertIn('count', stack_view)
+        self.assertEqual(1, stack_view['count'])
+
+    @mock.patch.object(stacks_view.views_common, 'get_collection_links')
+    def test_doesnt_append_collection_count(self, mock_get_collection_links):
+        stacks = [self.stack1]
+        stack_view = stacks_view.collection(self.request, stacks)
+        self.assertNotIn('count', stack_view)
+
+    @mock.patch.object(stacks_view.views_common, 'get_collection_links')
+    def test_appends_collection_count_of_zero(self, mock_get_collection_links):
+        stacks = [self.stack1]
+        count = 0
+        stack_view = stacks_view.collection(self.request, stacks, count)
+        self.assertIn('count', stack_view)
+        self.assertEqual(0, stack_view['count'])

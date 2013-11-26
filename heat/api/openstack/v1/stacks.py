@@ -167,10 +167,22 @@ class StackController(object):
         }
         params = util.get_allowed_params(req.params, whitelist)
         filter_params = util.get_allowed_params(req.params, filter_whitelist)
-        stacks = self.engine.list_stacks(req.context, filters=filter_params,
+
+        stacks = self.engine.list_stacks(req.context,
+                                         filters=filter_params,
                                          **params)
 
-        return stacks_view.collection(req, stacks)
+        count = None
+        if req.params.get('with_count'):
+            try:
+                # Check if engine has been updated to a version with
+                # support to count_stacks before trying to use it.
+                count = self.engine.count_stacks(req.context,
+                                                 filters=filter_params)
+            except AttributeError as exc:
+                logger.warning("Old Engine Version: %s" % str(exc))
+
+        return stacks_view.collection(req, stacks=stacks, count=count)
 
     @util.tenant_local
     def detail(self, req):

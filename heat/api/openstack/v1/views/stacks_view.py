@@ -57,12 +57,14 @@ def format_stack(req, stack, keys=None):
         transform(k, v) for k, v in stack.items()))
 
 
-def collection(req, stacks):
+def collection(req, stacks, count=None):
     formatted_stacks = [format_stack(req, s, basic_keys) for s in stacks]
 
     result = {'stacks': formatted_stacks}
     links = views_common.get_collection_links(req, formatted_stacks)
     if links:
         result['links'] = links
+    if count is not None:
+        result['count'] = count
 
     return result
