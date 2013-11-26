@@ -797,7 +797,7 @@ class AutoScalingTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_scaling_group_nochange(self):
+    def test_scaling_group_truncate_adjustment(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=self.params)
 
@@ -814,16 +814,24 @@ class AutoScalingTest(HeatTestCase):
         self.assertEqual(len(rsrc.get_instance_names()), 2)
 
         # raise above the max
+        self._stub_lb_reload(5)
+        self._stub_meta_expected(now, 'ChangeInCapacity : 4')
+        self._stub_create(3)
+        self.m.ReplayAll()
         rsrc.adjust(4)
-        self.assertEqual(len(rsrc.get_instance_names()), 2)
+        self.assertEqual(len(rsrc.get_instance_names()), 5)
 
         # lower below the min
-        rsrc.adjust(-2)
-        self.assertEqual(len(rsrc.get_instance_names()), 2)
+        self._stub_lb_reload(1)
+        self._stub_validate()
+        self._stub_meta_expected(now, 'ChangeInCapacity : -5')
+        self.m.ReplayAll()
+        rsrc.adjust(-5)
+        self.assertEqual(len(rsrc.get_instance_names()), 1)
 
         # no change
         rsrc.adjust(0)
-        self.assertEqual(len(rsrc.get_instance_names()), 2)
+        self.assertEqual(len(rsrc.get_instance_names()), 1)
 
         rsrc.delete()
         self.m.VerifyAll()
