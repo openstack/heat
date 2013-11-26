@@ -803,8 +803,6 @@ class Resource(object):
     def resource_to_template(cls, resource_type):
         '''
         :param resource_type: The resource type to be displayed in the template
-        :param explode_nested: True if a resource's nested properties schema
-            should be resolved.
         :returns: A template where the resource's properties_schema is mapped
             as parameters, and the resource's attributes_schema is mapped as
             outputs
