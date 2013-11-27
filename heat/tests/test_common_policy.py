@@ -58,7 +58,7 @@ class TestPolicyEnforcer(HeatTestCase):
         ctx = utils.dummy_context(roles=[])
         for action in self.cfn_actions:
             # Everything should be allowed
-            enforcer.enforce(ctx, action, {})
+            enforcer.enforce(ctx, action)
 
     def test_policy_cfn_notallowed(self):
         pf = policy_path + 'notallowed.json'
@@ -87,7 +87,7 @@ class TestPolicyEnforcer(HeatTestCase):
         for action in self.cfn_actions:
             # Everything apart from DescribeStackResource should be Forbidden
             if action == "DescribeStackResource":
-                enforcer.enforce(ctx, action, {})
+                enforcer.enforce(ctx, action)
             else:
                 self.assertRaises(exception.Forbidden, enforcer.enforce, ctx,
                                   action, {})
@@ -104,8 +104,7 @@ class TestPolicyEnforcer(HeatTestCase):
         ctx = utils.dummy_context(roles=['not_a_stack_user'])
         for action in self.cfn_actions:
             # Everything should be allowed
-            enforcer.enforce(ctx, action, {})
-        self.m.VerifyAll()
+            enforcer.enforce(ctx, action)
 
     def test_policy_cw_deny_stack_user(self):
         pf = policy_path + 'deny_stack_user.json'
@@ -119,7 +118,7 @@ class TestPolicyEnforcer(HeatTestCase):
         for action in self.cw_actions:
             # Everything apart from PutMetricData should be Forbidden
             if action == "PutMetricData":
-                enforcer.enforce(ctx, action, {})
+                enforcer.enforce(ctx, action)
             else:
                 self.assertRaises(exception.Forbidden, enforcer.enforce, ctx,
                                   action, {})
@@ -136,8 +135,7 @@ class TestPolicyEnforcer(HeatTestCase):
         ctx = utils.dummy_context(roles=['not_a_stack_user'])
         for action in self.cw_actions:
             # Everything should be allowed
-            enforcer.enforce(ctx, action, {})
-        self.m.VerifyAll()
+            enforcer.enforce(ctx, action)
 
     def test_clear(self):
         pf = policy_path + 'deny_stack_user.json'
@@ -207,5 +205,4 @@ class TestPolicyEnforcer(HeatTestCase):
         enforcer = policy.Enforcer(scope='cloudformation',
                                    exc=None, default_rule=default_rule)
         action = 'no_such_action'
-        self.assertEqual(enforcer.enforce(ctx, action, {}), False)
-        self.m.VerifyAll()
+        self.assertFalse(enforcer.enforce(ctx, action))
