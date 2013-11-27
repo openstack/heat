@@ -447,9 +447,9 @@ class Resource(object):
                     while not self.check_update_complete(handle_data):
                         yield
         except UpdateReplace:
-            logger.debug(_("Resource %s update requires replacement") %
-                         self.name)
-            raise
+            with excutils.save_and_reraise_exception():
+                logger.debug(_("Resource %s update requires replacement") %
+                             self.name)
         except Exception as ex:
             logger.exception('update %s : %s' % (str(self), str(ex)))
             failure = exception.ResourceFailure(ex, self, action)
