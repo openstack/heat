@@ -558,14 +558,22 @@ class Stack(object):
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
 
-        self.state_set(action, stack_status, reason)
         if stack_status != self.FAILED:
             # If we created a trust, delete it
             stack = db_api.stack_get(self.context, self.id)
             user_creds = db_api.user_creds_get(stack.user_creds_id)
             trust_id = user_creds.get('trust_id')
             if trust_id:
-                self.clients.keystone().delete_trust(trust_id)
+                try:
+                    self.clients.keystone().delete_trust(trust_id)
+                except Exception as ex:
+                    logger.exception(ex)
+                    stack_status = self.FAILED
+                    reason = "Error deleting trust: %s" % str(ex)
+
+        self.state_set(action, stack_status, reason)
+
+        if stack_status != self.FAILED:
             # delete the stack
             db_api.stack_delete(self.context, self.id)
             self.id = None
