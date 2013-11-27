@@ -97,6 +97,7 @@ class Stack(collections.Mapping):
         self.parent_resource = parent_resource
         self._resources = None
         self._dependencies = None
+        self._access_allowed_handlers = {}
 
         resources.initialise()
 
@@ -297,6 +298,28 @@ class Stack(collections.Mapping):
                     (r.UPDATE, r.IN_PROGRESS),
                     (r.UPDATE, r.COMPLETE)) and r.FnGetRefId() == refid:
                 return r
+
+    def register_access_allowed_handler(self, credential_id, handler):
+        '''
+        Register a function which determines whether the credentials with
+        a give ID can have access to a named resource.
+        '''
+        assert callable(handler), 'Handler is not callable'
+        self._access_allowed_handlers[credential_id] = handler
+
+    def access_allowed(self, credential_id, resource_name):
+        '''
+        Returns True if the credential_id is authorised to access the
+        resource with the specified resource_name.
+        '''
+        if not self.resources:
+            # this also triggers lazy-loading of resources
+            # so is required for register_access_allowed_handler
+            # to be called
+            return False
+
+        handler = self._access_allowed_handlers.get(credential_id)
+        return handler and handler(resource_name)
 
     def validate(self):
         '''

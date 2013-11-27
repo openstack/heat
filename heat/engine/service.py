@@ -625,27 +625,11 @@ class EngineService(service.Service):
         except (TypeError, AttributeError):
             ec2_creds = None
 
-        if ec2_creds:
-            access_key = ec2_creds.get('access')
-            # Then we look up the AccessKey resource and check the stack
-            try:
-                akey_rsrc = self.find_physical_resource(cnxt, access_key)
-            except exception.PhysicalResourceNotFound:
-                logger.warning(_("access_key % not found!") % access_key)
-                return False
+        if not ec2_creds:
+            return False
 
-            akey_rsrc_id = identifier.ResourceIdentifier(**akey_rsrc)
-            if stack.identifier() == akey_rsrc_id.stack():
-                # The stack matches, so check if access is allowed to this
-                # resource via the AccessKey resource access_allowed()
-                ak_akey_rsrc = stack[akey_rsrc_id.resource_name]
-                return ak_akey_rsrc.access_allowed(resource_name)
-            else:
-                logger.warning(_("Cannot access resource from wrong stack!"))
-        else:
-            logger.warning(_("Cannot access resource, invalid credentials!"))
-
-        return False
+        access_key = ec2_creds.get('access')
+        return stack.access_allowed(access_key, resource_name)
 
     @request_context
     def describe_stack_resource(self, cnxt, stack_identity, resource_name):
