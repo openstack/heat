@@ -147,8 +147,9 @@ class EngineService(service.Service):
         """
         The identify_stack method returns the full stack identifier for a
         single, live stack given the stack name.
-        arg1 -> RPC context.
-        arg2 -> Name or UUID of the stack to look up.
+
+        :param cnxt: RPC context.
+        :param stack_name: Name or UUID of the stack to look up.
         """
         if uuidutils.is_uuid_like(stack_name):
             s = db_api.stack_get(cnxt, stack_name, show_deleted=True)
@@ -182,8 +183,10 @@ class EngineService(service.Service):
     def show_stack(self, cnxt, stack_identity):
         """
         Return detailed information about one or all stacks.
-        arg1 -> RPC cnxt.
-        arg2 -> Name of the stack you want to show, or None to show all
+
+        :param cnxt: RPC context.
+        :param stack_identity: Name of the stack you want to show, or None
+            to show all
         """
         if stack_identity is not None:
             stacks = [self._get_stack(cnxt, stack_identity, show_deleted=True)]
@@ -248,6 +251,7 @@ class EngineService(service.Service):
         provided.
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
+
         :param cnxt: RPC context.
         :param stack_name: Name of the stack you want to create.
         :param template: Template of stack you want to create.
@@ -305,11 +309,13 @@ class EngineService(service.Service):
         provided template and parameters.
         Note that at this stage the template has already been fetched from the
         heat-api process if using a template-url.
-        arg1 -> RPC context.
-        arg2 -> Name of the stack you want to create.
-        arg3 -> Template of stack you want to create.
-        arg4 -> Stack Input Params
-        arg4 -> Request parameters/args passed from API
+
+        :param cnxt: RPC context.
+        :param stack_identity: Name of the stack you want to create.
+        :param template: Template of stack you want to create.
+        :param params: Stack Input Params
+        :param files: Files referenced from the template
+        :param args: Request parameters/args passed from API
         """
         logger.info(_('template is %s') % template)
 
@@ -351,9 +357,8 @@ class EngineService(service.Service):
         The validate_template method uses the stack parser to check
         the validity of a template.
 
-        arg1 -> RPC context.
-        arg3 -> Template of stack you want to create.
-        arg4 -> Stack Input Params
+        :param cnxt: RPC context.
+        :param template: Template of stack you want to create.
         """
         logger.info(_('validate_template'))
         if template is None:
@@ -418,8 +423,9 @@ class EngineService(service.Service):
     def get_template(self, cnxt, stack_identity):
         """
         Get the template.
-        arg1 -> RPC context.
-        arg2 -> Name of the stack you want to see.
+
+        :param cnxt: RPC context.
+        :param stack_identity: Name of the stack you want to see.
         """
         s = self._get_stack(cnxt, stack_identity, show_deleted=True)
         if s:
@@ -430,8 +436,9 @@ class EngineService(service.Service):
     def delete_stack(self, cnxt, stack_identity):
         """
         The delete_stack method deletes a given stack.
-        arg1 -> RPC context.
-        arg2 -> Name of the stack you want to delete.
+
+        :param cnxt: RPC context.
+        :param stack_identity: Name of the stack you want to delete.
         """
         st = self._get_stack(cnxt, stack_identity)
 
@@ -450,15 +457,17 @@ class EngineService(service.Service):
     def list_resource_types(self, cnxt):
         """
         Get a list of supported resource types.
-        arg1 -> RPC context.
+
+        :param cnxt: RPC context.
         """
         return list(resource.get_types())
 
     def resource_schema(self, cnxt, type_name):
         """
         Return the schema of the specified type.
-        arg1 -> RPC context.
-        arg2 -> Name of the resource type to obtain the schema of.
+
+        :param cnxt: RPC context.
+        :param type_name: Name of the resource type to obtain the schema of.
         """
         try:
             resource_class = resource.get_class(type_name)
@@ -485,8 +494,9 @@ class EngineService(service.Service):
     def generate_template(self, cnxt, type_name):
         """
         Generate a template based on the specified type.
-        arg1 -> RPC context.
-        arg2 -> Name of the resource type to generate a template for.
+
+        :param cnxt: RPC context.
+        :param type_name: Name of the resource type to generate a template for.
         """
         try:
             return \
@@ -498,8 +508,9 @@ class EngineService(service.Service):
     def list_events(self, cnxt, stack_identity):
         """
         The list_events method lists all events associated with a given stack.
-        arg1 -> RPC context.
-        arg2 -> Name of the stack you want to get events for.
+
+        :param cnxt: RPC context.
+        :param stack_identity: Name of the stack you want to get events for.
         """
 
         if stack_identity is not None:
@@ -604,8 +615,9 @@ class EngineService(service.Service):
         """
         Return an identifier for the resource with the specified physical
         resource ID.
-        arg1 -> RPC context.
-        arg2 -> The physical resource ID to look up.
+
+        :param cnxt: RPC context.
+        :param physical_resource_id: The physical resource ID to look up.
         """
         rs = db_api.resource_get_by_physical_resource_id(cnxt,
                                                          physical_resource_id)
@@ -784,11 +796,13 @@ class EngineService(service.Service):
 
     @request_context
     def show_watch(self, cnxt, watch_name):
-        '''
+        """
         The show_watch method returns the attributes of one watch/alarm
-        arg1 -> RPC context.
-        arg2 -> Name of the watch you want to see, or None to see all
-        '''
+
+        :param cnxt: RPC context.
+        :param watch_name: Name of the watch you want to see, or None to see
+            all
+        """
         if watch_name:
             wrn = [watch_name]
         else:
@@ -804,12 +818,15 @@ class EngineService(service.Service):
 
     @request_context
     def show_watch_metric(self, cnxt, metric_namespace=None, metric_name=None):
-        '''
+        """
         The show_watch method returns the datapoints for a metric
-        arg1 -> RPC context.
-        arg2 -> Name of the namespace you want to see, or None to see all
-        arg3 -> Name of the metric you want to see, or None to see all
-        '''
+
+        :param cnxt: RPC context.
+        :param metric_namespace: Name of the namespace you want to see, or None
+            to see all
+        :param metric_name: Name of the metric you want to see, or None to see
+            all
+        """
 
         # DB API and schema does not yet allow us to easily query by
         # namespace/metric, but we will want this at some point
@@ -829,12 +846,13 @@ class EngineService(service.Service):
 
     @request_context
     def set_watch_state(self, cnxt, watch_name, state):
-        '''
+        """
         Temporarily set the state of a given watch
-        arg1 -> RPC context.
-        arg2 -> Name of the watch
-        arg3 -> State (must be one defined in WatchRule class
-        '''
+
+        :param cnxt: RPC context.
+        :param watch_name: Name of the watch
+        :param state: State (must be one defined in WatchRule class
+        """
         wr = watchrule.WatchRule.load(cnxt, watch_name)
         if wr.state == rpc_api.WATCH_STATE_CEILOMETER_CONTROLLED:
             return
