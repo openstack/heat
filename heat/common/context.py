@@ -139,33 +139,10 @@ class ContextMiddleware(wsgi.Middleware):
         """
         Extract any authentication information in the request and
         construct an appropriate context from it.
-
-        A few scenarios exist:
-
-        1. If X-Auth-Token is passed in, then consult TENANT and ROLE headers
-           to determine permissions.
-
-        2. An X-Auth-Token was passed in, but the Identity-Status is not
-           confirmed. For now, just raising a NotAuthenticated exception.
-
-        3. X-Auth-Token is omitted. If we were using Keystone, then the
-           tokenauth middleware would have rejected the request, so we must be
-           using NoAuth.
         """
         headers = req.headers
 
         try:
-            """
-            This sets the username/password to the admin user because you
-            need this information in order to perform token authentication.
-            The real 'username' is the 'tenant'.
-
-            We should also check here to see if X-Auth-Token is not set and
-            in that case we should assign the user/pass directly as the real
-            username/password and token as None.  'tenant' should still be
-            the username.
-            """
-
             username = None
             password = None
             aws_creds = None
