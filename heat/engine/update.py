@@ -141,16 +141,13 @@ class StackUpdate(object):
 
         yield self._create_resource(new_res)
 
-    @scheduler.wrappertask
     def _update_in_place(self, existing_res, new_res):
-        # Compare resolved pre/post update resource snippets,
-        # note the new resource snippet is resolved in the context
+        # Note the new resource snippet is resolved in the context
         # of the existing stack (which is the stack being updated)
         existing_snippet = self.existing_snippets[existing_res.name]
         new_snippet = self.existing_stack.resolve_runtime_data(new_res.t)
 
-        if new_snippet != existing_snippet:
-            yield existing_res.update(new_snippet, existing_snippet)
+        return existing_res.update(new_snippet, existing_snippet)
 
     @scheduler.wrappertask
     def _process_existing_resource_update(self, existing_res):

@@ -423,6 +423,8 @@ class Resource(object):
 
         if before is None:
             before = self.parsed_template()
+        elif before == after:
+            return
 
         if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
                                           (self.UPDATE, self.IN_PROGRESS)):
