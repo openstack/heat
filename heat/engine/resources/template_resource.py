@@ -56,7 +56,7 @@ class TemplateResource(stack_resource.StackResource):
         # or otherwise inaccessible.  Suppress the error here so the
         # stack can be deleted, and detect it at validate/create time
         try:
-            tmpl = template.Template(self.parsed_nested)
+            tmpl = template.Template(self.parsed_nested())
         except ValueError as parse_error:
             self.validation_exception = parse_error
             tmpl = template.Template({})
@@ -101,13 +101,11 @@ class TemplateResource(stack_resource.StackResource):
 
         return params
 
-    @property
     def parsed_nested(self):
         if not self._parsed_nested:
-            self._parsed_nested = template_format.parse(self.template_data)
+            self._parsed_nested = template_format.parse(self.template_data())
         return self._parsed_nested
 
-    @property
     def template_data(self):
         t_data = self.stack.t.files.get(self.template_name)
         if not t_data and self.template_name.endswith((".yaml", ".template")):
@@ -166,7 +164,7 @@ class TemplateResource(stack_resource.StackResource):
             raise exception.StackValidationFailed(message=msg)
 
         try:
-            td = self.template_data
+            td = self.template_data()
         except ValueError as ex:
             msg = _("Failed to retrieve template data: %s") % str(ex)
             raise exception.StackValidationFailed(message=msg)
@@ -183,7 +181,7 @@ class TemplateResource(stack_resource.StackResource):
         return super(TemplateResource, self).validate()
 
     def handle_create(self):
-        return self.create_with_template(self.parsed_nested,
+        return self.create_with_template(self.parsed_nested(),
                                          self._to_parameters())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
@@ -194,7 +192,7 @@ class TemplateResource(stack_resource.StackResource):
             self.stack.resolve_runtime_data,
             self.name)
 
-        return self.update_with_template(self.parsed_nested,
+        return self.update_with_template(self.parsed_nested(),
                                          self._to_parameters())
 
     def handle_delete(self):
