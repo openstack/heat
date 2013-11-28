@@ -486,6 +486,7 @@ class Stack(collections.Mapping):
 
             self.env = newstack.env
             self.parameters = newstack.parameters
+            self._set_param_stackid()
 
             try:
                 updater.start(timeout=self.timeout_secs())
