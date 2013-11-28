@@ -17,6 +17,8 @@ import time
 
 import testscenarios
 
+from keystoneclient import exceptions as kc_exceptions
+
 from oslo.config import cfg
 
 from heat.engine import environment
@@ -863,6 +865,34 @@ class StackTest(HeatTestCase):
         self.assertEqual(db_s, None)
         self.assertEqual(self.stack.state,
                          (parser.Stack.DELETE, parser.Stack.COMPLETE))
+
+    @utils.stack_delete_after
+    def test_delete_trust_fail(self):
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+
+        class FakeKeystoneClientFail(FakeKeystoneClient):
+            def delete_trust(self, trust_id):
+                raise kc_exceptions.Forbidden("Denied!")
+
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            FakeKeystoneClientFail())
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(
+            self.ctx, 'delete_trust', template.Template({}))
+        stack_id = self.stack.store()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+
+        self.stack.delete()
+
+        db_s = db_api.stack_get(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.DELETE, parser.Stack.FAILED))
+        self.assertIn('Error deleting trust', self.stack.status_reason)
 
     @utils.stack_delete_after
     def test_suspend_resume(self):
