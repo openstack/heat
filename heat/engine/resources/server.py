@@ -201,13 +201,6 @@ class Server(resource.Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(Server, self).__init__(name, json_snippet, stack)
-        self.mime_string = None
-
-    def get_mime_string(self, userdata):
-        if not self.mime_string:
-            self.mime_string = nova_utils.build_userdata(
-                self, userdata, instance_user=self.properties['admin_user'])
-        return self.mime_string
 
     def physical_resource_name(self):
         name = self.properties.get('name')
@@ -220,11 +213,11 @@ class Server(resource.Resource):
         security_groups = self.properties.get('security_groups', [])
 
         user_data_format = self.properties.get('user_data_format')
-        if user_data_format == 'HEAT_CFNTOOLS':
-            userdata = self.get_mime_string(
-                self.properties.get('user_data', ''))
-        else:
-            userdata = self.properties.get('user_data', '')
+        userdata = nova_utils.build_userdata(
+            self,
+            self.properties.get('user_data', ''),
+            instance_user=self.properties['admin_user'],
+            user_data_format=user_data_format)
 
         flavor = self.properties['flavor']
         availability_zone = self.properties['availability_zone']
