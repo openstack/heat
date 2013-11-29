@@ -55,11 +55,11 @@ def model_query(context, *args):
 def soft_delete_aware_query(context, *args, **kwargs):
     """Stack query helper that accounts for context's `show_deleted` field.
 
-    :param show_deleted: if present, overrides context's show_deleted field.
+    :param show_deleted: if True, overrides context's show_deleted field.
     """
 
     query = model_query(context, *args)
-    show_deleted = kwargs.get('show_deleted')
+    show_deleted = kwargs.get('show_deleted') or context.show_deleted
 
     if not show_deleted:
         query = query.filter_by(deleted_at=None)
@@ -249,7 +249,8 @@ def stack_get_by_name(context, stack_name, owner_id=None):
 def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
     result = model_query(context, models.Stack).get(stack_id)
 
-    if result is None or result.deleted_at is not None and not show_deleted:
+    deleted_ok = show_deleted or context.show_deleted
+    if result is None or result.deleted_at is not None and not deleted_ok:
         return None
 
     if (tenant_safe and result is not None and context is not None and
