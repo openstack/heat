@@ -17,6 +17,7 @@ from oslo.config import cfg
 
 from heat.openstack.common import local
 from heat.common import exception
+from heat.common import policy
 from heat.common import wsgi
 from heat.openstack.common import context
 from heat.openstack.common import importutils
@@ -36,7 +37,7 @@ class RequestContext(context.RequestContext):
 
     def __init__(self, auth_token=None, username=None, password=None,
                  aws_creds=None, tenant=None,
-                 tenant_id=None, auth_url=None, roles=None, is_admin=False,
+                 tenant_id=None, auth_url=None, roles=None, is_admin=None,
                  read_only=False, show_deleted=False,
                  owner_is_tenant=True, overwrite=True,
                  trust_id=None, trustor_user_id=None,
@@ -67,6 +68,12 @@ class RequestContext(context.RequestContext):
         self._session = None
         self.trust_id = trust_id
         self.trustor_user_id = trustor_user_id
+        self.policy = policy.Enforcer()
+
+        if is_admin is None:
+            self.is_admin = self.policy.check_is_admin(self)
+        else:
+            self.is_admin = is_admin
 
     def update_store(self):
         local.store.context = self
@@ -108,8 +115,7 @@ def get_admin_context(read_deleted="no"):
 
 class ContextMiddleware(wsgi.Middleware):
 
-    opts = [cfg.BoolOpt('owner_is_tenant', default=True),
-            cfg.StrOpt('admin_role', default='admin')]
+    opts = [cfg.BoolOpt('owner_is_tenant', default=True)]
 
     def __init__(self, app, conf, **local_conf):
         cfg.CONF.register_opts(self.opts)
@@ -144,7 +150,7 @@ class ContextMiddleware(wsgi.Middleware):
 
         3. X-Auth-Token is omitted. If we were using Keystone, then the
            tokenauth middleware would have rejected the request, so we must be
-           using NoAuth. In that case, assume that is_admin=True.
+           using NoAuth.
         """
         headers = req.headers
 
@@ -186,8 +192,7 @@ class ContextMiddleware(wsgi.Middleware):
                                         aws_creds=aws_creds,
                                         username=username,
                                         password=password,
-                                        auth_url=auth_url, roles=roles,
-                                        is_admin=True)
+                                        auth_url=auth_url, roles=roles)
 
 
 def ContextMiddleware_filter_factory(global_conf, **local_conf):
