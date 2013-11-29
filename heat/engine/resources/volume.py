@@ -50,8 +50,8 @@ class Volume(resource.Resource):
         'Tags': {
             'Type': 'List',
             'Description': _('The list of tags to associate '
-                             'with the volume.')},
-            'Schema': {'Type': 'Map', 'Schema': tags_schema},
+                             'with the volume.'),
+            'Schema': {'Type': 'Map', 'Schema': tags_schema}},
     }
 
     _restore_property = 'SnapshotId'
