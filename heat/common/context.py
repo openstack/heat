@@ -93,15 +93,16 @@ class RequestContext(context.RequestContext):
                 'roles': self.roles,
                 'is_admin': self.is_admin,
                 'user': self.user,
-                'request_id': self.request_id}
+                'request_id': self.request_id,
+                'show_deleted': self.show_deleted}
 
     @classmethod
     def from_dict(cls, values):
         return cls(**values)
 
 
-def get_admin_context(read_deleted="no"):
-    return RequestContext(is_admin=True)
+def get_admin_context(show_deleted=False):
+    return RequestContext(is_admin=True, show_deleted=show_deleted)
 
 
 class ContextMiddleware(wsgi.Middleware):
