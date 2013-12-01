@@ -807,7 +807,6 @@ class StackServiceUpdateNotSupportedTest(HeatTestCase):
         ('delete_in_progress', dict(action='DELETE', status='IN_PROGRESS')),
         ('update_in_progress', dict(action='UPDATE', status='IN_PROGRESS')),
         ('rb_in_progress', dict(action='ROLLBACK', status='IN_PROGRESS')),
-        ('suspend_in_progress', dict(action='SUSPEND', status='IN_PROGRESS')),
         ('resume_in_progress', dict(action='RESUME', status='IN_PROGRESS')),
     ]
 
