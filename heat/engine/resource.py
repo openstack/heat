@@ -723,8 +723,9 @@ class Resource(object):
 
     def FnGetRefId(self):
         '''
-        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/\
-        intrinsic-function-reference-ref.html
+        For the intrinsic function Ref.
+
+        :results: the id or name of the resource.
         '''
         if self.resource_id is not None:
             return unicode(self.resource_id)
@@ -733,8 +734,10 @@ class Resource(object):
 
     def FnGetAtt(self, key):
         '''
-        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/\
-        intrinsic-function-reference-getatt.html
+        For the intrinsic function Fn::GetAtt.
+
+        :param key: the attribute key.
+        :returns: the attribute value.
         '''
         try:
             return self.attributes[key]
@@ -744,8 +747,10 @@ class Resource(object):
 
     def FnBase64(self, data):
         '''
-        http://docs.amazonwebservices.com/AWSCloudFormation/latest/UserGuide/\
-            intrinsic-function-reference-base64.html
+        For the instrinsic function Fn::Base64.
+
+        :param data: the input data.
+        :returns: the Base64 representation of the input data.
         '''
         return base64.b64encode(data)
 
