@@ -884,14 +884,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
-        error = heat_exc.InvalidTenant(target='a', actual='b')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'show_stack',
-                  'args': {'stack_identity': dict(identity)},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -900,8 +892,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        stack_name=identity.stack_name,
                                        stack_id=identity.stack_id)
 
-        self.assertEqual(resp.json['code'], 403)
-        self.assertEqual(resp.json['error']['type'], 'InvalidTenant')
+        self.assertEqual(resp.status_int, 403)
+        self.assertIn('403 Forbidden', str(resp))
         self.m.VerifyAll()
 
     def test_get_template(self):
