@@ -23,28 +23,6 @@ places where actual behavior differs from the spec.
 """
 
 
-def assert_has_keys(a_dict, required=(), optional=()):
-    """Raise an assertion if a_dict has the wrong keys.
-
-    :param a_dict: A dict to look for keys in.
-    :param required: An iterable of keys that must be present.
-    :param optional: An iterable of keys that may be present.
-
-    If any key from required is missing, an AssertionError will be raised.
-    If any key other than those from required + optional is present, an
-    AssertionError will be raised.
-    """
-    keys = set(a_dict.keys())
-    required = set(required)
-    optional = set(optional)
-    missing = required - keys
-    extra = keys - (required | optional)
-    if missing or extra:
-        raise AssertionError(
-            "Missing keys %r, with extra keys %r in %r" %
-            (missing, extra, keys))
-
-
 class FakeClient(object):
 
     def assert_called(self, method, url, body=None, pos=-1):
