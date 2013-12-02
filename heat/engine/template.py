@@ -374,6 +374,8 @@ class Template(collections.Mapping):
             for k, v in mapping.items():
                 if v is None:
                     v = ''
+                if isinstance(v, (int, float)):
+                    v = str(v)
                 if not isinstance(v, basestring):
                     raise TypeError(
                         _('"Fn::Replace" value(%(value)s) for'

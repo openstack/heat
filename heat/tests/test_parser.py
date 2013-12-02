@@ -338,7 +338,7 @@ Mappings:
             parser.Template.resolve_availability_zones(snippet, stack),
             ["nova1"])
 
-    def test_replace(self):
+    def test_replace_string_values(self):
         snippet = {"Fn::Replace": [
             {'$var1': 'foo', '%var2%': 'bar'},
             '$var1 is %var2%'
@@ -346,6 +346,23 @@ Mappings:
         self.assertEqual(
             parser.Template.resolve_replace(snippet),
             'foo is bar')
+
+    def test_replace_number_values(self):
+        snippet = {"Fn::Replace": [
+            {'$var1': 1, '%var2%': 2},
+            '$var1 is not %var2%'
+        ]}
+        self.assertEqual(
+            parser.Template.resolve_replace(snippet),
+            '1 is not 2')
+
+        snippet = {"Fn::Replace": [
+            {'$var1': 1.3, '%var2%': 2.5},
+            '$var1 is not %var2%'
+        ]}
+        self.assertEqual(
+            parser.Template.resolve_replace(snippet),
+            '1.3 is not 2.5')
 
     def test_replace_none_values(self):
         snippet = {"Fn::Replace": [
