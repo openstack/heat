@@ -20,6 +20,7 @@ return
 """
 
 import re
+import webob
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
@@ -52,7 +53,7 @@ class VersionNegotiationFilter(wsgi.Middleware):
         logger.debug(msg)
 
         # If the request is for /versions, just return the versions container
-        if req.path_info_peek() == "versions":
+        if req.path_info_peek() in ("versions", ""):
             return self.versions_app
 
         match = self._match_version_string(req.path_info_peek(), req)
@@ -100,8 +101,8 @@ class VersionNegotiationFilter(wsgi.Middleware):
         else:
             if req.accept not in ('*/*', ''):
                 logger.debug(_("Unknown accept header: %s..."
-                             "returning version choices."), req.accept)
-            return self.versions_app
+                             "returning HTTP not found."), req.accept)
+            return webob.exc.HTTPNotFound()
         return None
 
     def _match_version_string(self, subject, req):
