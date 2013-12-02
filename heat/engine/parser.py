@@ -728,6 +728,9 @@ def transform(data, transformations):
     Apply each of the transformation functions in the supplied list to the data
     in turn.
     '''
+    def sub_transform(d):
+        return transform(d, transformations)
+
     for t in transformations:
-        data = t(data)
+        data = t(data, transform=sub_transform)
     return data

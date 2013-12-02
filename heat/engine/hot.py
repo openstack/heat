@@ -148,7 +148,7 @@ class HOTemplate(template.Template):
         return cfn_outputs
 
     @staticmethod
-    def resolve_param_refs(s, parameters):
+    def resolve_param_refs(s, parameters, transform=None):
         """
         Resolve constructs of the form { get_param: my_param }
         """
@@ -163,10 +163,11 @@ class HOTemplate(template.Template):
             except (KeyError, ValueError):
                 raise exception.UserParameterMissing(key=ref)
 
-        return template._resolve(match_param_ref, handle_param_ref, s)
+        return template._resolve(match_param_ref, handle_param_ref, s,
+                                 transform)
 
     @staticmethod
-    def resolve_resource_refs(s, resources):
+    def resolve_resource_refs(s, resources, transform=None):
         '''
         Resolve constructs of the form { "get_resource" : "resource" }
         '''
@@ -176,10 +177,11 @@ class HOTemplate(template.Template):
         def handle_resource_ref(arg):
             return resources[arg].FnGetRefId()
 
-        return template._resolve(match_resource_ref, handle_resource_ref, s)
+        return template._resolve(match_resource_ref, handle_resource_ref, s,
+                                 transform)
 
     @staticmethod
-    def resolve_attributes(s, resources):
+    def resolve_attributes(s, resources, transform=None):
         """
         Resolve constructs of the form { get_attr: [my_resource, my_attr] }
         """
@@ -206,10 +208,11 @@ class HOTemplate(template.Template):
                 raise exception.InvalidTemplateAttribute(resource=resource,
                                                          key=att)
 
-        return template._resolve(match_get_attr, handle_get_attr, s)
+        return template._resolve(match_get_attr, handle_get_attr, s,
+                                 transform)
 
     @staticmethod
-    def resolve_replace(s):
+    def resolve_replace(s, transform=None):
         """
         Resolve template string substitution via function str_replace
 
@@ -253,7 +256,7 @@ class HOTemplate(template.Template):
 
         match_str_replace = lambda k, v: k in ['str_replace', 'Fn::Replace']
         return template._resolve(match_str_replace,
-                                 handle_str_replace, s)
+                                 handle_str_replace, s, transform)
 
     def param_schemata(self):
         params = self[PARAMETERS].iteritems()

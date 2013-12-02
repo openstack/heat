@@ -87,7 +87,7 @@ class Template(collections.Mapping):
         '''Return the number of sections.'''
         return len(SECTIONS)
 
-    def resolve_find_in_map(self, s):
+    def resolve_find_in_map(self, s, transform=None):
         '''
         Resolve constructs of the form { "Fn::FindInMap" : [ "mapping",
                                                              "key",
@@ -101,10 +101,10 @@ class Template(collections.Mapping):
                 raise KeyError(str(ex))
 
         return _resolve(lambda k, v: k == 'Fn::FindInMap',
-                        handle_find_in_map, s)
+                        handle_find_in_map, s, transform)
 
     @staticmethod
-    def resolve_availability_zones(s, stack):
+    def resolve_availability_zones(s, stack, transform=None):
         '''
             looking for { "Fn::GetAZs" : "str" }
         '''
@@ -118,10 +118,10 @@ class Template(collections.Mapping):
             else:
                 return stack.get_availability_zones()
 
-        return _resolve(match_get_az, handle_get_az, s)
+        return _resolve(match_get_az, handle_get_az, s, transform)
 
     @staticmethod
-    def resolve_param_refs(s, parameters):
+    def resolve_param_refs(s, parameters, transform=None):
         '''
         Resolve constructs of the form { "Ref" : "string" }
         '''
@@ -136,10 +136,10 @@ class Template(collections.Mapping):
             except (KeyError, ValueError):
                 raise exception.UserParameterMissing(key=ref)
 
-        return _resolve(match_param_ref, handle_param_ref, s)
+        return _resolve(match_param_ref, handle_param_ref, s, transform)
 
     @staticmethod
-    def resolve_resource_refs(s, resources):
+    def resolve_resource_refs(s, resources, transform=None):
         '''
         Resolve constructs of the form { "Ref" : "resource" }
         '''
@@ -149,10 +149,10 @@ class Template(collections.Mapping):
         def handle_resource_ref(arg):
             return resources[arg].FnGetRefId()
 
-        return _resolve(match_resource_ref, handle_resource_ref, s)
+        return _resolve(match_resource_ref, handle_resource_ref, s, transform)
 
     @staticmethod
-    def resolve_attributes(s, resources):
+    def resolve_attributes(s, resources, transform=None):
         '''
         Resolve constructs of the form { "Fn::GetAtt" : [ "WebServer",
                                                           "PublicIp" ] }
@@ -173,10 +173,11 @@ class Template(collections.Mapping):
                 raise exception.InvalidTemplateAttribute(resource=resource,
                                                          key=att)
 
-        return _resolve(lambda k, v: k == 'Fn::GetAtt', handle_getatt, s)
+        return _resolve(lambda k, v: k == 'Fn::GetAtt', handle_getatt, s,
+                        transform)
 
     @staticmethod
-    def reduce_joins(s):
+    def reduce_joins(s, transform=None):
         '''
         Reduces contiguous strings in Fn::Join to a single joined string
         eg the following
@@ -212,10 +213,11 @@ class Template(collections.Mapping):
                 reduced.append(delim.join(contiguous))
             return {'Fn::Join': [delim, reduced]}
 
-        return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s)
+        return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s,
+                        transform)
 
     @staticmethod
-    def resolve_select(s):
+    def resolve_select(s, transform=None):
         '''
         Resolve constructs of the form:
         (for a list lookup)
@@ -278,10 +280,11 @@ class Template(collections.Mapping):
 
             raise TypeError(_('Arguments to "Fn::Select" not fully resolved'))
 
-        return _resolve(lambda k, v: k == 'Fn::Select', handle_select, s)
+        return _resolve(lambda k, v: k == 'Fn::Select', handle_select, s,
+                        transform)
 
     @staticmethod
-    def resolve_joins(s):
+    def resolve_joins(s, transform=None):
         '''
         Resolve constructs of the form { "Fn::Join" : [ "delim", [ "str1",
                                                                    "str2" ] }
@@ -310,10 +313,11 @@ class Template(collections.Mapping):
 
             return delim.join(empty_for_none(value) for value in strings)
 
-        return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s)
+        return _resolve(lambda k, v: k == 'Fn::Join', handle_join, s,
+                        transform)
 
     @staticmethod
-    def resolve_split(s):
+    def resolve_split(s, transform=None):
         '''
         Split strings in Fn::Split to a list of sub strings
         eg the following
@@ -336,10 +340,11 @@ class Template(collections.Mapping):
                                   '"Fn::Split" should be: %s') %
                                 example)
             return strings.split(delim)
-        return _resolve(lambda k, v: k == 'Fn::Split', handle_split, s)
+        return _resolve(lambda k, v: k == 'Fn::Split', handle_split, s,
+                        transform)
 
     @staticmethod
-    def resolve_replace(s):
+    def resolve_replace(s, transform=None):
         """
         Resolve constructs of the form::
 
@@ -384,10 +389,11 @@ class Template(collections.Mapping):
                 string = string.replace(k, v)
             return string
 
-        return _resolve(lambda k, v: k == 'Fn::Replace', handle_replace, s)
+        return _resolve(lambda k, v: k == 'Fn::Replace', handle_replace, s,
+                        transform)
 
     @staticmethod
-    def resolve_base64(s):
+    def resolve_base64(s, transform=None):
         '''
         Resolve constructs of the form { "Fn::Base64" : "string" }
         '''
@@ -397,10 +403,11 @@ class Template(collections.Mapping):
                                   'not fully resolved'))
             return string
 
-        return _resolve(lambda k, v: k == 'Fn::Base64', handle_base64, s)
+        return _resolve(lambda k, v: k == 'Fn::Base64', handle_base64, s,
+                        transform)
 
     @staticmethod
-    def resolve_member_list_to_map(s):
+    def resolve_member_list_to_map(s, transform=None):
         '''
         Resolve constructs of the form::
 
@@ -437,10 +444,10 @@ class Template(collections.Mapping):
                                                  valuename=args[1])
 
         return _resolve(lambda k, v: k == 'Fn::MemberListToMap',
-                        handle_member_list_to_map, s)
+                        handle_member_list_to_map, s, transform)
 
     @staticmethod
-    def resolve_resource_facade(s, stack):
+    def resolve_resource_facade(s, stack, transform=None):
         '''
         Resolve constructs of the form {'Fn::ResourceFacade': 'Metadata'}
         '''
@@ -462,29 +469,34 @@ class Template(collections.Mapping):
 
         return _resolve(lambda k, v: k == 'Fn::ResourceFacade',
                         handle_resource_facade,
-                        s)
+                        s, transform)
 
     def param_schemata(self):
         parameters = self[PARAMETERS].iteritems()
         return dict((name, ParamSchema(schema)) for name, schema in parameters)
 
 
-def _resolve(match, handle, snippet):
+def _resolve(match, handle, snippet, transform=None):
     '''
     Resolve constructs in a snippet of a template. The supplied match function
     should return True if a particular key-value pair should be substituted,
     and the handle function should return the correct substitution when passed
     the argument list as parameters.
 
-    Returns a copy of the original snippet with the substitutions performed.
+    Returns a copy of the original snippet with the substitutions to handle
+    functions performed.
     '''
-    recurse = lambda s: _resolve(match, handle, s)
+
+    recurse = lambda s: _resolve(match, handle, s, transform)
 
     if isinstance(snippet, dict):
         if len(snippet) == 1:
             k, v = snippet.items()[0]
             if match(k, v):
-                return handle(recurse(v))
+                if transform:
+                    return handle(transform(v))
+                else:
+                    return handle(v)
         return dict((k, recurse(v)) for k, v in snippet.items())
     elif isinstance(snippet, list):
         return [recurse(s) for s in snippet]

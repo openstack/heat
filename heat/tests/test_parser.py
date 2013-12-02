@@ -106,11 +106,6 @@ class ParserTest(HeatTestCase):
         self.assertEqual(parsed['blarg'], raw['blarg'])
         self.assertTrue(parsed is not raw)
 
-    def test_join_recursive(self):
-        raw = {'Fn::Join': ['\n', [{'Fn::Join':
-                                   [' ', ['foo', 'bar']]}, 'baz']]}
-        self.assertEqual(join(raw), 'foo bar\nbaz')
-
 
 mapping_template = template_format.parse('''{
   "Mappings" : {
@@ -606,6 +601,115 @@ class TemplateFnErrorTest(HeatTestCase):
                                   self.resolve_fn,
                                   self.snippet)
         self.assertIn(self.snippet.keys()[0], str(error))
+
+
+class ResolveDataTest(HeatTestCase):
+
+    def setUp(self):
+        super(ResolveDataTest, self).setUp()
+        self.username = 'parser_stack_test_user'
+
+        utils.setup_dummy_db()
+        self.ctx = utils.dummy_context()
+
+        self.stack = parser.Stack(self.ctx, 'resolve_test_stack',
+                                  template.Template({}),
+                                  environment.Environment({}))
+
+    def test_split_join_split_join(self):
+        # each snippet in this test encapsulates
+        # the snippet from the previous step, leading
+        # to increasingly nested function calls
+
+        # split
+        snippet = {'Fn::Split': [',', 'one,two,three']}
+        self.assertEqual(['one', 'two', 'three'],
+                         self.stack.resolve_runtime_data(snippet))
+
+        # split then join
+        snippet = {'Fn::Join': [';', snippet]}
+        self.assertEqual('one;two;three',
+                         self.stack.resolve_runtime_data(snippet))
+
+        # split then join then split
+        snippet = {'Fn::Split': [';', snippet]}
+        self.assertEqual(['one', 'two', 'three'],
+                         self.stack.resolve_runtime_data(snippet))
+
+        # split then join then split then join
+        snippet = {'Fn::Join': ['-', snippet]}
+        self.assertEqual('one-two-three',
+                         self.stack.resolve_runtime_data(snippet))
+
+    def test_join_recursive(self):
+        raw = {'Fn::Join': ['\n', [{'Fn::Join':
+                                   [' ', ['foo', 'bar']]}, 'baz']]}
+        self.assertEqual('foo bar\nbaz', self.stack.resolve_runtime_data(raw))
+
+    def test_base64_replace(self):
+        raw = {'Fn::Base64': {'Fn::Replace': [
+            {'foo': 'bar'}, 'Meet at the foo']}}
+        self.assertEqual('Meet at the bar',
+                         self.stack.resolve_runtime_data(raw))
+
+    def test_replace_base64(self):
+        raw = {'Fn::Replace': [{'foo': 'bar'}, {
+            'Fn::Base64': 'Meet at the foo'}]}
+        self.assertEqual('Meet at the bar',
+                         self.stack.resolve_runtime_data(raw))
+
+    def test_nested_selects(self):
+        data = {
+            'a': ['one', 'two', 'three'],
+            'b': ['een', 'twee', {'d': 'D', 'e': 'E'}]
+        }
+        raw = {'Fn::Select': ['a', data]}
+        self.assertEqual(data['a'],
+                         self.stack.resolve_runtime_data(raw))
+
+        raw = {'Fn::Select': ['b', data]}
+        self.assertEqual(data['b'],
+                         self.stack.resolve_runtime_data(raw))
+
+        raw = {
+            'Fn::Select': ['1', {
+                'Fn::Select': ['b', data]}]}
+        self.assertEqual('twee',
+                         self.stack.resolve_runtime_data(raw))
+
+        raw = {
+            'Fn::Select': ['e', {
+                'Fn::Select': ['2', {
+                    'Fn::Select': ['b', data]}]}]}
+        self.assertEqual('E',
+                         self.stack.resolve_runtime_data(raw))
+
+    def test_member_list_select(self):
+        snippet = {'Fn::Select': ['metric', {"Fn::MemberListToMap": [
+            'Name', 'Value', ['.member.0.Name=metric',
+                              '.member.0.Value=cpu',
+                              '.member.1.Name=size',
+                              '.member.1.Value=56']]}]}
+        self.assertEqual('cpu',
+                         self.stack.resolve_runtime_data(snippet))
+
+    def test_join_reduce(self):
+        join = {"Fn::Join": [" ", ["foo", "bar", "baz", {'Ref': 'baz'},
+                "bink", "bonk"]]}
+        self.assertEqual(
+            {"Fn::Join": [" ", ["foo bar baz", {'Ref': 'baz'}, "bink bonk"]]},
+            self.stack.resolve_static_data(join))
+
+        join = {"Fn::Join": [" ", ["foo", {'Ref': 'baz'},
+                                   "bink"]]}
+        self.assertEqual(
+            {"Fn::Join": [" ", ["foo", {'Ref': 'baz'}, "bink"]]},
+            self.stack.resolve_static_data(join))
+
+        join = {"Fn::Join": [" ", [{'Ref': 'baz'}]]}
+        self.assertEqual(
+            {"Fn::Join": [" ", [{'Ref': 'baz'}]]},
+            self.stack.resolve_static_data(join))
 
 
 class StackTest(HeatTestCase):
