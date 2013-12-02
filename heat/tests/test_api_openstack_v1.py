@@ -366,7 +366,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/stacks', params=params)
         mock_call.return_value = []
 
-        result = self.controller.index(req, tenant_id='fake_tenant_id')
+        result = self.controller.index(req, tenant_id=self.tenant)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[2]['args']
@@ -388,7 +388,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/stacks', params=params)
         mock_call.return_value = []
 
-        result = self.controller.index(req, tenant_id='fake_tenant_id')
+        result = self.controller.index(req, tenant_id=self.tenant)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[2]['args']
@@ -408,7 +408,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         engine.list_stacks = mock.Mock(return_value=[])
         engine.count_stacks = mock.Mock(return_value=0)
 
-        result = self.controller.index(req, tenant_id='fake_tenant_id')
+        result = self.controller.index(req, tenant_id=self.tenant)
         self.assertEqual(0, result['count'])
 
     def test_index_doesnt_return_stack_count_if_with_count_is_falsy(self):
@@ -419,7 +419,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         engine.list_stacks = mock.Mock(return_value=[])
         engine.count_stacks = mock.Mock()
 
-        result = self.controller.index(req, tenant_id='fake_tenant_id')
+        result = self.controller.index(req, tenant_id=self.tenant)
         self.assertNotIn('count', result)
         assert not engine.count_stacks.called
 
@@ -432,7 +432,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         engine.list_stacks = mock.Mock(return_value=[])
         mock_count_stacks.side_effect = AttributeError("Should not exist")
 
-        result = self.controller.index(req, tenant_id='fake_tenant_id')
+        result = self.controller.index(req, tenant_id=self.tenant)
         self.assertNotIn('count', result)
 
     @mock.patch.object(rpc, 'call')
@@ -988,14 +988,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
-        error = heat_exc.InvalidTenant(target='a', actual='b')
-        self.m.StubOutWithMock(rpc, 'call')
-        rpc.call(req.context, self.topic,
-                 {'namespace': None,
-                  'method': 'show_stack',
-                  'args': {'stack_identity': dict(identity)},
-                  'version': self.api_version},
-                 None).AndRaise(to_remote_error(error))
         self.m.ReplayAll()
 
         resp = request_with_middleware(fault.FaultWrapper,
@@ -1004,8 +996,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        stack_name=identity.stack_name,
                                        stack_id=identity.stack_id)
 
-        self.assertEqual(resp.json['code'], 403)
-        self.assertEqual(resp.json['error']['type'], 'InvalidTenant')
+        self.assertEqual(resp.status_int, 403)
+        self.assertIn('403 Forbidden', str(resp))
         self.m.VerifyAll()
 
     def test_get_template(self):
@@ -2694,37 +2686,37 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
         self.m.VerifyAll()
 
 
-class BuildInfoControllerTest(HeatTestCase):
+class BuildInfoControllerTest(ControllerTest, HeatTestCase):
     def test_theres_a_default_api_build_revision(self):
-        req = mock.Mock()
+        req = self._get('/build_info')
         controller = build_info.BuildInfoController({})
         controller.engine = mock.Mock()
 
-        response = controller.build_info(req, tenant_id='tenant_id')
+        response = controller.build_info(req, tenant_id=self.tenant)
         self.assertIn('api', response)
         self.assertIn('revision', response['api'])
         self.assertEqual('unknown', response['api']['revision'])
 
     @mock.patch.object(build_info.cfg, 'CONF')
     def test_response_api_build_revision_from_config_file(self, mock_conf):
-        req = mock.Mock()
+        req = self._get('/build_info')
         controller = build_info.BuildInfoController({})
         mock_engine = mock.Mock()
         mock_engine.get_revision.return_value = 'engine_revision'
         controller.engine = mock_engine
         mock_conf.revision = {'heat_revision': 'test'}
 
-        response = controller.build_info(req, tenant_id='tenant_id')
+        response = controller.build_info(req, tenant_id=self.tenant)
         self.assertEqual('test', response['api']['revision'])
 
     def test_retrieves_build_revision_from_the_engine(self):
-        req = mock.Mock()
+        req = self._get('/build_info')
         controller = build_info.BuildInfoController({})
         mock_engine = mock.Mock()
         mock_engine.get_revision.return_value = 'engine_revision'
         controller.engine = mock_engine
 
-        response = controller.build_info(req, tenant_id='tenant_id')
+        response = controller.build_info(req, tenant_id=self.tenant)
         self.assertIn('engine', response)
         self.assertIn('revision', response['engine'])
         self.assertEqual('engine_revision', response['engine']['revision'])
