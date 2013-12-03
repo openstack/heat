@@ -567,6 +567,8 @@ class validateTest(HeatTestCase):
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -584,6 +586,8 @@ class validateTest(HeatTestCase):
             """)
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -595,6 +599,8 @@ class validateTest(HeatTestCase):
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -606,6 +612,8 @@ class validateTest(HeatTestCase):
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -617,6 +625,8 @@ class validateTest(HeatTestCase):
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -628,6 +638,8 @@ class validateTest(HeatTestCase):
 
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -641,6 +653,8 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_template_invalid_property)
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -651,6 +665,8 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_template_invalid_resources)
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -663,6 +679,8 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_template_unimplemented_property)
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -675,6 +693,8 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_template_invalid_deletion_policy)
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -685,6 +705,8 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_template_snapshot_deletion_policy)
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')
@@ -698,6 +720,8 @@ class validateTest(HeatTestCase):
         t = template_format.parse(test_template_volume_snapshot)
         self.m.StubOutWithMock(instances.Instance, 'nova')
         instances.Instance.nova().AndReturn(self.fc)
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
         self.m.ReplayAll()
 
         engine = service.EngineService('a', 't')

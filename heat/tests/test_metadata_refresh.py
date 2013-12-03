@@ -193,6 +193,10 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         super(WaitCondMetadataUpdateTest, self).setUp()
         utils.setup_dummy_db()
         self.fc = fakes.FakeKeystoneClient()
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
         self.man = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_waitcondition_server_url',
                              'http://server.test:8000/v1/waitcondition')

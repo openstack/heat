@@ -307,6 +307,9 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         utils.reset_dummy_db()
         self.ctx = utils.dummy_context()
 
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
         self.man = service.EngineService('a-host', 'a-topic')
 
     def _test_stack_create(self, stack_name):
@@ -819,6 +822,10 @@ class StackServiceUpdateNotSupportedTest(HeatTestCase):
         utils.setup_dummy_db()
         utils.reset_dummy_db()
         self.ctx = utils.dummy_context()
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
         self.man = service.EngineService('a-host', 'a-topic')
 
     def test_stack_update_during(self):
@@ -855,6 +862,9 @@ class StackServiceSuspendResumeTest(HeatTestCase):
         utils.setup_dummy_db()
         self.ctx = utils.dummy_context()
 
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
         self.man = service.EngineService('a-host', 'a-topic')
 
     def test_stack_suspend(self):
@@ -920,6 +930,11 @@ class StackServiceTest(HeatTestCase):
         super(StackServiceTest, self).setUp()
 
         self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
+
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
         self.eng = service.EngineService('a-host', 'a-topic')
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
         _register_class('ResourceWithPropsType',
