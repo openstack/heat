@@ -170,6 +170,17 @@ cfg.CONF.register_group(revision_group)
 cfg.CONF.register_opts(revision_opts, group=revision_group)
 register_clients_opts()
 
+# A bit of history:
+# This was added initially by jianingy, then it got added
+# to oslo by Luis. Then it was receintly removed from the
+# default list again.
+# I am not sure we can (or should) rely on oslo to keep
+# our exceptions class in the defaults list.
+allowed_rpc_exception_modules = cfg.CONF.allowed_rpc_exception_modules
+allowed_rpc_exception_modules.append('heat.common.exception')
+cfg.CONF.set_default(name='allowed_rpc_exception_modules',
+                     default=allowed_rpc_exception_modules)
+
 
 def rpc_set_default():
     rpc.set_defaults(control_exchange='heat')

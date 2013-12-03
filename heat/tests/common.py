@@ -53,6 +53,8 @@ class HeatTestCase(testtools.TestCase):
                                'environment.d')
 
         cfg.CONF.set_default('environment_dir', env_dir)
+        cfg.CONF.set_override('allowed_rpc_exception_modules',
+                              ['heat.common.exception', 'exceptions'])
         self.addCleanup(cfg.CONF.reset)
 
         tri = resources.global_env().get_resource_info(
