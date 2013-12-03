@@ -232,6 +232,18 @@ class VolumeTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_volume_bad_tags(self):
+        t = template_format.parse(volume_template)
+        t['Resources']['DataVolume']['Properties']['Tags'] = [{'Foo': 'bar'}]
+        stack = utils.parse_stack(t, stack_name='test_volume_bad_tags_stack')
+
+        rsrc = vol.Volume('DataVolume',
+                          t['Resources']['DataVolume'],
+                          stack)
+        self.assertRaises(exception.StackValidationFailed, rsrc.validate)
+
+        self.m.VerifyAll()
+
     def test_volume_attachment_error(self):
         fv = FakeVolume('creating', 'available')
         fva = FakeVolume('attaching', 'error')
