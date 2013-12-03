@@ -31,6 +31,7 @@ class TestRequestContext(HeatTestCase):
                     'user': 'mick',
                     'password': 'foo',
                     'trust_id': None,
+                    'show_deleted': False,
                     'roles': ['arole', 'notadmin'],
                     'tenant_id': '456tenant',
                     'tenant': 'atenant',
@@ -48,6 +49,7 @@ class TestRequestContext(HeatTestCase):
                                      tenant_id=self.ctx.get('tenant_id'),
                                      auth_url=self.ctx.get('auth_url'),
                                      roles=self.ctx.get('roles'),
+                                     show_deleted=self.ctx.get('show_deleted'),
                                      is_admin=self.ctx.get('is_admin'))
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
@@ -71,6 +73,12 @@ class TestRequestContext(HeatTestCase):
     def test_get_admin_context(self):
         ctx = context.get_admin_context()
         self.assertTrue(ctx.is_admin)
+        self.assertFalse(ctx.show_deleted)
+
+    def test_get_admin_context_show_deleted(self):
+        ctx = context.get_admin_context(show_deleted=True)
+        self.assertTrue(ctx.is_admin)
+        self.assertTrue(ctx.show_deleted)
 
     def test_admin_context_policy_true(self):
         policy_check = 'heat.common.policy.Enforcer.check_is_admin'
