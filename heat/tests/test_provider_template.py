@@ -492,6 +492,28 @@ class ProviderTemplateTest(HeatTestCase):
         self.assertRaises(exception.StackValidationFailed, temp_res.validate)
         self.m.VerifyAll()
 
+    def test_user_template_retrieve_fail_ext(self):
+        # make sure that a TemplateResource defined in the user environment
+        # fails gracefully if the template file is the wrong extension
+        # we should be able to create the TemplateResource object, but
+        # validation should fail, when the second attempt to access it is
+        # made in validate()
+        env = environment.Environment()
+        test_templ_name = 'http://heatr/letter_to_granny.docx'
+        env.load({'resource_registry':
+                  {'Test::Flippy': test_templ_name}})
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}), env=env,
+                             stack_id=uuidutils.generate_uuid())
+
+        self.m.ReplayAll()
+
+        temp_res = template_resource.TemplateResource('test_t_res',
+                                                      {"Type": 'Test::Flippy'},
+                                                      stack)
+        self.assertRaises(exception.StackValidationFailed, temp_res.validate)
+        self.m.VerifyAll()
+
     def create_stack(self, template):
         t = template_format.parse(template)
         stack = self.parse_stack(t)
