@@ -49,6 +49,19 @@ class FloatingIP(neutron.NeutronResource):
                              'multiple addresses.')
         }}
 
+    attributes_schema = {
+        'router_id': _('ID of the router used as gateway, set when associated '
+                       'with a port.'),
+        'tenant_id': _('The tenant owning this floating IP.'),
+        'floating_network_id': _('ID of the network in which this IP is '
+                                 'allocated.'),
+        'fixed_ip_address': _('IP address of the associated port, if '
+                              'specified.'),
+        'floating_ip_address': _('The allocated address of this IP.'),
+        'port_id': _('ID of the port associated with this IP.'),
+        'show': _('All attributes.')
+    }
+
     def add_dependencies(self, deps):
         super(FloatingIP, self).add_dependencies(deps)
         # depend on any RouterGateway in this template with the same
@@ -67,6 +80,9 @@ class FloatingIP(neutron.NeutronResource):
             'floatingip': props})['floatingip']
         self.resource_id_set(fip['id'])
 
+    def _show_resource(self):
+        return self.neutron().show_floatingip(self.resource_id)['floatingip']
+
     def handle_delete(self):
         client = self.neutron()
         try:
@@ -74,16 +90,6 @@ class FloatingIP(neutron.NeutronResource):
         except NeutronClientException as ex:
             if ex.status_code != 404:
                 raise ex
-
-    def FnGetAtt(self, key):
-        try:
-            attributes = self.neutron().show_floatingip(
-                self.resource_id)['floatingip']
-        except NeutronClientException as ex:
-            logger.warn(_("failed to fetch resource attributes: %s") %
-                        str(ex))
-            return None
-        return self.handle_get_attributes(self.name, key, attributes)
 
 
 class FloatingIPAssociation(neutron.NeutronResource):
