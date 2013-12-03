@@ -23,8 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 from heat.common import heat_keystoneclient as hkc
+from heatclient import client as heatclient
 from novaclient import client as novaclient
 from novaclient import shell as novashell
+
 try:
     from swiftclient import client as swiftclient
 except ImportError:
@@ -76,6 +78,7 @@ class OpenStackClients(object):
         self._cinder = None
         self._trove = None
         self._ceilometer = None
+        self._heat = None
 
     @property
     def auth_token(self):
@@ -264,6 +267,27 @@ class OpenStackClients(object):
         except (cfg.NoSuchGroupError, cfg.NoSuchOptError):
             cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
             return getattr(cfg.CONF.clients, option)
+
+    def heat(self):
+        if self._heat:
+            return self._heat
+
+        con = self.context
+        if self.auth_token is None:
+            logger.error(_("Heat connection failed, no auth_token!"))
+            return None
+
+        args = {
+            'auth_url': con.auth_url,
+            'token': self.auth_token,
+            'username': None,
+            'password': None
+        }
+
+        endpoint = self.url_for(service_type='orchestration')
+        self._heat = heatclient.Client('1', endpoint, **args)
+
+        return self._heat
 
 
 class ClientBackend(object):

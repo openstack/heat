@@ -344,6 +344,9 @@ class Resource(object):
     def ceilometer(self):
         return self.stack.clients.ceilometer()
 
+    def heat(self):
+        return self.stack.clients.heat()
+
     def _do_action(self, action, pre_func=None):
         '''
         Perform a transition to a new state via a specified action
