@@ -351,3 +351,12 @@ class FakeHTTPClient(base_client.HTTPClient):
 
     def get_os_availability_zone(self, *kw):
         return (200, {"availabilityZoneInfo": [{'zoneName': 'nova1'}]})
+
+    def get_os_networks(self, **kw):
+        return (200, {'networks':
+                [{'label': 'public',
+                  'id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'},
+                 {'label': 'foo',
+                  'id': '42'},
+                 {'label': 'foo',
+                  'id': '42'}]})

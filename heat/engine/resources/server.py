@@ -24,6 +24,7 @@ from heat.engine.resources import nova_utils
 from heat.engine import resource
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
+from heat.openstack.common import uuidutils
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +60,11 @@ class Server(resource.Resource):
     networks_schema = {
         'uuid': {
             'Type': 'String',
-            'Description': _('ID of network to create a port on.')},
+            'Description': _('DEPRECATED! ID of network '
+                             'to create a port on.')},
+        'network': {
+            'Type': 'String',
+            'Description': _('Name or ID of network to create a port on.')},
         'fixed_ip': {
             'Type': 'String',
             'Description': _('Fixed IP address to specify for the port '
@@ -314,8 +319,7 @@ class Server(resource.Resource):
 
         return bdm_dict
 
-    @staticmethod
-    def _build_nics(networks):
+    def _build_nics(self, networks):
         if not networks:
             return None
 
@@ -325,6 +329,13 @@ class Server(resource.Resource):
             nic_info = {}
             if net_data.get('uuid'):
                 nic_info['net-id'] = net_data['uuid']
+            label_or_uuid = net_data.get('network')
+            if label_or_uuid:
+                if uuidutils.is_uuid_like(label_or_uuid):
+                    nic_info['net-id'] = label_or_uuid
+                else:
+                    network = self.nova().networks.find(label=label_or_uuid)
+                    nic_info['net-id'] = network.id
             if net_data.get('fixed_ip'):
                 nic_info['v4-fixed-ip'] = net_data['fixed_ip']
             if net_data.get('port'):
@@ -452,6 +463,25 @@ class Server(resource.Resource):
             msg = _('Neither image nor bootable volume is specified for'
                     ' instance %s') % self.name
             raise exception.StackValidationFailed(message=msg)
+        # network properties 'uuid' and 'network' shouldn't be used
+        # both at once for all networks
+        networks = self.properties.get('networks') or []
+        for network in networks:
+            if network.get('uuid') and network.get('network'):
+                msg = _('Properties "uuid" and "network" are both set '
+                        'to the network "%(network)s" for the server '
+                        '"%(server)s". The "uuid" property is deprecated. '
+                        'Use only "network" property.'
+                        '') % dict(network=network['network'],
+                                   server=self.name)
+                raise exception.StackValidationFailed(message=msg)
+            elif network.get('uuid'):
+                logger.info(_('For the server "%(server)s" the "uuid" '
+                              'property is set to network "%(network)s". '
+                              '"uuid" property is deprecated. Use "network" '
+                              'property instead.'
+                              '') % dict(network=network['network'],
+                                         server=self.name))
 
     def handle_delete(self):
         '''
