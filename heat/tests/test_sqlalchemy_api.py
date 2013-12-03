@@ -16,6 +16,7 @@ from datetime import timedelta
 import fixtures
 from json import loads
 from json import dumps
+import mock
 import mox
 
 
@@ -280,6 +281,18 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(stacks[1].id, st_db[1].id)
         self.assertEqual(stacks[2].id, st_db[2].id)
 
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    def test_stack_get_all_by_tenant_filters_sort_keys(self, mock_paginate):
+        sort_keys = ['name', 'status', 'created_at', 'updated_at', 'username']
+        st_db = db_api.stack_get_all_by_tenant(self.ctx,
+                                               sort_keys=sort_keys)
+
+        args, _ = mock_paginate.call_args
+        used_sort_keys = set(args[3])
+        expected_keys = set(['name', 'status', 'created_at',
+                             'updated_at', 'id'])
+        self.assertEqual(expected_keys, used_sort_keys)
+
     def test_stack_get_all_by_tenant_marker(self):
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
 
@@ -293,12 +306,6 @@ class SqlAlchemyTest(HeatTestCase):
         uuid = 'this stack doesnt exist'
         st_db = db_api.stack_get_all_by_tenant(self.ctx, marker=uuid)
         self.assertEqual(3, len(st_db))
-
-    def test_stack_get_all_by_tenant_handles_invalid_sort_key(self):
-        self.assertRaises(exception.Invalid,
-                          db_api.stack_get_all_by_tenant,
-                          self.ctx,
-                          sort_keys=['foo'])
 
     def test_stack_get_all_by_tenant_doesnt_mutate_sort_keys(self):
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]

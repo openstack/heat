@@ -271,6 +271,21 @@ def stack_get_all_by_owner_id(context, owner_id):
     return results
 
 
+def _filter_sort_keys(sort_keys, whitelist):
+    '''Returns an array containing only whitelisted keys
+
+    :param sort_keys: an array of strings
+    :param whitelist: an array of allowed strings
+    :returns: filtered list of sort keys
+    '''
+    if not sort_keys:
+        return []
+    elif not isinstance(sort_keys, list):
+        sort_keys = [sort_keys]
+
+    return [key for key in sort_keys if key in whitelist]
+
+
 def _paginate_query(context, query, model, limit=None, sort_keys=None,
                     marker=None, sort_dir=None):
     default_sort_keys = ['created_at']
@@ -278,8 +293,6 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
         sort_keys = default_sort_keys
         if not sort_dir:
             sort_dir = 'desc'
-    elif not isinstance(sort_keys, list):
-        sort_keys = [sort_keys]
 
     # This assures the order of the stacks will always be the same
     # even for sort_key values that are not unique in the database
@@ -311,9 +324,15 @@ def stack_get_all_by_tenant(context, limit=None, sort_keys=None, marker=None,
     if filters is None:
         filters = {}
 
+    allowed_sort_keys = [models.Stack.name.key,
+                         models.Stack.status.key,
+                         models.Stack.created_at.key,
+                         models.Stack.updated_at.key]
+    filtered_keys = _filter_sort_keys(sort_keys, allowed_sort_keys)
+
     query = _query_stack_get_all_by_tenant(context)
     query = db_filters.exact_filter(query, models.Stack, filters)
-    return _paginate_query(context, query, models.Stack, limit, sort_keys,
+    return _paginate_query(context, query, models.Stack, limit, filtered_keys,
                            marker, sort_dir).all()
 
 
