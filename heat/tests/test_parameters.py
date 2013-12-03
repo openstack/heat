@@ -283,9 +283,8 @@ class ParameterTest(testtools.TestCase):
         '''Happy path for value thats already a map.'''
         schema = {'Type': 'Json'}
         val = {"foo": "bar", "items": [1, 2, 3]}
-        val_s = json.dumps(val)
         p = self.new_parameter('p', schema, val)
-        self.assertEqual(val_s, p.value())
+        self.assertEqual(val, p.value())
         self.assertEqual(val, p.parsed)
 
     def test_map_value_bad(self):
@@ -306,7 +305,7 @@ class ParameterTest(testtools.TestCase):
         val = {"foo": "bar", "items": [1, 2, 3]}
         val_s = json.dumps(val)
         p = self.new_parameter('p', schema, val_s)
-        self.assertEqual(val_s, p.value())
+        self.assertEqual(val, p.value())
         self.assertEqual(val, p.parsed)
 
     def test_map_value_bad_parse(self):
@@ -328,7 +327,7 @@ class ParameterTest(testtools.TestCase):
         val = {"foo": "bar", "baz": [1, 2, 3]}
         val_s = json.dumps(val)
         p = self.new_parameter('p', schema, val_s)
-        self.assertEqual(val_s, p.value())
+        self.assertEqual(val, p.value())
         self.assertEqual(val, p.parsed)
 
     def test_map_values_bad(self):

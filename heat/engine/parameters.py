@@ -300,7 +300,7 @@ class JsonParam(Parameter, collections.Mapping):
             except (ValueError, TypeError) as err:
                 message = _('Value must be valid JSON')
                 raise ValueError("%s: %s" % (message, str(err)))
-        return val
+        return self.parsed
 
     def __getitem__(self, key):
         return self.parsed[key]
