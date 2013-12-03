@@ -226,14 +226,14 @@ class ControllerTest(object):
     def __init__(self, *args, **kwargs):
         super(ControllerTest, self).__init__(*args, **kwargs)
 
-        cfg.CONF.set_default('host', 'host')
+        cfg.CONF.set_default('host', 'server.test')
         self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
         self.tenant = 't'
 
     def _environ(self, path):
         return {
-            'SERVER_NAME': 'heat.example.com',
+            'SERVER_NAME': 'server.test',
             'SERVER_PORT': 8004,
             'SCRIPT_NAME': '/v1',
             'PATH_INFO': '/%s' % self.tenant + path,
@@ -275,7 +275,7 @@ class ControllerTest(object):
         return self._data_request(path, data, content_type, method='PUT')
 
     def _url(self, id):
-        host = 'heat.example.com:8004'
+        host = 'server.test:8004'
         path = '/v1/%(tenant)s/stacks/%(stack_name)s/%(stack_id)s%(path)s' % id
         return 'http://%s%s' % (host, path)
 
