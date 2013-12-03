@@ -17,6 +17,7 @@ import copy
 
 from heat.engine import parser
 from heat.engine import properties
+from heat.engine import constraints
 from heat.engine import stack_resource
 from heat.common import exception
 
@@ -43,29 +44,29 @@ class ResourceGroup(stack_resource.StackResource):
 
     min_resource_schema = {
         "type": properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _("The type of the resources in the group"),
             required=True
         ),
         "properties": properties.Schema(
-            properties.MAP,
+            properties.Schema.MAP,
             _("Property values for the resources in the group")
         )
     }
 
     properties_schema = {
         "count": properties.Schema(
-            properties.INTEGER,
+            properties.Schema.INTEGER,
             _("The number of instances to create."),
             default=1,
             required=True,
             update_allowed=True,
             constraints=[
-                properties.Range(1)
+                constraints.Range(1)
             ]
         ),
         "resource_def": properties.Schema(
-            properties.MAP,
+            properties.Schema.MAP,
             _("Resource definition for the resources in the group. The value "
               "of this property is the definition of a resource just as if it"
               " had been declared in the template itself."),

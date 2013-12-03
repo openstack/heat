@@ -16,6 +16,7 @@
 from requests import exceptions
 
 from heat.common import exception
+
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import attributes
@@ -81,7 +82,7 @@ class TemplateResource(stack_resource.StackResource):
             val = self.properties[pname]
             if val is not None:
                 # take a list and create a CommaDelimitedList
-                if pval.type() == properties.LIST:
+                if pval.type() == properties.Schema.LIST:
                     if len(val) == 0:
                         params[pname] = ''
                     elif isinstance(val[0], dict):

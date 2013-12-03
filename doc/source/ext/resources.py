@@ -69,12 +69,12 @@ class ResourcePages(Directive):
     def _prop_syntax_example(self, prop):
         if not prop:
             return 'Value'
-        if prop.type == properties.LIST:
+        if prop.type == properties.Schema.LIST:
             schema = lambda i: prop.schema[i] if prop.schema else None
             sub_type = [self._prop_syntax_example(schema(i))
                         for i in range(2)]
             return '[%s, %s, ...]' % tuple(sub_type)
-        elif prop.type == properties.MAP:
+        elif prop.type == properties.Schema.MAP:
             def sub_props():
                 for sub_key, sub_value in prop.schema.items():
                     if sub_value.implemented:
@@ -193,12 +193,12 @@ Resources:
             definition.append(para)
 
         sub_schema = None
-        if prop.schema and prop.type == properties.MAP:
+        if prop.schema and prop.type == properties.Schema.MAP:
             para = nodes.emphasis('', _('Map properties:'))
             definition.append(para)
             sub_schema = prop.schema
 
-        elif prop.schema and prop.type == properties.LIST:
+        elif prop.schema and prop.type == properties.Schema.LIST:
             para = nodes.emphasis(
                 '', _('List contents:'))
             definition.append(para)

@@ -96,15 +96,14 @@ class InstanceGroup(stack_resource.StackResource):
                           "(Heat extension).")
     }
     rolling_update_schema = {
-        'MinInstancesInService': properties.Schema(properties.NUMBER,
+        'MinInstancesInService': properties.Schema(properties.Schema.NUMBER,
                                                    default=0),
-        'MaxBatchSize': properties.Schema(properties.NUMBER,
-                                          default=1),
-        'PauseTime': properties.Schema(properties.STRING,
+        'MaxBatchSize': properties.Schema(properties.Schema.NUMBER, default=1),
+        'PauseTime': properties.Schema(properties.Schema.STRING,
                                        default='PT0S')
     }
     update_policy_schema = {
-        'RollingUpdate': properties.Schema(properties.MAP,
+        'RollingUpdate': properties.Schema(properties.Schema.MAP,
                                            schema=rolling_update_schema)
     }
 
@@ -418,16 +417,16 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             'Description': _('Tags to attach to this group.')}
     }
     rolling_update_schema = {
-        'MinInstancesInService': properties.Schema(properties.NUMBER,
+        'MinInstancesInService': properties.Schema(properties.Schema.NUMBER,
                                                    default=0),
-        'MaxBatchSize': properties.Schema(properties.NUMBER,
-                                          default=1),
-        'PauseTime': properties.Schema(properties.STRING,
+        'MaxBatchSize': properties.Schema(properties.Schema.NUMBER, default=1),
+        'PauseTime': properties.Schema(properties.Schema.STRING,
                                        default='PT0S')
     }
     update_policy_schema = {
-        'AutoScalingRollingUpdate': properties.Schema(
-            properties.MAP, schema=rolling_update_schema)
+        'AutoScalingRollingUpdate': properties.Schema(properties.Schema.MAP,
+                                                      schema=
+                                                      rolling_update_schema)
     }
     update_allowed_keys = ('Properties', 'UpdatePolicy')
 

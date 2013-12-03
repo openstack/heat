@@ -16,6 +16,7 @@
 from heat.common import exception
 from heat.engine import clients
 from heat.engine import properties
+from heat.engine import constraints
 from heat.engine.resources.neutron import neutron
 from heat.openstack.common import log as logging
 
@@ -29,23 +30,23 @@ class SecurityGroup(neutron.NeutronResource):
 
     rule_schema = {
         'direction': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('The direction in which the security group rule is applied. '
               'For a compute instance, an ingress security group rule '
               'matches traffic that is incoming (ingress) for that '
               'instance. An egress rule is applied to traffic leaving '
               'the instance.'),
             default='ingress',
-            constraints=[properties.AllowedValues(('ingress', 'egress'))]
+            constraints=[constraints.AllowedValues(('ingress', 'egress'))]
         ),
         'ethertype': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('Ethertype of the traffic.'),
             default='IPv4',
-            constraints=[properties.AllowedValues(('IPv4', 'IPv6'))]
+            constraints=[constraints.AllowedValues(('IPv4', 'IPv6'))]
         ),
         'port_range_min': properties.Schema(
-            properties.INTEGER,
+            properties.Schema.INTEGER,
             _('The minimum port number in the range that is matched by the '
               'security group rule. If the protocol is TCP or UDP, this '
               'value must be less than or equal to the value of the '
@@ -53,32 +54,32 @@ class SecurityGroup(neutron.NeutronResource):
               'value must be an ICMP type.')
         ),
         'port_range_max': properties.Schema(
-            properties.INTEGER,
+            properties.Schema.INTEGER,
             _('The maximum port number in the range that is matched by the '
               'security group rule. The port_range_min attribute constrains '
               'the port_range_max attribute. If the protocol is ICMP, this '
               'value must be an ICMP type.')
         ),
         'protocol': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('The protocol that is matched by the security group rule. '
               'Valid values include tcp, udp, and icmp.')
         ),
         'remote_mode': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('Whether to specify a remote group or a remote IP prefix.'),
             default='remote_ip_prefix',
-            constraints=[properties.AllowedValues((
+            constraints=[constraints.AllowedValues((
                 'remote_ip_prefix', 'remote_group_id'))]
         ),
         'remote_group_id': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('The remote group ID to be associated with this security group '
               'rule. If no value is specified then this rule will use this '
               'security group for the remote_group_id.')
         ),
         'remote_ip_prefix': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('The remote IP prefix (CIDR) to be associated with this '
               'security group rule.')
         ),
@@ -86,25 +87,23 @@ class SecurityGroup(neutron.NeutronResource):
 
     properties_schema = {
         'name': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('A string specifying a symbolic name for '
               'the security group, which is not required to be '
               'unique.'),
             update_allowed=True
         ),
         'description': properties.Schema(
-            properties.STRING,
+            properties.Schema.STRING,
             _('Description of the security group.'),
             update_allowed=True
         ),
         'rules': properties.Schema(
-            properties.LIST,
+            properties.Schema.LIST,
             _('List of security group rules.'),
             default=[],
-            schema=properties.Schema(
-                properties.MAP,
-                schema=rule_schema
-            ),
+            schema=properties.Schema(properties.Schema.MAP,
+                                     schema=rule_schema),
             update_allowed=True
         )
     }
