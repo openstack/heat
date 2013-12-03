@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.config import cfg
-
 from heat.openstack.common import local
 from heat.common import exception
 from heat.common import policy
@@ -39,8 +37,7 @@ class RequestContext(context.RequestContext):
                  aws_creds=None, tenant=None,
                  tenant_id=None, auth_url=None, roles=None, is_admin=None,
                  read_only=False, show_deleted=False,
-                 owner_is_tenant=True, overwrite=True,
-                 trust_id=None, trustor_user_id=None,
+                 overwrite=True, trust_id=None, trustor_user_id=None,
                  request_id=None, **kwargs):
         """
         :param overwrite: Set to False to ensure that the greenthread local
@@ -62,7 +59,6 @@ class RequestContext(context.RequestContext):
         self.tenant_id = tenant_id
         self.auth_url = auth_url
         self.roles = roles or []
-        self.owner_is_tenant = owner_is_tenant
         if overwrite or not hasattr(local.store, 'context'):
             self.update_store()
         self._session = None
@@ -103,11 +99,6 @@ class RequestContext(context.RequestContext):
     def from_dict(cls, values):
         return cls(**values)
 
-    @property
-    def owner(self):
-        """Return the owner to correlate with an image."""
-        return self.tenant if self.owner_is_tenant else self.user
-
 
 def get_admin_context(read_deleted="no"):
     return RequestContext(is_admin=True)
@@ -115,11 +106,7 @@ def get_admin_context(read_deleted="no"):
 
 class ContextMiddleware(wsgi.Middleware):
 
-    opts = [cfg.BoolOpt('owner_is_tenant', default=True)]
-
     def __init__(self, app, conf, **local_conf):
-        cfg.CONF.register_opts(self.opts)
-
         # Determine the context class to use
         self.ctxcls = RequestContext
         if 'context_class' in local_conf:
@@ -131,8 +118,6 @@ class ContextMiddleware(wsgi.Middleware):
         """
         Create a context with the given arguments.
         """
-        kwargs.setdefault('owner_is_tenant', cfg.CONF.owner_is_tenant)
-
         return self.ctxcls(*args, **kwargs)
 
     def process_request(self, req):
