@@ -150,6 +150,15 @@ def register_clients_opts():
         cfg.CONF.register_opts(opts_copy, group=client_specific_group)
 
 
+revision_group = cfg.OptGroup('revision')
+revision_opts = [
+    cfg.StrOpt('heat_revision',
+               default='unknown',
+               help=_('Heat build revision. '
+                      'If you would prefer to manage your build revision '
+                      'separately you can move this section to a different '
+                      'file and add it as another config option'))]
+
 cfg.CONF.register_opts(engine_opts)
 cfg.CONF.register_opts(service_opts)
 cfg.CONF.register_opts(rpc_opts)
@@ -157,6 +166,8 @@ cfg.CONF.register_group(paste_deploy_group)
 cfg.CONF.register_opts(paste_deploy_opts, group=paste_deploy_group)
 cfg.CONF.register_group(auth_password_group)
 cfg.CONF.register_opts(auth_password_opts, group=auth_password_group)
+cfg.CONF.register_group(revision_group)
+cfg.CONF.register_opts(revision_opts, group=revision_group)
 register_clients_opts()
 
 

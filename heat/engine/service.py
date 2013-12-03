@@ -199,6 +199,9 @@ class EngineService(service.Service):
 
         return [format_stack_detail(s) for s in stacks]
 
+    def get_revision(self, cnxt):
+        return cfg.CONF.revision['heat_revision']
+
     @request_context
     def list_stacks(self, cnxt, limit=None, marker=None, sort_keys=None,
                     sort_dir=None, filters=None):

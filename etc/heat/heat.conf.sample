@@ -983,3 +983,16 @@
 #insecure=false
 
 
+[revision]
+
+#
+# Options defined in heat.common.config
+#
+
+# Heat build revision. If you would prefer to manage your
+# build revision separately you can move this section to a
+# different file and add it as another config option (string
+# value)
+#heat_revision=unknown
+
+
