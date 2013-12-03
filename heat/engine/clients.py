@@ -42,6 +42,12 @@ except ImportError:
     logger.info(_('cinderclient not available'))
 
 try:
+    from troveclient import client as troveclient
+except ImportError:
+    troveclient = None
+    logger.info(_('troveclient not available'))
+
+try:
     from ceilometerclient.v2 import client as ceilometerclient
 except ImportError:
     ceilometerclient = None
@@ -68,6 +74,7 @@ class OpenStackClients(object):
         self._swift = None
         self._neutron = None
         self._cinder = None
+        self._trove = None
         self._ceilometer = None
 
     @property
@@ -194,6 +201,32 @@ class OpenStackClients(object):
         self._cinder.client.management_url = management_url
 
         return self._cinder
+
+    def trove(self, service_type="database"):
+        if troveclient is None:
+            return None
+        if self._trove:
+            return self._trove
+
+        con = self.context
+        if self.auth_token is None:
+            logger.error(_("Trove connection failed, no auth_token!"))
+            return None
+
+        args = {
+            'service_type': service_type,
+            'auth_url': con.auth_url,
+            'proxy_token': con.auth_token,
+            'username': None,
+            'password': None
+        }
+
+        self._trove = troveclient.Client('1.0', **args)
+        management_url = self.url_for(service_type=service_type)
+        self._trove.client.auth_token = con.auth_token
+        self._trove.client.management_url = management_url
+
+        return self._trove
 
     def ceilometer(self):
         if ceilometerclient is None:

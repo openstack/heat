@@ -338,6 +338,9 @@ class Resource(object):
     def cinder(self):
         return self.stack.clients.cinder()
 
+    def trove(self):
+        return self.stack.clients.trove()
+
     def ceilometer(self):
         return self.stack.clients.ceilometer()
 
