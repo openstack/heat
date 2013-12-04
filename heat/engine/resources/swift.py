@@ -13,12 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from urlparse import urlparse
-
 from heat.common import exception
 from heat.engine import resource
-from heat.openstack.common import log as logging
 from heat.engine import clients
+
+from heat.openstack.common import log as logging
+from heat.openstack.common.py3kcompat import urlutils
+
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,7 @@ class SwiftContainer(resource.Resource):
 
     def FnGetAtt(self, key):
         url, token_id = self.swift().get_auth()
-        parsed = list(urlparse(url))
+        parsed = list(urlutils.urlparse(url))
         if key == 'DomainName':
             return parsed[1].split(':')[0]
         elif key == 'WebsiteURL':

@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from urlparse import urlparse
-
 from heat.engine import clients
 from heat.engine import resource
+
 from heat.openstack.common import log as logging
+from heat.openstack.common.py3kcompat import urlutils
+
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +127,7 @@ class S3Bucket(resource.Resource):
 
     def _resolve_attribute(self, name):
         url = self.swift().get_auth()[0]
-        parsed = list(urlparse(url))
+        parsed = list(urlutils.urlparse(url))
         if name == 'DomainName':
             return parsed[1].split(':')[0]
         elif name == 'WebsiteURL':
