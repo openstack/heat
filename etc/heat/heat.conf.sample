@@ -308,7 +308,7 @@
 
 # AMQP exchange to connect to if using RabbitMQ or Qpid
 # (string value)
-#control_exchange=openstack
+#control_exchange=heat
 
 
 #

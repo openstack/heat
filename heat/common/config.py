@@ -162,6 +162,7 @@ revision_opts = [
 cfg.CONF.register_opts(engine_opts)
 cfg.CONF.register_opts(service_opts)
 cfg.CONF.register_opts(rpc_opts)
+rpc.set_defaults(control_exchange='heat')
 cfg.CONF.register_group(paste_deploy_group)
 cfg.CONF.register_opts(paste_deploy_opts, group=paste_deploy_group)
 cfg.CONF.register_group(auth_password_group)
@@ -180,10 +181,6 @@ allowed_rpc_exception_modules = cfg.CONF.allowed_rpc_exception_modules
 allowed_rpc_exception_modules.append('heat.common.exception')
 cfg.CONF.set_default(name='allowed_rpc_exception_modules',
                      default=allowed_rpc_exception_modules)
-
-
-def rpc_set_default():
-    rpc.set_defaults(control_exchange='heat')
 
 
 def _get_deployment_flavor():
