@@ -113,14 +113,16 @@ class OSDBInstance(resource.Resource):
             _("List of databases to be created on DB instance creation."),
             required=False,
             default=[],
-            schema=properties.Schema(properties.Schema.MAP, database_schema)),
+            schema=properties.Schema(properties.Schema.MAP,
+                                     schema=database_schema)),
 
         "users": properties.Schema(
             properties.Schema.LIST,
             _("List of users to be created on DB instance creation."),
             required=False,
             default=[],
-            schema=properties.Schema(properties.Schema.MAP, user_schema)),
+            schema=properties.Schema(properties.Schema.MAP,
+                                     schema=user_schema)),
 
         "availability_zone": properties.Schema(
             properties.Schema.STRING,

@@ -117,9 +117,11 @@ class OSDBInstanceTest(HeatTestCase):
                                           FakeFlavor(2, '2GB')])
         self.m.StubOutWithMock(self.fc, 'instances')
         self.m.StubOutWithMock(self.fc.instances, 'create')
-        users = [{"name": "testuser", "password": "pass",
+        users = [{"name": "testuser", "password": "pass", "host": "%",
                   "databases": [{"name": "validdb"}]}]
-        databases = [{"name": "validdb"}]
+        databases = [{"collate": "utf8_general_ci",
+                      "character_set": "utf8",
+                      "name": "validdb"}]
         self.fc.instances.create('test', 1, volume={'size': 30},
                                  databases=databases,
                                  users=users,
