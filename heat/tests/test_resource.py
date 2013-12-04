@@ -24,6 +24,7 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import template
 from heat.engine import environment
+from heat.openstack.common.gettextutils import _
 import heat.db.api as db_api
 
 from heat.tests import generic_resource as generic_rsrc
@@ -66,6 +67,23 @@ class ResourceTest(HeatTestCase):
         snippet = {'Type': 'NoExistResourceType'}
         self.assertRaises(exception.StackValidationFailed,
                           resource.Resource, 'aresource', snippet, self.stack)
+
+    def test_resource_non_type(self):
+        snippet = {'Type': ''}
+        resource_name = 'aresource'
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               resource.Resource, resource_name,
+                               snippet, self.stack)
+        self.assertIn(_('Resource "%s" has no type') % resource_name, str(ex))
+
+    def test_resource_missed_type(self):
+        snippet = {'not-a-Type': 'GenericResourceType'}
+        resource_name = 'aresource'
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               resource.Resource, resource_name,
+                               snippet, self.stack)
+        self.assertIn(_('Non-empty resource type is required '
+                        'for resource "%s"') % resource_name, str(ex))
 
     def test_state_defaults(self):
         tmpl = {'Type': 'Foo'}
