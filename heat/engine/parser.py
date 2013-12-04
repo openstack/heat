@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import copy
 import functools
 import re
 import six
@@ -432,7 +433,9 @@ class Stack(collections.Mapping):
             logger.debug(_('Loaded existing backup stack'))
             return self.load(self.context, stack=s)
         elif create_if_missing:
-            prev = type(self)(self.context, self.name, self.t, self.env,
+            templ = Template.load(self.context, self.t.id)
+            templ.files = copy.deepcopy(self.t.files)
+            prev = type(self)(self.context, self.name, templ, self.env,
                               owner_id=self.id)
             prev.store(backup=True)
             logger.debug(_('Created new backup stack'))
@@ -477,7 +480,6 @@ class Stack(collections.Mapping):
 
         oldstack = Stack(self.context, self.name, self.t, self.env)
         backup_stack = self._backup_stack()
-
         try:
             update_task = update.StackUpdate(self, newstack, backup_stack,
                                              rollback=action == self.ROLLBACK)
@@ -485,6 +487,7 @@ class Stack(collections.Mapping):
 
             self.env = newstack.env
             self.parameters = newstack.parameters
+            self.t.files = newstack.t.files
             self._set_param_stackid()
 
             try:
