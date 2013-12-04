@@ -65,7 +65,7 @@ function run_tests {
     if [ -n "$args" ] ; then
         args="-t $args"
     fi
-    python setup.py testr --slowest $args
+    ${wrapper} python setup.py testr --slowest $args
 }
 
 function run_pep8 {
@@ -116,8 +116,8 @@ fi
 # Generate coverage report
 if [ "$coverage" == 1 ]; then
     echo "Generating coverage report in ./cover"
-    python setup.py testr --coverage --slowest
-    python -m coverage report --show-missing
+    ${wrapper} python setup.py testr --coverage --slowest
+    ${wrapper} python -m coverage report --show-missing
 fi
 
 exit $result
