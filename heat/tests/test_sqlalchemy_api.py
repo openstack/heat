@@ -190,6 +190,21 @@ class SqlAlchemyTest(HeatTestCase):
         st = db_api.stack_get(self.ctx, UUID1, show_deleted=True)
         self.assertEqual(UUID1, st.id)
 
+    def test_stack_get_show_deleted_context(self):
+        stack = self._setup_test_stack('stack', UUID1)[1]
+
+        self.assertFalse(self.ctx.show_deleted)
+        st = db_api.stack_get(self.ctx, UUID1)
+        self.assertEqual(UUID1, st.id)
+
+        stack.delete()
+        st = db_api.stack_get(self.ctx, UUID1)
+        self.assertIsNone(st)
+
+        self.ctx.show_deleted = True
+        st = db_api.stack_get(self.ctx, UUID1)
+        self.assertEqual(UUID1, st.id)
+
     def test_stack_get_all(self):
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
 
