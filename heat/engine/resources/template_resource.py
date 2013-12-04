@@ -47,6 +47,15 @@ class TemplateResource(stack_resource.StackResource):
         tri = stack.env.get_resource_info(
             json_snippet['Type'],
             registry_type=environment.TemplateResourceInfo)
+        if tri is None:
+            self.validation_exception = ValueError(_(
+                'Only Templates with an extension of .yaml or '
+                '.template are supported'))
+            self.properties_schema = {}
+            self.attributes_schema = {}
+            super(TemplateResource, self).__init__(name, json_snippet, stack)
+            return
+
         self.template_name = tri.template_name
         if tri.user_resource:
             self.allowed_schemes = ('http', 'https')
