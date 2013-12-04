@@ -134,9 +134,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         stack_name = '%s_stack' % name
         (t, stack) = self._setup_test_stack(stack_name)
 
-        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
-        clients.OpenStackClients.nova(
-            mox.IgnoreArg()).MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(cloud_server.CloudServer, "nova")
+        cloud_server.CloudServer.nova().MultipleTimes().AndReturn(self.fc)
 
         t['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['flavor'] = '256 MB Server'
@@ -207,9 +206,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_cs_create_image_name_err(self):
-        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
-        clients.OpenStackClients.nova(
-            mox.IgnoreArg()).MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(cloud_server.CloudServer, "nova")
+        cloud_server.CloudServer.nova().MultipleTimes().AndReturn(self.fc)
         stack_name = 'test_cs_create_image_name_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
@@ -227,9 +225,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_cs_create_image_name_okay(self):
-        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
-        clients.OpenStackClients.nova(
-            mox.IgnoreArg()).MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(cloud_server.CloudServer, "nova")
+        cloud_server.CloudServer.nova().MultipleTimes().AndReturn(self.fc)
         stack_name = 'test_cs_create_image_name_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
@@ -283,9 +280,8 @@ class RackspaceCloudServerTest(HeatTestCase):
 
     def test_cs_create_flavor_err(self):
         """validate() should throw an if the flavor is invalid."""
-        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
-        clients.OpenStackClients.nova(
-            mox.IgnoreArg()).MultipleTimes().AndReturn(self.fc)
+        self.m.StubOutWithMock(cloud_server.CloudServer, "nova")
+        cloud_server.CloudServer.nova().MultipleTimes().AndReturn(self.fc)
         stack_name = 'test_cs_create_flavor_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
