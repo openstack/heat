@@ -27,7 +27,7 @@ from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-from ..engine.plugins import rackspace_resource  # noqa
+from heat.engine import clients
 from ..engine.plugins import cloud_server  # noqa
 
 
@@ -134,9 +134,9 @@ class RackspaceCloudServerTest(HeatTestCase):
         stack_name = '%s_stack' % name
         (t, stack) = self._setup_test_stack(stack_name)
 
-        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
-        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
-                                                   .AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
+        clients.OpenStackClients.nova(
+            mox.IgnoreArg()).MultipleTimes().AndReturn(self.fc)
 
         t['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
         t['Resources']['WebServer']['Properties']['flavor'] = '256 MB Server'
@@ -167,9 +167,9 @@ class RackspaceCloudServerTest(HeatTestCase):
 
     def _update_test_cs(self, return_server, name, exit_code=0):
         self._mock_ssh_sftp(exit_code)
-        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
-        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
-                                                   .AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
+        clients.OpenStackClients.nova(
+            mox.IgnoreArg()).MultipleTimes().AndReturn(self.fc)
 
     def test_cs_create(self):
         return_server = self.fc.servers.list()[1]
@@ -207,9 +207,9 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_cs_create_image_name_err(self):
-        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
-        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
-                                                   .AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
+        clients.OpenStackClients.nova(
+            mox.IgnoreArg()).MultipleTimes().AndReturn(self.fc)
         stack_name = 'test_cs_create_image_name_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
@@ -227,9 +227,9 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_cs_create_image_name_okay(self):
-        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
-        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
-                                                   .AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
+        clients.OpenStackClients.nova(
+            mox.IgnoreArg()).MultipleTimes().AndReturn(self.fc)
         stack_name = 'test_cs_create_image_name_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 
@@ -283,9 +283,9 @@ class RackspaceCloudServerTest(HeatTestCase):
 
     def test_cs_create_flavor_err(self):
         """validate() should throw an if the flavor is invalid."""
-        self.m.StubOutWithMock(rackspace_resource.RackspaceResource, "nova")
-        rackspace_resource.RackspaceResource.nova().MultipleTimes()\
-                                                   .AndReturn(self.fc)
+        self.m.StubOutWithMock(clients.OpenStackClients, "nova")
+        clients.OpenStackClients.nova(
+            mox.IgnoreArg()).MultipleTimes().AndReturn(self.fc)
         stack_name = 'test_cs_create_flavor_err_stack'
         (t, stack) = self._setup_test_stack(stack_name)
 

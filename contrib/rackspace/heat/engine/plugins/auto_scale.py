@@ -18,7 +18,7 @@ Resources for Rackspace Auto Scale.
 
 import copy
 
-from . import rackspace_resource  # noqa
+from heat.engine import resource
 from heat.db.sqlalchemy import api as db_api
 from heat.common import exception
 
@@ -31,9 +31,14 @@ except ImportError:
 
     class NotFound(Exception):
         """Dummy pyrax exception - only used for testing."""
+    def resource_mapping():
+        return {}
+else:
+    def resource_mapping():
+        return unprotected_resources()
 
 
-class Group(rackspace_resource.RackspaceResource):
+class Group(resource.Resource):
     """Represents a scaling group."""
 
     # pyrax differs drastically from the actual Auto Scale API. We'll prefer
@@ -222,7 +227,7 @@ class Group(rackspace_resource.RackspaceResource):
         Create the autoscaling group and set the resulting group's ID as the
         resource_id.
         """
-        asclient = self.auto_scale()
+        asclient = self.stack.clients.auto_scale()
         group = asclient.create(**self._get_create_args())
         self.resource_id_set(str(group.id))
 
@@ -230,7 +235,7 @@ class Group(rackspace_resource.RackspaceResource):
         """
         Update the group configuration and the launch configuration.
         """
-        asclient = self.auto_scale()
+        asclient = self.stack.clients.auto_scale()
         if 'groupConfiguration' in prop_diff:
             args = self._get_group_config_args(prop_diff['groupConfiguration'])
             asclient.replace(self.resource_id, **args)
@@ -250,7 +255,7 @@ class Group(rackspace_resource.RackspaceResource):
         """
         if self.resource_id is None:
             return
-        asclient = self.auto_scale()
+        asclient = self.stack.clients.auto_scale()
         args = self._get_group_config_args(
             self.properties['groupConfiguration'])
         args['min_entities'] = 0
@@ -265,7 +270,7 @@ class Group(rackspace_resource.RackspaceResource):
         if self.resource_id is None:
             return True
         try:
-            self.auto_scale().delete(self.resource_id)
+            self.stack.clients.auto_scale().delete(self.resource_id)
         except Forbidden:
             return False
         except NotFound:
@@ -274,7 +279,7 @@ class Group(rackspace_resource.RackspaceResource):
             return True
 
 
-class ScalingPolicy(rackspace_resource.RackspaceResource):
+class ScalingPolicy(resource.Resource):
     """Represents a Rackspace Auto Scale scaling policy."""
     properties_schema = {
         # group isn't in the post body, but it's in the URL to post to.
@@ -355,7 +360,7 @@ class ScalingPolicy(rackspace_resource.RackspaceResource):
         Create the scaling policy, and initialize the resource ID to
         {group_id}:{policy_id}.
         """
-        asclient = self.auto_scale()
+        asclient = self.stack.clients.auto_scale()
         args = self._get_args(self.properties)
         policy = asclient.add_policy(**args)
         resource_id = '%s:%s' % (self.properties['group'], policy.id)
@@ -365,14 +370,14 @@ class ScalingPolicy(rackspace_resource.RackspaceResource):
         return self.resource_id.split(':', 1)[1]
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        asclient = self.auto_scale()
+        asclient = self.stack.clients.auto_scale()
         args = self._get_args(tmpl_diff['Properties'])
         args['policy'] = self._get_policy_id()
         asclient.replace_policy(**args)
 
     def handle_delete(self):
         """Delete the policy if it exists."""
-        asclient = self.auto_scale()
+        asclient = self.stack.clients.auto_scale()
         if self.resource_id is None:
             return
         policy_id = self._get_policy_id()
@@ -382,7 +387,7 @@ class ScalingPolicy(rackspace_resource.RackspaceResource):
             pass
 
 
-class WebHook(rackspace_resource.RackspaceResource):
+class WebHook(resource.Resource):
     """
     Represents a Rackspace AutoScale webhook.
 
@@ -427,7 +432,7 @@ class WebHook(rackspace_resource.RackspaceResource):
             metadata=props.get('metadata'))
 
     def handle_create(self):
-        asclient = self.auto_scale()
+        asclient = self.stack.clients.auto_scale()
         args = self._get_args(self.properties)
         webhook = asclient.add_webhook(**args)
         self.resource_id_set(webhook.id)
@@ -441,7 +446,7 @@ class WebHook(rackspace_resource.RackspaceResource):
                 db_api.resource_data_set(self, key, url)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        asclient = self.auto_scale()
+        asclient = self.stack.clients.auto_scale()
         args = self._get_args(json_snippet['Properties'])
         args['webhook'] = self.resource_id
         asclient.replace_webhook(**args)
@@ -455,7 +460,7 @@ class WebHook(rackspace_resource.RackspaceResource):
     def handle_delete(self):
         if self.resource_id is None:
             return
-        asclient = self.auto_scale()
+        asclient = self.stack.clients.auto_scale()
         group_id, policy_id = self.properties['policy'].split(':', 1)
         try:
             asclient.delete_webhook(group_id, policy_id, self.resource_id)
@@ -469,10 +474,3 @@ def unprotected_resources():
         'Rackspace::AutoScale::ScalingPolicy': ScalingPolicy,
         'Rackspace::AutoScale::WebHook': WebHook
     }
-
-
-def resource_mapping():
-    if rackspace_resource.PYRAX_INSTALLED:
-        return unprotected_resources()
-    else:
-        return {}

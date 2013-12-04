@@ -17,11 +17,11 @@ import itertools
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import clients
 from heat.engine import resource
 from heat.engine import scheduler
 
 from ..engine.plugins import auto_scale  # noqa
-from ..engine.plugins import rackspace_resource  # noqa
 
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
@@ -200,7 +200,7 @@ class ScalingGroupTest(HeatTestCase):
         for res_name, res_class in auto_scale.unprotected_resources().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
-        self.patch(rackspace_resource.RackspaceResource,
+        self.patch(clients.OpenStackClients,
                    'auto_scale', lambda resource: self.fake_auto_scale)
 
     def _setup_test_stack(self):
@@ -349,7 +349,7 @@ class PolicyTest(HeatTestCase):
         for res_name, res_class in auto_scale.unprotected_resources().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
-        self.patch(rackspace_resource.RackspaceResource,
+        self.patch(clients.OpenStackClients,
                    'auto_scale', lambda resource: self.fake_auto_scale)
 
     def _setup_test_stack(self, template):
@@ -493,7 +493,7 @@ class WebHookTest(HeatTestCase):
         for res_name, res_class in auto_scale.unprotected_resources().items():
             resource._register_class(res_name, res_class)
         self.fake_auto_scale = FakeAutoScale()
-        self.patch(rackspace_resource.RackspaceResource,
+        self.patch(clients.OpenStackClients,
                    'auto_scale', lambda resource: self.fake_auto_scale)
 
     def _setup_test_stack(self, template):
