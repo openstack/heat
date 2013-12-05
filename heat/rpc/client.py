@@ -69,6 +69,16 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
                          sort_keys=sort_keys, marker=marker,
                          sort_dir=sort_dir, filters=filters))
 
+    def count_stacks(self, ctxt, filters=None):
+        """
+        Return the number of stacks that match the given filters
+        :param ctxt: RPC context.
+        :param filters: a dict of ATTR:VALUE to match agains stacks
+        :returns: a integer representing the number of matched stacks
+        """
+        return self.call(ctxt, self.make_msg('count_stacks',
+                                             filters=filters))
+
     def show_stack(self, ctxt, stack_identity):
         """
         Return detailed information about one or all stacks.

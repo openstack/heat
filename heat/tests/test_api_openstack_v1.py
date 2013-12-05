@@ -26,6 +26,7 @@ from heat.common.wsgi import Request
 from heat.common import urlfetch
 from heat.openstack.common.rpc import common as rpc_common
 from heat.rpc import api as rpc_api
+from heat.rpc import client as rpc_client
 from heat.tests.common import HeatTestCase
 
 import heat.api.openstack.v1 as api_v1
@@ -371,6 +372,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertIn('sort_keys', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort_dir', engine_args)
+        self.assertIn('filters', engine_args)
         self.assertNotIn('balrog', engine_args)
 
     @mock.patch.object(rpc, 'call')
@@ -394,6 +396,41 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.assertIn('status', filters)
         self.assertIn('name', filters)
         self.assertNotIn('balrog', filters)
+
+    def test_index_returns_stack_count_if_with_count_is_truthy(self):
+        params = {'with_count': 'True'}
+        req = self._get('/stacks', params=params)
+        engine = self.controller.engine
+
+        engine.list_stacks = mock.Mock(return_value=[])
+        engine.count_stacks = mock.Mock(return_value=0)
+
+        result = self.controller.index(req, tenant_id='fake_tenant_id')
+        self.assertEqual(0, result['count'])
+
+    def test_index_doesnt_return_stack_count_if_with_count_is_falsy(self):
+        params = {'with_count': ''}
+        req = self._get('/stacks', params=params)
+        engine = self.controller.engine
+
+        engine.list_stacks = mock.Mock(return_value=[])
+        engine.count_stacks = mock.Mock()
+
+        result = self.controller.index(req, tenant_id='fake_tenant_id')
+        self.assertNotIn('count', result)
+        assert not engine.count_stacks.called
+
+    @mock.patch.object(rpc_client.EngineClient, 'count_stacks')
+    def test_index_doesnt_break_with_old_engine(self, mock_count_stacks):
+        params = {'with_count': 'Truthy'}
+        req = self._get('/stacks', params=params)
+        engine = self.controller.engine
+
+        engine.list_stacks = mock.Mock(return_value=[])
+        mock_count_stacks.side_effect = AttributeError("Should not exist")
+
+        result = self.controller.index(req, tenant_id='fake_tenant_id')
+        self.assertNotIn('count', result)
 
     @mock.patch.object(rpc, 'call')
     def test_detail(self, mock_call):

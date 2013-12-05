@@ -235,6 +235,16 @@ class EngineService(service.Service):
                                                 sort_dir, filters) or []
         return list(format_stack_details(stacks))
 
+    @request_context
+    def count_stacks(self, cnxt, filters=None):
+        """
+        Return the number of stacks that match the given filters
+        :param ctxt: RPC context.
+        :param filters: a dict of ATTR:VALUE to match agains stacks
+        :returns: a integer representing the number of matched stacks
+        """
+        return db_api.stack_count_all_by_tenant(cnxt, filters=filters)
+
     def _validate_deferred_auth_context(self, cnxt, stack):
         if cfg.CONF.deferred_auth_method != 'password':
             return
