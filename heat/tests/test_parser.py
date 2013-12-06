@@ -767,6 +767,49 @@ class StackTest(HeatTestCase):
         self.assertFalse(identifier.path)
 
     @utils.stack_delete_after
+    def test_get_stack_abandon_data(self):
+        tpl = {'Resources':
+               {'A': {'Type': 'GenericResourceType'},
+                'B': {'Type': 'GenericResourceType'}}}
+        resources = '''{'A': {'status': 'COMPLETE', 'name': 'A',
+        'resource_data': {}, 'resource_id': None, 'action': 'INIT',
+        'type': 'GenericResourceType', 'metadata': {}},
+        'B': {'status': 'COMPLETE', 'name': 'B', 'resource_data': {},
+        'resource_id': None, 'action': 'INIT', 'type': 'GenericResourceType',
+        'metadata': {}}}'''
+        self.stack = parser.Stack(self.ctx, 'stack_details_test',
+                                  parser.Template(tpl))
+        self.stack.store()
+        info = self.stack.get_abandon_data()
+        self.assertEqual(None, info['action'])
+        self.assertTrue('id' in info)
+        self.assertEqual('stack_details_test', info['name'])
+        self.assertTrue(resources, info['resources'])
+        self.assertEqual(None, info['status'])
+        self.assertEqual(tpl, info['template'])
+
+    @utils.stack_delete_after
+    def test_set_stack_res_deletion_policy(self):
+        tpl = {'Resources':
+               {'A': {'Type': 'GenericResourceType'},
+                'B': {'Type': 'GenericResourceType'}}}
+        resources = '''{'A': {'status': 'COMPLETE', 'name': 'A',
+        'resource_data': {}, 'resource_id': None, 'action': 'INIT',
+        'type': 'GenericResourceType', 'metadata': {}},
+        'B': {'status': 'COMPLETE', 'name': 'B', 'resource_data': {},
+        'resource_id': None, 'action': 'INIT', 'type': 'GenericResourceType',
+        'metadata': {}}}'''
+        stack = parser.Stack(self.ctx,
+                             'stack_details_test',
+                             parser.Template(tpl))
+        stack.store()
+        stack.set_deletion_policy(resource.RETAIN)
+        self.assertEqual(resource.RETAIN,
+                         stack.resources['A'].t['DeletionPolicy'])
+        self.assertEqual(resource.RETAIN,
+                         stack.resources['B'].t['DeletionPolicy'])
+
+    @utils.stack_delete_after
     def test_set_param_id(self):
         self.stack = parser.Stack(self.ctx, 'param_arn_test',
                                   parser.Template({}))

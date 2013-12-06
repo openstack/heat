@@ -663,6 +663,21 @@ class Stack(collections.Mapping):
                 self.clients.nova().availability_zones.list(detailed=False)]
         return self._zones
 
+    def set_deletion_policy(self, policy):
+        for res in self.resources.values():
+            res.set_deletion_policy(policy)
+
+    def get_abandon_data(self):
+        return {
+            'name': self.name,
+            'id': self.id,
+            'action': self.action,
+            'status': self.status,
+            'template': self.t.t,
+            'resources': dict((res.name, res.get_abandon_data())
+                              for res in self.resources.values())
+        }
+
     def resolve_static_data(self, snippet):
         return resolve_static_data(self.t, self, self.parameters, snippet)
 

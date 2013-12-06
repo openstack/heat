@@ -246,6 +246,12 @@ class StackResource(resource.Resource):
 
         return done
 
+    def set_deletion_policy(self, policy):
+        self.nested().set_deletion_policy(policy)
+
+    def get_abandon_data(self):
+        return self.nested().get_abandon_data()
+
     def get_output(self, op):
         '''
         Return the specified Output value from the nested stack.

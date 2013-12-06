@@ -115,6 +115,31 @@ class StackResourceTest(HeatTestCase):
         self.assertEqual(self.stack.id, self.parent_resource.resource_id)
 
     @utils.stack_delete_after
+    def test_set_deletion_policy(self):
+        self.parent_resource.create_with_template(self.templ,
+                                                  {"KeyName": "key"})
+        self.stack = self.parent_resource.nested()
+        self.parent_resource.set_deletion_policy(resource.RETAIN)
+        for res in self.stack.resources.values():
+            self.assertEqual(resource.RETAIN, res.t['DeletionPolicy'])
+
+    @utils.stack_delete_after
+    def test_get_abandon_data(self):
+        self.parent_resource.create_with_template(self.templ,
+                                                  {"KeyName": "key"})
+        ret = self.parent_resource.get_abandon_data()
+        # check abandoned data contains all the necessary information.
+        # (no need to check stack/resource IDs, because they are
+        # randomly generated uuids)
+        self.assertEqual(6, len(ret))
+        self.assertEqual('CREATE', ret['action'])
+        self.assertTrue('name' in ret)
+        self.assertTrue('id' in ret)
+        self.assertTrue('resources' in ret)
+        self.assertEqual(template_format.parse(param_template),
+                         ret['template'])
+
+    @utils.stack_delete_after
     def test_create_with_template_validates(self):
         """
         Creating a stack with a template validates the created stack, so that
