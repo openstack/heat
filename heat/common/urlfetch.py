@@ -19,8 +19,6 @@ Utility for fetching a resource (e.g. a template) from a URL.
 
 import requests
 from requests import exceptions
-import urllib2
-import urlparse
 
 from oslo.config import cfg
 
@@ -28,6 +26,7 @@ cfg.CONF.import_opt('max_template_size', 'heat.common.config')
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common.py3kcompat import urlutils
 
 logger = logging.getLogger(__name__)
 
@@ -43,15 +42,15 @@ def get(url, allowed_schemes=('http', 'https')):
     '''
     logger.info(_('Fetching data from %s') % url)
 
-    components = urlparse.urlparse(url)
+    components = urlutils.urlparse(url)
 
     if components.scheme not in allowed_schemes:
         raise IOError(_('Invalid URL scheme %s') % components.scheme)
 
     if components.scheme == 'file':
         try:
-            return urllib2.urlopen(url).read()
-        except urllib2.URLError as uex:
+            return urlutils.urlopen(url).read()
+        except urlutils.URLError as uex:
             raise IOError(_('Failed to retrieve template: %s') % str(uex))
 
     try:

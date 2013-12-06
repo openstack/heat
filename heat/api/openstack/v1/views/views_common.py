@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urllib
+from heat.openstack.common.py3kcompat import urlutils
 
 
 def get_collection_links(request, items):
@@ -39,4 +39,4 @@ def _get_next_link(request, marker):
     params = request.params.copy()
     params['marker'] = marker
 
-    return "%s?%s" % (request.path_url, urllib.urlencode(params))
+    return "%s?%s" % (request.path_url, urlutils.urlencode(params))

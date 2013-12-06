@@ -18,10 +18,10 @@
 """Heat exception subclasses"""
 
 import functools
-import urlparse
 import sys
 
 from heat.openstack.common import log as logging
+from heat.openstack.common.py3kcompat import urlutils
 
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 class RedirectException(Exception):
     def __init__(self, url):
-        self.url = urlparse.urlparse(url)
+        self.url = urlutils.urlparse(url)
 
 
 class KeystoneError(Exception):

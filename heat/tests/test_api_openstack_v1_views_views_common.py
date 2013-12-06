@@ -13,10 +13,10 @@
 #    under the License.
 
 import mock
-import urlparse
 
 from heat.tests.common import HeatTestCase
 from heat.api.openstack.v1.views import views_common
+from heat.openstack.common.py3kcompat import urlutils
 
 
 class TestViewsCommon(HeatTestCase):
@@ -74,10 +74,11 @@ class TestViewsCommon(HeatTestCase):
 
         next_link = filter(lambda link: link['rel'] == 'next', links).pop()
         url = next_link['href']
-        query_string = urlparse.urlparse(url).query
-        params = urlparse.parse_qs(query_string)
-        self.assertEqual('2', params['limit'][0])
-        self.assertEqual('bar', params['foo'][0])
+        query_string = urlutils.urlparse(url).query
+        params = {}
+        params.update(urlutils.parse_qsl(query_string))
+        self.assertEqual('2', params['limit'])
+        self.assertEqual('bar', params['foo'])
 
     def test_get_collection_links_handles_invalid_limits(self):
         self.setUpGetCollectionLinks()

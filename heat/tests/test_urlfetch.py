@@ -15,13 +15,14 @@
 
 import requests
 from requests import exceptions
-import urllib2
 import cStringIO
 
 from oslo.config import cfg
 
 from heat.common import urlfetch
 from heat.tests.common import HeatTestCase
+
+from heat.openstack.common.py3kcompat import urlutils
 
 
 class Response:
@@ -51,8 +52,8 @@ class UrlFetchTest(HeatTestCase):
         data = '{ "foo": "bar" }'
         url = 'file:///etc/profile'
 
-        self.m.StubOutWithMock(urllib2, 'urlopen')
-        urllib2.urlopen(url).AndReturn(cStringIO.StringIO(data))
+        self.m.StubOutWithMock(urlutils, 'urlopen')
+        urlutils.urlopen(url).AndReturn(cStringIO.StringIO(data))
         self.m.ReplayAll()
 
         self.assertEqual(data, urlfetch.get(url, allowed_schemes=['file']))
@@ -61,8 +62,8 @@ class UrlFetchTest(HeatTestCase):
     def test_file_scheme_failure(self):
         url = 'file:///etc/profile'
 
-        self.m.StubOutWithMock(urllib2, 'urlopen')
-        urllib2.urlopen(url).AndRaise(urllib2.URLError('oops'))
+        self.m.StubOutWithMock(urlutils, 'urlopen')
+        urlutils.urlopen(url).AndRaise(urlutils.URLError('oops'))
         self.m.ReplayAll()
 
         self.assertRaises(IOError, urlfetch.get, url, allowed_schemes=['file'])
