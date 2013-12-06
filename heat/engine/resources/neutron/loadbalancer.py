@@ -16,6 +16,8 @@
 from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import clients
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources import nova_utils
@@ -304,6 +306,92 @@ class Pool(neutron.NeutronResource):
             self._delete_pool()
 
 
+class PoolMember(neutron.NeutronResource):
+    """
+    A resource to handle load balancer members.
+    """
+
+    properties_schema = {
+        'pool_id': properties.Schema(
+            properties.Schema.STRING,
+            _('The ID of the load balancing pool.'),
+            required=True,
+            update_allowed=True),
+        'address': properties.Schema(
+            properties.Schema.STRING,
+            _('IP address of the pool member on the pool network.'),
+            required=True),
+        'protocol_port': properties.Schema(
+            properties.Schema.INTEGER,
+            _('TCP port on which the pool member listens for requests or '
+              'connections.'),
+            required=True,
+            constraints=[constraints.Range(0, 65535)]),
+        'weight': properties.Schema(
+            properties.Schema.INTEGER,
+            _('Weight of pool member in the pool (default to 1).'),
+            update_allowed=True,
+            constraints=[constraints.Range(0, 256)]),
+        'admin_state_up': properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('The administrative state of the pool member.'),
+            default=True)
+    }
+
+    attributes_schema = {
+        'admin_state_up': _('The administrative state of this pool '
+                            'member.'),
+        'tenant_id': _('Tenant owning the pool member.'),
+        'weight': _('Weight of the pool member in the pool.'),
+        'address': _('IP address of the pool member.'),
+        'pool_id': _('The ID of the load balancing pool.'),
+        'protocol_port': _('TCP port on which the pool member listens for'
+                           'requests or connections.'),
+        'show': _('All attributes.'),
+    }
+
+    update_allowed_keys = ('Properties',)
+
+    def handle_create(self):
+        pool = self.properties['pool_id']
+        client = self.neutron()
+        protocol_port = self.properties['protocol_port']
+        address = self.properties['address']
+        admin_state_up = self.properties['admin_state_up']
+        weight = self.properties.get('weight')
+
+        params = {
+            'pool_id': pool,
+            'address': address,
+            'protocol_port': protocol_port,
+            'admin_state_up': admin_state_up
+        }
+
+        if weight is not None:
+            params['weight'] = weight
+
+        member = client.create_member({'member': params})['member']
+        self.resource_id_set(member['id'])
+
+    def _show_resource(self):
+        return self.neutron().show_member(self.resource_id)['member']
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            self.neutron().update_member(
+                self.resource_id, {'member': prop_diff})
+
+    def handle_delete(self):
+        client = self.neutron()
+        try:
+            client.delete_member(self.resource_id)
+        except NeutronClientException as ex:
+            if ex.status_code != 404:
+                raise ex
+        else:
+            return scheduler.TaskRunner(self._confirm_delete)()
+
+
 class LoadBalancer(resource.Resource):
     """
     A resource to link a neutron pool with servers.
@@ -387,5 +475,6 @@ def resource_mapping():
     return {
         'OS::Neutron::HealthMonitor': HealthMonitor,
         'OS::Neutron::Pool': Pool,
+        'OS::Neutron::PoolMember': PoolMember,
         'OS::Neutron::LoadBalancer': LoadBalancer,
     }
