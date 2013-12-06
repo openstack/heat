@@ -217,10 +217,12 @@
 
 # (Optional) Name of log file to output to. If no default is
 # set, logging will go to stdout. (string value)
+# Deprecated group/name - [DEFAULT]/logfile
 #log_file=<None>
 
 # (Optional) The base directory used for relative --log-file
 # paths (string value)
+# Deprecated group/name - [DEFAULT]/logdir
 #log_dir=<None>
 
 # Use syslog for logging. (boolean value)
@@ -314,6 +316,7 @@
 #
 
 # Use durable queues in amqp. (boolean value)
+# Deprecated group/name - [DEFAULT]/rabbit_durable_queues
 #amqp_durable_queues=false
 
 # Auto-delete queues in amqp. (boolean value)
@@ -528,10 +531,12 @@
 #
 
 # The backend to use for db (string value)
+# Deprecated group/name - [DEFAULT]/db_backend
 #backend=sqlalchemy
 
 # Enable the experimental use of thread pooling for all DB API
 # calls (boolean value)
+# Deprecated group/name - [DEFAULT]/dbapi_use_tpool
 #use_tpool=false
 
 
@@ -541,6 +546,9 @@
 
 # The SQLAlchemy connection string used to connect to the
 # database (string value)
+# Deprecated group/name - [DEFAULT]/sql_connection
+# Deprecated group/name - [DATABASE]/sql_connection
+# Deprecated group/name - [sql]/connection
 #connection=sqlite:////heat/openstack/common/db/$sqlite_db
 
 # The SQLAlchemy connection string used to connect to the
@@ -549,38 +557,53 @@
 
 # timeout before idle sql connections are reaped (integer
 # value)
+# Deprecated group/name - [DEFAULT]/sql_idle_timeout
+# Deprecated group/name - [DATABASE]/sql_idle_timeout
 #idle_timeout=3600
 
 # Minimum number of SQL connections to keep open in a pool
 # (integer value)
+# Deprecated group/name - [DEFAULT]/sql_min_pool_size
+# Deprecated group/name - [DATABASE]/sql_min_pool_size
 #min_pool_size=1
 
 # Maximum number of SQL connections to keep open in a pool
 # (integer value)
+# Deprecated group/name - [DEFAULT]/sql_max_pool_size
+# Deprecated group/name - [DATABASE]/sql_max_pool_size
 #max_pool_size=<None>
 
 # maximum db connection retries during startup. (setting -1
 # implies an infinite retry count) (integer value)
+# Deprecated group/name - [DEFAULT]/sql_max_retries
+# Deprecated group/name - [DATABASE]/sql_max_retries
 #max_retries=10
 
 # interval between retries of opening a sql connection
 # (integer value)
+# Deprecated group/name - [DEFAULT]/sql_retry_interval
+# Deprecated group/name - [DATABASE]/reconnect_interval
 #retry_interval=10
 
 # If set, use this value for max_overflow with sqlalchemy
 # (integer value)
+# Deprecated group/name - [DEFAULT]/sql_max_overflow
+# Deprecated group/name - [DATABASE]/sqlalchemy_max_overflow
 #max_overflow=<None>
 
 # Verbosity of SQL debugging information. 0=None,
 # 100=Everything (integer value)
+# Deprecated group/name - [DEFAULT]/sql_connection_debug
 #connection_debug=0
 
 # Add python stack traces to SQL as comment strings (boolean
 # value)
+# Deprecated group/name - [DEFAULT]/sql_connection_trace
 #connection_trace=false
 
 # If set, use this value for pool_timeout with sqlalchemy
 # (integer value)
+# Deprecated group/name - [DATABASE]/sqlalchemy_pool_timeout
 #pool_timeout=<None>
 
 
@@ -670,6 +693,7 @@
 #
 
 # Matchmaker ring file (JSON) (string value)
+# Deprecated group/name - [DEFAULT]/matchmaker_ringfile
 #ringfile=/etc/oslo/matchmaker_ring.json
 
 
@@ -896,6 +920,7 @@
 
 # If defined, the memcache server(s) to use for caching (list
 # value)
+# Deprecated group/name - [DEFAULT]/memcache_servers
 #memcached_servers=<None>
 
 # In order to prevent excessive requests and validations, the
