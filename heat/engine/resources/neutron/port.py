@@ -26,51 +26,81 @@ logger = logging.getLogger(__name__)
 
 class Port(neutron.NeutronResource):
 
-    fixed_ip_schema = {'subnet_id': {'Type': 'String'},
-                       'ip_address': {'Type': 'String'}}
+    fixed_ip_schema = {
+        'subnet_id': {
+            'Type': 'String',
+            'Description': _('Subnet in which to allocate the IP address '
+                             'for this port.')
+        },
+        'ip_address': {
+            'Type': 'String',
+            'Description': _('IP address desired in the subnet for this port.')
+        }
+    }
 
-    address_pair_schema = {'mac_address': {'Type': 'String'},
-                           'ip_address': {'Type': 'String', 'Required': True}}
+    address_pair_schema = {
+        'mac_address': {
+            'Type': 'String',
+            'Description': _('MAC address to allow through this port.')
+        },
+        'ip_address': {
+            'Type': 'String',
+            'Description': _('IP address to allow through this port.'),
+            'Required': True
+        }
+    }
 
     properties_schema = {
         'network_id': {
             'Type': 'String',
+            'Description': _('Network ID this port belongs to.'),
             'Required': True
         },
         'name': {
-            'Type': 'String'
+            'Type': 'String',
+            'Description': _('A symbolic name for this port.')
         },
         'value_specs': {
             'Type': 'Map',
+            'Description': _('Extra parameters to include in the "port" '
+                             'object in the creation request.'),
             'Default': {},
         },
         'admin_state_up': {
             'Default': True,
             'Type': 'Boolean',
+            'Description': _('The administrative state of this port.'),
             'UpdateAllowed': True
         },
         'fixed_ips': {
             'Type': 'List',
             'Default': [],
             'UpdateAllowed': True,
+            'Description': _('Desired IPs for this port.'),
             'Schema': {
                 'Type': 'Map',
                 'Schema': fixed_ip_schema
             }
         },
         'mac_address': {
-            'Type': 'String'
+            'Type': 'String',
+            'Description': _('MAC address to give to this port.')
         },
         'device_id': {
-            'Type': 'String'
+            'Type': 'String',
+            'Description': _('Device ID of this port.')
         },
         'security_groups': {
             'Type': 'List',
             'UpdateAllowed': True,
+            'Description': _('Security group IDs to associate with this '
+                             'port.'),
             'Default': [],
         },
         'allowed_address_pairs': {
             'Type': 'List',
+            'Description': _('Additional MAC/IP address pairs allowed to pass'
+                             ' through the port.'),
             'Schema': {
                 'Type': 'Map',
                 'Schema': address_pair_schema
@@ -82,15 +112,15 @@ class Port(neutron.NeutronResource):
         "admin_state_up": _("The administrative state of this port."),
         "device_id": _("Unique identifier for the device."),
         "device_owner": _("Name of the network owning the port."),
-        "fixed_ips": _("Fixed ip addresses."),
-        "mac_address": _("Mac address of the port."),
+        "fixed_ips": _("Fixed IP addresses."),
+        "mac_address": _("MAC address of the port."),
         "name": _("Friendly name of the port."),
         "network_id": _("Unique identifier for the network owning the port."),
         "security_groups": _("A list of security groups for the port."),
         "status": _("The status of the port."),
         "tenant_id": _("Tenant owning the port."),
-        "allowed_address_pairs": _("Additional mac/ip address pairs allowed "
-                                   "to pass through a port"),
+        "allowed_address_pairs": _("Additional MAC/IP address pairs allowed "
+                                   "to pass through a port."),
         "show": _("All attributes."),
     }
 
