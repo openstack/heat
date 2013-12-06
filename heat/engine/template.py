@@ -189,7 +189,7 @@ class Template(collections.Mapping):
                 raise TypeError(_('Arguments to "Fn::Join" must be a list'))
             try:
                 delim, items = args
-            except ValueError as ex:
+            except ValueError:
                 example = '"Fn::Join" : [ " ", [ "str1", "str2"]]'
                 raise ValueError(_('Incorrect arguments to '
                                    '"Fn::Join" should be: %s') %
@@ -239,7 +239,7 @@ class Template(collections.Mapping):
 
             try:
                 lookup, strings = args
-            except ValueError as ex:
+            except ValueError:
                 raise ValueError(_('Incorrect arguments to '
                                    '"Fn::Select" should be: %s') %
                                  example)
@@ -250,7 +250,7 @@ class Template(collections.Mapping):
                                 example)
             try:
                 index = int(lookup)
-            except ValueError as ex:
+            except ValueError:
                 index = lookup
 
             if strings == '':
@@ -292,7 +292,7 @@ class Template(collections.Mapping):
 
             try:
                 delim, strings = args
-            except ValueError as ex:
+            except ValueError:
                 example = '"Fn::Join" : [ " ", [ "str1", "str2"]]'
                 raise ValueError(_('Incorrect arguments to '
                                    '"Fn::Join" should be: %s') %
@@ -328,7 +328,7 @@ class Template(collections.Mapping):
             example = '"Fn::Split" : [ ",", "str1, str2"]]'
             try:
                 delim, strings = args
-            except ValueError as ex:
+            except ValueError:
                 raise ValueError(_('Incorrect arguments to "Fn::Split" '
                                    'should be: %s') % example)
             if not isinstance(strings, basestring):
@@ -356,7 +356,7 @@ class Template(collections.Mapping):
 
             try:
                 mapping, string = args
-            except ValueError as ex:
+            except ValueError:
                 example = ('{"Fn::Replace": '
                            '[ {"$var1": "foo", "%var2%": "bar"}, '
                            '"$var1 is %var2%"]}')
