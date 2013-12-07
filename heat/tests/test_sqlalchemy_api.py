@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
 from datetime import datetime
 from datetime import timedelta
 
@@ -18,7 +19,6 @@ from json import loads
 from json import dumps
 import mock
 import mox
-
 
 from heat.db.sqlalchemy import api as db_api
 from heat.engine import environment
@@ -31,7 +31,6 @@ from heat.engine.resources import instance as instances
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.openstack.common import timeutils
-from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -63,7 +62,7 @@ wp_template = '''
 }
 '''
 
-UUIDs = (UUID1, UUID2, UUID3) = sorted([uuidutils.generate_uuid()
+UUIDs = (UUID1, UUID2, UUID3) = sorted([str(uuid.uuid4())
                                         for x in range(3)])
 
 
@@ -99,7 +98,7 @@ class SqlAlchemyTest(HeatTestCase):
     def _setup_test_stack(self, stack_name, stack_id=None):
         t = template_format.parse(wp_template)
         template = parser.Template(t)
-        stack_id = stack_id or uuidutils.generate_uuid()
+        stack_id = stack_id or str(uuid.uuid4())
         stack = parser.Stack(self.ctx, stack_name, template,
                              environment.Environment({'KeyName': 'test'}))
         with utils.UUIDStub(stack_id):

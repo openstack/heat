@@ -13,6 +13,7 @@
 #    under the License.
 
 import os
+import uuid
 import json
 
 from heat.common import exception
@@ -26,8 +27,6 @@ from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
 from heat.engine.resources import template_resource
-
-from heat.openstack.common import uuidutils
 
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests.common import HeatTestCase
@@ -119,7 +118,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}, files=files), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         map_prop_val = {
             "key1": "val1",
@@ -177,7 +176,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}, files=files), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         json_snippet = {
             "Type": "DummyResource",
@@ -209,7 +208,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}, files=files), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
@@ -244,7 +243,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}, files=files), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
@@ -274,7 +273,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}, files=files), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
@@ -306,7 +305,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}, files=files), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
@@ -339,7 +338,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'DummyResource': 'test_resource.template'}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}, files=files), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
@@ -389,7 +388,7 @@ class ProviderTemplateTest(HeatTestCase):
             }
         }
         stack = parser.Stack(None, 'test_stack', parser.Template({}),
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
         templ_resource = resource.Resource("test_templ_resource", json_snippet,
                                            stack)
         self.m.VerifyAll()
@@ -412,7 +411,7 @@ class ProviderTemplateTest(HeatTestCase):
                    {'Test::Frodo': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}),
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         minimal_temp = json.dumps({'Parameters': {}, 'Resources': {}})
         self.m.StubOutWithMock(urlfetch, "get")
@@ -436,7 +435,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'Test::Flippy': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       {"Type": 'Test::Flippy'},
@@ -456,7 +455,7 @@ class ProviderTemplateTest(HeatTestCase):
                    {'Test::Frodo': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}),
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         self.m.StubOutWithMock(urlfetch, "get")
         urlfetch.get(test_templ_name,
@@ -482,7 +481,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'Test::Flippy': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         self.m.StubOutWithMock(urlfetch, "get")
         urlfetch.get(test_templ_name,
@@ -507,7 +506,7 @@ class ProviderTemplateTest(HeatTestCase):
                   {'Test::Flippy': test_templ_name}})
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              parser.Template({}), env=env,
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         self.m.ReplayAll()
 

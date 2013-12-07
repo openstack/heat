@@ -12,12 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 import heat.engine.api as api
+
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.event import Event
 from heat.common.identifier import EventIdentifier
-from heat.openstack.common import uuidutils
 from heat.rpc import api as rpc_api
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
@@ -96,7 +98,7 @@ class FormatTest(HeatTestCase):
         resource._register_class('GenericResourceType',
                                  generic_rsrc.GenericResource)
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                  template, stack_id=uuidutils.generate_uuid())
+                                  template, stack_id=str(uuid.uuid4()))
 
     def _dummy_event(self, event_id):
         resource = self.stack['generic1']

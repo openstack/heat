@@ -12,13 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine import environment
 from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resources import os_database
-from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests.utils import setup_dummy_db
 
@@ -99,7 +100,7 @@ class OSDBInstanceTest(HeatTestCase):
                              stack_name,
                              template,
                              environment.Environment({'name': 'test'}),
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         instance = os_database.OSDBInstance(
             '%s_name' % name,

@@ -13,6 +13,7 @@
 #    under the License.
 
 import itertools
+import uuid
 
 import testscenarios
 
@@ -23,7 +24,6 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import template
 from heat.engine import environment
-from heat.openstack.common import uuidutils
 import heat.db.api as db_api
 
 from heat.tests import generic_resource as generic_rsrc
@@ -48,7 +48,7 @@ class ResourceTest(HeatTestCase):
 
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   parser.Template({}), env=env,
-                                  stack_id=uuidutils.generate_uuid())
+                                  stack_id=str(uuid.uuid4()))
 
     def test_get_class_ok(self):
         cls = resource.get_class('GenericResourceType')

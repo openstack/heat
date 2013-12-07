@@ -11,13 +11,13 @@
 #    under the License.
 
 import copy
+import uuid
 
 from heat.engine import environment
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.openstack.common import uuidutils
 from heat.tests import common
 from heat.tests import utils
 
@@ -106,7 +106,7 @@ class RackspaceDnsTest(common.HeatTestCase):
                              stack_name,
                              template,
                              environment.Environment({'name': 'test'}),
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         instance = cloud_dns.CloudDns(
             '%s_name' % name,
