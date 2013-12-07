@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 from requests import exceptions
 
 from heat.common import exception
@@ -43,6 +44,7 @@ class TemplateResource(stack_resource.StackResource):
         self._parsed_nested = None
         self.stack = stack
         self.validation_exception = None
+        self.update_allowed_keys = ('Properties',)
 
         tri = stack.env.get_resource_info(
             json_snippet['Type'],
@@ -51,33 +53,41 @@ class TemplateResource(stack_resource.StackResource):
             self.validation_exception = ValueError(_(
                 'Only Templates with an extension of .yaml or '
                 '.template are supported'))
-            self.properties_schema = {}
-            self.attributes_schema = {}
-            super(TemplateResource, self).__init__(name, json_snippet, stack)
-            return
-
-        self.template_name = tri.template_name
-        if tri.user_resource:
-            self.allowed_schemes = ('http', 'https')
         else:
-            self.allowed_schemes = ('http', 'https', 'file')
+            self.template_name = tri.template_name
+            if tri.user_resource:
+                self.allowed_schemes = ('http', 'https')
+            else:
+                self.allowed_schemes = ('http', 'https', 'file')
 
-        # parse_nested can fail if the URL in the environment is bad
-        # or otherwise inaccessible.  Suppress the error here so the
-        # stack can be deleted, and detect it at validate/create time
+        # run Resource.__init__() so we can call self.nested()
+        self.properties_schema = {}
+        self.attributes_schema = {}
+        super(TemplateResource, self).__init__(name, json_snippet, stack)
+        if self.validation_exception is None:
+            self._generate_schema(self.t.get('Properties', {}))
+
+    def _generate_schema(self, props):
+        self._parsed_nested = None
         try:
             tmpl = template.Template(self.parsed_nested())
-        except ValueError as parse_error:
-            self.validation_exception = parse_error
+        except ValueError as download_error:
+            self.validation_exception = download_error
             tmpl = template.Template({})
 
+        # re-generate the properties and attributes from the template.
         self.properties_schema = (properties.Properties
-            .schema_from_params(tmpl.param_schemata()))
+                                  .schema_from_params(tmpl.param_schemata()))
         self.attributes_schema = (attributes.Attributes
-            .schema_from_outputs(tmpl[template.OUTPUTS]))
-        self.update_allowed_keys = ('Properties',)
+                                  .schema_from_outputs(tmpl[template.OUTPUTS]))
 
-        super(TemplateResource, self).__init__(name, json_snippet, stack)
+        self.properties = properties.Properties(self.properties_schema,
+                                                props,
+                                                self._resolve_runtime_data,
+                                                self.name)
+        self.attributes = attributes.Attributes(self.name,
+                                                self.attributes_schema,
+                                                self._resolve_attribute)
 
     def _to_parameters(self):
         '''
@@ -117,22 +127,33 @@ class TemplateResource(stack_resource.StackResource):
         return self._parsed_nested
 
     def template_data(self):
+        # we want to have the latest possible template.
+        # 1. look in files
+        # 2. try download
+        # 3. look in the db
+        reported_excp = None
         t_data = self.stack.t.files.get(self.template_name)
         if not t_data and self.template_name.endswith((".yaml", ".template")):
             try:
                 t_data = urlfetch.get(self.template_name,
                                       allowed_schemes=self.allowed_schemes)
             except (exceptions.RequestException, IOError) as r_exc:
-                raise ValueError(_("Could not fetch remote template "
-                                 "'%(name)s': %(exc)s") % {
-                                 'name': self.template_name,
-                                 'exc': str(r_exc)})
-            else:
-                # TODO(Randall) Whoops, misunderstanding on my part; this
-                # doesn't actually persist to the db like I thought.
-                # Find a better way
-                self.stack.t.files[self.template_name] = t_data
-        return t_data
+                reported_excp = ValueError(_("Could not fetch remote template "
+                                             "'%(name)s': %(exc)s") % {
+                                                 'name': self.template_name,
+                                                 'exc': str(r_exc)})
+
+        if t_data is None:
+            if self.nested() is not None:
+                t_data = json.dumps(self.nested().t.t)
+
+        if t_data is not None:
+            self.stack.t.files[self.template_name] = t_data
+            return t_data
+        if reported_excp is None:
+            reported_excp = ValueError(_('Unknown error retrieving %s') %
+                                       self.template_name)
+        raise reported_excp
 
     def _validate_against_facade(self, facade_cls):
         facade_schemata = properties.schemata(facade_cls.properties_schema)

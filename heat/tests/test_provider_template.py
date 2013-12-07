@@ -517,6 +517,60 @@ class ProviderTemplateTest(HeatTestCase):
         self.assertRaises(exception.StackValidationFailed, temp_res.validate)
         self.m.VerifyAll()
 
+    def create_file_based_template_resource(self):
+        test_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  the_nested:
+    Type: the.yaml
+    Properties:
+      one: myname
+'''
+
+        resource_template = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Parameters:
+  one:
+    Type: String
+Resources:
+  NestedResource:
+    Type: GenericResource
+Outputs:
+  Foo:
+    Value: {Ref: one}
+'''
+        utils.setup_dummy_db()
+        self.ctx = utils.dummy_context('test_username', 'aaaa', 'password')
+        resource._register_class('GenericResource',
+                                 generic_rsrc.GenericResource)
+
+        tmpl = parser.Template(template_format.parse(test_template),
+                               files={'the.yaml': resource_template})
+        self.stack = parser.Stack(self.ctx, utils.random_name(), tmpl)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state, (self.stack.CREATE,
+                                            self.stack.COMPLETE))
+        return self.stack
+
+    @utils.stack_delete_after
+    def test_template_resource_outputs(self):
+        # assertion: if a template resource is given by file: we can later
+        #            do a stack-show and get the outputs. This tests that
+        #            we can retrieve the nested stack from the db.
+
+        stack = self.create_file_based_template_resource()
+        templ_resource = stack['the_nested']
+        self.assertEqual('myname', templ_resource.FnGetAtt('Foo'))
+
+        # this is the real test here: does a newly (re)loaded stack get it's
+        # attributes (this happens on stack-show not create/update).
+        status_stack = parser.Stack.load(self.ctx, stack_id=stack.id)
+        templ_resource = status_stack['the_nested']
+        self.assertEqual('myname', templ_resource.FnGetAtt('Foo'))
+
+        self.m.VerifyAll()
+
     def create_stack(self, template):
         t = template_format.parse(template)
         stack = self.parse_stack(t)
