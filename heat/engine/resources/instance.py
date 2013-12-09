@@ -191,7 +191,6 @@ class Instance(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = None
-        self.mime_string = None
 
     def _set_ipaddress(self, networks):
         '''
@@ -278,11 +277,6 @@ class Instance(resource.Resource):
             security_groups = None
         return security_groups
 
-    def get_mime_string(self, userdata):
-        if not self.mime_string:
-            self.mime_string = nova_utils.build_userdata(self, userdata)
-        return self.mime_string
-
     def _get_nova_metadata(self, properties):
         if properties is None or properties.get('Tags') is None:
             return None
@@ -327,7 +321,7 @@ class Instance(resource.Resource):
                 flavor=flavor_id,
                 key_name=key_name,
                 security_groups=security_groups,
-                userdata=self.get_mime_string(userdata),
+                userdata=nova_utils.build_userdata(self, userdata),
                 meta=self._get_nova_metadata(self.properties),
                 scheduler_hints=scheduler_hints,
                 nics=nics,
