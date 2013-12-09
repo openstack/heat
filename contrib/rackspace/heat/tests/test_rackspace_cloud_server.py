@@ -146,8 +146,9 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs.t = cs.stack.resolve_runtime_data(cs.t)
 
         self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(utils.PhysName(stack_name, cs.name),
-                               1, 1,
+        name_limit = cloud_server.CloudServer.physical_resource_name_limit
+        server_name = utils.PhysName(stack_name, cs.name, limit=name_limit)
+        self.fc.servers.create(server_name, 1, 1,
                                files=mox.IgnoreArg()).AndReturn(return_server)
         return_server.adminPass = "foobar"
 

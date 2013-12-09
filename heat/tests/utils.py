@@ -164,9 +164,12 @@ class PhysName(object):
     mock_short_id = 'x' * 12
 
     def __init__(self, stack_name, resource_name, limit=255):
-        self.stack_name = stack_name
-        self.resource_name = resource_name
-        self.limit = limit
+        name = '%s-%s-%s' % (stack_name,
+                             resource_name,
+                             self.mock_short_id)
+        self._physname = resource.Resource.reduce_physical_resource_name(
+            name, limit)
+        self.stack, self.res, self.sid = self._physname.rsplit('-', 2)
 
     def __eq__(self, physical_name):
         try:
@@ -178,14 +181,10 @@ class PhysName(object):
             return False
 
         # ignore the stack portion of the name, as it may have been truncated
-        return self.resource_name == res
+        return res == self.res
 
     def __ne__(self, physical_name):
         return not self.__eq__(physical_name)
 
     def __repr__(self):
-        name = '%s-%s-%s' % (self.stack_name,
-                             self.resource_name,
-                             self.mock_short_id)
-        return resource.Resource.reduce_physical_resource_name(
-            name, self.limit)
+        return self._physname

@@ -180,13 +180,6 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         self._flavor = None
         self._image = None
 
-    def physical_resource_name(self):
-        name = self.properties.get('name')
-        if name:
-            return name
-
-        return super(CloudServer, self).physical_resource_name()
-
     @property
     def server(self):
         """Get the Cloud Server object."""
