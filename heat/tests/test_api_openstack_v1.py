@@ -1787,8 +1787,13 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         cfgopts = DummyConfig()
         self.controller = events.EventController(options=cfgopts)
 
-    def test_resource_index(self):
-        event_id = '42'
+    def test_resource_index_event_id_integer(self):
+        self._test_resource_index('42')
+
+    def test_resource_index_event_id_uuid(self):
+        self._test_resource_index('a3455d8c-9f88-404d-a85b-5315293e67de')
+
+    def _test_resource_index(self, event_id):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
@@ -1865,8 +1870,13 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual(result, expected)
         self.m.VerifyAll()
 
-    def test_stack_index(self):
-        event_id = '42'
+    def test_stack_index_event_id_integer(self):
+        self._test_stack_index('42')
+
+    def test_stack_index_event_id_uuid(self):
+        self._test_stack_index('a3455d8c-9f88-404d-a85b-5315293e67de')
+
+    def _test_stack_index(self, event_id):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
@@ -1998,8 +2008,13 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                           resource_name=res_name)
         self.m.VerifyAll()
 
-    def test_show(self):
-        event_id = '42'
+    def test_show_event_id_integer(self):
+        self._test_show('42')
+
+    def test_show_event_id_uuid(self):
+        self._test_show('a3455d8c-9f88-404d-a85b-5315293e67de')
+
+    def _test_show(self, event_id):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
@@ -2080,14 +2095,20 @@ class EventControllerTest(ControllerTest, HeatTestCase):
         self.assertEqual(result, expected)
         self.m.VerifyAll()
 
-    def test_show_nonexist(self):
-        event_id = '42'
+    def test_show_nonexist_event_id_integer(self):
+        self._test_show_nonexist('42', '41')
+
+    def test_show_nonexist_event_id_uuid(self):
+        self._test_show_nonexist('a3455d8c-9f88-404d-a85b-5315293e67de',
+                                 'x3455x8x-9x88-404x-x85x-5315293x67xx')
+
+    def _test_show_nonexist(self, event_id, search_event_id):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '6')
         res_identity = identifier.ResourceIdentifier(resource_name=res_name,
                                                      **stack_identity)
-        ev_identity = identifier.EventIdentifier(event_id='41',
+        ev_identity = identifier.EventIdentifier(event_id=search_event_id,
                                                  **res_identity)
 
         req = self._get(stack_identity._tenant_path() +

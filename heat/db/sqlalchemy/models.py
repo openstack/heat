@@ -16,6 +16,7 @@ SQLAlchemy models for heat data.
 """
 
 import sqlalchemy
+import uuid
 
 from sqlalchemy.dialects import mysql
 from sqlalchemy.orm import relationship, backref
@@ -167,7 +168,8 @@ class Event(BASE, HeatBase):
 
     __tablename__ = 'event'
 
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    id = sqlalchemy.Column(sqlalchemy.String(36), primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
     stack_id = sqlalchemy.Column(sqlalchemy.String(36),
                                  sqlalchemy.ForeignKey('stack.id'),
                                  nullable=False)

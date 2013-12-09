@@ -1190,7 +1190,13 @@ class CfnStackControllerTest(HeatTestCase):
                          exception.HeatInvalidParameterValueError)
         self.m.VerifyAll()
 
-    def test_events_list(self):
+    def test_events_list_event_id_integer(self):
+        self._test_events_list('42')
+
+    def test_events_list_event_id_uuid(self):
+        self._test_events_list('a3455d8c-9f88-404d-a85b-5315293e67de')
+
+    def _test_events_list(self, event_id):
         # Format a dummy request
         stack_name = "wordpress"
         identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
@@ -1210,7 +1216,8 @@ class CfnStackControllerTest(HeatTestCase):
                         {u'tenant': u't',
                          u'stack_name': u'wordpress',
                          u'stack_id': u'6',
-                         u'path': u'/resources/WikiDatabase/events/42'},
+                         u'path': u'/resources/WikiDatabase/events/{0}'.format(
+                             event_id)},
                         u'resource_action': u'TEST',
                         u'resource_status': u'IN_PROGRESS',
                         u'physical_resource_id': None,
@@ -1236,7 +1243,7 @@ class CfnStackControllerTest(HeatTestCase):
         expected = {'DescribeStackEventsResponse':
                     {'DescribeStackEventsResult':
                      {'StackEvents':
-                      [{'EventId': u'42',
+                      [{'EventId': unicode(event_id),
                         'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
                         'ResourceStatus': u'TEST_IN_PROGRESS',
                         'ResourceType': u'AWS::EC2::Instance',

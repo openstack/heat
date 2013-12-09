@@ -390,11 +390,17 @@ class ResourceIdentifierTest(testtools.TestCase):
 
 
 class EventIdentifierTest(testtools.TestCase):
-    def test_event_init(self):
+    def test_event_init_integer_id(self):
+        self._test_event_init('42')
+
+    def test_event_init_uuid_id(self):
+        self._test_event_init('a3455d8c-9f88-404d-a85b-5315293e67de')
+
+    def _test_event_init(self, event_id):
         si = identifier.HeatIdentifier('t', 's', 'i')
         pi = identifier.ResourceIdentifier(resource_name='p', **si)
-        ei = identifier.EventIdentifier(event_id='e', **pi)
-        self.assertEqual(ei.path, '/resources/p/events/e')
+        ei = identifier.EventIdentifier(event_id=event_id, **pi)
+        self.assertEqual(ei.path, '/resources/p/events/{0}'.format(event_id))
 
     def test_event_init_from_dict(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', '/resources/p/events/42')
@@ -417,6 +423,13 @@ class EventIdentifierTest(testtools.TestCase):
         ei = identifier.EventIdentifier('t', 's', 'i', '/resources/p', 'e')
         self.assertEqual(ei.resource_name, 'p')
 
-    def test_event_id(self):
-        ei = identifier.EventIdentifier('t', 's', 'i', '/resources/p', 'e')
-        self.assertEqual(ei.event_id, 'e')
+    def test_event_id_integer(self):
+        self._test_event_id('42')
+
+    def test_event_id_uuid(self):
+        self._test_event_id('a3455d8c-9f88-404d-a85b-5315293e67de')
+
+    def _test_event_id(self, event_id):
+        ei = identifier.EventIdentifier('t', 's', 'i', '/resources/p',
+                                        event_id)
+        self.assertEqual(ei.event_id, event_id)
