@@ -126,7 +126,8 @@ def get_keypair(nova_client, key_name):
     raise exception.UserKeyPairMissing(key_name=key_name)
 
 
-def build_userdata(resource, userdata=None, instance_user=None):
+def build_userdata(resource, userdata=None, instance_user=None,
+                   user_data_format='HEAT_CFNTOOLS'):
     '''
     Build multipart data blob for CloudInit which includes user-supplied
     Metadata, user data, and the required Heat in-instance configuration.
@@ -137,8 +138,13 @@ def build_userdata(resource, userdata=None, instance_user=None):
     :type userdata: str or None
     :param instance_user: the user to create on the server
     :type instance_user: string
+    :param user_data_format: Format of user data to return
+    :type user_data_format: string
     :returns: multipart mime as a string
     '''
+
+    if user_data_format == 'RAW':
+        return userdata
 
     def make_subpart(content, filename, subtype=None):
         if subtype is None:
