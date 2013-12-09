@@ -77,13 +77,9 @@ class ParameterTest(testtools.TestCase):
                   'AllowedValues': ['foo'],
                   'ConstraintDescription': 'wibble',
                   'Default': 'bar'}
-        try:
-            self.new_parameter('p', schema, 'foo')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, 'foo')
+        self.assertIn('wibble', str(err))
 
     def test_no_echo_true(self):
         p = self.new_parameter('anechoic',
@@ -131,25 +127,17 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'MinLength': '4'}
-        try:
-            self.new_parameter('p', schema, 'foo')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, 'foo')
+        self.assertIn('wibble', str(err))
 
     def test_string_overflow(self):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'MaxLength': '2'}
-        try:
-            self.new_parameter('p', schema, 'foo')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, 'foo')
+        self.assertIn('wibble', str(err))
 
     def test_string_pattern_good(self):
         schema = {'Type': 'String',
@@ -161,25 +149,17 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'AllowedPattern': '[a-z]*'}
-        try:
-            self.new_parameter('p', schema, '1foo')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, '1foo')
+        self.assertIn('wibble', str(err))
 
     def test_string_pattern_bad_suffix(self):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'AllowedPattern': '[a-z]*'}
-        try:
-            self.new_parameter('p', schema, 'foo1')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, 'foo1')
+        self.assertIn('wibble', str(err))
 
     def test_string_value_list_good(self):
         schema = {'Type': 'String',
@@ -191,13 +171,9 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'AllowedValues': ['foo', 'bar', 'baz']}
-        try:
-            self.new_parameter('p', schema, 'blarg')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, 'blarg')
+        self.assertIn('wibble', str(err))
 
     def test_number_int_good(self):
         schema = {'Type': 'Number',
@@ -217,25 +193,17 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Number',
                   'ConstraintDescription': 'wibble',
                   'MinValue': '4'}
-        try:
-            self.new_parameter('p', schema, '3')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, '3')
+        self.assertIn('wibble', str(err))
 
     def test_number_high(self):
         schema = {'Type': 'Number',
                   'ConstraintDescription': 'wibble',
                   'MaxValue': '2'}
-        try:
-            self.new_parameter('p', schema, '3')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, '3')
+        self.assertIn('wibble', str(err))
 
     def test_number_value_list_good(self):
         schema = {'Type': 'Number',
@@ -247,13 +215,9 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Number',
                   'ConstraintDescription': 'wibble',
                   'AllowedValues': ['1', '3', '5']}
-        try:
-            self.new_parameter('p', schema, '2')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, '2')
+        self.assertIn('wibble', str(err))
 
     def test_list_value_list_good(self):
         schema = {'Type': 'CommaDelimitedList',
@@ -271,13 +235,9 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'CommaDelimitedList',
                   'ConstraintDescription': 'wibble',
                   'AllowedValues': ['foo', 'bar', 'baz']}
-        try:
-            self.new_parameter('p', schema, 'foo,baz,blarg')
-        except ValueError as ve:
-            msg = str(ve)
-            self.assertNotEqual(msg.find('wibble'), -1)
-        else:
-            self.fail('ValueError not raised')
+        err = self.assertRaises(ValueError, self.new_parameter,
+                                'p', schema, 'foo,baz,blarg')
+        self.assertIn('wibble', str(err))
 
     def test_map_value(self):
         '''Happy path for value thats already a map.'''
@@ -292,12 +252,9 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Json',
                   'ConstraintDescription': 'wibble'}
         val = {"foo": "bar", "not_json": len}
-        try:
-            self.new_parameter('p', schema, val)
-        except ValueError as verr:
-            self.assertIn('Value must be valid JSON', str(verr))
-        else:
-            self.fail("Value error not raised")
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, val)
+        self.assertIn('Value must be valid JSON', str(err))
 
     def test_map_value_parse(self):
         '''Happy path for value that's a string.'''
@@ -313,12 +270,9 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Json',
                   'ConstraintDescription': 'wibble'}
         val = "I am not a map"
-        try:
-            self.new_parameter('p', schema, val)
-        except ValueError as verr:
-            self.assertIn('Value must be valid JSON', str(verr))
-        else:
-            self.fail("Value error not raised")
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, val)
+        self.assertIn('Value must be valid JSON', str(err))
 
     def test_map_values_good(self):
         '''Happy path for map keys.'''
@@ -335,36 +289,27 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Json',
                   'AllowedValues': ["foo", "bar", "baz"]}
         val = {"foo": "bar", "items": [1, 2, 3]}
-        try:
-            self.new_parameter('p', schema, val)
-        except ValueError as verr:
-            self.assertIn("items", str(verr))
-        else:
-            self.fail("Value error not raised")
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, val)
+        self.assertIn("items", str(err))
 
     def test_map_underrun(self):
         '''Test map length under MIN_LEN.'''
         schema = {'Type': 'Json',
                   'MinLength': 3}
         val = {"foo": "bar", "items": [1, 2, 3]}
-        try:
-            self.new_parameter('p', schema, val)
-        except ValueError as verr:
-            self.assertIn('underflows', str(verr))
-        else:
-            self.fail("Value error not raised")
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, val)
+        self.assertIn('underflows', str(err))
 
     def test_map_overrun(self):
         '''Test map length over MAX_LEN.'''
         schema = {'Type': 'Json',
                   'MaxLength': 1}
         val = {"foo": "bar", "items": [1, 2, 3]}
-        try:
-            self.new_parameter('p', schema, val)
-        except ValueError as verr:
-            self.assertIn('overflows', str(verr))
-        else:
-            self.fail("Value error not raised")
+        err = self.assertRaises(ValueError,
+                                self.new_parameter, 'p', schema, val)
+        self.assertIn('overflows', str(err))
 
     def test_missing_param(self):
         '''Test missing user parameter.'''
