@@ -51,8 +51,8 @@ class DockerContainerTest(HeatTestCase):
     def setUp(self):
         super(DockerContainerTest, self).setUp()
         utils.setup_dummy_db()
-        for res_name, res_class in docker_container.resource_mapping().items():
-            resource._register_class(res_name, res_class)
+        resource._register_class('OS::Docker::Container',
+                                 docker_container.DockerContainer)
 
     def create_container(self, resource_name):
         t = template_format.parse(template)
