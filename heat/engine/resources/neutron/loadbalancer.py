@@ -160,10 +160,16 @@ class Pool(neutron.NeutronResource):
 
     _VIP_KEYS = (
         VIP_NAME, VIP_DESCRIPTION, VIP_ADDRESS, VIP_CONNECTION_LIMIT,
-        VIP_PROTOCOL_PORT, VIP_ADMIN_STATE_UP,
+        VIP_PROTOCOL_PORT, VIP_SESSION_PERSISTENCE, VIP_ADMIN_STATE_UP,
     ) = (
         'name', 'description', 'address', 'connection_limit',
-        'protocol_port', 'admin_state_up',
+        'protocol_port', 'session_persistence', 'admin_state_up',
+    )
+
+    _VIP_SESSION_PERSISTENCE_KEYS = (
+        VIP_SESSION_PERSISTENCE_TYPE, VIP_SESSION_PERSISTENCE_COOKIE_NAME,
+    ) = (
+        'type', 'cookie_name',
     )
 
     properties_schema = {
@@ -233,6 +239,26 @@ class Pool(neutron.NeutronResource):
                       'that is associated with the vip address.'),
                     required=True
                 ),
+                VIP_SESSION_PERSISTENCE: properties.Schema(
+                    properties.Schema.MAP,
+                    _('Configuration of session persistence.'),
+                    schema={
+                        VIP_SESSION_PERSISTENCE_TYPE: properties.Schema(
+                            properties.Schema.STRING,
+                            _('Method of implementation of session '
+                              'persistence feature.'),
+                            required=True,
+                            constraints=[constraints.AllowedValues(
+                                ['SOURCE_IP', 'HTTP_COOKIE', 'APP_COOKIE']
+                            )]
+                        ),
+                        VIP_SESSION_PERSISTENCE_COOKIE_NAME: properties.Schema(
+                            properties.Schema.STRING,
+                            _('Name of the cookie, '
+                              'required if type is APP_COOKIE.')
+                        )
+                    }
+                ),
                 VIP_ADMIN_STATE_UP: properties.Schema(
                     properties.Schema.BOOLEAN,
                     _('The administrative state of this vip.'),
@@ -262,6 +288,22 @@ class Pool(neutron.NeutronResource):
         'tenant_id': _('Tenant owning the pool.'),
         'vip': _('Vip associated with the pool.'),
     }
+
+    def validate(self):
+        res = super(Pool, self).validate()
+        if res:
+            return res
+
+        session_p = self.properties[self.VIP].get(self.VIP_SESSION_PERSISTENCE)
+        persistence_type = session_p[self.VIP_SESSION_PERSISTENCE_TYPE]
+
+        if session_p is not None and persistence_type == 'APP_COOKIE':
+            if session_p.get(self.VIP_SESSION_PERSISTENCE_COOKIE_NAME):
+                return
+
+            msg = _('Property cookie_name is required, when '
+                    'session_persistence type is set to APP_COOKIE.')
+            raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
         properties = self.prepare_properties(
