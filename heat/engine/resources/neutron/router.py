@@ -16,6 +16,7 @@
 from heat.common import exception
 from heat.engine import clients
 from heat.engine.resources.neutron import neutron
+from heat.engine import properties
 from heat.engine import scheduler
 
 if clients.neutronclient is not None:
@@ -93,6 +94,16 @@ class RouterInterface(neutron.NeutronResource):
             'Description': _('The port id, either '
                              'subnet_id or port_id should be specified.')}}
 
+    def add_dependencies(self, deps):
+        super(RouterInterface, self).add_dependencies(deps)
+        # depend on any RouterL3agents in this template with the same router_id
+        # as this router_id.
+        for resource in self.stack.itervalues():
+            if (resource.has_interface('OS::Neutron::RouterL3Agent') and
+                resource.properties.get('router_id') ==
+                    self.properties.get('router_id')):
+                        deps += (self, resource)
+
     def validate(self):
         '''
         Validate any of the provided params
@@ -157,6 +168,12 @@ class RouterGateway(neutron.NeutronResource):
                   resource.properties.get('network_id') ==
                     self.properties.get('network_id')):
                         deps += (self, resource)
+            # depend on any RouterL3agents in this template with the same
+            # router_id as this router_id.
+            elif (resource.has_interface('OS::Neutron::RouterL3Agent') and
+                  resource.properties.get('router_id') ==
+                    self.properties.get('router_id')):
+                        deps += (self, resource)
 
     def handle_create(self):
         router_id = self.properties.get('router_id')
@@ -181,6 +198,50 @@ class RouterGateway(neutron.NeutronResource):
                 raise ex
 
 
+class RouterL3Agent(neutron.NeutronResource):
+    properties_schema = {
+        'router_id': properties.Schema(
+            properties.Schema.STRING,
+            description=_('The ID of the router you want to be scheduled by '
+                          'the l3_agent. Note that the default policy setting '
+                          'in Neutron restricts usage of this property to '
+                          'administrative users only.'),
+            required=True
+        ),
+        'l3_agent_id': properties.Schema(
+            properties.Schema.STRING,
+            description=_('The ID of the l3-agent to schedule the router. '
+                          'Note that the default policy setting in Neutron '
+                          'restricts usage of this property to administrative '
+                          'users only.'),
+            required=True
+        )
+    }
+
+    def handle_create(self):
+        router_id = self.properties['router_id']
+        l3_agent_id = self.properties['l3_agent_id']
+        self.neutron().add_router_to_l3_agent(
+            l3_agent_id, {'router_id': router_id})
+        self.resource_id_set('%(rtr)s:%(agt)s' %
+                             {'rtr': router_id, 'agt': l3_agent_id})
+
+    def handle_delete(self):
+        if not self.resource_id:
+            return
+        client = self.neutron()
+        router_id, l3_agent_id = self.resource_id.split(':')
+        try:
+            client.remove_router_from_l3_agent(
+                l3_agent_id, router_id)
+        except NeutronClientException as ex:
+            # assume 2 patterns about status_code following:
+            #  404: the router or agent is already gone
+            #  409: the router isn't scheduled by the l3_agent
+            if ex.status_code not in (404, 409):
+                raise ex
+
+
 def resource_mapping():
     if clients.neutronclient is None:
         return {}
@@ -189,4 +250,5 @@ def resource_mapping():
         'OS::Neutron::Router': Router,
         'OS::Neutron::RouterInterface': RouterInterface,
         'OS::Neutron::RouterGateway': RouterGateway,
+        'OS::Neutron::RouterL3Agent': RouterL3Agent,
     }

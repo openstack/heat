@@ -124,6 +124,36 @@ neutron_dhcp_agent_template = '''
 }
 '''
 
+neutron_l3_agent_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test Neutron resources",
+  "Resources" : {
+    "router_l3_agent": {
+      "Type": "OS::Neutron::RouterL3Agent",
+      "Properties": {
+        "router_id": "2b0347ab-9e42-434f-8249-702eda4ce7a6",
+        "l3_agent_id": "5dab1619-9bb0-4e6f-9725-c5e2bfdec434"
+      }
+    },
+    "router_interface": {
+      "Type": "OS::Neutron::RouterInterface",
+      "Properties": {
+        "router_id": "2b0347ab-9e42-434f-8249-702eda4ce7a6",
+        "subnet_id": "10c69b87-6322-4e5f-9616-fb18ad6547b4"
+      }
+    },
+    "router_gateway": {
+      "Type": "OS::Neutron::RouterGateway",
+      "Properties": {
+        "router_id": "2b0347ab-9e42-434f-8249-702eda4ce7a6",
+        "network_id": "b3ae63e2-a17b-4a1e-823b-5a082c562725"
+      }
+    }
+  }
+}
+'''
+
 neutron_floating_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -770,6 +800,10 @@ class NeutronRouterTest(HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'remove_interface_router')
         self.m.StubOutWithMock(neutronclient.Client, 'add_gateway_router')
         self.m.StubOutWithMock(neutronclient.Client, 'remove_gateway_router')
+        self.m.StubOutWithMock(neutronclient.Client,
+                               'add_router_to_l3_agent')
+        self.m.StubOutWithMock(neutronclient.Client,
+                               'remove_router_from_l3_agent')
         self.m.StubOutWithMock(router.neutronV20,
                                'find_resourceid_by_name_or_id')
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
@@ -1081,6 +1115,103 @@ class NeutronRouterTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
+        self.m.VerifyAll()
+
+    def test_router_l3_agent(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+
+        neutronclient.Client.add_router_to_l3_agent(
+            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
+            {'router_id': u'2b0347ab-9e42-434f-8249-702eda4ce7a6'}
+        ).AndReturn(None)
+
+        neutronclient.Client.remove_router_from_l3_agent(
+            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
+            u'2b0347ab-9e42-434f-8249-702eda4ce7a6'
+        ).AndReturn(None)
+
+        neutronclient.Client.remove_router_from_l3_agent(
+            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
+            u'2b0347ab-9e42-434f-8249-702eda4ce7a6'
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+
+        self.m.ReplayAll()
+        t = template_format.parse(neutron_l3_agent_template)
+        stack = utils.parse_stack(t)
+        rsrc = router.RouterL3Agent('test_router_l3_agent',
+                                    t['Resources']['router_l3_agent'], stack)
+
+        # assert the implicit dependency between the l3_agent and the
+        # interface, and the l3_agent and the gateway
+        deps = stack.dependencies[stack['router_l3_agent']]
+        self.assertIn(stack['router_gateway'], deps)
+        self.assertIn(stack['router_interface'], deps)
+
+        # assert the implicit dependency between the router and the interface
+        deps = stack.dependencies[stack['router_interface']]
+        self.assertIn(stack['router_gateway'], deps)
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+
+        self.m.VerifyAll()
+
+    def test_router_l3_agent_create_failed(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+
+        neutronclient.Client.add_router_to_l3_agent(
+            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
+            {'router_id': u'2b0347ab-9e42-434f-8249-702eda4ce7a6'}
+        ).AndRaise(qe.NeutronClientException(status_code=500))
+
+        self.m.ReplayAll()
+        t = template_format.parse(neutron_l3_agent_template)
+        stack = utils.parse_stack(t)
+        rsrc = router.RouterL3Agent('test_router_l3_agent',
+                                    t['Resources']['router_l3_agent'], stack)
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.create))
+        self.assertEqual(
+            'NeutronClientException: An unknown exception occurred.',
+            str(error))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+
+        self.m.VerifyAll()
+
+    def test_router_l3_agent_delete_failed(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+
+        neutronclient.Client.add_router_to_l3_agent(
+            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
+            {'router_id': u'2b0347ab-9e42-434f-8249-702eda4ce7a6'}
+        ).AndReturn(None)
+
+        neutronclient.Client.remove_router_from_l3_agent(
+            u'5dab1619-9bb0-4e6f-9725-c5e2bfdec434',
+            u'2b0347ab-9e42-434f-8249-702eda4ce7a6'
+        ).AndRaise(qe.NeutronClientException(status_code=500))
+
+        self.m.ReplayAll()
+        t = template_format.parse(neutron_l3_agent_template)
+        stack = utils.parse_stack(t)
+        rsrc = router.RouterL3Agent('test_router_l3_agent',
+                                    t['Resources']['router_l3_agent'], stack)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.delete))
+        self.assertEqual(
+            'NeutronClientException: An unknown exception occurred.',
+            str(error))
+        self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
+
         self.m.VerifyAll()
 
 
