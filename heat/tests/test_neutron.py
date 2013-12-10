@@ -1001,8 +1001,8 @@ class NeutronFloatingIPTest(HeatTestCase):
         neutronclient.Client.create_floatingip({
             'floatingip': {'floating_network_id': u'abcd1234'}
         }).AndReturn({'floatingip': {
-            "status": "ACTIVE",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            'floating_network_id': u'abcd1234'
         }})
 
         neutronclient.Client.show_floatingip(
@@ -1011,8 +1011,8 @@ class NeutronFloatingIPTest(HeatTestCase):
         neutronclient.Client.show_floatingip(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).MultipleTimes().AndReturn({'floatingip': {
-            "status": "ACTIVE",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            'floating_network_id': u'abcd1234'
         }})
 
         neutronclient.Client.delete_floatingip(
@@ -1038,16 +1038,16 @@ class NeutronFloatingIPTest(HeatTestCase):
         fip_id = fip.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', fip_id)
 
-        self.assertEqual(None, fip.FnGetAtt('status'))
-        self.assertEqual('ACTIVE', fip.FnGetAtt('status'))
+        self.assertEqual(None, fip.FnGetAtt('show'))
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         fip.FnGetAtt('show')['id'])
         try:
             fip.FnGetAtt('Foo')
             raise Exception('Expected InvalidTemplateAttribute')
         except exception.InvalidTemplateAttribute:
             pass
 
-        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                         fip.FnGetAtt('id'))
+        self.assertEqual(u'abcd1234', fip.FnGetAtt('floating_network_id'))
         self.assertRaises(resource.UpdateReplace,
                           fip.handle_update, {}, {}, {})
         scheduler.TaskRunner(fip.delete)()
