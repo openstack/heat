@@ -10,5 +10,5 @@ paramiko
 pep8==1.3.4
 pyflakes
 python-glanceclient
-sphinx>=1.1.2
+sphinx>=1.1.2,<1.2
 Babel
