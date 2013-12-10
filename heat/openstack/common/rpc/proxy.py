@@ -19,6 +19,8 @@ For more information about rpc API version numbers, see:
     rpc/dispatcher.py
 """
 
+import six
+
 from heat.openstack.common import rpc
 from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import serializer as rpc_serializer
@@ -97,7 +99,7 @@ class RpcProxy(object):
         :returns: A new set of serialized arguments
         """
         new_kwargs = dict()
-        for argname, arg in kwargs.iteritems():
+        for argname, arg in six.iteritems(kwargs):
             new_kwargs[argname] = self.serializer.serialize_entity(context,
                                                                    arg)
         return new_kwargs
