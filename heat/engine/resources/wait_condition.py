@@ -123,7 +123,8 @@ class WaitConditionTimeout(Exception):
     def __init__(self, wait_condition, handle):
         reasons = handle.get_status_reason(STATUS_SUCCESS)
         message = (_('%(len)d of %(count)d received') % {
-                   'len': len(reasons), 'count': wait_condition.count})
+                   'len': len(reasons), 'count':
+                   wait_condition.properties[wait_condition.COUNT]})
         if reasons:
             message += ' - %s' % reasons
 
@@ -159,14 +160,16 @@ class WaitCondition(resource.Resource):
               'the stack creation process continues.'),
             constraints=[
                 constraints.Range(min=1),
-            ]
+            ],
+            default=1,
+            update_allowed=True
         ),
     }
 
+    update_allowed_keys = ('Properties',)
+
     def __init__(self, name, json_snippet, stack):
         super(WaitCondition, self).__init__(name, json_snippet, stack)
-
-        self.count = int(self.t['Properties'].get('Count', '1'))
 
     def _validate_handle_url(self):
         handle_url = self.properties[self.HANDLE]
@@ -211,7 +214,7 @@ class WaitCondition(resource.Resource):
                             'name': str(self), 'failure': str(failure)})
                 raise failure
 
-            if len(handle_status) >= self.count:
+            if len(handle_status) >= self.properties[self.COUNT]:
                 logger.info(_("%s Succeeded") % str(self))
                 return
 
@@ -226,6 +229,22 @@ class WaitCondition(resource.Resource):
         return runner
 
     def check_create_complete(self, runner):
+        return runner.step()
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            self.properties = properties.Properties(
+                self.properties_schema, json_snippet.get('Properties', {}),
+                self.stack.resolve_runtime_data, self.name)
+
+        handle_res_name = self._get_handle_resource_name()
+        handle = self.stack[handle_res_name]
+
+        runner = scheduler.TaskRunner(self._wait, handle)
+        runner.start(timeout=float(self.properties[self.TIMEOUT]))
+        return runner
+
+    def check_update_complete(self, runner):
         return runner.step()
 
     def handle_delete(self):

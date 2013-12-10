@@ -13,9 +13,10 @@
 #    under the License.
 
 import datetime
-import time
 import uuid
 import json
+import mox
+import time
 
 from oslo.config import cfg
 
@@ -237,8 +238,6 @@ class WaitConditionTest(HeatTestCase):
         reason = rsrc.status_reason
         self.assertTrue(reason.startswith('WaitConditionTimeout:'))
 
-        self.assertRaises(resource.UpdateReplace,
-                          rsrc.handle_update, {}, {}, {})
         self.m.VerifyAll()
 
     @utils.stack_delete_after
@@ -555,3 +554,187 @@ class WaitConditionHandleTest(HeatTestCase):
         rsrc.metadata_update(new_metadata=test_metadata)
         self.assertEqual('hoo', rsrc.get_status_reason('FAILURE'))
         self.m.VerifyAll()
+
+
+class WaitConditionUpdateTest(HeatTestCase):
+    def setUp(self):
+        super(WaitConditionUpdateTest, self).setUp()
+        cfg.CONF.set_default('heat_waitcondition_server_url',
+                             'http://server.test:8000/v1/waitcondition')
+
+        self.fc = fakes.FakeKeystoneClient()
+        utils.setup_dummy_db()
+        scheduler.ENABLE_SLEEP = False
+
+    def tearDown(self):
+        super(WaitConditionUpdateTest, self).tearDown()
+        utils.reset_dummy_db()
+        scheduler.ENABLE_SLEEP = True
+
+    # Note tests creating a stack should be decorated with @stack_delete_after
+    # to ensure the stack is properly cleaned up
+    def create_stack(self):
+        temp = template_format.parse(test_template_wc_count)
+        template = parser.Template(temp)
+        ctx = utils.dummy_context(tenant_id='test_tenant')
+        stack = parser.Stack(ctx, 'test_stack', template,
+                             environment.Environment({}),
+                             disable_rollback=True)
+
+        stack_id = str(uuid.uuid4())
+        self.stack_id = stack_id
+        with utils.UUIDStub(self.stack_id):
+            stack.store()
+
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'keystone')
+        wc.WaitConditionHandle.keystone().MultipleTimes().AndReturn(
+            self.fc)
+
+        self.m.StubOutWithMock(wc.WaitConditionHandle, 'get_status')
+        wc.WaitConditionHandle.get_status().AndReturn([])
+        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'SUCCESS'])
+        wc.WaitConditionHandle.get_status().AndReturn(['SUCCESS', 'SUCCESS',
+                                                       'SUCCESS'])
+
+        return stack
+
+    def get_stack(self, stack_id):
+        ctx = utils.dummy_context(tenant_id='test_tenant')
+        stack = parser.Stack.load(ctx, stack_id)
+        self.stack_id = stack_id
+        return stack
+
+    @utils.stack_delete_after
+    def test_update(self):
+        self.stack = self.create_stack()
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['WaitForTheHandle']
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        wait_condition_handle = self.stack['WaitHandle']
+        test_metadata = {'Data': 'foo', 'Reason': 'bar',
+                         'Status': 'SUCCESS', 'UniqueId': '1'}
+        self._metadata_update(wait_condition_handle, test_metadata, 5)
+
+        update_snippet = rsrc.parsed_template()
+        update_snippet['Properties']['Count'] = '5'
+
+        updater = scheduler.TaskRunner(rsrc.update, update_snippet)
+        updater()
+
+        self.assertEqual(rsrc.state, (rsrc.UPDATE, rsrc.COMPLETE))
+
+    @utils.stack_delete_after
+    def test_handle_update(self):
+        self.stack = self.create_stack()
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['WaitForTheHandle']
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        wait_condition_handle = self.stack['WaitHandle']
+        test_metadata = {'Data': 'foo', 'Reason': 'bar',
+                         'Status': 'SUCCESS', 'UniqueId': '1'}
+        self._metadata_update(wait_condition_handle, test_metadata, 5)
+
+        update_snippet = {"Type": "AWS::CloudFormation::WaitCondition",
+                          "Properties": {
+                              "Handle": {"Ref": "WaitHandle"},
+                              "Timeout": "5",
+                              "Count": "5"}}
+        prop_diff = {"Count": 5}
+        updater = rsrc.handle_update(update_snippet, {}, prop_diff)
+        updater.run_to_completion()
+
+        self.assertEqual(5, rsrc.properties['Count'])
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+    @utils.stack_delete_after
+    def test_handle_update_restored_from_db(self):
+        self.stack = self.create_stack()
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['WaitForTheHandle']
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        wait_condition_handle = self.stack['WaitHandle']
+        test_metadata = {'Data': 'foo', 'Reason': 'bar',
+                         'Status': 'SUCCESS', 'UniqueId': '1'}
+        self._metadata_update(wait_condition_handle, test_metadata, 2)
+
+        self.stack.store()
+        self.stack = self.get_stack(self.stack_id)
+        rsrc = self.stack['WaitForTheHandle']
+
+        self._metadata_update(wait_condition_handle, test_metadata, 3)
+        update_snippet = {"Type": "AWS::CloudFormation::WaitCondition",
+                          "Properties": {
+                              "Handle": {"Ref": "WaitHandle"},
+                              "Timeout": "5",
+                              "Count": "5"}}
+        prop_diff = {"Count": 5}
+        updater = rsrc.handle_update(update_snippet, {}, prop_diff)
+        updater.run_to_completion()
+
+        self.assertEqual(5, rsrc.properties['Count'])
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+    def _metadata_update(self, rsrc, metadata, times=1):
+        for time in range(times):
+            metadata['UniqueId'] = metadata['UniqueId'] * 2
+            rsrc.metadata_update(new_metadata=metadata)
+
+    @utils.stack_delete_after
+    def test_handle_update_timeout(self):
+        self.stack = self.create_stack()
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['WaitForTheHandle']
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        st = time.time()
+
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        scheduler.TaskRunner._sleep(mox.IgnoreArg()).MultipleTimes().AndReturn(
+            None)
+
+        self.m.StubOutWithMock(scheduler, 'wallclock')
+
+        scheduler.wallclock().AndReturn(st)
+        scheduler.wallclock().AndReturn(st + 0.001)
+        scheduler.wallclock().AndReturn(st + 0.1)
+        scheduler.wallclock().AndReturn(st + 4.1)
+        scheduler.wallclock().AndReturn(st + 5.1)
+
+        self.m.ReplayAll()
+
+        update_snippet = {"Type": "AWS::CloudFormation::WaitCondition",
+                          "Properties": {
+                              "Handle": {"Ref": "WaitHandle"},
+                              "Timeout": "5",
+                              "Count": "5"}}
+        prop_diff = {"Count": 5}
+        updater = rsrc.handle_update(update_snippet, {}, prop_diff)
+        self.assertEqual(5, rsrc.properties['Count'])
+        self.assertRaises(wc.WaitConditionTimeout, updater.run_to_completion)
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
