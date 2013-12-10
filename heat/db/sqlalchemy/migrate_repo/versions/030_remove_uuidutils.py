@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -12,27 +10,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 import sqlalchemy
+import uuid
 
 
 def upgrade(migrate_engine):
     meta = sqlalchemy.MetaData(bind=migrate_engine)
 
-    resource = sqlalchemy.Table('resource', meta, autoload=True)
+    stack = sqlalchemy.Table('stack', meta, autoload=True)
+    stack.c.id.alter(type=sqlalchemy.String(36), primary_key=True,
+                     default=lambda: str(uuid.uuid4()))
 
-    resource.c.id.alter(sqlalchemy.String(36), primary_key=True,
+    event = sqlalchemy.Table('event', meta, autoload=True)
+    event.c.id.alter(type=sqlalchemy.String(36), primary_key=True,
+                     default=lambda: str(uuid.uuid4()))
+
+    resource = sqlalchemy.Table('resource', meta, autoload=True)
+    resource.c.id.alter(type=sqlalchemy.String(36), primary_key=True,
                         default=lambda: str(uuid.uuid4()))
 
 
 def downgrade(migrate_engine):
-    meta = sqlalchemy.MetaData(bind=migrate_engine)
-
-    resource = sqlalchemy.Table('resource', meta, autoload=True)
-
-    try:
-        resource.c.id.alter(sqlalchemy.Integer, primary_key=True)
-    except:
-        #XXX: since there is no way to downgrade just passing
-        pass
+    # since uuid.uuid4() works so no need to do downgrade
+    pass

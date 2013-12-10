@@ -12,12 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
 
 from heat.common import template_format
 from heat.engine import parser
 from heat.engine import environment
 from heat.engine import resource
-from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -94,7 +94,7 @@ class CloudDBInstanceTest(HeatTestCase):
                              environment.Environment({'InstanceName': 'Test',
                                                       'FlavorRef': '1GB',
                                                       'VolumeSize': '30'}),
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
 
         if inject_property_error:
             # database name given in users list is not a valid database

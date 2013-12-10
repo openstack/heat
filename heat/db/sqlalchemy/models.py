@@ -15,8 +15,9 @@
 SQLAlchemy models for heat data.
 """
 
-import sqlalchemy
 import uuid
+
+import sqlalchemy
 
 from sqlalchemy.dialects import mysql
 from sqlalchemy.orm import relationship, backref
@@ -24,7 +25,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import types
 from json import dumps
 from json import loads
-from heat.openstack.common import uuidutils
 from heat.openstack.common import timeutils
 from heat.openstack.common.db.sqlalchemy import models
 from heat.openstack.common.db.sqlalchemy import session
@@ -122,7 +122,7 @@ class Stack(BASE, HeatBase, SoftDelete):
     __tablename__ = 'stack'
 
     id = sqlalchemy.Column(sqlalchemy.String(36), primary_key=True,
-                           default=uuidutils.generate_uuid)
+                           default=lambda: str(uuid.uuid4()))
     name = sqlalchemy.Column(sqlalchemy.String(255))
     raw_template_id = sqlalchemy.Column(
         sqlalchemy.Integer,
@@ -209,7 +209,7 @@ class Resource(BASE, HeatBase):
 
     id = sqlalchemy.Column(sqlalchemy.String(36),
                            primary_key=True,
-                           default=uuidutils.generate_uuid)
+                           default=lambda: str(uuid.uuid4()))
     action = sqlalchemy.Column('action', sqlalchemy.String(255))
     status = sqlalchemy.Column('status', sqlalchemy.String(255))
     name = sqlalchemy.Column('name', sqlalchemy.String(255), nullable=True)

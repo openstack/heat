@@ -13,7 +13,7 @@
 #    under the License.
 
 import copy
-
+import uuid
 import mox
 
 from heat.engine import environment
@@ -66,7 +66,7 @@ class ServersTest(HeatTestCase):
         template = parser.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              environment.Environment({'key_name': 'test'}),
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
         return (t, stack)
 
     def _setup_test_server(self, return_server, name, image_id=None,

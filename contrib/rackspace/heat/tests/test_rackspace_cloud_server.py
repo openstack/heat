@@ -11,6 +11,7 @@
 #    under the License.
 
 import copy
+import uuid
 
 import mox
 import paramiko
@@ -23,7 +24,6 @@ from heat.common import exception
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.openstack.common import uuidutils
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -91,7 +91,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         template = parser.Template(t)
         stack = parser.Stack(utils.dummy_context(), stack_name, template,
                              {},
-                             stack_id=uuidutils.generate_uuid())
+                             stack_id=str(uuid.uuid4()))
         return (t, stack)
 
     def _mock_ssh_sftp(self, exit_code=0):

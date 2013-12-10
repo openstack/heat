@@ -12,9 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 import sqlalchemy
+
 from migrate.versioning import util as migrate_util
-from heat.openstack.common import uuidutils
 from heat.openstack.common.gettextutils import _
 
 
@@ -23,7 +25,7 @@ def upgrade(migrate_engine):
 
     event = sqlalchemy.Table('event', meta, autoload=True)
     event.c.id.alter(type=sqlalchemy.String(36), primary_key=True,
-                     default=uuidutils.generate_uuid)
+                     default=lambda: str(uuid.uuid4()))
 
 
 def downgrade(migrate_engine):

@@ -14,11 +14,10 @@
 
 import datetime
 import time
+import uuid
 import json
 
 from oslo.config import cfg
-
-from heat.openstack.common import uuidutils
 
 from heat.tests.common import HeatTestCase
 from heat.tests import fakes
@@ -106,7 +105,7 @@ class WaitConditionTest(HeatTestCase):
 
         # Stub out the stack ID so we have a known value
         if stack_id is None:
-            stack_id = uuidutils.generate_uuid()
+            stack_id = str(uuid.uuid4())
 
         self.stack_id = stack_id
         with utils.UUIDStub(self.stack_id):
