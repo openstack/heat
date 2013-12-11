@@ -128,7 +128,9 @@ class Graph(collections.defaultdict):
         node = self[key]
 
         for src in node.required_by():
-            self[src] -= key
+            src_node = self[src]
+            if key in src_node:
+                src_node -= key
 
         return super(Graph, self).__delitem__(key)
 

@@ -75,6 +75,29 @@ class Timeout(BaseException):
         return wallclock() > self._endtime
 
 
+class ExceptionGroup(Exception):
+    '''
+    Container for multiple exceptions.
+
+    This exception is used by DependencyTaskGroup when the flag
+    aggregate_exceptions is set to True and it's re-raised again when all tasks
+    are finished.  This way it can be caught later on so that the individual
+    exceptions can be acted upon.
+    '''
+
+    def __init__(self, exceptions=None):
+        if exceptions is None:
+            exceptions = list()
+
+        self.exceptions = list(exceptions)
+
+    def __str__(self):
+        return str(map(str, self.exceptions))
+
+    def __unicode__(self):
+        return unicode(map(str, self.exceptions))
+
+
 class TaskRunner(object):
     """
     Wrapper for a resumable task (co-routine).
@@ -182,11 +205,14 @@ class TaskRunner(object):
             self._sleep(wait_time)
 
     def cancel(self):
-        """Cancel the task if it is running."""
-        if self.started() and not self.done():
+        """Cancel the task and mark it as done."""
+        if not self.done():
             logger.debug(_('%s cancelled') % str(self))
-            self._runner.close()
-            self._done = True
+            try:
+                if self.started():
+                    self._runner.close()
+            finally:
+                self._done = True
 
     def started(self):
         """Return True if the task has been started."""
@@ -268,7 +294,7 @@ class DependencyTaskGroup(object):
     """
 
     def __init__(self, dependencies, task=lambda o: o(),
-                 reverse=False, name=None):
+                 reverse=False, name=None, aggregate_exceptions=False):
         """
         Initialise with the task dependencies and (optionally) a task to run on
         each.
@@ -276,9 +302,14 @@ class DependencyTaskGroup(object):
         If no task is supplied, it is assumed that the tasks are stored
         directly in the dependency tree. If a task is supplied, the object
         stored in the dependency tree is passed as an argument.
+
+        If aggregate_exceptions is set to True, then all the tasks will be run
+        and any raised exceptions will be stored to be re-raised after all
+        tasks are done.
         """
         self._runners = dict((o, TaskRunner(task, o)) for o in dependencies)
         self._graph = dependencies.graph(reverse=reverse)
+        self.aggregate_exceptions = aggregate_exceptions
 
         if name is None:
             name = '(%s) %s' % (getattr(task, '__name__',
@@ -292,20 +323,39 @@ class DependencyTaskGroup(object):
 
     def __call__(self):
         """Return a co-routine which runs the task group."""
+        raised_exceptions = []
         try:
             while any(self._runners.itervalues()):
-                for k, r in self._ready():
-                    r.start()
+                try:
+                    for k, r in self._ready():
+                        r.start()
 
-                yield
+                    yield
 
-                for k, r in self._running():
-                    if r.step():
-                        del self._graph[k]
+                    for k, r in self._running():
+                        if r.step():
+                            del self._graph[k]
+                except Exception as e:
+                    self._cancel_recursively(k, r)
+                    if not self.aggregate_exceptions:
+                        raise
+                    raised_exceptions.append(e)
         except:
             with excutils.save_and_reraise_exception():
                 for r in self._runners.itervalues():
                     r.cancel()
+
+        if raised_exceptions:
+            raise ExceptionGroup(raised_exceptions)
+
+    def _cancel_recursively(self, key, runner):
+        runner.cancel()
+        node = self._graph[key]
+        for dependent_node in node.required_by():
+            node_runner = self._runners[dependent_node]
+            self._cancel_recursively(dependent_node, node_runner)
+
+        del self._graph[key]
 
     def _ready(self):
         """
