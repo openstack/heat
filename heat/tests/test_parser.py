@@ -1617,6 +1617,61 @@ class StackTest(HeatTestCase):
         self.assertEqual('Resume timed out', self.stack.status_reason)
         self.m.VerifyAll()
 
+    def _get_stack_to_check(self, name):
+        def _mock_check(res):
+            res.handle_check = mock.Mock()
+            if hasattr(res, 'nested'):
+                [_mock_check(r) for r in res.nested().resources.values()]
+
+        self._setup_nested(name)
+        [_mock_check(res) for res in self.stack.resources.values()]
+        return self.stack
+
+    def test_check_supported(self):
+        stack = self._get_stack_to_check('check-supported')
+        stack.check()
+
+        self.assertEqual(stack.COMPLETE, stack.status)
+        self.assertEqual(stack.CHECK, stack.action)
+        [self.assertTrue(res.handle_check.called)
+         for res in stack.resources.values()]
+        self.assertNotIn('not fully supported', stack.status_reason)
+
+    def test_check_nested_stack(self):
+        def _mock_check(res):
+            res.handle_check = mock.Mock()
+
+        self._setup_nested('check-nested-stack')
+        nested = self.stack['A'].nested()
+        [_mock_check(res) for res in nested.resources.values()]
+        self.stack.check()
+
+        [self.assertTrue(res.handle_check.called)
+         for res in nested.resources.values()]
+
+    def test_check_not_supported(self):
+        stack = self._get_stack_to_check('check-not-supported')
+        del stack['B'].handle_check
+        stack.check()
+
+        self.assertEqual(stack.COMPLETE, stack.status)
+        self.assertEqual(stack.CHECK, stack.action)
+        self.assertTrue(stack['A'].handle_check.called)
+        self.assertIn('not fully supported', stack.status_reason)
+
+    def test_check_fail(self):
+        stack = self._get_stack_to_check('check-fail')
+        stack['A'].handle_check.side_effect = Exception('fail-A')
+        stack['B'].handle_check.side_effect = Exception('fail-B')
+        stack.check()
+
+        self.assertEqual(stack.FAILED, stack.status)
+        self.assertEqual(stack.CHECK, stack.action)
+        self.assertTrue(stack['A'].handle_check.called)
+        self.assertTrue(stack['B'].handle_check.called)
+        self.assertIn('fail-A', stack.status_reason)
+        self.assertIn('fail-B', stack.status_reason)
+
     def test_delete_rollback(self):
         self.stack = parser.Stack(self.ctx, 'delete_rollback_test',
                                   self.tmpl, disable_rollback=False)

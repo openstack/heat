@@ -76,10 +76,13 @@ class ResourceUnknownStatus(exception.HeatException):
 
 
 class Resource(object):
-    ACTIONS = (INIT, CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT,
-               SNAPSHOT,
-               ) = ('INIT', 'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
-                    'SUSPEND', 'RESUME', 'ADOPT', 'SNAPSHOT')
+    ACTIONS = (
+        INIT, CREATE, DELETE, UPDATE, ROLLBACK,
+        SUSPEND, RESUME, ADOPT, SNAPSHOT, CHECK,
+    ) = (
+        'INIT', 'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
+        'SUSPEND', 'RESUME', 'ADOPT', 'SNAPSHOT', 'CHECK',
+    )
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
@@ -625,6 +628,23 @@ class Resource(object):
 
         self.t = after
         self.reparse()
+
+    def check(self):
+        """Checks that the physical resource is in its expected state
+
+        Gets the current status of the physical resource and updates the
+        database accordingly.  If check is not supported by the resource,
+        default action is to fail and revert the resource's status to its
+        original state with the added message that check was not performed.
+        """
+        action = self.CHECK
+        LOG.info(_('Checking %s') % six.text_type(self))
+
+        if hasattr(self, 'handle_%s' % action.lower()):
+            return self._do_action(action)
+        else:
+            reason = '%s not supported for %s' % (action, self.type())
+            self.state_set(action, self.COMPLETE, reason)
 
     def suspend(self):
         '''

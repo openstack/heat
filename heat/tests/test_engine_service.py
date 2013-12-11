@@ -1279,10 +1279,10 @@ class StackServiceUpdateSuspendedNotSupportedTest(HeatTestCase):
         self.m.VerifyAll()
 
 
-class StackServiceSuspendResumeTest(HeatTestCase):
+class StackServiceActionsTest(HeatTestCase):
 
     def setUp(self):
-        super(StackServiceSuspendResumeTest, self).setUp()
+        super(StackServiceActionsTest, self).setUp()
         self.ctx = utils.dummy_context()
         self.patch('heat.engine.service.warnings')
         self.man = service.EngineService('a-host', 'a-topic')
@@ -1350,6 +1350,22 @@ class StackServiceSuspendResumeTest(HeatTestCase):
                                stack.identifier())
         self.assertEqual(ex.exc_info[0], exception.StackNotFound)
         self.m.VerifyAll()
+
+    def _mock_thread_start(self, stack_id, func, *args, **kwargs):
+        func(*args, **kwargs)
+        return mock.Mock()
+
+    @mock.patch.object(service.ThreadGroupManager, 'start')
+    @mock.patch.object(parser.Stack, 'load')
+    def test_stack_check(self, mock_load, mock_start):
+        stack = get_wordpress_stack('test_stack_check', self.ctx)
+        stack.store()
+        stack.check = mock.Mock()
+        mock_load.return_value = stack
+        mock_start.side_effect = self._mock_thread_start
+
+        self.man.stack_check(self.ctx, stack.identifier())
+        self.assertTrue(stack.check.called)
 
 
 class StackServiceAuthorizeTest(HeatTestCase):

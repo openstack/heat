@@ -100,7 +100,6 @@ class MyImplementedStackResource(MyStackResource):
 
 
 class StackResourceTest(HeatTestCase):
-
     def setUp(self):
         super(StackResourceTest, self).setUp()
         resource._register_class('some_magic_type',
@@ -623,3 +622,15 @@ class StackResourceTest(HeatTestCase):
         self.m.VerifyAll()
         # Restore state_set to let clean up proceed
         self.stack.state_set = st_set
+
+    def test_check_nested_resources(self):
+        def _mock_check(res):
+            res.handle_check = mock.Mock()
+
+        self.parent_resource.create_with_template(self.templ, {"KeyName": "k"})
+        nested = self.parent_resource.nested()
+        [_mock_check(res) for res in nested.resources.values()]
+
+        scheduler.TaskRunner(self.parent_resource.check)()
+        [self.assertTrue(res.handle_check.called)
+         for res in nested.resources.values()]

@@ -331,6 +331,22 @@ class StackResource(resource.Resource):
 
         return done
 
+    def handle_check(self):
+        stack = self.nested()
+        if stack is None:
+            raise exception.Error(_('Cannot check %s, stack not created')
+                                  % self.name)
+
+        check_task = scheduler.TaskRunner(self._nested.stack_task,
+                                          action=self._nested.CHECK,
+                                          aggregate_exceptions=True)
+
+        check_task.start(timeout=self._nested.timeout_secs())
+        return check_task
+
+    def check_check_complete(self, check_task):
+        return check_task.step()
+
     def prepare_abandon(self):
         return self.nested().prepare_abandon()
 

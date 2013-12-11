@@ -45,11 +45,11 @@ LOG = logging.getLogger(__name__)
 class Stack(collections.Mapping):
 
     ACTIONS = (
-        CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT,
-        SNAPSHOT
+        CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND,
+        RESUME, ADOPT, SNAPSHOT, CHECK,
     ) = (
-        'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND', 'RESUME', 'ADOPT',
-        'SNAPSHOT'
+        'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND',
+        'RESUME', 'ADOPT', 'SNAPSHOT', 'CHECK',
     )
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
@@ -535,7 +535,8 @@ class Stack(collections.Mapping):
         return {'resource_data': data['resources'].get(resource.name)}
 
     @scheduler.wrappertask
-    def stack_task(self, action, reverse=False, post_func=None):
+    def stack_task(self, action, reverse=False, post_func=None,
+                   aggregate_exceptions=False):
         '''
         A task to perform an action on the stack and all of the resources
         in forward or reverse dependency order as specified by reverse
@@ -557,13 +558,15 @@ class Stack(collections.Mapping):
                                     '_%s_kwargs' % action_l, lambda x: {})
             return handle(**handle_kwargs(r))
 
-        action_task = scheduler.DependencyTaskGroup(self.dependencies,
-                                                    resource_action,
-                                                    reverse)
+        action_task = scheduler.DependencyTaskGroup(
+            self.dependencies,
+            resource_action,
+            reverse,
+            aggregate_exceptions=aggregate_exceptions)
 
         try:
             yield action_task()
-        except exception.ResourceFailure as ex:
+        except (exception.ResourceFailure, scheduler.ExceptionGroup) as ex:
             stack_status = self.FAILED
             reason = 'Resource %s failed: %s' % (action, six.text_type(ex))
         except scheduler.Timeout:
@@ -574,6 +577,30 @@ class Stack(collections.Mapping):
 
         if callable(post_func):
             post_func()
+
+    def check(self):
+        self.updated_time = datetime.utcnow()
+        checker = scheduler.TaskRunner(self.stack_task, self.CHECK,
+                                       post_func=self.supports_check_action,
+                                       aggregate_exceptions=True)
+        checker()
+
+    def supports_check_action(self):
+        def is_supported(stack, res):
+            if hasattr(res, 'nested'):
+                return res.nested().supports_check_action()
+            else:
+                return hasattr(res, 'handle_%s' % self.CHECK.lower())
+
+        supported = [is_supported(self, res)
+                     for res in self.resources.values()]
+
+        if not all(supported):
+            msg = ". '%s' not fully supported (see resources)" % self.CHECK
+            reason = self.status_reason + msg
+            self.state_set(self.CHECK, self.status, reason)
+
+        return all(supported)
 
     def _backup_stack(self, create_if_missing=True):
         '''
