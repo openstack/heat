@@ -145,6 +145,18 @@ def stack_delete(context, stack_id):
     return IMPL.stack_delete(context, stack_id)
 
 
+def stack_lock_create(stack_id, engine_id):
+    return IMPL.stack_lock_create(stack_id, engine_id)
+
+
+def stack_lock_steal(stack_id, old_engine_id, new_engine_id):
+    return IMPL.stack_lock_steal(stack_id, old_engine_id, new_engine_id)
+
+
+def stack_lock_release(stack_id, engine_id):
+    return IMPL.stack_lock_release(stack_id, engine_id)
+
+
 def user_creds_create(context):
     return IMPL.user_creds_create(context)
 
