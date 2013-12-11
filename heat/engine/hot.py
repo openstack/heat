@@ -21,10 +21,10 @@ from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 
-SECTIONS = (VERSION, DESCRIPTION, PARAMETERS,
+SECTIONS = (VERSION, DESCRIPTION, PARAMETER_GROUPS, PARAMETERS,
             RESOURCES, OUTPUTS, UNDEFINED) = \
-           ('heat_template_version', 'description', 'parameters',
-            'resources', 'outputs', '__undefined__')
+           ('heat_template_version', 'description', 'parameter_groups',
+            'parameters', 'resources', 'outputs', '__undefined__')
 
 PARAM_CONSTRAINTS = (CONSTRAINTS, DESCRIPTION, LENGTH, RANGE,
                      MIN, MAX, ALLOWED_VALUES, ALLOWED_PATTERN) = \
