@@ -45,31 +45,31 @@ class Ec2TokenTest(HeatTestCase):
     def test_conf_get_paste(self):
         dummy_conf = {'auth_uri': 'http://192.0.2.9/v2.0'}
         ec2 = ec2token.EC2Token(app=None, conf=dummy_conf)
-        self.assertEqual(ec2._conf_get('auth_uri'), 'http://192.0.2.9/v2.0')
+        self.assertEqual('http://192.0.2.9/v2.0', ec2._conf_get('auth_uri'))
         self.assertEqual(
-            ec2._conf_get_keystone_ec2_uri('http://192.0.2.9/v2.0'),
-            'http://192.0.2.9/v2.0/ec2tokens')
+            'http://192.0.2.9/v2.0/ec2tokens',
+            ec2._conf_get_keystone_ec2_uri('http://192.0.2.9/v2.0'))
 
     def test_conf_get_opts(self):
         cfg.CONF.set_default('auth_uri', 'http://192.0.2.9/v2.0/',
                              group='ec2authtoken')
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._conf_get('auth_uri'), 'http://192.0.2.9/v2.0/')
+        self.assertEqual('http://192.0.2.9/v2.0/', ec2._conf_get('auth_uri'))
         self.assertEqual(
-            ec2._conf_get_keystone_ec2_uri('http://192.0.2.9/v2.0/'),
-            'http://192.0.2.9/v2.0/ec2tokens')
+            'http://192.0.2.9/v2.0/ec2tokens',
+            ec2._conf_get_keystone_ec2_uri('http://192.0.2.9/v2.0/'))
 
     def test_get_signature_param_old(self):
         params = {'Signature': 'foo'}
         dummy_req = self._dummy_GET_request(params)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_signature(dummy_req), 'foo')
+        self.assertEqual('foo', ec2._get_signature(dummy_req))
 
     def test_get_signature_param_new(self):
         params = {'X-Amz-Signature': 'foo'}
         dummy_req = self._dummy_GET_request(params)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_signature(dummy_req), 'foo')
+        self.assertEqual('foo', ec2._get_signature(dummy_req))
 
     def test_get_signature_header_space(self):
         req_env = {'HTTP_AUTHORIZATION':
@@ -78,7 +78,7 @@ class Ec2TokenTest(HeatTestCase):
                     'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_signature(dummy_req), 'xyz')
+        self.assertEqual('xyz', ec2._get_signature(dummy_req))
 
     def test_get_signature_header_notlast(self):
         req_env = {'HTTP_AUTHORIZATION':
@@ -87,7 +87,7 @@ class Ec2TokenTest(HeatTestCase):
                     'SignedHeaders=content-type;host;x-amz-date ')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_signature(dummy_req), 'xyz')
+        self.assertEqual('xyz', ec2._get_signature(dummy_req))
 
     def test_get_signature_header_nospace(self):
         req_env = {'HTTP_AUTHORIZATION':
@@ -96,19 +96,19 @@ class Ec2TokenTest(HeatTestCase):
                     'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_signature(dummy_req), 'xyz')
+        self.assertEqual('xyz', ec2._get_signature(dummy_req))
 
     def test_get_access_param_old(self):
         params = {'AWSAccessKeyId': 'foo'}
         dummy_req = self._dummy_GET_request(params)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_access(dummy_req), 'foo')
+        self.assertEqual('foo', ec2._get_access(dummy_req))
 
     def test_get_access_param_new(self):
         params = {'X-Amz-Credential': 'foo/bar'}
         dummy_req = self._dummy_GET_request(params)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_access(dummy_req), 'foo')
+        self.assertEqual('foo', ec2._get_access(dummy_req))
 
     def test_get_access_header_space(self):
         req_env = {'HTTP_AUTHORIZATION':
@@ -117,7 +117,7 @@ class Ec2TokenTest(HeatTestCase):
                     'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_access(dummy_req), 'foo')
+        self.assertEqual('foo', ec2._get_access(dummy_req))
 
     def test_get_access_header_nospace(self):
         req_env = {'HTTP_AUTHORIZATION':
@@ -126,7 +126,7 @@ class Ec2TokenTest(HeatTestCase):
                     'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_access(dummy_req), 'foo')
+        self.assertEqual('foo', ec2._get_access(dummy_req))
 
     def test_get_access_header_last(self):
         req_env = {'HTTP_AUTHORIZATION':
@@ -135,13 +135,13 @@ class Ec2TokenTest(HeatTestCase):
                     'Signature=xyz,Credential=foo/bar')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual(ec2._get_access(dummy_req), 'foo')
+        self.assertEqual('foo', ec2._get_access(dummy_req))
 
     def test_call_x_auth_user(self):
         req_env = {'HTTP_X_AUTH_USER': 'foo'}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app='xyz', conf={})
-        self.assertEqual(ec2.__call__(dummy_req), 'xyz')
+        self.assertEqual('xyz', ec2.__call__(dummy_req))
 
     def test_call_auth_nosig(self):
         req_env = {'HTTP_AUTHORIZATION':
@@ -179,7 +179,7 @@ class Ec2TokenTest(HeatTestCase):
                     'Signature=xyz')}
         dummy_req = self._dummy_GET_request(environ=req_env)
         ec2 = ec2token.EC2Token(app='xyz', conf={})
-        self.assertEqual(ec2.__call__(dummy_req), 'xyz')
+        self.assertEqual('xyz', ec2.__call__(dummy_req))
 
     def _stub_http_connection(self, headers={}, params={}, response=None,
                               req_url='http://123:5000/v2.0/ec2tokens'):
@@ -224,7 +224,7 @@ class Ec2TokenTest(HeatTestCase):
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=ok_resp)
         self.m.ReplayAll()
-        self.assertEqual(ec2.__call__(dummy_req), 'woot')
+        self.assertEqual('woot', ec2.__call__(dummy_req))
 
         self.assertEqual('tenant', dummy_req.headers['X-Tenant-Name'])
         self.assertEqual('abcd1234', dummy_req.headers['X-Tenant-Id'])
@@ -252,7 +252,7 @@ class Ec2TokenTest(HeatTestCase):
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=ok_resp)
         self.m.ReplayAll()
-        self.assertEqual(ec2.__call__(dummy_req), 'woot')
+        self.assertEqual('woot', ec2.__call__(dummy_req))
 
         self.assertEqual('aa,bb,cc', dummy_req.headers['X-Roles'])
         self.m.VerifyAll()
@@ -340,7 +340,7 @@ class Ec2TokenTest(HeatTestCase):
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
         self.m.ReplayAll()
-        self.assertEqual(ec2.__call__(dummy_req), 'woot')
+        self.assertEqual('woot', ec2.__call__(dummy_req))
 
         self.m.VerifyAll()
 
@@ -376,7 +376,7 @@ class Ec2TokenTest(HeatTestCase):
             params={'AWSAccessKeyId': 'foo'})
 
         self.m.ReplayAll()
-        self.assertEqual(ec2.__call__(dummy_req), 'woot')
+        self.assertEqual('woot', ec2.__call__(dummy_req))
 
         self.m.VerifyAll()
 
@@ -446,7 +446,7 @@ class Ec2TokenTest(HeatTestCase):
         self.m.ReplayAll()
         ex = self.assertRaises(exception.HeatInternalFailureError,
                                ec2.__call__, dummy_req)
-        self.assertEqual(str(ex), 'Service misconfigured')
+        self.assertEqual('Service misconfigured', str(ex))
 
         self.m.VerifyAll()
 
@@ -467,7 +467,7 @@ class Ec2TokenTest(HeatTestCase):
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
         self.m.ReplayAll()
-        self.assertEqual(ec2.__call__(dummy_req), 'woot')
+        self.assertEqual('woot', ec2.__call__(dummy_req))
 
         self.m.VerifyAll()
 
@@ -490,6 +490,6 @@ class Ec2TokenTest(HeatTestCase):
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
         self.m.ReplayAll()
-        self.assertEqual(ec2.__call__(dummy_req), 'woot')
+        self.assertEqual('woot', ec2.__call__(dummy_req))
 
         self.m.VerifyAll()

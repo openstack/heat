@@ -67,7 +67,7 @@ class InstantiationDataTest(HeatTestCase):
         data = {"key1": ["val1[0]", "val1[1]"], "key2": "val2"}
         json_repr = '{ "key1": [ "val1[0]", "val1[1]" ], "key2": "val2" }'
         parsed = stacks.InstantiationData.format_parse(json_repr, 'foo')
-        self.assertEqual(parsed, data)
+        self.assertEqual(data, parsed)
 
     def test_format_parse_invalid(self):
         self.assertRaises(webob.exc.HTTPBadRequest,
@@ -91,7 +91,7 @@ parameters:
     def test_stack_name(self):
         body = {'stack_name': 'wibble'}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.stack_name(), 'wibble')
+        self.assertEqual('wibble', data.stack_name())
 
     def test_stack_name_missing(self):
         body = {'not the stack_name': 'wibble'}
@@ -102,13 +102,13 @@ parameters:
         template = {'foo': 'bar', 'blarg': 'wibble'}
         body = {'template': template}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.template(), template)
+        self.assertEqual(template, data.template())
 
     def test_template_string_json(self):
         template = '{"foo": "bar", "blarg": "wibble"}'
         body = {'template': template}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.template(), json.loads(template))
+        self.assertEqual(json.loads(template), data.template())
 
     def test_template_string_yaml(self):
         template = '''foo: bar
@@ -124,7 +124,7 @@ blarg: wibble
 
         body = {'template': template}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.template(), parsed)
+        self.assertEqual(parsed, data.template())
 
     def test_template_url(self):
         template = {'foo': 'bar', 'blarg': 'wibble'}
@@ -136,7 +136,7 @@ blarg: wibble
         urlfetch.get(url).AndReturn(json.dumps(template))
         self.m.ReplayAll()
 
-        self.assertEqual(data.template(), template)
+        self.assertEqual(template, data.template())
         self.m.VerifyAll()
 
     def test_template_priority(self):
@@ -148,7 +148,7 @@ blarg: wibble
         self.m.StubOutWithMock(urlfetch, 'get')
         self.m.ReplayAll()
 
-        self.assertEqual(data.template(), template)
+        self.assertEqual(template, data.template())
         self.m.VerifyAll()
 
     def test_template_missing(self):
@@ -162,13 +162,13 @@ blarg: wibble
         body = {'parameters': params,
                 'resource_registry': {}}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.environment(), body)
+        self.assertEqual(body, data.environment())
 
     def test_environment_only_params(self):
         env = {'parameters': {'foo': 'bar', 'blarg': 'wibble'}}
         body = {'environment': env}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.environment(), env)
+        self.assertEqual(env, data.environment())
 
     def test_environment_and_parameters(self):
         body = {'parameters': {'foo': 'bar'},
@@ -177,7 +177,7 @@ blarg: wibble
                                  'foo': 'bar'},
                   'resource_registry': {}}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.environment(), expect)
+        self.assertEqual(expect, data.environment())
 
     def test_parameters_override_environment(self):
         # This tests that the cli parameters will override
@@ -191,7 +191,7 @@ blarg: wibble
                                  'tester': 'Yes'},
                   'resource_registry': {}}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.environment(), expect)
+        self.assertEqual(expect, data.environment())
 
     def test_environment_bad_format(self):
         env = {'somethingnotsupported': {'blarg': 'wibble'}}
@@ -203,9 +203,8 @@ blarg: wibble
         env = {'foo': 'bar', 'blarg': 'wibble'}
         body = {'not the environment': env}
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.environment(),
-                         {'parameters': {},
-                          'resource_registry': {}})
+        self.assertEqual({'parameters': {}, 'resource_registry': {}},
+                         data.environment())
 
     def test_args(self):
         body = {
@@ -217,7 +216,7 @@ blarg: wibble
             'timeout_mins': 60,
         }
         data = stacks.InstantiationData(body)
-        self.assertEqual(data.args(), {'timeout_mins': 60})
+        self.assertEqual({'timeout_mins': 60}, data.args())
 
 
 class ControllerTest(object):
@@ -369,14 +368,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                 }
             ]
         }
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': {}}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
-                                          'method': 'list_stacks',
-                                          'args': default_args,
-                                          'version': self.api_version},
+                                           'method': 'list_stacks',
+                                           'args': default_args,
+                                           'version': self.api_version},
                                           None)
 
     @mock.patch.object(rpc, 'call')
@@ -521,14 +520,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
             ]
         }
 
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
-                                          'method': 'list_stacks',
-                                          'args': default_args,
-                                          'version': self.api_version},
+                                           'method': 'list_stacks',
+                                           'args': default_args,
+                                           'version': self.api_version},
                                           None)
 
     @mock.patch.object(rpc, 'call')
@@ -542,13 +541,13 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        self.controller.index,
                                        req, tenant_id=self.tenant)
 
-        self.assertEqual(resp.json['code'], 400)
-        self.assertEqual(resp.json['error']['type'], 'AttributeError')
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('AttributeError', resp.json['error']['type'])
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
-                                          'method': 'list_stacks',
-                                          'args': mock.ANY,
-                                          'version': self.api_version},
+                                           'method': 'list_stacks',
+                                           'args': mock.ANY,
+                                           'version': self.api_version},
                                           None)
 
     def test_index_err_denied_policy(self, mock_enforce):
@@ -574,13 +573,13 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        self.controller.index,
                                        req, tenant_id=self.tenant)
 
-        self.assertEqual(resp.json['code'], 500)
-        self.assertEqual(resp.json['error']['type'], 'Exception')
+        self.assertEqual(500, resp.json['code'])
+        self.assertEqual('Exception', resp.json['error']['type'])
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
-                                          'method': 'list_stacks',
-                                          'args': mock.ANY,
-                                          'version': self.api_version},
+                                           'method': 'list_stacks',
+                                           'args': mock.ANY,
+                                           'version': self.api_version},
                                           None)
 
     def test_create(self, mock_enforce):
@@ -616,7 +615,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         expected = {'stack':
                     {'id': '1',
                      'links': [{'href': self._url(identity), 'rel': 'self'}]}}
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
         self.m.VerifyAll()
 
@@ -653,7 +652,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         expected = {'stack':
                     {'id': '1',
                      'links': [{'href': self._url(identity), 'rel': 'self'}]}}
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
         self.m.VerifyAll()
 
@@ -710,22 +709,22 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        self.controller.create,
                                        req, tenant_id=self.tenant, body=body)
 
-        self.assertEqual(resp.json['code'], 400)
-        self.assertEqual(resp.json['error']['type'], 'AttributeError')
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('AttributeError', resp.json['error']['type'])
 
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.create,
                                        req, tenant_id=self.tenant, body=body)
 
-        self.assertEqual(resp.json['code'], 400)
-        self.assertEqual(resp.json['error']['type'], 'UnknownUserParameter')
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('UnknownUserParameter', resp.json['error']['type'])
 
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.create,
                                        req, tenant_id=self.tenant, body=body)
 
-        self.assertEqual(resp.json['code'], 400)
-        self.assertEqual(resp.json['error']['type'], 'UserParameterMissing')
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('UserParameterMissing', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_create_err_existing(self, mock_enforce):
@@ -759,8 +758,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        self.controller.create,
                                        req, tenant_id=self.tenant, body=body)
 
-        self.assertEqual(resp.json['code'], 409)
-        self.assertEqual(resp.json['error']['type'], 'StackExists')
+        self.assertEqual(409, resp.json['code'])
+        self.assertEqual('StackExists', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_create_err_denied_policy(self, mock_enforce):
@@ -813,8 +812,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        self.controller.create,
                                        req, tenant_id=self.tenant, body=body)
 
-        self.assertEqual(resp.json['code'], 400)
-        self.assertEqual(resp.json['error']['type'], 'StackValidationFailed')
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('StackValidationFailed', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_create_err_stack_bad_reqest(self, mock_enforce):
@@ -835,8 +834,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         # When HTTP disguised exceptions reach the fault app, they are
         # converted into regular responses, just like non-HTTP exceptions
-        self.assertEqual(resp.json['code'], 400)
-        self.assertEqual(resp.json['error']['type'], 'HTTPBadRequest')
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('HTTPBadRequest', resp.json['error']['type'])
         self.assertIsNotNone(resp.json['error']['traceback'])
 
     def test_lookup(self, mock_enforce):
@@ -858,7 +857,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         found = self.assertRaises(
             webob.exc.HTTPFound, self.controller.lookup, req,
             tenant_id=identity.tenant, stack_name=identity.stack_name)
-        self.assertEqual(found.location, self._url(identity))
+        self.assertEqual(self._url(identity), found.location)
 
         self.m.VerifyAll()
 
@@ -873,7 +872,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         found = self.assertRaises(
             webob.exc.HTTPFound, self.controller.lookup,
             req, tenant_id=identity.tenant, stack_name=identity.arn())
-        self.assertEqual(found.location, self._url(identity))
+        self.assertEqual(self._url(identity), found.location)
 
         self.m.VerifyAll()
 
@@ -899,8 +898,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        req, tenant_id=self.tenant,
                                        stack_name=stack_name)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_lookup_err_policy(self, mock_enforce):
@@ -933,12 +932,14 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                  None).AndReturn(identity)
 
         self.m.ReplayAll()
+
         found = self.assertRaises(
             webob.exc.HTTPFound, self.controller.lookup, req,
             tenant_id=identity.tenant, stack_name=identity.stack_name,
             path='resources')
-        self.assertEqual(found.location,
-                         self._url(identity) + '/resources')
+        self.assertEqual(self._url(identity) + '/resources',
+                         found.location)
+
         self.m.VerifyAll()
 
     def test_lookup_resource_nonexistent(self, mock_enforce):
@@ -964,8 +965,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        stack_name=stack_name,
                                        path='resources')
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_lookup_resource_err_denied_policy(self, mock_enforce):
@@ -1051,7 +1052,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                 u'timeout_mins': 60,
             }
         }
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
         self.m.VerifyAll()
 
     def test_show_notfound(self, mock_enforce):
@@ -1076,8 +1077,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        stack_name=identity.stack_name,
                                        stack_id=identity.stack_id)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_show_invalidtenant(self, mock_enforce):
@@ -1093,7 +1094,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        stack_name=identity.stack_name,
                                        stack_id=identity.stack_id)
 
-        self.assertEqual(resp.status_int, 403)
+        self.assertEqual(403, resp.status_int)
         self.assertIn('403 Forbidden', str(resp))
         self.m.VerifyAll()
 
@@ -1131,7 +1132,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                             stack_name=identity.stack_name,
                                             stack_id=identity.stack_id)
 
-        self.assertEqual(response, template)
+        self.assertEqual(template, response)
         self.m.VerifyAll()
 
     def test_get_template_err_denied_policy(self, mock_enforce):
@@ -1173,8 +1174,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        stack_name=identity.stack_name,
                                        stack_id=identity.stack_id)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_update(self, mock_enforce):
@@ -1247,8 +1248,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        stack_id=identity.stack_id,
                                        body=body)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_update_err_denied_policy(self, mock_enforce):
@@ -1373,8 +1374,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        stack_name=identity.stack_name,
                                        stack_id=identity.stack_id)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_validate_template(self, mock_enforce):
@@ -1407,7 +1408,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         response = self.controller.validate_template(req,
                                                      tenant_id=self.tenant,
                                                      body=body)
-        self.assertEqual(response, engine_response)
+        self.assertEqual(engine_response, response)
         self.m.VerifyAll()
 
     def test_validate_template_error(self, mock_enforce):
@@ -1464,7 +1465,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self.m.ReplayAll()
         response = self.controller.list_resource_types(req,
                                                        tenant_id=self.tenant)
-        self.assertEqual(response, {'resource_types': engine_response})
+        self.assertEqual({'resource_types': engine_response}, response)
         self.m.VerifyAll()
 
     def test_list_resource_types_error(self, mock_enforce):
@@ -1484,8 +1485,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.list_resource_types,
                                        req, tenant_id=self.tenant)
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'ResourceTypeNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceTypeNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_list_resource_types_err_denied_policy(self, mock_enforce):
@@ -1524,7 +1525,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         response = self.controller.resource_schema(req,
                                                    tenant_id=self.tenant,
                                                    type_name=type_name)
-        self.assertEqual(response, engine_response)
+        self.assertEqual(engine_response, response)
         self.m.VerifyAll()
 
     def test_resource_schema_nonexist(self, mock_enforce):
@@ -1546,8 +1547,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        self.controller.resource_schema,
                                        req, tenant_id=self.tenant,
                                        type_name=type_name)
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'ResourceTypeNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceTypeNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_resource_schema_err_denied_policy(self, mock_enforce):
@@ -1597,8 +1598,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                                        self.controller.generate_template,
                                        req, tenant_id=self.tenant,
                                        type_name='NOT_FOUND')
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'ResourceTypeNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceTypeNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_generate_template_err_denied_policy(self, mock_enforce):
@@ -1625,9 +1626,9 @@ class StackSerializerTest(HeatTestCase):
                    'links': [{'href': 'location', "rel": "self"}]}}
         response = webob.Response()
         response = self.serializer.create(response, result)
-        self.assertEqual(response.status_int, 201)
-        self.assertEqual(response.headers['Location'], 'location')
-        self.assertEqual(response.headers['Content-Type'], 'application/json')
+        self.assertEqual(201, response.status_int)
+        self.assertEqual('location', response.headers['Location'])
+        self.assertEqual('application/json', response.headers['Content-Type'])
 
 
 @mock.patch.object(policy.Enforcer, 'enforce')
@@ -1699,7 +1700,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                            u'a3455d8c-9f88-404d-a85b-5315293e67de',
                            u'resource_type': u'AWS::EC2::Instance'}]}
 
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         self.m.VerifyAll()
 
     def test_index_nonexist(self, mock_enforce):
@@ -1725,8 +1726,8 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                                        stack_name=stack_identity.stack_name,
                                        stack_id=stack_identity.stack_id)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_index_denied_policy(self, mock_enforce):
@@ -1805,7 +1806,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
             }
         }
 
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         self.m.VerifyAll()
 
     def test_show_nonexist(self, mock_enforce):
@@ -1836,8 +1837,8 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                                        stack_id=stack_identity.stack_id,
                                        resource_name=res_name)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_show_nonexist_resource(self, mock_enforce):
@@ -1868,8 +1869,8 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                                        stack_id=stack_identity.stack_id,
                                        resource_name=res_name)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'ResourceNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_show_uncreated_resource(self, mock_enforce):
@@ -1900,8 +1901,8 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                                        stack_id=stack_identity.stack_id,
                                        resource_name=res_name)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'ResourceNotAvailable')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotAvailable', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_show_err_denied_policy(self, mock_enforce):
@@ -1965,7 +1966,7 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
 
         expected = {'metadata': {u'ensureRunning': u'true'}}
 
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         self.m.VerifyAll()
 
     def test_metadata_show_nonexist(self, mock_enforce):
@@ -1996,8 +1997,8 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                                        stack_id=stack_identity.stack_id,
                                        resource_name=res_name)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_metadata_show_nonexist_resource(self, mock_enforce):
@@ -2028,8 +2029,8 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
                                        stack_id=stack_identity.stack_id,
                                        resource_name=res_name)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'ResourceNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('ResourceNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_metadata_show_err_denied_policy(self, mock_enforce):
@@ -2151,7 +2152,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
             ]
         }
 
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         self.m.VerifyAll()
 
     def test_stack_index_event_id_integer(self, mock_enforce):
@@ -2220,7 +2221,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
             ]
         }
 
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         self.m.VerifyAll()
 
     def test_index_stack_nonexist(self, mock_enforce):
@@ -2246,8 +2247,8 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                                        stack_name=stack_identity.stack_name,
                                        stack_id=stack_identity.stack_id)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_index_err_denied_policy(self, mock_enforce):
@@ -2396,7 +2397,7 @@ class EventControllerTest(ControllerTest, HeatTestCase):
             }
         }
 
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         self.m.VerifyAll()
 
     def test_show_nonexist_event_id_integer(self, mock_enforce):
@@ -2526,8 +2527,8 @@ class EventControllerTest(ControllerTest, HeatTestCase):
                                        resource_name=res_name,
                                        event_id=event_id)
 
-        self.assertEqual(resp.json['code'], 404)
-        self.assertEqual(resp.json['error']['type'], 'StackNotFound')
+        self.assertEqual(404, resp.json['code'])
+        self.assertEqual('StackNotFound', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_show_err_denied_policy(self, mock_enforce):
@@ -2998,8 +2999,8 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
                                        stack_id=stack_identity.stack_id,
                                        body=body)
 
-        self.assertEqual(resp.json['code'], 400)
-        self.assertEqual(resp.json['error']['type'], 'AttributeError')
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('AttributeError', resp.json['error']['type'])
         self.m.VerifyAll()
 
     def test_action_err_denied_policy(self, mock_enforce):

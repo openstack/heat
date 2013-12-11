@@ -244,13 +244,13 @@ class InstanceGroupTest(HeatTestCase):
         stack.validate()
         grp = stack['JobServerGroup']
         self.assertTrue(grp.update_policy)
-        self.assertTrue(len(grp.update_policy) == 1)
+        self.assertEqual(1, len(grp.update_policy))
         self.assertIn('RollingUpdate', grp.update_policy)
         policy = grp.update_policy['RollingUpdate']
         self.assertTrue(policy and len(policy) > 0)
-        self.assertEqual(int(policy['MinInstancesInService']), 1)
-        self.assertEqual(int(policy['MaxBatchSize']), 2)
-        self.assertEqual(policy['PauseTime'], 'PT1S')
+        self.assertEqual(1, int(policy['MinInstancesInService']))
+        self.assertEqual(2, int(policy['MaxBatchSize']))
+        self.assertEqual('PT1S', policy['PauseTime'])
 
     def test_parse_with_default_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_default_updt_policy)
@@ -258,13 +258,13 @@ class InstanceGroupTest(HeatTestCase):
         stack.validate()
         grp = stack['JobServerGroup']
         self.assertTrue(grp.update_policy)
-        self.assertTrue(len(grp.update_policy) == 1)
+        self.assertEqual(1, len(grp.update_policy))
         self.assertIn('RollingUpdate', grp.update_policy)
         policy = grp.update_policy['RollingUpdate']
         self.assertTrue(policy and len(policy) > 0)
-        self.assertEqual(int(policy['MinInstancesInService']), 0)
-        self.assertEqual(int(policy['MaxBatchSize']), 1)
-        self.assertEqual(policy['PauseTime'], 'PT0S')
+        self.assertEqual(0, int(policy['MinInstancesInService']))
+        self.assertEqual(1, int(policy['MaxBatchSize']))
+        self.assertEqual('PT0S', policy['PauseTime'])
 
     def test_parse_with_bad_update_policy(self):
         tmpl = template_format.parse(ig_tmpl_with_bad_updt_policy)
@@ -313,7 +313,7 @@ class InstanceGroupTest(HeatTestCase):
         updated_policy = (updated_grp.t['UpdatePolicy']
                           if 'UpdatePolicy' in updated_grp.t else None)
         expected = {u'UpdatePolicy': updated_policy}
-        self.assertEqual(tmpl_diff, expected)
+        self.assertEqual(expected, tmpl_diff)
 
     def test_update_policy_added(self):
         self.validate_update_policy_diff(ig_tmpl_without_updt_policy,
@@ -350,7 +350,7 @@ class InstanceGroupTest(HeatTestCase):
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
-        self.assertEqual(stack.state, ('CREATE', 'COMPLETE'))
+        self.assertEqual(('CREATE', 'COMPLETE'), stack.state)
 
         # test that update policy is loaded
         current_grp = stack['JobServerGroup']
@@ -361,7 +361,7 @@ class InstanceGroupTest(HeatTestCase):
         init_grp_tmpl = tmpl['Resources']['JobServerGroup']
         init_roll_updt = init_grp_tmpl['UpdatePolicy']['RollingUpdate']
         init_batch_sz = int(init_roll_updt['MaxBatchSize'])
-        self.assertEqual(int(current_policy['MaxBatchSize']), init_batch_sz)
+        self.assertEqual(init_batch_sz, int(current_policy['MaxBatchSize']))
 
         # test that physical resource name of launch configuration is used
         conf = stack['JobServerConfig']
@@ -373,7 +373,7 @@ class InstanceGroupTest(HeatTestCase):
 
         # test the number of instances created
         nested = stack['JobServerGroup'].nested()
-        self.assertEqual(len(nested.resources), size)
+        self.assertEqual(size, len(nested.resources))
 
         # clean up for next test
         self.m.UnsetStubs()
@@ -402,7 +402,7 @@ class InstanceGroupTest(HeatTestCase):
         self.m.ReplayAll()
         stack.update(updated_stack)
         self.m.VerifyAll()
-        self.assertEqual(stack.state, ('UPDATE', 'COMPLETE'))
+        self.assertEqual(('UPDATE', 'COMPLETE'), stack.state)
 
         # test that the update policy is updated
         updated_grp = stack['JobServerGroup']
@@ -410,7 +410,7 @@ class InstanceGroupTest(HeatTestCase):
         updated_policy = updated_grp.update_policy['RollingUpdate']
         self.assertTrue(updated_policy)
         self.assertTrue(len(updated_policy) > 0)
-        self.assertEqual(int(updated_policy['MaxBatchSize']), new_batch_sz)
+        self.assertEqual(new_batch_sz, int(updated_policy['MaxBatchSize']))
 
         # test that the launch configuration is replaced
         updated_conf_name = self.get_launch_conf_name(stack, 'JobServerGroup')
@@ -419,19 +419,19 @@ class InstanceGroupTest(HeatTestCase):
         # test that the group size are the same
         updt_instances = updated_grp.get_instances()
         updt_names = updated_grp.get_instance_names()
-        self.assertEqual(len(updt_names), len(init_names))
+        self.assertEqual(len(init_names), len(updt_names))
 
         # test that the appropriate number of instance names are the same
         matched_names = set(updt_names) & set(init_names)
-        self.assertEqual(len(matched_names), num_updates_expected_on_updt)
+        self.assertEqual(num_updates_expected_on_updt, len(matched_names))
 
         # test that the appropriate number of new instances are created
-        self.assertEqual(len(set(updt_names) - set(init_names)),
-                         num_creates_expected_on_updt)
+        self.assertEqual(num_creates_expected_on_updt,
+                         len(set(updt_names) - set(init_names)))
 
         # test that the appropriate number of instances are deleted
-        self.assertEqual(len(set(init_names) - set(updt_names)),
-                         num_deletes_expected_on_updt)
+        self.assertEqual(num_deletes_expected_on_updt,
+                         len(set(init_names) - set(updt_names)))
 
         # test that the older instances are the ones being deleted
         if num_deletes_expected_on_updt > 0:
@@ -443,12 +443,12 @@ class InstanceGroupTest(HeatTestCase):
             # test that the image id is changed for all instances
             updt_images = [(i.name, i.t['Properties']['ImageId'])
                            for i in updt_instances]
-            self.assertEqual(len(set(updt_images) & set(init_images)), 0)
+            self.assertEqual(0, len(set(updt_images) & set(init_images)))
         else:
             # test that instance type is changed for all instances
             updt_flavors = [(i.name, i.t['Properties']['InstanceType'])
                             for i in updt_instances]
-            self.assertEqual(len(set(updt_flavors) & set(init_flavors)), 0)
+            self.assertEqual(0, len(set(updt_flavors) & set(init_flavors)))
 
     def test_instance_group_update_replace(self):
         """
@@ -585,7 +585,7 @@ class InstanceGroupTest(HeatTestCase):
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
-        self.assertEqual(stack.state, ('CREATE', 'COMPLETE'))
+        self.assertEqual(('CREATE', 'COMPLETE'), stack.state)
 
         # test that update policy is loaded
         current_grp = stack['JobServerGroup']
@@ -596,7 +596,7 @@ class InstanceGroupTest(HeatTestCase):
         init_grp_tmpl = tmpl['Resources']['JobServerGroup']
         init_roll_updt = init_grp_tmpl['UpdatePolicy']['RollingUpdate']
         init_batch_sz = int(init_roll_updt['MaxBatchSize'])
-        self.assertEqual(int(current_policy['MaxBatchSize']), init_batch_sz)
+        self.assertEqual(init_batch_sz, int(current_policy['MaxBatchSize']))
 
         # test that physical resource name of launch configuration is used
         conf = stack['JobServerConfig']
@@ -605,13 +605,13 @@ class InstanceGroupTest(HeatTestCase):
 
         # test the number of instances created
         nested = stack['JobServerGroup'].nested()
-        self.assertEqual(len(nested.resources), size)
+        self.assertEqual(size, len(nested.resources))
 
         # test stack update
         updated_tmpl = template_format.parse(ig_tmpl_without_updt_policy)
         updated_stack = utils.parse_stack(updated_tmpl)
         stack.update(updated_stack)
-        self.assertEqual(stack.state, ('UPDATE', 'COMPLETE'))
+        self.assertEqual(('UPDATE', 'COMPLETE'), stack.state)
 
         # test that update policy is removed
         updated_grp = stack['JobServerGroup']
@@ -629,7 +629,7 @@ class InstanceGroupTest(HeatTestCase):
         self.m.ReplayAll()
         stack.create()
         self.m.VerifyAll()
-        self.assertEqual(stack.state, ('CREATE', 'COMPLETE'))
+        self.assertEqual(('CREATE', 'COMPLETE'), stack.state)
 
         # test that update policy is loaded
         current_grp = stack['JobServerGroup']
@@ -640,11 +640,11 @@ class InstanceGroupTest(HeatTestCase):
         init_grp_tmpl = tmpl['Resources']['JobServerGroup']
         init_roll_updt = init_grp_tmpl['UpdatePolicy']['RollingUpdate']
         init_batch_sz = int(init_roll_updt['MaxBatchSize'])
-        self.assertEqual(int(current_policy['MaxBatchSize']), init_batch_sz)
+        self.assertEqual(init_batch_sz, int(current_policy['MaxBatchSize']))
 
         # test the number of instances created
         nested = stack['JobServerGroup'].nested()
-        self.assertEqual(len(nested.resources), size)
+        self.assertEqual(size, len(nested.resources))
 
         # clean up for next test
         self.m.UnsetStubs()
@@ -660,7 +660,7 @@ class InstanceGroupTest(HeatTestCase):
         updated_tmpl = template_format.parse(json.dumps(updt_template))
         updated_stack = utils.parse_stack(updated_tmpl)
         stack.update(updated_stack)
-        self.assertEqual(stack.state, ('UPDATE', 'FAILED'))
+        self.assertEqual(('UPDATE', 'FAILED'), stack.state)
 
         # test that the update policy is updated
         updated_grp = stack['JobServerGroup']
@@ -668,7 +668,7 @@ class InstanceGroupTest(HeatTestCase):
         updated_policy = updated_grp.update_policy['RollingUpdate']
         self.assertTrue(updated_policy)
         self.assertTrue(len(updated_policy) > 0)
-        self.assertEqual(updated_policy['PauseTime'], new_pause_time)
+        self.assertEqual(new_pause_time, updated_policy['PauseTime'])
 
         # test that error message match
         expected_error_message = ('The current UpdatePolicy will result '

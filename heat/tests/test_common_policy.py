@@ -129,7 +129,7 @@ class TestPolicyEnforcer(HeatTestCase):
         enforcer = policy.Enforcer()
         enforcer.load_rules(force_reload=True)
         enforcer.clear()
-        self.assertEqual(enforcer.enforcer.rules, {})
+        self.assertEqual({}, enforcer.enforcer.rules)
 
     def test_set_rules_overwrite_true(self):
         self.stub_policyfile('deny_stack_user.json')
@@ -137,7 +137,7 @@ class TestPolicyEnforcer(HeatTestCase):
         enforcer = policy.Enforcer()
         enforcer.load_rules(True)
         enforcer.set_rules({'test_heat_rule': 1}, True)
-        self.assertEqual(enforcer.enforcer.rules, {'test_heat_rule': 1})
+        self.assertEqual({'test_heat_rule': 1}, enforcer.enforcer.rules)
 
     def test_set_rules_overwrite_false(self):
         self.stub_policyfile('deny_stack_user.json')

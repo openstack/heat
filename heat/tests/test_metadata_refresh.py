@@ -169,21 +169,21 @@ class MetadataRefreshTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        self.assertEqual(self.stack.state,
-                         (self.stack.CREATE, self.stack.COMPLETE))
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
 
         s1 = self.stack['S1']
         s2 = self.stack['S2']
         files = s1.metadata['AWS::CloudFormation::Init']['config']['files']
         cont = files['/tmp/random_file']['content']
         self.assertEqual((s2.CREATE, s2.COMPLETE), s2.state)
-        self.assertEqual(cont, 's2-ip=1.2.3.5')
+        self.assertEqual('s2-ip=1.2.3.5', cont)
 
         s1.metadata_update()
         s2.metadata_update()
         files = s1.metadata['AWS::CloudFormation::Init']['config']['files']
         cont = files['/tmp/random_file']['content']
-        self.assertEqual(cont, 's2-ip=10.0.0.5')
+        self.assertEqual('s2-ip=10.0.0.5', cont)
 
         self.m.VerifyAll()
 
@@ -248,7 +248,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         inst = self.stack['S2']
 
         def check_empty(sleep_time):
-            self.assertEqual(watch.FnGetAtt('Data'), '{}')
+            self.assertEqual('{}', watch.FnGetAtt('Data'))
             self.assertIsNone(inst.metadata['test'])
 
         def update_metadata(id, data, reason):
@@ -269,16 +269,16 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
         self.m.ReplayAll()
         self.stack.create()
 
-        self.assertEqual(self.stack.state,
-                         (self.stack.CREATE, self.stack.COMPLETE))
+        self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                         self.stack.state)
 
-        self.assertEqual(watch.FnGetAtt('Data'), '{"123": "foo"}')
-        self.assertEqual(inst.metadata['test'], '{"123": "foo"}')
+        self.assertEqual('{"123": "foo"}', watch.FnGetAtt('Data'))
+        self.assertEqual('{"123": "foo"}', inst.metadata['test'])
 
         update_metadata('456', 'blarg', 'wibble')
-        self.assertEqual(watch.FnGetAtt('Data'),
-                         '{"123": "foo", "456": "blarg"}')
-        self.assertEqual(inst.metadata['test'],
-                         '{"123": "foo", "456": "blarg"}')
+        self.assertEqual('{"123": "foo", "456": "blarg"}',
+                         watch.FnGetAtt('Data'))
+        self.assertEqual('{"123": "foo", "456": "blarg"}',
+                         inst.metadata['test'])
 
         self.m.VerifyAll()

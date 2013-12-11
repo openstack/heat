@@ -93,7 +93,7 @@ class CfnStackControllerTest(HeatTestCase):
         })
         expected = {'StackName': 'Foo',
                     'StackId': 'arn:openstack:heat::t:stacks/Foo/123'}
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_enforce_ok(self):
         params = {'Action': 'ListStacks'}
@@ -155,7 +155,7 @@ class CfnStackControllerTest(HeatTestCase):
                        u'CreationTime': u'2012-07-09T09:12:45Z',
                        u'StackName': u'wordpress',
                        u'StackStatus': u'CREATE_COMPLETE'}]}}}
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None}
         mock_call.assert_called_once_with(dummy_req.context, self.topic,
@@ -292,7 +292,7 @@ class CfnStackControllerTest(HeatTestCase):
                         'DisableRollback': 'true',
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_describe_arn(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -377,7 +377,7 @@ class CfnStackControllerTest(HeatTestCase):
                         'DisableRollback': 'true',
                         'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_describe_arn_invalidtenant(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -457,7 +457,7 @@ class CfnStackControllerTest(HeatTestCase):
         dummy_req = self._dummy_GET_request(params)
         result = self.controller._get_template(dummy_req)
         expected = "abcdef"
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
     # TODO(shardy) : test the _get_template TemplateUrl case
 
@@ -506,7 +506,7 @@ class CfnStackControllerTest(HeatTestCase):
             }
         }
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_create_rollback(self):
         # Format a dummy request
@@ -553,7 +553,7 @@ class CfnStackControllerTest(HeatTestCase):
             }
         }
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_create_onfailure_true(self):
         # Format a dummy request
@@ -600,7 +600,7 @@ class CfnStackControllerTest(HeatTestCase):
             }
         }
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_create_onfailure_false_delete(self):
         # Format a dummy request
@@ -647,7 +647,7 @@ class CfnStackControllerTest(HeatTestCase):
             }
         }
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_create_onfailure_false_rollback(self):
         # Format a dummy request
@@ -694,7 +694,7 @@ class CfnStackControllerTest(HeatTestCase):
             }
         }
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_create_onfailure_err(self):
         # Format a dummy request
@@ -925,7 +925,7 @@ class CfnStackControllerTest(HeatTestCase):
             }
         }
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_update_bad_name(self):
         stack_name = "wibble"
@@ -989,7 +989,7 @@ class CfnStackControllerTest(HeatTestCase):
                     {'GetTemplateResult':
                      {'TemplateBody': template}}}
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_get_template_err_rpcerr(self):
         stack_name = "wordpress"
@@ -1151,7 +1151,7 @@ class CfnStackControllerTest(HeatTestCase):
 
         expected = {'DeleteStackResponse': {'DeleteStackResult': ''}}
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_delete_err_rpcerr(self):
         stack_name = "wordpress"
@@ -1270,7 +1270,7 @@ class CfnStackControllerTest(HeatTestCase):
                         'ResourceStatusReason': u'state changed',
                         'LogicalResourceId': u'WikiDatabase'}]}}}
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_events_list_err_rpcerr(self):
         stack_name = "wordpress"
@@ -1389,7 +1389,7 @@ class CfnStackControllerTest(HeatTestCase):
                        'Metadata': {u'wordpress': []},
                        'LogicalResourceId': u'WikiDatabase'}}}}
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_describe_stack_resource_nonexistent_stack(self):
         # Format a dummy request
@@ -1515,7 +1515,7 @@ class CfnStackControllerTest(HeatTestCase):
                         u'a3455d8c-9f88-404d-a85b-5315293e67de',
                         'LogicalResourceId': u'WikiDatabase'}]}}}
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_describe_stack_resources_bad_name(self):
         stack_name = "wibble"
@@ -1608,7 +1608,7 @@ class CfnStackControllerTest(HeatTestCase):
                         u'a3455d8c-9f88-404d-a85b-5315293e67de',
                         'LogicalResourceId': u'WikiDatabase'}]}}}
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_describe_stack_resources_physical_not_found(self):
         # Format a dummy request
@@ -1705,7 +1705,7 @@ class CfnStackControllerTest(HeatTestCase):
                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
                        'LogicalResourceId': u'WikiDatabase'}]}}}
 
-        self.assertEqual(response, expected)
+        self.assertEqual(expected, response)
 
     def test_list_stack_resources_bad_name(self):
         stack_name = "wibble"

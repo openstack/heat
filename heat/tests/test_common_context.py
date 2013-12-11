@@ -53,22 +53,22 @@ class TestRequestContext(HeatTestCase):
                                      is_admin=self.ctx.get('is_admin'))
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
-        self.assertEqual(ctx_dict, self.ctx)
+        self.assertEqual(self.ctx, ctx_dict)
 
     def test_request_context_from_dict(self):
         ctx = context.RequestContext.from_dict(self.ctx)
         ctx_dict = ctx.to_dict()
         del(ctx_dict['request_id'])
-        self.assertEqual(ctx_dict, self.ctx)
+        self.assertEqual(self.ctx, ctx_dict)
 
     def test_request_context_update(self):
         ctx = context.RequestContext.from_dict(self.ctx)
 
         for k in self.ctx:
-            self.assertEqual(ctx.to_dict().get(k), self.ctx.get(k))
+            self.assertEqual(self.ctx.get(k), ctx.to_dict().get(k))
             override = '%s_override' % k
             setattr(ctx, k, override)
-            self.assertEqual(ctx.to_dict().get(k), override)
+            self.assertEqual(override, ctx.to_dict().get(k))
 
     def test_get_admin_context(self):
         ctx = context.get_admin_context()

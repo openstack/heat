@@ -260,10 +260,10 @@ class instancesTest(HeatTestCase):
         self.assertTrue(instance.id > 0)
 
         expected_ip = return_server.networks['public'][0]
-        self.assertEqual(instance.FnGetAtt('PublicIp'), expected_ip)
-        self.assertEqual(instance.FnGetAtt('PrivateIp'), expected_ip)
-        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
-        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
+        self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
 
         self.m.VerifyAll()
 
@@ -276,9 +276,9 @@ class instancesTest(HeatTestCase):
         self.assertTrue(instance.id > 0)
 
         expected_ip = return_server.networks['public'][0]
-        self.assertEqual(instance.FnGetAtt('PublicIp'), expected_ip)
-        self.assertEqual(instance.FnGetAtt('PrivateIp'), expected_ip)
-        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
-        self.assertEqual(instance.FnGetAtt('PrivateDnsName'), expected_ip)
+        self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
+        self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
 
         self.m.VerifyAll()

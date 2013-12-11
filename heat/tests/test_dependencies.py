@@ -29,9 +29,9 @@ class dependenciesTest(testtools.TestCase):
 
         for n in nodes:
             self.assertTrue(n in order, '"%s" is not in the sequence' % n)
-            self.assertEqual(order.count(n), 1)
+            self.assertEqual(1, order.count(n))
 
-        self.assertEqual(len(order), len(nodes))
+        self.assertEqual(len(nodes), len(order))
 
         for l, f in deps:
             checkorder(order.index(f), order.index(l))
@@ -51,23 +51,23 @@ class dependenciesTest(testtools.TestCase):
     def test_edges(self):
         input_edges = [('1', None), ('2', '3'), ('2', '4')]
         dp = Dependencies(input_edges)
-        self.assertEqual(set(dp.graph().edges()), set(input_edges))
+        self.assertEqual(set(input_edges), set(dp.graph().edges()))
 
     def test_repr(self):
         dp = Dependencies([('1', None), ('2', '3'), ('2', '4')])
         s = "Dependencies([('1', None), ('2', '3'), ('2', '4')])"
-        self.assertEqual(repr(dp), s)
+        self.assertEqual(s, repr(dp))
 
     def test_single_node(self):
         d = Dependencies([('only', None)])
         l = list(iter(d))
-        self.assertEqual(len(l), 1)
-        self.assertEqual(l[0], 'only')
+        self.assertEqual(1, len(l))
+        self.assertEqual('only', l[0])
 
     def test_disjoint(self):
         d = Dependencies([('1', None), ('2', None)])
         l = list(iter(d))
-        self.assertEqual(len(l), 2)
+        self.assertEqual(2, len(l))
         self.assertIn('1', l)
         self.assertIn('2', l)
 
@@ -164,14 +164,14 @@ class dependenciesTest(testtools.TestCase):
         d = Dependencies([('last', 'first')])
         p = d['last']
         l = list(iter(p))
-        self.assertEqual(len(l), 1)
-        self.assertEqual(l[0], 'last')
+        self.assertEqual(1, len(l))
+        self.assertEqual('last', l[0])
 
     def test_simple_partial(self):
         d = Dependencies([('last', 'middle'), ('middle', 'first')])
         p = d['middle']
         order = list(iter(p))
-        self.assertEqual(len(order), 2)
+        self.assertEqual(2, len(order))
         for n in ('last', 'middle'):
             self.assertTrue(n in order,
                             "'%s' not found in dependency order" % n)
@@ -183,7 +183,7 @@ class dependenciesTest(testtools.TestCase):
                           ('target', 'first')])
         p = d['target']
         order = list(iter(p))
-        self.assertEqual(len(order), 3)
+        self.assertEqual(3, len(order))
         for n in ('last', 'middle', 'target'):
             self.assertTrue(n in order,
                             "'%s' not found in dependency order" % n)
@@ -195,7 +195,7 @@ class dependenciesTest(testtools.TestCase):
                           ('mid3', 'e3')])
         p = d['mid3']
         order = list(iter(p))
-        self.assertEqual(len(order), 4)
+        self.assertEqual(4, len(order))
         for n in ('last', 'mid1', 'mid2', 'mid3'):
             self.assertTrue(n in order,
                             "'%s' not found in dependency order" % n)
@@ -209,13 +209,13 @@ class dependenciesTest(testtools.TestCase):
         self.assertEqual(0, len(list(d.required_by('last'))))
 
         required_by = list(d.required_by('mid3'))
-        self.assertEqual(len(required_by), 2)
+        self.assertEqual(2, len(required_by))
         for n in ('mid1', 'mid2'):
             self.assertTrue(n in required_by,
                             "'%s' not found in required_by" % n)
 
         required_by = list(d.required_by('e2'))
-        self.assertEqual(len(required_by), 1)
+        self.assertEqual(1, len(required_by))
         self.assertTrue('mid1' in required_by,
                         "'%s' not found in required_by" % n)
 
