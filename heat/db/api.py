@@ -111,8 +111,13 @@ def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
                           tenant_safe=tenant_safe)
 
 
-def stack_get_by_name(context, stack_name, owner_id=None):
-    return IMPL.stack_get_by_name(context, stack_name, owner_id=owner_id)
+def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
+    return IMPL.stack_get_by_name_and_owner_id(context, stack_name,
+                                               owner_id=owner_id)
+
+
+def stack_get_by_name(context, stack_name):
+    return IMPL.stack_get_by_name(context, stack_name)
 
 
 def stack_get_all(context):
