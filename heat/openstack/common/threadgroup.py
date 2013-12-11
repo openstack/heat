@@ -87,7 +87,10 @@ class ThreadGroup(object):
 
     def stop(self):
         current = greenthread.getcurrent()
-        for x in self.threads:
+
+        # Iterate over a copy of self.threads so thread_done doesn't
+        # modify the list while we're iterating
+        for x in self.threads[:]:
             if x is current:
                 # don't kill the current thread.
                 continue
@@ -112,7 +115,10 @@ class ThreadGroup(object):
             except Exception as ex:
                 LOG.exception(ex)
         current = greenthread.getcurrent()
-        for x in self.threads:
+
+        # Iterate over a copy of self.threads so thread_done doesn't
+        # modify the list while we're iterating
+        for x in self.threads[:]:
             if x is current:
                 continue
             try:
