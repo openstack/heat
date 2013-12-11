@@ -187,13 +187,12 @@ class KeystoneClient(object):
 
     def create_trust_context(self):
         """
-        If cfg.CONF.deferred_auth_method is trusts, we create a
-        trust using the trustor identity in the current context, with the
-        trustee as the heat service user and return a context containing
-        the new trust_id
+        Create a trust using the trustor identity in the current context,
+        with the trustee as the heat service user and return a context
+        containing the new trust_id.
 
-        If deferred_auth_method != trusts, or the current context already
-        contains a trust_id, we do nothing and return the current context
+        If the current context already contains a trust_id, we do nothing
+        and return the current context.
         """
         if self.context.trust_id:
             return self.context
