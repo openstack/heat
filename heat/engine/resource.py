@@ -277,7 +277,6 @@ class Resource(object):
                                 if before.get(k) != after.get(k)])
 
         if not changed_keys_set.issubset(update_allowed_set):
-            badkeys = changed_keys_set - update_allowed_set
             raise UpdateReplace(self.name)
 
         return dict((k, after.get(k)) for k in changed_keys_set)
