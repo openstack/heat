@@ -400,7 +400,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
     def check_create_complete(self, cookie):
         """Check if server creation is complete and handle server configs."""
-        if not self._check_active(cookie):
+        if not super(CloudServer, self).check_create_complete(cookie):
             return False
 
         server = cookie[0]

@@ -449,41 +449,46 @@ class Instance(resource.Resource):
         return scheduler.PollingTaskGroup(attach_tasks)
 
     def check_create_complete(self, cookie):
-        return self._check_active(cookie)
+        server, volume_attach_task = cookie
+        return (self._check_active(server) and
+                self._check_volume_attached(server, volume_attach_task))
 
-    def _check_active(self, cookie):
-        server, volume_attach = cookie
-
-        if not volume_attach.started():
-            if server.status != 'ACTIVE':
-                server.get()
-
-            # Some clouds append extra (STATUS) strings to the status
-            short_server_status = server.status.split('(')[0]
-            if short_server_status in nova_utils.deferred_server_statuses:
-                return False
-            elif server.status == 'ACTIVE':
-                self._set_ipaddress(server.networks)
-                volume_attach.start()
-                return volume_attach.done()
-            elif server.status == 'ERROR':
-                fault = getattr(server, 'fault', {})
-                message = fault.get('message', 'Unknown')
-                code = fault.get('code', 500)
-                exc = exception.Error(_("Creation of server %(server)s "
-                                        "failed: %(message)s (%(code)s)") %
-                                      dict(server=server.name,
-                                           message=message,
-                                           code=code))
-                raise exc
-            else:
-                exc = exception.Error(_("Creation of server %(server)s failed "
-                                        "with unknown status: %(status)s") %
-                                      dict(server=server.name,
-                                           status=server.status))
-                raise exc
+    def _check_volume_attached(self, server, volume_attach_task):
+        if not volume_attach_task.started():
+            self._set_ipaddress(server.networks)
+            volume_attach_task.start()
+            return volume_attach_task.done()
         else:
-            return volume_attach.step()
+            return volume_attach_task.step()
+
+    def _check_active(self, server):
+        if server.status != 'ACTIVE':
+            server.get()
+
+        if server.status == 'ACTIVE':
+            return True
+
+        # Some clouds append extra (STATUS) strings to the status
+        short_server_status = server.status.split('(')[0]
+        if short_server_status in nova_utils.deferred_server_statuses:
+            return False
+
+        if server.status == 'ERROR':
+            fault = getattr(server, 'fault', {})
+            message = fault.get('message', 'Unknown')
+            code = fault.get('code', 500)
+            exc = exception.Error(_("Creation of server %(server)s "
+                                    "failed: %(message)s (%(code)s)") %
+                                  dict(server=server.name,
+                                       message=message,
+                                       code=code))
+            raise exc
+
+        exc = exception.Error(_("Creation of server %(server)s failed "
+                                "with unknown status: %(status)s") %
+                              dict(server=server.name,
+                                   status=server.status))
+        raise exc
 
     def volumes(self):
         """
@@ -683,7 +688,9 @@ class Instance(resource.Resource):
             return server, scheduler.TaskRunner(self._attach_volumes_task())
 
     def check_resume_complete(self, cookie):
-        return self._check_active(cookie)
+        server, volume_attach_task = cookie
+        return (self._check_active(server) and
+                self._check_volume_attached(server, volume_attach_task))
 
 
 def resource_mapping():
