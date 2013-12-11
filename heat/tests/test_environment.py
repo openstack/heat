@@ -15,6 +15,7 @@
 import fixtures
 import mock
 import os.path
+import testscenarios
 
 from oslo.config import cfg
 
@@ -27,6 +28,9 @@ from heat.engine import resources
 
 from heat.tests import generic_resource
 from heat.tests import common
+
+
+load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class EnvironmentTest(common.HeatTestCase):
@@ -105,6 +109,46 @@ class EnvironmentTest(common.HeatTestCase):
         self.assertEqual('ip.yaml',
                          env.get_resource_info('OS::Networking::FloatingIP',
                                                'my_fip').value)
+
+
+class EnvironmentDuplicateTest(common.HeatTestCase):
+
+    scenarios = [
+        ('same', dict(resource_type='test.yaml',
+                      expected_equal=True)),
+        ('diff_temp', dict(resource_type='not.yaml',
+                           expected_equal=False)),
+        ('diff_map', dict(resource_type='OS::SomethingElse',
+                          expected_equal=False)),
+        ('diff_path', dict(resource_type='a/test.yaml',
+                           expected_equal=False)),
+    ]
+
+    def test_env_load(self):
+        env_initial = {u'resource_registry': {
+            u'OS::Test::Dummy': 'test.yaml'}}
+
+        env = environment.Environment()
+        env.load(env_initial)
+        info = env.get_resource_info('OS::Test::Dummy', 'something')
+        replace_log = 'Changing %s from %s to %s' % ('OS::Test::Dummy',
+                                                     'test.yaml',
+                                                     self.resource_type)
+        self.assertNotIn(replace_log, self.logger.output)
+        env_test = {u'resource_registry': {
+            u'OS::Test::Dummy': self.resource_type}}
+        env.load(env_test)
+
+        if self.expected_equal:
+            # should return exactly the same object.
+            self.assertIs(info, env.get_resource_info('OS::Test::Dummy',
+                                                      'my_fip'))
+            self.assertNotIn(replace_log, self.logger.output)
+        else:
+            self.assertIn(replace_log, self.logger.output)
+            self.assertNotEqual(info,
+                                env.get_resource_info('OS::Test::Dummy',
+                                                      'my_fip'))
 
 
 class GlobalEnvLoadingTest(common.HeatTestCase):
