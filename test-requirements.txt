@@ -11,5 +11,5 @@ mox>=0.5.3
 testtools>=0.9.32
 testrepository>=0.0.17
 python-glanceclient>=0.9.0
-sphinx>=1.1.2
+sphinx>=1.1.2,<1.2
 oslo.sphinx
