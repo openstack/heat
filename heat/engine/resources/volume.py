@@ -286,7 +286,10 @@ class VolumeAttachment(resource.Resource):
             'Type': 'String', 'Required': True,
             'AllowedPattern': '/dev/vd[b-z]',
             'Description': _('The device where the volume is exposed on '
-                             'the instance.')}
+                             'the instance. This assignment may not be '
+                             'honored and it is advised that the path '
+                             '/dev/disk/by-id/virtio-<VolumeId> be used '
+                             'instead.')}
     }
 
     _instance_property = 'InstanceId'
@@ -427,7 +430,10 @@ class CinderVolumeAttachment(VolumeAttachment):
         'mountpoint': {
             'Type': 'String', 'Required': True,
             'Description': _('The location where the volume is exposed on '
-                             'the instance.')}
+                             'the instance. This assignment may not be '
+                             'honored and it is advised that the path '
+                             '/dev/disk/by-id/virtio-<VolumeId> be used '
+                             'instead.')}
     }
 
     _instance_property = 'instance_uuid'
