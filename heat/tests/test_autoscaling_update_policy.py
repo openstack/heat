@@ -20,7 +20,7 @@ from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine import notification
+from heat.engine.notification import stack as notification
 from heat.engine import parser
 from heat.engine.resources import user
 from heat.engine.resources import instance

@@ -28,6 +28,7 @@ from heat.engine.resources import autoscaling as asc
 from heat.engine.resources import loadbalancer
 from heat.engine.resources import instance
 from heat.engine.resources.neutron import loadbalancer as neutron_lb
+from heat.engine.notification import autoscaling as notification
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
@@ -185,6 +186,45 @@ class AutoScalingTest(HeatTestCase):
                 mox.IgnoreArg(), mox.IgnoreArg(),
                 {'Instances': expected_list}).AndReturn(None)
 
+    def _stub_scale_notification(self,
+                                 adjust,
+                                 groupname,
+                                 start_capacity,
+                                 adjust_type='ChangeInCapacity',
+                                 end_capacity=None,
+                                 with_error=None):
+
+        self.m.StubOutWithMock(notification, 'send')
+        notification.send(stack=mox.IgnoreArg(),
+                          adjustment=adjust,
+                          adjustment_type=adjust_type,
+                          capacity=start_capacity,
+                          groupname=mox.IgnoreArg(),
+                          suffix='start',
+                          message="Start resizing the group %s"
+                          % groupname,
+                          ).AndReturn(False)
+        if with_error:
+            notification.send(stack=mox.IgnoreArg(),
+                              adjustment=adjust,
+                              capacity=start_capacity,
+                              adjustment_type=adjust_type,
+                              groupname=mox.IgnoreArg(),
+                              message='Nested stack update failed:'
+                                      ' Error: %s' % with_error,
+                              suffix='error',
+                              ).AndReturn(False)
+        else:
+            notification.send(stack=mox.IgnoreArg(),
+                              adjustment=adjust,
+                              adjustment_type=adjust_type,
+                              capacity=end_capacity,
+                              groupname=mox.IgnoreArg(),
+                              message="End resizing the group %s"
+                              % groupname,
+                              suffix='end',
+                              ).AndReturn(False)
+
     def _stub_meta_expected(self, now, data, nmeta=1):
         # Stop time at now
         self.m.StubOutWithMock(timeutils, 'utcnow')
@@ -238,6 +278,8 @@ class AutoScalingTest(HeatTestCase):
 
         # trigger adjustment to reduce to 0, there should be no more instances
         self._stub_lb_reload(0)
+        self._stub_scale_notification(adjust=-1, groupname=rsrc.FnGetRefId(),
+                                      start_capacity=1, end_capacity=0)
         self._stub_meta_expected(now, 'ChangeInCapacity : -1')
         self.m.ReplayAll()
         rsrc.adjust(-1)
@@ -767,6 +809,8 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(1)
         self._stub_validate()
         self._stub_meta_expected(now, 'ChangeInCapacity : -2')
+        self._stub_scale_notification(adjust=-2, groupname=rsrc.FnGetRefId(),
+                                      start_capacity=3, end_capacity=1)
         self.m.ReplayAll()
         rsrc.adjust(-2)
         self.assertEqual(1, len(rsrc.get_instance_names()))
@@ -775,6 +819,8 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(3)
         self._stub_meta_expected(now, 'ChangeInCapacity : 2')
         self._stub_create(2)
+        self._stub_scale_notification(adjust=2, groupname=rsrc.FnGetRefId(),
+                                      start_capacity=1, end_capacity=3)
         self.m.ReplayAll()
         rsrc.adjust(2)
         self.assertEqual(3, len(rsrc.get_instance_names()))
@@ -783,6 +829,9 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(2)
         self._stub_validate()
         self._stub_meta_expected(now, 'ExactCapacity : 2')
+        self._stub_scale_notification(adjust=2, groupname=rsrc.FnGetRefId(),
+                                      adjust_type='ExactCapacity',
+                                      start_capacity=3, end_capacity=2)
         self.m.ReplayAll()
         rsrc.adjust(2, 'ExactCapacity')
         self.assertEqual(2, len(rsrc.get_instance_names()))
@@ -805,9 +854,13 @@ class AutoScalingTest(HeatTestCase):
 
         # Scale up one 1 instance with resource failure
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
-        instance.Instance.handle_create().AndRaise(exception.Error())
+        instance.Instance.handle_create().AndRaise(exception.Error('Bang'))
         self._stub_lb_reload(1, unset=False, nochange=True)
         self._stub_validate()
+        self._stub_scale_notification(adjust=1,
+                                      groupname=rsrc.FnGetRefId(),
+                                      start_capacity=1,
+                                      with_error='Bang')
         self.m.ReplayAll()
 
         self.assertRaises(exception.Error, rsrc.adjust, 1)

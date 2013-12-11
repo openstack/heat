@@ -25,10 +25,12 @@ from heat.engine import signal_responder
 from heat.common import short_id
 from heat.common import exception
 from heat.common import timeutils as iso8601utils
+from heat.openstack.common import excutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.engine.properties import Properties
 from heat.engine import constraints
+from heat.engine.notification import autoscaling as notification
 from heat.engine import properties
 from heat.engine import scheduler
 from heat.engine import stack_resource
@@ -632,11 +634,39 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             logger.debug(_('no change in capacity %d') % capacity)
             return
 
-        result = self.resize(new_capacity)
+        # send a notification before, on-error and on-success.
+        notif = {
+            'stack': self.stack,
+            'adjustment': adjustment,
+            'adjustment_type': adjustment_type,
+            'capacity': capacity,
+            'groupname': self.FnGetRefId(),
+            'message': _("Start resizing the group %(group)s") % {
+                'group': self.FnGetRefId()},
+            'suffix': 'start',
+        }
+        notification.send(**notif)
+        try:
+            self.resize(new_capacity)
+        except Exception as resize_ex:
+            with excutils.save_and_reraise_exception():
+                try:
+                    notif.update({'suffix': 'error',
+                                  'message': str(resize_ex),
+                                  })
+                    notification.send(**notif)
+                except Exception:
+                    logger.exception(_('Failed sending error notification'))
+        else:
+            notif.update({
+                'suffix': 'end',
+                'capacity': new_capacity,
+                'message': _("End resizing the group %(group)s") % {
+                    'group': notif['groupname']},
+            })
+            notification.send(**notif)
 
         self._cooldown_timestamp("%s : %s" % (adjustment_type, adjustment))
-
-        return result
 
     def _tags(self):
         """Add Identifing Tags to all servers in the group.
