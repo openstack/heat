@@ -32,48 +32,68 @@ class HealthMonitor(neutron.NeutronResource):
     A resource for managing health monitors for load balancers in Neutron.
     """
 
+    PROPERTIES = (
+        DELAY, TYPE, MAX_RETRIES, TIMEOUT, ADMIN_STATE_UP,
+        HTTP_METHOD, EXPECTED_CODES, URL_PATH,
+    ) = (
+        'delay', 'type', 'max_retries', 'timeout', 'admin_state_up',
+        'http_method', 'expected_codes', 'url_path',
+    )
+
     properties_schema = {
-        'delay': {
-            'Type': 'Integer', 'Required': True,
-            'UpdateAllowed': True,
-            'Description': _('The minimum time in seconds between regular '
-                             'connections of the member.')},
-        'type': {
-            'Type': 'String', 'Required': True,
-            'AllowedValues': ['PING', 'TCP', 'HTTP', 'HTTPS'],
-            'Description': _('One of predefined health monitor types.')},
-        'max_retries': {
-            'Type': 'Integer', 'Required': True,
-            'UpdateAllowed': True,
-            'Description': _('Number of permissible connection failures before'
-                             ' changing the member status to INACTIVE.')},
-        'timeout': {
-            'Type': 'Integer', 'Required': True,
-            'UpdateAllowed': True,
-            'Description': _('Maximum number of seconds for a monitor to '
-                             'wait for a connection to be established before '
-                             'it times out.')},
-        'admin_state_up': {
-            'Default': True, 'Type': 'Boolean',
-            'UpdateAllowed': True,
-            'Description': _('The administrative state of the health '
-                             'monitor.')},
-        'http_method': {
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('The HTTP method used for requests by the '
-                             'monitor of type HTTP.')},
-        'expected_codes': {
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('The list of HTTP status codes expected in '
-                             'response from the member to declare it '
-                             'healthy.')},
-        'url_path': {
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('The HTTP path used in the HTTP request used '
-                             'by the monitor to test a member health.')},
+        DELAY: properties.Schema(
+            properties.Schema.INTEGER,
+            _('The minimum time in seconds between regular connections of '
+              'the member.'),
+            required=True,
+            update_allowed=True
+        ),
+        TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('One of predefined health monitor types.'),
+            required=True,
+            constraints=[
+                constraints.AllowedValues(['PING', 'TCP', 'HTTP', 'HTTPS']),
+            ]
+        ),
+        MAX_RETRIES: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Number of permissible connection failures before changing the '
+              'member status to INACTIVE.'),
+            required=True,
+            update_allowed=True
+        ),
+        TIMEOUT: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Maximum number of seconds for a monitor to wait for a '
+              'connection to be established before it times out.'),
+            required=True,
+            update_allowed=True
+        ),
+        ADMIN_STATE_UP: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('The administrative state of the health monitor.'),
+            default=True,
+            update_allowed=True
+        ),
+        HTTP_METHOD: properties.Schema(
+            properties.Schema.STRING,
+            _('The HTTP method used for requests by the monitor of type '
+              'HTTP.'),
+            update_allowed=True
+        ),
+        EXPECTED_CODES: properties.Schema(
+            properties.Schema.STRING,
+            _('The list of HTTP status codes expected in response from the '
+              'member to declare it healthy.'),
+            update_allowed=True
+        ),
+        URL_PATH: properties.Schema(
+            properties.Schema.STRING,
+            _('The HTTP path used in the HTTP request used by the monitor to '
+              'test a member health.'),
+            update_allowed=True
+        ),
     }
 
     update_allowed_keys = ('Properties',)
@@ -130,64 +150,102 @@ class Pool(neutron.NeutronResource):
     A resource for managing load balancer pools in Neutron.
     """
 
-    vip_schema = {
-        'name': {
-            'Type': 'String',
-            'Description': _('Name of the vip.')},
-        'description': {
-            'Type': 'String',
-            'Description': _('Description of the vip.')},
-        'address': {
-            'Type': 'String',
-            'Description': _('IP address of the vip.')},
-        'connection_limit': {
-            'Type': 'Integer',
-            'Description': _('The maximum number of connections per second '
-                             'allowed for the vip.')},
-        'protocol_port': {
-            'Type': 'Integer', 'Required': True,
-            'Description': _('TCP port on which to listen for client traffic '
-                             'that is associated with the vip address.')},
-        'admin_state_up': {
-            'Default': True, 'Type': 'Boolean',
-            'Description': _('The administrative state of this vip.')}
-    }
+    PROPERTIES = (
+        PROTOCOL, SUBNET_ID, LB_METHOD, NAME, DESCRIPTION,
+        ADMIN_STATE_UP, VIP, MONITORS,
+    ) = (
+        'protocol', 'subnet_id', 'lb_method', 'name', 'description',
+        'admin_state_up', 'vip', 'monitors',
+    )
+
+    _VIP_KEYS = (
+        VIP_NAME, VIP_DESCRIPTION, VIP_ADDRESS, VIP_CONNECTION_LIMIT,
+        VIP_PROTOCOL_PORT, VIP_ADMIN_STATE_UP,
+    ) = (
+        'name', 'description', 'address', 'connection_limit',
+        'protocol_port', 'admin_state_up',
+    )
 
     properties_schema = {
-        'protocol': {
-            'Type': 'String', 'Required': True,
-            'AllowedValues': ['TCP', 'HTTP', 'HTTPS'],
-            'Description': _('Protocol for balancing.')},
-        'subnet_id': {
-            'Type': 'String', 'Required': True,
-            'Description': _('The subnet on which the members of the pool '
-                             'will be located.')},
-        'lb_method': {
-            'Type': 'String', 'Required': True,
-            'AllowedValues': ['ROUND_ROBIN', 'LEAST_CONNECTIONS',
-                              'SOURCE_IP'],
-            'UpdateAllowed': True,
-            'Description': _('The algorithm used to distribute load between '
-                             'the members of the pool.')},
-        'name': {
-            'Type': 'String',
-            'Description': _('Name of the pool.')},
-        'description': {
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('Description of the pool.')},
-        'admin_state_up': {
-            'Default': True, 'Type': 'Boolean',
-            'UpdateAllowed': True,
-            'Description': _('The administrative state of this pool.')},
-        'vip': {
-            'Type': 'Map', 'Schema': vip_schema, 'Required': True,
-            'Description': _('IP address and port of the pool.')},
-        'monitors': {
-            'Type': 'List',
-            'UpdateAllowed': True,
-            'Description': _('List of health monitors associated with the '
-                             'pool.')},
+        PROTOCOL: properties.Schema(
+            properties.Schema.STRING,
+            _('Protocol for balancing.'),
+            required=True,
+            constraints=[
+                constraints.AllowedValues(['TCP', 'HTTP', 'HTTPS']),
+            ]
+        ),
+        SUBNET_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The subnet on which the members of the pool will be located.'),
+            required=True
+        ),
+        LB_METHOD: properties.Schema(
+            properties.Schema.STRING,
+            _('The algorithm used to distribute load between the members of '
+              'the pool.'),
+            required=True,
+            constraints=[
+                constraints.AllowedValues(['ROUND_ROBIN',
+                                           'LEAST_CONNECTIONS', 'SOURCE_IP']),
+            ],
+            update_allowed=True
+        ),
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of the pool.')
+        ),
+        DESCRIPTION: properties.Schema(
+            properties.Schema.STRING,
+            _('Description of the pool.'),
+            update_allowed=True
+        ),
+        ADMIN_STATE_UP: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('The administrative state of this pool.'),
+            default=True,
+            update_allowed=True
+        ),
+        VIP: properties.Schema(
+            properties.Schema.MAP,
+            _('IP address and port of the pool.'),
+            schema={
+                VIP_NAME: properties.Schema(
+                    properties.Schema.STRING,
+                    _('Name of the vip.')
+                ),
+                VIP_DESCRIPTION: properties.Schema(
+                    properties.Schema.STRING,
+                    _('Description of the vip.')
+                ),
+                VIP_ADDRESS: properties.Schema(
+                    properties.Schema.STRING,
+                    _('IP address of the vip.')
+                ),
+                VIP_CONNECTION_LIMIT: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('The maximum number of connections per second '
+                      'allowed for the vip.')
+                ),
+                VIP_PROTOCOL_PORT: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('TCP port on which to listen for client traffic '
+                      'that is associated with the vip address.'),
+                    required=True
+                ),
+                VIP_ADMIN_STATE_UP: properties.Schema(
+                    properties.Schema.BOOLEAN,
+                    _('The administrative state of this vip.'),
+                    default=True
+                ),
+            },
+            required=True
+        ),
+        MONITORS: properties.Schema(
+            properties.Schema.LIST,
+            _('List of health monitors associated with the pool.'),
+            update_allowed=True
+        ),
     }
 
     update_allowed_keys = ('Properties',)
@@ -209,8 +267,8 @@ class Pool(neutron.NeutronResource):
         properties = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        vip_properties = properties.pop('vip')
-        monitors = properties.pop('monitors', [])
+        vip_properties = properties.pop(self.VIP)
+        monitors = properties.pop(self.MONITORS, [])
         client = self.neutron()
         pool = client.create_pool({'pool': properties})['pool']
         self.resource_id_set(pool['id'])
@@ -222,8 +280,8 @@ class Pool(neutron.NeutronResource):
         vip_arguments = self.prepare_properties(
             vip_properties,
             '%s.vip' % (self.name,))
-        vip_arguments['protocol'] = self.properties['protocol']
-        vip_arguments['subnet_id'] = self.properties['subnet_id']
+        vip_arguments['protocol'] = self.properties[self.PROTOCOL]
+        vip_arguments['subnet_id'] = self.properties[self.SUBNET_ID]
         vip_arguments['pool_id'] = pool['id']
         vip = client.create_vip({'vip': vip_arguments})['vip']
 
@@ -253,9 +311,9 @@ class Pool(neutron.NeutronResource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             client = self.neutron()
-            monitors = set(prop_diff.pop('monitors', []))
+            monitors = set(prop_diff.pop(self.MONITORS, []))
             if monitors:
-                old_monitors = set(self.t['Properties']['monitors'])
+                old_monitors = set(self.t['Properties'][self.MONITORS])
                 for monitor in old_monitors - monitors:
                     client.disassociate_health_monitor(
                         self.resource_id, {'health_monitor': {'id': monitor}})
@@ -311,31 +369,46 @@ class PoolMember(neutron.NeutronResource):
     A resource to handle load balancer members.
     """
 
+    PROPERTIES = (
+        POOL_ID, ADDRESS, PROTOCOL_PORT, WEIGHT, ADMIN_STATE_UP,
+    ) = (
+        'pool_id', 'address', 'protocol_port', 'weight', 'admin_state_up',
+    )
+
     properties_schema = {
-        'pool_id': properties.Schema(
+        POOL_ID: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the load balancing pool.'),
             required=True,
-            update_allowed=True),
-        'address': properties.Schema(
+            update_allowed=True
+        ),
+        ADDRESS: properties.Schema(
             properties.Schema.STRING,
             _('IP address of the pool member on the pool network.'),
-            required=True),
-        'protocol_port': properties.Schema(
+            required=True
+        ),
+        PROTOCOL_PORT: properties.Schema(
             properties.Schema.INTEGER,
             _('TCP port on which the pool member listens for requests or '
               'connections.'),
             required=True,
-            constraints=[constraints.Range(0, 65535)]),
-        'weight': properties.Schema(
+            constraints=[
+                constraints.Range(0, 65535),
+            ]
+        ),
+        WEIGHT: properties.Schema(
             properties.Schema.INTEGER,
             _('Weight of pool member in the pool (default to 1).'),
-            update_allowed=True,
-            constraints=[constraints.Range(0, 256)]),
-        'admin_state_up': properties.Schema(
+            constraints=[
+                constraints.Range(0, 256),
+            ],
+            update_allowed=True
+        ),
+        ADMIN_STATE_UP: properties.Schema(
             properties.Schema.BOOLEAN,
             _('The administrative state of the pool member.'),
-            default=True)
+            default=True
+        ),
     }
 
     attributes_schema = {
@@ -353,12 +426,12 @@ class PoolMember(neutron.NeutronResource):
     update_allowed_keys = ('Properties',)
 
     def handle_create(self):
-        pool = self.properties['pool_id']
+        pool = self.properties[self.POOL_ID]
         client = self.neutron()
-        protocol_port = self.properties['protocol_port']
-        address = self.properties['address']
-        admin_state_up = self.properties['admin_state_up']
-        weight = self.properties.get('weight')
+        protocol_port = self.properties[self.PROTOCOL_PORT]
+        address = self.properties[self.ADDRESS]
+        admin_state_up = self.properties[self.ADMIN_STATE_UP]
+        weight = self.properties.get(self.WEIGHT)
 
         params = {
             'pool_id': pool,
@@ -397,31 +470,41 @@ class LoadBalancer(resource.Resource):
     A resource to link a neutron pool with servers.
     """
 
+    PROPERTIES = (
+        POOL_ID, PROTOCOL_PORT, MEMBERS,
+    ) = (
+        'pool_id', 'protocol_port', 'members',
+    )
+
     properties_schema = {
-        'pool_id': {
-            'Type': 'String', 'Required': True,
-            'UpdateAllowed': True,
-            'Description': _('The ID of the load balancing pool.')},
-        'protocol_port': {
-            'Type': 'Integer', 'Required': True,
-            'Description': _('Port number on which the servers are '
-                             'running on the members.')},
-        'members': {
-            'Type': 'List',
-            'Default': [],
-            'UpdateAllowed': True,
-            'Description': _('The list of Nova server IDs load balanced.')},
+        POOL_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The ID of the load balancing pool.'),
+            required=True,
+            update_allowed=True
+        ),
+        PROTOCOL_PORT: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Port number on which the servers are running on the members.'),
+            required=True
+        ),
+        MEMBERS: properties.Schema(
+            properties.Schema.LIST,
+            _('The list of Nova server IDs load balanced.'),
+            default=[],
+            update_allowed=True
+        ),
     }
 
     update_allowed_keys = ('Properties',)
 
     def handle_create(self):
-        pool = self.properties['pool_id']
+        pool = self.properties[self.POOL_ID]
         client = self.neutron()
         nova_client = self.nova()
-        protocol_port = self.properties['protocol_port']
+        protocol_port = self.properties[self.PROTOCOL_PORT]
 
-        for member in self.properties.get('members'):
+        for member in self.properties.get(self.MEMBERS):
             address = nova_utils.server_to_ipaddress(nova_client, member)
             lb_member = client.create_member({
                 'member': {
@@ -431,8 +514,8 @@ class LoadBalancer(resource.Resource):
             db_api.resource_data_set(self, member, lb_member['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if 'members' in prop_diff:
-            members = set(prop_diff['members'])
+        if self.MEMBERS in prop_diff:
+            members = set(prop_diff[self.MEMBERS])
             rd_members = db_api.resource_data_get_all(self)
             old_members = set(rd_members.keys())
             client = self.neutron()
@@ -444,9 +527,9 @@ class LoadBalancer(resource.Resource):
                     if ex.status_code != 404:
                         raise ex
                 db_api.resource_data_delete(self, member)
-            pool = self.properties['pool_id']
+            pool = self.properties[self.POOL_ID]
             nova_client = self.nova()
-            protocol_port = self.properties['protocol_port']
+            protocol_port = self.properties[self.PROTOCOL_PORT]
             for member in members - old_members:
                 address = nova_utils.server_to_ipaddress(nova_client, member)
                 lb_member = client.create_member({
@@ -458,7 +541,7 @@ class LoadBalancer(resource.Resource):
 
     def handle_delete(self):
         client = self.neutron()
-        for member in self.properties.get('members'):
+        for member in self.properties.get(self.MEMBERS):
             member_id = db_api.resource_data_get(self, member)
             try:
                 client.delete_member(member_id)

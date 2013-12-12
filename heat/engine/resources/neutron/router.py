@@ -17,6 +17,7 @@ from heat.common import exception
 from heat.engine import clients
 from heat.engine.resource import SupportStatus
 from heat.engine.resources.neutron import neutron
+from heat.engine.resources.neutron import subnet
 from heat.engine import properties
 from heat.engine import scheduler
 
@@ -31,49 +32,52 @@ logger = logging.getLogger(__name__)
 
 class Router(neutron.NeutronResource):
 
-    external_gateway_info_schema = {
-        'network': {
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Required': True,
-            'Description': _('ID or name of the external network for the '
-                             'gateway.')
-        },
-        'enable_snat': {
-            'Type': 'Boolean',
-            'Default': True,
-            'UpdateAllowed': True,
-            'Description': _('Enables Source NAT on the router gateway.')
-        }
-    }
+    PROPERTIES = (
+        NAME, EXTERNAL_GATEWAY, VALUE_SPECS, ADMIN_STATE_UP,
+    ) = (
+        'name', 'external_gateway_info', 'value_specs', 'admin_state_up',
+    )
+
+    _EXTERNAL_GATEWAY_KEYS = (
+        EXTERNAL_GATEWAY_NETWORK, EXTERNAL_GATEWAY_ENABLE_SNAT,
+    ) = (
+        'network', 'enable_snat',
+    )
 
     properties_schema = {
-        'name': {
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('Name of router to create.')
-        },
-        'external_gateway_info': {
-            'Type': 'Map',
-            'Schema': external_gateway_info_schema,
-            'UpdateAllowed': True,
-            'Description': _('External network gateway configuration for a '
-                             'router.')
-        },
-        'value_specs': {
-            'Type': 'Map',
-            'Default': {},
-            'UpdateAllowed': True,
-            'Description': _('Extra parameters to include in the "router" '
-                             'object in the creation request.')
-        },
-        'admin_state_up': {
-            'Type': 'Boolean',
-            'Default': True,
-            'UpdateAllowed': True,
-            'Description': _('A boolean value specifying the administrative '
-                             'status of the network.')
-        }
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            update_allowed=True
+        ),
+        EXTERNAL_GATEWAY: properties.Schema(
+            properties.Schema.MAP,
+            _('External network gateway configuration for a router.'),
+            schema={
+                EXTERNAL_GATEWAY_NETWORK: properties.Schema(
+                    properties.Schema.STRING,
+                    _('ID or name of the external network for the gateway.'),
+                    required=True,
+                    update_allowed=True
+                ),
+                EXTERNAL_GATEWAY_ENABLE_SNAT: properties.Schema(
+                    properties.Schema.BOOLEAN,
+                    _('Enables Source NAT on the router gateway.'),
+                    default=True,
+                    update_allowed=True
+                ),
+            },
+            update_allowed=True
+        ),
+        VALUE_SPECS: properties.Schema(
+            properties.Schema.MAP,
+            default={},
+            update_allowed=True
+        ),
+        ADMIN_STATE_UP: properties.Schema(
+            properties.Schema.BOOLEAN,
+            default=True,
+            update_allowed=True
+        ),
     }
 
     attributes_schema = {
@@ -89,12 +93,12 @@ class Router(neutron.NeutronResource):
 
     def prepare_properties(self, properties, name):
         props = super(Router, self).prepare_properties(properties, name)
-        gateway = props.get('external_gateway_info')
+        gateway = props.get(self.EXTERNAL_GATEWAY)
         if gateway:
             gateway['network_id'] = neutronV20.find_resourceid_by_name_or_id(
                 self.neutron(),
                 'network',
-                gateway.pop('network'))
+                gateway.pop(self.EXTERNAL_GATEWAY_NETWORK))
         return props
 
     def handle_create(self):
@@ -129,19 +133,28 @@ class Router(neutron.NeutronResource):
 
 
 class RouterInterface(neutron.NeutronResource):
+    PROPERTIES = (
+        ROUTER_ID, SUBNET_ID, PORT_ID,
+    ) = (
+        'router_id', 'subnet_id', 'port_id',
+    )
+
     properties_schema = {
-        'router_id': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('The router id.')},
-        'subnet_id': {
-            'Type': 'String',
-            'Description': _('The subnet id, either '
-                             'subnet_id or port_id should be specified.')},
-        'port_id': {
-            'Type': 'String',
-            'Description': _('The port id, either '
-                             'subnet_id or port_id should be specified.')}}
+        ROUTER_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The router id.'),
+            required=True
+        ),
+        SUBNET_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The subnet id, either subnet_id or port_id should be '
+              'specified.')
+        ),
+        PORT_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The port id, either subnet_id or port_id should be specified.')
+        ),
+    }
 
     def add_dependencies(self, deps):
         super(RouterInterface, self).add_dependencies(deps)
@@ -149,8 +162,8 @@ class RouterInterface(neutron.NeutronResource):
         # as this router_id.
         for resource in self.stack.itervalues():
             if (resource.has_interface('OS::Neutron::RouterL3Agent') and
-                resource.properties.get('router_id') ==
-                    self.properties.get('router_id')):
+                resource.properties.get(RouterL3Agent.ROUTER_ID) ==
+                    self.properties.get(self.ROUTER_ID)):
                         deps += (self, resource)
 
     def validate(self):
@@ -158,20 +171,21 @@ class RouterInterface(neutron.NeutronResource):
         Validate any of the provided params
         '''
         super(RouterInterface, self).validate()
-        subnet_id = self.properties.get('subnet_id')
-        port_id = self.properties.get('port_id')
+        subnet_id = self.properties.get(self.SUBNET_ID)
+        port_id = self.properties.get(self.PORT_ID)
         if subnet_id and port_id:
-            raise exception.ResourcePropertyConflict('subnet_id', 'port_id')
+            raise exception.ResourcePropertyConflict(self.SUBNET_ID,
+                                                     self.PORT_ID)
         if not subnet_id and not port_id:
             msg = 'Either subnet_id or port_id must be specified.'
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
-        router_id = self.properties.get('router_id')
-        key = 'subnet_id'
+        router_id = self.properties.get(self.ROUTER_ID)
+        key = self.SUBNET_ID
         value = self.properties.get(key)
         if not value:
-            key = 'port_id'
+            key = self.PORT_ID
             value = self.properties.get(key)
         self.neutron().add_interface_router(
             router_id,
@@ -204,10 +218,22 @@ class RouterGateway(neutron.NeutronResource):
           'resource to set up the gateway.')
     )
 
-    properties_schema = {'router_id': {'Type': 'String',
-                                       'Required': True},
-                         'network_id': {'Type': 'String',
-                                        'Required': True}}
+    PROPERTIES = (
+        ROUTER_ID, NETWORK_ID,
+    ) = (
+        'router_id', 'network_id',
+    )
+
+    properties_schema = {
+        ROUTER_ID: properties.Schema(
+            properties.Schema.STRING,
+            required=True
+        ),
+        NETWORK_ID: properties.Schema(
+            properties.Schema.STRING,
+            required=True
+        ),
+    }
 
     def add_dependencies(self, deps):
         super(RouterGateway, self).add_dependencies(deps)
@@ -215,29 +241,29 @@ class RouterGateway(neutron.NeutronResource):
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
             if (resource.has_interface('OS::Neutron::RouterInterface') and
-                resource.properties.get('router_id') ==
-                    self.properties.get('router_id')):
+                resource.properties.get(RouterInterface.ROUTER_ID) ==
+                    self.properties.get(self.ROUTER_ID)):
                         deps += (self, resource)
             # depend on any subnet in this template with the same network_id
             # as this network_id, as the gateway implicitly creates a port
             # on that subnet
             elif (resource.has_interface('OS::Neutron::Subnet') and
-                  resource.properties.get('network_id') ==
-                    self.properties.get('network_id')):
+                  resource.properties.get(subnet.Subnet.NETWORK_ID) ==
+                    self.properties.get(self.NETWORK_ID)):
                         deps += (self, resource)
             # depend on any RouterL3agents in this template with the same
             # router_id as this router_id.
             elif (resource.has_interface('OS::Neutron::RouterL3Agent') and
-                  resource.properties.get('router_id') ==
-                    self.properties.get('router_id')):
+                  resource.properties.get(RouterL3Agent.ROUTER_ID) ==
+                    self.properties.get(self.ROUTER_ID)):
                         deps += (self, resource)
 
     def handle_create(self):
-        router_id = self.properties.get('router_id')
+        router_id = self.properties.get(self.ROUTER_ID)
         network_id = neutronV20.find_resourceid_by_name_or_id(
             self.neutron(),
             'network',
-            self.properties.get('network_id'))
+            self.properties.get(self.NETWORK_ID))
         self.neutron().add_gateway_router(
             router_id,
             {'network_id': network_id})
@@ -256,28 +282,33 @@ class RouterGateway(neutron.NeutronResource):
 
 
 class RouterL3Agent(neutron.NeutronResource):
+    PROPERTIES = (
+        ROUTER_ID, L3_AGENT_ID,
+    ) = (
+        'router_id', 'l3_agent_id',
+    )
+
     properties_schema = {
-        'router_id': properties.Schema(
+        ROUTER_ID: properties.Schema(
             properties.Schema.STRING,
-            description=_('The ID of the router you want to be scheduled by '
-                          'the l3_agent. Note that the default policy setting '
-                          'in Neutron restricts usage of this property to '
-                          'administrative users only.'),
+            _('The ID of the router you want to be scheduled by the '
+              'l3_agent. Note that the default policy setting in Neutron '
+              'restricts usage of this property to administrative users '
+              'only.'),
             required=True
         ),
-        'l3_agent_id': properties.Schema(
+        L3_AGENT_ID: properties.Schema(
             properties.Schema.STRING,
-            description=_('The ID of the l3-agent to schedule the router. '
-                          'Note that the default policy setting in Neutron '
-                          'restricts usage of this property to administrative '
-                          'users only.'),
+            _('The ID of the l3-agent to schedule the router. Note that the '
+              'default policy setting in Neutron restricts usage of this '
+              'property to administrative users only.'),
             required=True
-        )
+        ),
     }
 
     def handle_create(self):
-        router_id = self.properties['router_id']
-        l3_agent_id = self.properties['l3_agent_id']
+        router_id = self.properties[self.ROUTER_ID]
+        l3_agent_id = self.properties[self.L3_AGENT_ID]
         self.neutron().add_router_to_l3_agent(
             l3_agent_id, {'router_id': router_id})
         self.resource_id_set('%(rtr)s:%(agt)s' %

@@ -16,6 +16,7 @@
 from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine.resources.neutron import neutron
+from heat.engine import properties
 from heat.engine import scheduler
 
 if clients.neutronclient is not None:
@@ -25,46 +26,50 @@ logger = logging.getLogger(__name__)
 
 
 class Net(neutron.NeutronResource):
+    PROPERTIES = (
+        NAME, VALUE_SPECS, ADMIN_STATE_UP, TENANT_ID, SHARED,
+    ) = (
+        'name', 'value_specs', 'admin_state_up', 'tenant_id', 'shared',
+    )
+
     properties_schema = {
-        'name': {
-            'Type': 'String',
-            'Description': _('A string specifying a symbolic name for '
-                             'the network, which is not required to be '
-                             'unique.'),
-            'UpdateAllowed': True
-        },
-        'value_specs': {
-            'Type': 'Map',
-            'Default': {},
-            'Description': _('Extra parameters to include in the "network" '
-                             'object in the creation request. Parameters '
-                             'are often specific to installed hardware or '
-                             'extensions.'),
-            'UpdateAllowed': True
-        },
-        'admin_state_up': {
-            'Default': True,
-            'Type': 'Boolean',
-            'Description': _('A boolean value specifying the administrative '
-                             'status of the network.'),
-            'UpdateAllowed': True
-        },
-        'tenant_id': {
-            'Type': 'String',
-            'Description': _('The ID of the tenant which will own the '
-                             'network. Only administrative users can set '
-                             'the tenant identifier; this cannot be changed '
-                             'using authorization policies.')
-        },
-        'shared': {
-            'Type': 'Boolean',
-            'Description': _('Whether this network should be shared across '
-                             'all tenants. Note that the default policy '
-                             'setting restricts usage of this attribute to '
-                             'administrative users only.'),
-            'UpdateAllowed': True,
-            'Default': False
-        }}
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('A string specifying a symbolic name for the network, which is '
+              'not required to be unique.'),
+            update_allowed=True
+        ),
+        VALUE_SPECS: properties.Schema(
+            properties.Schema.MAP,
+            _('Extra parameters to include in the "network" object in the '
+              'creation request. Parameters are often specific to installed '
+              'hardware or extensions.'),
+            default={},
+            update_allowed=True
+        ),
+        ADMIN_STATE_UP: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('A boolean value specifying the administrative status of the '
+              'network.'),
+            default=True,
+            update_allowed=True
+        ),
+        TENANT_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The ID of the tenant which will own the network. Only '
+              'administrative users can set the tenant identifier; this '
+              'cannot be changed using authorization policies.')
+        ),
+        SHARED: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Whether this network should be shared across all tenants. '
+              'Note that the default policy setting restricts usage of this '
+              'attribute to administrative users only.'),
+            default=False,
+            update_allowed=True
+        ),
+    }
+
     attributes_schema = {
         "status": _("The status of the network."),
         "name": _("The name of the network."),
@@ -117,28 +122,33 @@ class Net(neutron.NeutronResource):
 
 
 class NetDHCPAgent(neutron.NeutronResource):
+    PROPERTIES = (
+        NETWORK_ID, DHCP_AGENT_ID,
+    ) = (
+        'network_id', 'dhcp_agent_id',
+    )
+
     properties_schema = {
-        'network_id': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('The ID of the network you want to be scheduled '
-                             'by the dhcp_agent. Note that the default policy '
-                             'setting in Neutron restricts usage of this '
-                             'property to administrative users only.'),
-        },
-        'dhcp_agent_id': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('The ID of the dhcp-agent to schedule '
-                             'the network. Note that the default policy '
-                             'setting in Neutron restricts usage of this '
-                             'property to administrative users only.'),
-        }
+        NETWORK_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The ID of the network you want to be scheduled by the '
+              'dhcp_agent. Note that the default policy setting in Neutron '
+              'restricts usage of this property to administrative users '
+              'only.'),
+            required=True
+        ),
+        DHCP_AGENT_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The ID of the dhcp-agent to schedule the network. Note that '
+              'the default policy setting in Neutron restricts usage of this '
+              'property to administrative users only.'),
+            required=True
+        ),
     }
 
     def handle_create(self):
-        network_id = self.properties['network_id']
-        dhcp_agent_id = self.properties['dhcp_agent_id']
+        network_id = self.properties[self.NETWORK_ID]
+        dhcp_agent_id = self.properties[self.DHCP_AGENT_ID]
         self.neutron().add_network_to_dhcp_agent(
             dhcp_agent_id, {'network_id': network_id})
         self.resource_id_set('%(net)s:%(agt)s' %
