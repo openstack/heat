@@ -147,9 +147,8 @@ class Server(resource.Resource):
             'Type': 'Map',
             'UpdateAllowed': True,
             'Description': _('Arbitrary key/value metadata to store for this '
-                             'server. A maximum of five entries is allowed, '
-                             'and both keys and values must be 255 characters '
-                             'or less.')},
+                             'server.  Both keys and values must be 255 '
+                             'characters or less.')},
         'user_data_format': {
             'Type': 'String',
             'Default': 'HEAT_CFNTOOLS',
@@ -493,6 +492,18 @@ class Server(resource.Resource):
                               'property instead.'
                               '') % dict(network=network['network'],
                                          server=self.name))
+
+        # verify that the number of metadata entries is not greater
+        # than the maximum number allowed in the provider's absolute
+        # limits
+        metadata = self.properties.get('metadata')
+        if metadata is not None:
+            limits = nova_utils.absolute_limits(self.nova())
+            if len(metadata) > limits['maxServerMeta']:
+                msg = _('Instance metadata must not contain greater than %s '
+                        'entries.  This is the maximum number allowed by your '
+                        'service provider') % limits['maxServerMeta']
+                raise exception.StackValidationFailed(message=msg)
 
     def handle_delete(self):
         '''
