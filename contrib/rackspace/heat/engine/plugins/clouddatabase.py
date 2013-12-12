@@ -40,6 +40,8 @@ else:
 
 from heat.common import exception
 from heat.openstack.common import log as logging
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 
 logger = logging.getLogger(__name__)
@@ -49,83 +51,105 @@ class CloudDBInstance(resource.Resource):
     '''
     Rackspace cloud database resource.
     '''
-    database_schema = {
-        "Character_set": {
-            "Type": "String",
-            "Default": "utf8",
-            "Required": False
-        },
-        "Collate": {
-            "Type": "String",
-            "Default": "utf8_general_ci",
-            "Required": False
-        },
-        "Name": {
-            "Type": "String",
-            "Required": True,
-            "MaxLength": "64",
-            "AllowedPattern": "[a-zA-Z0-9_]+[a-zA-Z0-9_@?#\s]*[a-zA-Z0-9_]+"
-        }
-    }
 
-    user_schema = {
-        "Name": {
-            "Type": "String",
-            "Required": True,
-            "MaxLength": "16",
-            "AllowedPattern": "[a-zA-Z0-9_]+[a-zA-Z0-9_@?#\s]*[a-zA-Z0-9_]+"
-        },
-        "Password": {
-            "Type": "String",
-            "Required": True,
-            "AllowedPattern": "[a-zA-Z0-9_]+[a-zA-Z0-9_@?#\s]*[a-zA-Z0-9_]+"
-        },
-        "Host": {
-            "Type": "String",
-            "Default": "%"
-        },
-        "Databases": {
-            "Type": "List",
-            "Required": True
-        }
-    }
+    PROPERTIES = (
+        INSTANCE_NAME, FLAVOR_REF, VOLUME_SIZE, DATABASES, USERS,
+    ) = (
+        'InstanceName', 'FlavorRef', 'VolumeSize', 'Databases', 'Users',
+    )
+
+    _DATABASE_KEYS = (
+        DATABASE_CHARACTER_SET, DATABASE_COLLATE, DATABASE_NAME,
+    ) = (
+        'Character_set', 'Collate', 'Name',
+    )
+
+    _USER_KEYS = (
+        USER_NAME, USER_PASSWORD, USER_HOST, USER_DATABASES,
+    ) = (
+        'Name', 'Password', 'Host', 'Databases',
+    )
 
     properties_schema = {
-        "InstanceName": {
-            "Type": "String",
-            "Required": True,
-            "MaxLength": "255"
-        },
-
-        "FlavorRef": {
-            "Type": "String",
-            "Required": True
-        },
-
-        "VolumeSize": {
-            "Type": "Number",
-            "MinValue": 1,
-            "MaxValue": 150,
-            "Required": True
-        },
-
-        "Databases": {
-            'Type': 'List',
-            'Required': False,
-            'Schema': {
-                'Type': 'Map',
-                'Schema': database_schema
-            }
-        },
-
-        "Users": {
-            'Type': 'List',
-            'Required': False,
-            'Schema': {
-                'Type': 'Map',
-                'Schema': user_schema
-            }
-        },
+        INSTANCE_NAME: properties.Schema(
+            properties.Schema.STRING,
+            required=True,
+            constraints=[
+                constraints.Length(max=255),
+            ]
+        ),
+        FLAVOR_REF: properties.Schema(
+            properties.Schema.STRING,
+            required=True
+        ),
+        VOLUME_SIZE: properties.Schema(
+            properties.Schema.NUMBER,
+            required=True,
+            constraints=[
+                constraints.Range(1, 150),
+            ]
+        ),
+        DATABASES: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    DATABASE_CHARACTER_SET: properties.Schema(
+                        properties.Schema.STRING,
+                        default='utf8'
+                    ),
+                    DATABASE_COLLATE: properties.Schema(
+                        properties.Schema.STRING,
+                        default='utf8_general_ci'
+                    ),
+                    DATABASE_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True,
+                        constraints=[
+                            constraints.Length(max=64),
+                            constraints.AllowedPattern(r'[a-zA-Z0-9_]+'
+                                                       r'[a-zA-Z0-9_@?#\s]*'
+                                                       r'[a-zA-Z0-9_]+'),
+                        ]
+                    ),
+                },
+            )
+        ),
+        USERS: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    USER_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True,
+                        constraints=[
+                            constraints.Length(max=16),
+                            constraints.AllowedPattern(r'[a-zA-Z0-9_]+'
+                                                       r'[a-zA-Z0-9_@?#\s]*'
+                                                       r'[a-zA-Z0-9_]+'),
+                        ]
+                    ),
+                    USER_PASSWORD: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True,
+                        constraints=[
+                            constraints.AllowedPattern(r'[a-zA-Z0-9_]+'
+                                                       r'[a-zA-Z0-9_@?#\s]*'
+                                                       r'[a-zA-Z0-9_]+'),
+                        ]
+                    ),
+                    USER_HOST: properties.Schema(
+                        properties.Schema.STRING,
+                        default='%'
+                    ),
+                    USER_DATABASES: properties.Schema(
+                        properties.Schema.LIST,
+                        required=True
+                    ),
+                },
+            )
+        ),
     }
 
     attributes_schema = {
@@ -146,11 +170,11 @@ class CloudDBInstance(resource.Resource):
         Create Rackspace Cloud DB Instance.
         '''
         logger.debug("Cloud DB instance handle_create called")
-        self.sqlinstancename = self.properties['InstanceName']
-        self.flavor = self.properties['FlavorRef']
-        self.volume = self.properties['VolumeSize']
-        self.databases = self.properties.get('Databases', None)
-        self.users = self.properties.get('Users', None)
+        self.sqlinstancename = self.properties[self.INSTANCE_NAME]
+        self.flavor = self.properties[self.FLAVOR_REF]
+        self.volume = self.properties[self.VOLUME_SIZE]
+        self.databases = self.properties.get(self.DATABASES, None)
+        self.users = self.properties.get(self.USERS, None)
 
         # create db instance
         logger.info("Creating Cloud DB instance %s" % self.sqlinstancename)
@@ -181,20 +205,22 @@ class CloudDBInstance(resource.Resource):
         # create databases
         for database in self.databases:
             instance.create_database(
-                database['Name'],
-                character_set=database['Character_set'],
-                collate=database['Collate'])
+                database[self.DATABASE_NAME],
+                character_set=database[self.DATABASE_CHARACTER_SET],
+                collate=database[self.DATABASE_COLLATE])
             logger.info("Database %s created on cloud DB instance %s" %
-                        (database['Name'], self.sqlinstancename))
+                        (database[self.DATABASE_NAME], self.sqlinstancename))
 
         # add users
         dbs = []
         for user in self.users:
-            if user['Databases']:
-                dbs = user['Databases']
-            instance.create_user(user['Name'], user['Password'], dbs)
+            if user[self.USER_DATABASES]:
+                dbs = user[self.USER_DATABASES]
+            instance.create_user(user[self.DATABASE_NAME],
+                                 user[self.USER_PASSWORD],
+                                 dbs)
             logger.info("Cloud database user %s created successfully" %
-                        (user['Name']))
+                        (user[self.DATABASE_NAME]))
         return True
 
     def handle_delete(self):
@@ -219,24 +245,25 @@ class CloudDBInstance(resource.Resource):
             return res
 
         # check validity of user and databases
-        users = self.properties.get('Users', None)
+        users = self.properties.get(self.USERS, None)
         if not users:
             return
 
-        databases = self.properties.get('Databases', None)
+        databases = self.properties.get(self.DATABASES, None)
         if not databases:
             return {'Error':
                     'Databases property is required if Users property'
                     ' is provided'}
 
         for user in users:
-            if not user['Databases']:
+            if not user[self.USER_DATABASES]:
                 return {'Error':
                         'Must provide access to at least one database for '
-                        'user %s' % user['Name']}
+                        'user %s' % user[self.DATABASE_NAME]}
 
-            missing_db = [db_name for db_name in user['Databases']
-                          if db_name not in [db['Name'] for db in databases]]
+            db_names = set([db[self.DATABASE_NAME] for db in databases])
+            missing_db = [db_name for db_name in user[self.USER_DATABASES]
+                          if db_name not in db_names]
             if missing_db:
                 return {'Error':
                         'Database %s specified for user does not exist in '

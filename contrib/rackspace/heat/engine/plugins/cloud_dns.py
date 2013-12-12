@@ -25,6 +25,8 @@ else:
         return {'Rackspace::Cloud::DNS': CloudDns}
 
 from heat.common import exception
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common import log as logging
 
@@ -33,93 +35,113 @@ logger = logging.getLogger(__name__)
 
 class CloudDns(resource.Resource):
 
-    record_schema = {
-        'name': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('Specifies the name for the domain or subdomain. '
-                             'Must be a valid domain name.'),
-            'MinLength': 3
-        },
-        'type': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('Specifies the record type.'),
-            'AllowedValues': [
-                'A',
-                'AAAA',
-                'NS',
-                'MX',
-                'CNAME',
-                'TXT',
-                'SRV'
-            ]
-        },
-        'data': {
-            'Type': 'String',
-            'Description': _('Type specific record data'),
-            'Required': True
-        },
-        'ttl': {
-            'Type': 'Integer',
-            'Description': _('How long other servers should cache record'
-                             'data.'),
-            'MinValue': 301,
-            'Default': 3600
-        },
-        'priority': {
-            'Type': 'Integer',
-            'Description': _('Required for MX and SRV records, but forbidden '
-                             'for other record types. If specified, must be '
-                             'an integer from 0 to 65535.'),
-            'MinValue': 0,
-            'MaxValue': 65535
-        },
-        'comment': {
-            'Type': 'String',
-            'Description': _('Optional free form text comment'),
-            'MaxLength': 160
-        }
-    }
+    PROPERTIES = (
+        NAME, EMAIL_ADDRESS, TTL, COMMENT, RECORDS,
+    ) = (
+        'name', 'emailAddress', 'ttl', 'comment', 'records',
+    )
+
+    _RECORD_KEYS = (
+        RECORD_COMMENT, RECORD_NAME, RECORD_DATA, RECORD_PRIORITY, RECORD_TTL,
+        RECORD_TYPE,
+    ) = (
+        'comment', 'name', 'data', 'priority', 'ttl',
+        'type',
+    )
 
     properties_schema = {
-        'name': {
-            'Type': 'String',
-            'Description': _('Specifies the name for the domain or subdomain. '
-                             'Must be a valid domain name.'),
-            'Required': True,
-            'MinLength': 3
-        },
-        'emailAddress': {
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('Email address to use for contacting the domain '
-                             'administrator.'),
-            'Required': True
-        },
-        'ttl': {
-            'Type': 'Integer',
-            'UpdateAllowed': True,
-            'Description': _('How long other servers should cache record'
-                             'data.'),
-            'MinValue': 301,
-            'Default': 3600
-        },
-        'comment': {
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('Optional free form text comment'),
-            'MaxLength': 160
-        },
-        'records': {
-            'Type': 'List',
-            'UpdateAllowed': True,
-            'Description': _('Domain records'),
-            'Schema': {
-                'Type': 'Map',
-                'Schema': record_schema
-            }
-        }
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Specifies the name for the domain or subdomain. Must be a '
+              'valid domain name.'),
+            required=True,
+            constraints=[
+                constraints.Length(min=3),
+            ]
+        ),
+        EMAIL_ADDRESS: properties.Schema(
+            properties.Schema.STRING,
+            _('Email address to use for contacting the domain administrator.'),
+            required=True,
+            update_allowed=True
+        ),
+        TTL: properties.Schema(
+            properties.Schema.INTEGER,
+            _('How long other servers should cache recorddata.'),
+            default=3600,
+            constraints=[
+                constraints.Range(min=301),
+            ],
+            update_allowed=True
+        ),
+        COMMENT: properties.Schema(
+            properties.Schema.STRING,
+            _('Optional free form text comment'),
+            constraints=[
+                constraints.Length(max=160),
+            ],
+            update_allowed=True
+        ),
+        RECORDS: properties.Schema(
+            properties.Schema.LIST,
+            _('Domain records'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    RECORD_COMMENT: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Optional free form text comment'),
+                        constraints=[
+                            constraints.Length(max=160),
+                        ]
+                    ),
+                    RECORD_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Specifies the name for the domain or '
+                          'subdomain. Must be a valid domain name.'),
+                        required=True,
+                        constraints=[
+                            constraints.Length(min=3),
+                        ]
+                    ),
+                    RECORD_DATA: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Type specific record data'),
+                        required=True
+                    ),
+                    RECORD_PRIORITY: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('Required for MX and SRV records, but '
+                          'forbidden for other record types. If '
+                          'specified, must be an integer from 0 to '
+                          '65535.'),
+                        constraints=[
+                            constraints.Range(0, 65535),
+                        ]
+                    ),
+                    RECORD_TTL: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('How long other servers should cache '
+                          'recorddata.'),
+                        default=3600,
+                        constraints=[
+                            constraints.Range(min=301),
+                        ]
+                    ),
+                    RECORD_TYPE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Specifies the record type.'),
+                        required=True,
+                        constraints=[
+                            constraints.AllowedValues(['A', 'AAAA', 'NS',
+                                                       'MX', 'CNAME',
+                                                       'TXT', 'SRV']),
+                        ]
+                    ),
+                },
+            ),
+            update_allowed=True
+        ),
     }
 
     update_allowed_keys = ('Properties',)
@@ -135,10 +157,11 @@ class CloudDns(resource.Resource):
         # synchronous.
         logger.debug("CloudDns handle_create called.")
         args = dict((k, v) for k, v in self.properties.items())
-        for rec in args['records'] or {}:
+        for rec in args[self.RECORDS] or {}:
             # only pop the priority for the correct types
-            if (rec['type'] != 'MX') and (rec['type'] != 'SRV'):
-                rec.pop('priority', None)
+            rec_type = rec[self.RECORD_TYPE]
+            if (rec_type != 'MX') and (rec_type != 'SRV'):
+                rec.pop(self.RECORD_PRIORITY, None)
         dom = self.cloud_dns().create(**args)
         self.resource_id_set(dom.id)
 
@@ -153,7 +176,7 @@ class CloudDns(resource.Resource):
             dom = self.cloud_dns().get(self.resource_id)
 
             # handle records separately
-            records = prop_diff.pop('records', {})
+            records = prop_diff.pop(self.RECORDS, {})
 
             # Handle top level domain properties
             dom.update(**prop_diff)
