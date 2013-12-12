@@ -245,7 +245,7 @@ class NeutronTest(HeatTestCase):
         data = {'admin_state_up': False,
                 'value_specs': vs}
         p = properties.Properties(net.Net.properties_schema, data)
-        self.assertEqual(None, qr.validate_properties(p))
+        self.assertIsNone(qr.validate_properties(p))
 
         vs['shared'] = True
         self.assertEqual('shared not allowed in value_specs',
@@ -263,7 +263,7 @@ class NeutronTest(HeatTestCase):
         vs.pop('tenant_id')
 
         vs['foo'] = '1234'
-        self.assertEqual(None, qr.validate_properties(p))
+        self.assertIsNone(qr.validate_properties(p))
 
     def test_prepare_properties(self):
         data = {'admin_state_up': False,
@@ -429,7 +429,7 @@ class NeutronNetTest(HeatTestCase):
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', ref_id)
 
-        self.assertEqual(None, rsrc.FnGetAtt('status'))
+        self.assertIsNone(rsrc.FnGetAtt('status'))
         self.assertEqual('ACTIVE', rsrc.FnGetAtt('status'))
         self.assertRaises(
             exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
@@ -643,8 +643,7 @@ class NeutronSubnetTest(HeatTestCase):
 
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
-        self.assertEqual(None,
-                         rsrc.FnGetAtt('network_id'))
+        self.assertIsNone(rsrc.FnGetAtt('network_id'))
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          rsrc.FnGetAtt('network_id'))
         self.assertEqual('8.8.8.8', rsrc.FnGetAtt('dns_nameservers')[0])
@@ -669,9 +668,9 @@ class NeutronSubnetTest(HeatTestCase):
         }
         rsrc.handle_update(update_snippet, {}, {})
 
-        self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.m.VerifyAll()
 
     def test_subnet_disable_dhcp(self):
@@ -741,7 +740,7 @@ class NeutronSubnetTest(HeatTestCase):
 
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
-        self.assertEqual(False, rsrc.FnGetAtt('enable_dhcp'))
+        self.assertIs(False, rsrc.FnGetAtt('enable_dhcp'))
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
@@ -937,8 +936,7 @@ class NeutronRouterTest(HeatTestCase):
 
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8', ref_id)
-        self.assertEqual(None,
-                         rsrc.FnGetAtt('tenant_id'))
+        self.assertIsNone(rsrc.FnGetAtt('tenant_id'))
         self.assertEqual('3e21026f2dc94372b105808c0e721661',
                          rsrc.FnGetAtt('tenant_id'))
 
@@ -951,9 +949,9 @@ class NeutronRouterTest(HeatTestCase):
         }
         rsrc.handle_update(update_snippet, {}, {})
 
-        self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
-        self.assertEqual(scheduler.TaskRunner(rsrc.delete)(), None)
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.m.VerifyAll()
 
     def test_router_interface(self):
@@ -1069,13 +1067,13 @@ class NeutronRouterTest(HeatTestCase):
             'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
         stack = utils.parse_stack(t)
         res = router.RouterInterface('router_interface', json, stack)
-        self.assertEqual(None, res.validate())
+        self.assertIsNone(res.validate())
         json['Properties'] = {
             'router_id': 'ae478782-53c0-4434-ab16-49900c88016c',
             'subnet_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
         stack = utils.parse_stack(t)
         res = router.RouterInterface('router_interface', json, stack)
-        self.assertEqual(None, res.validate())
+        self.assertIsNone(res.validate())
         json['Properties'] = {
             'router_id': 'ae478782-53c0-4434-ab16-49900c88016c'}
         stack = utils.parse_stack(t)
@@ -1275,7 +1273,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         fip_id = fip.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', fip_id)
 
-        self.assertEqual(None, fip.FnGetAtt('show'))
+        self.assertIsNone(fip.FnGetAtt('show'))
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                          fip.FnGetAtt('show')['id'])
         try:
@@ -1356,7 +1354,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         port_id = p.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', port_id)
 
-        self.assertEqual(None, p.FnGetAtt('status'))
+        self.assertIsNone(p.FnGetAtt('status'))
         self.assertEqual('ACTIVE', p.FnGetAtt('status'))
         self.assertRaises(
             exception.InvalidTemplateAttribute, p.FnGetAtt, 'Foo')
@@ -1485,7 +1483,7 @@ class NeutronFloatingIPTest(HeatTestCase):
         p.state_set(p.CREATE, p.COMPLETE, 'to delete again')
 
         scheduler.TaskRunner(fipa.delete)()
-        self.assertEqual(scheduler.TaskRunner(p.delete)(), None)
+        self.assertIsNone(scheduler.TaskRunner(p.delete)())
         scheduler.TaskRunner(fip.delete)()
 
         self.m.VerifyAll()

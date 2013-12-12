@@ -84,7 +84,7 @@ class InstanceGroupTest(HeatTestCase):
         # subsequent resources may need to reference previous created resources
         # use the stack's resource objects instead of instantiating new ones
         rsrc = stack[resource_name]
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
@@ -191,8 +191,8 @@ class InstanceGroupTest(HeatTestCase):
         update_snippet['Properties']['Size'] = '5'
         tmpl_diff = {'Properties': {'Size': '5'}}
         prop_diff = {'Size': '5'}
-        self.assertEqual(None, rsrc.handle_update(update_snippet, tmpl_diff,
-                         prop_diff))
+        self.assertIsNone(rsrc.handle_update(update_snippet, tmpl_diff,
+                                             prop_diff))
         self.assertEqual('10.0.0.2,10.0.0.3,10.0.0.4,10.0.0.5,10.0.0.6',
                          rsrc.FnGetAtt('InstanceList'))
 

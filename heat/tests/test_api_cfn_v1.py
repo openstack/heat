@@ -100,7 +100,7 @@ class CfnStackControllerTest(HeatTestCase):
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'ListStacks')
         response = self.controller._enforce(dummy_req, 'ListStacks')
-        self.assertEqual(response, None)
+        self.assertIsNone(response)
 
     def test_enforce_denied(self):
         self.m.ReplayAll()

@@ -113,7 +113,7 @@ class LoguserdataTest(HeatTestCase):
                 OSError(errno.ENOEXEC, "empty script"))
 
         self.m.ReplayAll()
-        self.assertEqual(None, loguserdata.main())
+        self.assertIsNone(loguserdata.main())
 
         self.m.VerifyAll()
 

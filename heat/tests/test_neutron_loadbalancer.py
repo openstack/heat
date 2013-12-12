@@ -205,7 +205,7 @@ class HealthMonitorTest(HeatTestCase):
             {'health_monitor': {'admin_state_up': True, 'delay': 3}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(True, rsrc.FnGetAtt('admin_state_up'))
+        self.assertIs(True, rsrc.FnGetAtt('admin_state_up'))
         self.assertEqual(3, rsrc.FnGetAtt('delay'))
         self.m.VerifyAll()
 
@@ -473,7 +473,7 @@ class PoolTest(HeatTestCase):
             {'pool': {'admin_state_up': True, 'lb_method': 'ROUND_ROBIN'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(True, rsrc.FnGetAtt('admin_state_up'))
+        self.assertIs(True, rsrc.FnGetAtt('admin_state_up'))
         self.assertEqual('ROUND_ROBIN', rsrc.FnGetAtt('lb_method'))
         self.m.VerifyAll()
 
@@ -619,7 +619,7 @@ class PoolMemberTest(HeatTestCase):
             {'member': {'admin_state_up': True, 'weight': 5}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(True, rsrc.FnGetAtt('admin_state_up'))
+        self.assertIs(True, rsrc.FnGetAtt('admin_state_up'))
         self.assertEqual(5, rsrc.FnGetAtt('weight'))
         self.m.VerifyAll()
 

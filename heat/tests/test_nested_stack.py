@@ -199,7 +199,7 @@ Outputs:
         prop_diff = {'TemplateURL': 'https://server.test/new.template'}
         updater = rsrc.handle_update(new_res, {}, prop_diff)
         updater.run_to_completion()
-        self.assertEqual(True, rsrc.check_update_complete(updater))
+        self.assertIs(True, rsrc.check_update_complete(updater))
 
         # Expect the physical resource name staying the same after update,
         # so that the nested was actually updated instead of replaced.
@@ -255,7 +255,7 @@ Outputs:
         prop_diff = {'TemplateURL': 'https://server.test/new.template'}
         updater = rsrc.handle_update(new_res, {}, prop_diff)
         updater.run_to_completion()
-        self.assertEqual(True, rsrc.check_update_complete(updater))
+        self.assertIs(True, rsrc.check_update_complete(updater))
 
         self.assertEqual('foo', rsrc.FnGetAtt('Outputs.Bar'))
 

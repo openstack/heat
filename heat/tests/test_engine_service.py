@@ -270,7 +270,7 @@ class StackCreateTest(HeatTestCase):
         stack.store()
         stack.create()
 
-        self.assertNotEqual(stack['WebServer'], None)
+        self.assertIsNotNone(stack['WebServer'])
         self.assertTrue(stack['WebServer'].resource_id > 0)
         self.assertNotEqual(stack['WebServer'].ipaddress, '0.0.0.0')
 
@@ -283,9 +283,9 @@ class StackCreateTest(HeatTestCase):
         stack.create()
 
         db_s = db_api.stack_get(ctx, stack_id)
-        self.assertNotEqual(db_s, None)
+        self.assertIsNotNone(db_s)
 
-        self.assertNotEqual(stack['WebServer'], None)
+        self.assertIsNotNone(stack['WebServer'])
         self.assertTrue(stack['WebServer'].resource_id > 0)
 
         self.m.StubOutWithMock(fc.client, 'get_servers_9999')
@@ -297,7 +297,7 @@ class StackCreateTest(HeatTestCase):
         rsrc = stack['WebServer']
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual((stack.DELETE, stack.COMPLETE), rsrc.state)
-        self.assertEqual(None, db_api.stack_get(ctx, stack_id))
+        self.assertIsNone(db_api.stack_get(ctx, stack_id))
         self.assertEqual('DELETE', db_s.action)
         self.assertEqual('COMPLETE', db_s.status, )
 
@@ -548,8 +548,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         self.m.ReplayAll()
 
-        self.assertEqual(None,
-                         self.man.delete_stack(self.ctx, stack.identifier()))
+        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
         self.m.VerifyAll()
 
     def test_stack_delete_nonexist(self):
@@ -888,7 +887,7 @@ class StackServiceSuspendResumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.man.stack_suspend(self.ctx, stack.identifier())
-        self.assertEqual(None, result)
+        self.assertIsNone(result)
 
         self.m.VerifyAll()
 
@@ -908,7 +907,7 @@ class StackServiceSuspendResumeTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.man.stack_resume(self.ctx, self.stack.identifier())
-        self.assertEqual(None, result)
+        self.assertIsNone(result)
         self.m.VerifyAll()
 
     def test_stack_suspend_nonexist(self):
@@ -990,7 +989,7 @@ class StackServiceTest(HeatTestCase):
                          db_api.stack_get_by_name(self.ctx,
                                                   self.stack.name).id)
         ctx2 = utils.dummy_context(tenant_id='stack_service_test_tenant2')
-        self.assertEqual(None, db_api.stack_get_by_name(ctx2, self.stack.name))
+        self.assertIsNone(db_api.stack_get_by_name(ctx2, self.stack.name))
 
     @stack_context('service_event_list_test_stack')
     def test_stack_event_list(self):
@@ -1161,7 +1160,7 @@ class StackServiceTest(HeatTestCase):
             self.assertIn('creation_time', s)
             self.assertIn('updated_time', s)
             self.assertIn('stack_identity', s)
-            self.assertNotEqual(s['stack_identity'], None)
+            self.assertIsNotNone(s['stack_identity'])
             self.assertIn('stack_name', s)
             self.assertEqual(self.stack.name, s['stack_name'])
             self.assertIn('stack_status', s)
@@ -1262,7 +1261,7 @@ class StackServiceTest(HeatTestCase):
         self.assertIn('creation_time', s)
         self.assertIn('updated_time', s)
         self.assertIn('stack_identity', s)
-        self.assertNotEqual(s['stack_identity'], None)
+        self.assertIsNotNone(s['stack_identity'])
         self.assertIn('stack_name', s)
         self.assertEqual(self.stack.name, s['stack_name'])
         self.assertIn('stack_status', s)
@@ -1283,7 +1282,7 @@ class StackServiceTest(HeatTestCase):
         self.assertIn('creation_time', s)
         self.assertIn('updated_time', s)
         self.assertIn('stack_identity', s)
-        self.assertNotEqual(s['stack_identity'], None)
+        self.assertIsNotNone(s['stack_identity'])
         self.assertIn('stack_name', s)
         self.assertEqual(self.stack.name, s['stack_name'])
         self.assertIn('stack_status', s)
@@ -1336,7 +1335,7 @@ class StackServiceTest(HeatTestCase):
         self.assertIn('description', r)
         self.assertIn('updated_time', r)
         self.assertIn('stack_identity', r)
-        self.assertNotEqual(r['stack_identity'], None)
+        self.assertIsNotNone(r['stack_identity'])
         self.assertIn('stack_name', r)
         self.assertEqual(self.stack.name, r['stack_name'])
         self.assertIn('metadata', r)
@@ -1439,7 +1438,7 @@ class StackServiceTest(HeatTestCase):
         self.assertIn('description', r)
         self.assertIn('updated_time', r)
         self.assertIn('stack_identity', r)
-        self.assertNotEqual(r['stack_identity'], None)
+        self.assertIsNotNone(r['stack_identity'])
         self.assertIn('stack_name', r)
         self.assertEqual(self.stack.name, r['stack_name'])
         self.assertIn('resource_status', r)
@@ -1782,7 +1781,7 @@ class StackServiceTest(HeatTestCase):
 
         # And add a metric datapoint
         watch = db_api.watch_rule_get_by_name(self.ctx, 'show_watch_metric_1')
-        self.assertNotEqual(watch, None)
+        self.assertIsNotNone(watch)
         values = {'watch_rule_id': watch.id,
                   'data': {u'Namespace': u'system/linux',
                            u'ServiceFailure': {
@@ -1943,8 +1942,8 @@ class StackServiceTest(HeatTestCase):
         stack = parser.Stack(self.ctx, stack_name, templ,
                              environment.Environment({}))
 
-        self.assertEqual(stack._resources, None)
-        self.assertEqual(stack._dependencies, None)
+        self.assertIsNone(stack._resources)
+        self.assertIsNone(stack._dependencies)
 
         resources = stack.resources
         self.assertEqual(type(resources), dict)

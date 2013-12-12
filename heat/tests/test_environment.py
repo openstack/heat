@@ -101,9 +101,8 @@ class EnvironmentTest(common.HeatTestCase):
             u'OS::Networking::FloatingIP': 'ip.yaml'}}}}
 
         env = environment.Environment()
-        self.assertEqual(None,
-                         env.get_resource_info('OS::Networking::FloatingIP',
-                                               'my_fip'))
+        self.assertIsNone(env.get_resource_info('OS::Networking::FloatingIP',
+                                                'my_fip'))
 
         env.load(new_env)
         self.assertEqual('ip.yaml',
@@ -266,8 +265,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         resources._load_all(g_env)
 
         # 3. assert our resource is in now gone.
-        self.assertEqual(None,
-                         g_env.get_resource_info('OS::Nova::Server'))
+        self.assertIsNone(g_env.get_resource_info('OS::Nova::Server'))
 
         # 4. make sure we haven't removed something we shouldn't have
         self.assertEqual(resources.instance.Instance,
@@ -292,8 +290,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         resources._load_all(g_env)
 
         # 3. assert our resources are now gone.
-        self.assertEqual(None,
-                         g_env.get_resource_info('AWS::EC2::Instance'))
+        self.assertIsNone(g_env.get_resource_info('AWS::EC2::Instance'))
 
         # 4. make sure we haven't removed something we shouldn't have
         self.assertEqual(resources.server.Server,

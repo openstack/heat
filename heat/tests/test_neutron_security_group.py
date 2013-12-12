@@ -109,7 +109,7 @@ Resources:
     def create_stack(self, template):
         t = template_format.parse(template)
         self.stack = self.parse_stack(t)
-        self.assertEqual(None, self.stack.create())
+        self.assertIsNone(self.stack.create())
         return self.stack
 
     def parse_stack(self, t):
@@ -120,7 +120,7 @@ Resources:
         return stack
 
     def assertResourceState(self, rsrc, ref_id, metadata={}):
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(ref_id, rsrc.FnGetRefId())
         self.assertEqual(metadata, dict(rsrc.metadata))

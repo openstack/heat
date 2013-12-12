@@ -166,7 +166,7 @@ class EIPTest(HeatTestCase):
         rsrc = eip.ElasticIp(resource_name,
                              t['Resources'][resource_name],
                              stack)
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
@@ -175,7 +175,7 @@ class EIPTest(HeatTestCase):
         rsrc = eip.ElasticIpAssociation(resource_name,
                                         t['Resources'][resource_name],
                                         stack)
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
@@ -318,7 +318,7 @@ class AllocTest(HeatTestCase):
         rsrc = eip.ElasticIp(resource_name,
                              t['Resources'][resource_name],
                              stack)
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
@@ -327,7 +327,7 @@ class AllocTest(HeatTestCase):
         rsrc = eip.ElasticIpAssociation(resource_name,
                                         t['Resources'][resource_name],
                                         stack)
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc

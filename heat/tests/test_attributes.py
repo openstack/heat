@@ -58,7 +58,7 @@ class AttributesTest(common.HeatTestCase):
         attribs = attributes.Attributes('test resource',
                                         self.attributes_schema,
                                         test_resolver)
-        self.assertEqual(None, attribs['test1'])
+        self.assertIsNone(attribs['test1'])
 
     def test_get_attribute_nonexist(self):
         """Test that we get the attribute values we expect."""

@@ -292,7 +292,7 @@ class InstancesTest(HeatTestCase):
         uuidutils.is_uuid_like('1').AndReturn(True)
         self.m.ReplayAll()
 
-        self.assertEqual(instance.validate(), None)
+        self.assertIsNone(instance.validate())
 
         self.m.VerifyAll()
 
@@ -311,7 +311,7 @@ class InstancesTest(HeatTestCase):
         mox.Replay(get)
 
         scheduler.TaskRunner(instance.delete)()
-        self.assertTrue(instance.resource_id is None)
+        self.assertIsNone(instance.resource_id)
         self.assertEqual(instance.state, (instance.DELETE, instance.COMPLETE))
         self.m.VerifyAll()
 
@@ -641,8 +641,8 @@ class InstancesTest(HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'build_nics')
 
-        self.assertEqual(None, instance._build_nics([]))
-        self.assertEqual(None, instance._build_nics(None))
+        self.assertIsNone(instance._build_nics([]))
+        self.assertIsNone(instance._build_nics(None))
         self.assertEqual([
             {'port-id': 'id3'}, {'port-id': 'id1'}, {'port-id': 'id2'}],
             instance._build_nics([

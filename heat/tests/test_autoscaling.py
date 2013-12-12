@@ -136,20 +136,20 @@ class AutoScalingTest(HeatTestCase):
     def create_scaling_group(self, t, stack, resource_name):
         # create the launch configuration resource
         conf = stack['LaunchConfig']
-        self.assertEqual(None, conf.validate())
+        self.assertIsNone(conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
 
         # create the group resource
         rsrc = stack[resource_name]
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def create_scaling_policy(self, t, stack, resource_name):
         rsrc = stack[resource_name]
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
@@ -211,7 +211,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(0)
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
-        self.assertEqual(None, rsrc.FnGetAtt("InstanceList"))
+        self.assertIsNone(rsrc.FnGetAtt("InstanceList"))
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -498,12 +498,12 @@ class AutoScalingTest(HeatTestCase):
         self.m.ReplayAll()
 
         conf = stack['LaunchConfig']
-        self.assertEqual(None, conf.validate())
+        self.assertIsNone(conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
 
         rsrc = stack['WebServerGroup']
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(rsrc.create))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
@@ -619,7 +619,7 @@ class AutoScalingTest(HeatTestCase):
         del(update_snippet['Properties']['DesiredCapacity'])
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual(instance_names, rsrc.get_instance_names())
-        self.assertEqual(None, rsrc.properties['DesiredCapacity'])
+        self.assertIsNone(rsrc.properties['DesiredCapacity'])
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -1109,7 +1109,7 @@ class AutoScalingTest(HeatTestCase):
                                                'WebServerScaleUpPolicy')
 
         alarm_url = up_policy.FnGetAtt('AlarmUrl')
-        self.assertNotEqual(None, alarm_url)
+        self.assertIsNotNone(alarm_url)
         up_policy.signal()
         self.assertEqual(len(rsrc.get_instance_names()), 2)
 

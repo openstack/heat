@@ -117,7 +117,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc = lb.LoadBalancer(resource_name,
                                t['Resources'][resource_name],
                                stack)
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
@@ -169,7 +169,7 @@ class LoadBalancerTest(HeatTestCase):
             'Interval': '30',
             'Timeout': '5'}
         rsrc.t['Properties']['HealthCheck'] = hc
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
 
         hc['Timeout'] = 35
         self.assertEqual(
@@ -204,7 +204,7 @@ class LoadBalancerTest(HeatTestCase):
         except exception.InvalidTemplateAttribute:
             pass
 
-        self.assertEqual(None, rsrc.handle_update({}, {}, {}))
+        self.assertIsNone(rsrc.handle_update({}, {}, {}))
 
         self.m.VerifyAll()
 

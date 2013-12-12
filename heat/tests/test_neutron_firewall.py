@@ -189,7 +189,7 @@ class FirewallTest(HeatTestCase):
                           'firewall_policy_id': 'policy-id'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(True, rsrc.FnGetAtt('admin_state_up'))
+        self.assertIs(True, rsrc.FnGetAtt('admin_state_up'))
         self.assertEqual('policy-id', rsrc.FnGetAtt('firewall_policy_id'))
         self.m.VerifyAll()
 
@@ -319,8 +319,8 @@ class FirewallPolicyTest(HeatTestCase):
             {'firewall_policy': {'audited': True, 'shared': True}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(True, rsrc.FnGetAtt('audited'))
-        self.assertEqual(True, rsrc.FnGetAtt('shared'))
+        self.assertIs(True, rsrc.FnGetAtt('audited'))
+        self.assertIs(True, rsrc.FnGetAtt('shared'))
         self.m.VerifyAll()
 
     def test_attribute_failed(self):
@@ -452,7 +452,7 @@ class FirewallRuleTest(HeatTestCase):
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual('tcp', rsrc.FnGetAtt('protocol'))
-        self.assertEqual(True, rsrc.FnGetAtt('shared'))
+        self.assertIs(True, rsrc.FnGetAtt('shared'))
         self.m.VerifyAll()
 
     def test_attribute_failed(self):

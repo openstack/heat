@@ -249,7 +249,7 @@ class WaitCondMetadataUpdateTest(HeatTestCase):
 
         def check_empty(sleep_time):
             self.assertEqual(watch.FnGetAtt('Data'), '{}')
-            self.assertEqual(inst.metadata['test'], None)
+            self.assertIsNone(inst.metadata['test'])
 
         def update_metadata(id, data, reason):
             self.man.metadata_update(utils.dummy_context(),

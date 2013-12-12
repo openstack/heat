@@ -59,7 +59,7 @@ class CloudWatchAlarmTest(HeatTestCase):
         rsrc = cloud_watch.CloudWatchAlarm(resource_name,
                                            t['Resources'][resource_name],
                                            stack)
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc

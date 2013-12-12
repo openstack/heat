@@ -2559,7 +2559,7 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
                                         stack_name=stack_identity.stack_name,
                                         stack_id=stack_identity.stack_id,
                                         body=body)
-        self.assertEqual(result, None)
+        self.assertIsNone(result)
         self.m.VerifyAll()
 
     def test_action_resume(self):
@@ -2583,7 +2583,7 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
                                         stack_name=stack_identity.stack_name,
                                         stack_id=stack_identity.stack_id,
                                         body=body)
-        self.assertEqual(result, None)
+        self.assertIsNone(result)
         self.m.VerifyAll()
 
     def test_action_badaction(self):
