@@ -15,6 +15,8 @@
 
 from heat.common import exception
 from heat.engine import watchrule
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine.properties import Properties
 
@@ -24,113 +26,116 @@ logger = logging.getLogger(__name__)
 
 
 class CloudWatchAlarm(resource.Resource):
+    PROPERTIES = (
+        COMPARISON_OPERATOR, ALARM_DESCRIPTION, EVALUATION_PERIODS,
+        METRIC_NAME, NAMESPACE, PERIOD, STATISTIC, ALARM_ACTIONS,
+        OKACTIONS, DIMENSIONS, INSUFFICIENT_DATA_ACTIONS, THRESHOLD,
+        UNITS,
+    ) = (
+        'ComparisonOperator', 'AlarmDescription', 'EvaluationPeriods',
+        'MetricName', 'Namespace', 'Period', 'Statistic', 'AlarmActions',
+        'OKActions', 'Dimensions', 'InsufficientDataActions', 'Threshold',
+        'Units',
+    )
+
     properties_schema = {
-        'ComparisonOperator': {
-            'Type': 'String',
-            'AllowedValues': ['GreaterThanOrEqualToThreshold',
-                              'GreaterThanThreshold',
-                              'LessThanThreshold',
-                              'LessThanOrEqualToThreshold'],
-            'Description': _('Operator used to compare the specified '
-                             'Statistic with Threshold.'),
-            'UpdateAllowed': True,
-        },
-        'AlarmDescription': {
-            'Type': 'String',
-            'Description': _('Description for the alarm.'),
-            'UpdateAllowed': True,
-        },
-        'EvaluationPeriods': {
-            'Type': 'String',
-            'Description': _('Number of periods to evaluate over.'),
-            'UpdateAllowed': True,
-        },
-        'MetricName': {
-            'Type': 'String',
-            'Description': _('Metric name watched by the alarm.')
-        },
-        'Namespace': {
-            'Type': 'String',
-            'Description': _('Namespace for the metric.')
-        },
-        'Period': {
-            'Type': 'String',
-            'Description': _('Period (seconds) to evaluate over.'),
-            'UpdateAllowed': True,
-        },
-        'Statistic': {
-            'Type': 'String',
-            'AllowedValues': ['SampleCount',
-                              'Average',
-                              'Sum',
-                              'Minimum',
-                              'Maximum'],
-            'Description': _('Metric statistic to evaluate.'),
-            'UpdateAllowed': True,
-        },
-        'AlarmActions': {
-            'Type': 'List',
-            'Description': _('A list of actions to execute when state '
-                             'transitions to alarm.'),
-            'UpdateAllowed': True,
-        },
-        'OKActions': {
-            'Type': 'List',
-            'Description': _('A list of actions to execute when state '
-                             'transitions to ok.'),
-            'UpdateAllowed': True,
-        },
-        'Dimensions': {
-            'Type': 'List',
-            'Description': _('A list of dimensions (arbitrary name/value '
-                             'pairs) associated with the metric.')
-        },
-        'InsufficientDataActions': {
-            'Type': 'List',
-            'Description': _('A list of actions to execute when state '
-                             'transitions to insufficient-data.'),
-            'UpdateAllowed': True,
-        },
-        'Threshold': {
-            'Type': 'String',
-            'Description': _('Threshold to evaluate against.'),
-            'UpdateAllowed': True,
-        },
-        'Units': {
-            'Type': 'String',
-            'AllowedValues': ['Seconds',
-                              'Microseconds',
-                              'Milliseconds',
-                              'Bytes',
-                              'Kilobytes',
-                              'Megabytes',
-                              'Gigabytes',
-                              'Terabytes',
-                              'Bits',
-                              'Kilobits',
-                              'Megabits',
-                              'Gigabits',
-                              'Terabits',
-                              'Percent',
-                              'Count',
-                              'Bytes/Second',
-                              'Kilobytes/Second',
-                              'Megabytes/Second',
-                              'Gigabytes/Second',
-                              'Terabytes/Second',
-                              'Bits/Second',
-                              'Kilobits/Second',
-                              'Megabits/Second',
-                              'Gigabits/Second',
-                              'Terabits/Second',
-                              'Count/Second',
-                              None],
-            'Description': _('Unit for the metric.'),
-            'UpdateAllowed': True,
-        }
+        COMPARISON_OPERATOR: properties.Schema(
+            properties.Schema.STRING,
+            _('Operator used to compare the specified Statistic with '
+              'Threshold.'),
+            constraints=[
+                constraints.AllowedValues(['GreaterThanOrEqualToThreshold',
+                                           'GreaterThanThreshold',
+                                           'LessThanThreshold',
+                                           'LessThanOrEqualToThreshold']),
+            ],
+            update_allowed=True
+        ),
+        ALARM_DESCRIPTION: properties.Schema(
+            properties.Schema.STRING,
+            _('Description for the alarm.'),
+            update_allowed=True
+        ),
+        EVALUATION_PERIODS: properties.Schema(
+            properties.Schema.STRING,
+            _('Number of periods to evaluate over.'),
+            update_allowed=True
+        ),
+        METRIC_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Metric name watched by the alarm.')
+        ),
+        NAMESPACE: properties.Schema(
+            properties.Schema.STRING,
+            _('Namespace for the metric.')
+        ),
+        PERIOD: properties.Schema(
+            properties.Schema.STRING,
+            _('Period (seconds) to evaluate over.'),
+            update_allowed=True
+        ),
+        STATISTIC: properties.Schema(
+            properties.Schema.STRING,
+            _('Metric statistic to evaluate.'),
+            constraints=[
+                constraints.AllowedValues(['SampleCount', 'Average', 'Sum',
+                                           'Minimum', 'Maximum']),
+            ],
+            update_allowed=True
+        ),
+        ALARM_ACTIONS: properties.Schema(
+            properties.Schema.LIST,
+            _('A list of actions to execute when state transitions to alarm.'),
+            update_allowed=True
+        ),
+        OKACTIONS: properties.Schema(
+            properties.Schema.LIST,
+            _('A list of actions to execute when state transitions to ok.'),
+            update_allowed=True
+        ),
+        DIMENSIONS: properties.Schema(
+            properties.Schema.LIST,
+            _('A list of dimensions (arbitrary name/value pairs) associated '
+              'with the metric.')
+        ),
+        INSUFFICIENT_DATA_ACTIONS: properties.Schema(
+            properties.Schema.LIST,
+            _('A list of actions to execute when state transitions to '
+              'insufficient-data.'),
+            update_allowed=True
+        ),
+        THRESHOLD: properties.Schema(
+            properties.Schema.STRING,
+            _('Threshold to evaluate against.'),
+            update_allowed=True
+        ),
+        UNITS: properties.Schema(
+            properties.Schema.STRING,
+            _('Unit for the metric.'),
+            constraints=[
+                constraints.AllowedValues(['Seconds', 'Microseconds',
+                                           'Milliseconds', 'Bytes',
+                                           'Kilobytes', 'Megabytes',
+                                           'Gigabytes', 'Terabytes', 'Bits',
+                                           'Kilobits', 'Megabits',
+                                           'Gigabits', 'Terabits', 'Percent',
+                                           'Count', 'Bytes/Second',
+                                           'Kilobytes/Second',
+                                           'Megabytes/Second',
+                                           'Gigabytes/Second',
+                                           'Terabytes/Second', 'Bits/Second',
+                                           'Kilobits/Second',
+                                           'Megabits/Second',
+                                           'Gigabits/Second',
+                                           'Terabits/Second', 'Count/Second',
+                                           None]),
+            ],
+            update_allowed=True
+        ),
     }
 
     strict_dependency = False
+
     update_allowed_keys = ('Properties',)
 
     def handle_create(self):
