@@ -25,6 +25,7 @@ from heat.engine.resources import instance as instances
 from heat.engine import service
 from heat.openstack.common.importutils import try_import
 from heat.engine import parser
+from heat.engine.hot import HOTemplate
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -537,6 +538,163 @@ test_template_unique_logical_name = '''
     }
     '''
 
+test_template_duplicate_parameters = '''
+# This is a hello world HOT template just defining a single compute instance
+heat_template_version: 2013-05-23
+
+description: >
+  Hello world HOT template that just defines a single compute instance.
+  Contains just base features to verify base HOT support.
+
+parameter_groups:
+  - label: Server Group
+    description: A group of parameters for the server
+    parameters:
+    - InstanceType
+    - KeyName
+    - ImageId
+  - label: Database Group
+    description: A group of parameters for the database
+    parameters:
+    - db_password
+    - db_port
+    - InstanceType
+
+parameters:
+  KeyName:
+    type: string
+    description: Name of an existing key pair to use for the instance
+  InstanceType:
+    type: string
+    description: Instance type for the instance to be created
+    default: m1.small
+    constraints:
+      - allowed_values: [m1.tiny, m1.small, m1.large]
+        description: Value must be one of 'm1.tiny', 'm1.small' or 'm1.large'
+  ImageId:
+    type: string
+    description: ID of the image to use for the instance
+  # parameters below are not used in template, but are for verifying parameter
+  # validation support in HOT
+  db_password:
+    type: string
+    description: Database password
+    hidden: true
+    constraints:
+      - length: { min: 6, max: 8 }
+        description: Password length must be between 6 and 8 characters
+      - allowed_pattern: "[a-zA-Z0-9]+"
+        description: Password must consist of characters and numbers only
+      - allowed_pattern: "[A-Z]+[a-zA-Z0-9]*"
+        description: Password must start with an uppercase character
+  db_port:
+    type: number
+    description: Database port number
+    default: 50000
+    constraints:
+      - range: { min: 40000, max: 60000 }
+        description: Port number must be between 40000 and 60000
+
+resources:
+  my_instance:
+    # Use an AWS resource type since this exists; so why use other name here?
+    type: AWS::EC2::Instance
+    properties:
+      KeyName: { get_param: KeyName }
+      ImageId: { get_param: ImageId }
+      InstanceType: { get_param: InstanceType }
+
+outputs:
+  instance_ip:
+    description: The IP address of the deployed instance
+    value: { get_attr: [my_instance, PublicIp] }
+'''
+
+test_template_invalid_parameter_name = '''
+# This is a hello world HOT template just defining a single compute instance
+heat_template_version: 2013-05-23
+
+description: >
+  Hello world HOT template that just defines a single compute instance.
+  Contains just base features to verify base HOT support.
+
+parameter_groups:
+  - label: Server Group
+    description: A group of parameters for the server
+    parameters:
+    - InstanceType
+    - KeyName
+    - ImageId
+  - label: Database Group
+    description: A group of parameters for the database
+    parameters:
+    - db_password
+    - db_port
+    - SomethingNotHere
+
+parameters:
+  KeyName:
+    type: string
+    description: Name of an existing key pair to use for the instance
+  InstanceType:
+    type: string
+    description: Instance type for the instance to be created
+    default: m1.small
+    constraints:
+      - allowed_values: [m1.tiny, m1.small, m1.large]
+        description: Value must be one of 'm1.tiny', 'm1.small' or 'm1.large'
+  ImageId:
+    type: string
+    description: ID of the image to use for the instance
+  # parameters below are not used in template, but are for verifying parameter
+  # validation support in HOT
+  db_password:
+    type: string
+    description: Database password
+    hidden: true
+    constraints:
+      - length: { min: 6, max: 8 }
+        description: Password length must be between 6 and 8 characters
+      - allowed_pattern: "[a-zA-Z0-9]+"
+        description: Password must consist of characters and numbers only
+      - allowed_pattern: "[A-Z]+[a-zA-Z0-9]*"
+        description: Password must start with an uppercase character
+  db_port:
+    type: number
+    description: Database port number
+    default: 50000
+    constraints:
+      - range: { min: 40000, max: 60000 }
+        description: Port number must be between 40000 and 60000
+
+resources:
+  my_instance:
+    # Use an AWS resource type since this exists; so why use other name here?
+    type: AWS::EC2::Instance
+    properties:
+      KeyName: { get_param: KeyName }
+      ImageId: { get_param: ImageId }
+      InstanceType: { get_param: InstanceType }
+
+outputs:
+  instance_ip:
+    description: The IP address of the deployed instance
+    value: { get_attr: [my_instance, PublicIp] }
+'''
+test_template_no_parameters = '''
+heat_template_version: 2013-05-23
+
+description: >
+  Hello world HOT template that just defines a single compute instance.
+  Contains just base features to verify base HOT support.
+
+parameter_groups:
+  - label: Server Group
+    description: A group of parameters for the server
+  - label: Database Group
+    description: A group of parameters for the database
+'''
+
 
 class validateTest(HeatTestCase):
     def setUp(self):
@@ -849,3 +1007,43 @@ class validateTest(HeatTestCase):
                                                       'KeyName': 'test'}))
 
         self.assertRaises(exception.StackValidationFailed, stack.validate)
+
+    def test_validate_duplicate_parameters_in_group(self):
+        t = template_format.parse(test_template_duplicate_parameters)
+        template = HOTemplate(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({
+                                 'KeyName': 'test',
+                                 'ImageId': 'sometestid',
+                                 'db_password': 'Pass123'
+                             }))
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+
+        self.assertEqual(_('The InstanceType parameter must be assigned to '
+                         'one Parameter Group only.'), str(exc))
+
+    def test_validate_invalid_parameter_in_group(self):
+        t = template_format.parse(test_template_invalid_parameter_name)
+        template = HOTemplate(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template,
+                             environment.Environment({
+                                 'KeyName': 'test',
+                                 'ImageId': 'sometestid',
+                                 'db_password': 'Pass123'}))
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+
+        self.assertEqual(_('The Parameter name (SomethingNotHere) does not '
+                         'reference an existing parameter.'), str(exc))
+
+    def test_validate_no_parameters_in_group(self):
+        t = template_format.parse(test_template_no_parameters)
+        template = HOTemplate(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                stack.validate)
+
+        self.assertEqual(_('Parameters must be provided for each Parameter '
+                         'Group.'), str(exc))
