@@ -28,11 +28,11 @@ class PluginLoaderTest(testtools.TestCase):
 
     def test_create_subpackage_single_path(self):
         pkg_name = 'heat.engine.test_single_path'
-        self.assertFalse(pkg_name in sys.modules)
+        self.assertNotIn(pkg_name, sys.modules)
         pkg = plugin_loader.create_subpackage('/tmp',
                                               'heat.engine',
                                               'test_single_path')
-        self.assertTrue(pkg_name in sys.modules)
+        self.assertIn(pkg_name, sys.modules)
         self.assertEqual(sys.modules[pkg_name], pkg)
         self.assertEqual(pkg.__path__, ['/tmp'])
         self.assertEqual(pkg.__name__, pkg_name)
@@ -40,14 +40,14 @@ class PluginLoaderTest(testtools.TestCase):
     def test_create_subpackage_path_list(self):
         path_list = ['/tmp']
         pkg_name = 'heat.engine.test_path_list'
-        self.assertFalse(pkg_name in sys.modules)
+        self.assertNotIn(pkg_name, sys.modules)
         pkg = plugin_loader.create_subpackage('/tmp',
                                               'heat.engine',
                                               'test_path_list')
-        self.assertTrue(pkg_name in sys.modules)
+        self.assertIn(pkg_name, sys.modules)
         self.assertEqual(sys.modules[pkg_name], pkg)
         self.assertEqual(pkg.__path__, path_list)
-        self.assertFalse(pkg.__path__ is path_list)
+        self.assertNotIn(pkg.__path__, path_list)
         self.assertEqual(pkg.__name__, pkg_name)
 
     def test_import_module_existing(self):

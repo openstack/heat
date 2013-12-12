@@ -144,4 +144,4 @@ class EventTest(HeatTestCase):
         res = generic_rsrc.ResourceWithRequiredProps(rname, tmpl, self.stack)
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
                         'wibble', res.properties, res.name, res.type())
-        self.assertTrue('Error' in e.resource_properties)
+        self.assertIn('Error', e.resource_properties)

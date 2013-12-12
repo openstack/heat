@@ -886,7 +886,7 @@ class StackTest(HeatTestCase):
         self.stack.store()
         info = self.stack.get_abandon_data()
         self.assertEqual(None, info['action'])
-        self.assertTrue('id' in info)
+        self.assertIn('id', info)
         self.assertEqual('stack_details_test', info['name'])
         self.assertTrue(resources, info['resources'])
         self.assertEqual(None, info['status'])
@@ -1239,7 +1239,7 @@ class StackTest(HeatTestCase):
         self.stack.create()
         self.assertEqual(self.stack.state,
                          (parser.Stack.CREATE, parser.Stack.COMPLETE))
-        self.assertTrue('AResource' in self.stack)
+        self.assertIn('AResource', self.stack)
         rsrc = self.stack['AResource']
         rsrc.resource_id_set('aaaa')
         self.assertNotEqual(None, resource)
@@ -1280,7 +1280,7 @@ class StackTest(HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual(self.stack.state,
                          (parser.Stack.UPDATE, parser.Stack.COMPLETE))
-        self.assertTrue('BResource' in self.stack)
+        self.assertIn('BResource', self.stack)
 
     @utils.stack_delete_after
     def test_update_remove(self):
@@ -1302,7 +1302,7 @@ class StackTest(HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual(self.stack.state,
                          (parser.Stack.UPDATE, parser.Stack.COMPLETE))
-        self.assertFalse('BResource' in self.stack)
+        self.assertNotIn('BResource', self.stack)
 
     @utils.stack_delete_after
     def test_update_description(self):
@@ -1485,12 +1485,12 @@ class StackTest(HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual(self.stack.state,
                          (parser.Stack.UPDATE, parser.Stack.FAILED))
-        self.assertTrue('BResource' in self.stack)
+        self.assertIn('BResource', self.stack)
 
         # Reload the stack from the DB and prove that it contains the failed
         # resource (to ensure it will be deleted on stack delete)
         re_stack = parser.Stack.load(self.ctx, stack_id=self.stack.id)
-        self.assertTrue('BResource' in re_stack)
+        self.assertIn('BResource', re_stack)
         self.m.VerifyAll()
 
     @utils.stack_delete_after
@@ -1592,7 +1592,7 @@ class StackTest(HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual(self.stack.state,
                          (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
-        self.assertFalse('BResource' in self.stack)
+        self.assertNotIn('BResource', self.stack)
         self.m.VerifyAll()
 
     @utils.stack_delete_after
@@ -1622,7 +1622,7 @@ class StackTest(HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual(self.stack.state,
                          (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
-        self.assertTrue('BResource' in self.stack)
+        self.assertIn('BResource', self.stack)
         self.m.VerifyAll()
         # Unset here so delete() is not stubbed for stack.delete cleanup
         self.m.UnsetStubs()
@@ -2013,7 +2013,7 @@ class StackTest(HeatTestCase):
         self.stack.create()
         self.assertEqual(self.stack.state,
                          (parser.Stack.CREATE, parser.Stack.COMPLETE))
-        self.assertTrue('AResource' in self.stack)
+        self.assertIn('AResource', self.stack)
         rsrc = self.stack['AResource']
         rsrc.resource_id_set('aaaa')
         self.assertEqual('AResource', rsrc.FnGetAtt('Foo'))

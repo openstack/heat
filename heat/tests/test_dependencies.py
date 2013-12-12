@@ -68,8 +68,8 @@ class dependenciesTest(testtools.TestCase):
         d = Dependencies([('1', None), ('2', None)])
         l = list(iter(d))
         self.assertEqual(len(l), 2)
-        self.assertTrue('1' in l)
-        self.assertTrue('2' in l)
+        self.assertIn('1', l)
+        self.assertIn('2', l)
 
     def test_single_fwd(self):
         self._dep_test_fwd(('second', 'first'))

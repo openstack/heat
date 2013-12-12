@@ -341,7 +341,7 @@ class ParametersTest(testtools.TestCase):
 
         self.assertEqual(params['AWS::StackName'], 'test_stack')
         self.assertEqual(params['AWS::StackId'], 'None')
-        self.assertTrue('AWS::Region' in params)
+        self.assertIn('AWS::Region', params)
 
     def test_pseudo_param_stackid(self):
         params = self.new_parameters('test_stack', {'Parameters': {}},
@@ -369,7 +369,7 @@ class ParametersTest(testtools.TestCase):
         self.assertEqual(as_dict['Foo'], 'foo')
         self.assertEqual(as_dict['Bar'], 42)
         self.assertEqual(as_dict['AWS::StackName'], 'test_params')
-        self.assertTrue('AWS::Region' in as_dict)
+        self.assertIn('AWS::Region', as_dict)
 
     def test_map(self):
         template = {'Parameters': {'Foo': {'Type': 'String'},

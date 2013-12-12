@@ -128,5 +128,5 @@ class UrlFetchTest(HeatTestCase):
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
         exception = self.assertRaises(IOError, urlfetch.get, url)
-        self.assertTrue("Template exceeds" in str(exception))
+        self.assertIn("Template exceeds", str(exception))
         self.m.VerifyAll()

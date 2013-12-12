@@ -132,9 +132,9 @@ class StackResourceTest(HeatTestCase):
         # randomly generated uuids)
         self.assertEqual(6, len(ret))
         self.assertEqual('CREATE', ret['action'])
-        self.assertTrue('name' in ret)
-        self.assertTrue('id' in ret)
-        self.assertTrue('resources' in ret)
+        self.assertIn('name', ret)
+        self.assertIn('id', ret)
+        self.assertIn('resources', ret)
         self.assertEqual(template_format.parse(param_template),
                          ret['template'])
 
