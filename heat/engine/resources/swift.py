@@ -14,6 +14,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine import clients
 
@@ -25,26 +26,36 @@ logger = logging.getLogger(__name__)
 
 
 class SwiftContainer(resource.Resource):
+    PROPERTIES = (
+        NAME, X_CONTAINER_READ, X_CONTAINER_WRITE, X_CONTAINER_META,
+    ) = (
+        'name', 'X-Container-Read', 'X-Container-Write', 'X-Container-Meta',
+    )
+
     properties_schema = {
-        'name': {
-            'Type': 'String',
-            'Description': _('Name for the container. If not specified, a '
-                             'unique name will be generated.')},
-        'X-Container-Read': {
-            'Type': 'String',
-            'Description': _('Specify the ACL permissions on who can read '
-                             'objects in the container.')},
-        'X-Container-Write': {
-            'Type': 'String',
-            'Description': _('Specify the ACL permissions on who can write '
-                             'objects to the container.')},
-        'X-Container-Meta': {
-            'Type': 'Map', 'Default': {},
-            'Description': _('A map of user-defined meta data to associate '
-                             'with the container. Each key in the map will '
-                             'set the header X-Container-Meta-{key} with the '
-                             'corresponding value.')
-        }}
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Name for the container. If not specified, a unique name will '
+              'be generated.')
+        ),
+        X_CONTAINER_READ: properties.Schema(
+            properties.Schema.STRING,
+            _('Specify the ACL permissions on who can read objects in the '
+              'container.')
+        ),
+        X_CONTAINER_WRITE: properties.Schema(
+            properties.Schema.STRING,
+            _('Specify the ACL permissions on who can write objects to the '
+              'container.')
+        ),
+        X_CONTAINER_META: properties.Schema(
+            properties.Schema.MAP,
+            _('A map of user-defined meta data to associate with the '
+              'container. Each key in the map will set the header '
+              'X-Container-Meta-{key} with the corresponding value.'),
+            default={}
+        ),
+    }
 
     attributes_schema = {
         'DomainName': _('The host from the container URL.'),
@@ -65,7 +76,7 @@ class SwiftContainer(resource.Resource):
                     'SwiftContainer unavailable due to missing swiftclient.'}
 
     def physical_resource_name(self):
-        name = self.properties.get('name')
+        name = self.properties.get(self.NAME)
         if name:
             return name
 
@@ -86,11 +97,13 @@ class SwiftContainer(resource.Resource):
         """Create a container."""
         container = self.physical_resource_name()
         headers = SwiftContainer._build_meta_headers(
-            self.properties['X-Container-Meta'])
-        if 'X-Container-Read' in self.properties.keys():
-            headers['X-Container-Read'] = self.properties['X-Container-Read']
-        if 'X-Container-Write' in self.properties.keys():
-            headers['X-Container-Write'] = self.properties['X-Container-Write']
+            self.properties[self.X_CONTAINER_META])
+        if self.X_CONTAINER_READ in self.properties.keys():
+            read_header = self.properties[self.X_CONTAINER_READ]
+            headers['X-Container-Read'] = read_header
+        if self.X_CONTAINER_WRITE in self.properties.keys():
+            write_header = self.properties[self.X_CONTAINER_WRITE]
+            headers['X-Container-Write'] = write_header
         logger.debug(_('SwiftContainer create container %(container)s with '
                      'headers %(headers)s') % {
                      'container': container, 'headers': headers})

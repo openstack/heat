@@ -14,6 +14,8 @@
 #    under the License.
 
 from heat.engine import clients
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
@@ -24,42 +26,75 @@ logger = logging.getLogger(__name__)
 
 
 class S3Bucket(resource.Resource):
-    website_schema = {
-        'IndexDocument': {
-            'Type': 'String',
-            'Description': _('The name of the index document.')},
-        'ErrorDocument': {
-            'Type': 'String',
-            'Description': _('The name of the error document.')}}
-    tags_schema = {'Key': {'Type': 'String',
-                           'Description': _('The tag key name.'),
-                           'Required': True},
-                   'Value': {'Type': 'String',
-                             'Description': _('The tag value.'),
-                             'Required': True}}
+
+    PROPERTIES = (
+        ACCESS_CONTROL, WEBSITE_CONFIGURATION, TAGS,
+    ) = (
+        'AccessControl', 'WebsiteConfiguration', 'Tags',
+    )
+
+    _WEBSITE_CONFIGURATION_KEYS = (
+        WEBSITE_CONFIGURATION_INDEX_DOCUMENT,
+        WEBSITE_CONFIGURATION_ERROR_DOCUMENT,
+    ) = (
+        'IndexDocument',
+        'ErrorDocument',
+    )
+
+    _TAG_KEYS = (
+        TAG_KEY, TAG_VALUE,
+    ) = (
+        'Key', 'Value',
+    )
 
     properties_schema = {
-        'AccessControl': {
-            'Type': 'String',
-            'AllowedValues': ['Private',
-                              'PublicRead',
-                              'PublicReadWrite',
-                              'AuthenticatedRead',
-                              'BucketOwnerRead',
-                              'BucketOwnerFullControl'],
-            'Description': _('A predefined access control list (ACL) that'
-                             ' grants permissions on the bucket.')},
-        'WebsiteConfiguration': {
-            'Type': 'Map',
-            'Schema': website_schema,
-            'Description': _('Information used to configure the bucket as '
-                             'a static website.')},
-        'Tags': {
-            'Type': 'List',
-            'Schema': {'Type': 'Map', 'Schema': tags_schema},
-            'Required': False,
-            'Description': _('Tags to attach to the bucket.')},
+        ACCESS_CONTROL: properties.Schema(
+            properties.Schema.STRING,
+            _('A predefined access control list (ACL) that grants '
+              'permissions on the bucket.'),
+            constraints=[
+                constraints.AllowedValues(['Private', 'PublicRead',
+                                           'PublicReadWrite',
+                                           'AuthenticatedRead',
+                                           'BucketOwnerRead',
+                                           'BucketOwnerFullControl']),
+            ]
+        ),
+        WEBSITE_CONFIGURATION: properties.Schema(
+            properties.Schema.MAP,
+            _('Information used to configure the bucket as a static website.'),
+            schema={
+                WEBSITE_CONFIGURATION_INDEX_DOCUMENT: properties.Schema(
+                    properties.Schema.STRING,
+                    _('The name of the index document.')
+                ),
+                WEBSITE_CONFIGURATION_ERROR_DOCUMENT: properties.Schema(
+                    properties.Schema.STRING,
+                    _('The name of the error document.')
+                ),
+            }
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('Tags to attach to the bucket.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    TAG_KEY: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The tag key name.'),
+                        required=True
+                    ),
+                    TAG_VALUE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The tag value.'),
+                        required=True
+                    ),
+                },
+            )
+        ),
     }
+
     attributes_schema = {
         'DomainName': _('The DNS name of the specified bucket.'),
         'WebsiteURL': _('The website endpoint for the specified bucket.')
@@ -75,11 +110,11 @@ class S3Bucket(resource.Resource):
                     'S3 services unavailable because of missing swiftclient.'}
 
     def tags_to_headers(self):
-        if self.properties['Tags'] is None:
+        if self.properties[self.TAGS] is None:
             return {}
         return dict(
-            ('X-Container-Meta-S3-Tag-' + tm['Key'], tm['Value'])
-            for tm in self.properties['Tags'])
+            ('X-Container-Meta-S3-Tag-' + tm[self.TAG_KEY], tm[self.TAG_VALUE])
+            for tm in self.properties[self.TAGS])
 
     def handle_create(self):
         """Create a bucket."""
@@ -88,15 +123,17 @@ class S3Bucket(resource.Resource):
         logger.debug(_('S3Bucket create container %(container)s with headers '
                      '%(headers)s') % {
                      'container': container, 'headers': headers})
-        if self.properties['WebsiteConfiguration'] is not None:
-            sc = self.properties['WebsiteConfiguration']
+        if self.properties[self.WEBSITE_CONFIGURATION] is not None:
+            sc = self.properties[self.WEBSITE_CONFIGURATION]
+            index_doc = sc[self.WEBSITE_CONFIGURATION_INDEX_DOCUMENT]
+            error_doc = sc[self.WEBSITE_CONFIGURATION_ERROR_DOCUMENT]
             # we will assume that swift is configured for the staticweb
             # wsgi middleware
-            headers['X-Container-Meta-Web-Index'] = sc['IndexDocument']
-            headers['X-Container-Meta-Web-Error'] = sc['ErrorDocument']
+            headers['X-Container-Meta-Web-Index'] = index_doc
+            headers['X-Container-Meta-Web-Error'] = error_doc
 
         con = self.context
-        ac = self.properties['AccessControl']
+        ac = self.properties[self.ACCESS_CONTROL]
         tenant_username = '%s:%s' % (con.tenant, con.username)
         if ac in ('PublicRead', 'PublicReadWrite'):
             headers['X-Container-Read'] = '.r:*'
