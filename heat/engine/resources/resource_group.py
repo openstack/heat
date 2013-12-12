@@ -32,14 +32,16 @@ template_template = {
 class ResourceGroup(stack_resource.StackResource):
     """
     A resource that creates one or more identically configured nested
-    resources. The attributes of this resource mirror those of the
-    nested resource definition.
+    resources.
 
-    The attributes of this resource mirror the attributes of the resources
-    in the group except a list of attribute values for each resource in
-    the group is returned. Additionally, attributes for individual resources
-    in the group can be accessed using synthetic attributes of the form
-    "resource.[index].[attribute name]"
+    In addition to the "refs" attribute, this resource implements synthetic
+    attributes that mirror those of the resources in the group.  When
+    getting an attribute from this resource, however, a list of attribute
+    values for each resource in the group is returned. To get attribute values
+    for a single resource in the group, synthetic attributes of the form
+    "resource.{resource index}.{attribute name}" can be used. The resource ID
+    of a particular resource in the group can be obtained via the synthetic
+    attribute "resource.{resource index}".
     """
 
     PROPERTIES = (
@@ -85,8 +87,9 @@ class ResourceGroup(stack_resource.StackResource):
         ),
     }
 
-    attributes_schema = {}
-
+    attributes_schema = {
+        "refs": _("A list of resource IDs for the resources in the group")
+    }
     update_allowed_keys = ("Properties",)
 
     def validate(self):
@@ -108,7 +111,7 @@ class ResourceGroup(stack_resource.StackResource):
                                          self.stack.timeout_mins)
 
     def handle_update(self, new_snippet, tmpl_diff, prop_diff):
-        count = prop_diff.get("count")
+        count = prop_diff.get(self.COUNT)
         if count:
             return self.update_with_template(self._assemble_nested(count),
                                              {},
@@ -120,17 +123,26 @@ class ResourceGroup(stack_resource.StackResource):
     def FnGetAtt(self, key):
         if key.startswith("resource."):
             parts = key.split(".", 2)
-            attr_name = parts[-1]
+            attr_name = parts[-1] if len(parts) > 2 else None
             try:
                 res = self.nested()[parts[1]]
             except KeyError:
                 raise exception.InvalidTemplateAttribute(resource=self.name,
                                                          key=key)
             else:
-                return res.FnGetAtt(attr_name)
+                return (res.FnGetRefId() if attr_name is None
+                        else res.FnGetAtt(attr_name))
         else:
-            return [self.nested()[str(v)].FnGetAtt(key) for v
-                    in range(self.properties[self.COUNT])]
+
+            def get_aggregated_attr(func, *args):
+                for n in range(self.properties[self.COUNT]):
+                    resource_method = getattr(self.nested()[str(n)], func)
+                    yield resource_method(*args)
+
+            method_name, method_call = (("FnGetRefId", []) if "refs" == key
+                                        else ("FnGetAtt", [key]))
+            return [val for val in get_aggregated_attr(method_name,
+                                                       *method_call)]
 
     def _assemble_nested(self, count, include_all=False):
         child_template = copy.deepcopy(template_template)

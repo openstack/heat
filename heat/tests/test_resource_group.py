@@ -66,12 +66,18 @@ template2 = {
 }
 
 
+class ResourceWithPropsAndId(generic_resource.ResourceWithProps):
+
+    def FnGetRefId(self):
+        return "ID-%s" % self.name
+
+
 class ResourceGroupTest(common.HeatTestCase):
 
     def setUp(self):
         common.HeatTestCase.setUp(self)
         resource._register_class("dummy.resource",
-                                 generic_resource.ResourceWithProps)
+                                 ResourceWithPropsAndId)
         utils.setup_dummy_db()
 
     def test_assemble_nested(self):
@@ -183,15 +189,22 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual(expected, resg.FnGetAtt('Foo'))
 
     @utils.stack_delete_after
-    def test_index_attribs(self):
-        """Tests getting attributes of individual resources."""
+    def test_aggregate_refs(self):
+        """
+        Test resource id aggregation
+        """
         resg = self._create_dummy_stack()
-        self.assertEqual("0", resg.FnGetAtt('resource.0.foo'))
-        self.assertEqual("1", resg.FnGetAtt('resource.1.foo'))
+        expected = ['ID-0', 'ID-1']
+        self.assertEqual(expected, resg.FnGetAtt("refs"))
+
+    @utils.stack_delete_after
+    def test_index_refs(self):
+        """Tests getting ids of individual resources."""
+        resg = self._create_dummy_stack()
+        self.assertEqual("ID-0", resg.FnGetAtt('resource.0'))
+        self.assertEqual("ID-1", resg.FnGetAtt('resource.1'))
         self.assertRaises(exception.InvalidTemplateAttribute, resg.FnGetAtt,
-                          'resource.2.foo')
-        self.assertRaises(exception.InvalidTemplateAttribute, resg.FnGetAtt,
-                          'resource.1.bar')
+                          'resource.2')
 
     def _create_dummy_stack(self):
         stack = utils.parse_stack(template)
