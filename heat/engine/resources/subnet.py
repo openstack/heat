@@ -16,6 +16,7 @@
 from heat.engine import clients
 from heat.common import exception
 from heat.openstack.common import log as logging
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.vpc import VPC
 
@@ -23,40 +24,63 @@ logger = logging.getLogger(__name__)
 
 
 class Subnet(resource.Resource):
-    tags_schema = {'Key': {'Type': 'String',
-                           'Required': True},
-                   'Value': {'Type': 'String',
-                             'Required': True}}
+
+    PROPERTIES = (
+        AVAILABILITY_ZONE, CIDR_BLOCK, VPC_ID, TAGS,
+    ) = (
+        'AvailabilityZone', 'CidrBlock', 'VpcId', 'Tags',
+    )
+
+    _TAG_KEYS = (
+        TAG_KEY, TAG_VALUE,
+    ) = (
+        'Key', 'Value',
+    )
 
     properties_schema = {
-        'AvailabilityZone': {
-            'Type': 'String',
-            'Description': _('Availablity zone in which you want the '
-                             'subnet.')},
-        'CidrBlock': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('CIDR block to apply to subnet.')},
-        'VpcId': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('Ref structure that contains the ID of the '
-                             'VPC on which you want to create the subnet.')},
-        'Tags': {'Type': 'List', 'Schema': {
-            'Type': 'Map',
-            'Implemented': False,
-            'Schema': tags_schema,
-            'Description': _('List of tags to attach to this resource.')}}
+        AVAILABILITY_ZONE: properties.Schema(
+            properties.Schema.STRING,
+            _('Availablity zone in which you want the subnet.')
+        ),
+        CIDR_BLOCK: properties.Schema(
+            properties.Schema.STRING,
+            _('CIDR block to apply to subnet.'),
+            required=True
+        ),
+        VPC_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('Ref structure that contains the ID of the VPC on which you '
+              'want to create the subnet.'),
+            required=True
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                _('List of tags to attach to this resource.'),
+                schema={
+                    TAG_KEY: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                    TAG_VALUE: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                },
+                implemented=False,
+            )
+        ),
     }
 
     def handle_create(self):
         client = self.neutron()
         # TODO(sbaker) Verify that this CidrBlock is within the vpc CidrBlock
-        network_id = self.properties.get('VpcId')
+        network_id = self.properties.get(self.VPC_ID)
 
         props = {
             'network_id': network_id,
-            'cidr': self.properties.get('CidrBlock'),
+            'cidr': self.properties.get(self.CIDR_BLOCK),
             'name': self.physical_resource_name(),
             'ip_version': 4
         }
@@ -73,7 +97,7 @@ class Subnet(resource.Resource):
         from neutronclient.common.exceptions import NeutronClientException
 
         client = self.neutron()
-        network_id = self.properties.get('VpcId')
+        network_id = self.properties.get(self.VPC_ID)
         subnet_id = self.resource_id
 
         try:
