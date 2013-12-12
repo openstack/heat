@@ -232,7 +232,12 @@ class Server(resource.Resource):
             image = nova_utils.get_image_id(self.nova(), image)
 
         flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
+
         instance_meta = self.properties.get('metadata')
+        if instance_meta is not None:
+            instance_meta = dict((key, str(value)) for (key, value) in
+                                 instance_meta.items())
+
         scheduler_hints = self.properties.get('scheduler_hints')
         nics = self._build_nics(self.properties.get('networks'))
         block_device_mapping = self._build_block_device_mapping(
