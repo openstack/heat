@@ -32,6 +32,7 @@ from heat.openstack.common.importutils import try_import
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine.properties import schemata
 from heat.engine.resources.ceilometer import alarm
 
 ceilometerclient = try_import('ceilometerclient.v2')
@@ -141,11 +142,9 @@ class CeilometerAlarmTest(HeatTestCase):
 
         self.stack = self.create_stack(template=json.dumps(t))
         self.m.StubOutWithMock(self.fa.alarms, 'update')
-        al2 = {}
-        for k in alarm.CeilometerAlarm.properties_schema:
-            if alarm.CeilometerAlarm.properties_schema[k].get('UpdateAllowed',
-                                                              False):
-                al2[k] = mox.IgnoreArg()
+        schema = schemata(alarm.CeilometerAlarm.properties_schema)
+        al2 = dict((k, mox.IgnoreArg())
+                   for k, s in schema.items() if s.update_allowed)
         al2['alarm_id'] = mox.IgnoreArg()
         self.fa.alarms.update(**al2).AndReturn(None)
 
