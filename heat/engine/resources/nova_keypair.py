@@ -12,6 +12,7 @@
 
 from heat.common import exception
 from heat.db import api as db_api
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import nova_utils
 from heat.openstack.common.gettextutils import _
@@ -36,26 +37,30 @@ class KeyPair(resource.Resource):
     save.
     """
 
-    properties_schema = {
-        'name': {
-            'Type': 'String',
-            'Description': _("The name of the key pair."),
-            'Required': True
-        },
-        'save_private_key': {
-            'Type': 'Boolean',
-            'Description': _("True if the system should remember a generated "
-                             "private key; False otherwise."),
-            'Default': False
-        },
-        'public_key': {
-            'Type': 'String',
-            'Description': _("The optional public key. This allows users to "
-                             "supply the public key from a pre-existing key "
-                             "pair. If not supplied, a new key pair will be "
-                             "generated.")
-        }
+    PROPERTIES = (
+        NAME, SAVE_PRIVATE_KEY, PUBLIC_KEY,
+    ) = (
+        'name', 'save_private_key', 'public_key',
+    )
 
+    properties_schema = {
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('The name of the key pair.'),
+            required=True
+        ),
+        SAVE_PRIVATE_KEY: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('True if the system should remember a generated private key; '
+              'False otherwise.'),
+            default=False
+        ),
+        PUBLIC_KEY: properties.Schema(
+            properties.Schema.STRING,
+            _('The optional public key. This allows users to supply the '
+              'public key from a pre-existing key pair. If not supplied, a '
+              'new key pair will be generated.')
+        ),
     }
 
     attributes_schema = {
@@ -72,7 +77,7 @@ class KeyPair(resource.Resource):
     def private_key(self):
         """Return the private SSH key for the resource."""
         if (self._private_key is None and self.id and
-                self.properties['save_private_key']):
+                self.properties[self.SAVE_PRIVATE_KEY]):
                 try:
                     self._private_key = db_api.resource_data_get(self,
                                                                  'private_key')
@@ -84,8 +89,8 @@ class KeyPair(resource.Resource):
     def public_key(self):
         """Return the public SSH key for the resource."""
         if not self._public_key:
-            if self.properties['public_key']:
-                self._public_key = self.properties['public_key']
+            if self.properties[self.PUBLIC_KEY]:
+                self._public_key = self.properties[self.PUBLIC_KEY]
             elif self.resource_id:
                 nova_key = nova_utils.get_keypair(self.nova(),
                                                   self.resource_id)
@@ -93,10 +98,10 @@ class KeyPair(resource.Resource):
         return self._public_key
 
     def handle_create(self):
-        pub_key = self.properties['public_key'] or None
-        new_keypair = self.nova().keypairs.create(self.properties['name'],
+        pub_key = self.properties[self.PUBLIC_KEY] or None
+        new_keypair = self.nova().keypairs.create(self.properties[self.NAME],
                                                   public_key=pub_key)
-        if (self.properties['save_private_key'] and
+        if (self.properties[self.SAVE_PRIVATE_KEY] and
                 hasattr(new_keypair, 'private_key')):
             db_api.resource_data_set(self, 'private_key',
                                      new_keypair.private_key,

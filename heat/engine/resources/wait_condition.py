@@ -17,6 +17,8 @@ import json
 
 from heat.common import exception
 from heat.common import identifier
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import signal_responder
@@ -129,25 +131,36 @@ class WaitConditionTimeout(Exception):
 
 
 class WaitCondition(resource.Resource):
+    PROPERTIES = (
+        HANDLE, TIMEOUT, COUNT,
+    ) = (
+        'Handle', 'Timeout', 'Count',
+    )
+
     properties_schema = {
-        'Handle': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('A reference to the wait condition handle used'
-                             ' to signal this wait condition.')},
-        'Timeout': {
-            'Type': 'Number',
-            'Required': True,
-            'MinValue': '1',
-            'MaxValue': '43200',
-            'Description': _('The number of seconds to wait for the'
-                             ' correct number of signals to arrive.')},
-        'Count': {
-            'Type': 'Number',
-            'MinValue': '1',
-            'Description': _('The number of success signals that must be'
-                             ' received before the stack creation process'
-                             ' continues.')}
+        HANDLE: properties.Schema(
+            properties.Schema.STRING,
+            _('A reference to the wait condition handle used to signal this '
+              'wait condition.'),
+            required=True
+        ),
+        TIMEOUT: properties.Schema(
+            properties.Schema.NUMBER,
+            _('The number of seconds to wait for the correct number of '
+              'signals to arrive.'),
+            required=True,
+            constraints=[
+                constraints.Range(1, 43200),
+            ]
+        ),
+        COUNT: properties.Schema(
+            properties.Schema.NUMBER,
+            _('The number of success signals that must be received before '
+              'the stack creation process continues.'),
+            constraints=[
+                constraints.Range(min=1),
+            ]
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):
@@ -156,7 +169,7 @@ class WaitCondition(resource.Resource):
         self.count = int(self.t['Properties'].get('Count', '1'))
 
     def _validate_handle_url(self):
-        handle_url = self.properties['Handle']
+        handle_url = self.properties[self.HANDLE]
         handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
         if handle_id.tenant != self.stack.context.tenant_id:
             raise ValueError(_("WaitCondition invalid Handle tenant %s") %
@@ -176,7 +189,7 @@ class WaitCondition(resource.Resource):
                              handle_id.resource_name)
 
     def _get_handle_resource_name(self):
-        handle_url = self.properties['Handle']
+        handle_url = self.properties[self.HANDLE]
         handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
         return handle_id.resource_name
 
@@ -209,7 +222,7 @@ class WaitCondition(resource.Resource):
         self.resource_id_set(handle_res_name)
 
         runner = scheduler.TaskRunner(self._wait, handle)
-        runner.start(timeout=float(self.properties['Timeout']))
+        runner.start(timeout=float(self.properties[self.TIMEOUT]))
         return runner
 
     def check_create_complete(self, runner):

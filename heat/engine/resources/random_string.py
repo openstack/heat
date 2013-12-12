@@ -28,24 +28,38 @@ class RandomString(resource.Resource):
 
     This is useful for configuring passwords and secrets on services.
     '''
+    PROPERTIES = (
+        LENGTH, SEQUENCE, SALT,
+    ) = (
+        'length', 'sequence', 'salt',
+    )
+
     properties_schema = {
-        'length': properties.Schema(
+        LENGTH: properties.Schema(
             properties.Schema.INTEGER,
             _('Length of the string to generate.'),
             default=32,
-            constraints=[constraints.Range(1, 512)]),
-        'sequence': properties.Schema(
+            constraints=[
+                constraints.Range(1, 512),
+            ]
+        ),
+        SEQUENCE: properties.Schema(
             properties.Schema.STRING,
             _('Sequence of characters to build the random string from.'),
             default='lettersdigits',
-            constraints=[constraints.AllowedValues((
-                'lettersdigits', 'letters', 'lowercase', 'uppercase', 'digits',
-                'hexdigits', 'octdigits'))]),
-        'salt': properties.Schema(
+            constraints=[
+                constraints.AllowedValues(['lettersdigits', 'letters',
+                                           'lowercase', 'uppercase',
+                                           'digits', 'hexdigits',
+                                           'octdigits']),
+            ]
+        ),
+        SALT: properties.Schema(
             properties.Schema.STRING,
             _('Value which can be set or changed on stack update to trigger '
-              'the resource for replacement with a new random string . '
-              'The salt value itself is ignored by the random generator.'))
+              'the resource for replacement with a new random string . The '
+              'salt value itself is ignored by the random generator.')
+        ),
     }
 
     attributes_schema = {
@@ -68,8 +82,8 @@ class RandomString(resource.Resource):
         return ''.join(rand.choice(sequence) for x in xrange(length))
 
     def handle_create(self):
-        length = self.properties.get('length')
-        sequence = self._sequences[self.properties.get('sequence')]
+        length = self.properties.get(self.LENGTH)
+        sequence = self._sequences[self.properties.get(self.SEQUENCE)]
         random_string = self._generate_random_string(sequence, length)
         db_api.resource_data_set(self, 'value', random_string, redact=True)
 
