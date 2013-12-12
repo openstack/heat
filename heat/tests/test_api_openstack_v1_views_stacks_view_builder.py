@@ -37,14 +37,14 @@ class TestFormatStack(HeatTestCase):
 
         result = stacks_view.format_stack(self.request, stack)
         self.assertIn('stack_status', result)
-        self.assertEquals('CREATE_COMPLETE', result['stack_status'])
+        self.assertEqual('CREATE_COMPLETE', result['stack_status'])
 
     def test_include_stack_status_with_no_action(self):
         stack = {'stack_status': 'COMPLETE'}
 
         result = stacks_view.format_stack(self.request, stack)
         self.assertIn('stack_status', result)
-        self.assertEquals('COMPLETE', result['stack_status'])
+        self.assertEqual('COMPLETE', result['stack_status'])
 
     @mock.patch.object(stacks_view, 'util')
     def test_replace_stack_identity_with_id_and_links(self, mock_util):
@@ -54,10 +54,10 @@ class TestFormatStack(HeatTestCase):
         result = stacks_view.format_stack(self.request, stack)
         self.assertIn('id', result)
         self.assertNotIn('stack_identity', result)
-        self.assertEquals('foo', result['id'])
+        self.assertEqual('foo', result['id'])
 
         self.assertIn('links', result)
-        self.assertEquals(['blah'], result['links'])
+        self.assertEqual(['blah'], result['links'])
 
     def test_includes_all_other_keys(self):
         stack = {'foo': 'bar'}

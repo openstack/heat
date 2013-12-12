@@ -78,8 +78,8 @@ class VersionNegotiationMiddlewareTest(HeatTestCase):
         response = version_negotiation.process_request(request)
 
         self.assertIsNone(response)
-        self.assertEquals(major_version, request.environ['api.major_version'])
-        self.assertEquals(minor_version, request.environ['api.minor_version'])
+        self.assertEqual(major_version, request.environ['api.major_version'])
+        self.assertEqual(minor_version, request.environ['api.minor_version'])
 
     def test_removes_version_from_request_path(self):
         version_negotiation = VersionNegotiationFilter(
@@ -91,7 +91,7 @@ class VersionNegotiationMiddlewareTest(HeatTestCase):
         response = version_negotiation.process_request(request)
 
         self.assertIsNone(response)
-        self.assertEquals(expected_path, request.path_info_peek())
+        self.assertEqual(expected_path, request.path_info_peek())
 
     def test_request_path_contains_unknown_version(self):
         version_negotiation = VersionNegotiationFilter(
@@ -114,8 +114,8 @@ class VersionNegotiationMiddlewareTest(HeatTestCase):
         response = version_negotiation.process_request(request)
 
         self.assertIsNone(response)
-        self.assertEquals(major_version, request.environ['api.major_version'])
-        self.assertEquals(minor_version, request.environ['api.minor_version'])
+        self.assertEqual(major_version, request.environ['api.major_version'])
+        self.assertEqual(minor_version, request.environ['api.minor_version'])
 
     def test_accept_header_contains_unknown_version(self):
         version_negotiation = VersionNegotiationFilter(
