@@ -159,7 +159,7 @@ class Resource(object):
             return super(Resource, cls).__new__(cls)
 
         # Select the correct subclass to instantiate
-        ResourceClass = stack.env.get_class(json['Type'],
+        ResourceClass = stack.env.get_class(json.get('Type'),
                                             resource_name=name)
         return ResourceClass(name, json, stack)
 
