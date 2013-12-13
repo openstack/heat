@@ -42,40 +42,51 @@ class ResourceGroup(stack_resource.StackResource):
     "resource.[index].[attribute name]"
     """
 
-    min_resource_schema = {
-        "type": properties.Schema(
-            properties.Schema.STRING,
-            _("The type of the resources in the group"),
-            required=True
-        ),
-        "properties": properties.Schema(
-            properties.Schema.MAP,
-            _("Property values for the resources in the group")
-        )
-    }
+    PROPERTIES = (
+        COUNT, RESOURCE_DEF,
+    ) = (
+        'count', 'resource_def',
+    )
+
+    _RESOURCE_DEF_KEYS = (
+        RESOURCE_DEF_TYPE, RESOURCE_DEF_PROPERTIES,
+    ) = (
+        'type', 'properties',
+    )
 
     properties_schema = {
-        "count": properties.Schema(
+        COUNT: properties.Schema(
             properties.Schema.INTEGER,
-            _("The number of instances to create."),
+            _('The number of instances to create.'),
             default=1,
             required=True,
-            update_allowed=True,
             constraints=[
-                constraints.Range(1)
-            ]
+                constraints.Range(min=1),
+            ],
+            update_allowed=True
         ),
-        "resource_def": properties.Schema(
+        RESOURCE_DEF: properties.Schema(
             properties.Schema.MAP,
-            _("Resource definition for the resources in the group. The value "
-              "of this property is the definition of a resource just as if it"
-              " had been declared in the template itself."),
-            required=True,
-            schema=min_resource_schema
-        )
+            _('Resource definition for the resources in the group. The value '
+              'of this property is the definition of a resource just as if '
+              'it had been declared in the template itself.'),
+            schema={
+                RESOURCE_DEF_TYPE: properties.Schema(
+                    properties.Schema.STRING,
+                    _('The type of the resources in the group'),
+                    required=True
+                ),
+                RESOURCE_DEF_PROPERTIES: properties.Schema(
+                    properties.Schema.MAP,
+                    _('Property values for the resources in the group')
+                ),
+            },
+            required=True
+        ),
     }
 
     attributes_schema = {}
+
     update_allowed_keys = ("Properties",)
 
     def validate(self):
@@ -91,7 +102,7 @@ class ResourceGroup(stack_resource.StackResource):
         res_inst.validate()
 
     def handle_create(self):
-        count = self.properties['count']
+        count = self.properties[self.COUNT]
         return self.create_with_template(self._assemble_nested(count),
                                          {},
                                          self.stack.timeout_mins)
@@ -119,15 +130,15 @@ class ResourceGroup(stack_resource.StackResource):
                 return res.FnGetAtt(attr_name)
         else:
             return [self.nested()[str(v)].FnGetAtt(key) for v
-                    in range(self.properties['count'])]
+                    in range(self.properties[self.COUNT])]
 
     def _assemble_nested(self, count, include_all=False):
         child_template = copy.deepcopy(template_template)
-        resource_def = self.properties['resource_def']
+        resource_def = self.properties[self.RESOURCE_DEF]
         if not include_all:
-            clean = dict((k, v) for k, v
-                         in resource_def['properties'].items() if v)
-            resource_def['properties'] = clean
+            resource_def_props = resource_def[self.RESOURCE_DEF_PROPERTIES]
+            clean = dict((k, v) for k, v in resource_def_props.items() if v)
+            resource_def[self.RESOURCE_DEF_PROPERTIES] = clean
         resources = dict((str(k), resource_def)
                          for k in range(count))
         child_template['resources'] = resources

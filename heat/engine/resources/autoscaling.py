@@ -25,6 +25,7 @@ from heat.common import timeutils as iso8601utils
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 from heat.engine.properties import Properties
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import scheduler
 from heat.engine import stack_resource
@@ -63,34 +64,64 @@ class CooldownMixin(object):
 
 
 class InstanceGroup(stack_resource.StackResource):
-    tags_schema = {'Key': {'Type': 'String',
-                           'Required': True},
-                   'Value': {'Type': 'String',
-                             'Required': True}}
+
+    PROPERTIES = (
+        AVAILABILITY_ZONES, LAUNCH_CONFIGURATION_NAME, SIZE,
+        LOAD_BALANCER_NAMES, TAGS,
+    ) = (
+        'AvailabilityZones', 'LaunchConfigurationName', 'Size',
+        'LoadBalancerNames', 'Tags',
+    )
+
+    _TAG_KEYS = (
+        TAG_KEY, TAG_VALUE,
+    ) = (
+        'Key', 'Value',
+    )
+
     properties_schema = {
-        'AvailabilityZones': {
-            'Required': True,
-            'Type': 'List',
-            'Description': _('Not Implemented.')},
-        'LaunchConfigurationName': {
-            'Required': True,
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('Name of LaunchConfiguration resource.')},
-        'Size': {
-            'Required': True,
-            'Type': 'Number',
-            'UpdateAllowed': True,
-            'Description': _('Desired number of instances.')},
-        'LoadBalancerNames': {
-            'Type': 'List',
-            'Description': _('List of LoadBalancer resources.')},
-        'Tags': {
-            'Type': 'List',
-            'Schema': {'Type': 'Map', 'Schema': tags_schema},
-            'Description': _('Tags to attach to this group.')}
+        AVAILABILITY_ZONES: properties.Schema(
+            properties.Schema.LIST,
+            _('Not Implemented.'),
+            required=True
+        ),
+        LAUNCH_CONFIGURATION_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of LaunchConfiguration resource.'),
+            required=True,
+            update_allowed=True
+        ),
+        SIZE: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Desired number of instances.'),
+            required=True,
+            update_allowed=True
+        ),
+        LOAD_BALANCER_NAMES: properties.Schema(
+            properties.Schema.LIST,
+            _('List of LoadBalancer resources.')
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('Tags to attach to this group.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    TAG_KEY: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                    TAG_VALUE: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                },
+            )
+        ),
     }
+
     update_allowed_keys = ('Properties', 'UpdatePolicy',)
+
     attributes_schema = {
         "InstanceList": _("A comma-delimited list of server ip addresses. "
                           "(Heat extension).")
@@ -152,7 +183,7 @@ class InstanceGroup(stack_resource.StackResource):
 
     def handle_create(self):
         """Create a nested stack and add the initial resources to it."""
-        num_instances = int(self.properties['Size'])
+        num_instances = int(self.properties[self.SIZE])
         initial_template = self._create_template(num_instances)
         return self.create_with_template(initial_template, {})
 
@@ -188,7 +219,7 @@ class InstanceGroup(stack_resource.StackResource):
 
             # Replace instances first if launch configuration has changed
             if (self.update_policy['RollingUpdate'] and
-                    'LaunchConfigurationName' in prop_diff):
+                    self.LAUNCH_CONFIGURATION_NAME in prop_diff):
                 policy = self.update_policy['RollingUpdate']
                 self._replace(int(policy['MinInstancesInService']),
                               int(policy['MaxBatchSize']),
@@ -196,29 +227,29 @@ class InstanceGroup(stack_resource.StackResource):
 
             # Get the current capacity, we may need to adjust if
             # Size has changed
-            if 'Size' in prop_diff:
+            if self.SIZE in prop_diff:
                 inst_list = self.get_instances()
-                if len(inst_list) != int(self.properties['Size']):
-                    self.resize(int(self.properties['Size']))
+                if len(inst_list) != int(self.properties[self.SIZE]):
+                    self.resize(int(self.properties[self.SIZE]))
 
     def _tags(self):
         """
         Make sure that we add a tag that Ceilometer can pick up.
         These need to be prepended with 'metering.'.
         """
-        tags = self.properties.get('Tags') or []
+        tags = self.properties.get(self.TAGS) or []
         for t in tags:
-            if t['Key'].startswith('metering.'):
+            if t[self.TAG_KEY].startswith('metering.'):
                 # the user has added one, don't add another.
                 return tags
-        return tags + [{'Key': 'metering.groupname',
-                        'Value': self.FnGetRefId()}]
+        return tags + [{self.TAG_KEY: 'metering.groupname',
+                        self.TAG_VALUE: self.FnGetRefId()}]
 
     def handle_delete(self):
         return self.delete_nested()
 
     def _get_instance_definition(self):
-        conf_name = self.properties['LaunchConfigurationName']
+        conf_name = self.properties[self.LAUNCH_CONFIGURATION_NAME]
         conf = self.stack.resource_by_refid(conf_name)
         instance_definition = copy.deepcopy(conf.t)
         instance_definition['Type'] = 'AWS::EC2::Instance'
@@ -331,10 +362,10 @@ class InstanceGroup(stack_resource.StackResource):
         This must be done after activation (instance in ACTIVE state),
         otherwise the instances' IP addresses may not be available.
         '''
-        if self.properties['LoadBalancerNames']:
+        if self.properties[self.LOAD_BALANCER_NAMES]:
             id_list = [inst.FnGetRefId() for inst in self.get_instances()
                        if inst.FnGetRefId() not in exclude]
-            for lb in self.properties['LoadBalancerNames']:
+            for lb in self.properties[self.LOAD_BALANCER_NAMES]:
                 lb_resource = self.stack[lb]
                 if 'Instances' in lb_resource.properties_schema:
                     lb_resource.json_snippet['Properties']['Instances'] = (
@@ -364,58 +395,97 @@ class InstanceGroup(stack_resource.StackResource):
 
 
 class AutoScalingGroup(InstanceGroup, CooldownMixin):
-    tags_schema = {'Key': {'Type': 'String',
-                           'Required': True},
-                   'Value': {'Type': 'String',
-                             'Required': True}}
+
+    PROPERTIES = (
+        AVAILABILITY_ZONES, LAUNCH_CONFIGURATION_NAME, MAX_SIZE, MIN_SIZE,
+        COOLDOWN, DESIRED_CAPACITY, HEALTH_CHECK_GRACE_PERIOD,
+        HEALTH_CHECK_TYPE, LOAD_BALANCER_NAMES, VPCZONE_IDENTIFIER, TAGS,
+    ) = (
+        'AvailabilityZones', 'LaunchConfigurationName', 'MaxSize', 'MinSize',
+        'Cooldown', 'DesiredCapacity', 'HealthCheckGracePeriod',
+        'HealthCheckType', 'LoadBalancerNames', 'VPCZoneIdentifier', 'Tags',
+    )
+
+    _TAG_KEYS = (
+        TAG_KEY, TAG_VALUE,
+    ) = (
+        'Key', 'Value',
+    )
+
     properties_schema = {
-        'AvailabilityZones': {
-            'Required': True,
-            'Type': 'List',
-            'Description': _('Not Implemented.')},
-        'LaunchConfigurationName': {
-            'Required': True,
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('Name of LaunchConfiguration resource.')},
-        'MaxSize': {
-            'Required': True,
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('Maximum number of instances in the group.')},
-        'MinSize': {
-            'Required': True,
-            'UpdateAllowed': True,
-            'Type': 'String',
-            'Description': _('Minimum number of instances in the group.')},
-        'Cooldown': {
-            'Type': 'String',
-            'UpdateAllowed': True,
-            'Description': _('Cooldown period, in seconds.')},
-        'DesiredCapacity': {
-            'Type': 'Number',
-            'UpdateAllowed': True,
-            'Description': _('Desired initial number of instances.')},
-        'HealthCheckGracePeriod': {
-            'Type': 'Integer',
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'HealthCheckType': {
-            'Type': 'String',
-            'AllowedValues': ['EC2', 'ELB'],
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'LoadBalancerNames': {
-            'Type': 'List',
-            'Description': _('List of LoadBalancer resources.')},
-        'VPCZoneIdentifier': {
-            'Type': 'List',
-            'Description': _('List of VPC subnet identifiers.')},
-        'Tags': {
-            'Type': 'List',
-            'Schema': {'Type': 'Map', 'Schema': tags_schema},
-            'Description': _('Tags to attach to this group.')}
+        AVAILABILITY_ZONES: properties.Schema(
+            properties.Schema.LIST,
+            _('Not Implemented.'),
+            required=True
+        ),
+        LAUNCH_CONFIGURATION_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of LaunchConfiguration resource.'),
+            required=True,
+            update_allowed=True
+        ),
+        MAX_SIZE: properties.Schema(
+            properties.Schema.STRING,
+            _('Maximum number of instances in the group.'),
+            required=True,
+            update_allowed=True
+        ),
+        MIN_SIZE: properties.Schema(
+            properties.Schema.STRING,
+            _('Minimum number of instances in the group.'),
+            required=True,
+            update_allowed=True
+        ),
+        COOLDOWN: properties.Schema(
+            properties.Schema.STRING,
+            _('Cooldown period, in seconds.'),
+            update_allowed=True
+        ),
+        DESIRED_CAPACITY: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Desired initial number of instances.'),
+            update_allowed=True
+        ),
+        HEALTH_CHECK_GRACE_PERIOD: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Not Implemented.'),
+            implemented=False
+        ),
+        HEALTH_CHECK_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('Not Implemented.'),
+            constraints=[
+                constraints.AllowedValues(['EC2', 'ELB']),
+            ],
+            implemented=False
+        ),
+        LOAD_BALANCER_NAMES: properties.Schema(
+            properties.Schema.LIST,
+            _('List of LoadBalancer resources.')
+        ),
+        VPCZONE_IDENTIFIER: properties.Schema(
+            properties.Schema.LIST,
+            _('List of VPC subnet identifiers.')
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('Tags to attach to this group.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    TAG_KEY: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                    TAG_VALUE: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                },
+            )
+        ),
     }
+
     rolling_update_schema = {
         'MinInstancesInService': properties.Schema(properties.Schema.NUMBER,
                                                    default=0),
@@ -428,13 +498,14 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                                                       schema=
                                                       rolling_update_schema)
     }
+
     update_allowed_keys = ('Properties', 'UpdatePolicy')
 
     def handle_create(self):
-        if self.properties['DesiredCapacity']:
-            num_to_create = int(self.properties['DesiredCapacity'])
+        if self.properties[self.DESIRED_CAPACITY]:
+            num_to_create = int(self.properties[self.DESIRED_CAPACITY])
         else:
-            num_to_create = int(self.properties['MinSize'])
+            num_to_create = int(self.properties[self.MIN_SIZE])
         initial_template = self._create_template(num_to_create)
         return self.create_with_template(initial_template, {})
 
@@ -479,15 +550,15 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
 
             # Figure out if an adjustment is required
             new_capacity = None
-            if 'MinSize' in prop_diff:
-                if capacity < int(self.properties['MinSize']):
-                    new_capacity = int(self.properties['MinSize'])
-            if 'MaxSize' in prop_diff:
-                if capacity > int(self.properties['MaxSize']):
-                    new_capacity = int(self.properties['MaxSize'])
-            if 'DesiredCapacity' in prop_diff:
-                if self.properties['DesiredCapacity']:
-                    new_capacity = int(self.properties['DesiredCapacity'])
+            if self.MIN_SIZE in prop_diff:
+                if capacity < int(self.properties[self.MIN_SIZE]):
+                    new_capacity = int(self.properties[self.MIN_SIZE])
+            if self.MAX_SIZE in prop_diff:
+                if capacity > int(self.properties[self.MAX_SIZE]):
+                    new_capacity = int(self.properties[self.MAX_SIZE])
+            if self.DESIRED_CAPACITY in prop_diff:
+                if self.properties[self.DESIRED_CAPACITY]:
+                    new_capacity = int(self.properties[self.DESIRED_CAPACITY])
 
             if new_capacity is not None:
                 self.adjust(new_capacity, adjustment_type='ExactCapacity')
@@ -500,7 +571,7 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
             logger.info(_("%(name)s NOT performing scaling adjustment, "
                         "cooldown %(cooldown)s") % {
                         'name': self.name,
-                        'cooldown': self.properties['Cooldown']})
+                        'cooldown': self.properties[self.COOLDOWN]})
             return
 
         capacity = len(self.get_instances())
@@ -519,8 +590,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
                               else math.ceil(delta))
             new_capacity = capacity + rounded
 
-        upper = int(self.properties['MaxSize'])
-        lower = int(self.properties['MinSize'])
+        upper = int(self.properties[self.MAX_SIZE])
+        lower = int(self.properties[self.MIN_SIZE])
 
         if new_capacity > upper:
             if upper > capacity:
@@ -554,8 +625,8 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         the groupname and stack id.
         Note: the group name must match what is returned from FnGetRefId
         """
-        autoscaling_tag = [{'Key': 'AutoScalingGroupName',
-                            'Value': self.FnGetRefId()}]
+        autoscaling_tag = [{self.TAG_KEY: 'AutoScalingGroupName',
+                            self.TAG_VALUE: self.FnGetRefId()}]
         return super(AutoScalingGroup, self)._tags() + autoscaling_tag
 
     def validate(self):
@@ -567,52 +638,83 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         # availability zones, it will be possible to specify multiple subnets.
         # For now, only one subnet can be specified. The bug #1096017 tracks
         # this issue.
-        if self.properties.get('VPCZoneIdentifier') and \
-                len(self.properties['VPCZoneIdentifier']) != 1:
+        if self.properties.get(self.VPCZONE_IDENTIFIER) and \
+                len(self.properties[self.VPCZONE_IDENTIFIER]) != 1:
             raise exception.NotSupported(feature=_("Anything other than one "
                                          "VPCZoneIdentifier"))
 
 
 class LaunchConfiguration(resource.Resource):
-    tags_schema = {'Key': {'Type': 'String',
-                           'Required': True},
-                   'Value': {'Type': 'String',
-                             'Required': True}}
+
+    PROPERTIES = (
+        IMAGE_ID, INSTANCE_TYPE, KEY_NAME, USER_DATA, SECURITY_GROUPS,
+        KERNEL_ID, RAM_DISK_ID, BLOCK_DEVICE_MAPPINGS, NOVA_SCHEDULER_HINTS,
+    ) = (
+        'ImageId', 'InstanceType', 'KeyName', 'UserData', 'SecurityGroups',
+        'KernelId', 'RamDiskId', 'BlockDeviceMappings', 'NovaSchedulerHints',
+    )
+
+    _NOVA_SCHEDULER_HINT_KEYS = (
+        NOVA_SCHEDULER_HINT_KEY, NOVA_SCHEDULER_HINT_VALUE,
+    ) = (
+        'Key', 'Value',
+    )
+
     properties_schema = {
-        'ImageId': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('Glance image ID or name.')},
-        'InstanceType': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('Nova instance type (flavor).')},
-        'KeyName': {
-            'Type': 'String',
-            'Description': _('Optional Nova keypair name.')},
-        'UserData': {
-            'Type': 'String',
-            'Description': _('User data to pass to instance.')},
-        'SecurityGroups': {
-            'Type': 'List',
-            'Description': _('Security group names to assign.')},
-        'KernelId': {
-            'Type': 'String',
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'RamDiskId': {
-            'Type': 'String',
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'BlockDeviceMappings': {
-            'Type': 'String',
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'NovaSchedulerHints': {
-            'Type': 'List',
-            'Schema': {'Type': 'Map', 'Schema': tags_schema},
-            'Description': _('Scheduler hints to pass '
-                             'to Nova (Heat extension).')},
+        IMAGE_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('Glance image ID or name.'),
+            required=True
+        ),
+        INSTANCE_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('Nova instance type (flavor).'),
+            required=True
+        ),
+        KEY_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Optional Nova keypair name.')
+        ),
+        USER_DATA: properties.Schema(
+            properties.Schema.STRING,
+            _('User data to pass to instance.')
+        ),
+        SECURITY_GROUPS: properties.Schema(
+            properties.Schema.LIST,
+            _('Security group names to assign.')
+        ),
+        KERNEL_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('Not Implemented.'),
+            implemented=False
+        ),
+        RAM_DISK_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('Not Implemented.'),
+            implemented=False
+        ),
+        BLOCK_DEVICE_MAPPINGS: properties.Schema(
+            properties.Schema.STRING,
+            _('Not Implemented.'),
+            implemented=False
+        ),
+        NOVA_SCHEDULER_HINTS: properties.Schema(
+            properties.Schema.LIST,
+            _('Scheduler hints to pass to Nova (Heat extension).'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    NOVA_SCHEDULER_HINT_KEY: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                    NOVA_SCHEDULER_HINT_VALUE: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                },
+            )
+        ),
     }
 
     def FnGetRefId(self):
@@ -620,31 +722,46 @@ class LaunchConfiguration(resource.Resource):
 
 
 class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
+    PROPERTIES = (
+        AUTO_SCALING_GROUP_NAME, SCALING_ADJUSTMENT, ADJUSTMENT_TYPE,
+        COOLDOWN,
+    ) = (
+        'AutoScalingGroupName', 'ScalingAdjustment', 'AdjustmentType',
+        'Cooldown',
+    )
+
     properties_schema = {
-        'AutoScalingGroupName': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('AutoScaling group name to apply policy to.')},
-        'ScalingAdjustment': {
-            'Type': 'Number',
-            'Required': True,
-            'UpdateAllowed': True,
-            'Description': _('Size of adjustment.')},
-        'AdjustmentType': {
-            'Type': 'String',
-            'AllowedValues': ['ChangeInCapacity',
-                              'ExactCapacity',
-                              'PercentChangeInCapacity'],
-            'Required': True,
-            'UpdateAllowed': True,
-            'Description': _('Type of adjustment (absolute or percentage).')},
-        'Cooldown': {
-            'Type': 'Number',
-            'UpdateAllowed': True,
-            'Description': _('Cooldown period, in seconds.')},
+        AUTO_SCALING_GROUP_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('AutoScaling group name to apply policy to.'),
+            required=True
+        ),
+        SCALING_ADJUSTMENT: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Size of adjustment.'),
+            required=True,
+            update_allowed=True
+        ),
+        ADJUSTMENT_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('Type of adjustment (absolute or percentage).'),
+            required=True,
+            constraints=[
+                constraints.AllowedValues(['ChangeInCapacity',
+                                           'ExactCapacity',
+                                           'PercentChangeInCapacity']),
+            ],
+            update_allowed=True
+        ),
+        COOLDOWN: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Cooldown period, in seconds.'),
+            update_allowed=True
+        ),
     }
 
     update_allowed_keys = ('Properties',)
+
     attributes_schema = {
         "AlarmUrl": _("A signed url to handle the alarm. "
                       "(Heat extension).")
@@ -685,22 +802,22 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
             logger.info(_("%(name)s NOT performing scaling action, "
                         "cooldown %(cooldown)s") % {
                         'name': self.name,
-                        'cooldown': self.properties['Cooldown']})
+                        'cooldown': self.properties[self.COOLDOWN]})
             return
 
-        asgn_id = self.properties['AutoScalingGroupName']
+        asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
         group = self.stack.resource_by_refid(asgn_id)
 
         logger.info(_('%(name)s Alarm, adjusting Group %(group)s '
                     'by %(filter)s') % {
                     'name': self.name, 'group': group.name,
-                    'filter': self.properties['ScalingAdjustment']})
-        group.adjust(int(self.properties['ScalingAdjustment']),
-                     self.properties['AdjustmentType'])
+                    'filter': self.properties[self.SCALING_ADJUSTMENT]})
+        group.adjust(int(self.properties[self.SCALING_ADJUSTMENT]),
+                     self.properties[self.ADJUSTMENT_TYPE])
 
         self._cooldown_timestamp("%s : %s" %
-                                 (self.properties['AdjustmentType'],
-                                  self.properties['ScalingAdjustment']))
+                                 (self.properties[self.ADJUSTMENT_TYPE],
+                                  self.properties[self.SCALING_ADJUSTMENT]))
 
     def _resolve_attribute(self, name):
         '''
