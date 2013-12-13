@@ -251,7 +251,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(cs.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertTrue("The heat-script.sh script exited" in str(exc))
+        self.assertIn("The heat-script.sh script exited", str(exc))
         self.m.VerifyAll()
 
     def test_cs_create_cfnuserdata_nonzero_exit_status(self):
@@ -261,7 +261,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.ReplayAll()
         create = scheduler.TaskRunner(cs.create)
         exc = self.assertRaises(exception.ResourceFailure, create)
-        self.assertTrue("The cfn-userdata script exited" in str(exc))
+        self.assertIn("The cfn-userdata script exited", str(exc))
         self.m.VerifyAll()
 
     def test_cs_update_cfnuserdata_nonzero_exit_status(self):
@@ -277,7 +277,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         update_template['Metadata'] = {'test': 123}
         update = scheduler.TaskRunner(cs.update, update_template)
         exc = self.assertRaises(exception.ResourceFailure, update)
-        self.assertTrue("The cfn-userdata script exited" in str(exc))
+        self.assertIn("The cfn-userdata script exited", str(exc))
 
     def test_cs_create_flavor_err(self):
         """validate() should throw an if the flavor is invalid."""

@@ -196,5 +196,5 @@ class CloudDBInstanceTest(HeatTestCase):
                                                     inject_property_error=True)
         self.m.ReplayAll()
         ret = instance.validate()
-        self.assertTrue('Error' in ret)
+        self.assertIn('Error', ret)
         self.m.VerifyAll()

@@ -245,7 +245,7 @@ class InstanceGroupTest(HeatTestCase):
         grp = stack['JobServerGroup']
         self.assertTrue(grp.update_policy)
         self.assertTrue(len(grp.update_policy) == 1)
-        self.assertTrue('RollingUpdate' in grp.update_policy)
+        self.assertIn('RollingUpdate', grp.update_policy)
         policy = grp.update_policy['RollingUpdate']
         self.assertTrue(policy and len(policy) > 0)
         self.assertEqual(int(policy['MinInstancesInService']), 1)
@@ -259,7 +259,7 @@ class InstanceGroupTest(HeatTestCase):
         grp = stack['JobServerGroup']
         self.assertTrue(grp.update_policy)
         self.assertTrue(len(grp.update_policy) == 1)
-        self.assertTrue('RollingUpdate' in grp.update_policy)
+        self.assertIn('RollingUpdate', grp.update_policy)
         policy = grp.update_policy['RollingUpdate']
         self.assertTrue(policy and len(policy) > 0)
         self.assertEqual(int(policy['MinInstancesInService']), 0)
@@ -354,7 +354,7 @@ class InstanceGroupTest(HeatTestCase):
 
         # test that update policy is loaded
         current_grp = stack['JobServerGroup']
-        self.assertTrue('RollingUpdate' in current_grp.update_policy)
+        self.assertIn('RollingUpdate', current_grp.update_policy)
         current_policy = current_grp.update_policy['RollingUpdate']
         self.assertTrue(current_policy)
         self.assertTrue(len(current_policy) > 0)
@@ -406,7 +406,7 @@ class InstanceGroupTest(HeatTestCase):
 
         # test that the update policy is updated
         updated_grp = stack['JobServerGroup']
-        self.assertTrue('RollingUpdate' in updated_grp.update_policy)
+        self.assertIn('RollingUpdate', updated_grp.update_policy)
         updated_policy = updated_grp.update_policy['RollingUpdate']
         self.assertTrue(updated_policy)
         self.assertTrue(len(updated_policy) > 0)
@@ -589,7 +589,7 @@ class InstanceGroupTest(HeatTestCase):
 
         # test that update policy is loaded
         current_grp = stack['JobServerGroup']
-        self.assertTrue('RollingUpdate' in current_grp.update_policy)
+        self.assertIn('RollingUpdate', current_grp.update_policy)
         current_policy = current_grp.update_policy['RollingUpdate']
         self.assertTrue(current_policy)
         self.assertTrue(len(current_policy) > 0)
@@ -633,7 +633,7 @@ class InstanceGroupTest(HeatTestCase):
 
         # test that update policy is loaded
         current_grp = stack['JobServerGroup']
-        self.assertTrue('RollingUpdate' in current_grp.update_policy)
+        self.assertIn('RollingUpdate', current_grp.update_policy)
         current_policy = current_grp.update_policy['RollingUpdate']
         self.assertTrue(current_policy)
         self.assertTrue(len(current_policy) > 0)
@@ -664,7 +664,7 @@ class InstanceGroupTest(HeatTestCase):
 
         # test that the update policy is updated
         updated_grp = stack['JobServerGroup']
-        self.assertTrue('RollingUpdate' in updated_grp.update_policy)
+        self.assertIn('RollingUpdate', updated_grp.update_policy)
         updated_policy = updated_grp.update_policy['RollingUpdate']
         self.assertTrue(updated_policy)
         self.assertTrue(len(updated_policy) > 0)

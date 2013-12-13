@@ -36,9 +36,9 @@ class AWSCommonTest(HeatTestCase):
                                                keyname='ParameterKey',
                                                valuename='ParameterValue')
         self.assertEqual(len(params), 2)
-        self.assertTrue('foo' in params)
+        self.assertIn('foo', params)
         self.assertEqual(params['foo'], 'bar')
-        self.assertTrue('blarg' in params)
+        self.assertIn('blarg', params)
         self.assertEqual(params['blarg'], 'wibble')
 
     def test_params_extract_dots(self):
@@ -60,7 +60,7 @@ class AWSCommonTest(HeatTestCase):
                                                keyname='ParameterKey',
                                                valuename='ParameterValue')
         self.assertEqual(len(params), 1)
-        self.assertTrue('foo' in params)
+        self.assertIn('foo', params)
         self.assertEqual(params['foo'], 'bar')
 
     def test_params_extract_garbage_prefix(self):
@@ -85,9 +85,9 @@ class AWSCommonTest(HeatTestCase):
              'MetricData.member.1.Value': 234333}
         params = api_utils.extract_param_list(p, prefix='MetricData')
         self.assertEqual(len(params), 1)
-        self.assertTrue('MetricName' in params[0])
-        self.assertTrue('Unit' in params[0])
-        self.assertTrue('Value' in params[0])
+        self.assertIn('MetricName', params[0])
+        self.assertIn('Unit', params[0])
+        self.assertIn('Value', params[0])
         self.assertEqual(params[0]['MetricName'], 'foo')
         self.assertEqual(params[0]['Unit'], 'Bytes')
         self.assertEqual(params[0]['Value'], 234333)
@@ -98,9 +98,9 @@ class AWSCommonTest(HeatTestCase):
              'MetricData.member.1.Value': 234333}
         params = api_utils.extract_param_list(p, prefix='MetricData')
         self.assertEqual(len(params), 1)
-        self.assertTrue('MetricName' not in params[0])
-        self.assertTrue('Unit' in params[0])
-        self.assertTrue('Value' in params[0])
+        self.assertNotIn('MetricName', params[0])
+        self.assertIn('Unit', params[0])
+        self.assertIn('Value', params[0])
         self.assertEqual(params[0]['Unit'], 'Bytes')
         self.assertEqual(params[0]['Value'], 234333)
 
@@ -117,9 +117,9 @@ class AWSCommonTest(HeatTestCase):
              'MetricData.member.1.Value': 234333}
         params = api_utils.extract_param_list(p, prefix='MetricData')
         self.assertEqual(len(params), 1)
-        self.assertTrue('MetricName' not in params[0])
-        self.assertTrue('Unit' in params[0])
-        self.assertTrue('Value' in params[0])
+        self.assertNotIn('MetricName', params[0])
+        self.assertIn('Unit', params[0])
+        self.assertIn('Value', params[0])
         self.assertEqual(params[0]['Unit'], 'Bytes')
         self.assertEqual(params[0]['Value'], 234333)
 
@@ -132,8 +132,8 @@ class AWSCommonTest(HeatTestCase):
              'MetricData.member.2.Value': 12345}
         params = api_utils.extract_param_list(p, prefix='MetricData')
         self.assertEqual(len(params), 2)
-        self.assertTrue('MetricName' in params[0])
-        self.assertTrue('MetricName' in params[1])
+        self.assertIn('MetricName', params[0])
+        self.assertIn('MetricName', params[1])
         self.assertEqual(params[0]['MetricName'], 'foo')
         self.assertEqual(params[0]['Unit'], 'Bytes')
         self.assertEqual(params[0]['Value'], 234333)
@@ -151,8 +151,8 @@ class AWSCommonTest(HeatTestCase):
              'MetricData.member.3.Value': 12345}
         params = api_utils.extract_param_list(p, prefix='MetricData')
         self.assertEqual(len(params), 2)
-        self.assertTrue('MetricName' in params[0])
-        self.assertTrue('MetricName' in params[1])
+        self.assertIn('MetricName', params[0])
+        self.assertIn('MetricName', params[1])
         self.assertEqual(params[0]['MetricName'], 'foo')
         self.assertEqual(params[0]['Unit'], 'Bytes')
         self.assertEqual(params[0]['Value'], 234333)

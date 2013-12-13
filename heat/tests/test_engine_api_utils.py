@@ -35,46 +35,46 @@ class EngineApiTest(HeatTestCase):
     def test_timeout_extract_zero(self):
         p = {'timeout_mins': '0'}
         args = api.extract_args(p)
-        self.assertTrue('timeout_mins' not in args)
+        self.assertNotIn('timeout_mins', args)
 
     def test_timeout_extract_garbage(self):
         p = {'timeout_mins': 'wibble'}
         args = api.extract_args(p)
-        self.assertTrue('timeout_mins' not in args)
+        self.assertNotIn('timeout_mins', args)
 
     def test_timeout_extract_none(self):
         p = {'timeout_mins': None}
         args = api.extract_args(p)
-        self.assertTrue('timeout_mins' not in args)
+        self.assertNotIn('timeout_mins', args)
 
     def test_timeout_extract_not_present(self):
         args = api.extract_args({})
-        self.assertTrue('timeout_mins' not in args)
+        self.assertNotIn('timeout_mins', args)
 
     def test_disable_rollback_extract_true(self):
         args = api.extract_args({'disable_rollback': True})
-        self.assertTrue('disable_rollback' in args)
+        self.assertIn('disable_rollback', args)
         self.assertTrue(args.get('disable_rollback'))
 
         args = api.extract_args({'disable_rollback': 'True'})
-        self.assertTrue('disable_rollback' in args)
+        self.assertIn('disable_rollback', args)
         self.assertTrue(args.get('disable_rollback'))
 
         args = api.extract_args({'disable_rollback': 'true'})
-        self.assertTrue('disable_rollback' in args)
+        self.assertIn('disable_rollback', args)
         self.assertTrue(args.get('disable_rollback'))
 
     def test_disable_rollback_extract_false(self):
         args = api.extract_args({'disable_rollback': False})
-        self.assertTrue('disable_rollback' in args)
+        self.assertIn('disable_rollback', args)
         self.assertFalse(args.get('disable_rollback'))
 
         args = api.extract_args({'disable_rollback': 'False'})
-        self.assertTrue('disable_rollback' in args)
+        self.assertIn('disable_rollback', args)
         self.assertFalse(args.get('disable_rollback'))
 
         args = api.extract_args({'disable_rollback': 'false'})
-        self.assertTrue('disable_rollback' in args)
+        self.assertIn('disable_rollback', args)
         self.assertFalse(args.get('disable_rollback'))
 
     def test_disable_rollback_extract_bad(self):
