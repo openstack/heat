@@ -875,12 +875,12 @@ class StackTest(HeatTestCase):
         tpl = {'Resources':
                {'A': {'Type': 'GenericResourceType'},
                 'B': {'Type': 'GenericResourceType'}}}
-        resources = '''{'A': {'status': 'COMPLETE', 'name': 'A',
-        'resource_data': {}, 'resource_id': None, 'action': 'INIT',
-        'type': 'GenericResourceType', 'metadata': {}},
-        'B': {'status': 'COMPLETE', 'name': 'B', 'resource_data': {},
-        'resource_id': None, 'action': 'INIT', 'type': 'GenericResourceType',
-        'metadata': {}}}'''
+        resources = '''{"A": {"status": "COMPLETE", "name": "A",
+        "resource_data": {}, "resource_id": null, "action": "INIT",
+        "type": "GenericResourceType", "metadata": {}},
+        "B": {"status": "COMPLETE", "name": "B", "resource_data": {},
+        "resource_id": null, "action": "INIT", "type": "GenericResourceType",
+        "metadata": {}}}'''
         self.stack = parser.Stack(self.ctx, 'stack_details_test',
                                   parser.Template(tpl))
         self.stack.store()
@@ -888,7 +888,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(None, info['action'])
         self.assertTrue('id' in info)
         self.assertEqual('stack_details_test', info['name'])
-        self.assertTrue(resources, info['resources'])
+        self.assertTrue(json.loads(resources), info['resources'])
         self.assertEqual(None, info['status'])
         self.assertEqual(tpl, info['template'])
 
