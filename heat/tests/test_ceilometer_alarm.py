@@ -25,10 +25,12 @@ from heat.tests import generic_resource
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
+from heat.common import exception
 from heat.common import template_format
 
 from heat.openstack.common.importutils import try_import
 
+from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
@@ -64,6 +66,24 @@ alarm_template = '''
 }
 '''
 
+combination_alarm_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Combination Alarm Test",
+  "Resources" : {
+    "CombinAlarm": {
+     "Type": "OS::Ceilometer::CombinationAlarm",
+     "Properties": {
+        "description": "Do stuff in combination",
+        "alarm_ids": ["alarm1", "alarm2"],
+        "operator": "and",
+        "alarm_actions": [],
+      }
+    }
+  }
+}
+'''
+
 
 class FakeCeilometerAlarm(object):
     alarm_id = 'foo'
@@ -84,6 +104,7 @@ class FakeCeilometerClient(object):
     alarms = FakeCeilometerAlarms()
 
 
+@testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
 class CeilometerAlarmTest(HeatTestCase):
     def setUp(self):
         super(CeilometerAlarmTest, self).setUp()
@@ -127,7 +148,6 @@ class CeilometerAlarmTest(HeatTestCase):
         self.fa.alarms.create(**al).AndReturn(FakeCeilometerAlarm())
         return stack
 
-    @testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
     @utils.stack_delete_after
     def test_mem_alarm_high_update_no_replace(self):
         '''
@@ -169,7 +189,6 @@ class CeilometerAlarmTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
     @utils.stack_delete_after
     def test_mem_alarm_high_update_replace(self):
         '''
@@ -195,7 +214,6 @@ class CeilometerAlarmTest(HeatTestCase):
 
         self.m.VerifyAll()
 
-    @testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
     @utils.stack_delete_after
     def test_mem_alarm_suspend_resume(self):
         """
@@ -219,5 +237,107 @@ class CeilometerAlarmTest(HeatTestCase):
         self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.resume)()
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+
+@testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
+class CombinationAlarmTest(HeatTestCase):
+
+    def setUp(self):
+        super(CombinationAlarmTest, self).setUp()
+        self.fc = FakeCeilometerClient()
+        self.m.StubOutWithMock(clients.OpenStackClients, 'ceilometer')
+        utils.setup_dummy_db()
+
+    def create_alarm(self):
+        clients.OpenStackClients.ceilometer().MultipleTimes().AndReturn(
+            self.fc)
+        self.m.StubOutWithMock(self.fc.alarms, 'create')
+        self.fc.alarms.create(
+            alarm_actions=[],
+            description=u'Do stuff in combination',
+            name=mox.IgnoreArg(), type='combination',
+            combination_rule={'alarm_ids': [u'alarm1', u'alarm2'],
+                              'operator': u'and'}
+        ).AndReturn(FakeCeilometerAlarm())
+        snippet = template_format.parse(combination_alarm_template)
+        stack = utils.parse_stack(snippet)
+        return alarm.CombinationAlarm(
+            'CombinAlarm', snippet['Resources']['CombinAlarm'], stack)
+
+    def test_create(self):
+        rsrc = self.create_alarm()
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual('foo', rsrc.resource_id)
+        self.m.VerifyAll()
+
+    def test_invalid_alarm_list(self):
+        snippet = template_format.parse(combination_alarm_template)
+        snippet['Resources']['CombinAlarm']['Properties']['alarm_ids'] = []
+        stack = utils.parse_stack(snippet)
+        rsrc = alarm.CombinationAlarm(
+            'CombinAlarm', snippet['Resources']['CombinAlarm'], stack)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  rsrc.validate)
+        self.assertEqual(
+            "Property error : CombinAlarm: alarm_ids length (0) is out of "
+            "range (min: 1, max: None)", str(error))
+
+    def test_update(self):
+        rsrc = self.create_alarm()
+        self.m.StubOutWithMock(self.fc.alarms, 'update')
+        self.fc.alarms.update(
+            alarm_id='foo',
+            combination_rule={'alarm_ids': [u'alarm1', u'alarm3']})
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        update_template = copy.deepcopy(rsrc.t)
+        update_template['Properties']['alarm_ids'] = ['alarm1', 'alarm3']
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_suspend(self):
+        rsrc = self.create_alarm()
+        self.m.StubOutWithMock(self.fc.alarms, 'update')
+        self.fc.alarms.update(alarm_id='foo', enabled=False)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        scheduler.TaskRunner(rsrc.suspend)()
+        self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_resume(self):
+        rsrc = self.create_alarm()
+        self.m.StubOutWithMock(self.fc.alarms, 'update')
+        self.fc.alarms.update(alarm_id='foo', enabled=True)
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
+
+        scheduler.TaskRunner(rsrc.resume)()
+        self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    def test_delete(self):
+        rsrc = self.create_alarm()
+        self.m.StubOutWithMock(self.fc.alarms, 'delete')
+        self.fc.alarms.delete('foo')
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
