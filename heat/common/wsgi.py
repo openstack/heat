@@ -670,17 +670,18 @@ class Resource(object):
             # won't make it into the pipeline app that serializes errors
             raise exception.HTTPExceptionDisguise(http_exc)
         except webob.exc.HTTPException as err:
-            if isinstance(err, (webob.exc.HTTPOk, webob.exc.HTTPRedirection)):
+            if not isinstance(err, webob.exc.HTTPError):
                 # Some HTTPException are actually not errors, they are
                 # responses ready to be sent back to the users, so we don't
                 # error log, disguise or translate those
                 raise
-            logging.error(_("Returning %(code)s to user: %(explanation)s"),
-                          {'code': err.code, 'explanation': err.explanation})
+            if isinstance(err, webob.exc.HTTPServerError):
+                logging.error(
+                    _("Returning %(code)s to user: %(explanation)s"),
+                    {'code': err.code, 'explanation': err.explanation})
             http_exc = translate_exception(err, request.best_match_language())
             raise exception.HTTPExceptionDisguise(http_exc)
         except exception.HeatException as err:
-            log_exception(err, sys.exc_info())
             raise translate_exception(err, request.best_match_language())
         except Exception as err:
             log_exception(err, sys.exc_info())

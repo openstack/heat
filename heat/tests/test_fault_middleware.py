@@ -39,12 +39,12 @@ class FaultMiddlewareTest(HeatTestCase):
 
     def test_openstack_exception_without_kwargs(self):
         wrapper = fault.FaultWrapper(None)
-        msg = wrapper._error(heat_exc.NoServiceEndpoint())
+        msg = wrapper._error(heat_exc.StackResourceLimitExceeded())
         expected = {'code': 500,
-                    'error': {'message': 'Response from Keystone does '
-                                         'not contain a Heat endpoint.',
+                    'error': {'message': 'Maximum resources '
+                                         'per stack exceeded.',
                               'traceback': None,
-                              'type': 'NoServiceEndpoint'},
+                              'type': 'StackResourceLimitExceeded'},
                     'explanation': 'The server has either erred or is '
                                    'incapable of performing the requested '
                                    'operation.',

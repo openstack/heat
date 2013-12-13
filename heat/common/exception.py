@@ -166,17 +166,8 @@ class AuthorizationRedirect(HeatException):
     msg_fmt = _("Redirecting to %(uri)s for authorization.")
 
 
-class ClientConfigurationError(HeatException):
-    msg_fmt = _("There was an error configuring the client.")
-
-
 class RequestUriTooLong(HeatException):
     msg_fmt = _("The URI was too long.")
-
-
-class ServerError(HeatException):
-    msg_fmt = _("The request returned 500 Internal Server Error"
-                "\n\nThe response body:\n%(body)s")
 
 
 class MaxRedirectsExceeded(HeatException):
@@ -185,10 +176,6 @@ class MaxRedirectsExceeded(HeatException):
 
 class InvalidRedirect(HeatException):
     msg_fmt = _("Received invalid HTTP redirect.")
-
-
-class NoServiceEndpoint(HeatException):
-    msg_fmt = _("Response from Keystone does not contain a Heat endpoint.")
 
 
 class RegionAmbiguity(HeatException):
