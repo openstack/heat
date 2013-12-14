@@ -197,6 +197,8 @@ class ResourceRegistry(object):
             return
 
         if name in registry and isinstance(registry[name], ResourceInfo):
+            if registry[name] == info:
+                return
             details = {
                 'path': descriptive_path,
                 'was': str(registry[name].value),

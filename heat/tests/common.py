@@ -36,7 +36,7 @@ class HeatTestCase(testtools.TestCase):
         super(HeatTestCase, self).setUp()
         self.m = mox.Mox()
         self.addCleanup(self.m.UnsetStubs)
-        self.useFixture(fixtures.FakeLogger(level=logging.DEBUG))
+        self.logger = self.useFixture(fixtures.FakeLogger(level=logging.DEBUG))
         scheduler.ENABLE_SLEEP = False
         self.useFixture(fixtures.MonkeyPatch(
             'heat.common.exception._FATAL_EXCEPTION_FORMAT_ERRORS',
