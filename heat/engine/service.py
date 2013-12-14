@@ -39,6 +39,7 @@ from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
+from heat.engine import stack_lock
 from heat.engine import template as tpl
 from heat.engine import watchrule
 
@@ -61,6 +62,19 @@ def request_context(func):
     return wrapped
 
 
+class EngineListener(service.Service):
+    '''
+    Listen on an AMQP queue while a stack action is in-progress and
+    respond to stack-related questions.  Used for multi-engine support.
+    '''
+    def listening(self, ctxt):
+        '''
+        Respond affirmatively to confirm that the engine performing the
+        action is still alive.
+        '''
+        return True
+
+
 class EngineService(service.Service):
     """
     Manages the running instances from creation to destruction.
@@ -76,6 +90,11 @@ class EngineService(service.Service):
         # stg == "Stack Thread Groups"
         self.stg = {}
         resources.initialise()
+
+        self.listener = EngineListener(host, stack_lock.engine_id)
+        logger.debug(_("Starting listener for engine %s")
+                     % stack_lock.engine_id)
+        self.listener.start()
 
     def _start_in_thread(self, stack_id, func, *args, **kwargs):
         if stack_id not in self.stg:
