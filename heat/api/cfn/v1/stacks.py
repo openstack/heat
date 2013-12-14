@@ -267,9 +267,11 @@ class StackController(object):
     )
 
     def create(self, req):
+        self._enforce(req, 'CreateStack')
         return self.create_or_update(req, self.CREATE_STACK)
 
     def update(self, req):
+        self._enforce(req, 'UpdateStack')
         return self.create_or_update(req, self.UPDATE_STACK)
 
     def create_or_update(self, req, action=None):
