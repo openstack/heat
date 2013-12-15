@@ -15,6 +15,8 @@
 
 from heat.common import exception
 from heat.engine import clients
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
@@ -29,20 +31,41 @@ logger = logging.getLogger(__name__)
 
 
 class User(resource.Resource):
+    PROPERTIES = (
+        PATH, GROUPS, LOGIN_PROFILE, POLICIES,
+    ) = (
+        'Path', 'Groups', 'LoginProfile', 'Policies',
+    )
+
+    _LOGIN_PROFILE_KEYS = (
+        LOGIN_PROFILE_PASSWORD,
+    ) = (
+        'Password',
+    )
+
     properties_schema = {
-        'Path': {
-            'Type': 'String',
-            'Description': _('Not Implemented.')},
-        'Groups': {
-            'Type': 'List',
-            'Description': _('Not Implemented.')},
-        'LoginProfile': {
-            'Type': 'Map',
-            'Schema': {'Password': {'Type': 'String'}},
-            'Description': _('A login profile for the user.')},
-        'Policies': {
-            'Type': 'List',
-            'Description': _('Access policies to apply to the user.')}}
+        PATH: properties.Schema(
+            properties.Schema.STRING,
+            _('Not Implemented.')
+        ),
+        GROUPS: properties.Schema(
+            properties.Schema.LIST,
+            _('Not Implemented.')
+        ),
+        LOGIN_PROFILE: properties.Schema(
+            properties.Schema.MAP,
+            _('A login profile for the user.'),
+            schema={
+                LOGIN_PROFILE_PASSWORD: properties.Schema(
+                    properties.Schema.STRING
+                ),
+            }
+        ),
+        POLICIES: properties.Schema(
+            properties.Schema.LIST,
+            _('Access policies to apply to the user.')
+        ),
+    }
 
     def _validate_policies(self, policies):
         for policy in (policies or []):
@@ -76,14 +99,14 @@ class User(resource.Resource):
 
     def handle_create(self):
         passwd = ''
-        if self.properties['LoginProfile'] and \
-                'Password' in self.properties['LoginProfile']:
-                passwd = self.properties['LoginProfile']['Password']
+        profile = self.properties[self.LOGIN_PROFILE]
+        if profile and self.LOGIN_PROFILE_PASSWORD in profile:
+            passwd = profile[self.LOGIN_PROFILE_PASSWORD]
 
-        if self.properties['Policies']:
-            if not self._validate_policies(self.properties['Policies']):
+        if self.properties[self.POLICIES]:
+            if not self._validate_policies(self.properties[self.POLICIES]):
                 raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                         key='Policies')
+                                                         key=self.POLICIES)
 
         uid = self.keystone().create_stack_user(self.physical_resource_name(),
                                                 passwd)
@@ -122,7 +145,7 @@ class User(resource.Resource):
             resource=self.name, key=key)
 
     def access_allowed(self, resource_name):
-        policies = (self.properties['Policies'] or [])
+        policies = (self.properties[self.POLICIES] or [])
         for policy in policies:
             if not isinstance(policy, basestring):
                 logger.warning(_("Ignoring policy %s, must be string "
@@ -135,21 +158,32 @@ class User(resource.Resource):
 
 
 class AccessKey(resource.Resource):
+    PROPERTIES = (
+        SERIAL, USER_NAME, STATUS,
+    ) = (
+        'Serial', 'UserName', 'Status',
+    )
+
     properties_schema = {
-        'Serial': {
-            'Type': 'Integer',
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'UserName': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('The name of the user that the new key will'
-                             ' belong to.')},
-        'Status': {
-            'Type': 'String',
-            'Implemented': False,
-            'AllowedValues': ['Active', 'Inactive'],
-            'Description': _('Not Implemented.')}}
+        SERIAL: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Not Implemented.'),
+            implemented=False
+        ),
+        USER_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('The name of the user that the new key will belong to.'),
+            required=True
+        ),
+        STATUS: properties.Schema(
+            properties.Schema.STRING,
+            _('Not Implemented.'),
+            constraints=[
+                constraints.AllowedValues(['Active', 'Inactive']),
+            ],
+            implemented=False
+        ),
+    }
 
     def __init__(self, name, json_snippet, stack):
         super(AccessKey, self).__init__(name, json_snippet, stack)
@@ -167,13 +201,13 @@ class AccessKey(resource.Resource):
         # into the UserName parameter.  Would be cleaner to just make the User
         # resource return resource_id for FnGetRefId but the AWS definition of
         # user does say it returns a user name not ID
-        return self.stack.resource_by_refid(self.properties['UserName'])
+        return self.stack.resource_by_refid(self.properties[self.USER_NAME])
 
     def handle_create(self):
         user = self._get_user()
         if user is None:
             raise exception.NotFound(_('could not find user %s') %
-                                     self.properties['UserName'])
+                                     self.properties[self.USER_NAME])
 
         kp = self.keystone().get_ec2_keypair(user.resource_id)
         if not kp:
@@ -209,7 +243,7 @@ class AccessKey(resource.Resource):
             if not self.resource_id:
                 logger.warn(_('could not get secret for %(username)s '
                             'Error:%(msg)s') % {
-                            'username': self.properties['UserName'],
+                            'username': self.properties[self.USER_NAME],
                             'msg': "resource_id not yet set"})
             else:
                 try:
@@ -218,7 +252,7 @@ class AccessKey(resource.Resource):
                 except Exception as ex:
                     logger.warn(_('could not get secret for %(username)s '
                                 'Error:%(msg)s') % {
-                                'username': self.properties['UserName'],
+                                'username': self.properties[self.USER_NAME],
                                 'msg': str(ex)})
                 else:
                     if kp.access == self.resource_id:
@@ -235,7 +269,7 @@ class AccessKey(resource.Resource):
         res = None
         log_res = None
         if key == 'UserName':
-            res = self.properties['UserName']
+            res = self.properties[self.USER_NAME]
             log_res = res
         elif key == 'SecretAccessKey':
             res = self._secret_accesskey()
@@ -253,15 +287,23 @@ class AccessKey(resource.Resource):
 
 
 class AccessPolicy(resource.Resource):
+    PROPERTIES = (
+        ALLOWED_RESOURCES,
+    ) = (
+        'AllowedResources',
+    )
+
     properties_schema = {
-        'AllowedResources': {
-            'Type': 'List',
-            'Required': True,
-            'Description': _('Resources that users are allowed to access by'
-                             ' the DescribeStackResource API.')}}
+        ALLOWED_RESOURCES: properties.Schema(
+            properties.Schema.LIST,
+            _('Resources that users are allowed to access by the '
+              'DescribeStackResource API.'),
+            required=True
+        ),
+    }
 
     def handle_create(self):
-        resources = self.properties['AllowedResources']
+        resources = self.properties[self.ALLOWED_RESOURCES]
         # All of the provided resource names must exist in this stack
         for resource in resources:
             if resource not in self.stack:
@@ -271,7 +313,7 @@ class AccessPolicy(resource.Resource):
                                                  stack_name=self.stack.name)
 
     def access_allowed(self, resource_name):
-        return resource_name in self.properties['AllowedResources']
+        return resource_name in self.properties[self.ALLOWED_RESOURCES]
 
 
 def resource_mapping():
