@@ -112,7 +112,6 @@ class swiftTest(HeatTestCase):
         headers = {
             "content-length": "0",
             "x-container-object-count": "82",
-            "x-container-write": "None",
             "accept-ranges": "bytes",
             "x-trans-id": "tx08ea48ef2fa24e6da3d2f5c188fd938b",
             "date": "Wed, 23 Jan 2013 22:48:05 GMT",
@@ -125,10 +124,7 @@ class swiftTest(HeatTestCase):
             fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
-            container_name,
-            {'X-Container-Write': None,
-             'X-Container-Read': None}
-        ).AndReturn(None)
+            container_name, {}).AndReturn(None)
         swiftclient.Connection.get_auth().MultipleTimes().AndReturn(
             ('http://server.test:8080/v_2', None))
         swiftclient.Connection.head_container(
@@ -169,8 +165,7 @@ class swiftTest(HeatTestCase):
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
-            {'X-Container-Write': None,
-             'X-Container-Read': '.r:*'}).AndReturn(None)
+            {'X-Container-Read': '.r:*'}).AndReturn(None)
         swiftclient.Connection.delete_container(container_name).AndReturn(None)
 
         self.m.ReplayAll()
@@ -210,7 +205,6 @@ class swiftTest(HeatTestCase):
             container_name,
             {'X-Container-Meta-Web-Error': 'error.html',
              'X-Container-Meta-Web-Index': 'index.html',
-             'X-Container-Write': None,
              'X-Container-Read': '.r:*'}).AndReturn(None)
         swiftclient.Connection.delete_container(container_name).AndReturn(None)
 
@@ -227,8 +221,7 @@ class swiftTest(HeatTestCase):
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name,
-            {'X-Container-Write': None,
-             'X-Container-Read': None}).AndReturn(None)
+            {}).AndReturn(None)
         swiftclient.Connection.delete_container(container_name).AndRaise(
             swiftclient.ClientException('Test delete failure'))
 
@@ -247,8 +240,7 @@ class swiftTest(HeatTestCase):
         # first run, with retain policy
         swiftclient.Connection.put_container(
             utils.PhysName('test_stack', 'test_resource'),
-            {'X-Container-Write': None,
-             'X-Container-Read': None}).AndReturn(None)
+            {}).AndReturn(None)
 
         self.m.ReplayAll()
         t = template_format.parse(swift_template)
@@ -261,3 +253,24 @@ class swiftTest(HeatTestCase):
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
+
+    def test_default_headers_not_none_empty_string(self):
+        '''Test that we are not passing None when we have a default
+        empty string or swiftclient will pass them as string None. see
+        bug lp:1259571.
+        '''
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        swiftclient.Connection.put_container(
+            container_name, {}).AndReturn(None)
+        swiftclient.Connection.delete_container(container_name).AndReturn(None)
+
+        self.m.ReplayAll()
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'SwiftContainer')
+        scheduler.TaskRunner(rsrc.delete)()
+        self.m.VerifyAll()
+
+        self.assertEqual({}, rsrc.metadata)

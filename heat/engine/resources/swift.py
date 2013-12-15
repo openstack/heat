@@ -98,12 +98,11 @@ class SwiftContainer(resource.Resource):
         container = self.physical_resource_name()
         headers = SwiftContainer._build_meta_headers(
             self.properties[self.X_CONTAINER_META])
-        if self.X_CONTAINER_READ in self.properties.keys():
-            read_header = self.properties[self.X_CONTAINER_READ]
-            headers['X-Container-Read'] = read_header
-        if self.X_CONTAINER_WRITE in self.properties.keys():
-            write_header = self.properties[self.X_CONTAINER_WRITE]
-            headers['X-Container-Write'] = write_header
+
+        for key in (self.X_CONTAINER_READ, self.X_CONTAINER_WRITE):
+            if self.properties.get(key) is not None:
+                headers[key] = self.properties[key]
+
         logger.debug(_('SwiftContainer create container %(container)s with '
                      'headers %(headers)s') % {
                      'container': container, 'headers': headers})
