@@ -11,11 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.common import exception
 from heat.db import api as db_api
 from heat.engine import stack_lock
 from heat.openstack.common.rpc import proxy
-from heat.openstack.common.rpc.common import Timeout
+from heat.openstack.common.rpc import common as rpc_common
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
@@ -49,7 +48,7 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack)
-        self.assertRaises(exception.ActionInProgress, slock.acquire)
+        self.assertRaises(rpc_common.ClientException, slock.acquire)
         self.m.VerifyAll()
 
     def test_successful_acquire_existing_lock_engine_dead(self):
@@ -61,7 +60,7 @@ class StackLockTest(HeatTestCase):
         self.m.StubOutWithMock(proxy.RpcProxy, "call")
         rpc = proxy.RpcProxy(topic, "1.0")
         rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(Timeout)
+                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
 
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
         db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
@@ -87,7 +86,7 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack)
-        self.assertRaises(exception.ActionInProgress, slock.acquire)
+        self.assertRaises(rpc_common.ClientException, slock.acquire)
         self.m.VerifyAll()
 
     def test_failed_acquire_existing_lock_engine_dead(self):
@@ -99,7 +98,7 @@ class StackLockTest(HeatTestCase):
         self.m.StubOutWithMock(proxy.RpcProxy, "call")
         rpc = proxy.RpcProxy(topic, "1.0")
         rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(Timeout)
+                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
 
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
         db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
@@ -109,7 +108,7 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack)
-        self.assertRaises(exception.ActionInProgress, slock.acquire)
+        self.assertRaises(rpc_common.ClientException, slock.acquire)
         self.m.VerifyAll()
 
     def test_successful_acquire_with_retry(self):
@@ -121,7 +120,7 @@ class StackLockTest(HeatTestCase):
         self.m.StubOutWithMock(proxy.RpcProxy, "call")
         rpc = proxy.RpcProxy(topic, "1.0")
         rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(Timeout)
+                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
 
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
         db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
@@ -134,7 +133,7 @@ class StackLockTest(HeatTestCase):
         topic = self.stack.id
         rpc = proxy.RpcProxy(topic, "1.0")
         rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(Timeout)
+                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
 
         db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
                                 stack_lock.engine_id).\
@@ -155,7 +154,7 @@ class StackLockTest(HeatTestCase):
         self.m.StubOutWithMock(proxy.RpcProxy, "call")
         rpc = proxy.RpcProxy(topic, "1.0")
         rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(Timeout)
+                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
 
         self.m.StubOutWithMock(db_api, "stack_lock_steal")
         db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
@@ -168,7 +167,7 @@ class StackLockTest(HeatTestCase):
         topic = self.stack.id
         rpc = proxy.RpcProxy(topic, "1.0")
         rpc.call(self.context, rpc.make_msg("listening"), timeout=2,
-                 topic="fake-engine-id").AndRaise(Timeout)
+                 topic="fake-engine-id").AndRaise(rpc_common.Timeout)
 
         db_api.stack_lock_steal(self.stack.id, "fake-engine-id",
                                 stack_lock.engine_id).\
@@ -177,5 +176,5 @@ class StackLockTest(HeatTestCase):
         self.m.ReplayAll()
 
         slock = stack_lock.StackLock(self.context, self.stack)
-        self.assertRaises(exception.ActionInProgress, slock.acquire)
+        self.assertRaises(rpc_common.ClientException, slock.acquire)
         self.m.VerifyAll()
