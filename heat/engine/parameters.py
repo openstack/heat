@@ -292,14 +292,6 @@ class JsonParam(Parameter, collections.Mapping):
         return value
 
     def value(self):
-        val = super(JsonParam, self).value()
-        if isinstance(val, collections.Mapping):
-            try:
-                val = json.dumps(val)
-                self.user_value = val
-            except (ValueError, TypeError) as err:
-                message = _('Value must be valid JSON')
-                raise ValueError("%s: %s" % (message, str(err)))
         return self.parsed
 
     def __getitem__(self, key):
