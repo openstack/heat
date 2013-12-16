@@ -455,8 +455,8 @@ class CinderVolume(Volume):
         elif self.properties.get(self.IMAGE_REF):
             arguments['imageRef'] = self.properties[self.IMAGE_REF]
 
-        optionals = ['snapshot_id', 'volume_type', 'source_volid',
-                     'metadata']
+        optionals = (self.SNAPSHOT_ID, self.VOLUME_TYPE, self.SOURCE_VOLID,
+                     self.METADATA)
         arguments.update((prop, self.properties[prop]) for prop in optionals
                          if self.properties[prop])
         return arguments
