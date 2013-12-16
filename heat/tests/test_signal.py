@@ -24,9 +24,12 @@ from heat.tests import utils
 from heat.common import exception
 from heat.common import template_format
 
+from heat.db import api as db_api
+
 from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
+from heat.engine import scheduler
 from heat.engine import signal_responder as sr
 
 from keystoneclient import exceptions as kc_exceptions
@@ -153,6 +156,34 @@ class SignalTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.assertIn('Error creating ec2 keypair', rsrc.status_reason)
         self.assertEqual('123xyz', rsrc.resource_id, '123xyz')
+
+    @utils.stack_delete_after
+    def test_resource_data(self):
+        self.stack = self.create_stack(stack_name='resource_data_test',
+                                       stub=False)
+
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            fakes.FakeKeystoneClient(
+                access='anaccesskey', secret='verysecret'))
+        self.m.ReplayAll()
+
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        # Ensure the resource data has been stored correctly
+        rs_data = db_api.resource_data_get_all(rsrc)
+        self.assertEqual('anaccesskey', rs_data.get('access_key'))
+        self.assertEqual('verysecret', rs_data.get('secret_key'))
+        self.assertEqual(2, len(rs_data.keys()))
+
+        # And that we remove it on delete
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        rs_data = db_api.resource_data_get_all(rsrc)
+        self.assertEqual(0, len(rs_data.keys()))
 
     @utils.stack_delete_after
     def test_FnGetAtt_Alarm_Url(self):
