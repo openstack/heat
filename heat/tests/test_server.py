@@ -25,8 +25,10 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources import server as servers
 from heat.openstack.common import uuidutils
+from heat.openstack.common.gettextutils import _
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
+from novaclient import exceptions
 
 
 wp_template = '''
@@ -363,6 +365,33 @@ class ServersTest(HeatTestCase):
         self.assertEqual('Invalid DeletionPolicy SelfDestruct',
                          str(ex))
 
+        self.m.VerifyAll()
+
+    def test_server_validate_with_networks(self):
+        stack_name = 'srv_net'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        network_name = 'public'
+        # create an server with 'uuid' and 'network' properties
+        t['Resources']['WebServer']['Properties']['networks'] = (
+            [{'uuid': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+              'network': network_name}])
+
+        server = servers.Server('server_validate_with_networks',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               server.validate)
+        self.assertIn(_('Properties "uuid" and "network" are both set to '
+                        'the network "%(network)s" for the server '
+                        '"%(server)s". The "uuid" property is deprecated. '
+                        'Use only "network" property.'
+                        '') % dict(network=network_name, server=server.name),
+                      str(ex))
         self.m.VerifyAll()
 
     def test_server_delete(self):
@@ -960,17 +989,33 @@ class ServersTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_build_nics(self):
-        self.assertEqual(None, servers.Server._build_nics([]))
-        self.assertEqual(None, servers.Server._build_nics(None))
-        self.assertEqual([
-            {'net-id': '1234abcd'},
-            {'v4-fixed-ip': '192.0.2.0'},
-            {'port-id': 'aaaabbbb'}
-        ], servers.Server._build_nics([
-            {'uuid': '1234abcd'},
-            {'fixed_ip': '192.0.2.0'},
-            {'port': 'aaaabbbb'}
-        ]))
+        return_server = self.fc.servers.list()[1]
+        server = self._create_test_server(return_server,
+                                          'test_server_create')
+        self.assertEqual(None, server._build_nics([]))
+        self.assertEqual(None, server._build_nics(None))
+        self.assertEqual([{'port-id': 'aaaabbbb'},
+                          {'v4-fixed-ip': '192.0.2.0'}],
+                         server._build_nics([{'port': 'aaaabbbb'},
+                                             {'fixed_ip': '192.0.2.0'}]))
+
+        self.assertEqual([{'net-id': '1234abcd'}],
+                         server._build_nics([{'uuid': '1234abcd'}]))
+
+        self.assertEqual([{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
+                         server._build_nics(
+                             [{'network':
+                               'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]
+                         ))
+
+        self.assertEqual([{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
+                         server._build_nics([{'network': 'public'}]))
+
+        self.assertRaises(exceptions.NoUniqueMatch, server._build_nics,
+                          ([{'network': 'foo'}]))
+
+        self.assertRaises(exceptions.NotFound, server._build_nics,
+                          ([{'network': 'bar'}]))
 
     def test_server_without_ip_address(self):
         return_server = self.fc.servers.list()[3]
