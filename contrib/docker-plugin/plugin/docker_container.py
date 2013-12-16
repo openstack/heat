@@ -17,9 +17,19 @@
 
 from heat.engine import properties
 from heat.engine import resource
+from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
 
-import docker
+logger = logging.getLogger(__name__)
+
+DOCKER_INSTALLED = False
+# conditionally import so tests can work without having the dependency
+# satisfied
+try:
+    import docker
+    DOCKER_INSTALLED = True
+except ImportError:
+    docker = None
 
 
 class DockerContainer(resource.Resource):
@@ -128,13 +138,14 @@ class DockerContainer(resource.Resource):
         'logs_tail': _('Container last logs line')
     }
 
-    docker_client = docker.Client()
-
     def get_client(self):
-        client = self.docker_client
-        endpoint = self.properties.get('docker_endpoint')
-        if endpoint:
-            client = docker.Client(endpoint)
+        client = None
+        if DOCKER_INSTALLED:
+            endpoint = self.properties.get('docker_endpoint')
+            if endpoint:
+                client = docker.Client(endpoint)
+            else:
+                client = docker.Client()
         return client
 
     def _parse_networkinfo_ports(self, networkinfo):
@@ -261,6 +272,11 @@ class DockerContainer(resource.Resource):
 
 
 def resource_mapping():
-    return {
-        'OS::Docker::Container': DockerContainer
-    }
+    # only register if docker client installed
+    if DOCKER_INSTALLED:
+        return {
+            'OS::Docker::Container': DockerContainer
+        }
+    else:
+        logger.warn("Docker plug-in loaded, but docker lib not installed.")
+    return {}
