@@ -823,6 +823,11 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
 
         asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
         group = self.stack.resource_by_refid(asgn_id)
+        if group is None:
+            raise exception.NotFound(_('Alarm %(alarm)s could not find '
+                                       'scaling group named "%(group)s"') % {
+                                           'alarm': self.name,
+                                           'group': asgn_id})
 
         logger.info(_('%(name)s Alarm, adjusting Group %(group)s '
                     'by %(filter)s') % {
