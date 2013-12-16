@@ -427,8 +427,9 @@ class Stack(collections.Mapping):
         Get a Stack containing any in-progress resources from the previous
         stack state prior to an update.
         '''
-        s = db_api.stack_get_by_name(self.context, self._backup_name(),
-                                     owner_id=self.id)
+        s = db_api.stack_get_by_name_and_owner_id(self.context,
+                                                  self._backup_name(),
+                                                  owner_id=self.id)
         if s is not None:
             logger.debug(_('Loaded existing backup stack'))
             return self.load(self.context, stack=s)
