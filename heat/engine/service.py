@@ -47,6 +47,7 @@ from heat.openstack.common import log as logging
 from heat.openstack.common import threadgroup
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common.rpc import service
+from heat.openstack.common import excutils
 from heat.openstack.common import uuidutils
 
 
@@ -99,7 +100,35 @@ class EngineService(service.Service):
     def _start_in_thread(self, stack_id, func, *args, **kwargs):
         if stack_id not in self.stg:
             self.stg[stack_id] = threadgroup.ThreadGroup()
-        self.stg[stack_id].add_thread(func, *args, **kwargs)
+        return self.stg[stack_id].add_thread(func, *args, **kwargs)
+
+    def _start_thread_with_lock(self, cnxt, stack, func, *args):
+        """
+        Try to acquire a stack lock and, if successful, run the method in a
+        sub-thread.
+
+        :param cnxt: RPC context
+        :param stack: Stack to be operated on
+        :type stack: heat.engine.parser.Stack
+        :param func: Callable to be invoked in sub-thread
+        :type func: function or instancemethod
+        :param args: Args to be passed to func
+        """
+        lock = stack_lock.StackLock(cnxt, stack)
+
+        def release(gt, *args, **kwargs):
+            """
+            Callback function that will be passed to GreenThread.link().
+            """
+            lock.release()
+
+        lock.acquire()
+        try:
+            th = self._start_in_thread(stack.id, func, *args)
+            th.link(release)
+        except:
+            with excutils.save_and_reraise_exception():
+                lock.release()
 
     def _timer_in_thread(self, stack_id, func, *args, **kwargs):
         """
@@ -327,9 +356,9 @@ class EngineService(service.Service):
 
         stack.validate()
 
-        stack_id = stack.store()
+        stack.store()
 
-        self._start_in_thread(stack_id, _stack_create, stack)
+        self._start_thread_with_lock(cnxt, stack, _stack_create, stack)
 
         return dict(stack.identifier())
 
@@ -379,7 +408,8 @@ class EngineService(service.Service):
         self._validate_deferred_auth_context(cnxt, updated_stack)
         updated_stack.validate()
 
-        self._start_in_thread(db_stack.id, current_stack.update, updated_stack)
+        self._start_thread_with_lock(cnxt, current_stack, current_stack.update,
+                                     updated_stack)
 
         return dict(current_stack.identifier())
 
@@ -478,15 +508,8 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(cnxt, stack=st)
 
-        self._delete_stack_on_thread(st, stack)
-
-    def _delete_stack_on_thread(self, st, stack):
-        # Kill any pending threads by calling ThreadGroup.stop()
-        if st.id in self.stg:
-            self.stg[st.id].stop()
-            del self.stg[st.id]
-        # use the service ThreadGroup for deletes
-        self.tg.add_thread(stack.delete)
+        self._start_thread_with_lock(cnxt, stack, stack.delete)
+        return None
 
     @request_context
     def abandon_stack(self, cnxt, stack_identity):
@@ -503,7 +526,7 @@ class EngineService(service.Service):
         stack_info = stack.get_abandon_data()
         # Set deletion policy to 'Retain' for all resources in the stack.
         stack.set_deletion_policy(resource.RETAIN)
-        self._delete_stack_on_thread(st, stack)
+        self._start_thread_with_lock(cnxt, stack, stack.delete)
         return stack_info
 
     def list_resource_types(self, cnxt):
@@ -713,7 +736,7 @@ class EngineService(service.Service):
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
-        self._start_in_thread(stack.id, _stack_suspend, stack)
+        self._start_thread_with_lock(cnxt, stack, _stack_suspend, stack)
 
     @request_context
     def stack_resume(self, cnxt, stack_identity):
@@ -727,7 +750,7 @@ class EngineService(service.Service):
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
-        self._start_in_thread(stack.id, _stack_resume, stack)
+        self._start_thread_with_lock(cnxt, stack, _stack_resume, stack)
 
     def _load_user_creds(self, creds_id):
         user_creds = db_api.user_creds_get(creds_id)
