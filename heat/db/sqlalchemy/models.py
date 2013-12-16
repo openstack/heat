@@ -166,6 +166,7 @@ class UserCreds(BASE, HeatBase):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     username = sqlalchemy.Column(sqlalchemy.String(255))
     password = sqlalchemy.Column(sqlalchemy.String(255))
+    decrypt_method = sqlalchemy.Column(sqlalchemy.String(64))
     tenant = sqlalchemy.Column(sqlalchemy.String(1024))
     auth_url = sqlalchemy.Column(sqlalchemy.String)
     tenant_id = sqlalchemy.Column(sqlalchemy.String(256))
@@ -207,6 +208,7 @@ class ResourceData(BASE, HeatBase):
     key = sqlalchemy.Column('key', sqlalchemy.String(255))
     value = sqlalchemy.Column('value', sqlalchemy.String)
     redact = sqlalchemy.Column('redact', sqlalchemy.Boolean)
+    decrypt_method = sqlalchemy.Column(sqlalchemy.String(64))
     resource_id = sqlalchemy.Column('resource_id',
                                     sqlalchemy.String(36),
                                     sqlalchemy.ForeignKey('resource.id'),

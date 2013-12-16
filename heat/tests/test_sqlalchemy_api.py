@@ -603,7 +603,9 @@ class DBAPIUserCredsTest(HeatTestCase):
         user_creds = create_user_creds(self.ctx, trust_id='test_trust_id',
                                        trustor_user_id='trustor_id')
         self.assertIsNotNone(user_creds.id)
-        self.assertEqual('test_trust_id', db_api._decrypt(user_creds.trust_id))
+        self.assertEqual('test_trust_id',
+                         db_api._decrypt(user_creds.trust_id,
+                                         user_creds.decrypt_method))
         self.assertEqual('trustor_id', user_creds.trustor_user_id)
         self.assertIsNone(user_creds.username)
         self.assertIsNone(user_creds.password)
@@ -614,12 +616,14 @@ class DBAPIUserCredsTest(HeatTestCase):
         user_creds = create_user_creds(self.ctx)
         self.assertIsNotNone(user_creds.id)
         self.assertEqual(self.ctx.password,
-                         db_api._decrypt(user_creds.password))
+                         db_api._decrypt(user_creds.password,
+                                         user_creds.decrypt_method))
 
     def test_user_creds_get(self):
         user_creds = create_user_creds(self.ctx)
         ret_user_creds = db_api.user_creds_get(user_creds.id)
-        self.assertEqual(db_api._decrypt(user_creds.password),
+        self.assertEqual(db_api._decrypt(user_creds.password,
+                                         user_creds.decrypt_method),
                          ret_user_creds['password'])
 
 
