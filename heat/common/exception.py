@@ -331,3 +331,8 @@ class ActionInProgress(HeatException):
 
 class SoftwareConfigMissing(HeatException):
     msg_fmt = _("The config (%(software_config_id)s) could not be found.")
+
+
+class StopActionFailed(HeatException):
+    msg_fmt = _("Failed to stop stack (%(stack_name)s) on other engine "
+                "(%(engine_id)s)")
