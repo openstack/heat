@@ -89,6 +89,10 @@ class Clients(clients.OpenStackClients):
         '''Rackspace neutron client.'''
         return self._get_client("network")
 
+    def trove(self):
+        '''Rackspace trove client.'''
+        return super(Clients, self).trove(service_type="rax:database")
+
     def __authenticate(self):
         # current implemenation shown below authenticates using
         # username and password. Need make it work with auth-token
