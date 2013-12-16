@@ -17,6 +17,7 @@
 import ConfigParser
 import functools
 import os
+import subprocess
 
 import lockfile
 import sqlalchemy
@@ -24,7 +25,6 @@ import sqlalchemy.exc
 
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
-from heat.openstack.common import processutils
 from heat.openstack.common.py3kcompat import urlutils
 from heat.openstack.common import test
 
@@ -158,13 +158,13 @@ class BaseMigrationTestCase(test.BaseTestCase):
         super(BaseMigrationTestCase, self).tearDown()
 
     def execute_cmd(self, cmd=None):
-        out, err = processutils.trycmd(cmd, shell=True, discard_warnings=True)
-        output = out or err
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
+        output = process.communicate()[0]
         LOG.debug(output)
-        self.assertEqual('', err,
+        self.assertEqual(0, process.returncode,
                          "Failed to run: %s\n%s" % (cmd, output))
 
-    @_set_db_lock('pgadmin', 'tests-')
     def _reset_pg(self, conn_pieces):
         (user, password, database, host) = get_db_connection_info(conn_pieces)
         os.environ['PGPASSWORD'] = password
@@ -186,6 +186,7 @@ class BaseMigrationTestCase(test.BaseTestCase):
         os.unsetenv('PGPASSWORD')
         os.unsetenv('PGUSER')
 
+    @_set_db_lock(lock_prefix='migration_tests-')
     def _reset_databases(self):
         for key, engine in self.engines.items():
             conn_string = self.test_databases[key]
