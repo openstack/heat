@@ -45,6 +45,7 @@ from heat.engine.resources import nova_utils
 from heat.engine import resource as rsrs
 from heat.engine import watchrule
 from heat.openstack.common import threadgroup
+from heat.openstack.common.rpc import common as rpc_common
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -975,8 +976,9 @@ class StackServiceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_stack_identify_nonexist(self):
-        self.assertRaises(exception.StackNotFound, self.eng.identify_stack,
-                          self.ctx, 'wibble')
+        e = self.assertRaises(rpc_common.ClientException,
+                              self.eng.identify_stack, self.ctx, 'wibble')
+        self.assertIs(e._exc_info[0], exception.StackNotFound)
 
     @stack_context('service_create_existing_test_stack', False)
     def test_stack_create_existing(self):
