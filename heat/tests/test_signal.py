@@ -121,7 +121,7 @@ class SignalTest(HeatTestCase):
                                        stub=False)
 
         class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
-            def get_ec2_keypair(self, name):
+            def create_ec2_keypair(self, name):
                 raise kc_exceptions.Forbidden("Denied!")
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
@@ -142,7 +142,7 @@ class SignalTest(HeatTestCase):
                                        stub=False)
 
         class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
-            def get_ec2_keypair(self, name):
+            def create_ec2_keypair(self, name):
                 return None
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')

@@ -309,20 +309,13 @@ class KeystoneClient(object):
     def delete_ec2_keypair(self, user_id, accesskey):
         self.client_v2.ec2.delete(user_id, accesskey)
 
-    def get_ec2_keypair(self, user_id):
-        # We make the assumption that each user will only have one
-        # ec2 keypair, it's not clear if AWS allow multiple AccessKey resources
-        # to be associated with a single User resource, but for simplicity
-        # we assume that here for now
-        cred = self.client_v2.ec2.list(user_id)
-        if len(cred) == 0:
-            return self.client_v2.ec2.create(user_id, self.context.tenant_id)
-        if len(cred) == 1:
-            return cred[0]
-        else:
-            logger.error(_("Unexpected number of ec2 credentials %(len)s "
-                           "for %(user)s") % {'len': len(cred),
-                                              'user': user_id})
+    def get_ec2_keypair(self, access, user_id=None):
+        uid = user_id or self.client_v2.auth_ref.user_id
+        return self.client_v2.ec2.get(uid, access)
+
+    def create_ec2_keypair(self, user_id=None):
+        uid = user_id or self.client_v2.auth_ref.user_id
+        return self.client_v2.ec2.create(uid, self.context.tenant_id)
 
     def disable_stack_user(self, user_id):
         # FIXME : This won't work with the v3 keystone API
