@@ -21,8 +21,8 @@ from heat.db import api as db_api
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
+from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import proxy
-from heat.openstack.common.rpc.common import Timeout
 
 logger = logging.getLogger(__name__)
 engine_id = str(uuid.uuid4())
@@ -41,9 +41,10 @@ class StackLock(object):
         try:
             return rpc.call(self.context, msg, topic=topic,
                             timeout=cfg.CONF.engine_life_check_timeout)
-        except Timeout:
+        except rpc_common.Timeout:
             return False
 
+    @rpc_common.client_exceptions(exception.ActionInProgress)
     def acquire(self, retry=True):
         """Acquire a lock on the stack."""
         lock_engine_id = db_api.stack_lock_create(self.stack.id, engine_id)
