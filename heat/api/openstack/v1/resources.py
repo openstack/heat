@@ -79,7 +79,7 @@ class ResourceController(object):
     @util.identified_stack
     def show(self, req, identity, resource_name):
         """
-        Gets detailed information for a stack
+        Gets detailed information for a resource
         """
 
         res = self.engine.describe_stack_resource(req.context,
@@ -91,7 +91,7 @@ class ResourceController(object):
     @util.identified_stack
     def metadata(self, req, identity, resource_name):
         """
-        Gets detailed information for a stack
+        Gets metadata information for a resource
         """
 
         res = self.engine.describe_stack_resource(req.context,
