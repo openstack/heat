@@ -35,103 +35,138 @@ class OSDBInstance(resource.Resource):
     '''
     Openstack cloud database instance resource.
     '''
-    database_schema = {
-        "character_set": properties.Schema(
-            properties.Schema.STRING,
-            _("Set of symbols and encodings."),
-            default="utf8",
-            required=False),
 
-        "collate": properties.Schema(
-            properties.Schema.STRING,
-            _("Set of rules for comparing characters in a character set."),
-            default="utf8_general_ci",
-            required=False),
+    PROPERTIES = (
+        NAME, FLAVOR, SIZE, DATABASES, USERS, AVAILABILITY_ZONE,
+        RESTORE_POINT,
+    ) = (
+        'name', 'flavor', 'size', 'databases', 'users', 'availability_zone',
+        'restore_point',
+    )
 
-        "name": properties.Schema(
-            properties.Schema.STRING,
-            _("Specifies database names for creating databases on instance"
-              " creation."),
-            required=True,
-            constraints=[
-                constraints.Length(max=64),
-                constraints.AllowedPattern(
-                    "[a-zA-Z0-9_]+[a-zA-Z0-9_@?#\s]*[a-zA-Z0-9_]+")]),
-    }
+    _DATABASE_KEYS = (
+        DATABASE_CHARACTER_SET, DATABASE_COLLATE, DATABASE_NAME,
+    ) = (
+        'character_set', 'collate', 'name',
+    )
 
-    user_schema = {
-        "name": properties.Schema(
-            properties.Schema.STRING,
-            _("User name to create a user on instance creation."),
-            required=True,
-            constraints=[
-                constraints.Length(max=16),
-                constraints.AllowedPattern(
-                    "[a-zA-Z0-9_]+[a-zA-Z0-9_@?#\s]*[a-zA-Z0-9_]+")]),
-
-        "password": properties.Schema(
-            properties.Schema.STRING,
-            _("Password for those users on instance creation."),
-            required=True,
-            constraints=[constraints.AllowedPattern(
-                "[a-zA-Z0-9_]+[a-zA-Z0-9_@?#\s]*[a-zA-Z0-9_]+")]),
-
-        "host": properties.Schema(
-            properties.Schema.STRING,
-            _("The host from which a user is allowed to connect "
-              "to the database."),
-            default="%"),
-
-        "databases": properties.Schema(
-            properties.Schema.LIST,
-            _("Names of databases that those users can access "
-              "on instance creation."),
-            required=True,
-            schema=properties.Schema(properties.Schema.STRING))
-    }
+    _USER_KEYS = (
+        USER_NAME, USER_PASSWORD, USER_HOST, USER_DATABASES,
+    ) = (
+        'name', 'password', 'host', 'databases',
+    )
 
     properties_schema = {
-        "name": properties.Schema(
+        NAME: properties.Schema(
             properties.Schema.STRING,
-            _("Name of the DB instance to create."),
+            _('Name of the DB instance to create.'),
             required=True,
-            constraints=[constraints.Length(max=255)]),
-
-        "flavor": properties.Schema(
+            constraints=[
+                constraints.Length(max=255),
+            ]
+        ),
+        FLAVOR: properties.Schema(
             properties.Schema.STRING,
-            _("Reference to a flavor for creating DB instance."),
-            required=True),
-
-        "size": properties.Schema(
+            _('Reference to a flavor for creating DB instance.'),
+            required=True
+        ),
+        SIZE: properties.Schema(
             properties.Schema.INTEGER,
-            _("Database volume size in GB."),
+            _('Database volume size in GB.'),
             required=True,
-            constraints=[constraints.Range(1, 150)]),
-
-        "databases": properties.Schema(
+            constraints=[
+                constraints.Range(1, 150),
+            ]
+        ),
+        DATABASES: properties.Schema(
             properties.Schema.LIST,
-            _("List of databases to be created on DB instance creation."),
-            required=False,
+            _('List of databases to be created on DB instance creation.'),
             default=[],
-            schema=properties.Schema(properties.Schema.MAP,
-                                     schema=database_schema)),
-
-        "users": properties.Schema(
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    DATABASE_CHARACTER_SET: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Set of symbols and encodings.'),
+                        default='utf8'
+                    ),
+                    DATABASE_COLLATE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Set of rules for comparing characters in a '
+                          'character set.'),
+                        default='utf8_general_ci'
+                    ),
+                    DATABASE_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Specifies database names for creating '
+                          'databases on instance creation.'),
+                        required=True,
+                        constraints=[
+                            constraints.Length(max=64),
+                            constraints.AllowedPattern(r'[a-zA-Z0-9_]+'
+                                                       r'[a-zA-Z0-9_@?#\s]*'
+                                                       r'[a-zA-Z0-9_]+'),
+                        ]
+                    ),
+                },
+            )
+        ),
+        USERS: properties.Schema(
             properties.Schema.LIST,
-            _("List of users to be created on DB instance creation."),
-            required=False,
+            _('List of users to be created on DB instance creation.'),
             default=[],
-            schema=properties.Schema(properties.Schema.MAP,
-                                     schema=user_schema)),
-
-        "availability_zone": properties.Schema(
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    USER_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        _('User name to create a user on instance '
+                          'creation.'),
+                        required=True,
+                        constraints=[
+                            constraints.Length(max=16),
+                            constraints.AllowedPattern(r'[a-zA-Z0-9_]+'
+                                                       r'[a-zA-Z0-9_@?#\s]*'
+                                                       r'[a-zA-Z0-9_]+'),
+                        ]
+                    ),
+                    USER_PASSWORD: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Password for those users on instance '
+                          'creation.'),
+                        required=True,
+                        constraints=[
+                            constraints.AllowedPattern(r'[a-zA-Z0-9_]+'
+                                                       r'[a-zA-Z0-9_@?#\s]*'
+                                                       r'[a-zA-Z0-9_]+'),
+                        ]
+                    ),
+                    USER_HOST: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The host from which a user is allowed to '
+                          'connect to the database.'),
+                        default='%'
+                    ),
+                    USER_DATABASES: properties.Schema(
+                        properties.Schema.LIST,
+                        _('Names of databases that those users can '
+                          'access on instance creation.'),
+                        schema=properties.Schema(
+                            properties.Schema.STRING,
+                        ),
+                        required=True
+                    ),
+                },
+            )
+        ),
+        AVAILABILITY_ZONE: properties.Schema(
             properties.Schema.STRING,
-            _("Name of the availability zone for DB instance.")),
-
-        "restore_point": properties.Schema(
+            _('Name of the availability zone for DB instance.')
+        ),
+        RESTORE_POINT: properties.Schema(
             properties.Schema.STRING,
-            _("DB instance restore point."))
-
+            _('DB instance restore point.')
+        ),
     }
 
     attributes_schema = {
@@ -153,7 +188,7 @@ class OSDBInstance(resource.Resource):
         return self._dbinstance
 
     def physical_resource_name(self):
-        name = self.properties.get('name')
+        name = self.properties.get(self.NAME)
         if name:
             return name
 
@@ -165,18 +200,18 @@ class OSDBInstance(resource.Resource):
         '''
         self.dbinstancename = self.physical_resource_name()
         self.flavor = nova_utils.get_flavor_id(self.trove(),
-                                               self.properties['flavor'])
-        self.volume = {'size': self.properties['size']}
-        self.databases = self.properties.get('databases', [])
-        self.users = self.properties.get('users', [])
-        restore_point = self.properties.get('restore_point', None)
-        zone = self.properties.get('availability_zone', None)
+                                               self.properties[self.FLAVOR])
+        self.volume = {'size': self.properties[self.SIZE]}
+        self.databases = self.properties.get(self.DATABASES, [])
+        self.users = self.properties.get(self.USERS, [])
+        restore_point = self.properties.get(self.RESTORE_POINT, None)
+        zone = self.properties.get(self.AVAILABILITY_ZONE, None)
 
         # convert user databases to format required for troveclient.
         # that is, list of database dictionaries
         for user in self.users:
-            user['databases'] = [{'name': db}
-                                 for db in user.get('databases', [])]
+            dbs = [{'name': db} for db in user.get(self.USER_DATABASES, [])]
+            user[self.USER_DATABASES] = dbs
 
         # create db instance
         instance = self.trove().instances.create(
@@ -251,25 +286,25 @@ class OSDBInstance(resource.Resource):
             return res
 
         # check validity of user and databases
-        users = self.properties.get('users', [])
+        users = self.properties.get(self.USERS, [])
         if not users:
             return
 
-        databases = self.properties.get('databases', [])
+        databases = self.properties.get(self.DATABASES, [])
         if not databases:
             msg = _('Databases property is required if users property'
                     ' is provided')
             raise exception.StackValidationFailed(message=msg)
 
+        db_names = set([db[self.DATABASE_NAME] for db in databases])
         for user in users:
-            if not user.get('databases', []):
+            if not user.get(self.USER_DATABASES, []):
                 msg = _('Must provide access to at least one database for '
-                        'user %s') % user['name']
+                        'user %s') % user[self.USER_NAME]
                 raise exception.StackValidationFailed(message=msg)
 
-            missing_db = [db_name for db_name in user['databases']
-                          if db_name not in
-                          [db['name'] for db in databases]]
+            missing_db = [db_name for db_name in user[self.USER_DATABASES]
+                          if db_name not in db_names]
 
             if missing_db:
                 msg = _('Database %s specified for user does not exist in '
