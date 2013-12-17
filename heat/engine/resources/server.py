@@ -110,7 +110,8 @@ class Server(resource.Resource):
             'Description': _('Policy on how to apply an image-id update; '
                              'either by requesting a server rebuild or by '
                              'replacing the entire server'),
-            'AllowedValues': ['REBUILD', 'REPLACE'],
+            'AllowedValues': ['REBUILD', 'REPLACE',
+                              'REBUILD_PRESERVE_EPHEMERAL'],
             'UpdateAllowed': True},
         'key_name': {
             'Type': 'String',
@@ -401,8 +402,11 @@ class Server(resource.Resource):
             image_id = nova_utils.get_image_id(self.nova(), image)
             if not server:
                 server = self.nova().servers.get(self.resource_id)
-            checker = scheduler.TaskRunner(nova_utils.rebuild, server,
-                                           image_id)
+            preserve_ephemeral = (
+                image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
+            checker = scheduler.TaskRunner(
+                nova_utils.rebuild, server, image_id,
+                preserve_ephemeral=preserve_ephemeral)
             checkers.append(checker)
 
         # Optimization: make sure the first task is started before
