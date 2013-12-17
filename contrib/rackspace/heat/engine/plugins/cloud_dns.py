@@ -29,6 +29,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +156,7 @@ class CloudDns(resource.Resource):
         """
         # There is no check_create_complete as the pyrax create for DNS is
         # synchronous.
-        logger.debug("CloudDns handle_create called.")
+        logger.debug(_("CloudDns handle_create called."))
         args = dict((k, v) for k, v in self.properties.items())
         for rec in args[self.RECORDS] or {}:
             # only pop the priority for the correct types
@@ -169,9 +170,9 @@ class CloudDns(resource.Resource):
         """
         Update a Rackspace CloudDns Instance.
         """
-        logger.debug("CloudDns handle_update called.")
+        logger.debug(_("CloudDns handle_update called."))
         if not self.resource_id:
-            raise exception.Error('Update called on a non-existent domain')
+            raise exception.Error(_('Update called on a non-existent domain'))
         if prop_diff:
             dom = self.cloud_dns().get(self.resource_id)
 
@@ -194,7 +195,7 @@ class CloudDns(resource.Resource):
         """
         Delete a Rackspace CloudDns Instance.
         """
-        logger.debug("CloudDns handle_delete called.")
+        logger.debug(_("CloudDns handle_delete called."))
         if self.resource_id:
             try:
                 dom = self.cloud_dns().get(self.resource_id)

@@ -19,6 +19,7 @@ import novaclient.exceptions as novaexception
 
 from heat.common import exception
 from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
 from heat.engine import properties
 from heat.engine import scheduler
 from heat.engine.resources import instance
@@ -185,9 +186,9 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                      'rhel': rhel_script,
                      'ubuntu': ubuntu_script}
 
-    script_error_msg = ("The %(path)s script exited with a non-zero exit "
+    script_error_msg = (_("The %(path)s script exited with a non-zero exit "
                         "status.  To see the error message, log into the "
-                        "server and view %(log)s")
+                        "server and view %(log)s"))
 
     # Template keys supported for handle_update.  Properties not
     # listed here trigger an UpdateReplace
@@ -207,7 +208,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     def server(self):
         """Get the Cloud Server object."""
         if not self._server:
-            logger.debug("Calling nova().servers.get()")
+            logger.debug(_("Calling nova().servers.get()"))
             self._server = self.nova().servers.get(self.resource_id)
         return self._server
 
@@ -215,7 +216,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
     def distro(self):
         """Get the Linux distribution for this server."""
         if not self._distro:
-            logger.debug("Calling nova().images.get()")
+            logger.debug(_("Calling nova().images.get()"))
             image_data = self.nova().images.get(self.image)
             self._distro = image_data.metadata['os_distro']
         return self._distro
@@ -266,8 +267,10 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                 if ip['version'] == 4:
                     return ip['addr']
 
-        raise exception.Error("Could not determine the %s IP of %s." %
-                              (ip_type, self.properties[self.IMAGE]))
+        raise exception.Error(_("Could not determine the %(ip)s IP of "
+                                "%(image)s.") %
+                              {'ip': ip_type,
+                               'image': self.properties[self.IMAGE]})
 
     @property
     def public_ip(self):
@@ -352,7 +355,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
         # Create server
         client = self.nova().servers
-        logger.debug("Calling nova().servers.create()")
+        logger.debug(_("Calling nova().servers.create()"))
         server = client.create(self.physical_resource_name(),
                                self.image,
                                self.flavor,
@@ -369,7 +372,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         return scheduler.PollingTaskGroup(tasks)
 
     def _attach_volume(self, volume_id, device):
-        logger.debug("Calling nova().volumes.create_server_volume()")
+        logger.debug(_("Calling nova().volumes.create_server_volume()"))
         self.nova().volumes.create_server_volume(self.server.id,
                                                  volume_id,
                                                  device or None)
@@ -407,12 +410,13 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
         server.get()
         if 'rack_connect' in self.context.roles:  # Account has RackConnect
             if 'rackconnect_automation_status' not in server.metadata:
-                logger.debug("RackConnect server does not have the "
-                             "rackconnect_automation_status metadata tag yet")
+                logger.debug(_("RackConnect server does not have the "
+                               "rackconnect_automation_status metadata tag "
+                               "yet"))
                 return False
 
             rc_status = server.metadata['rackconnect_automation_status']
-            logger.debug("RackConnect automation status: " + rc_status)
+            logger.debug(_("RackConnect automation status: ") + rc_status)
 
             if rc_status == 'DEPLOYING':
                 return False
@@ -421,13 +425,13 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                 self._public_ip = None  # The public IP changed, forget old one
 
             elif rc_status == 'FAILED':
-                raise exception.Error("RackConnect automation FAILED")
+                raise exception.Error(_("RackConnect automation FAILED"))
 
             elif rc_status == 'UNPROCESSABLE':
                 reason = server.metadata.get(
                     "rackconnect_unprocessable_reason", None)
                 if reason is not None:
-                    logger.warning("RackConnect unprocessable reason: "
+                    logger.warning(_("RackConnect unprocessable reason: ")
                                    + reason)
                 # UNPROCESSABLE means the RackConnect automation was
                 # not attempted (eg. Cloud Server in a different DC
@@ -435,17 +439,17 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                 # It is okay if we do not raise an exception.
 
             else:
-                raise exception.Error("Unknown RackConnect automation status: "
-                                      + rc_status)
+                raise exception.Error(_("Unknown RackConnect automation "
+                                        "status: ") + rc_status)
 
         if 'rax_managed' in self.context.roles:  # Managed Cloud account
             if 'rax_service_level_automation' not in server.metadata:
-                logger.debug("Managed Cloud server does not have the "
-                             "rax_service_level_automation metadata tag yet")
+                logger.debug(_("Managed Cloud server does not have the "
+                             "rax_service_level_automation metadata tag yet"))
                 return False
 
             mc_status = server.metadata['rax_service_level_automation']
-            logger.debug("Managed Cloud automation status: " + mc_status)
+            logger.debug(_("Managed Cloud automation status: ") + mc_status)
 
             if mc_status == 'In Progress':
                 return False
@@ -454,11 +458,11 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                 pass
 
             elif mc_status == 'Build Error':
-                raise exception.Error("Managed Cloud automation failed")
+                raise exception.Error(_("Managed Cloud automation failed"))
 
             else:
-                raise exception.Error("Unknown Managed Cloud automation "
-                                      "status: " + mc_status)
+                raise exception.Error(_("Unknown Managed Cloud automation "
+                                      "status: ") + mc_status)
 
         if self.has_userdata:
             # Create heat-script and userdata files on server
@@ -494,7 +498,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                 if server.status == "DELETED":
                     break
                 elif server.status == "ERROR":
-                    raise exception.Error("Deletion of server %s failed." %
+                    raise exception.Error(_("Deletion of server %s failed.") %
                                           server.name)
             except novaexception.NotFound:
                 break
