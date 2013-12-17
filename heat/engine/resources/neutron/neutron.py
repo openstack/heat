@@ -18,6 +18,7 @@ from neutronclient.common.exceptions import NeutronClientException
 from heat.common import exception
 from heat.engine.properties import Properties
 from heat.engine import resource
+from heat.engine import scheduler
 
 from heat.openstack.common import log as logging
 from heat.openstack.common import uuidutils
@@ -165,3 +166,12 @@ class NeutronResource(resource.Resource):
                     raise exception.PhysicalResourceNameAmbiguity(name=sg)
                 seclist.append(groups[0])
         return seclist
+
+    def _delete_task(self):
+        delete_task = scheduler.TaskRunner(self._confirm_delete)
+        delete_task.start()
+        return delete_task
+
+    def check_delete_complete(self, delete_task):
+        # if the resource was already deleted, delete_task will be None
+        return delete_task is None or delete_task.step()

@@ -142,7 +142,7 @@ class HealthMonitor(neutron.NeutronResource):
             if ex.status_code != 404:
                 raise ex
         else:
-            return scheduler.TaskRunner(self._confirm_delete)()
+            return self._delete_task()
 
 
 class Pool(neutron.NeutronResource):
@@ -339,29 +339,34 @@ class Pool(neutron.NeutronResource):
                 if ex.status_code != 404:
                     raise ex
                 break
-        self._delete_pool()
-
-    def _delete_pool(self):
-        try:
-            self.neutron().delete_pool(self.resource_id)
-        except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
-        else:
-            return scheduler.TaskRunner(self._confirm_delete)()
 
     def handle_delete(self):
+        checkers = []
         if self.metadata:
             try:
                 self.neutron().delete_vip(self.metadata['vip'])
             except NeutronClientException as ex:
                 if ex.status_code != 404:
                     raise ex
-                self._delete_pool()
             else:
-                return scheduler.TaskRunner(self._confirm_vip_delete)()
+                checkers.append(scheduler.TaskRunner(self._confirm_vip_delete))
+        try:
+            self.neutron().delete_pool(self.resource_id)
+        except NeutronClientException as ex:
+            if ex.status_code != 404:
+                raise ex
         else:
-            self._delete_pool()
+            checkers.append(scheduler.TaskRunner(self._confirm_delete))
+        return checkers
+
+    def check_delete_complete(self, checkers):
+        '''Push all checkers to completion in list order.'''
+        for checker in checkers:
+            if not checker.started():
+                checker.start()
+            if not checker.step():
+                return False
+        return True
 
 
 class PoolMember(neutron.NeutronResource):
@@ -462,7 +467,7 @@ class PoolMember(neutron.NeutronResource):
             if ex.status_code != 404:
                 raise ex
         else:
-            return scheduler.TaskRunner(self._confirm_delete)()
+            return self._delete_task()
 
 
 class LoadBalancer(resource.Resource):

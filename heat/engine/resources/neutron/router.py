@@ -19,7 +19,6 @@ from heat.engine.resource import SupportStatus
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import subnet
 from heat.engine import properties
-from heat.engine import scheduler
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException
@@ -124,7 +123,7 @@ class Router(neutron.NeutronResource):
             if ex.status_code != 404:
                 raise ex
         else:
-            return scheduler.TaskRunner(self._confirm_delete)()
+            return self._delete_task()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
