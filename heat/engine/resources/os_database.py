@@ -202,10 +202,10 @@ class OSDBInstance(resource.Resource):
         self.flavor = nova_utils.get_flavor_id(self.trove(),
                                                self.properties[self.FLAVOR])
         self.volume = {'size': self.properties[self.SIZE]}
-        self.databases = self.properties.get(self.DATABASES, [])
-        self.users = self.properties.get(self.USERS, [])
-        restore_point = self.properties.get(self.RESTORE_POINT, None)
-        zone = self.properties.get(self.AVAILABILITY_ZONE, None)
+        self.databases = self.properties.get(self.DATABASES)
+        self.users = self.properties.get(self.USERS)
+        restore_point = self.properties.get(self.RESTORE_POINT)
+        zone = self.properties.get(self.AVAILABILITY_ZONE)
 
         # convert user databases to format required for troveclient.
         # that is, list of database dictionaries
@@ -286,11 +286,11 @@ class OSDBInstance(resource.Resource):
             return res
 
         # check validity of user and databases
-        users = self.properties.get(self.USERS, [])
+        users = self.properties.get(self.USERS)
         if not users:
             return
 
-        databases = self.properties.get(self.DATABASES, [])
+        databases = self.properties.get(self.DATABASES)
         if not databases:
             msg = _('Databases property is required if users property'
                     ' is provided')

@@ -45,7 +45,8 @@ class NetworkInterface(resource.Resource):
         ),
         GROUP_SET: properties.Schema(
             properties.Schema.LIST,
-            _('List of security group IDs associated with this interface.')
+            _('List of security group IDs associated with this interface.'),
+            default=[]
         ),
         PRIVATE_IP_ADDRESS: properties.Schema(
             properties.Schema.STRING
@@ -111,7 +112,7 @@ class NetworkInterface(resource.Resource):
 
         if self.properties[self.GROUP_SET]:
             sgs = neutron.NeutronResource.get_secgroup_uuids(
-                self.properties.get(self.GROUP_SET, []), self.neutron())
+                self.properties.get(self.GROUP_SET), self.neutron())
             props['security_groups'] = sgs
         port = client.create_port({'port': props})['port']
         self.resource_id_set(port['id'])

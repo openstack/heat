@@ -118,7 +118,7 @@ class Subnet(resource.Resource):
 
     def FnGetAtt(self, key):
         if key == 'AvailabilityZone':
-            return self.properties.get(key, '')
+            return self.properties.get(key)
         raise exception.InvalidTemplateAttribute(resource=self.name, key=key)
 
 

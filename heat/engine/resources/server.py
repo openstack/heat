@@ -127,7 +127,8 @@ class Server(resource.Resource):
                              'placement.')},
         'security_groups': {
             'Type': 'List',
-            'Description': _('List of security group names or IDs.')},
+            'Description': _('List of security group names or IDs.'),
+            'Default': []},
         'networks': {
             'Type': 'List',
             'Description': _('An ordered list of nics to be '
@@ -161,7 +162,8 @@ class Server(resource.Resource):
         'user_data': {
             'Type': 'String',
             'Description': _('User data script to be executed by '
-                             'cloud-init.')},
+                             'cloud-init.'),
+            'Default': ""},
         'reservation_id': {
             'Type': 'String',
             'Description': _('A UUID for the set of servers being requested.')
@@ -216,12 +218,12 @@ class Server(resource.Resource):
         return super(Server, self).physical_resource_name()
 
     def handle_create(self):
-        security_groups = self.properties.get('security_groups', [])
+        security_groups = self.properties.get('security_groups')
 
         user_data_format = self.properties.get('user_data_format')
         userdata = nova_utils.build_userdata(
             self,
-            self.properties.get('user_data', ''),
+            self.properties.get('user_data'),
             instance_user=self.properties['admin_user'],
             user_data_format=user_data_format)
 
@@ -444,7 +446,7 @@ class Server(resource.Resource):
         super(Server, self).validate()
 
         # check validity of key
-        key_name = self.properties.get('key_name', None)
+        key_name = self.properties.get('key_name')
         if key_name:
             nova_utils.get_keypair(self.nova(), key_name)
 
@@ -465,7 +467,7 @@ class Server(resource.Resource):
                 raise exception.StackValidationFailed(message=msg)
 
         # make sure the image exists if specified.
-        image = self.properties.get('image', None)
+        image = self.properties.get('image')
         if image:
             nova_utils.get_image_id(self.nova(), image)
         elif not image and not bootable_vol:
