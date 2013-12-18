@@ -375,9 +375,9 @@ class Instance(resource.Resource):
 
     def _get_security_groups(self):
         security_groups = []
-        for property in (self.SECURITY_GROUPS, self.SECURITY_GROUP_IDS):
-            if self.properties.get(property) is not None:
-                for sg in self.properties.get(property):
+        for key in (self.SECURITY_GROUPS, self.SECURITY_GROUP_IDS):
+            if self.properties.get(key) is not None:
+                for sg in self.properties.get(key):
                     security_groups.append(sg)
         if not security_groups:
             security_groups = None
