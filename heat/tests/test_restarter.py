@@ -71,7 +71,7 @@ class RestarterTest(common.HeatTestCase):
 
         rsrc.stack.restart_resource = mock.Mock(return_value=None)
 
-        self.assertEqual(None, rsrc.handle_signal())
+        self.assertIsNone(rsrc.handle_signal())
         rsrc.stack.restart_resource.assert_called_once_with('instance')
 
     def test_handle_signal_alarm(self):
@@ -82,7 +82,7 @@ class RestarterTest(common.HeatTestCase):
 
         rsrc.stack.restart_resource = mock.Mock(return_value=None)
 
-        self.assertEqual(None, rsrc.handle_signal({'state': 'Alarm'}))
+        self.assertIsNone(rsrc.handle_signal({'state': 'Alarm'}))
         rsrc.stack.restart_resource.assert_called_once_with('instance')
 
     def test_handle_signal_not_alarm(self):
@@ -93,7 +93,7 @@ class RestarterTest(common.HeatTestCase):
 
         rsrc.stack.restart_resource = mock.Mock(return_value=None)
 
-        self.assertEqual(None, rsrc.handle_signal({'state': 'spam'}))
+        self.assertIsNone(rsrc.handle_signal({'state': 'spam'}))
         self.assertEqual([], rsrc.stack.restart_resource.mock_calls)
 
     def test_handle_signal_no_instance(self):
@@ -102,5 +102,5 @@ class RestarterTest(common.HeatTestCase):
 
         rsrc.stack.restart_resource = mock.Mock(return_value=None)
 
-        self.assertEqual(None, rsrc.handle_signal())
+        self.assertIsNone(rsrc.handle_signal())
         self.assertEqual([], rsrc.stack.restart_resource.mock_calls)

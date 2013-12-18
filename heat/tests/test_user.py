@@ -102,7 +102,7 @@ class UserTest(UserPolicyTestCase):
         rsrc = user.User(resource_name,
                          t['Resources'][resource_name],
                          stack)
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
@@ -126,8 +126,8 @@ class UserTest(UserPolicyTestCase):
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
 
-        self.assertEqual(None, rsrc.handle_suspend())
-        self.assertEqual(None, rsrc.handle_resume())
+        self.assertIsNone(rsrc.handle_suspend())
+        self.assertIsNone(rsrc.handle_resume())
 
         rsrc.resource_id = None
         scheduler.TaskRunner(rsrc.delete)()
@@ -261,14 +261,14 @@ class AccessKeyTest(UserPolicyTestCase):
         rsrc = user.AccessKey(resource_name,
                               t['Resources'][resource_name],
                               stack)
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc
 
     def create_user(self, t, stack, resource_name):
         rsrc = stack[resource_name]
-        self.assertEqual(None, rsrc.validate())
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         return rsrc

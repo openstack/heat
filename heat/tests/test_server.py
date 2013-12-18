@@ -342,7 +342,7 @@ class ServersTest(HeatTestCase):
         uuidutils.is_uuid_like('1').AndReturn(True)
         self.m.ReplayAll()
 
-        self.assertEqual(server.validate(), None)
+        self.assertIsNone(server.validate())
 
         self.m.VerifyAll()
 
@@ -368,9 +368,9 @@ class ServersTest(HeatTestCase):
             return server
 
         server = create_server(u'vda')
-        self.assertEqual(server.validate(), None)
+        self.assertIsNone(server.validate())
         server = create_server('vda')
-        self.assertEqual(server.validate(), None)
+        self.assertIsNone(server.validate())
         server = create_server('vdb')
         ex = self.assertRaises(exception.StackValidationFailed,
                                server.validate)
@@ -441,7 +441,7 @@ class ServersTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.delete)()
-        self.assertTrue(server.resource_id is None)
+        self.assertIsNone(server.resource_id)
         self.assertEqual(server.state, (server.DELETE, server.COMPLETE))
         self.m.VerifyAll()
 
@@ -460,7 +460,7 @@ class ServersTest(HeatTestCase):
         mox.Replay(get)
 
         scheduler.TaskRunner(server.delete)()
-        self.assertTrue(server.resource_id is None)
+        self.assertIsNone(server.resource_id)
         self.assertEqual(server.state, (server.DELETE, server.COMPLETE))
         self.m.VerifyAll()
 
@@ -1035,8 +1035,8 @@ class ServersTest(HeatTestCase):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'test_server_create')
-        self.assertEqual(None, server._build_nics([]))
-        self.assertEqual(None, server._build_nics(None))
+        self.assertIsNone(server._build_nics([]))
+        self.assertIsNone(server._build_nics(None))
         self.assertEqual([{'port-id': 'aaaabbbb'},
                           {'v4-fixed-ip': '192.0.2.0'}],
                          server._build_nics([{'port': 'aaaabbbb'},
@@ -1070,10 +1070,8 @@ class ServersTest(HeatTestCase):
         self.assertEqual(server.FnGetAtt('first_address'), '')
 
     def test_build_block_device_mapping(self):
-        self.assertEqual(
-            None, servers.Server._build_block_device_mapping([]))
-        self.assertEqual(
-            None, servers.Server._build_block_device_mapping(None))
+        self.assertIsNone(servers.Server._build_block_device_mapping([]))
+        self.assertIsNone(servers.Server._build_block_device_mapping(None))
 
         self.assertEqual({
             'vda': '1234:',

@@ -93,7 +93,7 @@ class VolumeTest(HeatTestCase):
         data = t['Resources'][resource_name]
         data['Properties']['AvailabilityZone'] = 'nova'
         rsrc = vol.Volume(resource_name, data, stack)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         return rsrc
@@ -102,7 +102,7 @@ class VolumeTest(HeatTestCase):
         rsrc = vol.VolumeAttachment(resource_name,
                                     t['Resources'][resource_name],
                                     stack)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         return rsrc
@@ -204,7 +204,7 @@ class VolumeTest(HeatTestCase):
         stack = utils.parse_stack(t, stack_name=stack_name)
 
         rsrc = stack['DataVolume']
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(stack.create)()
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
@@ -637,7 +637,7 @@ class VolumeTest(HeatTestCase):
         rsrc = vol.CinderVolume('DataVolume',
                                 t['Resources']['DataVolume'],
                                 stack)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         self.assertEqual(fv.status, 'available')
@@ -675,7 +675,7 @@ class VolumeTest(HeatTestCase):
         rsrc = vol.CinderVolume('DataVolume',
                                 t['Resources']['DataVolume'],
                                 stack)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         self.assertEqual(fv.status, 'available')
@@ -706,7 +706,7 @@ class VolumeTest(HeatTestCase):
         rsrc = vol.CinderVolume('DataVolume',
                                 t['Resources']['DataVolume'],
                                 stack)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
         self.assertEqual(fv.status, 'available')
@@ -797,7 +797,7 @@ class VolumeTest(HeatTestCase):
         rsrc = vol.CinderVolumeAttachment('MountPoint',
                                           t['Resources']['MountPoint'],
                                           stack)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 

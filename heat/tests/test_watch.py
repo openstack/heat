@@ -325,7 +325,7 @@ class WatchRuleTest(HeatTestCase):
         self.wr.store()
 
         dbwr = db_api.watch_rule_get_by_name(self.ctx, 'storetest')
-        self.assertNotEqual(dbwr, None)
+        self.assertIsNotNone(dbwr)
         self.assertEqual(dbwr.name, 'storetest')
         self.assertEqual(dbwr.state, watchrule.WatchRule.NODATA)
         self.assertEqual(dbwr.rule, rule)

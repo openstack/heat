@@ -309,7 +309,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
 
         #test TCP_CLIENT_FIRST protocol
         template = self._set_template(template,
@@ -319,7 +319,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
 
     def test_validate_health_monitor(self):
         #test connect success
@@ -337,7 +337,7 @@ class LoadBalancerTest(HeatTestCase):
                                                           self.lb_name,
                                                           expected)
 
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
 
         #test connect failure
         #bodyRegex is only valid for type 'HTTP(S)'
@@ -366,7 +366,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
 
     def test_validate_ssl_termination(self):
         ssl_termination = {
@@ -395,7 +395,7 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEqual(rsrc.validate(), None)
+        self.assertIsNone(rsrc.validate())
 
     def test_post_creation_access_list(self):
         access_list = [{"address": '192.168.1.1/0',

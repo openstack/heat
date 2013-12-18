@@ -57,11 +57,10 @@ class PluginLoaderTest(testtools.TestCase):
         loaded = plugin_loader._import_module(importer,
                                               'heat.engine.service',
                                               heat.engine)
-        self.assertTrue(loaded is existing)
+        self.assertIs(existing, loaded)
 
     def test_import_module_garbage(self):
         importer = pkgutil.ImpImporter(heat.engine.__path__[0])
-        self.assertEqual(plugin_loader._import_module(importer,
-                                                      'wibble',
-                                                      heat.engine),
-                         None)
+        self.assertIsNone(plugin_loader._import_module(importer,
+                                                       'wibble',
+                                                       heat.engine))

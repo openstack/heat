@@ -61,7 +61,7 @@ class DockerContainerTest(HeatTestCase):
             resource_name, t['Resources'][resource_name], stack)
         self.m.StubOutWithMock(resource, 'get_client')
         resource.get_client().MultipleTimes().AndReturn(FakeDockerClient())
-        self.assertEqual(None, resource.validate())
+        self.assertIsNone(resource.validate())
         self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
         self.assertEqual(resource.state, (resource.CREATE,
@@ -76,7 +76,7 @@ class DockerContainerTest(HeatTestCase):
         container = self.create_container('Blog')
         self.assertTrue(container.resource_id)
         running = self.get_container_state(container)['Running']
-        self.assertEqual(True, running)
+        self.assertIs(True, running)
         self.m.VerifyAll()
 
     def test_resource_attributes(self):
@@ -99,7 +99,7 @@ class DockerContainerTest(HeatTestCase):
         self.assertEqual(container.state, (container.DELETE,
                                            container.COMPLETE))
         running = self.get_container_state(container)['Running']
-        self.assertEqual(False, running)
+        self.assertIs(False, running)
         self.m.VerifyAll()
 
     def test_resource_suspend_resume(self):
@@ -109,11 +109,11 @@ class DockerContainerTest(HeatTestCase):
         self.assertEqual(container.state, (container.SUSPEND,
                                            container.COMPLETE))
         running = self.get_container_state(container)['Running']
-        self.assertEqual(False, running)
+        self.assertIs(False, running)
         # Test resume
         scheduler.TaskRunner(container.resume)()
         self.assertEqual(container.state, (container.RESUME,
                                            container.COMPLETE))
         running = self.get_container_state(container)['Running']
-        self.assertEqual(True, running)
+        self.assertIs(True, running)
         self.m.VerifyAll()

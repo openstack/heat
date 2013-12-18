@@ -1070,7 +1070,7 @@ class AutoScalingTest(HeatTestCase):
                                                'WebServerScaleUpPolicy')
 
         alarm_url = up_policy.FnGetAtt('AlarmUrl')
-        self.assertNotEqual(None, alarm_url)
+        self.assertIsNotNone(alarm_url)
         ex = self.assertRaises(exception.ResourceFailure, up_policy.signal)
         self.assertIn('Alarm WebServerScaleUpPolicy could '
                       'not find scaling group', str(ex))

@@ -188,7 +188,7 @@ class ProviderTemplateTest(HeatTestCase):
 
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
-        self.assertEqual(None, temp_res.validate())
+        self.assertIsNone(temp_res.validate())
 
     def test_attributes_missing(self):
         provider = {
@@ -251,7 +251,7 @@ class ProviderTemplateTest(HeatTestCase):
 
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
-        self.assertEqual(None, temp_res.validate())
+        self.assertIsNone(temp_res.validate())
 
     def test_properties_missing(self):
         provider = {
@@ -427,7 +427,7 @@ class ProviderTemplateTest(HeatTestCase):
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       {"Type": 'Test::Frodo'},
                                                       stack)
-        self.assertEqual(None, temp_res.validate())
+        self.assertIsNone(temp_res.validate())
         self.m.VerifyAll()
 
     def test_user_template_not_retrieved_by_file(self):
