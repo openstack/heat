@@ -130,6 +130,114 @@ class SqlAlchemyTest(HeatTestCase):
         get = fc.client.get_servers_9999
         get().MultipleTimes().AndRaise(novaclient.exceptions.NotFound(404))
 
+    @mock.patch.object(db_api, '_paginate_query')
+    def test_filter_and_page_query_paginates_query(self, mock_paginate_query):
+        query = mock.Mock()
+        db_api._filter_and_page_query(self.ctx, query)
+
+        assert mock_paginate_query.called
+
+    @mock.patch.object(db_api.db_filters, 'exact_filter')
+    def test_filter_and_page_query_handles_no_filters(self, mock_db_filter):
+        query = mock.Mock()
+        db_api._filter_and_page_query(self.ctx, query)
+
+        mock_db_filter.assert_called_once_with(mock.ANY, mock.ANY, {})
+
+    @mock.patch.object(db_api.db_filters, 'exact_filter')
+    def test_filter_and_page_query_applies_filters(self, mock_db_filter):
+        query = mock.Mock()
+        filters = {'foo': 'bar'}
+        db_api._filter_and_page_query(self.ctx, query, filters=filters)
+
+        assert mock_db_filter.called
+
+    @mock.patch.object(db_api, '_paginate_query')
+    def test_filter_and_page_query_whitelists_sort_keys(self,
+                                                        mock_paginate_query):
+        query = mock.Mock()
+        sort_keys = ['name', 'foo']
+        db_api._filter_and_page_query(self.ctx, query, sort_keys=sort_keys)
+
+        args, _ = mock_paginate_query.call_args
+        self.assertIn(['name'], args)
+
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    def test_paginate_query_default_sorts_by_created_at_and_id(
+            self, mock_paginate_query):
+        query = mock.Mock()
+        model = mock.Mock()
+        db_api._paginate_query(self.ctx, query, model, sort_keys=None)
+        args, _ = mock_paginate_query.call_args
+        self.assertIn(['created_at', 'id'], args)
+
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    def test_paginate_query_default_sorts_dir_by_desc(self,
+                                                      mock_paginate_query):
+        query = mock.Mock()
+        model = mock.Mock()
+        db_api._paginate_query(self.ctx, query, model, sort_dir=None)
+        args, _ = mock_paginate_query.call_args
+        self.assertIn('desc', args)
+
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    def test_paginate_query_uses_given_sort_plus_id(self,
+                                                    mock_paginate_query):
+        query = mock.Mock()
+        model = mock.Mock()
+        db_api._paginate_query(self.ctx, query, model, sort_keys=['name'])
+        args, _ = mock_paginate_query.call_args
+        self.assertIn(['name', 'id'], args)
+
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    @mock.patch.object(db_api, 'model_query')
+    def test_paginate_query_gets_model_marker(self, mock_query,
+                                              mock_paginate_query):
+        query = mock.Mock()
+        model = mock.Mock()
+        marker = mock.Mock()
+
+        mock_query_object = mock.Mock()
+        mock_query_object.get.return_value = 'real_marker'
+        mock_query.return_value = mock_query_object
+
+        db_api._paginate_query(self.ctx, query, model, marker=marker)
+        mock_query_object.get.assert_called_once_with(marker)
+        args, _ = mock_paginate_query.call_args
+        self.assertIn('real_marker', args)
+
+    @mock.patch.object(db_api.utils, 'paginate_query')
+    def test_paginate_query_raises_invalid_sort_key(self, mock_paginate_query):
+        query = mock.Mock()
+        model = mock.Mock()
+
+        mock_paginate_query.side_effect = db_api.utils.InvalidSortKey()
+        self.assertRaises(exception.Invalid, db_api._paginate_query,
+                          self.ctx, query, model, sort_keys=['foo'])
+
+    def test_filter_sort_keys_returns_empty_list_if_no_keys(self):
+        sort_keys = None
+        whitelist = None
+
+        filtered_keys = db_api._filter_sort_keys(sort_keys, whitelist)
+        self.assertEqual([], filtered_keys)
+
+    def test_filter_sort_keys_whitelists_single_key(self):
+        sort_key = 'foo'
+        whitelist = ['foo']
+
+        filtered_keys = db_api._filter_sort_keys(sort_key, whitelist)
+        self.assertEqual(['foo'], filtered_keys)
+
+    def test_filter_sort_keys_whitelists_multiple_keys(self):
+        sort_keys = ['foo', 'bar', 'nope']
+        whitelist = ['foo', 'bar']
+
+        filtered_keys = db_api._filter_sort_keys(sort_keys, whitelist)
+        self.assertIn('foo', filtered_keys)
+        self.assertIn('bar', filtered_keys)
+        self.assertNotIn('nope', filtered_keys)
+
     def test_encryption(self):
         stack_name = 'test_encryption'
         (t, stack) = self._setup_test_stack(stack_name)
