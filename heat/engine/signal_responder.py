@@ -22,12 +22,13 @@ from heat.common import exception
 from heat.engine import clients
 from heat.engine import resource
 
-from heat.openstack.common import log
+from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common.py3kcompat import urlutils
 
 
-LOG = log.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
 SIGNAL_TYPES = (
     WAITCONDITION, SIGNAL
 ) = (
@@ -88,13 +89,19 @@ class SignalResponder(resource.Resource):
         if stored is not None:
             return stored
 
+        try:
+            access_key = db_api.resource_data_get(self, 'access_key')
+            secret_key = db_api.resource_data_get(self, 'secret_key')
+        except exception.NotFound:
+            logger.warning(_('Cannot generate signed url, '
+                             'no stored access/secret key'))
+            return
+
         waitcond_url = cfg.CONF.heat_waitcondition_server_url
         signal_url = waitcond_url.replace('/waitcondition', signal_type)
         host_url = urlutils.urlparse(signal_url)
 
         path = self.identifier().arn_url_path()
-        access_key = db_api.resource_data_get(self, 'access_key')
-        secret_key = db_api.resource_data_get(self, 'secret_key')
 
         # Note the WSGI spec apparently means that the webob request we end up
         # prcessing in the CFN API (ec2token.py) has an unquoted path, so we
