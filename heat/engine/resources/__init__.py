@@ -37,7 +37,7 @@ def _get_module_resources(module):
     if callable(getattr(module, 'resource_mapping', None)):
         try:
             return module.resource_mapping().iteritems()
-        except Exception as ex:
+        except Exception:
             LOG.error(_('Failed to load resources from %s') % str(module))
     else:
         return []

@@ -52,9 +52,9 @@ class ActionController(object):
             raise exc.HTTPBadRequest(_("Invalid action %s specified") % ac)
 
         if ac == self.SUSPEND:
-            res = self.engine.stack_suspend(req.context, identity)
+            self.engine.stack_suspend(req.context, identity)
         elif ac == self.RESUME:
-            res = self.engine.stack_resume(req.context, identity)
+            self.engine.stack_resume(req.context, identity)
         else:
             raise exc.HTTPInternalServerError(_("Unexpected action %s") % ac)
 

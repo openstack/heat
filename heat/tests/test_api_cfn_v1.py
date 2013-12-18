@@ -712,8 +712,6 @@ class CfnStackControllerTest(HeatTestCase):
                   'OnFailure': 'DO_NOTHING',
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'CreateStack')
 
@@ -1010,7 +1008,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_get_template_err_rpcerr(self):
         stack_name = "wordpress"
         identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
-        template = {u'Foo': u'bar'}
         params = {'Action': 'GetTemplate', 'StackName': stack_name}
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'GetTemplate')
@@ -1062,7 +1059,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_get_template_err_none(self):
         stack_name = "wordpress"
         identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
-        template = {u'Foo': u'bar'}
         params = {'Action': 'GetTemplate', 'StackName': stack_name}
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'GetTemplate')
@@ -1092,7 +1088,6 @@ class CfnStackControllerTest(HeatTestCase):
 
     def test_validate_err_no_template(self):
         # Format a dummy request with a missing template field
-        stack_name = "wordpress"
         params = {'Action': 'ValidateTemplate'}
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'ValidateTemplate')
@@ -1420,7 +1415,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_describe_stack_resource_nonexistent_stack(self):
         # Format a dummy request
         stack_name = "wibble"
-        identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
         params = {'Action': 'DescribeStackResource',
                   'StackName': stack_name,
                   'LogicalResourceId': "WikiDatabase"}
@@ -1642,8 +1636,6 @@ class CfnStackControllerTest(HeatTestCase):
 
     def test_describe_stack_resources_physical_not_found(self):
         # Format a dummy request
-        stack_name = "wordpress"
-        identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
         params = {'Action': 'DescribeStackResources',
                   'LogicalResourceId': "WikiDatabase",
                   'PhysicalResourceId': 'aaaaaaaa-9f88-404d-cccc-ffffffffffff'}

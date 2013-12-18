@@ -278,7 +278,7 @@ class Property(object):
                 isinstance(value, basestring)):
             raise TypeError(_('"%s" is not a list') % repr(value))
 
-        return [v for i, v in self._validate_children(enumerate(value),
+        return [v[1] for v in self._validate_children(enumerate(value),
                                                       range(len(value)))]
 
     def _validate_bool(self, value):

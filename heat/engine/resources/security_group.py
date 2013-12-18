@@ -201,7 +201,7 @@ class SecurityGroup(resource.Resource):
                             source_group_id = group.id
                             break
                 try:
-                    rule = rules_client.create(
+                    rules_client.create(
                         sec.id,
                         i.get(self.RULE_IP_PROTOCOL),
                         i.get(self.RULE_FROM_PORT),

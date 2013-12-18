@@ -837,8 +837,6 @@ class StackServiceUpdateNotSupportedTest(HeatTestCase):
         sid = old_stack.store()
         s = db_api.stack_get(self.ctx, sid)
 
-        stack = get_wordpress_stack(stack_name, self.ctx)
-
         self.m.StubOutWithMock(parser, 'Stack')
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.ctx, stack=s).AndReturn(old_stack)
@@ -1577,10 +1575,10 @@ class StackServiceTest(HeatTestCase):
         rsrs.Resource.signal(mox.IgnoreArg()).AndReturn(None)
         self.m.ReplayAll()
 
-        result = self.eng.resource_signal(self.ctx,
-                                          dict(self.stack.identifier()),
-                                          'WebServerScaleDownPolicy',
-                                          test_data)
+        self.eng.resource_signal(self.ctx,
+                                 dict(self.stack.identifier()),
+                                 'WebServerScaleDownPolicy',
+                                 test_data)
         self.m.VerifyAll()
         self.stack.delete()
 

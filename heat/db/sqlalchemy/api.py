@@ -375,8 +375,6 @@ def stack_update(context, stack_id, values):
                                  'id': stack_id,
                                  'msg': 'that does not exist'})
 
-    old_template_id = stack.raw_template_id
-
     stack.update(values)
     stack.save(_session(context))
 

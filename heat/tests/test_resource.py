@@ -179,7 +179,7 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(res.status, res.IN_PROGRESS)
         self.assertEqual(res.status_reason, 'test_store')
 
-        db_res = r = db_api.resource_get(res.context, res.id)
+        db_res = db_api.resource_get(res.context, res.id)
         self.assertEqual(db_res.action, res.CREATE)
         self.assertEqual(db_res.status, res.IN_PROGRESS)
         self.assertEqual(db_res.status_reason, 'test_store')

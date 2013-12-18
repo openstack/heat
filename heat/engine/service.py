@@ -763,7 +763,7 @@ class EngineService(service.Service):
         # heat_keystoneclient populates the context with an auth_token
         # either via the stored user/password or trust_id, depending
         # on how deferred_auth_method is configured in the conf file
-        kc = hkc.KeystoneClient(stored_context)
+        hkc.KeystoneClient(stored_context)
         return stored_context
 
     @request_context

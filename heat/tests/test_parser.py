@@ -883,12 +883,6 @@ class StackTest(HeatTestCase):
         tpl = {'Resources':
                {'A': {'Type': 'GenericResourceType'},
                 'B': {'Type': 'GenericResourceType'}}}
-        resources = '''{'A': {'status': 'COMPLETE', 'name': 'A',
-        'resource_data': {}, 'resource_id': None, 'action': 'INIT',
-        'type': 'GenericResourceType', 'metadata': {}},
-        'B': {'status': 'COMPLETE', 'name': 'B', 'resource_data': {},
-        'resource_id': None, 'action': 'INIT', 'type': 'GenericResourceType',
-        'metadata': {}}}'''
         stack = parser.Stack(self.ctx,
                              'stack_details_test',
                              parser.Template(tpl))
@@ -1050,7 +1044,7 @@ class StackTest(HeatTestCase):
         tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.stack = parser.Stack(self.ctx, 'suspend_test',
                                   parser.Template(tmpl))
-        stack_id = self.stack.store()
+        self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state,
                          (self.stack.CREATE, self.stack.COMPLETE))
@@ -1078,7 +1072,7 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'suspend_test_fail',
                                   parser.Template(tmpl))
 
-        stack_id = self.stack.store()
+        self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state,
                          (self.stack.CREATE, self.stack.COMPLETE))
@@ -1101,7 +1095,7 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'resume_test_fail',
                                   parser.Template(tmpl))
 
-        stack_id = self.stack.store()
+        self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state,
                          (self.stack.CREATE, self.stack.COMPLETE))
@@ -1130,7 +1124,7 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'suspend_test_fail_timeout',
                                   parser.Template(tmpl))
 
-        stack_id = self.stack.store()
+        self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state,
                          (self.stack.CREATE, self.stack.COMPLETE))
@@ -1153,7 +1147,7 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'resume_test_fail_timeout',
                                   parser.Template(tmpl))
 
-        stack_id = self.stack.store()
+        self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state,
                          (self.stack.CREATE, self.stack.COMPLETE))
@@ -1208,7 +1202,7 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
                                   action=parser.Stack.CREATE,
                                   status=parser.Stack.FAILED)
-        stack_id = self.stack.store()
+        self.stack.store()
         self.assertEqual(self.stack.state,
                          (parser.Stack.CREATE, parser.Stack.FAILED))
         self.stack.update({})
@@ -1929,7 +1923,7 @@ class StackTest(HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'delete_test_fail',
                                   parser.Template(tmpl))
 
-        stack_id = self.stack.store()
+        self.stack.store()
         self.stack.create()
         self.assertEqual(self.stack.state,
                          (self.stack.CREATE, self.stack.COMPLETE))

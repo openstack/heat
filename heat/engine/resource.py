@@ -321,7 +321,7 @@ class Resource(object):
                 if key in ('DependsOn', 'Ref', 'Fn::GetAtt', 'get_attr',
                            'get_resource'):
                     if key in ('Fn::GetAtt', 'get_attr'):
-                        res_name, att = value
+                        res_name = value[0]
                         res_list = [res_name]
                     elif key == 'DependsOn' and isinstance(value, list):
                         res_list = value

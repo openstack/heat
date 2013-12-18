@@ -90,7 +90,7 @@ def load_modules(package, ignore_error=False):
                                                                    pkg_prefix):
         try:
             module = _import_module(importer, module_name, package)
-        except ImportError as ex:
+        except ImportError:
             logger.error(_('Failed to import module %s') % module_name)
             if not ignore_error:
                 raise

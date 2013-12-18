@@ -440,7 +440,6 @@ class VolumeTest(HeatTestCase):
     def test_volume_delete(self):
         stack_name = 'test_volume_stack'
         fv = FakeVolume('creating', 'available')
-        fb = FakeBackup('creating', 'available')
 
         self._mock_create_volume(fv, stack_name)
         self.m.ReplayAll()
