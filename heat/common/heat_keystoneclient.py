@@ -118,6 +118,12 @@ class KeystoneClient(object):
             # All OK so update the context with the token
             self.context.auth_token = client_v2.auth_ref.auth_token
             self.context.auth_url = kwargs.get('auth_url')
+            # Ensure the v2 API we're using is not impacted by keystone
+            # bug #1239303, otherwise we can't trust the user_id
+            if self.context.trustor_user_id != client_v2.auth_ref.user_id:
+                logger.error("Trust impersonation failed, bug #1239303 "
+                             "suspected, you may need a newer keystone")
+                raise exception.AuthorizationFailure()
 
         return client_v2
 
