@@ -72,7 +72,7 @@ class Enforcer(object):
         return self.enforcer.enforce(rule, target, credentials,
                                      do_raise, exc=exc, *args, **kwargs)
 
-    def enforce(self, context, action, target=None):
+    def enforce(self, context, action, scope=None, target=None):
         """Verifies that the action is valid on the target in this context.
 
            :param context: Heat request context
@@ -81,7 +81,7 @@ class Enforcer(object):
            :raises: self.exc (defaults to heat.common.exception.Forbidden)
            :returns: A non-False value if access is allowed.
         """
-        _action = '%s:%s' % (self.scope, action)
+        _action = '%s:%s' % (scope or self.scope, action)
         _target = target or {}
         return self._check(context, _action, _target, self.exc, action=action)
 

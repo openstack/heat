@@ -60,6 +60,8 @@ class ResourceController(object):
     WSGI controller for Resources in Heat v1 API
     Implements the API actions
     """
+    # Define request scope (must match what is in policy.json)
+    REQUEST_SCOPE = 'resource'
 
     def __init__(self, options):
         self.options = options

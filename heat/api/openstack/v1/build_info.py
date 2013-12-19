@@ -25,12 +25,14 @@ class BuildInfoController(object):
     WSGI controller for BuildInfo in Heat v1 API
     Returns build information for current app
     """
+    # Define request scope (must match what is in policy.json)
+    REQUEST_SCOPE = 'build_info'
 
     def __init__(self, options):
         self.options = options
         self.engine = rpc_client.EngineClient()
 
-    @util.tenant_local
+    @util.policy_enforce
     def build_info(self, req):
         engine_revision = self.engine.get_revision(req.context)
         build_info = {

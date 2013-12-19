@@ -19,14 +19,19 @@ from functools import wraps
 from heat.common import identifier
 
 
-def tenant_local(handler):
+def policy_enforce(handler):
     '''
     Decorator for a handler method that checks the path matches the
-    request context.
+    request context and enforce policy defined in policy.json
     '''
     @wraps(handler)
     def handle_stack_method(controller, req, tenant_id, **kwargs):
         if req.context.tenant_id != tenant_id:
+            raise exc.HTTPForbidden()
+        allowed = req.context.policy.enforce(context=req.context,
+                                             action=handler.__name__,
+                                             scope=controller.REQUEST_SCOPE)
+        if not allowed:
             raise exc.HTTPForbidden()
         return handler(controller, req, **kwargs)
 
@@ -38,7 +43,7 @@ def identified_stack(handler):
     Decorator for a handler method that passes a stack identifier in place of
     the various path components.
     '''
-    @tenant_local
+    @policy_enforce
     @wraps(handler)
     def handle_stack_method(controller, req, stack_name, stack_id, **kwargs):
         stack_identity = identifier.HeatIdentifier(req.context.tenant_id,
