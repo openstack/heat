@@ -127,8 +127,8 @@ class CeilometerAlarm(resource.Resource):
     def _actions_to_urls(self, props):
         kwargs = {}
         for k, v in iter(props.items()):
-            if k in ['alarm_actions', 'ok_actions',
-                     'insufficient_data_actions'] and v is not None:
+            if k in (self.ALARM_ACTIONS, self.OK_ACTIONS,
+                     self.INSUFFICIENT_DATA_ACTIONS) and v is not None:
                 kwargs[k] = []
                 for act in v:
                     # if the action is a resource name
