@@ -15,6 +15,7 @@
 
 from heat.engine import clients
 from heat.openstack.common import log as logging
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.vpc import VPC
@@ -26,21 +27,43 @@ logger = logging.getLogger(__name__)
 
 
 class RouteTable(resource.Resource):
-    tags_schema = {'Key': {'Type': 'String',
-                           'Required': True},
-                   'Value': {'Type': 'String',
-                             'Required': True}}
+
+    PROPERTIES = (
+        VPC_ID, TAGS,
+    ) = (
+        'VpcId', 'Tags',
+    )
+
+    _TAG_KEYS = (
+        TAG_KEY, TAG_VALUE,
+    ) = (
+        'Key', 'Value',
+    )
 
     properties_schema = {
-        'VpcId': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('VPC ID for where the route table is created.')},
-        'Tags': {'Type': 'List', 'Schema': {
-            'Type': 'Map',
-            'Implemented': False,
-            'Schema': tags_schema,
-            'Description': _('List of tags to be attached to this resource.')}}
+        VPC_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('VPC ID for where the route table is created.'),
+            required=True
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                _('List of tags to be attached to this resource.'),
+                schema={
+                    TAG_KEY: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                    TAG_VALUE: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                },
+                implemented=False,
+            )
+        ),
     }
 
     def handle_create(self):
@@ -56,7 +79,7 @@ class RouteTable(resource.Resource):
         if not neutron.NeutronResource.is_built(attributes):
             return False
 
-        network_id = self.properties.get('VpcId')
+        network_id = self.properties.get(self.VPC_ID)
         default_router = VPC.router_for_vpc(client, network_id)
         if default_router and default_router.get('external_gateway_info'):
             # the default router for the VPC is connected
@@ -87,22 +110,30 @@ class RouteTable(resource.Resource):
 
 class SubnetRouteTableAssocation(resource.Resource):
 
+    PROPERTIES = (
+        ROUTE_TABLE_ID, SUBNET_ID,
+    ) = (
+        'RouteTableId', 'SubnetId',
+    )
+
     properties_schema = {
-        'RouteTableId': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('Route table ID.')},
-        'SubnetId': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('Subnet ID.')}
+        ROUTE_TABLE_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('Route table ID.'),
+            required=True
+        ),
+        SUBNET_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('Subnet ID.'),
+            required=True
+        ),
     }
 
     def handle_create(self):
         client = self.neutron()
-        subnet_id = self.properties.get('SubnetId')
+        subnet_id = self.properties.get(self.SUBNET_ID)
 
-        router_id = self.properties.get('RouteTableId')
+        router_id = self.properties.get(self.ROUTE_TABLE_ID)
 
         #remove the default router association for this subnet.
         try:
@@ -127,9 +158,9 @@ class SubnetRouteTableAssocation(resource.Resource):
 
     def handle_delete(self):
         client = self.neutron()
-        subnet_id = self.properties.get('SubnetId')
+        subnet_id = self.properties.get(self.SUBNET_ID)
 
-        router_id = self.properties.get('RouteTableId')
+        router_id = self.properties.get(self.ROUTE_TABLE_ID)
 
         try:
             client.remove_interface_router(router_id, {

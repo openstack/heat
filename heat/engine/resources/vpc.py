@@ -16,6 +16,8 @@
 from heat.common import exception
 from heat.engine import clients
 from heat.openstack.common import log as logging
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.neutron import neutron
 
@@ -23,31 +25,54 @@ logger = logging.getLogger(__name__)
 
 
 class VPC(resource.Resource):
-    tags_schema = {'Key': {'Type': 'String',
-                           'Required': True},
-                   'Value': {'Type': 'String',
-                             'Required': True}}
+
+    PROPERTIES = (
+        CIDR_BLOCK, INSTANCE_TENANCY, TAGS,
+    ) = (
+        'CidrBlock', 'InstanceTenancy', 'Tags',
+    )
+
+    _TAG_KEYS = (
+        TAG_KEY, TAG_VALUE,
+    ) = (
+        'Key', 'Value',
+    )
 
     properties_schema = {
-        'CidrBlock': {
-            'Type': 'String',
-            'Description': _('CIDR block to apply to the VPC.')},
-        'InstanceTenancy': {
-            'Type': 'String',
-            'AllowedValues': ['default',
-                              'dedicated'],
-            'Default': 'default',
-            'Implemented': False,
-            'Description': _('Allowed tenancy of instances launched in the '
-                             'VPC. default - any tenancy; dedicated - '
-                             'instance will be dedicated, regardless of '
-                             'the tenancy option specified at instance '
-                             'launch.')},
-        'Tags': {'Type': 'List', 'Schema': {
-            'Type': 'Map',
-            'Implemented': False,
-            'Schema': tags_schema,
-            'Description': _('List of tags to attach to the instance.')}}
+        CIDR_BLOCK: properties.Schema(
+            properties.Schema.STRING,
+            _('CIDR block to apply to the VPC.')
+        ),
+        INSTANCE_TENANCY: properties.Schema(
+            properties.Schema.STRING,
+            _('Allowed tenancy of instances launched in the VPC. default - '
+              'any tenancy; dedicated - instance will be dedicated, '
+              'regardless of the tenancy option specified at instance '
+              'launch.'),
+            default='default',
+            constraints=[
+                constraints.AllowedValues(['default', 'dedicated']),
+            ],
+            implemented=False
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                _('List of tags to attach to the instance.'),
+                schema={
+                    TAG_KEY: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                    TAG_VALUE: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                },
+                implemented=False,
+            )
+        ),
     }
 
     def handle_create(self):

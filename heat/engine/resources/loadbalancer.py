@@ -14,6 +14,8 @@
 #    under the License.
 
 from heat.common import template_format
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import stack_resource
 from heat.engine.resources import nova_utils
 
@@ -197,94 +199,142 @@ lb_template = r'''
 #
 class LoadBalancer(stack_resource.StackResource):
 
-    listeners_schema = {
-        'InstancePort': {
-            'Type': 'Number',
-            'Required': True,
-            'Description': _('TCP port on which the instance server is'
-                             ' listening.')},
-        'LoadBalancerPort': {
-            'Type': 'Number',
-            'Required': True,
-            'Description': _('The external load balancer port number.')},
-        'Protocol': {
-            'Type': 'String',
-            'Required': True,
-            'AllowedValues': ['TCP', 'HTTP'],
-            'Description': _('The load balancer transport protocol to use.')},
-        'SSLCertificateId': {
-            'Type': 'String',
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'PolicyNames': {
-            'Type': 'List',
-            'Implemented': False,
-            'Description': _('Not Implemented.')}
-    }
-    healthcheck_schema = {
-        'HealthyThreshold': {
-            'Type': 'Number',
-            'Required': True,
-            'Description': _('The number of consecutive health probe successes'
-                             ' required before moving the instance to the'
-                             ' healthy state.')},
-        'Interval': {
-            'Type': 'Number',
-            'Required': True,
-            'Description': _('The approximate interval, in seconds, between'
-                             ' health checks of an individual instance.')},
-        'Target': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('The port being checked.')},
-        'Timeout': {
-            'Type': 'Number',
-            'Required': True,
-            'Description': _('Health probe timeout, in seconds.')},
-        'UnhealthyThreshold': {
-            'Type': 'Number',
-            'Required': True,
-            'Description': _('The number of consecutive health probe failures'
-                             ' required before moving the instance to the'
-                             ' unhealthy state')},
-    }
+    PROPERTIES = (
+        AVAILABILITY_ZONES, HEALTH_CHECK, INSTANCES, LISTENERS,
+        APP_COOKIE_STICKINESS_POLICY, LBCOOKIE_STICKINESS_POLICY,
+        SECURITY_GROUPS, SUBNETS,
+    ) = (
+        'AvailabilityZones', 'HealthCheck', 'Instances', 'Listeners',
+        'AppCookieStickinessPolicy', 'LBCookieStickinessPolicy',
+        'SecurityGroups', 'Subnets',
+    )
+
+    _HEALTH_CHECK_KEYS = (
+        HEALTH_CHECK_HEALTHY_THRESHOLD, HEALTH_CHECK_INTERVAL,
+        HEALTH_CHECK_TARGET, HEALTH_CHECK_TIMEOUT,
+        HEALTH_CHECK_UNHEALTHY_THRESHOLD,
+    ) = (
+        'HealthyThreshold', 'Interval',
+        'Target', 'Timeout',
+        'UnhealthyThreshold',
+    )
+
+    _LISTENER_KEYS = (
+        LISTENER_INSTANCE_PORT, LISTENER_LOAD_BALANCER_PORT, LISTENER_PROTOCOL,
+        LISTENER_SSLCERTIFICATE_ID, LISTENER_POLICY_NAMES,
+    ) = (
+        'InstancePort', 'LoadBalancerPort', 'Protocol',
+        'SSLCertificateId', 'PolicyNames',
+    )
 
     properties_schema = {
-        'AvailabilityZones': {
-            'Type': 'List',
-            'Required': True,
-            'Description': _('The Availability Zones in which to create the'
-                             ' load balancer.')},
-        'HealthCheck': {
-            'Type': 'Map',
-            'Schema': healthcheck_schema,
-            'Description': _('An application health check for the'
-                             ' instances.')},
-        'Instances': {
-            'Type': 'List',
-            'UpdateAllowed': True,
-            'Description': _('The list of instance IDs load balanced.')},
-        'Listeners': {
-            'Type': 'List', 'Required': True,
-            'Schema': {'Type': 'Map', 'Schema': listeners_schema},
-            'Description': _('One or more listeners for this load balancer.')},
-        'AppCookieStickinessPolicy': {
-            'Type': 'String',
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'LBCookieStickinessPolicy': {
-            'Type': 'String',
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'SecurityGroups': {
-            'Type': 'String',
-            'Implemented': False,
-            'Description': _('Not Implemented.')},
-        'Subnets': {
-            'Type': 'List',
-            'Implemented': False,
-            'Description': _('Not Implemented.')}
+        AVAILABILITY_ZONES: properties.Schema(
+            properties.Schema.LIST,
+            _('The Availability Zones in which to create the load balancer.'),
+            required=True
+        ),
+        HEALTH_CHECK: properties.Schema(
+            properties.Schema.MAP,
+            _('An application health check for the instances.'),
+            schema={
+                HEALTH_CHECK_HEALTHY_THRESHOLD: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('The number of consecutive health probe successes '
+                      'required before moving the instance to the '
+                      'healthy state.'),
+                    required=True
+                ),
+                HEALTH_CHECK_INTERVAL: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('The approximate interval, in seconds, between '
+                      'health checks of an individual instance.'),
+                    required=True
+                ),
+                HEALTH_CHECK_TARGET: properties.Schema(
+                    properties.Schema.STRING,
+                    _('The port being checked.'),
+                    required=True
+                ),
+                HEALTH_CHECK_TIMEOUT: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('Health probe timeout, in seconds.'),
+                    required=True
+                ),
+                HEALTH_CHECK_UNHEALTHY_THRESHOLD: properties.Schema(
+                    properties.Schema.NUMBER,
+                    _('The number of consecutive health probe failures '
+                      'required before moving the instance to the '
+                      'unhealthy state'),
+                    required=True
+                ),
+            }
+        ),
+        INSTANCES: properties.Schema(
+            properties.Schema.LIST,
+            _('The list of instance IDs load balanced.'),
+            update_allowed=True
+        ),
+        LISTENERS: properties.Schema(
+            properties.Schema.LIST,
+            _('One or more listeners for this load balancer.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    LISTENER_INSTANCE_PORT: properties.Schema(
+                        properties.Schema.NUMBER,
+                        _('TCP port on which the instance server is '
+                          'listening.'),
+                        required=True
+                    ),
+                    LISTENER_LOAD_BALANCER_PORT: properties.Schema(
+                        properties.Schema.NUMBER,
+                        _('The external load balancer port number.'),
+                        required=True
+                    ),
+                    LISTENER_PROTOCOL: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The load balancer transport protocol to use.'),
+                        required=True,
+                        constraints=[
+                            constraints.AllowedValues(['TCP', 'HTTP']),
+                        ]
+                    ),
+                    LISTENER_SSLCERTIFICATE_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Not Implemented.'),
+                        implemented=False
+                    ),
+                    LISTENER_POLICY_NAMES: properties.Schema(
+                        properties.Schema.LIST,
+                        _('Not Implemented.'),
+                        implemented=False
+                    ),
+                },
+            ),
+            required=True
+        ),
+        APP_COOKIE_STICKINESS_POLICY: properties.Schema(
+            properties.Schema.STRING,
+            _('Not Implemented.'),
+            implemented=False
+        ),
+        LBCOOKIE_STICKINESS_POLICY: properties.Schema(
+            properties.Schema.STRING,
+            _('Not Implemented.'),
+            implemented=False
+        ),
+        SECURITY_GROUPS: properties.Schema(
+            properties.Schema.STRING,
+            _('Not Implemented.'),
+            implemented=False
+        ),
+        SUBNETS: properties.Schema(
+            properties.Schema.LIST,
+            _('Not Implemented.'),
+            implemented=False
+        ),
     }
+
     attributes_schema = {
         "CanonicalHostedZoneName": ("The name of the hosted zone that is "
                                     "associated with the LoadBalancer."),
@@ -297,6 +347,7 @@ class LoadBalancer(stack_resource.StackResource):
                                           "instances."),
         "SourceSecurityGroup.OwnerAlias": "Owner of the source security group."
     }
+
     update_allowed_keys = ('Properties',)
 
     def _haproxy_config(self, templ, instances):
@@ -318,22 +369,23 @@ class LoadBalancer(stack_resource.StackResource):
         timeout server 50000ms
 '''
 
-        listener = self.properties['Listeners'][0]
-        lb_port = listener['LoadBalancerPort']
-        inst_port = listener['InstancePort']
+        listener = self.properties[self.LISTENERS][0]
+        lb_port = listener[self.LISTENER_LOAD_BALANCER_PORT]
+        inst_port = listener[self.LISTENER_INSTANCE_PORT]
         spaces = '            '
         frontend = '''
         frontend http
             bind *:%s
 ''' % (lb_port)
 
-        health_chk = self.properties['HealthCheck']
+        health_chk = self.properties[self.HEALTH_CHECK]
         if health_chk:
             check = 'check inter %ss fall %s rise %s' % (
-                    health_chk['Interval'],
-                    health_chk['UnhealthyThreshold'],
-                    health_chk['HealthyThreshold'])
-            timeout_check = 'timeout check %ds' % int(health_chk['Timeout'])
+                    health_chk[self.HEALTH_CHECK_INTERVAL],
+                    health_chk[self.HEALTH_CHECK_UNHEALTHY_THRESHOLD],
+                    health_chk[self.HEALTH_CHECK_HEALTHY_THRESHOLD])
+            timeout = int(health_chk[self.HEALTH_CHECK_TIMEOUT])
+            timeout_check = 'timeout check %ds' % timeout
         else:
             check = ''
             timeout_check = ''
@@ -365,10 +417,10 @@ class LoadBalancer(stack_resource.StackResource):
     def handle_create(self):
         templ = template_format.parse(lb_template)
 
-        if self.properties['Instances']:
+        if self.properties[self.INSTANCES]:
             md = templ['Resources']['LB_instance']['Metadata']
             files = md['AWS::CloudFormation::Init']['config']['files']
-            cfg = self._haproxy_config(templ, self.properties['Instances'])
+            cfg = self._haproxy_config(templ, self.properties[self.INSTANCES])
             files['/etc/haproxy/haproxy.cfg']['content'] = cfg
 
         # If the owning stack defines KeyName, we use that key for the nested
@@ -388,9 +440,9 @@ class LoadBalancer(stack_resource.StackResource):
         save it to the db.
         rely on the cfn-hup to reconfigure HAProxy
         '''
-        if 'Instances' in prop_diff:
+        if self.INSTANCES in prop_diff:
             templ = template_format.parse(lb_template)
-            cfg = self._haproxy_config(templ, prop_diff['Instances'])
+            cfg = self._haproxy_config(templ, prop_diff[self.INSTANCES])
 
             md = self.nested()['LB_instance'].metadata
             files = md['AWS::CloudFormation::Init']['config']['files']
@@ -409,9 +461,11 @@ class LoadBalancer(stack_resource.StackResource):
         if res:
             return res
 
-        health_chk = self.properties['HealthCheck']
+        health_chk = self.properties[self.HEALTH_CHECK]
         if health_chk:
-            if float(health_chk['Interval']) < float(health_chk['Timeout']):
+            interval = float(health_chk[self.HEALTH_CHECK_INTERVAL])
+            timeout = float(health_chk[self.HEALTH_CHECK_TIMEOUT])
+            if interval < timeout:
                 return {'Error':
                         'Interval must be larger than Timeout'}
 
