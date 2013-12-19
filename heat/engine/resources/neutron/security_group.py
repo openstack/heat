@@ -28,8 +28,24 @@ logger = logging.getLogger(__name__)
 
 class SecurityGroup(neutron.NeutronResource):
 
-    rule_schema = {
-        'direction': properties.Schema(
+    PROPERTIES = (
+        NAME, DESCRIPTION, RULES,
+    ) = (
+        'name', 'description', 'rules',
+    )
+
+    _RULE_KEYS = (
+        RULE_DIRECTION, RULE_ETHERTYPE, RULE_PORT_RANGE_MIN,
+        RULE_PORT_RANGE_MAX, RULE_PROTOCOL, RULE_REMOTE_MODE,
+        RULE_REMOTE_GROUP_ID, RULE_REMOTE_IP_PREFIX,
+    ) = (
+        'direction', 'ethertype', 'port_range_min',
+        'port_range_max', 'protocol', 'remote_mode',
+        'remote_group_id', 'remote_ip_prefix',
+    )
+
+    _rule_schema = {
+        RULE_DIRECTION: properties.Schema(
             properties.Schema.STRING,
             _('The direction in which the security group rule is applied. '
               'For a compute instance, an ingress security group rule '
@@ -37,15 +53,19 @@ class SecurityGroup(neutron.NeutronResource):
               'instance. An egress rule is applied to traffic leaving '
               'the instance.'),
             default='ingress',
-            constraints=[constraints.AllowedValues(('ingress', 'egress'))]
+            constraints=[
+                constraints.AllowedValues(['ingress', 'egress']),
+            ]
         ),
-        'ethertype': properties.Schema(
+        RULE_ETHERTYPE: properties.Schema(
             properties.Schema.STRING,
             _('Ethertype of the traffic.'),
             default='IPv4',
-            constraints=[constraints.AllowedValues(('IPv4', 'IPv6'))]
+            constraints=[
+                constraints.AllowedValues(['IPv4', 'IPv6']),
+            ]
         ),
-        'port_range_min': properties.Schema(
+        RULE_PORT_RANGE_MIN: properties.Schema(
             properties.Schema.INTEGER,
             _('The minimum port number in the range that is matched by the '
               'security group rule. If the protocol is TCP or UDP, this '
@@ -53,32 +73,34 @@ class SecurityGroup(neutron.NeutronResource):
               'port_range_max attribute. If the protocol is ICMP, this '
               'value must be an ICMP type.')
         ),
-        'port_range_max': properties.Schema(
+        RULE_PORT_RANGE_MAX: properties.Schema(
             properties.Schema.INTEGER,
             _('The maximum port number in the range that is matched by the '
               'security group rule. The port_range_min attribute constrains '
               'the port_range_max attribute. If the protocol is ICMP, this '
               'value must be an ICMP type.')
         ),
-        'protocol': properties.Schema(
+        RULE_PROTOCOL: properties.Schema(
             properties.Schema.STRING,
             _('The protocol that is matched by the security group rule. '
               'Valid values include tcp, udp, and icmp.')
         ),
-        'remote_mode': properties.Schema(
+        RULE_REMOTE_MODE: properties.Schema(
             properties.Schema.STRING,
             _('Whether to specify a remote group or a remote IP prefix.'),
             default='remote_ip_prefix',
-            constraints=[constraints.AllowedValues((
-                'remote_ip_prefix', 'remote_group_id'))]
+            constraints=[
+                constraints.AllowedValues(['remote_ip_prefix',
+                                           'remote_group_id']),
+            ]
         ),
-        'remote_group_id': properties.Schema(
+        RULE_REMOTE_GROUP_ID: properties.Schema(
             properties.Schema.STRING,
             _('The remote group ID to be associated with this security group '
               'rule. If no value is specified then this rule will use this '
               'security group for the remote_group_id.')
         ),
-        'remote_ip_prefix': properties.Schema(
+        RULE_REMOTE_IP_PREFIX: properties.Schema(
             properties.Schema.STRING,
             _('The remote IP prefix (CIDR) to be associated with this '
               'security group rule.')
@@ -86,26 +108,27 @@ class SecurityGroup(neutron.NeutronResource):
     }
 
     properties_schema = {
-        'name': properties.Schema(
+        NAME: properties.Schema(
             properties.Schema.STRING,
-            _('A string specifying a symbolic name for '
-              'the security group, which is not required to be '
-              'unique.'),
+            _('A string specifying a symbolic name for the security group, '
+              'which is not required to be unique.'),
             update_allowed=True
         ),
-        'description': properties.Schema(
+        DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
             _('Description of the security group.'),
             update_allowed=True
         ),
-        'rules': properties.Schema(
+        RULES: properties.Schema(
             properties.Schema.LIST,
             _('List of security group rules.'),
             default=[],
-            schema=properties.Schema(properties.Schema.MAP,
-                                     schema=rule_schema),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema=_rule_schema
+            ),
             update_allowed=True
-        )
+        ),
     }
 
     default_egress_rules = [
@@ -117,7 +140,7 @@ class SecurityGroup(neutron.NeutronResource):
 
     def validate(self):
         super(SecurityGroup, self).validate()
-        if self.properties.get('name') == 'default':
+        if self.properties.get(self.NAME) == 'default':
             msg = _('Security groups cannot be assigned the name "default".')
             raise exception.StackValidationFailed(message=msg)
 
@@ -125,7 +148,7 @@ class SecurityGroup(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        rules = props.pop('rules', [])
+        rules = props.pop(self.RULES, [])
 
         sec = self.neutron().create_security_group(
             {'security_group': props})['security_group']
@@ -138,35 +161,34 @@ class SecurityGroup(neutron.NeutronResource):
         rule['security_group_id'] = self.resource_id
 
         if 'remote_mode' in rule:
-            remote_mode = rule.get('remote_mode')
-            del(rule['remote_mode'])
+            remote_mode = rule.get(self.RULE_REMOTE_MODE)
+            del(rule[self.RULE_REMOTE_MODE])
 
-            if remote_mode == 'remote_group_id':
-                rule['remote_ip_prefix'] = None
-                if not rule.get('remote_group_id'):
+            if remote_mode == self.RULE_REMOTE_GROUP_ID:
+                rule[self.RULE_REMOTE_IP_PREFIX] = None
+                if not rule.get(self.RULE_REMOTE_GROUP_ID):
                     # if remote group is not specified then make this
                     # a self-referencing rule
-                    rule['remote_group_id'] = self.resource_id
+                    rule[self.RULE_REMOTE_GROUP_ID] = self.resource_id
             else:
-                rule['remote_group_id'] = None
+                rule[self.RULE_REMOTE_GROUP_ID] = None
 
-        if rule.get('port_range_min', None) is not None:
-            rule['port_range_min'] = str(rule['port_range_min'])
-        if rule.get('port_range_max', None) is not None:
-            rule['port_range_max'] = str(rule['port_range_max'])
+        for key in (self.RULE_PORT_RANGE_MIN, self.RULE_PORT_RANGE_MAX):
+            if rule.get(key, None) is not None:
+                rule[key] = str(rule[key])
         return rule
 
     def _create_rules(self, rules):
         egress_deleted = False
 
         for i in rules:
-            if i['direction'] == 'egress' and not egress_deleted:
+            if i[self.RULE_DIRECTION] == 'egress' and not egress_deleted:
                 # There is at least one egress rule, so delete the default
                 # rules which allow all egress traffic
                 egress_deleted = True
 
                 def is_egress(rule):
-                    return rule['direction'] == 'egress'
+                    return rule[self.RULE_DIRECTION] == 'egress'
 
                 self._delete_rules(is_egress)
 
@@ -211,7 +233,7 @@ class SecurityGroup(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
-        rules = props.pop('rules', [])
+        rules = props.pop(self.RULES, [])
 
         self.neutron().update_security_group(
             self.resource_id, {'security_group': props})

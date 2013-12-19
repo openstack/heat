@@ -16,6 +16,8 @@
 from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine.resources.neutron import neutron
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import scheduler
 
 if clients.neutronclient is not None:
@@ -26,37 +28,81 @@ logger = logging.getLogger(__name__)
 
 class Subnet(neutron.NeutronResource):
 
-    allocation_schema = {'start': {'Type': 'String',
-                                   'Required': True},
-                         'end': {'Type': 'String',
-                                 'Required': True}}
+    PROPERTIES = (
+        NETWORK_ID, CIDR, VALUE_SPECS, NAME, IP_VERSION,
+        DNS_NAMESERVERS, GATEWAY_IP, ENABLE_DHCP, ALLOCATION_POOLS,
+        TENANT_ID,
+    ) = (
+        'network_id', 'cidr', 'value_specs', 'name', 'ip_version',
+        'dns_nameservers', 'gateway_ip', 'enable_dhcp', 'allocation_pools',
+        'tenant_id',
+    )
 
-    properties_schema = {'network_id': {'Type': 'String',
-                                        'Required': True},
-                         'cidr': {'Type': 'String',
-                                  'Required': True},
-                         'value_specs': {'Type': 'Map',
-                                         'Default': {},
-                                         'UpdateAllowed': True},
-                         'name': {'Type': 'String',
-                                  'UpdateAllowed': True},
-                         'ip_version': {'Type': 'Integer',
-                                        'AllowedValues': [4, 6],
-                                        'Default': 4},
-                         'dns_nameservers': {'Type': 'List',
-                                             'UpdateAllowed': True,
-                                             'Default': []},
-                         'gateway_ip': {'Type': 'String',
-                                        'UpdateAllowed': True},
-                         'enable_dhcp': {'Type': 'Boolean',
-                                         'UpdateAllowed': True,
-                                         'Default': True},
-                         'allocation_pools': {'Type': 'List',
-                                              'Schema': {
-                                                  'Type': 'Map',
-                                                  'Schema': allocation_schema
-                                              }},
-                         'tenant_id': {'Type': 'String'}}
+    _ALLOCATION_POOL_KEYS = (
+        ALLOCATION_POOL_START, ALLOCATION_POOL_END,
+    ) = (
+        'start', 'end',
+    )
+
+    properties_schema = {
+        NETWORK_ID: properties.Schema(
+            properties.Schema.STRING,
+            required=True
+        ),
+        CIDR: properties.Schema(
+            properties.Schema.STRING,
+            required=True
+        ),
+        VALUE_SPECS: properties.Schema(
+            properties.Schema.MAP,
+            default={},
+            update_allowed=True
+        ),
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            update_allowed=True
+        ),
+        IP_VERSION: properties.Schema(
+            properties.Schema.INTEGER,
+            default=4,
+            constraints=[
+                constraints.AllowedValues([4, 6]),
+            ]
+        ),
+        DNS_NAMESERVERS: properties.Schema(
+            properties.Schema.LIST,
+            default=[],
+            update_allowed=True
+        ),
+        GATEWAY_IP: properties.Schema(
+            properties.Schema.STRING,
+            update_allowed=True
+        ),
+        ENABLE_DHCP: properties.Schema(
+            properties.Schema.BOOLEAN,
+            default=True,
+            update_allowed=True
+        ),
+        ALLOCATION_POOLS: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    ALLOCATION_POOL_START: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                    ALLOCATION_POOL_END: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                },
+            )
+        ),
+        TENANT_ID: properties.Schema(
+            properties.Schema.STRING
+        ),
+    }
 
     attributes_schema = {
         "name": _("Friendly name of the subnet."),
@@ -75,17 +121,17 @@ class Subnet(neutron.NeutronResource):
 
     update_allowed_keys = ('Properties',)
 
-    @staticmethod
-    def _null_gateway_ip(props):
-        if 'gateway_ip' not in props:
+    @classmethod
+    def _null_gateway_ip(cls, props):
+        if cls.GATEWAY_IP not in props:
             return
         # Specifying null in the gateway_ip will result in
         # a property containing an empty string.
         # A null gateway_ip has special meaning in the API
         # so this needs to be set back to None.
         # See bug https://bugs.launchpad.net/heat/+bug/1226666
-        if props.get('gateway_ip') == '':
-            props['gateway_ip'] = None
+        if props.get(cls.GATEWAY_IP) == '':
+            props[cls.GATEWAY_IP] = None
 
     def handle_create(self):
         props = self.prepare_properties(

@@ -16,6 +16,8 @@
 from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine.resources.neutron import neutron
+from heat.engine.resources.neutron import subnet
+from heat.engine import properties
 from heat.engine import scheduler
 
 if clients.neutronclient is not None:
@@ -26,86 +28,101 @@ logger = logging.getLogger(__name__)
 
 class Port(neutron.NeutronResource):
 
-    fixed_ip_schema = {
-        'subnet_id': {
-            'Type': 'String',
-            'Description': _('Subnet in which to allocate the IP address '
-                             'for this port.')
-        },
-        'ip_address': {
-            'Type': 'String',
-            'Description': _('IP address desired in the subnet for this port.')
-        }
-    }
+    PROPERTIES = (
+        NETWORK_ID, NAME, VALUE_SPECS, ADMIN_STATE_UP, FIXED_IPS,
+        MAC_ADDRESS, DEVICE_ID, SECURITY_GROUPS, ALLOWED_ADDRESS_PAIRS,
+    ) = (
+        'network_id', 'name', 'value_specs', 'admin_state_up', 'fixed_ips',
+        'mac_address', 'device_id', 'security_groups', 'allowed_address_pairs',
+    )
 
-    address_pair_schema = {
-        'mac_address': {
-            'Type': 'String',
-            'Description': _('MAC address to allow through this port.')
-        },
-        'ip_address': {
-            'Type': 'String',
-            'Description': _('IP address to allow through this port.'),
-            'Required': True
-        }
-    }
+    _FIXED_IP_KEYS = (
+        FIXED_IP_SUBNET_ID, FIXED_IP_IP_ADDRESS,
+    ) = (
+        'subnet_id', 'ip_address',
+    )
+
+    _ALLOWED_ADDRESS_PAIR_KEYS = (
+        ALLOWED_ADDRESS_PAIR_MAC_ADDRESS, ALLOWED_ADDRESS_PAIR_IP_ADDRESS,
+    ) = (
+        'mac_address', 'ip_address',
+    )
 
     properties_schema = {
-        'network_id': {
-            'Type': 'String',
-            'Description': _('Network ID this port belongs to.'),
-            'Required': True
-        },
-        'name': {
-            'Type': 'String',
-            'Description': _('A symbolic name for this port.')
-        },
-        'value_specs': {
-            'Type': 'Map',
-            'Description': _('Extra parameters to include in the "port" '
-                             'object in the creation request.'),
-            'Default': {},
-        },
-        'admin_state_up': {
-            'Default': True,
-            'Type': 'Boolean',
-            'Description': _('The administrative state of this port.'),
-            'UpdateAllowed': True
-        },
-        'fixed_ips': {
-            'Type': 'List',
-            'Default': [],
-            'UpdateAllowed': True,
-            'Description': _('Desired IPs for this port.'),
-            'Schema': {
-                'Type': 'Map',
-                'Schema': fixed_ip_schema
-            }
-        },
-        'mac_address': {
-            'Type': 'String',
-            'Description': _('MAC address to give to this port.')
-        },
-        'device_id': {
-            'Type': 'String',
-            'Description': _('Device ID of this port.')
-        },
-        'security_groups': {
-            'Type': 'List',
-            'UpdateAllowed': True,
-            'Description': _('Security group IDs to associate with this '
-                             'port.'),
-            'Default': [],
-        },
-        'allowed_address_pairs': {
-            'Type': 'List',
-            'Description': _('Additional MAC/IP address pairs allowed to pass'
-                             ' through the port.'),
-            'Schema': {
-                'Type': 'Map',
-                'Schema': address_pair_schema
-            }
-        }
+        NETWORK_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('Network ID this port belongs to.'),
+            required=True
+        ),
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('A symbolic name for this port.')
+        ),
+        VALUE_SPECS: properties.Schema(
+            properties.Schema.MAP,
+            _('Extra parameters to include in the "port" object in the '
+              'creation request.'),
+            default={}
+        ),
+        ADMIN_STATE_UP: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('The administrative state of this port.'),
+            default=True,
+            update_allowed=True
+        ),
+        FIXED_IPS: properties.Schema(
+            properties.Schema.LIST,
+            _('Desired IPs for this port.'),
+            default=[],
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    FIXED_IP_SUBNET_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Subnet in which to allocate the IP address for '
+                          'this port.')
+                    ),
+                    FIXED_IP_IP_ADDRESS: properties.Schema(
+                        properties.Schema.STRING,
+                        _('IP address desired in the subnet for this port.')
+                    ),
+                },
+            ),
+            update_allowed=True
+        ),
+        MAC_ADDRESS: properties.Schema(
+            properties.Schema.STRING,
+            _('MAC address to give to this port.')
+        ),
+        DEVICE_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('Device ID of this port.')
+        ),
+        SECURITY_GROUPS: properties.Schema(
+            properties.Schema.LIST,
+            _('Security group IDs to associate with this port.'),
+            default=[],
+            update_allowed=True
+        ),
+        ALLOWED_ADDRESS_PAIRS: properties.Schema(
+            properties.Schema.LIST,
+            _('Additional MAC/IP address pairs allowed to pass through the '
+              'port.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    ALLOWED_ADDRESS_PAIR_MAC_ADDRESS: properties.Schema(
+                        properties.Schema.STRING,
+                        _('MAC address to allow through this port.')
+                    ),
+                    ALLOWED_ADDRESS_PAIR_IP_ADDRESS: properties.Schema(
+                        properties.Schema.STRING,
+                        _('IP address to allow through this port.'),
+                        required=True
+                    ),
+                },
+            )
+        ),
     }
 
     attributes_schema = {
@@ -135,8 +152,8 @@ class Port(neutron.NeutronResource):
         # the ports in that network.
         for resource in self.stack.itervalues():
             if (resource.has_interface('OS::Neutron::Subnet') and
-                resource.properties.get('network_id') ==
-                    self.properties.get('network_id')):
+                resource.properties.get(subnet.Subnet.NETWORK_ID) ==
+                    self.properties.get(self.NETWORK_ID)):
                         deps += (self, resource)
 
     def handle_create(self):
@@ -150,20 +167,21 @@ class Port(neutron.NeutronResource):
         self.resource_id_set(port['id'])
 
     def _prepare_list_properties(self, props):
-        for fixed_ip in props.get('fixed_ips', []):
+        for fixed_ip in props.get(self.FIXED_IPS, []):
             for key, value in fixed_ip.items():
                 if value is None:
                     fixed_ip.pop(key)
 
         # delete empty MAC addresses so that Neutron validation code
         # wouldn't fail as it not accepts Nones
-        for pair in props.get('allowed_address_pairs', []):
-            if 'mac_address' in pair and pair['mac_address'] is None:
-                del pair['mac_address']
+        for pair in props.get(self.ALLOWED_ADDRESS_PAIRS, []):
+            if (self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS in pair and
+                    pair[self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS] is None):
+                del pair[self.ALLOWED_ADDRESS_PAIR_MAC_ADDRESS]
 
-        if props.get('security_groups'):
-            props['security_groups'] = self.get_secgroup_uuids(
-                props.get('security_groups'), self.neutron())
+        if props.get(self.SECURITY_GROUPS):
+            props[self.SECURITY_GROUPS] = self.get_secgroup_uuids(
+                props.get(self.SECURITY_GROUPS), self.neutron())
 
     def _show_resource(self):
         return self.neutron().show_port(
