@@ -128,13 +128,15 @@ class StackResource(resource.Resource):
         # all subclasses want that behavior, since they may offer custom
         # attributes.
         nested_stack = self.nested()
-        if nested_stack is not None:
-            res_diff = (
-                len(template[tmpl.RESOURCES]) - len(nested_stack.resources))
-            new_size = nested_stack.root_stack.total_resources() + res_diff
-            if new_size > cfg.CONF.max_resources_per_stack:
-                raise exception.RequestLimitExceeded(
-                    message=exception.StackResourceLimitExceeded.msg_fmt)
+        if nested_stack is None:
+            raise exception.Error(_('Cannot update %s, stack not created')
+                                  % self.name)
+        res_diff = (
+            len(template[tmpl.RESOURCES]) - len(nested_stack.resources))
+        new_size = nested_stack.root_stack.total_resources() + res_diff
+        if new_size > cfg.CONF.max_resources_per_stack:
+            raise exception.RequestLimitExceeded(
+                message=exception.StackResourceLimitExceeded.msg_fmt)
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
@@ -147,11 +149,6 @@ class StackResource(resource.Resource):
                              parent_resource=self,
                              owner_id=self.stack.id)
         stack.validate()
-
-        nested_stack = self.nested()
-        if nested_stack is None:
-            raise exception.Error(_('Cannot update %s, stack not created')
-                                  % self.name)
 
         if not hasattr(type(self), 'attributes_schema'):
             self.attributes = None
