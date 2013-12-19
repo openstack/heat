@@ -90,7 +90,7 @@ class EventController(object):
     @util.identified_stack
     def index(self, req, identity, resource_name=None):
         """
-        Lists summary information for all resources
+        Lists summary information for all events
         """
 
         if resource_name is None:
@@ -108,7 +108,7 @@ class EventController(object):
     @util.identified_stack
     def show(self, req, identity, resource_name, event_id):
         """
-        Gets detailed information for a stack
+        Gets detailed information for an event
         """
 
         def event_match(ev):
