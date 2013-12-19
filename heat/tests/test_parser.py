@@ -888,7 +888,7 @@ class StackTest(HeatTestCase):
         self.assertEqual(None, info['action'])
         self.assertIn('id', info)
         self.assertEqual('stack_details_test', info['name'])
-        self.assertTrue(json.loads(resources), info['resources'])
+        self.assertEqual(json.loads(resources), info['resources'])
         self.assertEqual(None, info['status'])
         self.assertEqual(tpl, info['template'])
 
