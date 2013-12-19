@@ -144,6 +144,35 @@ class ServersTest(HeatTestCase):
         self.assertEqual('::babe:4317:0A83', server.FnGetAtt('accessIPv6'))
         self.m.VerifyAll()
 
+    def test_server_create_metadata(self):
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'create_metadata_test_stack'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['metadata'] = \
+            {'a': 1}
+        server = servers.Server('create_metadata_test_server',
+                                t['Resources']['WebServer'], stack)
+        server.t = server.stack.resolve_runtime_data(server.t)
+
+        instance_meta = {'a': "1"}
+        self.m.StubOutWithMock(self.fc.servers, 'create')
+        self.fc.servers.create(
+            image=mox.IgnoreArg(), flavor=mox.IgnoreArg(), key_name='test',
+            name=mox.IgnoreArg(), security_groups=None,
+            userdata=mox.IgnoreArg(), scheduler_hints=None,
+            meta=instance_meta, nics=None, availability_zone=None,
+            block_device_mapping=None, config_drive=None,
+            disk_config=None, reservation_id=None).AndReturn(
+                return_server)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(server.create)()
+        self.m.VerifyAll()
+
     def test_server_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
         server = self._setup_test_server(return_server,
