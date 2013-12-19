@@ -1,0 +1,164 @@
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import email
+import mock
+
+from heat.engine import parser
+from heat.engine import template
+
+import heat.engine.resources.software_config.multi_part as mp
+
+from heat.tests.common import HeatTestCase
+from heat.tests import utils
+import heatclient.exc as exc
+
+
+class MultipartMimeTest(HeatTestCase):
+
+    def setUp(self):
+        super(MultipartMimeTest, self).setUp()
+        utils.setup_dummy_db()
+        self.ctx = utils.dummy_context()
+        self.init_config()
+
+    def init_config(self, parts=[]):
+        stack = parser.Stack(
+            self.ctx, 'software_config_test_stack',
+            template.Template({
+                'Resources': {
+                    'config_mysql': {
+                        'Type': 'OS::Heat::MultipartMime',
+                        'Properties': {
+                            'parts': parts
+                        }}}}))
+        self.config = stack['config_mysql']
+        heat = mock.MagicMock()
+        self.config.heat = heat
+        self.software_configs = heat.return_value.software_configs
+
+    def test_resource_mapping(self):
+        mapping = mp.resource_mapping()
+        self.assertEqual(1, len(mapping))
+        self.assertEqual(mp.MultipartMime,
+                         mapping['OS::Heat::MultipartMime'])
+        self.assertIsInstance(self.config, mp.MultipartMime)
+
+    def test_handle_create(self):
+        sc = mock.MagicMock()
+        config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
+        sc.id = config_id
+        self.software_configs.create.return_value = sc
+        self.config.handle_create()
+        self.assertEqual(config_id, self.config.resource_id)
+        args = self.software_configs.create.call_args[1]
+        self.assertEqual(self.config.message, args['config'])
+
+    def test_get_message_not_none(self):
+        self.config.message = 'Not none'
+        result = self.config.get_message()
+        self.assertEqual('Not none', result)
+
+    def test_get_message_empty_list(self):
+        parts = []
+        self.init_config(parts=parts)
+        result = self.config.get_message()
+        message = email.message_from_string(result)
+        self.assertTrue(message.is_multipart())
+
+    def test_get_message_text(self):
+        parts = [{
+            'config': '1e0e5a60-2843-4cfd-9137-d90bdf18eef5',
+            'type': 'text'
+        }]
+        self.init_config(parts=parts)
+        self.software_configs.get.return_value.config = '#!/bin/bash'
+        result = self.config.get_message()
+        message = email.message_from_string(result)
+        self.assertTrue(message.is_multipart())
+        subs = message.get_payload()
+        self.assertEqual(1, len(subs))
+        self.assertEqual('#!/bin/bash', subs[0].get_payload())
+
+    def test_get_message_fail_back(self):
+        parts = [{
+            'config': '#!/bin/bash',
+            'type': 'text'
+        }]
+        self.init_config(parts=parts)
+        self.software_configs.get.side_effect = exc.HTTPNotFound()
+        result = self.config.get_message()
+        message = email.message_from_string(result)
+        self.assertTrue(message.is_multipart())
+        subs = message.get_payload()
+        self.assertEqual(1, len(subs))
+        self.assertEqual('#!/bin/bash', subs[0].get_payload())
+
+    def test_get_message_text_with_filename(self):
+        parts = [{
+            'config': '1e0e5a60-2843-4cfd-9137-d90bdf18eef5',
+            'type': 'text',
+            'filename': '/opt/stack/configure.d/55-heat-config'
+        }]
+        self.init_config(parts=parts)
+        self.software_configs.get.return_value.config = '#!/bin/bash'
+        result = self.config.get_message()
+        message = email.message_from_string(result)
+        self.assertTrue(message.is_multipart())
+        subs = message.get_payload()
+        self.assertEqual(1, len(subs))
+        self.assertEqual('#!/bin/bash', subs[0].get_payload())
+        self.assertEqual(parts[0]['filename'], subs[0].get_filename())
+
+    def test_get_message_multi_part(self):
+        multipart = ('Content-Type: multipart/mixed; '
+                     'boundary="===============2579792489038011818=="\n'
+                     'MIME-Version: 1.0\n'
+                     '\n--===============2579792489038011818=='
+                     '\nContent-Type: text; '
+                     'charset="us-ascii"\n'
+                     'MIME-Version: 1.0\n'
+                     'Content-Transfer-Encoding: 7bit\n'
+                     'Content-Disposition: attachment;\n'
+                     ' filename="/opt/stack/configure.d/55-heat-config"\n'
+                     '#!/bin/bash\n'
+                     '--===============2579792489038011818==--\n')
+        parts = [{
+            'config': '1e0e5a60-2843-4cfd-9137-d90bdf18eef5',
+            'type': 'multipart'
+        }]
+        self.init_config(parts=parts)
+        self.software_configs.get.return_value.config = multipart
+        result = self.config.get_message()
+        message = email.message_from_string(result)
+        self.assertTrue(message.is_multipart())
+        subs = message.get_payload()
+        self.assertEqual(1, len(subs))
+        self.assertEqual('#!/bin/bash', subs[0].get_payload())
+        self.assertEqual('/opt/stack/configure.d/55-heat-config',
+                         subs[0].get_filename())
+
+    def test_get_message_multi_part_bad_format(self):
+        parts = [
+            {'config': '1e0e5a60-2843-4cfd-9137-d90bdf18eef5',
+             'type': 'multipart'},
+            {'config': '9cab10ef-16ce-4be9-8b25-a67b7313eddb',
+             'type': 'text'}]
+        self.init_config(parts=parts)
+        self.software_configs.get.return_value.config = '#!/bin/bash'
+        result = self.config.get_message()
+        message = email.message_from_string(result)
+        self.assertTrue(message.is_multipart())
+        subs = message.get_payload()
+        self.assertEqual(1, len(subs))
+        self.assertEqual('#!/bin/bash', subs[0].get_payload())
