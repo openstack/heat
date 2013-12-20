@@ -1284,7 +1284,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_list_resource_types_error(self):
         req = self._get('/resource_types')
 
-        error = heat_exc.ServerError(body='')
+        error = heat_exc.ResourceTypeNotFound(type_name='')
         self.m.StubOutWithMock(rpc, 'call')
         rpc.call(req.context, self.topic,
                  {'namespace': None,
@@ -1297,8 +1297,8 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.list_resource_types,
                                        req, tenant_id=self.tenant)
-        self.assertEqual(resp.json['code'], 500)
-        self.assertEqual(resp.json['error']['type'], 'ServerError')
+        self.assertEqual(resp.json['code'], 404)
+        self.assertEqual(resp.json['error']['type'], 'ResourceTypeNotFound')
         self.m.VerifyAll()
 
     def test_resource_schema(self):

@@ -20,11 +20,14 @@ import datetime
 import json
 from oslo.config import cfg
 import stubout
+import testscenarios
 import webob
 
 from heat.common import exception
 from heat.common import wsgi
 from heat.tests.common import HeatTestCase
+
+load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class RequestTest(HeatTestCase):
@@ -224,6 +227,42 @@ class ResourceTest(HeatTestCase):
                               resource, request)
         self.assertEqual(message_es, str(e.exc))
         self.m.VerifyAll()
+
+
+class ResourceExceptionHandlingTest(HeatTestCase):
+    scenarios = [
+        ('client_exceptions', dict(
+            exception=exception.StackResourceLimitExceeded,
+            exception_catch=exception.StackResourceLimitExceeded)),
+        ('webob_bad_request', dict(
+            exception=webob.exc.HTTPBadRequest,
+            exception_catch=exception.HTTPExceptionDisguise)),
+        ('webob_not_found', dict(
+            exception=webob.exc.HTTPNotFound,
+            exception_catch=exception.HTTPExceptionDisguise)),
+    ]
+
+    def setUp(self):
+        super(ResourceExceptionHandlingTest, self).setUp()
+
+    def test_resource_client_exceptions_dont_log_error(self):
+        class Controller(object):
+            def __init__(self, excpetion_to_raise):
+                self.excpetion_to_raise = excpetion_to_raise
+
+            def raise_exception(self, req, body):
+                raise self.excpetion_to_raise()
+
+        actions = {'action': 'raise_exception', 'body': 'data'}
+        env = {'wsgiorg.routing_args': [None, actions]}
+        request = wsgi.Request.blank('/tests/123', environ=env)
+        request.body = '{"foo" : "value"}'
+        resource = wsgi.Resource(Controller(self.exception),
+                                 wsgi.JSONRequestDeserializer(),
+                                 None)
+        e = self.assertRaises(self.exception_catch, resource, request)
+        e = e.exc if hasattr(e, 'exc') else e
+        self.assertNotIn(str(e), self.logger.output)
 
 
 class JSONResponseSerializerTest(HeatTestCase):
