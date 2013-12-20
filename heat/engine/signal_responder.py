@@ -47,12 +47,12 @@ class SignalResponder(resource.Resource):
         # Create a keystone user so we can create a signed URL via FnGetRefId
         user_id = self.keystone().create_stack_user(
             self.physical_resource_name())
+        self.resource_id_set(user_id)
+
         kp = self.keystone().get_ec2_keypair(user_id)
         if not kp:
             raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user_id)
-        else:
-            self.resource_id_set(user_id)
 
     def handle_delete(self):
         if self.resource_id is None:

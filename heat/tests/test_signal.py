@@ -24,9 +24,12 @@ from heat.tests import utils
 from heat.common import exception
 from heat.common import template_format
 
+from heat.engine import clients
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import signal_responder as sr
+
+from keystoneclient import exceptions as kc_exceptions
 
 
 test_template_signal = '''
@@ -88,6 +91,68 @@ class SignalTest(HeatTestCase):
         self.m.ReplayAll()
 
         return stack
+
+    @utils.stack_delete_after
+    def test_handle_create_fail_user(self):
+        self.stack = self.create_stack(stack_name='create_fail_user',
+                                       stub=False)
+
+        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
+            def create_stack_user(self, name):
+                raise kc_exceptions.Forbidden("Denied!")
+
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            FakeKeystoneClientFail())
+        self.m.ReplayAll()
+
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        self.assertIn('Forbidden', rsrc.status_reason)
+
+    @utils.stack_delete_after
+    def test_handle_create_fail_keypair_raise(self):
+        self.stack = self.create_stack(stack_name='create_fail_keypair',
+                                       stub=False)
+
+        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
+            def get_ec2_keypair(self, name):
+                raise kc_exceptions.Forbidden("Denied!")
+
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            FakeKeystoneClientFail(user_id='123xyz'))
+        self.m.ReplayAll()
+
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        self.assertIn('Forbidden', rsrc.status_reason)
+        self.assertEqual('123xyz', rsrc.resource_id)
+
+    @utils.stack_delete_after
+    def test_handle_create_fail_keypair_none(self):
+        self.stack = self.create_stack(stack_name='create_fail_keypair',
+                                       stub=False)
+
+        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
+            def get_ec2_keypair(self, name):
+                return None
+
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            FakeKeystoneClientFail(user_id='123xyz'))
+        self.m.ReplayAll()
+
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        self.assertIn('Error creating ec2 keypair', rsrc.status_reason)
+        self.assertEqual('123xyz', rsrc.resource_id, '123xyz')
 
     @utils.stack_delete_after
     def test_FnGetAtt_Alarm_Url(self):
