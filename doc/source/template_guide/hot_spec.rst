@@ -42,7 +42,11 @@ HOT templates are defined in YAML and follow the structure outlined below.
 
   heat_template_version: 2013-05-23
 
-  description: # a description of the template
+  description: 
+    # a description of the template
+
+  parameter_groups:
+    # a declaration of input parameter groups and order
 
   parameters:
     # declaration of input parameters
@@ -61,6 +65,11 @@ description
     This *optional* key allows for giving a description of the template, or the
     workload that can be deployed using the template.
 
+parameter_groups
+    This section allows for specifying how the input parameters should be
+    grouped and the order to provide the parameters in. This section is
+    *optional* and can be omitted when necessary.
+
 parameters
     This section allows for specifying input parameters that have to be provided
     when instantiating the template. The section is *optional* and can be
@@ -75,6 +84,46 @@ outputs
     This section allows for specifying output parameters available to users once
     the template has been instantiated. This section is *optional* and can be
     omitted when no output values are required.
+
+
+.. _hot_spec_parameter_groups:
+
+------------------------
+Parameter Groups Section
+------------------------
+
+The *parameter_groups* section allows for specifying how the input parameters
+should be grouped and the order to provide the parameters in. These groups are
+typically used to describe expected behavior for downstream user interfaces.
+
+These groups are specified in a list with each group containing a list of
+associated parameters. The lists are used to denote the expected order of the
+parameters. Each parameter should be associated to a specific group only once
+using the parameter name to bind it to a defined parameter in the parameters
+section.
+
+::
+
+  parameter_groups:
+  - label: <human-readable label of parameter group>
+    description: <description of the parameter group>
+    parameters:
+    - <param name>
+    - <param name>
+
+label
+    A human-readable label that defines the associated group of parameters.
+
+description
+    This attribute allows for giving a human-readable description of the
+    parameter group.
+
+parameters
+    A list of parameters associated with this parameter group.
+
+param name
+    The name of the parameter that is defined in the associated parameters
+    section.
 
 
 .. _hot_spec_parameters:
