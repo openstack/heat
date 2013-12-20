@@ -180,6 +180,10 @@ class Instance(resource.Resource):
     update_allowed_keys = ('Metadata', 'Properties')
     update_allowed_properties = ('InstanceType',)
 
+    # Server host name limit to 53 characters by due to typical default
+    # linux HOST_NAME_MAX of 64, minus the .novalocal appended to the name
+    physical_resource_name_limit = 53
+
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
         self.ipaddress = None
@@ -335,18 +339,6 @@ class Instance(resource.Resource):
                                 security_groups=security_groups,
                                 subnet_id=self.properties['SubnetId'])
         server = None
-
-        # TODO(sdake/shardy) ensure physical_resource_name() never returns a
-        # string longer than 63 characters, as this is pretty inconvenient
-        # behavior for autoscaling groups and nested stacks where instance
-        # names can easily become quite long even with terse names.
-        physical_resource_name_len = len(self.physical_resource_name())
-        if physical_resource_name_len > 63:
-            raise exception.Error(_('Server %(server)s length %(length)d > 63'
-                                  ' characters, please reduce the length of'
-                                  ' stack or resource names') %
-                                  dict(server=self.physical_resource_name(),
-                                       length=physical_resource_name_len))
 
         try:
             server = self.nova().servers.create(

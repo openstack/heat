@@ -98,7 +98,10 @@ class InstancesTest(HeatTestCase):
             self.m.StubOutWithMock(self.fc.servers, 'create')
             self.fc.servers.create(
                 image=1, flavor=1, key_name='test',
-                name=utils.PhysName(stack_name, instance.name),
+                name=utils.PhysName(
+                    stack_name,
+                    instance.name,
+                    limit=instance.physical_resource_name_limit),
                 security_groups=None,
                 userdata=server_userdata, scheduler_hints=None,
                 meta=None, nics=None, availability_zone=None).AndReturn(
@@ -264,21 +267,6 @@ class InstancesTest(HeatTestCase):
         else:
             self.fail('Error not raised')
 
-        self.m.VerifyAll()
-
-    def test_instance_create_err_toolong(self):
-        # Attempt to create a server with a 64 character name should fail
-        # instance name is name_s-name-xxxxxxxxxxxx, so 24 characters gives
-        # a 64 character physical_resource_name
-        return_server = self.fc.servers.list()[1]
-        name = 'e' * 24
-        error = self.assertRaises(exception.ResourceFailure,
-                                  self._create_test_instance,
-                                  return_server,
-                                  name, stub_create=False)
-        substr = ('length 64 > 63 characters, '
-                  'please reduce the length of stack or resource names')
-        self.assertIn(substr, str(error))
         self.m.VerifyAll()
 
     def test_instance_validate(self):
