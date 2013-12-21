@@ -1,12 +1,5 @@
 user: @INSTANCE_USER@
 
-cloud_config_modules:
- - locale
- - set_hostname
- - timezone
- - update_etc_hosts
- - update_hostname
-
 # Capture all subprocess output into a logfile
 # Useful for troubleshooting cloud-init issues
 output: {all: '| tee -a /var/log/cloud-init-output.log'}
