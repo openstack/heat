@@ -42,6 +42,15 @@ swift_template = '''
         "X-Container-Meta" : {
           "Web-Index" : "index.html",
           "Web-Error" : "error.html"
+}
+      }
+    },
+    "SwiftAccountMetadata" : {
+      "Type" : "OS::Swift::Container",
+      "DeletionPolicy" : "Delete",
+      "Properties" : {
+        "X-Account-Meta" : {
+          "Temp-Url-Key" : "secret"
          }
       }
     },
@@ -66,6 +75,7 @@ class swiftTest(HeatTestCase):
     def setUp(self):
         super(swiftTest, self).setUp()
         self.m.CreateMock(swiftclient.Connection)
+        self.m.StubOutWithMock(swiftclient.Connection, 'post_account')
         self.m.StubOutWithMock(swiftclient.Connection, 'put_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'delete_container')
         self.m.StubOutWithMock(swiftclient.Connection, 'head_container')
@@ -97,16 +107,19 @@ class swiftTest(HeatTestCase):
 
     def test_build_meta_headers(self):
         self.m.UnsetStubs()
-        self.assertEqual({}, swift.SwiftContainer._build_meta_headers({}))
-        self.assertEqual({}, swift.SwiftContainer._build_meta_headers(None))
+        self.assertEqual({}, swift.SwiftContainer._build_meta_headers(
+            'container', {}))
+        self.assertEqual({}, swift.SwiftContainer._build_meta_headers(
+            'container', None))
         meta = {
             'X-Container-Meta-Web-Index': 'index.html',
             'X-Container-Meta-Web-Error': 'error.html'
         }
-        self.assertEqual(meta, swift.SwiftContainer._build_meta_headers({
-            "Web-Index": "index.html",
-            "Web-Error": "error.html"
-        }))
+        self.assertEqual(meta, swift.SwiftContainer._build_meta_headers(
+            'container', {
+                "Web-Index": "index.html",
+                "Web-Error": "error.html"
+            }))
 
     def test_attributes(self):
         headers = {
@@ -197,7 +210,7 @@ class swiftTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
-    def test_website(self):
+    def test_container_headers(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())
         container_name = utils.PhysName('test_stack', 'test_resource')
@@ -212,6 +225,22 @@ class swiftTest(HeatTestCase):
         t = template_format.parse(swift_template)
         stack = utils.parse_stack(t)
         rsrc = self.create_resource(t, stack, 'SwiftContainerWebsite')
+        scheduler.TaskRunner(rsrc.delete)()
+        self.m.VerifyAll()
+
+    def test_account_headers(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        container_name = utils.PhysName('test_stack', 'test_resource')
+        swiftclient.Connection.put_container(container_name, {})
+        swiftclient.Connection.post_account(
+            {'X-Account-Meta-Temp-Url-Key': 'secret'}).AndReturn(None)
+        swiftclient.Connection.delete_container(container_name).AndReturn(None)
+
+        self.m.ReplayAll()
+        t = template_format.parse(swift_template)
+        stack = utils.parse_stack(t)
+        rsrc = self.create_resource(t, stack, 'SwiftAccountMetadata')
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()
 
