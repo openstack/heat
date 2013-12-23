@@ -28,6 +28,8 @@ else:
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
 from heat.engine import scheduler
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 from heat.engine.properties import Properties
 from heat.common import exception
@@ -41,150 +43,319 @@ class LoadbalancerBuildError(exception.HeatException):
 
 class CloudLoadBalancer(resource.Resource):
 
-    protocol_values = ["DNS_TCP", "DNS_UDP", "FTP", "HTTP", "HTTPS", "IMAPS",
-                       "IMAPv4", "LDAP", "LDAPS", "MYSQL", "POP3", "POP3S",
-                       "SMTP", "TCP", "TCP_CLIENT_FIRST", "UDP", "UDP_STREAM",
-                       "SFTP"]
+    PROPERTIES = (
+        NAME, NODES, PROTOCOL, ACCESS_LIST, HALF_CLOSED, ALGORITHM,
+        CONNECTION_LOGGING, METADATA, PORT, TIMEOUT,
+        CONNECTION_THROTTLE, SESSION_PERSISTENCE, VIRTUAL_IPS,
+        CONTENT_CACHING, HEALTH_MONITOR, SSL_TERMINATION, ERROR_PAGE,
+    ) = (
+        'name', 'nodes', 'protocol', 'accessList', 'halfClosed', 'algorithm',
+        'connectionLogging', 'metadata', 'port', 'timeout',
+        'connectionThrottle', 'sessionPersistence', 'virtualIps',
+        'contentCaching', 'healthMonitor', 'sslTermination', 'errorPage',
+    )
 
-    algorithm_values = ["LEAST_CONNECTIONS", "RANDOM", "ROUND_ROBIN",
-                        "WEIGHTED_LEAST_CONNECTIONS", "WEIGHTED_ROUND_ROBIN"]
+    _NODE_KEYS = (
+        NODE_ADDRESS, NODE_REF, NODE_PORT, NODE_CONDITION, NODE_TYPE,
+        NODE_WEIGHT,
+    ) = (
+        'address', 'ref', 'port', 'condition', 'type',
+        'weight',
+    )
 
-    nodes_schema = {
-        'address': {'Type': 'String', 'Required': False},
-        'ref': {'Type': 'String', 'Required': False},
-        'port': {'Type': 'Number', 'Required': True},
-        'condition': {'Type': 'String', 'Required': True,
-                      'AllowedValues': ['ENABLED', 'DISABLED'],
-                      'Default': 'ENABLED'},
-        'type': {'Type': 'String', 'Required': False,
-                 'AllowedValues': ['PRIMARY', 'SECONDARY']},
-        'weight': {'Type': 'Number', 'MinValue': 1, 'MaxValue': 100}
-    }
+    _ACCESS_LIST_KEYS = (
+        ACCESS_LIST_ADDRESS, ACCESS_LIST_TYPE,
+    ) = (
+        'address', 'type',
+    )
 
-    access_list_schema = {
-        'address': {'Type': 'String', 'Required': True},
-        'type': {'Type': 'String', 'Required': True,
-                 'AllowedValues': ['ALLOW', 'DENY']}
-    }
+    _CONNECTION_THROTTLE_KEYS = (
+        CONNECTION_THROTTLE_MAX_CONNECTION_RATE,
+        CONNECTION_THROTTLE_MIN_CONNECTIONS,
+        CONNECTION_THROTTLE_MAX_CONNECTIONS,
+        CONNECTION_THROTTLE_RATE_INTERVAL,
+    ) = (
+        'maxConnectionRate',
+        'minConnections',
+        'maxConnections',
+        'rateInterval',
+    )
 
-    connection_logging_schema = {
-        'enabled': {'Type': 'String', 'Required': True,
-                    'AllowedValues': ["true", "false"]}
-    }
+    _VIRTUAL_IP_KEYS = (
+        VIRTUAL_IP_TYPE, VIRTUAL_IP_IP_VERSION,
+    ) = (
+        'type', 'ipVersion',
+    )
 
-    connection_throttle_schema = {
-        'maxConnectionRate': {'Type': 'Number', 'Required': False,
-                              'MinValue': 0, 'MaxValue': 100000},
-        'minConnections': {'Type': 'Number', 'Required': False, 'MinValue': 1,
-                           'MaxValue': 1000},
-        'maxConnections': {'Type': 'Number', 'Required': False, 'MinValue': 1,
-                           'MaxValue': 100000},
-        'rateInterval': {'Type': 'Number', 'Required': False, 'MinValue': 1,
-                         'MaxValue': 3600}
-    }
+    _HEALTH_MONITOR_KEYS = (
+        HEALTH_MONITOR_ATTEMPTS_BEFORE_DEACTIVATION, HEALTH_MONITOR_DELAY,
+        HEALTH_MONITOR_TIMEOUT, HEALTH_MONITOR_TYPE, HEALTH_MONITOR_BODY_REGEX,
+        HEALTH_MONITOR_HOST_HEADER, HEALTH_MONITOR_PATH,
+        HEALTH_MONITOR_STATUS_REGEX,
+    ) = (
+        'attemptsBeforeDeactivation', 'delay',
+        'timeout', 'type', 'bodyRegex',
+        'hostHeader', 'path',
+        'statusRegex',
+    )
+    _HEALTH_MONITOR_CONNECT_KEYS = (
+        HEALTH_MONITOR_ATTEMPTS_BEFORE_DEACTIVATION, HEALTH_MONITOR_DELAY,
+        HEALTH_MONITOR_TIMEOUT, HEALTH_MONITOR_TYPE,
+    )
 
-    virtualip_schema = {
-        'type': {'Type': 'String', 'Required': True,
-                 'AllowedValues': ['SERVICENET', 'PUBLIC']},
-        'ipVersion': {'Type': 'String', 'Required': False,
-                      'AllowedValues': ['IPV6', 'IPV4'],
-                      'Default': 'IPV6'}
-    }
+    _SSL_TERMINATION_KEYS = (
+        SSL_TERMINATION_ENABLED, SSL_TERMINATION_SECURE_PORT,
+        SSL_TERMINATION_PRIVATEKEY, SSL_TERMINATION_CERTIFICATE,
+        SSL_TERMINATION_INTERMEDIATE_CERTIFICATE,
+        SSL_TERMINATION_SECURE_TRAFFIC_ONLY,
+    ) = (
+        'enabled', 'securePort',
+        'privatekey', 'certificate',
+        'intermediateCertificate',
+        'secureTrafficOnly',
+    )
 
-    health_monitor_base_schema = {
-        'attemptsBeforeDeactivation': {'Type': 'Number', 'MinValue': 1,
-                                       'MaxValue': 10, 'Required': True},
-        'delay': {'Type': 'Number', 'MinValue': 1, 'MaxValue': 3600,
-                  'Required': True},
-        'timeout': {'Type': 'Number', 'MinValue': 1, 'MaxValue': 300,
-                    'Required': True},
-        'type': {'Type': 'String',
-                 'AllowedValues': ['CONNECT', 'HTTP', 'HTTPS'],
-                 'Required': True},
-        'bodyRegex': {'Type': 'String', 'Required': False},
-        'hostHeader': {'Type': 'String', 'Required': False},
-        'path': {'Type': 'String', 'Required': False},
-        'statusRegex': {'Type': 'String', 'Required': False},
-    }
-
-    health_monitor_connect_schema = {
-        'attemptsBeforeDeactivation': {'Type': 'Number', 'MinValue': 1,
-                                       'MaxValue': 10, 'Required': True},
-        'delay': {'Type': 'Number', 'MinValue': 1, 'MaxValue': 3600,
-                  'Required': True},
-        'timeout': {'Type': 'Number', 'MinValue': 1, 'MaxValue': 300,
-                    'Required': True},
-        'type': {'Type': 'String', 'AllowedValues': ['CONNECT'],
-                 'Required': True}
-    }
-
-    health_monitor_http_schema = {
-        'attemptsBeforeDeactivation': {'Type': 'Number', 'Required': True,
-                                       'MaxValue': 10, 'MinValue': 1},
-        'bodyRegex': {'Type': 'String', 'Required': True},
-        'delay': {'Type': 'Number', 'Required': True,
-                  'MaxValue': 3600, 'MinValue': 1},
-        'hostHeader': {'Type': 'String', 'Required': False},
-        'path': {'Type': 'String', 'Required': True},
-        'statusRegex': {'Type': 'String', 'Required': True},
-        'timeout': {'Type': 'Number', 'Required': True,
-                    'MaxValue': 300, 'MinValue': 1},
-        'type': {'Type': 'String', 'Required': True,
-                 'AllowedValues': ['HTTP', 'HTTPS']}
-    }
-
-    ssl_termination_base_schema = {
-        "enabled": {'Type': 'Boolean', 'Required': True},
-        "securePort": {'Type': 'Number', 'Required': False},
-        "privatekey": {'Type': 'String', 'Required': False},
-        "certificate": {'Type': 'String', 'Required': False},
-        #only required if configuring intermediate ssl termination
-        #add to custom validation
-        "intermediateCertificate": {'Type': 'String', 'Required': False},
-        #pyrax will default to false
-        "secureTrafficOnly": {'Type': 'Boolean', 'Required': False}
-    }
-
-    ssl_termination_enabled_schema = {
-        "securePort": {'Type': 'Number', 'Required': True},
-        "privatekey": {'Type': 'String', 'Required': True},
-        "certificate": {'Type': 'String', 'Required': True},
-        "intermediateCertificate": {'Type': 'String', 'Required': False},
-        "enabled": {'Type': 'Boolean', 'Required': True,
-                    'AllowedValues': [True]},
-        "secureTrafficOnly": {'Type': 'Boolean', 'Required': False}
+    _health_monitor_schema = {
+        HEALTH_MONITOR_ATTEMPTS_BEFORE_DEACTIVATION: properties.Schema(
+            properties.Schema.NUMBER,
+            required=True,
+            constraints=[
+                constraints.Range(1, 10),
+            ]
+        ),
+        HEALTH_MONITOR_DELAY: properties.Schema(
+            properties.Schema.NUMBER,
+            required=True,
+            constraints=[
+                constraints.Range(1, 3600),
+            ]
+        ),
+        HEALTH_MONITOR_TIMEOUT: properties.Schema(
+            properties.Schema.NUMBER,
+            required=True,
+            constraints=[
+                constraints.Range(1, 300),
+            ]
+        ),
+        HEALTH_MONITOR_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            required=True,
+            constraints=[
+                constraints.AllowedValues(['CONNECT', 'HTTP', 'HTTPS']),
+            ]
+        ),
+        HEALTH_MONITOR_BODY_REGEX: properties.Schema(
+            properties.Schema.STRING
+        ),
+        HEALTH_MONITOR_HOST_HEADER: properties.Schema(
+            properties.Schema.STRING
+        ),
+        HEALTH_MONITOR_PATH: properties.Schema(
+            properties.Schema.STRING
+        ),
+        HEALTH_MONITOR_STATUS_REGEX: properties.Schema(
+            properties.Schema.STRING
+        ),
     }
 
     properties_schema = {
-        'name': {'Type': 'String', 'Required': False},
-        'nodes': {'Type': 'List', 'Required': True,
-                  'UpdateAllowed': True,
-                  'Schema': {'Type': 'Map', 'Schema': nodes_schema}},
-        'protocol': {'Type': 'String', 'Required': True,
-                     'AllowedValues': protocol_values},
-        'accessList': {'Type': 'List', 'Required': False,
-                       'Schema': {'Type': 'Map',
-                                  'Schema': access_list_schema}},
-        'halfClosed': {'Type': 'Boolean', 'Required': False},
-        'algorithm': {'Type': 'String', 'Required': False},
-        'connectionLogging': {'Type': 'Boolean', 'Required': False},
-        'metadata': {'Type': 'Map', 'Required': False},
-        'port': {'Type': 'Number', 'Required': True},
-        'timeout': {'Type': 'Number', 'Required': False, 'MinValue': 1,
-                    'MaxValue': 120},
-        'connectionThrottle': {'Type': 'Map', 'Required': False,
-                               'Schema': connection_throttle_schema},
-        'sessionPersistence': {'Type': 'String', 'Required': False,
-                               'AllowedValues': ['HTTP_COOKIE', 'SOURCE_IP']},
-        'virtualIps': {'Type': 'List', 'Required': True,
-                       'Schema': {'Type': 'Map', 'Schema': virtualip_schema}},
-        'contentCaching': {'Type': 'String', 'Required': False,
-                           'AllowedValues': ['ENABLED', 'DISABLED']},
-        'healthMonitor': {'Type': 'Map', 'Required': False,
-                          'Schema': health_monitor_base_schema},
-        'sslTermination': {'Type': 'Map', 'Required': False,
-                           'Schema': ssl_termination_base_schema},
-        'errorPage': {'Type': 'String', 'Required': False}
+        NAME: properties.Schema(
+            properties.Schema.STRING
+        ),
+        NODES: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    NODE_ADDRESS: properties.Schema(
+                        properties.Schema.STRING
+                    ),
+                    NODE_REF: properties.Schema(
+                        properties.Schema.STRING
+                    ),
+                    NODE_PORT: properties.Schema(
+                        properties.Schema.NUMBER,
+                        required=True
+                    ),
+                    NODE_CONDITION: properties.Schema(
+                        properties.Schema.STRING,
+                        default='ENABLED',
+                        required=True,
+                        constraints=[
+                            constraints.AllowedValues(['ENABLED',
+                                                       'DISABLED']),
+                        ]
+                    ),
+                    NODE_TYPE: properties.Schema(
+                        properties.Schema.STRING,
+                        constraints=[
+                            constraints.AllowedValues(['PRIMARY',
+                                                       'SECONDARY']),
+                        ]
+                    ),
+                    NODE_WEIGHT: properties.Schema(
+                        properties.Schema.NUMBER,
+                        constraints=[
+                            constraints.Range(1, 100),
+                        ]
+                    ),
+                },
+            ),
+            required=True,
+            update_allowed=True
+        ),
+        PROTOCOL: properties.Schema(
+            properties.Schema.STRING,
+            required=True,
+            constraints=[
+                constraints.AllowedValues(['DNS_TCP', 'DNS_UDP', 'FTP',
+                                           'HTTP', 'HTTPS', 'IMAPS',
+                                           'IMAPv4', 'LDAP', 'LDAPS',
+                                           'MYSQL', 'POP3', 'POP3S', 'SMTP',
+                                           'TCP', 'TCP_CLIENT_FIRST', 'UDP',
+                                           'UDP_STREAM', 'SFTP']),
+            ]
+        ),
+        ACCESS_LIST: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    ACCESS_LIST_ADDRESS: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True
+                    ),
+                    ACCESS_LIST_TYPE: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True,
+                        constraints=[
+                            constraints.AllowedValues(['ALLOW', 'DENY']),
+                        ]
+                    ),
+                },
+            )
+        ),
+        HALF_CLOSED: properties.Schema(
+            properties.Schema.BOOLEAN
+        ),
+        ALGORITHM: properties.Schema(
+            properties.Schema.STRING
+        ),
+        CONNECTION_LOGGING: properties.Schema(
+            properties.Schema.BOOLEAN
+        ),
+        METADATA: properties.Schema(
+            properties.Schema.MAP
+        ),
+        PORT: properties.Schema(
+            properties.Schema.NUMBER,
+            required=True
+        ),
+        TIMEOUT: properties.Schema(
+            properties.Schema.NUMBER,
+            constraints=[
+                constraints.Range(1, 120),
+            ]
+        ),
+        CONNECTION_THROTTLE: properties.Schema(
+            properties.Schema.MAP,
+            schema={
+                CONNECTION_THROTTLE_MAX_CONNECTION_RATE: properties.Schema(
+                    properties.Schema.NUMBER,
+                    constraints=[
+                        constraints.Range(0, 100000),
+                    ]
+                ),
+                CONNECTION_THROTTLE_MIN_CONNECTIONS: properties.Schema(
+                    properties.Schema.NUMBER,
+                    constraints=[
+                        constraints.Range(1, 1000),
+                    ]
+                ),
+                CONNECTION_THROTTLE_MAX_CONNECTIONS: properties.Schema(
+                    properties.Schema.NUMBER,
+                    constraints=[
+                        constraints.Range(1, 100000),
+                    ]
+                ),
+                CONNECTION_THROTTLE_RATE_INTERVAL: properties.Schema(
+                    properties.Schema.NUMBER,
+                    constraints=[
+                        constraints.Range(1, 3600),
+                    ]
+                ),
+            }
+        ),
+        SESSION_PERSISTENCE: properties.Schema(
+            properties.Schema.STRING,
+            constraints=[
+                constraints.AllowedValues(['HTTP_COOKIE', 'SOURCE_IP']),
+            ]
+        ),
+        VIRTUAL_IPS: properties.Schema(
+            properties.Schema.LIST,
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    VIRTUAL_IP_TYPE: properties.Schema(
+                        properties.Schema.STRING,
+                        required=True,
+                        constraints=[
+                            constraints.AllowedValues(['SERVICENET',
+                                                       'PUBLIC']),
+                        ]
+                    ),
+                    VIRTUAL_IP_IP_VERSION: properties.Schema(
+                        properties.Schema.STRING,
+                        default='IPV6',
+                        constraints=[
+                            constraints.AllowedValues(['IPV6', 'IPV4']),
+                        ]
+                    ),
+                },
+            ),
+            required=True
+        ),
+        CONTENT_CACHING: properties.Schema(
+            properties.Schema.STRING,
+            constraints=[
+                constraints.AllowedValues(['ENABLED', 'DISABLED']),
+            ]
+        ),
+        HEALTH_MONITOR: properties.Schema(
+            properties.Schema.MAP,
+            schema=_health_monitor_schema
+        ),
+        SSL_TERMINATION: properties.Schema(
+            properties.Schema.MAP,
+            schema={
+                SSL_TERMINATION_ENABLED: properties.Schema(
+                    properties.Schema.BOOLEAN,
+                    required=True
+                ),
+                SSL_TERMINATION_SECURE_PORT: properties.Schema(
+                    properties.Schema.NUMBER
+                ),
+                SSL_TERMINATION_PRIVATEKEY: properties.Schema(
+                    properties.Schema.STRING
+                ),
+                SSL_TERMINATION_CERTIFICATE: properties.Schema(
+                    properties.Schema.STRING
+                ),
+                # only required if configuring intermediate ssl termination
+                # add to custom validation
+                SSL_TERMINATION_INTERMEDIATE_CERTIFICATE: properties.Schema(
+                    properties.Schema.STRING
+                ),
+                # pyrax will default to false
+                SSL_TERMINATION_SECURE_TRAFFIC_ONLY: properties.Schema(
+                    properties.Schema.BOOLEAN
+                ),
+            }
+        ),
+        ERROR_PAGE: properties.Schema(
+            properties.Schema.STRING
+        ),
     }
 
     attributes_schema = {
@@ -212,17 +383,17 @@ class CloudLoadBalancer(resource.Resource):
         be passed into the api. Set them up to make template definition easier.
         """
         session_persistence = None
-        if'sessionPersistence' in self.properties.data:
+        if self.SESSION_PERSISTENCE in self.properties.data:
             session_persistence = {'persistenceType':
-                                   self.properties['sessionPersistence']}
+                                   self.properties[self.SESSION_PERSISTENCE]}
         connection_logging = None
-        if 'connectionLogging' in self.properties.data:
-            connection_logging = {'enabled':
-                                  self.properties['connectionLogging']}
+        if self.CONNECTION_LOGGING in self.properties.data:
+            connection_logging = {self.SSL_TERMINATION_ENABLED:
+                                  self.properties[self.CONNECTION_LOGGING]}
         metadata = None
-        if 'metadata' in self.properties.data:
+        if self.METADATA in self.properties.data:
             metadata = [{'key': k, 'value': v}
-                        for k, v in self.properties['metadata'].iteritems()]
+                        for k, v in self.properties[self.METADATA].iteritems()]
 
         return (session_persistence, connection_logging, metadata)
 
@@ -238,71 +409,71 @@ class CloudLoadBalancer(resource.Resource):
         """Configure all load balancer properties that must be done post
         creation.
         """
-        if self.properties['accessList']:
+        if self.properties[self.ACCESS_LIST]:
             while not self._check_status(loadbalancer, ['ACTIVE']):
                 yield
-            loadbalancer.add_access_list(self.properties['accessList'])
+            loadbalancer.add_access_list(self.properties[self.ACCESS_LIST])
 
-        if self.properties['errorPage']:
+        if self.properties[self.ERROR_PAGE]:
             while not self._check_status(loadbalancer, ['ACTIVE']):
                 yield
-            loadbalancer.set_error_page(self.properties['errorPage'])
+            loadbalancer.set_error_page(self.properties[self.ERROR_PAGE])
 
-        if self.properties['sslTermination']:
+        if self.properties[self.SSL_TERMINATION]:
             while not self._check_status(loadbalancer, ['ACTIVE']):
                 yield
+            ssl_term = self.properties[self.SSL_TERMINATION]
             loadbalancer.add_ssl_termination(
-                self.properties['sslTermination']['securePort'],
-                self.properties['sslTermination']['privatekey'],
-                self.properties['sslTermination']['certificate'],
-                intermediateCertificate=
-                self.properties['sslTermination']
-                ['intermediateCertificate'],
-                enabled=self.properties['sslTermination']['enabled'],
-                secureTrafficOnly=self.properties['sslTermination']
-                ['secureTrafficOnly'])
+                ssl_term[self.SSL_TERMINATION_SECURE_PORT],
+                ssl_term[self.SSL_TERMINATION_PRIVATEKEY],
+                ssl_term[self.SSL_TERMINATION_CERTIFICATE],
+                intermediateCertificate=ssl_term[
+                    self.SSL_TERMINATION_INTERMEDIATE_CERTIFICATE],
+                enabled=ssl_term[self.SSL_TERMINATION_ENABLED],
+                secureTrafficOnly=ssl_term[
+                    self.SSL_TERMINATION_SECURE_TRAFFIC_ONLY])
 
-        if 'contentCaching' in self.properties:
-            enabled = True if self.properties['contentCaching'] == 'ENABLED'\
-                else False
+        if self.CONTENT_CACHING in self.properties:
+            enabled = self.properties[self.CONTENT_CACHING] == 'ENABLED'
             while not self._check_status(loadbalancer, ['ACTIVE']):
                 yield
             loadbalancer.content_caching = enabled
 
     def handle_create(self):
         node_list = []
-        for node in self.properties['nodes']:
+        for node in self.properties[self.NODES]:
             # resolve references to stack resource IP's
-            if node.get('ref'):
-                node['address'] = (self.stack
-                                   .resource_by_refid(node['ref'])
-                                   .FnGetAtt('PublicIp'))
-            del node['ref']
+            if node.get(self.NODE_REF):
+                resource = self.stack.resource_by_refid(node[self.NODE_REF])
+                node[self.NODE_ADDRESS] = resource.FnGetAtt('PublicIp')
+            del node[self.NODE_REF]
             node_list.append(node)
 
         nodes = [self.clb.Node(**node) for node in node_list]
-        virtual_ips = self._setup_properties(self.properties.get('virtualIps'),
-                                             self.clb.VirtualIP)
+        vips = self.properties.get(self.VIRTUAL_IPS)
+        virtual_ips = self._setup_properties(vips, self.clb.VirtualIP)
 
         (session_persistence, connection_logging, metadata) = \
             self._alter_properties_for_api()
 
         lb_body = {
-            'port': self.properties['port'],
-            'protocol': self.properties['protocol'],
+            'port': self.properties[self.PORT],
+            'protocol': self.properties[self.PROTOCOL],
             'nodes': nodes,
             'virtual_ips': virtual_ips,
-            'algorithm': self.properties.get('algorithm'),
-            'halfClosed': self.properties.get('halfClosed'),
-            'connectionThrottle': self.properties.get('connectionThrottle'),
+            'algorithm': self.properties.get(self.ALGORITHM),
+            'halfClosed': self.properties.get(self.HALF_CLOSED),
+            'connectionThrottle': self.properties.get(
+                self.CONNECTION_THROTTLE),
             'metadata': metadata,
-            'healthMonitor': self.properties.get('healthMonitor'),
+            'healthMonitor': self.properties.get(self.HEALTH_MONITOR),
             'sessionPersistence': session_persistence,
-            'timeout': self.properties.get('timeout'),
+            'timeout': self.properties.get(self.TIMEOUT),
             'connectionLogging': connection_logging,
         }
 
-        lb_name = self.properties.get('name') or self.physical_resource_name()
+        lb_name = (self.properties.get(self.NAME) or
+                   self.physical_resource_name())
         logger.debug('Creating loadbalancer: %s' % {lb_name: lb_body})
         loadbalancer = self.clb.create(lb_name, **lb_body)
         self.resource_id_set(str(loadbalancer.id))
@@ -320,23 +491,23 @@ class CloudLoadBalancer(resource.Resource):
         Add and remove nodes specified in the prop_diff.
         """
         loadbalancer = self.clb.get(self.resource_id)
-        if 'nodes' in prop_diff:
+        if self.NODES in prop_diff:
             current_nodes = loadbalancer.nodes
             #Loadbalancers can be uniquely identified by address and port.
             #Old is a dict of all nodes the loadbalancer currently knows about.
-            for node in prop_diff['nodes']:
+            for node in prop_diff[self.NODES]:
                 # resolve references to stack resource IP's
-                if node.get('ref'):
-                    node['address'] = (self.stack
-                                       .resource_by_refid(node['ref'])
-                                       .FnGetAtt('PublicIp'))
-                    del node['ref']
+                if node.get(self.NODE_REF):
+                    res = self.stack.resource_by_refid(node[self.NODE_REF])
+                    node[self.NODE_ADDRESS] = res.FnGetAtt('PublicIp')
+                    del node[self.NODE_REF]
             old = dict(("{0.address}{0.port}".format(node), node)
                        for node in current_nodes)
             #New is a dict of the nodes the loadbalancer will know about after
             #this update.
-            new = dict(("%s%s" % (node['address'], node['port']), node)
-                       for node in prop_diff['nodes'])
+            new = dict(("%s%s" % (node[self.NODE_ADDRESS],
+                                  node[self.NODE_PORT]), node)
+                       for node in prop_diff[self.NODES])
 
             old_set = set(old.keys())
             new_set = set(new.keys())
@@ -401,23 +572,23 @@ class CloudLoadBalancer(resource.Resource):
         if res:
             return res
 
-        if self.properties.get('halfClosed'):
-            if not (self.properties['protocol'] == 'TCP' or
-                    self.properties['protocol'] == 'TCP_CLIENT_FIRST'):
+        if self.properties.get(self.HALF_CLOSED):
+            if not (self.properties[self.PROTOCOL] == 'TCP' or
+                    self.properties[self.PROTOCOL] == 'TCP_CLIENT_FIRST'):
                 return {'Error':
-                        'The halfClosed property is only available for the '
-                        'TCP or TCP_CLIENT_FIRST protocols'}
+                        'The %s property is only available for the TCP or '
+                        'TCP_CLIENT_FIRST protocols' % self.HALF_CLOSED}
 
         #health_monitor connect and http types require completely different
         #schema
-        if self.properties.get('healthMonitor'):
+        if self.properties.get(self.HEALTH_MONITOR):
             health_monitor = \
-                self._remove_none(self.properties['healthMonitor'])
+                self._remove_none(self.properties[self.HEALTH_MONITOR])
 
-            if health_monitor['type'] == 'CONNECT':
-                schema = CloudLoadBalancer.health_monitor_connect_schema
-            else:
-                schema = CloudLoadBalancer.health_monitor_http_schema
+            schema = self._health_monitor_schema
+            if health_monitor[self.HEALTH_MONITOR_TYPE] == 'CONNECT':
+                schema = dict((k, v) for k, v in schema
+                              if k in self._HEALTH_MONITOR_CONNECT_KEYS)
             try:
                 Properties(schema,
                            health_monitor,
@@ -426,19 +597,18 @@ class CloudLoadBalancer(resource.Resource):
             except exception.StackValidationFailed as svf:
                 return {'Error': str(svf)}
 
-        if self.properties.get('sslTermination'):
+        if self.properties.get(self.SSL_TERMINATION):
             ssl_termination = self._remove_none(
-                self.properties['sslTermination'])
+                self.properties[self.SSL_TERMINATION])
 
-            if ssl_termination['enabled']:
-                try:
-                    Properties(CloudLoadBalancer.
-                               ssl_termination_enabled_schema,
-                               ssl_termination,
-                               self.stack.resolve_runtime_data,
-                               self.name).validate()
-                except exception.StackValidationFailed as svf:
-                    return {'Error': str(svf)}
+            if ssl_termination[self.SSL_TERMINATION_ENABLED]:
+                for key in (self.SSL_TERMINATION_SECURE_PORT,
+                            self.SSL_TERMINATION_PRIVATE_KEY,
+                            self.SSL_TERMINATION_CERTIFICATE):
+                    if key not in ssl_termination.get(key):
+                        svf = exception.StackValidationFailed(
+                            _('Property %s not assigned') % key)
+                        return {'Error': str(svf)}
 
     def _public_ip(self):
         #TODO(andrew-plunk) return list here and let caller choose ip
