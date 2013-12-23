@@ -28,8 +28,10 @@ logger = logging.getLogger(__name__)
 class SwiftContainer(resource.Resource):
     PROPERTIES = (
         NAME, X_CONTAINER_READ, X_CONTAINER_WRITE, X_CONTAINER_META,
+        X_ACCOUNT_META
     ) = (
         'name', 'X-Container-Read', 'X-Container-Write', 'X-Container-Meta',
+        'X-Account-Meta'
     )
 
     properties_schema = {
@@ -53,6 +55,13 @@ class SwiftContainer(resource.Resource):
             _('A map of user-defined meta data to associate with the '
               'container. Each key in the map will set the header '
               'X-Container-Meta-{key} with the corresponding value.'),
+            default={}
+        ),
+        X_ACCOUNT_META: properties.Schema(
+            properties.Schema.MAP,
+            _('A map of user-defined meta data to associate with the '
+              'account. Each key in the map will set the header '
+              'X-Account-Meta-{key} with the corresponding value.'),
             default={}
         ),
     }
@@ -83,7 +92,7 @@ class SwiftContainer(resource.Resource):
         return super(SwiftContainer, self).physical_resource_name()
 
     @staticmethod
-    def _build_meta_headers(meta_props):
+    def _build_meta_headers(obj_type, meta_props):
         '''
         Returns a new dict where each key is prepended with:
         X-Container-Meta-
@@ -91,23 +100,35 @@ class SwiftContainer(resource.Resource):
         if meta_props is None:
             return {}
         return dict(
-            ('X-Container-Meta-' + k, v) for (k, v) in meta_props.items())
+            ('X-' + obj_type.title() + '-Meta-' + k, v)
+            for (k, v) in meta_props.items())
 
     def handle_create(self):
         """Create a container."""
         container = self.physical_resource_name()
-        headers = SwiftContainer._build_meta_headers(
-            self.properties[self.X_CONTAINER_META])
+
+        container_headers = SwiftContainer._build_meta_headers(
+            "container", self.properties[self.X_CONTAINER_META])
+
+        account_headers = SwiftContainer._build_meta_headers(
+            "account", self.properties[self.X_ACCOUNT_META])
 
         for key in (self.X_CONTAINER_READ, self.X_CONTAINER_WRITE):
             if self.properties.get(key) is not None:
-                headers[key] = self.properties[key]
+                container_headers[key] = self.properties[key]
 
         logger.debug(_('SwiftContainer create container %(container)s with '
-                     'headers %(headers)s') % {
-                     'container': container, 'headers': headers})
+                     'container headers %(container_headers)s and '
+                     'account headers %(account_headers)s') % {
+                     'container': container,
+                     'account_headers': account_headers,
+                     'container_headers': container_headers})
 
-        self.swift().put_container(container, headers)
+        self.swift().put_container(container, container_headers)
+
+        if account_headers:
+            self.swift().post_account(account_headers)
+
         self.resource_id_set(container)
 
     def handle_delete(self):
