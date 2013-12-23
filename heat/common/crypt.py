@@ -35,14 +35,14 @@ logger = logging.getLogger(__name__)
 
 def encrypt(auth_info):
     if auth_info is None:
-        return None
+        return None, None
     iv = urandom(AES.block_size)
     cipher = AES.new(cfg.CONF.auth_encryption_key[:32], AES.MODE_CFB, iv)
     res = base64.b64encode(iv + cipher.encrypt(auth_info))
-    return res
+    return 'heat_decrypt', res
 
 
-def decrypt(auth_info):
+def heat_decrypt(auth_info):
     if auth_info is None:
         return None
     auth = base64.b64decode(auth_info)

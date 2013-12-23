@@ -142,7 +142,7 @@ def resource_data_get_all(resource):
 
     for res in result:
         if res.redact:
-            ret[res.key] = _decrypt(res.value)
+            ret[res.key] = _decrypt(res.value, res.decrypt_method)
         else:
             ret[res.key] = res.value
 
@@ -157,17 +157,22 @@ def resource_data_get(resource, key):
                                       resource.id,
                                       key)
     if result.redact:
-        return _decrypt(result.value)
+        return _decrypt(result.value, result.decrypt_method)
     return result.value
 
 
 def _encrypt(value):
     if value is not None:
         return crypt.encrypt(value.encode('utf-8'))
+    else:
+        return None, None
 
 
-def _decrypt(enc_value):
-    value = crypt.decrypt(enc_value)
+def _decrypt(enc_value, method):
+    if method is None:
+        return None
+    decryptor = getattr(crypt, method)
+    value = decryptor(enc_value)
     if value is not None:
         return unicode(value, 'utf-8')
 
@@ -188,7 +193,9 @@ def resource_data_get_by_key(context, resource_id, key):
 def resource_data_set(resource, key, value, redact=False):
     """Save resource's key/value pair to database."""
     if redact:
-        value = _encrypt(value)
+        method, value = _encrypt(value)
+    else:
+        method = ''
     try:
         current = resource_data_get_by_key(resource.context, resource.id, key)
     except exception.NotFound:
@@ -197,6 +204,7 @@ def resource_data_set(resource, key, value, redact=False):
         current.resource_id = resource.id
     current.redact = redact
     current.value = value
+    current.decrypt_method = method
     current.save(session=resource.context.session)
     return current
 
@@ -425,7 +433,9 @@ def user_creds_create(context):
     values = context.to_dict()
     user_creds_ref = models.UserCreds()
     if values.get('trust_id'):
-        user_creds_ref.trust_id = _encrypt(values.get('trust_id'))
+        method, trust_id = _encrypt(values.get('trust_id'))
+        user_creds_ref.trust_id = trust_id
+        user_creds_ref.decrypt_method = method
         user_creds_ref.trustor_user_id = values.get('trustor_user_id')
         user_creds_ref.username = None
         user_creds_ref.password = None
@@ -433,7 +443,9 @@ def user_creds_create(context):
         user_creds_ref.tenant_id = values.get('tenant_id')
     else:
         user_creds_ref.update(values)
-        user_creds_ref.password = _encrypt(values['password'])
+        method, password = _encrypt(values['password'])
+        user_creds_ref.password = password
+        user_creds_ref.decrypt_method = method
     user_creds_ref.save(_session(context))
     return user_creds_ref
 
@@ -443,8 +455,9 @@ def user_creds_get(user_creds_id):
     # Return a dict copy of db results, do not decrypt details into db_result
     # or it can be committed back to the DB in decrypted form
     result = dict(db_result)
-    result['password'] = _decrypt(result['password'])
-    result['trust_id'] = _decrypt(result['trust_id'])
+    del result['decrypt_method']
+    result['password'] = _decrypt(result['password'], db_result.decrypt_method)
+    result['trust_id'] = _decrypt(result['trust_id'], db_result.decrypt_method)
     return result
 
 
