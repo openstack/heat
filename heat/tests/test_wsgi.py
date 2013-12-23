@@ -242,9 +242,6 @@ class ResourceExceptionHandlingTest(HeatTestCase):
             exception_catch=exception.HTTPExceptionDisguise)),
     ]
 
-    def setUp(self):
-        super(ResourceExceptionHandlingTest, self).setUp()
-
     def test_resource_client_exceptions_dont_log_error(self):
         class Controller(object):
             def __init__(self, excpetion_to_raise):
