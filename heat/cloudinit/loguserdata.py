@@ -73,8 +73,8 @@ def main():
 
     if not chk_ci_version():
         # pre 0.6.0 - user data executed via cloudinit, not this helper
-        LOG.info('Unable to log provisioning, need a newer version of'
-                 ' cloud-init\n')
+        LOG.error('Unable to log provisioning, need a newer version of'
+                  ' cloud-init\n')
         return -1
 
     userdata_path = os.path.join(VAR_PATH, 'cfn-userdata')
