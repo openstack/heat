@@ -17,6 +17,7 @@ from oslo.config import cfg
 
 from heat.common import exception
 from heat.common import template_format
+from heat.db import api as db_api
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine.resources import user
@@ -295,6 +296,11 @@ class AccessKeyTest(UserPolicyTestCase):
         self.assertEqual(self.fc.secret,
                          rsrc._secret)
 
+        # Ensure the resource data has been stored correctly
+        rs_data = db_api.resource_data_get_all(rsrc)
+        self.assertEqual(self.fc.secret, rs_data.get('secret_key'))
+        self.assertEqual(1, len(rs_data.keys()))
+
         self.assertEqual(utils.PhysName(stack.name, 'CfnUser'),
                          rsrc.FnGetAtt('UserName'))
         rsrc._secret = None
@@ -303,7 +309,39 @@ class AccessKeyTest(UserPolicyTestCase):
 
         self.assertRaises(exception.InvalidTemplateAttribute,
                           rsrc.FnGetAtt, 'Foo')
+
         scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_access_key_get_from_keystone(self):
+        self.m.StubOutWithMock(user.AccessKey, 'keystone')
+        self.m.StubOutWithMock(user.User, 'keystone')
+        user.AccessKey.keystone().MultipleTimes().AndReturn(self.fc)
+        user.User.keystone().MultipleTimes().AndReturn(self.fc)
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(user_accesskey_template)
+
+        stack = utils.parse_stack(t)
+
+        self.create_user(t, stack, 'CfnUser')
+        rsrc = self.create_access_key(t, stack, 'HostKeys')
+
+        # Delete the resource data for secret_key, to test that existing
+        # stacks which don't have the resource_data stored will continue
+        # working via retrieving the keypair from keystone
+        db_api.resource_data_delete(rsrc, 'secret_key')
+        rs_data = db_api.resource_data_get_all(rsrc)
+        self.assertEqual(0, len(rs_data.keys()))
+
+        rsrc._secret = None
+        self.assertEqual(self.fc.secret,
+                         rsrc.FnGetAtt('SecretAccessKey'))
+
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
         self.m.VerifyAll()
 
     def test_access_key_deleted(self):

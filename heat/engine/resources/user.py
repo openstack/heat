@@ -14,6 +14,7 @@
 #    under the License.
 
 from heat.common import exception
+from heat.db import api as db_api
 from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
@@ -217,6 +218,12 @@ class AccessKey(resource.Resource):
         self.resource_id_set(kp.access)
         self._secret = kp.secret
 
+        # Store the secret key, encrypted, in the DB so we don't have to
+        # re-request it from keystone every time someone requests the
+        # SecretAccessKey attribute
+        db_api.resource_data_set(self, 'secret_key', kp.secret,
+                                 redact=True)
+
     def handle_delete(self):
         self._secret = None
         if self.resource_id is None:
@@ -246,22 +253,25 @@ class AccessKey(resource.Resource):
                             'username': self.properties[self.USER_NAME],
                             'msg': "resource_id not yet set"})
             else:
+                # First try to retrieve the secret from resource_data, but
+                # for backwards compatibility, fall back to requesting from
+                # keystone
                 try:
-                    user_id = self._get_user().resource_id
-                    kp = self.keystone().get_ec2_keypair(user_id)
-                except Exception as ex:
-                    logger.warn(_('could not get secret for %(username)s '
-                                'Error:%(msg)s') % {
-                                'username': self.properties[self.USER_NAME],
-                                'msg': str(ex)})
-                else:
-                    if kp.access == self.resource_id:
+                    self._secret = db_api.resource_data_get(self, 'secret_key')
+                except exception.NotFound:
+                    try:
+                        user_id = self._get_user().resource_id
+                        kp = self.keystone().get_ec2_keypair(user_id)
                         self._secret = kp.secret
-                    else:
-                        msg = (_("Unexpected ec2 keypair, for %(id)s access "
-                               "%(access)s") % {
-                               'id': user_id, 'access': kp.access})
-                        logger.error(msg)
+                        # Store the key in resource_data
+                        db_api.resource_data_set(self, 'secret_key',
+                                                 kp.secret, redact=True)
+                    except Exception as ex:
+                        logger.warn(_('could not get secret for %(username)s '
+                                      'Error:%(msg)s') % {
+                                    'username':
+                                    self.properties[self.USER_NAME],
+                                    'msg': str(ex)})
 
         return self._secret or '000-000-000'
 
