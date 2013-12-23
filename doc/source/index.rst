@@ -55,8 +55,10 @@ Developers Documentation
 
 Operations Documentation
 ========================
+.. toctree::
+   :maxdepth: 1
 
-    scale_deployment
+   scale_deployment
 
 Code Documentation
 ==================
