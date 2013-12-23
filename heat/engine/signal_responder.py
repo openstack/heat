@@ -53,6 +53,11 @@ class SignalResponder(resource.Resource):
         if not kp:
             raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user_id)
+        else:
+            db_api.resource_data_set(self, 'access_key', kp.access,
+                                     redact=True)
+            db_api.resource_data_set(self, 'secret_key', kp.secret,
+                                     redact=True)
 
     def handle_delete(self):
         if self.resource_id is None:
@@ -61,10 +66,11 @@ class SignalResponder(resource.Resource):
             self.keystone().delete_stack_user(self.resource_id)
         except clients.hkc.kc.exceptions.NotFound:
             pass
-        try:
-            db_api.resource_data_delete(self, 'ec2_signed_url')
-        except exception.NotFound:
-            pass
+        for data_key in ('ec2_signed_url', 'access_key', 'secret_key'):
+            try:
+                db_api.resource_data_delete(self, data_key)
+            except exception.NotFound:
+                pass
 
     def _get_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
@@ -87,7 +93,8 @@ class SignalResponder(resource.Resource):
         host_url = urlutils.urlparse(signal_url)
 
         path = self.identifier().arn_url_path()
-        credentials = self.keystone().get_ec2_keypair(self.resource_id)
+        access_key = db_api.resource_data_get(self, 'access_key')
+        secret_key = db_api.resource_data_get(self, 'secret_key')
 
         # Note the WSGI spec apparently means that the webob request we end up
         # prcessing in the CFN API (ec2token.py) has an unquoted path, so we
@@ -99,12 +106,12 @@ class SignalResponder(resource.Resource):
                    'path': unquoted_path,
                    'params': {'SignatureMethod': 'HmacSHA256',
                               'SignatureVersion': '2',
-                              'AWSAccessKeyId': credentials.access,
+                              'AWSAccessKeyId': access_key,
                               'Timestamp':
                               self.created_time.strftime("%Y-%m-%dT%H:%M:%SZ")
                               }}
-        # Sign the requested
-        signer = ec2_utils.Ec2Signer(credentials.secret)
+        # Sign the request
+        signer = ec2_utils.Ec2Signer(secret_key)
         request['params']['Signature'] = signer.generate(request)
 
         qs = urlutils.urlencode(request['params'])

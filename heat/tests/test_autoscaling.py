@@ -1385,8 +1385,7 @@ class AutoScalingTest(HeatTestCase):
         self._stub_create(1)
 
         self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
-        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(
-            self.fc)
+        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(self.fc)
 
         self.m.ReplayAll()
         rsrc = self.create_scaling_group(t, stack, 'WebServerGroup')
@@ -1401,10 +1400,6 @@ class AutoScalingTest(HeatTestCase):
         self._stub_lb_reload(2)
         self._stub_meta_expected(now, 'ChangeInCapacity : 1', 2)
         self._stub_create(1)
-
-        self.m.StubOutWithMock(asc.ScalingPolicy, 'keystone')
-        asc.ScalingPolicy.keystone().MultipleTimes().AndReturn(
-            self.fc)
 
         self.m.ReplayAll()
 
