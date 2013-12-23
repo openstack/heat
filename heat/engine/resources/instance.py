@@ -124,6 +124,12 @@ class Instance(resource.Resource):
         'Key', 'Value',
     )
 
+    _VOLUME_KEYS = (
+        VOLUME_DEVICE, VOLUME_ID,
+    ) = (
+        'Device', 'VolumeId',
+    )
+
     properties_schema = {
         IMAGE_ID: properties.Schema(
             properties.Schema.STRING,
@@ -246,7 +252,27 @@ class Instance(resource.Resource):
         ),
         VOLUMES: properties.Schema(
             properties.Schema.LIST,
-            _('Volumes to attach to instance.')
+            _('Volumes to attach to instance.'),
+            default=[],
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    VOLUME_DEVICE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The device where the volume is exposed on the '
+                          'instance. This assignment may not be honored and '
+                          'it is advised that the path '
+                          '/dev/disk/by-id/virtio-<VolumeId> be used '
+                          'instead.'),
+                        required=True
+                    ),
+                    VOLUME_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The ID of the volume to be attached.'),
+                        required=True
+                    ),
+                }
+            )
         ),
     }
 
@@ -465,10 +491,9 @@ class Instance(resource.Resource):
         that should be attached to this instance.
         """
         volumes = self.properties[self.VOLUMES]
-        if volumes is None:
-            return []
 
-        return ((vol['VolumeId'], vol['Device']) for vol in volumes)
+        return ((vol[self.VOLUME_ID],
+                 vol[self.VOLUME_DEVICE]) for vol in volumes)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if 'Metadata' in tmpl_diff:
