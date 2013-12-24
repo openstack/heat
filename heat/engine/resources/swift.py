@@ -75,15 +75,6 @@ class SwiftContainer(resource.Resource):
         'HeadContainer': _('A map containing all headers for the container.')
     }
 
-    def validate(self):
-        '''
-        Validate any of the provided params
-        '''
-        #check if swiftclient is installed
-        if clients.swiftclient is None:
-            return {'Error':
-                    'SwiftContainer unavailable due to missing swiftclient.'}
-
     def physical_resource_name(self):
         name = self.properties.get(self.NAME)
         if name:

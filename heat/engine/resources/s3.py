@@ -100,15 +100,6 @@ class S3Bucket(resource.Resource):
         'WebsiteURL': _('The website endpoint for the specified bucket.')
     }
 
-    def validate(self):
-        '''
-        Validate any of the provided params
-        '''
-        #check if swiftclient is installed
-        if clients.swiftclient is None:
-            return {'Error':
-                    'S3 services unavailable because of missing swiftclient.'}
-
     def tags_to_headers(self):
         if self.properties[self.TAGS] is None:
             return {}
