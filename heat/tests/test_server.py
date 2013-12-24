@@ -100,7 +100,7 @@ class ServersTest(HeatTestCase):
                 image=1, flavor=1, key_name='test',
                 name=override_name and server.name or utils.PhysName(
                     stack_name, server.name),
-                security_groups=None,
+                security_groups=[],
                 userdata=mox.IgnoreArg(), scheduler_hints=None,
                 meta=None, nics=None, availability_zone=None,
                 block_device_mapping=None, config_drive=None,
@@ -159,7 +159,7 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'create')
         self.fc.servers.create(
             image=mox.IgnoreArg(), flavor=mox.IgnoreArg(), key_name='test',
-            name=mox.IgnoreArg(), security_groups=None,
+            name=mox.IgnoreArg(), security_groups=[],
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=instance_meta, nics=None, availability_zone=None,
             block_device_mapping=None, config_drive=None,
@@ -315,7 +315,7 @@ class ServersTest(HeatTestCase):
         self.fc.servers.create(
             image=744, flavor=3, key_name='test',
             name=utils.PhysName(stack_name, server.name),
-            security_groups=None,
+            security_groups=[],
             userdata='wordpress', scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
             block_device_mapping=None, config_drive=None,
