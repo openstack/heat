@@ -180,8 +180,12 @@ class Resource(object):
                                      self.attributes_schema,
                                      self._resolve_attribute)
 
-        resource = db_api.resource_get_by_name_and_stack(self.context,
-                                                         name, stack.id)
+        if stack.id:
+            resource = db_api.resource_get_by_name_and_stack(self.context,
+                                                             name, stack.id)
+        else:
+            resource = None
+
         if resource:
             self.resource_id = resource.nova_instance
             self.action = resource.action

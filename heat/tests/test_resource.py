@@ -15,6 +15,8 @@
 import itertools
 import uuid
 
+import mock
+
 from heat.common import exception
 from heat.engine import dependencies
 from heat.engine import parser
@@ -58,6 +60,16 @@ class ResourceTest(HeatTestCase):
         snippet = {'Type': 'GenericResourceType'}
         res = resource.Resource('aresource', snippet, self.stack)
         self.assertIsInstance(res, generic_rsrc.GenericResource)
+        self.assertEqual("INIT", res.action)
+
+    def test_resource_new_stack_not_stored(self):
+        snippet = {'Type': 'GenericResourceType'}
+        self.stack.id = None
+        db_method = 'resource_get_by_name_and_stack'
+        with mock.patch.object(db_api, db_method) as resource_get:
+            res = resource.Resource('aresource', snippet, self.stack)
+            self.assertEqual("INIT", res.action)
+            self.assertIs(False, resource_get.called)
 
     def test_resource_new_err(self):
         snippet = {'Type': 'NoExistResourceType'}
