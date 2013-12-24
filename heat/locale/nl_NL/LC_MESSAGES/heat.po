@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Heat\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-12-23 06:05+0000\n"
+"POT-Creation-Date: 2013-12-24 06:05+0000\n"
 "PO-Revision-Date: 2013-10-10 01:09+0000\n"
 "Last-Translator: openstackjenkins <jenkins@openstack.org>\n"
 "Language-Team: Dutch (Netherlands) "
@@ -844,44 +844,44 @@ msgstr ""
 msgid "no resource data found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:184
+#: heat/db/sqlalchemy/api.py:189
 msgid "No resource data found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:234
+#: heat/db/sqlalchemy/api.py:242
 #, python-format
 msgid "no resources for stack_id %s were found"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:365
+#: heat/db/sqlalchemy/api.py:373
 #, python-format
 msgid "Attempt to update a stack with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:379
+#: heat/db/sqlalchemy/api.py:387
 #, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:559
+#: heat/db/sqlalchemy/api.py:572
 #, python-format
 msgid "Attempt to update a watch with id: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:571
+#: heat/db/sqlalchemy/api.py:584
 #, python-format
 msgid "Attempt to delete watch_rule: %(id)s %(msg)s"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:600
+#: heat/db/sqlalchemy/api.py:613
 msgid "age should be an integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:602
+#: heat/db/sqlalchemy/api.py:615
 msgid "age should be a positive integer"
 msgstr ""
 
-#: heat/db/sqlalchemy/api.py:606
+#: heat/db/sqlalchemy/api.py:619
 msgid "granularity should be days, hours, minutes, or seconds"
 msgstr ""
 
@@ -1804,10 +1804,10 @@ msgstr ""
 #: heat/engine/resources/autoscaling.py:704
 #: heat/engine/resources/autoscaling.py:709
 #: heat/engine/resources/autoscaling.py:714
-#: heat/engine/resources/instance.py:151 heat/engine/resources/instance.py:156
-#: heat/engine/resources/instance.py:161 heat/engine/resources/instance.py:166
-#: heat/engine/resources/instance.py:171 heat/engine/resources/instance.py:176
-#: heat/engine/resources/instance.py:193 heat/engine/resources/instance.py:237
+#: heat/engine/resources/instance.py:157 heat/engine/resources/instance.py:162
+#: heat/engine/resources/instance.py:167 heat/engine/resources/instance.py:172
+#: heat/engine/resources/instance.py:177 heat/engine/resources/instance.py:182
+#: heat/engine/resources/instance.py:199 heat/engine/resources/instance.py:243
 #: heat/engine/resources/loadbalancer.py:304
 #: heat/engine/resources/loadbalancer.py:309
 #: heat/engine/resources/loadbalancer.py:318
@@ -1898,32 +1898,32 @@ msgid "Anything other than one VPCZoneIdentifier"
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:682
-#: heat/engine/resources/instance.py:130
+#: heat/engine/resources/instance.py:136
 msgid "Glance image ID or name."
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:687
-#: heat/engine/resources/instance.py:137
+#: heat/engine/resources/instance.py:143
 msgid "Nova instance type (flavor)."
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:692
-#: heat/engine/resources/instance.py:143
+#: heat/engine/resources/instance.py:149
 msgid "Optional Nova keypair name."
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:696
-#: heat/engine/resources/instance.py:245
+#: heat/engine/resources/instance.py:251
 msgid "User data to pass to instance."
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:700
-#: heat/engine/resources/instance.py:181
+#: heat/engine/resources/instance.py:187
 msgid "Security group names to assign."
 msgstr ""
 
 #: heat/engine/resources/autoscaling.py:719
-#: heat/engine/resources/instance.py:220
+#: heat/engine/resources/instance.py:226
 msgid "Scheduler hints to pass to Nova (Heat extension)."
 msgstr ""
 
@@ -2099,91 +2099,103 @@ msgstr ""
 msgid "%(name)s Alarm, restarting resource: %(victim)s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:147
+#: heat/engine/resources/instance.py:153
 msgid "Availability zone to launch the instance in."
 msgstr ""
 
-#: heat/engine/resources/instance.py:185
+#: heat/engine/resources/instance.py:191
 msgid "Security group IDs to assign."
 msgstr ""
 
-#: heat/engine/resources/instance.py:189
+#: heat/engine/resources/instance.py:195
 msgid "Network interfaces to associate with instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:198
+#: heat/engine/resources/instance.py:204
 msgid "Subnet ID to launch instance in."
 msgstr ""
 
-#: heat/engine/resources/instance.py:202
+#: heat/engine/resources/instance.py:208
 msgid "Tags to attach to instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:249
+#: heat/engine/resources/instance.py:255
 msgid "Volumes to attach to instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:253
+#: heat/engine/resources/instance.py:262 heat/engine/resources/volume.py:324
+msgid ""
+"The device where the volume is exposed on the instance. This assignment "
+"may not be honored and it is advised that the path /dev/disk/by-"
+"id/virtio-<VolumeId> be used instead."
+msgstr ""
+
+#: heat/engine/resources/instance.py:271 heat/engine/resources/volume.py:319
+#: heat/engine/resources/volume.py:487
+msgid "The ID of the volume to be attached."
+msgstr ""
+
+#: heat/engine/resources/instance.py:279
 msgid "The Availability Zone where the specified instance is launched."
 msgstr ""
 
-#: heat/engine/resources/instance.py:256
+#: heat/engine/resources/instance.py:282
 msgid "Private DNS name of the specified instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:258
+#: heat/engine/resources/instance.py:284
 msgid "Public DNS name of the specified instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:260
+#: heat/engine/resources/instance.py:286
 msgid "Private IP address of the specified instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:262
+#: heat/engine/resources/instance.py:288
 msgid "Public IP address of the specified instance."
 msgstr ""
 
-#: heat/engine/resources/instance.py:447
+#: heat/engine/resources/instance.py:473
 #, python-format
 msgid "Creation of server %(server)s failed: %(message)s (%(code)s)"
 msgstr ""
 
-#: heat/engine/resources/instance.py:454 heat/engine/resources/server.py:299
+#: heat/engine/resources/instance.py:480 heat/engine/resources/server.py:299
 #, python-format
 msgid "Creation of server %(server)s failed with unknown status: %(status)s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:545
+#: heat/engine/resources/instance.py:570
 #, python-format
 msgid "Deletion of server %s failed."
 msgstr ""
 
-#: heat/engine/resources/instance.py:593 heat/engine/resources/server.py:519
+#: heat/engine/resources/instance.py:618 heat/engine/resources/server.py:519
 #, python-format
 msgid "Cannot suspend %s, resource_id not set"
 msgstr ""
 
-#: heat/engine/resources/instance.py:599 heat/engine/resources/instance.py:653
+#: heat/engine/resources/instance.py:624 heat/engine/resources/instance.py:678
 #, python-format
 msgid "Failed to find instance %s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:602
+#: heat/engine/resources/instance.py:627
 #, python-format
 msgid "suspending instance %s"
 msgstr ""
 
-#: heat/engine/resources/instance.py:630
+#: heat/engine/resources/instance.py:655
 #, python-format
 msgid " nova reported unexpected instance[%(instance)s] status[%(status)s]"
 msgstr ""
 
-#: heat/engine/resources/instance.py:647 heat/engine/resources/server.py:565
+#: heat/engine/resources/instance.py:672 heat/engine/resources/server.py:565
 #, python-format
 msgid "Cannot resume %s, resource_id not set"
 msgstr ""
 
-#: heat/engine/resources/instance.py:656
+#: heat/engine/resources/instance.py:681
 #, python-format
 msgid "resuming instance %s"
 msgstr ""
@@ -2544,7 +2556,7 @@ msgstr ""
 msgid "S3Bucket delete container %s"
 msgstr ""
 
-#: heat/engine/resources/s3.py:160 heat/engine/resources/swift.py:121
+#: heat/engine/resources/s3.py:160 heat/engine/resources/swift.py:142
 #, python-format
 msgid "Delete container failed: %s"
 msgstr ""
@@ -2820,60 +2832,69 @@ msgstr ""
 msgid "List of tags to attach to this resource."
 msgstr ""
 
-#: heat/engine/resources/swift.py:38
+#: heat/engine/resources/swift.py:40
 msgid "Name for the container. If not specified, a unique name will be generated."
 msgstr ""
 
-#: heat/engine/resources/swift.py:43
+#: heat/engine/resources/swift.py:45
 msgid "Specify the ACL permissions on who can read objects in the container."
 msgstr ""
 
-#: heat/engine/resources/swift.py:48
+#: heat/engine/resources/swift.py:50
 msgid "Specify the ACL permissions on who can write objects to the container."
 msgstr ""
 
-#: heat/engine/resources/swift.py:53
+#: heat/engine/resources/swift.py:55
 msgid ""
 "A map of user-defined meta data to associate with the container. Each key"
 " in the map will set the header X-Container-Meta-{key} with the "
 "corresponding value."
 msgstr ""
 
-#: heat/engine/resources/swift.py:61
+#: heat/engine/resources/swift.py:62
+msgid ""
+"A map of user-defined meta data to associate with the account. Each key "
+"in the map will set the header X-Account-Meta-{key} with the "
+"corresponding value."
+msgstr ""
+
+#: heat/engine/resources/swift.py:70
 msgid "The host from the container URL."
 msgstr ""
 
-#: heat/engine/resources/swift.py:62
+#: heat/engine/resources/swift.py:71
 msgid "The URL of the container."
 msgstr ""
 
-#: heat/engine/resources/swift.py:63
+#: heat/engine/resources/swift.py:72
 msgid "The parent URL of the container."
 msgstr ""
 
-#: heat/engine/resources/swift.py:64
+#: heat/engine/resources/swift.py:73
 msgid "The number of objects stored in the container."
 msgstr ""
 
-#: heat/engine/resources/swift.py:65
+#: heat/engine/resources/swift.py:74
 msgid "The number of bytes stored in the container."
 msgstr ""
 
-#: heat/engine/resources/swift.py:66
+#: heat/engine/resources/swift.py:75
 msgid "A map containing all headers for the container."
 msgstr ""
 
-#: heat/engine/resources/swift.py:106
+#: heat/engine/resources/swift.py:120
 #, python-format
-msgid "SwiftContainer create container %(container)s with headers %(headers)s"
+msgid ""
+"SwiftContainer create container %(container)s with container headers "
+"%(container_headers)s and account headers %(account_headers)s"
 msgstr ""
 
-#: heat/engine/resources/swift.py:115
+#: heat/engine/resources/swift.py:136
 #, python-format
 msgid "SwiftContainer delete container %s"
 msgstr ""
 
-#: heat/engine/resources/swift.py:141
+#: heat/engine/resources/swift.py:162
 #, python-format
 msgid "Head container failed: %s"
 msgstr ""
@@ -3041,17 +3062,6 @@ msgstr ""
 
 #: heat/engine/resources/volume.py:314
 msgid "The ID of the instance to which the volume attaches."
-msgstr ""
-
-#: heat/engine/resources/volume.py:319 heat/engine/resources/volume.py:487
-msgid "The ID of the volume to be attached."
-msgstr ""
-
-#: heat/engine/resources/volume.py:324
-msgid ""
-"The device where the volume is exposed on the instance. This assignment "
-"may not be honored and it is advised that the path /dev/disk/by-"
-"id/virtio-<VolumeId> be used instead."
 msgstr ""
 
 #: heat/engine/resources/volume.py:381
@@ -5348,16 +5358,12 @@ msgstr ""
 #~ msgid "There was an error configuring the client."
 #~ msgstr ""
 
-#~ msgid ""
-#~ "The request returned 500 Internal Server Error\n"
-#~ "\n"
-#~ "The response body:\n"
-#~ "%(body)s"
-#~ msgstr ""
-
 #~ msgid "Response from Keystone does not contain a Heat endpoint."
 #~ msgstr ""
 
 #~ msgid "Got mysql server has gone away: %s"
+#~ msgstr ""
+
+#~ msgid "SwiftContainer create container %(container)s with headers %(headers)s"
 #~ msgstr ""
 
