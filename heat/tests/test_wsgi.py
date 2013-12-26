@@ -20,14 +20,11 @@ import datetime
 import json
 from oslo.config import cfg
 import stubout
-import testscenarios
 import webob
 
 from heat.common import exception
 from heat.common import wsgi
 from heat.tests.common import HeatTestCase
-
-load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class RequestTest(HeatTestCase):

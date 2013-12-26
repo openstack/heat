@@ -21,7 +21,6 @@ import sys
 import mock
 import mox
 from testtools import matchers
-import testscenarios
 
 from oslo.config import cfg
 
@@ -48,9 +47,6 @@ from heat.openstack.common import threadgroup
 from heat.tests.common import HeatTestCase
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
-
-
-load_tests = testscenarios.load_tests_apply_scenarios
 
 
 wp_template = '''

@@ -19,6 +19,7 @@ import mox
 import os
 import sys
 import time
+import testscenarios
 import testtools
 
 from oslo.config import cfg
@@ -30,7 +31,7 @@ from heat.engine import resources
 from heat.engine import scheduler
 
 
-class HeatTestCase(testtools.TestCase):
+class HeatTestCase(testscenarios.WithScenarios, testtools.TestCase):
 
     TIME_STEP = 0.1
 

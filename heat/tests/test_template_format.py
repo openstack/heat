@@ -15,7 +15,6 @@
 import mock
 import os
 import testtools
-import testscenarios
 import yaml
 
 from heat.engine import clients
@@ -24,8 +23,6 @@ from heat.common import exception
 from heat.common import template_format
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-
-load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class JsonToYamlTest(HeatTestCase):

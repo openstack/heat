@@ -15,7 +15,6 @@
 import fixtures
 import mock
 import os.path
-import testscenarios
 
 from oslo.config import cfg
 
@@ -28,9 +27,6 @@ from heat.engine import resources
 
 from heat.tests import generic_resource
 from heat.tests import common
-
-
-load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class EnvironmentTest(common.HeatTestCase):

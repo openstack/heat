@@ -14,14 +14,11 @@
 #    under the License.
 """Tests for :module:'heat.engine.resources.nova_utls'."""
 
-import testscenarios
 import uuid
 
 from heat.common import exception
 from heat.engine.resources import nova_utils
 from heat.tests.common import HeatTestCase
-
-load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class NovaUtilsTests(HeatTestCase):
