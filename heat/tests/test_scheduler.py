@@ -20,6 +20,8 @@ import eventlet
 from heat.engine import dependencies
 from heat.engine import scheduler
 
+from heat.tests.common import HeatTestCase
+
 
 class DummyTask(object):
     def __init__(self, num_steps=3):
@@ -31,17 +33,21 @@ class DummyTask(object):
             yield
 
     def do_step(self, step_num, *args, **kwargs):
-        print(self, step_num)
+        pass
 
 
-class PollingTaskGroupTest(mox.MoxTestBase):
+class PollingTaskGroupTest(HeatTestCase):
+
+    def setUp(self):
+        super(PollingTaskGroupTest, self).setUp()
+        self.addCleanup(self.m.VerifyAll)
 
     def test_group(self):
         tasks = [DummyTask() for i in range(3)]
         for t in tasks:
-            self.mox.StubOutWithMock(t, 'do_step')
+            self.m.StubOutWithMock(t, 'do_step')
 
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         for t in tasks:
             t.do_step(1).AndReturn(None)
@@ -51,7 +57,7 @@ class PollingTaskGroupTest(mox.MoxTestBase):
             scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
             t.do_step(3).AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         tg = scheduler.PollingTaskGroup(tasks)
         scheduler.TaskRunner(tg)()
@@ -114,12 +120,11 @@ class PollingTaskGroupTest(mox.MoxTestBase):
                                                             *arg_lists,
                                                             **kwarg_lists)
 
-        self.mox.StubOutWithMock(dummy, 'do_step')
+        self.m.StubOutWithMock(dummy, 'do_step')
         yield dummy
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
         scheduler.TaskRunner(tg)(wait_time=None)
-        self.mox.VerifyAll()
 
     def test_with_all_args(self):
         with self._args_test([0, 1, 2], [0, 1, 8],
@@ -140,13 +145,11 @@ class PollingTaskGroupTest(mox.MoxTestBase):
                 dummy.do_step(1, i, i * i, i=i, i2=i * i)
 
     def test_with_empty_args(self):
-        with self._args_test([],
-                             i=[0, 1, 2], i2=[0, 1, 4]) as dummy:
+        with self._args_test([], i=[0, 1, 2], i2=[0, 1, 4]):
             pass
 
     def test_with_empty_kwargs(self):
-        with self._args_test([0, 1, 2], [0, 1, 8],
-                             i=[]) as dummy:
+        with self._args_test([0, 1, 2], [0, 1, 8], i=[]):
             pass
 
     def test_with_no_args(self):
@@ -160,7 +163,11 @@ class PollingTaskGroupTest(mox.MoxTestBase):
                 dummy.do_step(1, i, i * i)
 
 
-class DependencyTaskGroupTest(mox.MoxTestBase):
+class DependencyTaskGroupTest(HeatTestCase):
+
+    def setUp(self):
+        super(DependencyTaskGroupTest, self).setUp()
+        self.addCleanup(self.m.VerifyAll)
 
     @contextlib.contextmanager
     def _dep_test(self, *edges):
@@ -170,18 +177,17 @@ class DependencyTaskGroupTest(mox.MoxTestBase):
 
         tg = scheduler.DependencyTaskGroup(deps, dummy)
 
-        self.mox.StubOutWithMock(dummy, 'do_step')
+        self.m.StubOutWithMock(dummy, 'do_step')
 
         yield dummy
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
         scheduler.TaskRunner(tg)(wait_time=None)
-        self.mox.VerifyAll()
 
     def test_no_steps(self):
         self.steps = 0
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-        with self._dep_test(('second', 'first')) as dummy:
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        with self._dep_test(('second', 'first')):
             scheduler.TaskRunner._sleep(None).AndReturn(None)
 
     def test_single_node(self):
@@ -315,12 +321,17 @@ class DependencyTaskGroupTest(mox.MoxTestBase):
                           scheduler.DependencyTaskGroup, d)
 
 
-class TaskTest(mox.MoxTestBase):
+class TaskTest(HeatTestCase):
+
+    def setUp(self):
+        super(TaskTest, self).setUp()
+        scheduler.ENABLE_SLEEP = True
+        self.addCleanup(self.m.VerifyAll)
 
     def test_run(self):
         task = DummyTask()
-        self.mox.StubOutWithMock(task, 'do_step')
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         task.do_step(1).AndReturn(None)
         scheduler.TaskRunner._sleep(1).AndReturn(None)
@@ -328,14 +339,14 @@ class TaskTest(mox.MoxTestBase):
         scheduler.TaskRunner._sleep(1).AndReturn(None)
         task.do_step(3).AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         scheduler.TaskRunner(task)()
 
     def test_run_wait_time(self):
         task = DummyTask()
-        self.mox.StubOutWithMock(task, 'do_step')
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         task.do_step(1).AndReturn(None)
         scheduler.TaskRunner._sleep(42).AndReturn(None)
@@ -343,14 +354,14 @@ class TaskTest(mox.MoxTestBase):
         scheduler.TaskRunner._sleep(42).AndReturn(None)
         task.do_step(3).AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         scheduler.TaskRunner(task)(wait_time=42)
 
     def test_start_run(self):
         task = DummyTask()
-        self.mox.StubOutWithMock(task, 'do_step')
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         task.do_step(1).AndReturn(None)
         scheduler.TaskRunner._sleep(1).AndReturn(None)
@@ -358,7 +369,7 @@ class TaskTest(mox.MoxTestBase):
         scheduler.TaskRunner._sleep(1).AndReturn(None)
         task.do_step(3).AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task)
         runner.start()
@@ -366,8 +377,8 @@ class TaskTest(mox.MoxTestBase):
 
     def test_start_run_wait_time(self):
         task = DummyTask()
-        self.mox.StubOutWithMock(task, 'do_step')
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         task.do_step(1).AndReturn(None)
         scheduler.TaskRunner._sleep(24).AndReturn(None)
@@ -375,7 +386,7 @@ class TaskTest(mox.MoxTestBase):
         scheduler.TaskRunner._sleep(24).AndReturn(None)
         task.do_step(3).AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task)
         runner.start()
@@ -383,26 +394,26 @@ class TaskTest(mox.MoxTestBase):
 
     def test_sleep(self):
         sleep_time = 42
-        self.mox.StubOutWithMock(eventlet, 'sleep')
+        self.m.StubOutWithMock(eventlet, 'sleep')
         eventlet.sleep(sleep_time).MultipleTimes().AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(DummyTask())
         runner(wait_time=sleep_time)
 
     def test_sleep_zero(self):
-        self.mox.StubOutWithMock(eventlet, 'sleep')
+        self.m.StubOutWithMock(eventlet, 'sleep')
         eventlet.sleep(0).MultipleTimes().AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(DummyTask())
         runner(wait_time=0)
 
     def test_sleep_none(self):
-        self.mox.StubOutWithMock(eventlet, 'sleep')
-        self.mox.ReplayAll()
+        self.m.StubOutWithMock(eventlet, 'sleep')
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(DummyTask())
         runner(wait_time=None)
@@ -411,12 +422,12 @@ class TaskTest(mox.MoxTestBase):
         args = ['foo', 'bar']
         kwargs = {'baz': 'quux', 'blarg': 'wibble'}
 
-        self.mox.StubOutWithMock(DummyTask, '__call__')
+        self.m.StubOutWithMock(DummyTask, '__call__')
         task = DummyTask()
 
         task(*args, **kwargs)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task, *args, **kwargs)
         runner(wait_time=None)
@@ -426,14 +437,14 @@ class TaskTest(mox.MoxTestBase):
 
     def test_stepping(self):
         task = DummyTask()
-        self.mox.StubOutWithMock(task, 'do_step')
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         task.do_step(1).AndReturn(None)
         task.do_step(2).AndReturn(None)
         task.do_step(3).AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task)
         runner.start()
@@ -446,10 +457,10 @@ class TaskTest(mox.MoxTestBase):
 
     def test_start_no_steps(self):
         task = DummyTask(0)
-        self.mox.StubOutWithMock(task, 'do_step')
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task)
         runner.start()
@@ -459,12 +470,12 @@ class TaskTest(mox.MoxTestBase):
 
     def test_start_only(self):
         task = DummyTask()
-        self.mox.StubOutWithMock(task, 'do_step')
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         task.do_step(1).AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task)
 
@@ -497,10 +508,10 @@ class TaskTest(mox.MoxTestBase):
 
     def test_repeated_done(self):
         task = DummyTask(0)
-        self.mox.StubOutWithMock(task, 'do_step')
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+        self.m.StubOutWithMock(task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task)
 
@@ -515,20 +526,18 @@ class TaskTest(mox.MoxTestBase):
             while True:
                 yield
 
-        self.mox.StubOutWithMock(scheduler, 'wallclock')
+        self.m.StubOutWithMock(scheduler, 'wallclock')
         scheduler.wallclock().AndReturn(st)
         scheduler.wallclock().AndReturn(st + 0.5)
         scheduler.wallclock().AndReturn(st + 1.5)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task)
 
         runner.start(timeout=1)
         self.assertTrue(runner)
         self.assertRaises(scheduler.Timeout, runner.step)
-
-        self.mox.VerifyAll()
 
     def test_timeout_return(self):
         st = scheduler.wallclock()
@@ -540,12 +549,12 @@ class TaskTest(mox.MoxTestBase):
                 except scheduler.Timeout:
                     return
 
-        self.mox.StubOutWithMock(scheduler, 'wallclock')
+        self.m.StubOutWithMock(scheduler, 'wallclock')
         scheduler.wallclock().AndReturn(st)
         scheduler.wallclock().AndReturn(st + 0.5)
         scheduler.wallclock().AndReturn(st + 1.5)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task)
 
@@ -553,8 +562,6 @@ class TaskTest(mox.MoxTestBase):
         self.assertTrue(runner)
         self.assertTrue(runner.step())
         self.assertFalse(runner)
-
-        self.mox.VerifyAll()
 
     def test_timeout_swallowed(self):
         st = scheduler.wallclock()
@@ -567,12 +574,12 @@ class TaskTest(mox.MoxTestBase):
                     yield
                     self.fail('Task still running')
 
-        self.mox.StubOutWithMock(scheduler, 'wallclock')
+        self.m.StubOutWithMock(scheduler, 'wallclock')
         scheduler.wallclock().AndReturn(st)
         scheduler.wallclock().AndReturn(st + 0.5)
         scheduler.wallclock().AndReturn(st + 1.5)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         runner = scheduler.TaskRunner(task)
 
@@ -582,10 +589,13 @@ class TaskTest(mox.MoxTestBase):
         self.assertFalse(runner)
         self.assertTrue(runner.step())
 
-        self.mox.VerifyAll()
 
+class DescriptionTest(HeatTestCase):
 
-class DescriptionTest(mox.MoxTestBase):
+    def setUp(self):
+        super(DescriptionTest, self).setUp()
+        self.addCleanup(self.m.VerifyAll)
+
     def test_func(self):
         def f():
             pass
@@ -624,7 +634,11 @@ class DescriptionTest(mox.MoxTestBase):
         self.assertEqual(scheduler.task_description(C()), 'o')
 
 
-class WrapperTaskTest(mox.MoxTestBase):
+class WrapperTaskTest(HeatTestCase):
+
+    def setUp(self):
+        super(WrapperTaskTest, self).setUp()
+        self.addCleanup(self.m.VerifyAll)
 
     def test_wrap(self):
         child_tasks = [DummyTask() for i in range(3)]
@@ -637,8 +651,8 @@ class WrapperTaskTest(mox.MoxTestBase):
             yield
 
         for child_task in child_tasks:
-            self.mox.StubOutWithMock(child_task, 'do_step')
-        self.mox.StubOutWithMock(scheduler.TaskRunner, '_sleep')
+            self.m.StubOutWithMock(child_task, 'do_step')
+        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
 
         for child_task in child_tasks:
             child_task.do_step(1).AndReturn(None)
@@ -648,7 +662,7 @@ class WrapperTaskTest(mox.MoxTestBase):
             child_task.do_step(3).AndReturn(None)
             scheduler.TaskRunner._sleep(mox.IsA(int)).AndReturn(None)
 
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         scheduler.TaskRunner(task)()
 
@@ -745,10 +759,10 @@ class WrapperTaskTest(mox.MoxTestBase):
         task = parent_task()
         task.next()
 
-        self.mox.StubOutWithMock(dummy, 'do_step')
+        self.m.StubOutWithMock(dummy, 'do_step')
         for i in range(1, dummy.num_steps + 1):
             dummy.do_step(i).AndReturn(None)
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         for i in range(1, dummy.num_steps + 1):
             task.next()
@@ -775,10 +789,10 @@ class WrapperTaskTest(mox.MoxTestBase):
 
         task = parent_task()
 
-        self.mox.StubOutWithMock(dummy, 'do_step')
+        self.m.StubOutWithMock(dummy, 'do_step')
         for i in range(1, dummy.num_steps + 1):
             dummy.do_step(i).AndReturn(None)
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         next(task)
         task.throw(MyException)
@@ -811,10 +825,10 @@ class WrapperTaskTest(mox.MoxTestBase):
 
         task = parent_task()
 
-        self.mox.StubOutWithMock(dummy, 'do_step')
+        self.m.StubOutWithMock(dummy, 'do_step')
         for i in range(1, dummy.num_steps + 1):
             dummy.do_step(i).AndReturn(None)
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         next(task)
         task.throw(MyException)
@@ -845,10 +859,10 @@ class WrapperTaskTest(mox.MoxTestBase):
 
         task = parent_task()
 
-        self.mox.StubOutWithMock(dummy, 'do_step')
+        self.m.StubOutWithMock(dummy, 'do_step')
         for i in range(1, dummy.num_steps + 1):
             dummy.do_step(i).AndReturn(None)
-        self.mox.ReplayAll()
+        self.m.ReplayAll()
 
         next(task)
         task.throw(MyException)
