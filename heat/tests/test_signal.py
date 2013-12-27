@@ -228,7 +228,7 @@ class SignalTest(HeatTestCase):
         self.m.VerifyAll()
 
     @utils.stack_delete_after
-    def test_FnGetAtt_delete_not_found(self):
+    def test_FnGetAtt_delete(self):
         self.stack = self.create_stack()
 
         self.m.ReplayAll()
@@ -237,9 +237,11 @@ class SignalTest(HeatTestCase):
         rsrc = self.stack['signal_handler']
         self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
 
-        rsrc.delete()
-        rsrc.resource_id = 'not-none'
-        rsrc.delete()
+        self.assertIn('http://server.test:8000/v1/signal',
+                      rsrc.FnGetAtt('AlarmUrl'))
+
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual('None', rsrc.FnGetAtt('AlarmUrl'))
 
         self.m.VerifyAll()
 
