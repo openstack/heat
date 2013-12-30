@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat 2013.2.a430.gd264018\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-12-24 06:05+0000\n"
+"POT-Creation-Date: 2013-12-30 06:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: en_US <LL@li.org>\n"
@@ -1519,9 +1519,13 @@ msgstr ""
 msgid "show_metric (all) db error %s"
 msgstr ""
 
-#: heat/engine/signal_responder.py:54 heat/engine/resources/user.py:214
+#: heat/engine/signal_responder.py:55 heat/engine/resources/user.py:214
 #, python-format
 msgid "Error creating ec2 keypair for user %s"
+msgstr ""
+
+#: heat/engine/signal_responder.py:96
+msgid "Cannot generate signed url, no stored access/secret key"
 msgstr ""
 
 #: heat/engine/stack_lock.py:52
@@ -2160,7 +2164,7 @@ msgstr ""
 msgid "Creation of server %(server)s failed: %(message)s (%(code)s)"
 msgstr ""
 
-#: heat/engine/resources/instance.py:480 heat/engine/resources/server.py:299
+#: heat/engine/resources/instance.py:480 heat/engine/resources/server.py:301
 #, python-format
 msgid "Creation of server %(server)s failed with unknown status: %(status)s"
 msgstr ""
@@ -2170,7 +2174,7 @@ msgstr ""
 msgid "Deletion of server %s failed."
 msgstr ""
 
-#: heat/engine/resources/instance.py:618 heat/engine/resources/server.py:519
+#: heat/engine/resources/instance.py:618 heat/engine/resources/server.py:521
 #, python-format
 msgid "Cannot suspend %s, resource_id not set"
 msgstr ""
@@ -2190,7 +2194,7 @@ msgstr ""
 msgid " nova reported unexpected instance[%(instance)s] status[%(status)s]"
 msgstr ""
 
-#: heat/engine/resources/instance.py:672 heat/engine/resources/server.py:565
+#: heat/engine/resources/instance.py:672 heat/engine/resources/server.py:567
 #, python-format
 msgid "Cannot resume %s, resource_id not set"
 msgstr ""
@@ -2284,19 +2288,19 @@ msgstr ""
 msgid "List of security group IDs associated with this interface."
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:55
+#: heat/engine/resources/network_interface.py:56
 msgid "Flag indicating if traffic to or from instance is validated."
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:60
+#: heat/engine/resources/network_interface.py:61
 msgid "Subnet ID to associate with this interface."
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:67
+#: heat/engine/resources/network_interface.py:68
 msgid "List of tags associated with this interface."
 msgstr ""
 
-#: heat/engine/resources/network_interface.py:83
+#: heat/engine/resources/network_interface.py:84
 msgid "Private IP address of the network interface."
 msgstr ""
 
@@ -2546,17 +2550,17 @@ msgstr ""
 msgid "The website endpoint for the specified bucket."
 msgstr ""
 
-#: heat/engine/resources/s3.py:123
+#: heat/engine/resources/s3.py:114
 #, python-format
 msgid "S3Bucket create container %(container)s with headers %(headers)s"
 msgstr ""
 
-#: heat/engine/resources/s3.py:155
+#: heat/engine/resources/s3.py:146
 #, python-format
 msgid "S3Bucket delete container %s"
 msgstr ""
 
-#: heat/engine/resources/s3.py:160 heat/engine/resources/swift.py:142
+#: heat/engine/resources/s3.py:151 heat/engine/resources/swift.py:133
 #, python-format
 msgid "Delete container failed: %s"
 msgstr ""
@@ -2666,95 +2670,95 @@ msgstr ""
 msgid "List of security group names or IDs."
 msgstr ""
 
-#: heat/engine/resources/server.py:133
+#: heat/engine/resources/server.py:134
 msgid ""
 "An ordered list of nics to be added to this server, with information "
 "about connected networks, fixed ips, port etc."
 msgstr ""
 
-#: heat/engine/resources/server.py:143
+#: heat/engine/resources/server.py:144
 msgid "Arbitrary key-value pairs specified by the client to help boot a server."
 msgstr ""
 
-#: heat/engine/resources/server.py:148
+#: heat/engine/resources/server.py:149
 msgid ""
 "Arbitrary key/value metadata to store for this server. A maximum of five "
 "entries is allowed, and both keys and values must be 255 characters or "
 "less."
 msgstr ""
 
-#: heat/engine/resources/server.py:155
+#: heat/engine/resources/server.py:156
 msgid ""
 "How the user_data should be formatted for the server. For HEAT_CFNTOOLS, "
 "the user_data is bundled as part of the heat-cfntools cloud-init boot "
 "configuration data. For RAW, the user_data is passed to Nova unmodified."
 msgstr ""
 
-#: heat/engine/resources/server.py:163
+#: heat/engine/resources/server.py:164
 msgid "User data script to be executed by cloud-init."
 msgstr ""
 
-#: heat/engine/resources/server.py:167
+#: heat/engine/resources/server.py:169
 msgid "A UUID for the set of servers being requested."
 msgstr ""
 
-#: heat/engine/resources/server.py:171
+#: heat/engine/resources/server.py:173
 msgid "value for config drive either boolean, or volume-id."
 msgstr ""
 
-#: heat/engine/resources/server.py:178
+#: heat/engine/resources/server.py:180
 msgid "Control how the disk is partitioned when the server is created."
 msgstr ""
 
-#: heat/engine/resources/server.py:184
+#: heat/engine/resources/server.py:186
 msgid "A dict of all server details as returned by the API."
 msgstr ""
 
-#: heat/engine/resources/server.py:185
+#: heat/engine/resources/server.py:187
 msgid "A dict of all network addresses as returned by the API."
 msgstr ""
 
-#: heat/engine/resources/server.py:187
+#: heat/engine/resources/server.py:189
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
 "ip2...], \"private\": [ip3, ip4]}."
 msgstr ""
 
-#: heat/engine/resources/server.py:189
+#: heat/engine/resources/server.py:191
 msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be"
 " predictable if the server has addresses from more than one network."
 msgstr ""
 
-#: heat/engine/resources/server.py:195
+#: heat/engine/resources/server.py:197
 msgid "AWS compatible instance name."
 msgstr ""
 
-#: heat/engine/resources/server.py:196
+#: heat/engine/resources/server.py:198
 msgid "The manually assigned alternative public IPv4 address of the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:198
+#: heat/engine/resources/server.py:200
 msgid "The manually assigned alternative public IPv6 address of the server."
 msgstr ""
 
-#: heat/engine/resources/server.py:295
+#: heat/engine/resources/server.py:297
 #, python-format
 msgid "Creation of server %s failed."
 msgstr ""
 
-#: heat/engine/resources/server.py:463
+#: heat/engine/resources/server.py:465
 #, python-format
 msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:472
+#: heat/engine/resources/server.py:474
 #, python-format
 msgid "Neither image nor bootable volume is specified for instance %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:480 heat/tests/test_server.py:418
+#: heat/engine/resources/server.py:482 heat/tests/test_server.py:418
 #, python-format
 msgid ""
 "Properties \"uuid\" and \"network\" are both set to the network "
@@ -2762,7 +2766,7 @@ msgid ""
 "deprecated. Use only \"network\" property."
 msgstr ""
 
-#: heat/engine/resources/server.py:488
+#: heat/engine/resources/server.py:490
 #, python-format
 msgid ""
 "For the server \"%(server)s\" the \"uuid\" property is set to network "
@@ -2770,27 +2774,27 @@ msgid ""
 "property instead."
 msgstr ""
 
-#: heat/engine/resources/server.py:525 heat/engine/resources/server.py:571
+#: heat/engine/resources/server.py:527 heat/engine/resources/server.py:573
 #, python-format
 msgid "Failed to find server %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:528
+#: heat/engine/resources/server.py:530
 #, python-format
 msgid "suspending server %s"
 msgstr ""
 
-#: heat/engine/resources/server.py:545
+#: heat/engine/resources/server.py:547
 #, python-format
 msgid "%(name)s check_suspend_complete status = %(status)s"
 msgstr ""
 
-#: heat/engine/resources/server.py:552
+#: heat/engine/resources/server.py:554
 #, python-format
 msgid "Suspend of server %(server)s failed with unknown status: %(status)s"
 msgstr ""
 
-#: heat/engine/resources/server.py:574
+#: heat/engine/resources/server.py:576
 #, python-format
 msgid "resuming server %s"
 msgstr ""
@@ -2882,19 +2886,19 @@ msgstr ""
 msgid "A map containing all headers for the container."
 msgstr ""
 
-#: heat/engine/resources/swift.py:120
+#: heat/engine/resources/swift.py:111
 #, python-format
 msgid ""
 "SwiftContainer create container %(container)s with container headers "
 "%(container_headers)s and account headers %(account_headers)s"
 msgstr ""
 
-#: heat/engine/resources/swift.py:136
+#: heat/engine/resources/swift.py:127
 #, python-format
 msgid "SwiftContainer delete container %s"
 msgstr ""
 
-#: heat/engine/resources/swift.py:162
+#: heat/engine/resources/swift.py:153
 #, python-format
 msgid "Head container failed: %s"
 msgstr ""
