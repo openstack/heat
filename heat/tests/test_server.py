@@ -125,16 +125,16 @@ class ServersTest(HeatTestCase):
         self.assertTrue(server.id > 0)
 
         public_ip = return_server.networks['public'][0]
-        self.assertEqual(
-            server.FnGetAtt('addresses')['public'][0]['addr'], public_ip)
-        self.assertEqual(
-            server.FnGetAtt('networks')['public'][0], public_ip)
+        self.assertEqual(public_ip,
+                         server.FnGetAtt('addresses')['public'][0]['addr'])
+        self.assertEqual(public_ip,
+                         server.FnGetAtt('networks')['public'][0])
 
         private_ip = return_server.networks['private'][0]
-        self.assertEqual(
-            server.FnGetAtt('addresses')['private'][0]['addr'], private_ip)
-        self.assertEqual(
-            server.FnGetAtt('networks')['private'][0], private_ip)
+        self.assertEqual(private_ip,
+                         server.FnGetAtt('addresses')['private'][0]['addr'])
+        self.assertEqual(private_ip,
+                         server.FnGetAtt('networks')['private'][0])
         self.assertIn(
             server.FnGetAtt('first_address'), (private_ip, public_ip))
 
@@ -442,7 +442,7 @@ class ServersTest(HeatTestCase):
 
         scheduler.TaskRunner(server.delete)()
         self.assertIsNone(server.resource_id)
-        self.assertEqual(server.state, (server.DELETE, server.COMPLETE))
+        self.assertEqual((server.DELETE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
     def test_server_delete_notfound(self):
@@ -461,12 +461,12 @@ class ServersTest(HeatTestCase):
 
         scheduler.TaskRunner(server.delete)()
         self.assertIsNone(server.resource_id)
-        self.assertEqual(server.state, (server.DELETE, server.COMPLETE))
+        self.assertEqual((server.DELETE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
         server.state_set(server.CREATE, server.COMPLETE, 'to delete again')
         scheduler.TaskRunner(server.delete)()
-        self.assertEqual(server.state, (server.DELETE, server.COMPLETE))
+        self.assertEqual((server.DELETE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
     def test_server_update_metadata(self):
@@ -477,11 +477,11 @@ class ServersTest(HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Metadata'] = {'test': 123}
         scheduler.TaskRunner(server.update, update_template)()
-        self.assertEqual(server.metadata, {'test': 123})
+        self.assertEqual({'test': 123}, server.metadata)
 
         server.t['Metadata'] = {'test': 456}
         server.metadata_update()
-        self.assertEqual(server.metadata, {'test': 456})
+        self.assertEqual({'test': 456}, server.metadata)
 
     def test_server_update_nova_metadata(self):
         return_server = self.fc.servers.list()[1]
@@ -496,7 +496,7 @@ class ServersTest(HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['metadata'] = new_meta
         scheduler.TaskRunner(server.update, update_template)()
-        self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
     def test_server_update_nova_metadata_with_delete(self):
@@ -513,7 +513,7 @@ class ServersTest(HeatTestCase):
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['metadata'] = new_meta
         scheduler.TaskRunner(server.update, update_template)()
-        self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.m.VerifyAll()
         self.m.UnsetStubs()
 
@@ -538,7 +538,7 @@ class ServersTest(HeatTestCase):
         server.resource_id = '56789'
 
         scheduler.TaskRunner(server.update, update_template)()
-        self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
     def test_server_update_server_flavor(self):
@@ -569,7 +569,7 @@ class ServersTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.update, update_template)()
-        self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
     def test_server_update_server_flavor_failed(self):
@@ -602,7 +602,7 @@ class ServersTest(HeatTestCase):
         self.assertEqual(
             "Error: Resizing to 'm1.small' failed, status 'ACTIVE'",
             str(error))
-        self.assertEqual(server.state, (server.UPDATE, server.FAILED))
+        self.assertEqual((server.UPDATE, server.FAILED), server.state)
         self.m.VerifyAll()
 
     def test_server_update_server_flavor_replace(self):
@@ -679,7 +679,7 @@ class ServersTest(HeatTestCase):
 
         self.m.ReplayAll()
         scheduler.TaskRunner(server.update, update_template)()
-        self.assertEqual(server.state, (server.UPDATE, server.COMPLETE))
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.m.VerifyAll()
 
     def test_server_update_image_rebuild_status_rebuild(self):
@@ -733,7 +733,7 @@ class ServersTest(HeatTestCase):
         self.assertEqual(
             "Error: Rebuilding server failed, status 'ERROR'",
             str(error))
-        self.assertEqual(server.state, (server.UPDATE, server.FAILED))
+        self.assertEqual((server.UPDATE, server.FAILED), server.state)
         self.m.VerifyAll()
 
     def test_server_update_attr_replace(self):
@@ -769,7 +769,7 @@ class ServersTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.create)()
-        self.assertEqual(server.state, (server.CREATE, server.COMPLETE))
+        self.assertEqual((server.CREATE, server.COMPLETE), server.state)
 
     def test_server_status_suspend_no_resource_id(self):
         return_server = self.fc.servers.list()[1]
@@ -784,7 +784,7 @@ class ServersTest(HeatTestCase):
         self.assertEqual('Error: Cannot suspend srv_sus1, '
                          'resource_id not set',
                          str(ex))
-        self.assertEqual(server.state, (server.SUSPEND, server.FAILED))
+        self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
         self.m.VerifyAll()
 
@@ -804,7 +804,7 @@ class ServersTest(HeatTestCase):
                                scheduler.TaskRunner(server.suspend))
         self.assertEqual('NotFound: Failed to find server 1234',
                          str(ex))
-        self.assertEqual(server.state, (server.SUSPEND, server.FAILED))
+        self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
         self.m.VerifyAll()
 
@@ -825,7 +825,7 @@ class ServersTest(HeatTestCase):
         mox.Replay(get)
 
         scheduler.TaskRunner(server.suspend)()
-        self.assertEqual(server.state, (server.SUSPEND, server.COMPLETE))
+        self.assertEqual((server.SUSPEND, server.COMPLETE), server.state)
 
         self.m.VerifyAll()
 
@@ -847,7 +847,7 @@ class ServersTest(HeatTestCase):
         server.state_set(server.SUSPEND, server.COMPLETE)
 
         scheduler.TaskRunner(server.resume)()
-        self.assertEqual(server.state, (server.RESUME, server.COMPLETE))
+        self.assertEqual((server.RESUME, server.COMPLETE), server.state)
 
         self.m.VerifyAll()
 
@@ -873,7 +873,7 @@ class ServersTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.suspend)()
-        self.assertEqual(server.state, (server.SUSPEND, server.COMPLETE))
+        self.assertEqual((server.SUSPEND, server.COMPLETE), server.state)
 
         self.m.VerifyAll()
 
@@ -903,7 +903,7 @@ class ServersTest(HeatTestCase):
         self.assertEqual('Error: Suspend of server sample-server failed '
                          'with unknown status: TRANSMOGRIFIED',
                          str(ex))
-        self.assertEqual(server.state, (server.SUSPEND, server.FAILED))
+        self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
         self.m.VerifyAll()
 
@@ -931,7 +931,7 @@ class ServersTest(HeatTestCase):
         server.state_set(server.SUSPEND, server.COMPLETE)
 
         scheduler.TaskRunner(server.resume)()
-        self.assertEqual(server.state, (server.RESUME, server.COMPLETE))
+        self.assertEqual((server.RESUME, server.COMPLETE), server.state)
 
         self.m.VerifyAll()
 
@@ -949,7 +949,7 @@ class ServersTest(HeatTestCase):
         self.assertEqual('Error: Cannot resume srv_susp_norid, '
                          'resource_id not set',
                          str(ex))
-        self.assertEqual(server.state, (server.RESUME, server.FAILED))
+        self.assertEqual((server.RESUME, server.FAILED), server.state)
 
         self.m.VerifyAll()
 
@@ -974,7 +974,7 @@ class ServersTest(HeatTestCase):
                                scheduler.TaskRunner(server.resume))
         self.assertEqual('NotFound: Failed to find server 1234',
                          str(ex))
-        self.assertEqual(server.state, (server.RESUME, server.FAILED))
+        self.assertEqual((server.RESUME, server.FAILED), server.state)
 
         self.m.VerifyAll()
 
@@ -1027,7 +1027,7 @@ class ServersTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(server.create)()
-        self.assertEqual(server.state, (server.CREATE, server.COMPLETE))
+        self.assertEqual((server.CREATE, server.COMPLETE), server.state)
 
         self.m.VerifyAll()
 
@@ -1065,9 +1065,9 @@ class ServersTest(HeatTestCase):
         server = self._create_test_server(return_server,
                                           'wo_ipaddr')
 
-        self.assertEqual(server.FnGetAtt('addresses'), {'empty_net': []})
-        self.assertEqual(server.FnGetAtt('networks'), {'empty_net': []})
-        self.assertEqual(server.FnGetAtt('first_address'), '')
+        self.assertEqual({'empty_net': []}, server.FnGetAtt('addresses'))
+        self.assertEqual({'empty_net': []}, server.FnGetAtt('networks'))
+        self.assertEqual('', server.FnGetAtt('first_address'))
 
     def test_build_block_device_mapping(self):
         self.assertIsNone(servers.Server._build_block_device_mapping([]))

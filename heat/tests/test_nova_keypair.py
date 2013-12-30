@@ -89,7 +89,7 @@ class NovaKeyPairTest(HeatTestCase):
         self.assertEqual("generated test public key",
                          tp_test.FnGetAtt('public_key'))
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
-        self.assertEqual(created_key.name, tp_test.resource_id)
+        self.assertEqual(tp_test.resource_id, created_key.name)
         self.m.VerifyAll()
 
     def test_delete_key(self):
@@ -127,7 +127,7 @@ class NovaKeyPairTest(HeatTestCase):
         self.assertEqual("test_create_pub",
                          tp_test.FnGetAtt('public_key'))
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
-        self.assertEqual(created_key.name, tp_test.resource_id)
+        self.assertEqual(tp_test.resource_id, created_key.name)
         self.m.VerifyAll()
 
     def test_save_priv_key(self):
@@ -143,5 +143,5 @@ class NovaKeyPairTest(HeatTestCase):
         self.assertEqual("generated test public key",
                          tp_test.FnGetAtt('public_key'))
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
-        self.assertEqual(created_key.name, tp_test.resource_id)
+        self.assertEqual(tp_test.resource_id, created_key.name)
         self.m.VerifyAll()

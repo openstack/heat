@@ -72,7 +72,7 @@ class PollingTaskGroupTest(HeatTestCase):
                            {'i': 1, 'i2': 1},
                            {'i': 2, 'i2': 4}]
 
-        self.assertEqual(list(output_kwargs), expected_kwargs)
+        self.assertEqual(expected_kwargs, list(output_kwargs))
 
     def test_kwargs_short(self):
         input_kwargs = {'i': [0, 1, 2],
@@ -82,11 +82,11 @@ class PollingTaskGroupTest(HeatTestCase):
 
         expected_kwargs = [{'i': 0, 'i2': 0}]
 
-        self.assertEqual(list(output_kwargs), expected_kwargs)
+        self.assertEqual(expected_kwargs, list(output_kwargs))
 
     def test_no_kwargs(self):
         output_kwargs = scheduler.PollingTaskGroup._kwargs({})
-        self.assertEqual(list(output_kwargs), [])
+        self.assertEqual([], list(output_kwargs))
 
     def test_args(self):
         input_args = ([0, 1, 2],
@@ -96,7 +96,7 @@ class PollingTaskGroupTest(HeatTestCase):
 
         expected_args = [(0, 0), (1, 1), (2, 4)]
 
-        self.assertEqual(list(output_args), expected_args)
+        self.assertEqual(expected_args, list(output_args))
 
     def test_args_short(self):
         input_args = ([0, 1, 2],
@@ -106,11 +106,11 @@ class PollingTaskGroupTest(HeatTestCase):
 
         expected_args = [(0, 0)]
 
-        self.assertEqual(list(output_args), expected_args)
+        self.assertEqual(expected_args, list(output_args))
 
     def test_no_args(self):
         output_args = scheduler.PollingTaskGroup._args([])
-        self.assertEqual(list(output_args), [])
+        self.assertEqual([], list(output_args))
 
     @contextlib.contextmanager
     def _args_test(self, *arg_lists, **kwarg_lists):
@@ -680,12 +680,12 @@ class DescriptionTest(HeatTestCase):
         def f():
             pass
 
-        self.assertEqual(scheduler.task_description(f), 'f')
+        self.assertEqual('f', scheduler.task_description(f))
 
     def test_lambda(self):
         l = lambda: None
 
-        self.assertEqual(scheduler.task_description(l), '<lambda>')
+        self.assertEqual('<lambda>', scheduler.task_description(l))
 
     def test_method(self):
         class C(object):
@@ -698,7 +698,7 @@ class DescriptionTest(HeatTestCase):
             def m(self):
                 pass
 
-        self.assertEqual(scheduler.task_description(C().m), 'm from C "o"')
+        self.assertEqual('m from C "o"', scheduler.task_description(C().m))
 
     def test_object(self):
         class C(object):
@@ -711,7 +711,7 @@ class DescriptionTest(HeatTestCase):
             def __call__(self):
                 pass
 
-        self.assertEqual(scheduler.task_description(C()), 'o')
+        self.assertEqual('o', scheduler.task_description(C()))
 
 
 class WrapperTaskTest(HeatTestCase):

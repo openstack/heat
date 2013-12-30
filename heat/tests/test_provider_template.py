@@ -356,7 +356,7 @@ class ProviderTemplateTest(HeatTestCase):
             "OS::ResourceType": "some_magic.yaml"}}}}
         env = environment.Environment(env_str)
         cls = env.get_class('OS::ResourceType', 'fred')
-        self.assertEqual(cls, template_resource.TemplateResource)
+        self.assertEqual(template_resource.TemplateResource, cls)
 
     def test_template_as_resource(self):
         """
@@ -648,7 +648,7 @@ Outputs:
         stack = parser.Stack(self.ctx, utils.random_name(), tmpl)
         stack.store()
         stack.create()
-        self.assertEqual(stack.state, (stack.CREATE, stack.COMPLETE))
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
         return stack
 
     @utils.stack_delete_after
@@ -661,7 +661,7 @@ Outputs:
                                files={'the.yaml': self.provider})
         updated_stack = parser.Stack(self.ctx, stack.name, tmpl)
         stack.update(updated_stack)
-        self.assertEqual(stack.state, ('UPDATE', 'COMPLETE'))
+        self.assertEqual(('UPDATE', 'COMPLETE'), stack.state)
         if self.expect == self.REPLACE:
             self.assertNotEqual(initial_id,
                                 stack.output('identifier'))

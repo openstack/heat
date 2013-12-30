@@ -357,8 +357,8 @@ class AutoScalingTest(HeatTestCase):
 
         stack.store()
         stack.create()
-        self.assertEqual(stack.state,
-                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         stack.state)
 
         # Start of stack update
         stack2 = parser.Stack.load(self.ctx, stack_id=stack.id)
@@ -370,8 +370,8 @@ class AutoScalingTest(HeatTestCase):
                                     template.Template(tmpl2),
                                     environment.Environment(env))
         stack2.update(update_stack)
-        self.assertEqual(stack2.state,
-                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
+        self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
+                         stack2.state)
 
         members = db_api.resource_data_get_all(stack['ElasticLoadBalancer'])
         self.assertEqual(3, len(members.keys()))

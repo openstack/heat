@@ -64,8 +64,8 @@ class DockerContainerTest(HeatTestCase):
         self.assertIsNone(resource.validate())
         self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
-        self.assertEqual(resource.state, (resource.CREATE,
-                                          resource.COMPLETE))
+        self.assertEqual((resource.CREATE, resource.COMPLETE),
+                         resource.state)
         return resource
 
     def get_container_state(self, resource):
@@ -96,8 +96,8 @@ class DockerContainerTest(HeatTestCase):
     def test_resource_delete(self):
         container = self.create_container('Blog')
         scheduler.TaskRunner(container.delete)()
-        self.assertEqual(container.state, (container.DELETE,
-                                           container.COMPLETE))
+        self.assertEqual((container.DELETE, container.COMPLETE),
+                         container.state)
         running = self.get_container_state(container)['Running']
         self.assertIs(False, running)
         self.m.VerifyAll()
@@ -106,14 +106,14 @@ class DockerContainerTest(HeatTestCase):
         container = self.create_container('Blog')
         # Test suspend
         scheduler.TaskRunner(container.suspend)()
-        self.assertEqual(container.state, (container.SUSPEND,
-                                           container.COMPLETE))
+        self.assertEqual((container.SUSPEND, container.COMPLETE),
+                         container.state)
         running = self.get_container_state(container)['Running']
         self.assertIs(False, running)
         # Test resume
         scheduler.TaskRunner(container.resume)()
-        self.assertEqual(container.state, (container.RESUME,
-                                           container.COMPLETE))
+        self.assertEqual((container.RESUME, container.COMPLETE),
+                         container.state)
         running = self.get_container_state(container)['Running']
         self.assertIs(True, running)
         self.m.VerifyAll()

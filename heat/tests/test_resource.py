@@ -50,7 +50,7 @@ class ResourceTest(HeatTestCase):
 
     def test_get_class_ok(self):
         cls = resource.get_class('GenericResourceType')
-        self.assertEqual(cls, generic_rsrc.GenericResource)
+        self.assertEqual(generic_rsrc.GenericResource, cls)
 
     def test_get_class_noexist(self):
         self.assertRaises(exception.StackValidationFailed, resource.get_class,
@@ -96,8 +96,8 @@ class ResourceTest(HeatTestCase):
     def test_state_defaults(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_res_def', tmpl, self.stack)
-        self.assertEqual(res.state, (res.INIT, res.COMPLETE))
-        self.assertEqual(res.status_reason, '')
+        self.assertEqual((res.INIT, res.COMPLETE), res.state)
+        self.assertEqual('', res.status_reason)
 
     def test_resource_str_repr_stack_id_resource_id(self):
         tmpl = {'Type': 'Foo'}
@@ -134,10 +134,10 @@ class ResourceTest(HeatTestCase):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.state_set(res.CREATE, res.COMPLETE, 'wibble')
-        self.assertEqual(res.action, res.CREATE)
-        self.assertEqual(res.status, res.COMPLETE)
-        self.assertEqual(res.state, (res.CREATE, res.COMPLETE))
-        self.assertEqual(res.status_reason, 'wibble')
+        self.assertEqual(res.CREATE, res.action)
+        self.assertEqual(res.COMPLETE, res.status)
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        self.assertEqual('wibble', res.status_reason)
 
     def test_set_deletion_policy(self):
         tmpl = {'Type': 'Foo'}
@@ -180,7 +180,7 @@ class ResourceTest(HeatTestCase):
     def test_type(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertEqual(res.type(), 'Foo')
+        self.assertEqual('Foo', res.type())
 
     def test_has_interface_direct_match(self):
         tmpl = {'Type': 'GenericResourceType'}
@@ -223,17 +223,17 @@ class ResourceTest(HeatTestCase):
         self.assertEqual('test_store', res.status_reason)
 
         db_res = db_api.resource_get(res.context, res.id)
-        self.assertEqual(db_res.action, res.CREATE)
-        self.assertEqual(db_res.status, res.IN_PROGRESS)
-        self.assertEqual(db_res.status_reason, 'test_store')
+        self.assertEqual(res.CREATE, db_res.action)
+        self.assertEqual(res.IN_PROGRESS, db_res.status)
+        self.assertEqual('test_store', db_res.status_reason)
 
         res._store_or_update(res.CREATE, res.COMPLETE, 'test_update')
-        self.assertEqual(res.action, res.CREATE)
-        self.assertEqual(res.status, res.COMPLETE)
-        self.assertEqual(res.status_reason, 'test_update')
-        self.assertEqual(db_res.action, res.CREATE)
-        self.assertEqual(db_res.status, res.COMPLETE)
-        self.assertEqual(db_res.status_reason, 'test_update')
+        self.assertEqual(res.CREATE, res.action)
+        self.assertEqual(res.COMPLETE, res.status)
+        self.assertEqual('test_update', res.status_reason)
+        self.assertEqual(res.CREATE, db_res.action)
+        self.assertEqual(res.COMPLETE, db_res.status)
+        self.assertEqual('test_update', db_res.status_reason)
 
     def test_parsed_template(self):
         tmpl = {
@@ -243,22 +243,22 @@ class ResourceTest(HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
 
         parsed_tmpl = res.parsed_template()
-        self.assertEqual(parsed_tmpl['Type'], 'Foo')
-        self.assertEqual(parsed_tmpl['foo'], 'bar baz quux')
+        self.assertEqual('Foo', parsed_tmpl['Type'])
+        self.assertEqual('bar baz quux', parsed_tmpl['foo'])
 
-        self.assertEqual(res.parsed_template('foo'), 'bar baz quux')
-        self.assertEqual(res.parsed_template('foo', 'bar'), 'bar baz quux')
+        self.assertEqual('bar baz quux', res.parsed_template('foo'))
+        self.assertEqual('bar baz quux', res.parsed_template('foo', 'bar'))
 
     def test_parsed_template_default(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertEqual(res.parsed_template('foo'), {})
-        self.assertEqual(res.parsed_template('foo', 'bar'), 'bar')
+        self.assertEqual({}, res.parsed_template('foo'))
+        self.assertEqual('bar', res.parsed_template('foo', 'bar'))
 
     def test_metadata_default(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        self.assertEqual(res.metadata, {})
+        self.assertEqual({}, res.metadata)
 
     def test_equals_different_stacks(self):
         tmpl1 = {'Type': 'Foo'}
@@ -303,7 +303,7 @@ class ResourceTest(HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(update_snippet, tmpl)
-        self.assertEqual(diff, {'Metadata': {'foo': 456}})
+        self.assertEqual({'Metadata': {'foo': 456}}, diff)
 
     def test_update_template_diff_changed_add(self):
         tmpl = {'Type': 'Foo'}
@@ -311,7 +311,7 @@ class ResourceTest(HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(update_snippet, tmpl)
-        self.assertEqual(diff, {'Metadata': {'foo': 123}})
+        self.assertEqual({'Metadata': {'foo': 123}}, diff)
 
     def test_update_template_diff_changed_remove(self):
         tmpl = {'Type': 'Foo', 'Metadata': {'foo': 123}}
@@ -319,14 +319,14 @@ class ResourceTest(HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_keys = ('Metadata',)
         diff = res.update_template_diff(update_snippet, tmpl)
-        self.assertEqual(diff, {'Metadata': None})
+        self.assertEqual({'Metadata': None}, diff)
 
     def test_update_template_diff_properties_none(self):
         tmpl = {'Type': 'Foo'}
         update_snippet = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         diff = res.update_template_diff_properties(update_snippet, tmpl)
-        self.assertEqual(diff, {})
+        self.assertEqual({}, diff)
 
     def test_update_template_diff_properties_added(self):
         tmpl = {'Type': 'Foo'}
@@ -334,7 +334,7 @@ class ResourceTest(HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Bar',)
         diff = res.update_template_diff_properties(update_snippet, tmpl)
-        self.assertEqual(diff, {'Bar': 123})
+        self.assertEqual({'Bar': 123}, diff)
 
     def test_update_template_diff_properties_removed(self):
         tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
@@ -342,7 +342,7 @@ class ResourceTest(HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Bar',)
         diff = res.update_template_diff_properties(update_snippet, tmpl)
-        self.assertEqual(diff, {'Bar': None})
+        self.assertEqual({'Bar': None}, diff)
 
     def test_update_template_diff_properties_changed(self):
         tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
@@ -350,7 +350,7 @@ class ResourceTest(HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.update_allowed_properties = ('Bar',)
         diff = res.update_template_diff_properties(update_snippet, tmpl)
-        self.assertEqual(diff, {'Bar': 456})
+        self.assertEqual({'Bar': 456}, diff)
 
     def test_update_template_diff_properties_notallowed(self):
         tmpl = {'Type': 'Foo', 'Properties': {'Bar': 123}}
@@ -1115,12 +1115,12 @@ class MetadataTest(HeatTestCase):
         self.addCleanup(self.stack.delete)
 
     def test_read_initial(self):
-        self.assertEqual(self.res.metadata, {'Test': 'Initial metadata'})
+        self.assertEqual({'Test': 'Initial metadata'}, self.res.metadata)
 
     def test_write(self):
         test_data = {'Test': 'Newly-written data'}
         self.res.metadata = test_data
-        self.assertEqual(self.res.metadata, test_data)
+        self.assertEqual(test_data, self.res.metadata)
 
 
 class ReducePhysicalResourceNameTest(HeatTestCase):
@@ -1184,7 +1184,7 @@ class ReducePhysicalResourceNameTest(HeatTestCase):
             self.assertEqual(self.reduced, reduced)
             if self.will_reduce:
                 # check it has been truncated to exactly the limit
-                self.assertEqual(len(reduced), self.limit)
+                self.assertEqual(self.limit, len(reduced))
             else:
                 # check that nothing has changed
                 self.assertEqual(self.original, reduced)

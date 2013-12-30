@@ -254,12 +254,12 @@ class SqlAlchemyTest(HeatTestCase):
                                                    stack.id)
         encrypted_key = rs.data[0]['value']
         self.assertNotEqual(encrypted_key, "fake secret")
-        decrypted_key = cs.my_secret
-        self.assertEqual(decrypted_key, "fake secret")
+        # Test private_key property returns decrypted value
+        self.assertEqual("fake secret", cs.my_secret)
 
         #do this twice to verify that the orm does not commit the unencrypted
         #value.
-        self.assertEqual(cs.my_secret, "fake secret")
+        self.assertEqual("fake secret", cs.my_secret)
         scheduler.TaskRunner(cs.destroy)()
 
     def test_resource_data_delete(self):
@@ -575,14 +575,14 @@ class SqlAlchemyTest(HeatTestCase):
         db_creds = db_api.user_creds_create(self.ctx)
         load_creds = db_api.user_creds_get(db_creds.id)
 
-        self.assertEqual(load_creds.get('username'), 'test_username')
-        self.assertEqual(load_creds.get('password'), 'password')
-        self.assertEqual(load_creds.get('tenant'), 'test_tenant')
-        self.assertEqual(load_creds.get('tenant_id'), 'test_tenant_id')
+        self.assertEqual('test_username', load_creds.get('username'))
+        self.assertEqual('password', load_creds.get('password'))
+        self.assertEqual('test_tenant', load_creds.get('tenant'))
+        self.assertEqual('test_tenant_id', load_creds.get('tenant_id'))
         self.assertIsNotNone(load_creds.get('created_at'))
         self.assertIsNone(load_creds.get('updated_at'))
-        self.assertEqual(load_creds.get('auth_url'),
-                         'http://server.test:5000/v2.0')
+        self.assertEqual('http://server.test:5000/v2.0',
+                         load_creds.get('auth_url'))
         self.assertIsNone(load_creds.get('trust_id'))
         self.assertIsNone(load_creds.get('trustor_user_id'))
 
@@ -601,10 +601,10 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertIsNotNone(load_creds.get('created_at'))
         self.assertIsNone(load_creds.get('updated_at'))
         self.assertIsNone(load_creds.get('auth_url'))
-        self.assertEqual(load_creds.get('tenant_id'), 'atenant123')
-        self.assertEqual(load_creds.get('tenant'), 'atenant')
-        self.assertEqual(load_creds.get('trust_id'), 'atrust123')
-        self.assertEqual(load_creds.get('trustor_user_id'), 'atrustor123')
+        self.assertEqual('atenant123', load_creds.get('tenant_id'))
+        self.assertEqual('atenant', load_creds.get('tenant'))
+        self.assertEqual('atrust123', load_creds.get('trust_id'))
+        self.assertEqual('atrustor123', load_creds.get('trustor_user_id'))
 
     def test_user_creds_none(self):
         self.ctx.username = None
@@ -1154,7 +1154,7 @@ class DBAPIResourceDataTest(HeatTestCase):
         self.assertEqual('test_value', val)
 
         vals = db_api.resource_data_get_all(self.resource)
-        self.assertEqual(len(vals), 2)
+        self.assertEqual(2, len(vals))
         self.assertEqual('foo', vals.get('test_resource_key'))
         self.assertEqual('test_value', vals.get('encryped_resource_key'))
 

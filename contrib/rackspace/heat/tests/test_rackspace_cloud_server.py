@@ -181,10 +181,10 @@ class RackspaceCloudServerTest(HeatTestCase):
 
         expected_public = return_server.networks['public'][0]
         expected_private = return_server.networks['private'][0]
-        self.assertEqual(cs.FnGetAtt('PublicIp'), expected_public)
-        self.assertEqual(cs.FnGetAtt('PrivateIp'), expected_private)
-        self.assertEqual(cs.FnGetAtt('PublicDnsName'), expected_public)
-        self.assertEqual(cs.FnGetAtt('PrivateDnsName'), expected_public)
+        self.assertEqual(expected_public, cs.FnGetAtt('PublicIp'))
+        self.assertEqual(expected_private, cs.FnGetAtt('PrivateIp'))
+        self.assertEqual(expected_public, cs.FnGetAtt('PublicDnsName'))
+        self.assertEqual(expected_public, cs.FnGetAtt('PrivateDnsName'))
 
         self.m.VerifyAll()
 
@@ -200,10 +200,10 @@ class RackspaceCloudServerTest(HeatTestCase):
 
         expected_public = return_server.networks['public'][0]
         expected_private = return_server.networks['private'][0]
-        self.assertEqual(cs.FnGetAtt('PublicIp'), expected_public)
-        self.assertEqual(cs.FnGetAtt('PrivateIp'), expected_private)
-        self.assertEqual(cs.FnGetAtt('PublicDnsName'), expected_public)
-        self.assertEqual(cs.FnGetAtt('PrivateDnsName'), expected_public)
+        self.assertEqual(expected_public, cs.FnGetAtt('PublicIp'))
+        self.assertEqual(expected_private, cs.FnGetAtt('PrivateIp'))
+        self.assertEqual(expected_public, cs.FnGetAtt('PublicDnsName'))
+        self.assertEqual(expected_public, cs.FnGetAtt('PrivateDnsName'))
         self.assertRaises(exception.InvalidTemplateAttribute,
                           cs.FnGetAtt, 'foo')
         self.m.VerifyAll()
@@ -317,7 +317,7 @@ class RackspaceCloudServerTest(HeatTestCase):
 
         scheduler.TaskRunner(cs.delete)()
         self.assertIsNone(cs.resource_id)
-        self.assertEqual(cs.state, (cs.DELETE, cs.COMPLETE))
+        self.assertEqual((cs.DELETE, cs.COMPLETE), cs.state)
         self.m.VerifyAll()
 
     def test_cs_update_metadata(self):
@@ -329,7 +329,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         update_template = copy.deepcopy(cs.t)
         update_template['Metadata'] = {'test': 123}
         scheduler.TaskRunner(cs.update, update_template)()
-        self.assertEqual(cs.metadata, {'test': 123})
+        self.assertEqual({'test': 123}, cs.metadata)
 
     def test_cs_update_replace(self):
         return_server = self.fc.servers.list()[1]
@@ -361,7 +361,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(cs.create)()
-        self.assertEqual(cs.state, (cs.CREATE, cs.COMPLETE))
+        self.assertEqual((cs.CREATE, cs.COMPLETE), cs.state)
 
     def test_cs_status_hard_reboot(self):
         self._test_cs_status_not_build_active('HARD_REBOOT')
@@ -409,7 +409,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(cs.create)()
-        self.assertEqual(cs.state, (cs.CREATE, cs.COMPLETE))
+        self.assertEqual((cs.CREATE, cs.COMPLETE), cs.state)
 
         self.m.VerifyAll()
 
@@ -429,9 +429,9 @@ class RackspaceCloudServerTest(HeatTestCase):
                                    {'version': 6, 'addr': 'fake:ip::6'}],
                         'private': [{'version': 4, 'addr': '10.13.12.13'}]}
         self.mock_get_ip(cs)
-        self.assertEqual(cs.public_ip, '4.5.6.7')
+        self.assertEqual('4.5.6.7', cs.public_ip)
         self.mock_get_ip(cs)
-        self.assertEqual(cs.private_ip, '10.13.12.13')
+        self.assertEqual('10.13.12.13', cs.private_ip)
 
         cs.addresses = {'public': [],
                         'private': []}
@@ -455,8 +455,8 @@ class RackspaceCloudServerTest(HeatTestCase):
                                                    stack.id)
         encrypted_key = rs.data[0]['value']
         self.assertNotEqual(encrypted_key, "fake private key")
-        decrypted_key = cs.private_key
-        self.assertEqual(decrypted_key, "fake private key")
+        # Test private_key property returns decrypted value
+        self.assertEqual("fake private key", cs.private_key)
 
     def test_rackconnect_deployed(self):
         return_server = self.fc.servers.list()[1]
@@ -467,8 +467,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs.context.roles = ['rack_connect']
         self.m.ReplayAll()
         scheduler.TaskRunner(cs.create)()
-        self.assertEqual(cs.action, 'CREATE')
-        self.assertEqual(cs.status, 'COMPLETE')
+        self.assertEqual('CREATE', cs.action)
+        self.assertEqual('COMPLETE', cs.status)
         self.m.VerifyAll()
 
     def test_rackconnect_failed(self):
@@ -496,8 +496,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs.context.roles = ['rack_connect']
         self.m.ReplayAll()
         scheduler.TaskRunner(cs.create)()
-        self.assertEqual(cs.action, 'CREATE')
-        self.assertEqual(cs.status, 'COMPLETE')
+        self.assertEqual('CREATE', cs.action)
+        self.assertEqual('COMPLETE', cs.status)
         self.m.VerifyAll()
 
     def test_rackconnect_unknown(self):
@@ -522,8 +522,8 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs.context.roles = ['rax_managed']
         self.m.ReplayAll()
         scheduler.TaskRunner(cs.create)()
-        self.assertEqual(cs.action, 'CREATE')
-        self.assertEqual(cs.status, 'COMPLETE')
+        self.assertEqual('CREATE', cs.action)
+        self.assertEqual('COMPLETE', cs.status)
         self.m.VerifyAll()
 
     def test_managed_cloud_build_error(self):

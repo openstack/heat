@@ -610,7 +610,7 @@ Resources:
             self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
             rsrc = stack['the_nic']
             self.assertResourceState(rsrc, 'dddd')
-            self.assertEqual(rsrc.FnGetAtt('PrivateIpAddress'), '10.0.0.100')
+            self.assertEqual('10.0.0.100', rsrc.FnGetAtt('PrivateIpAddress'))
 
             self.assertRaises(resource.UpdateReplace,
                               rsrc.handle_update, {}, {}, {})
@@ -762,7 +762,7 @@ Resources:
                           attachment.handle_update, {}, {}, {})
 
         route_table = stack['the_route_table']
-        self.assertEqual([route_table], list(attachment._vpc_route_tables()))
+        self.assertEqual(list(attachment._vpc_route_tables()), [route_table])
 
         stack.delete()
         self.m.VerifyAll()

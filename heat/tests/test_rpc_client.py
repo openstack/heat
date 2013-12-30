@@ -71,7 +71,7 @@ class EngineRpcAPITestCase(testtools.TestCase):
 
             retval = getattr(rpcapi, method)(ctxt, **kwargs)
 
-            self.assertEqual(retval, expected_retval)
+            self.assertEqual(expected_retval, retval)
             expected_args = [ctxt, expected_topic, expected_msg,
                              mock.ANY]
             actual_args, _ = mock_rpc_method.call_args

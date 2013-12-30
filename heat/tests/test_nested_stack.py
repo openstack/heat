@@ -73,7 +73,7 @@ Outputs:
         t = template_format.parse(template)
         stack = self.parse_stack(t)
         stack.create()
-        self.assertEqual(stack.state, (stack.CREATE, stack.COMPLETE))
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
         return stack
 
     def parse_stack(self, t):
@@ -92,7 +92,7 @@ Outputs:
         stack = self.create_stack(self.test_template)
         rsrc = stack['the_nested']
         nested_name = utils.PhysName(stack.name, 'the_nested')
-        self.assertEqual(nested_name, rsrc.physical_resource_name())
+        self.assertEqual(rsrc.physical_resource_name(), nested_name)
         arn_prefix = ('arn:openstack:heat::aaaa:stacks/%s/' %
                       rsrc.physical_resource_name())
         self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
@@ -121,7 +121,7 @@ Outputs:
         props['TimeoutInMinutes'] = '50'
 
         stack = self.create_stack(json.dumps(timeout_template))
-        self.assertEqual(stack.state, (stack.CREATE, stack.COMPLETE))
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
         self.m.VerifyAll()
 
     def test_nested_stack_create_exceeds_resource_limit(self):
@@ -146,7 +146,7 @@ Outputs:
         t = template_format.parse(self.test_template)
         stack = self.parse_stack(t)
         stack.create()
-        self.assertEqual(stack.state, (stack.CREATE, stack.FAILED))
+        self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
         self.assertIn('Maximum resources per stack exceeded',
                       stack.status_reason)
 
@@ -174,7 +174,7 @@ Outputs:
         t = template_format.parse(self.test_template)
         stack = self.parse_stack(t)
         stack.create()
-        self.assertEqual(stack.state, (stack.CREATE, stack.COMPLETE))
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
         self.assertIn('NestedResource',
                       stack['the_nested'].nested())
 
@@ -310,10 +310,10 @@ Outputs:
         rsrc = stack['the_nested']
 
         scheduler.TaskRunner(rsrc.suspend)()
-        self.assertEqual(rsrc.state, (rsrc.SUSPEND, rsrc.COMPLETE))
+        self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
 
         scheduler.TaskRunner(rsrc.resume)()
-        self.assertEqual(rsrc.state, (rsrc.RESUME, rsrc.COMPLETE))
+        self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
 
         rsrc.delete()
         self.m.VerifyAll()
@@ -474,7 +474,7 @@ Resources:
         t = template_format.parse(template)
         stack = self.parse_stack(t)
         stack.create()
-        self.assertEqual(stack.state, (stack.CREATE, stack.FAILED))
+        self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
         self.assertIn('Recursion depth exceeds', stack.status_reason)
         self.m.VerifyAll()
 
@@ -545,6 +545,6 @@ Outputs:
         stack = self.create_stack(self.test_template)
         res = stack['the_nested'].nested()['nested_res']
         stack.delete()
-        self.assertEqual(stack.state, (stack.DELETE, stack.COMPLETE))
+        self.assertEqual((stack.DELETE, stack.COMPLETE), stack.state)
         self.assertRaises(exception.NotFound, db_api.resource_data_get, res,
                           'test')
