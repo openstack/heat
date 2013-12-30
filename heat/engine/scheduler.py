@@ -236,9 +236,9 @@ def wrappertask(task):
                     while subtask_running:
                         try:
                             yield step
-                        except GeneratorExit as exit:
+                        except GeneratorExit as ex:
                             subtask.close()
-                            raise exit
+                            raise ex
                         except:
                             try:
                                 step = subtask.throw(*sys.exc_info())
@@ -251,9 +251,9 @@ def wrappertask(task):
                                 subtask_running = False
                 else:
                     yield
-            except GeneratorExit as exit:
+            except GeneratorExit as ex:
                 parent.close()
-                raise exit
+                raise ex
             except:
                 subtask = parent.throw(*sys.exc_info())
             else:
