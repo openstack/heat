@@ -65,7 +65,8 @@ class CloudServer(instance.Instance):
             properties.Schema.STRING
         ),
         VOLUMES: properties.Schema(
-            properties.Schema.LIST
+            properties.Schema.LIST,
+            default=[]
         ),
         NAME: properties.Schema(
             properties.Schema.STRING
