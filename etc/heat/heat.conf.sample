@@ -584,6 +584,10 @@
 # (boolean value)
 #insecure=false
 
+# Optional heat url in format like
+# http://0.0.0.0:8004/v1/%(tenant_id)s. (string value)
+#url=<None>
+
 
 [clients_keystone]
 
