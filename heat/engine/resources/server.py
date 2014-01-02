@@ -78,7 +78,7 @@ class Server(resource.Resource):
     properties_schema = {
         'name': {
             'Type': 'String',
-            'Description': _('Optional server name.')},
+            'Description': _('Server name.')},
         'image': {
             'Type': 'String',
             'Description': _('The ID or name of the image to boot with.'),
