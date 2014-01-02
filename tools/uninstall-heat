@@ -76,3 +76,4 @@ if user_wants 'Delete Heat logs?'; then
     echo 1>&2
 fi
 
+echo 'Warning: You shall explicitly remove related tenants, role, and users from keystone' 1>&2
