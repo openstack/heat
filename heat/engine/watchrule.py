@@ -248,8 +248,10 @@ class WatchRule(object):
         return actions
 
     def rule_actions(self, new_state):
-        logger.info('WATCH: stack:%s, watch_name:%s %s',
-                    self.stack_id, self.name, new_state)
+        logger.info(_('WATCH: stack:%(stack)s, watch_name:%(watch_name)s, '
+                      'new_state:%(new_state)s'), {'stack': self.stack_id,
+                                                   'watch_name': self.name,
+                                                   'new_state': new_state})
         actions = []
         if self.ACTION_MAP[new_state] not in self.rule:
             logger.info(_('no action for new state %s'),
