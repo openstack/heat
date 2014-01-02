@@ -74,7 +74,7 @@ class StackResource(resource.Resource):
         return self._nested
 
     def create_with_template(self, child_template, user_params,
-                             timeout_mins=None):
+                             timeout_mins=None, adopt_data=None):
         '''
         Handle the creation of the nested stack from a given JSON template.
         '''
@@ -99,14 +99,19 @@ class StackResource(resource.Resource):
                               timeout_mins=timeout_mins,
                               disable_rollback=True,
                               parent_resource=self,
-                              owner_id=self.stack.id)
+                              owner_id=self.stack.id,
+                              adopt_stack_data=adopt_data)
         nested.validate()
         self._nested = nested
         nested_id = self._nested.store()
         self.resource_id_set(nested_id)
 
+        action = self._nested.CREATE
+        if adopt_data:
+            action = self._nested.ADOPT
+
         stack_creator = scheduler.TaskRunner(self._nested.stack_task,
-                                             action=self._nested.CREATE)
+                                             action=action)
         stack_creator.start(timeout=self._nested.timeout_secs())
         return stack_creator
 

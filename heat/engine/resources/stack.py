@@ -61,7 +61,13 @@ class NestedStack(stack_resource.StackResource):
 
     update_allowed_keys = ('Properties',)
 
+    def handle_adopt(self, resource_data=None):
+        return self._create_with_template(resource_adopt_data=resource_data)
+
     def handle_create(self):
+        return self._create_with_template()
+
+    def _create_with_template(self, resource_adopt_data=None):
         try:
             template_data = urlfetch.get(self.properties[self.TEMPLATE_URL])
         except (exceptions.RequestException, IOError) as r_exc:
@@ -74,7 +80,8 @@ class NestedStack(stack_resource.StackResource):
 
         return self.create_with_template(template,
                                          self.properties[self.PARAMETERS],
-                                         self.properties[self.TIMEOUT_IN_MINS])
+                                         self.properties[self.TIMEOUT_IN_MINS],
+                                         adopt_data=resource_adopt_data)
 
     def handle_delete(self):
         return self.delete_nested()

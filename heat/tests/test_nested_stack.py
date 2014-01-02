@@ -76,11 +76,18 @@ Outputs:
         self.assertEqual(stack.state, (stack.CREATE, stack.COMPLETE))
         return stack
 
-    def parse_stack(self, t):
+    def adopt_stack(self, template, adopt_data):
+        t = template_format.parse(template)
+        stack = self.parse_stack(t, adopt_data)
+        stack.adopt()
+        self.assertEqual((stack.ADOPT, stack.COMPLETE), stack.state)
+        return stack
+
+    def parse_stack(self, t, data=None):
         ctx = utils.dummy_context('test_username', 'aaaa', 'password')
         stack_name = 'test_stack'
         tmpl = parser.Template(t)
-        stack = parser.Stack(ctx, stack_name, tmpl)
+        stack = parser.Stack(ctx, stack_name, tmpl, adopt_stack_data=data)
         stack.store()
         return stack
 
@@ -108,6 +115,84 @@ Outputs:
         rsrc.delete()
         self.assertTrue(rsrc.FnGetRefId().startswith(arn_prefix))
 
+        self.m.VerifyAll()
+
+    def test_nested_stack_adopt(self):
+        resource._register_class('GenericResource',
+                                 generic_rsrc.GenericResource)
+        urlfetch.get('https://server.test/the.template').MultipleTimes().\
+            AndReturn('''
+            HeatTemplateFormatVersion: '2012-12-12'
+            Parameters:
+              KeyName:
+                Type: String
+            Resources:
+              NestedResource:
+                Type: GenericResource
+            Outputs:
+              Foo:
+                Value: bar
+            ''')
+        self.m.ReplayAll()
+
+        adopt_data = {
+            "resources": {
+                "the_nested": {
+                    "resource_id": "test-res-id",
+                    "resources": {
+                        "NestedResource": {
+                            "resource_id": "test-nested-res-id"
+                        }
+                    }
+                }
+            }
+        }
+
+        stack = self.adopt_stack(self.test_template, adopt_data)
+        self.assertEqual((stack.ADOPT, stack.COMPLETE), stack.state)
+        rsrc = stack['the_nested']
+        self.assertEqual((rsrc.ADOPT, rsrc.COMPLETE), rsrc.state)
+        nested_name = utils.PhysName(stack.name, 'the_nested')
+        self.assertEqual(nested_name, rsrc.physical_resource_name())
+        self.assertEqual('test-nested-res-id',
+                         rsrc.nested()['NestedResource'].resource_id)
+        rsrc.delete()
+        self.m.VerifyAll()
+
+    def test_nested_stack_adopt_fail(self):
+        resource._register_class('GenericResource',
+                                 generic_rsrc.GenericResource)
+        urlfetch.get('https://server.test/the.template').MultipleTimes().\
+            AndReturn('''
+            HeatTemplateFormatVersion: '2012-12-12'
+            Parameters:
+              KeyName:
+                Type: String
+            Resources:
+              NestedResource:
+                Type: GenericResource
+            Outputs:
+              Foo:
+                Value: bar
+            ''')
+        self.m.ReplayAll()
+
+        adopt_data = {
+            "resources": {
+                "the_nested": {
+                    "resource_id": "test-res-id",
+                    "resources": {
+                    }
+                }
+            }
+        }
+
+        stack = self.adopt_stack(self.test_template, adopt_data)
+        rsrc = stack['the_nested']
+        self.assertEqual((rsrc.ADOPT, rsrc.FAILED), rsrc.nested().state)
+        nested_name = utils.PhysName(stack.name, 'the_nested')
+        self.assertEqual(nested_name, rsrc.physical_resource_name())
+        rsrc.delete()
         self.m.VerifyAll()
 
     def test_nested_stack_create_with_timeout(self):
