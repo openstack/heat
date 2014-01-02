@@ -28,6 +28,7 @@ import tempfile
 from migrate.versioning import repository
 
 from heat.db.sqlalchemy import migrate_repo
+from heat.db.sqlalchemy import migration
 from heat.openstack.common import log as logging
 from heat.openstack.common.db.sqlalchemy import test_migrations
 
@@ -75,12 +76,12 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
         self.addCleanup(clean_lock_dir)
         self.snake_walk = False
         self.downgrade = False
+        self.INIT_VERSION = migration.INIT_VERSION
         if self.migration_api is None:
-            temp = __import__('heat.db.sqlalchemy.migration',
+            temp = __import__('heat.openstack.common.db.sqlalchemy.migration',
                               globals(), locals(),
                               ['versioning_api'], -1)
             self.migration_api = temp.versioning_api
-            self.INIT_VERSION = temp.INIT_VERSION
 
     def test_walk_versions(self):
         for key, engine in self.engines.items():
