@@ -15,8 +15,6 @@
 import json
 import time
 
-import testscenarios
-
 from keystoneclient import exceptions as kc_exceptions
 
 from oslo.config import cfg
@@ -39,8 +37,6 @@ from heat.tests.v1_1 import fakes
 from heat.tests import generic_resource as generic_rsrc
 
 import heat.db.api as db_api
-
-load_tests = testscenarios.load_tests_apply_scenarios
 
 
 def join(raw):

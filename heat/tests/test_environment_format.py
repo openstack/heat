@@ -13,14 +13,10 @@
 #    under the License.
 
 import mock
-import testscenarios
 import yaml
 
 from heat.common import environment_format
 from heat.tests import common
-
-
-load_tests = testscenarios.load_tests_apply_scenarios
 
 
 class YamlEnvironmentTest(common.HeatTestCase):
