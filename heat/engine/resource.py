@@ -114,9 +114,9 @@ class SupportStatus(object):
 
 
 class Resource(object):
-    ACTIONS = (INIT, CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME
+    ACTIONS = (INIT, CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT
                ) = ('INIT', 'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
-                    'SUSPEND', 'RESUME')
+                    'SUSPEND', 'RESUME', 'ADOPT')
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
@@ -399,7 +399,7 @@ class Resource(object):
     def heat(self):
         return self.stack.clients.heat()
 
-    def _do_action(self, action, pre_func=None):
+    def _do_action(self, action, pre_func=None, resource_data=None):
         '''
         Perform a transition to a new state via a specified action
         action should be e.g self.CREATE, self.UPDATE etc, we set
@@ -428,7 +428,8 @@ class Resource(object):
 
             handle_data = None
             if callable(handle):
-                handle_data = handle()
+                handle_data = (handle(resource_data) if resource_data else
+                               handle())
                 yield
                 if callable(check):
                     while not check(handle_data):
@@ -487,6 +488,40 @@ class Resource(object):
                                   for r in db_api.resource_data_get_all(self))
         }
 
+    def adopt(self, resource_data):
+        '''
+        Adopt the existing resource. Resource subclasses can provide
+        a handle_adopt() method to customise adopt.
+        '''
+        return self._do_action(self.ADOPT, resource_data=resource_data)
+
+    def handle_adopt(self, resource_data=None):
+        resource_id, data, metadata = self._get_resource_info(resource_data)
+
+        if not resource_id:
+            exc = Exception(_('Resource ID was not provided.'))
+            failure = exception.ResourceFailure(exc, self)
+            raise failure
+
+        # set resource id
+        self.resource_id_set(resource_id)
+
+        # save the resource data
+        if data and isinstance(data, dict):
+            for key, value in data.iteritems():
+                db_api.resource_data_set(self, key, value)
+
+        # save the resource metadata
+        self.metadata = metadata
+
+    def _get_resource_info(self, resource_data):
+        if not resource_data:
+            return None, None, None
+
+        return (resource_data.get('resource_id'),
+                resource_data.get('resource_data'),
+                resource_data.get('metadata'))
+
     def update(self, after, before=None, prev_resource=None):
         '''
         update the resource. Subclasses should provide a handle_update() method
@@ -508,7 +543,8 @@ class Resource(object):
             return
 
         if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),
-                                          (self.UPDATE, self.IN_PROGRESS)):
+                                          (self.UPDATE, self.IN_PROGRESS),
+                                          (self.ADOPT, self.IN_PROGRESS)):
             exc = Exception(_('Resource update already requested'))
             raise exception.ResourceFailure(exc, self, action)
 
@@ -762,7 +798,8 @@ class Resource(object):
         # store resource in DB on transition to CREATE_IN_PROGRESS
         # all other transistions (other than to DELETE_COMPLETE)
         # should be handled by the update_and_save above..
-        elif (action, status) == (self.CREATE, self.IN_PROGRESS):
+        elif (action, status) in [(self.CREATE, self.IN_PROGRESS),
+                                  (self.ADOPT, self.IN_PROGRESS)]:
             self._store()
 
     def _resolve_attribute(self, name):

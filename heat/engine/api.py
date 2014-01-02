@@ -48,6 +48,11 @@ def extract_args(params):
                                ' %(name)s : %(value)s') %
                              dict(name=api.PARAM_DISABLE_ROLLBACK,
                                   value=disable_rollback))
+
+    if api.PARAM_ADOPT_STACK_DATA in params:
+        kwargs[api.PARAM_ADOPT_STACK_DATA] = params.get(
+            api.PARAM_ADOPT_STACK_DATA)
+
     return kwargs
 
 

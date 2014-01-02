@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import itertools
 import uuid
 
@@ -652,6 +653,90 @@ class ResourceTest(HeatTestCase):
         self.assertEqual(expected_template,
                          TestResource.resource_to_template(
                              'Test::Resource::resource'))
+
+
+class ResourceAdoptTest(HeatTestCase):
+    def setUp(self):
+        super(ResourceAdoptTest, self).setUp()
+        utils.setup_dummy_db()
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
+
+    def test_adopt_resource_success(self):
+        adopt_data = '{}'
+        tmpl = template.Template({
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+            }
+        })
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  tmpl,
+                                  stack_id=str(uuid.uuid4()),
+                                  adopt_stack_data=json.loads(adopt_data))
+        res = self.stack['foo']
+        res_data = {
+            "status": "COMPLETE",
+            "name": "foo",
+            "resource_data": {},
+            "metadata": {},
+            "resource_id": "test-res-id",
+            "action": "CREATE",
+            "type": "GenericResourceType"
+        }
+        adopt = scheduler.TaskRunner(res.adopt, res_data)
+        adopt()
+        self.assertEqual({}, res.metadata)
+        self.assertEqual((res.ADOPT, res.COMPLETE), res.state)
+
+    def test_adopt_with_resource_data_and_metadata(self):
+        adopt_data = '{}'
+        tmpl = template.Template({
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+            }
+        })
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  tmpl,
+                                  stack_id=str(uuid.uuid4()),
+                                  adopt_stack_data=json.loads(adopt_data))
+        res = self.stack['foo']
+        res_data = {
+            "status": "COMPLETE",
+            "name": "foo",
+            "resource_data": {"test-key": "test-value"},
+            "metadata": {"os_distro": "test-distro"},
+            "resource_id": "test-res-id",
+            "action": "CREATE",
+            "type": "GenericResourceType"
+        }
+        adopt = scheduler.TaskRunner(res.adopt, res_data)
+        adopt()
+        self.assertEqual("test-value",
+                         db_api.resource_data_get(res, "test-key"))
+        self.assertEqual({"os_distro": "test-distro"}, res.metadata)
+        self.assertEqual((res.ADOPT, res.COMPLETE), res.state)
+
+    def test_adopt_resource_missing(self):
+        adopt_data = '''{
+                        "action": "CREATE",
+                        "status": "COMPLETE",
+                        "name": "my-test-stack-name",
+                        "resources": {}
+                        }'''
+        tmpl = template.Template({
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+            }
+        })
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  tmpl,
+                                  stack_id=str(uuid.uuid4()),
+                                  adopt_stack_data=json.loads(adopt_data))
+        res = self.stack['foo']
+        adopt = scheduler.TaskRunner(res.adopt, None)
+        self.assertRaises(exception.ResourceFailure, adopt)
+        expected = 'Exception: Resource ID was not provided.'
+        self.assertEqual(expected, res.status_reason)
 
 
 class ResourceDependenciesTest(HeatTestCase):

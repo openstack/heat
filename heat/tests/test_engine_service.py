@@ -307,6 +307,57 @@ class StackCreateTest(HeatTestCase):
         self.assertTrue(stack['WebServer'].resource_id > 0)
         self.assertNotEqual(stack['WebServer'].ipaddress, '0.0.0.0')
 
+    def test_wordpress_single_instance_stack_adopt(self):
+        t = template_format.parse(wp_template)
+        template = parser.Template(t)
+        ctx = utils.dummy_context()
+        adopt_data = {
+            'resources': {
+                'WebServer': {
+                    'resource_id': 'test-res-id'
+                }
+            }
+        }
+        stack = parser.Stack(ctx,
+                             'test_stack',
+                             template,
+                             adopt_stack_data=adopt_data)
+
+        setup_mocks(self.m, stack)
+        self.m.ReplayAll()
+        stack.store()
+        stack.adopt()
+
+        self.assertIsNotNone(stack['WebServer'])
+        self.assertEqual('test-res-id', stack['WebServer'].resource_id)
+        self.assertEqual((stack.ADOPT, stack.COMPLETE), stack.state)
+
+    def test_wordpress_single_instance_stack_adopt_fail(self):
+        t = template_format.parse(wp_template)
+        template = parser.Template(t)
+        ctx = utils.dummy_context()
+        adopt_data = {
+            'resources': {
+                'WebServer1': {
+                    'resource_id': 'test-res-id'
+                }
+            }
+        }
+        stack = parser.Stack(ctx,
+                             'test_stack',
+                             template,
+                             adopt_stack_data=adopt_data)
+
+        setup_mocks(self.m, stack)
+        self.m.ReplayAll()
+        stack.store()
+        stack.adopt()
+        self.assertIsNotNone(stack['WebServer'])
+        expected = ('Resource adopt failed: Exception: Resource ID was not'
+                    ' provided.')
+        self.assertEqual(expected, stack.status_reason)
+        self.assertEqual((stack.ADOPT, stack.FAILED), stack.state)
+
     def test_wordpress_single_instance_stack_delete(self):
         ctx = utils.dummy_context()
         stack = get_wordpress_stack('test_stack', ctx)
