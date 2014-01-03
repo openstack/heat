@@ -102,8 +102,8 @@ def generate(srcfiles):
                 opts_by_group.setdefault(group, []).append((mod_str, opts))
 
     print_group_opts('DEFAULT', opts_by_group.pop('DEFAULT', []))
-    for group, opts in opts_by_group.items():
-        print_group_opts(group, opts)
+    for group in sorted(opts_by_group.keys()):
+        print_group_opts(group, opts_by_group[group])
 
 
 def _import_module(mod_str):
