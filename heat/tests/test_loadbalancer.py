@@ -179,8 +179,9 @@ class LoadBalancerTest(HeatTestCase):
 
         self.assertEqual('LoadBalancer', rsrc.FnGetRefId())
 
-        templ = template_format.parse(lb.lb_template)
+        templ = template_format.parse(lb.lb_template_default)
         ha_cfg = rsrc._haproxy_config(templ, rsrc.properties['Instances'])
+
         self.assertRegexpMatches(ha_cfg, 'bind \*:80')
         self.assertRegexpMatches(ha_cfg, 'server server1 1\.2\.3\.4:80 '
                                  'check inter 30s fall 5 rise 3')
@@ -228,3 +229,15 @@ class LoadBalancerTest(HeatTestCase):
             msg = '%s: %r not found in %r' % (msg,
                                               expected_regexp.pattern, text)
             raise self.failureException(msg)
+
+    def test_loadbalancer_validate_badtemplate(self):
+        cfg.CONF.set_override('loadbalancer_template', '/a/noexist/x.y')
+
+        t = template_format.parse(lb_template)
+        s = utils.parse_stack(t)
+        s.store()
+
+        rsrc = lb.LoadBalancer('LoadBalancer',
+                               t['Resources']['LoadBalancer'],
+                               s)
+        self.assertRaises(exception.StackValidationFailed, rsrc.validate)
