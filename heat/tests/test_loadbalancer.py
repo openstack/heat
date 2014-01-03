@@ -198,11 +198,8 @@ class LoadBalancerTest(HeatTestCase):
         self.assertEqual('4.5.6.7', rsrc.FnGetAtt('DNSName'))
         self.assertEqual('', rsrc.FnGetAtt('SourceSecurityGroup.GroupName'))
 
-        try:
-            rsrc.FnGetAtt('Foo')
-            raise Exception('Expected InvalidTemplateAttribute')
-        except exception.InvalidTemplateAttribute:
-            pass
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          rsrc.FnGetAtt, 'Foo')
 
         self.assertIsNone(rsrc.handle_update({}, {}, {}))
 

@@ -787,13 +787,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.m.ReplayAll()
 
-        try:
-            result = self.controller.lookup(req, tenant_id=identity.tenant,
-                                            stack_name=identity.stack_name)
-        except webob.exc.HTTPFound as found:
-            self.assertEqual(found.location, self._url(identity))
-        else:
-            self.fail('No redirect generated')
+        found = self.assertRaises(
+            webob.exc.HTTPFound, self.controller.lookup, req,
+            tenant_id=identity.tenant, stack_name=identity.stack_name)
+        self.assertEqual(found.location, self._url(identity))
+
         self.m.VerifyAll()
 
     def test_lookup_arn(self):
@@ -803,13 +801,11 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.m.ReplayAll()
 
-        try:
-            result = self.controller.lookup(req, tenant_id=identity.tenant,
-                                            stack_name=identity.arn())
-        except webob.exc.HTTPFound as found:
-            self.assertEqual(found.location, self._url(identity))
-        else:
-            self.fail('No redirect generated')
+        found = self.assertRaises(
+            webob.exc.HTTPFound, self.controller.lookup,
+            req, tenant_id=identity.tenant, stack_name=identity.arn())
+        self.assertEqual(found.location, self._url(identity))
+
         self.m.VerifyAll()
 
     def test_lookup_nonexistant(self):
@@ -851,16 +847,12 @@ class StackControllerTest(ControllerTest, HeatTestCase):
                  None).AndReturn(identity)
 
         self.m.ReplayAll()
-
-        try:
-            result = self.controller.lookup(req, tenant_id=identity.tenant,
-                                            stack_name=identity.stack_name,
-                                            path='resources')
-        except webob.exc.HTTPFound as found:
-            self.assertEqual(found.location,
-                             self._url(identity) + '/resources')
-        else:
-            self.fail('No redirect generated')
+        found = self.assertRaises(
+            webob.exc.HTTPFound, self.controller.lookup, req,
+            tenant_id=identity.tenant, stack_name=identity.stack_name,
+            path='resources')
+        self.assertEqual(found.location,
+                         self._url(identity) + '/resources')
         self.m.VerifyAll()
 
     def test_lookup_resource_nonexistant(self):

@@ -264,15 +264,12 @@ class InstancesTest(HeatTestCase):
         return_server.get()
         self.m.ReplayAll()
 
-        try:
-            instance.check_create_complete(
-                (return_server, self.FakeVolumeAttach()))
-        except exception.Error as e:
-            self.assertEqual(
-                'Creation of server sample-server2 failed: Unknown (500)',
-                str(e))
-        else:
-            self.fail('Error not raised')
+        e = self.assertRaises(
+            exception.Error, instance.check_create_complete,
+            (return_server, self.FakeVolumeAttach()))
+        self.assertEqual(
+            'Creation of server sample-server2 failed: Unknown (500)',
+            str(e))
 
         self.m.VerifyAll()
 
