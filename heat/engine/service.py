@@ -47,6 +47,7 @@ from heat.openstack.common import log as logging
 from heat.openstack.common import threadgroup
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common.rpc import service
+from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common import excutils
 from heat.openstack.common import uuidutils
 
@@ -190,6 +191,7 @@ class EngineService(service.Service):
         for s in stacks:
             self._start_watch_task(s.id, admin_context)
 
+    @rpc_common.client_exceptions(exception.StackNotFound)
     @request_context
     def identify_stack(self, cnxt, stack_name):
         """
