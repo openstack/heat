@@ -23,6 +23,7 @@ if possible.
 import os
 import shutil
 import sqlalchemy
+import subprocess
 import tempfile
 import uuid
 
@@ -30,6 +31,7 @@ from migrate.versioning import repository
 
 from heat.db.sqlalchemy import migrate_repo
 from heat.openstack.common import log as logging
+from heat.openstack.common.py3kcompat import urlutils
 from heat.openstack.common.db.sqlalchemy import test_migrations
 
 
@@ -111,6 +113,32 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
                 break
 
         self.assertEqual(sorted(members), sorted(index_columns))
+
+    def _load_mysql_dump_file(self, engine, file_name):
+        for key, eng in self.engines.items():
+            if eng is engine:
+                conn_string = self.test_databases[key]
+                conn_pieces = urlutils.urlparse(conn_string)
+                if conn_string.startswith('mysql'):
+                    break
+                else:
+                    return
+
+        (user, password, database, host) = \
+            test_migrations.get_db_connection_info(conn_pieces)
+        cmd = ('mysql -u \"%(user)s\" -p\"%(password)s\" -h %(host)s %(db)s '
+               ) % {'user': user, 'password': password,
+                    'host': host, 'db': database}
+        file_path = os.path.join(os.path.dirname(__file__),
+                                 file_name)
+        with open(file_path) as sql_file:
+            process = subprocess.Popen(cmd, shell=True,
+                                       stdout=subprocess.PIPE,
+                                       stdin=sql_file,
+                                       stderr=subprocess.STDOUT)
+            output = process.communicate()[0]
+            self.assertEqual(0, process.returncode,
+                             "Failed to run: %s\n%s" % (cmd, output))
 
     def _pre_upgrade_031(self, engine):
         raw_template = get_table(engine, 'raw_template')
