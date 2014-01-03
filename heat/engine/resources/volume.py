@@ -491,8 +491,7 @@ class CinderVolumeAttachment(VolumeAttachment):
             properties.Schema.STRING,
             _('The location where the volume is exposed on the instance. This '
               'assignment may not be honored and it is advised that the path '
-              '/dev/disk/by-id/virtio-<VolumeId> be used instead.'),
-            required=True
+              '/dev/disk/by-id/virtio-<VolumeId> be used instead.')
         ),
     }
 
