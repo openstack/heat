@@ -121,6 +121,15 @@
 
 
 #
+# Options defined in heat.engine.resources.loadbalancer
+#
+
+# Custom template for the built-in loadbalancer nested stack
+# (string value)
+#loadbalancer_template=<None>
+
+
+#
 # Options defined in heat.openstack.common.db.sqlalchemy.session
 #
 
