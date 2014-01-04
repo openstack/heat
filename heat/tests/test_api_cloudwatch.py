@@ -92,14 +92,14 @@ class WatchControllerTest(HeatTestCase):
         params = {'Action': 'DeleteAlarms'}
         dummy_req = self._dummy_GET_request(params)
         result = self.controller.delete_alarms(dummy_req)
-        self.assertEqual(exception.HeatAPINotImplementedError, type(result))
+        self.assertIsInstance(result, exception.HeatAPINotImplementedError)
 
     def test_describe_alarm_history(self):
         # Not yet implemented, should raise HeatAPINotImplementedError
         params = {'Action': 'DescribeAlarmHistory'}
         dummy_req = self._dummy_GET_request(params)
         result = self.controller.describe_alarm_history(dummy_req)
-        self.assertEqual(exception.HeatAPINotImplementedError, type(result))
+        self.assertIsInstance(result, exception.HeatAPINotImplementedError)
 
     def test_describe_all(self):
         watch_name = None   # Get all watches
@@ -178,28 +178,28 @@ class WatchControllerTest(HeatTestCase):
         params = {'Action': 'DescribeAlarmsForMetric'}
         dummy_req = self._dummy_GET_request(params)
         result = self.controller.describe_alarms_for_metric(dummy_req)
-        self.assertEqual(exception.HeatAPINotImplementedError, type(result))
+        self.assertIsInstance(result, exception.HeatAPINotImplementedError)
 
     def test_disable_alarm_actions(self):
         # Not yet implemented, should raise HeatAPINotImplementedError
         params = {'Action': 'DisableAlarmActions'}
         dummy_req = self._dummy_GET_request(params)
         result = self.controller.disable_alarm_actions(dummy_req)
-        self.assertEqual(exception.HeatAPINotImplementedError, type(result))
+        self.assertIsInstance(result, exception.HeatAPINotImplementedError)
 
     def test_enable_alarm_actions(self):
         # Not yet implemented, should raise HeatAPINotImplementedError
         params = {'Action': 'EnableAlarmActions'}
         dummy_req = self._dummy_GET_request(params)
         result = self.controller.enable_alarm_actions(dummy_req)
-        self.assertEqual(exception.HeatAPINotImplementedError, type(result))
+        self.assertIsInstance(result, exception.HeatAPINotImplementedError)
 
     def test_get_metric_statistics(self):
         # Not yet implemented, should raise HeatAPINotImplementedError
         params = {'Action': 'GetMetricStatistics'}
         dummy_req = self._dummy_GET_request(params)
         result = self.controller.get_metric_statistics(dummy_req)
-        self.assertEqual(exception.HeatAPINotImplementedError, type(result))
+        self.assertIsInstance(result, exception.HeatAPINotImplementedError)
 
     def test_list_metrics_all(self):
         params = {'Action': 'ListMetrics'}
@@ -411,7 +411,7 @@ class WatchControllerTest(HeatTestCase):
         params = {'Action': 'PutMetricAlarm'}
         dummy_req = self._dummy_GET_request(params)
         result = self.controller.put_metric_alarm(dummy_req)
-        self.assertEqual(type(result), exception.HeatAPINotImplementedError)
+        self.assertIsInstance(result, exception.HeatAPINotImplementedError)
 
     def test_put_metric_data(self):
 
@@ -498,8 +498,7 @@ class WatchControllerTest(HeatTestCase):
 
         # should raise HeatInvalidParameterValueError
         result = self.controller.set_alarm_state(dummy_req)
-        self.assertEqual(exception.HeatInvalidParameterValueError,
-                         type(result))
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def setUp(self):
         super(WatchControllerTest, self).setUp()

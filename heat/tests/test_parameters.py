@@ -33,20 +33,20 @@ class ParameterTest(testtools.TestCase):
 
     def test_new_string(self):
         p = self.new_parameter('p', {'Type': 'String'}, validate_value=False)
-        self.assertTrue(isinstance(p, parameters.StringParam))
+        self.assertIsInstance(p, parameters.StringParam)
 
     def test_new_number(self):
         p = self.new_parameter('p', {'Type': 'Number'}, validate_value=False)
-        self.assertTrue(isinstance(p, parameters.NumberParam))
+        self.assertIsInstance(p, parameters.NumberParam)
 
     def test_new_list(self):
         p = self.new_parameter('p', {'Type': 'CommaDelimitedList'},
                                validate_value=False)
-        self.assertTrue(isinstance(p, parameters.CommaDelimitedListParam))
+        self.assertIsInstance(p, parameters.CommaDelimitedListParam)
 
     def test_new_json(self):
         p = self.new_parameter('p', {'Type': 'Json'}, validate_value=False)
-        self.assertTrue(isinstance(p, parameters.JsonParam))
+        self.assertIsInstance(p, parameters.JsonParam)
 
     def test_new_bad_type(self):
         self.assertRaises(ValueError, self.new_parameter, 'p',

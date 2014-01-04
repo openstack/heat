@@ -177,8 +177,7 @@ class CfnStackControllerTest(HeatTestCase):
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
         mock_call.assert_called_once_with(dummy_req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',
@@ -198,7 +197,7 @@ class CfnStackControllerTest(HeatTestCase):
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
-        self.assertEqual(type(result), exception.HeatInternalFailureError)
+        self.assertIsInstance(result, exception.HeatInternalFailureError)
         mock_call.assert_called_once_with(dummy_req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',
@@ -402,8 +401,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.describe(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_describe_aterr(self):
         stack_name = "wordpress"
@@ -430,8 +428,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.describe(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_describe_bad_name(self):
         stack_name = "wibble"
@@ -452,8 +449,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.describe(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_get_template_int_body(self):
         '''Test the internal _get_template function.'''
@@ -726,7 +722,7 @@ class CfnStackControllerTest(HeatTestCase):
         self._stub_enforce(dummy_req, 'CreateStack')
 
         result = self.controller.create(dummy_req)
-        self.assertEqual(type(result), exception.HeatMissingParameterError)
+        self.assertIsInstance(result, exception.HeatMissingParameterError)
 
     def test_create_err_inval_template(self):
         # Format a dummy request with an invalid TemplateBody
@@ -738,8 +734,7 @@ class CfnStackControllerTest(HeatTestCase):
         self._stub_enforce(dummy_req, 'CreateStack')
 
         result = self.controller.create(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_create_err_rpcerr(self):
         # Format a dummy request
@@ -803,19 +798,13 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.create(dummy_req)
-
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
         result = self.controller.create(dummy_req)
-
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
         result = self.controller.create(dummy_req)
-
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_create_err_exists(self):
         # Format a dummy request
@@ -851,8 +840,7 @@ class CfnStackControllerTest(HeatTestCase):
 
         result = self.controller.create(dummy_req)
 
-        self.assertEqual(type(result),
-                         exception.AlreadyExistsError)
+        self.assertIsInstance(result, exception.AlreadyExistsError)
 
     def test_create_err_engine(self):
         # Format a dummy request
@@ -888,8 +876,7 @@ class CfnStackControllerTest(HeatTestCase):
 
         result = self.controller.create(dummy_req)
 
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_update(self):
         # Format a dummy request
@@ -964,12 +951,11 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.update(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_create_or_update_err(self):
         result = self.controller.create_or_update(req={}, action="dsdgfdf")
-        self.assertEqual(type(result), exception.HeatInternalFailureError)
+        self.assertIsInstance(result, exception.HeatInternalFailureError)
 
     def test_get_template(self):
         # Format a dummy request
@@ -1031,8 +1017,7 @@ class CfnStackControllerTest(HeatTestCase):
 
         result = self.controller.get_template(dummy_req)
 
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_get_template_bad_name(self):
         stack_name = "wibble"
@@ -1053,8 +1038,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.get_template(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_get_template_err_none(self):
         stack_name = "wordpress"
@@ -1083,8 +1067,7 @@ class CfnStackControllerTest(HeatTestCase):
 
         result = self.controller.get_template(dummy_req)
 
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_validate_err_no_template(self):
         # Format a dummy request with a missing template field
@@ -1093,7 +1076,7 @@ class CfnStackControllerTest(HeatTestCase):
         self._stub_enforce(dummy_req, 'ValidateTemplate')
 
         result = self.controller.validate_template(dummy_req)
-        self.assertEqual(type(result), exception.HeatMissingParameterError)
+        self.assertIsInstance(result, exception.HeatMissingParameterError)
 
     def test_validate_err_inval_template(self):
         # Format a dummy request with an invalid TemplateBody
@@ -1104,8 +1087,7 @@ class CfnStackControllerTest(HeatTestCase):
         self._stub_enforce(dummy_req, 'ValidateTemplate')
 
         result = self.controller.validate_template(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_bad_resources_in_template(self):
         # Format a dummy request
@@ -1199,8 +1181,7 @@ class CfnStackControllerTest(HeatTestCase):
 
         result = self.controller.delete(dummy_req)
 
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_delete_bad_name(self):
         stack_name = "wibble"
@@ -1221,8 +1202,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.delete(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_events_list_event_id_integer(self):
         self._test_events_list('42')
@@ -1318,7 +1298,7 @@ class CfnStackControllerTest(HeatTestCase):
 
         result = self.controller.events_list(dummy_req)
 
-        self.assertEqual(type(result), exception.HeatInternalFailureError)
+        self.assertIsInstance(result, exception.HeatInternalFailureError)
 
     def test_events_list_bad_name(self):
         stack_name = "wibble"
@@ -1339,8 +1319,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.events_list(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_describe_stack_resource(self):
         # Format a dummy request
@@ -1433,8 +1412,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.describe_stack_resource(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_describe_stack_resource_nonexistent(self):
         # Format a dummy request
@@ -1468,8 +1446,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.describe_stack_resource(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_describe_stack_resources(self):
         # Format a dummy request
@@ -1561,8 +1538,7 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.describe_stack_resources(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
 
     def test_describe_stack_resources_physical(self):
         # Format a dummy request
@@ -1657,8 +1633,8 @@ class CfnStackControllerTest(HeatTestCase):
 
         response = self.controller.describe_stack_resources(dummy_req)
 
-        self.assertEqual(type(response),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(response,
+                              exception.HeatInvalidParameterValueError)
 
     def test_describe_stack_resources_err_inval(self):
         # Format a dummy request containing both StackName and
@@ -1671,8 +1647,8 @@ class CfnStackControllerTest(HeatTestCase):
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'DescribeStackResources')
         ret = self.controller.describe_stack_resources(dummy_req)
-        self.assertEqual(type(ret),
-                         exception.HeatInvalidParameterCombinationError)
+        self.assertIsInstance(ret,
+                              exception.HeatInvalidParameterCombinationError)
 
     def test_list_stack_resources(self):
         # Format a dummy request
@@ -1751,5 +1727,4 @@ class CfnStackControllerTest(HeatTestCase):
         self.m.ReplayAll()
 
         result = self.controller.list_stack_resources(dummy_req)
-        self.assertEqual(type(result),
-                         exception.HeatInvalidParameterValueError)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)

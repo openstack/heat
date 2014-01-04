@@ -20,7 +20,6 @@ import sys
 
 import mock
 import mox
-from testtools import matchers
 
 from oslo.config import cfg
 
@@ -375,7 +374,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         result = self.man.create_stack(self.ctx, stack_name,
                                        template, params, None, {})
         self.assertEqual(stack.identifier(), result)
-        self.assertTrue(isinstance(result, dict))
+        self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
         self.m.VerifyAll()
 
@@ -630,7 +629,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, None, {})
         self.assertEqual(old_stack.identifier(), result)
-        self.assertTrue(isinstance(result, dict))
+        self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
         self.m.VerifyAll()
 
@@ -677,7 +676,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, None, {})
         self.assertEqual(old_stack.identifier(), result)
-        self.assertTrue(isinstance(result, dict))
+        self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
         self.assertEqual(3, old_stack.root_stack.total_resources())
         self.m.VerifyAll()
@@ -1112,7 +1111,7 @@ class StackServiceTest(HeatTestCase):
         self.assertEqual(2, len(events))
         for ev in events:
             self.assertIn('event_identity', ev)
-            self.assertEqual(dict, type(ev['event_identity']))
+            self.assertIsInstance(ev['event_identity'], dict)
             self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
             self.assertIn('resource_name', ev)
@@ -1178,7 +1177,7 @@ class StackServiceTest(HeatTestCase):
         self.stack = parser.Stack.load(self.ctx, stack_id=result['stack_id'])
 
         self.assertEqual(self.stack.identifier(), result)
-        self.assertTrue(isinstance(result, dict))
+        self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
         events = self.eng.list_events(self.ctx, self.stack.identifier())
 
@@ -1186,7 +1185,7 @@ class StackServiceTest(HeatTestCase):
 
         for ev in events:
             self.assertIn('event_identity', ev)
-            self.assertEqual(dict, type(ev['event_identity']))
+            self.assertIsInstance(ev['event_identity'], dict)
             self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
             self.assertIn('resource_name', ev)
@@ -1217,7 +1216,7 @@ class StackServiceTest(HeatTestCase):
         self.assertEqual(2, len(events))
         for ev in events:
             self.assertIn('event_identity', ev)
-            self.assertThat(ev['event_identity'], matchers.IsInstance(dict))
+            self.assertIsInstance(ev['event_identity'], dict)
             self.assertTrue(ev['event_identity']['path'].rsplit('/', 1)[1])
 
             self.assertIn('resource_name', ev)
@@ -1400,7 +1399,7 @@ class StackServiceTest(HeatTestCase):
 
     def test_list_resource_types(self):
         resources = self.eng.list_resource_types(self.ctx)
-        self.assertTrue(isinstance(resources, list))
+        self.assertIsInstance(resources, list)
         self.assertIn('AWS::EC2::Instance', resources)
 
     def test_list_resource_types_deprecated(self):
@@ -1584,7 +1583,7 @@ class StackServiceTest(HeatTestCase):
         phys_id = resources[0]['physical_resource_id']
 
         result = self.eng.find_physical_resource(self.ctx, phys_id)
-        self.assertTrue(isinstance(result, dict))
+        self.assertIsInstance(result, dict)
         resource_identity = identifier.ResourceIdentifier(**result)
         self.assertEqual(self.stack.identifier(), resource_identity.stack())
         self.assertEqual('WebServer', resource_identity.resource_name)
@@ -2034,13 +2033,13 @@ class StackServiceTest(HeatTestCase):
         self.assertIsNone(stack._dependencies)
 
         resources = stack.resources
-        self.assertEqual(type(resources), dict)
+        self.assertIsInstance(resources, dict)
         self.assertEqual(len(resources), 2)
-        self.assertEqual(type(resources.get('foo')),
-                         generic_rsrc.GenericResource)
-        self.assertEqual(type(resources.get('bar')),
-                         generic_rsrc.ResourceWithProps)
+        self.assertIsInstance(resources.get('foo'),
+                              generic_rsrc.GenericResource)
+        self.assertIsInstance(resources.get('bar'),
+                              generic_rsrc.ResourceWithProps)
 
         stack_dependencies = stack.dependencies
-        self.assertEqual(type(stack_dependencies), dependencies.Dependencies)
+        self.assertIsInstance(stack_dependencies, dependencies.Dependencies)
         self.assertEqual(len(stack_dependencies.graph()), 2)

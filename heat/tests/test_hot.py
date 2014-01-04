@@ -36,7 +36,7 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl = parser.Template(hot_tpl_empty)
         # check if we get the right class
-        self.assertTrue(isinstance(tmpl, hot.HOTemplate))
+        self.assertIsInstance(tmpl, hot.HOTemplate)
         # test getting an invalid section
         self.assertNotIn('foobar', tmpl)
 
