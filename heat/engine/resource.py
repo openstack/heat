@@ -241,6 +241,16 @@ class Resource(object):
                                               self.name)
         return ri.name == resource_type
 
+    def implementation_signature(self):
+        '''
+        Return a tuple defining the implementation.
+
+        This should be broken down into a definition and an
+        implementation version.
+        '''
+
+        return (self.__class__.__name__, self.support_status.version)
+
     def identifier(self):
         '''Return an identifier for this resource.'''
         return identifier.ResourceIdentifier(resource_name=self.name,
@@ -467,16 +477,24 @@ class Resource(object):
                                   for r in db_api.resource_data_get_all(self))
         }
 
-    def update(self, after, before=None):
+    def update(self, after, before=None, prev_resource=None):
         '''
         update the resource. Subclasses should provide a handle_update() method
         to customise update, the base-class handle_update will fail by default.
         '''
         action = self.UPDATE
 
+        (cur_class_def, cur_ver) = self.implementation_signature()
+        prev_ver = cur_ver
+        if prev_resource is not None:
+            (prev_class_def,
+             prev_ver) = prev_resource.implementation_signature()
+            if prev_class_def != cur_class_def:
+                raise UpdateReplace(self.name)
+
         if before is None:
             before = self.parsed_template()
-        elif before == after:
+        if prev_ver == cur_ver and before == after:
             return
 
         if (self.action, self.status) in ((self.CREATE, self.IN_PROGRESS),

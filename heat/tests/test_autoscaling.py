@@ -179,11 +179,8 @@ class AutoScalingTest(HeatTestCase):
             instance.Instance.FnGetRefId().MultipleTimes().AndReturn(
                 self.dummy_instance_id)
 
-        self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'handle_update')
-        if nochange:
-            loadbalancer.LoadBalancer.handle_update(
-                mox.IgnoreArg(), mox.IgnoreArg(), {}).AndReturn(None)
-        else:
+        if not nochange:
+            self.m.StubOutWithMock(loadbalancer.LoadBalancer, 'handle_update')
             loadbalancer.LoadBalancer.handle_update(
                 mox.IgnoreArg(), mox.IgnoreArg(),
                 {'Instances': expected_list}).AndReturn(None)
