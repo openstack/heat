@@ -337,6 +337,14 @@ class FakeHTTPClient(base_client.HTTPClient):
                                   "created": "2010-08-10T12:00:00Z",
                                   "status": "SAVING",
                                   "progress": 80,
+                                  "links": {}},
+                                 {"id": 746,
+                                  "name": "F20-x86_64-cfntools",
+                                  "serverId": 9998,
+                                  "updated": "2010-10-10T12:00:00Z",
+                                  "created": "2010-08-10T12:00:00Z",
+                                  "status": "SAVING",
+                                  "progress": 80,
                                   "links": {}}]})
 
     def get_images_1(self, **kw):
