@@ -73,6 +73,8 @@ class EventController(object):
     WSGI controller for Events in Heat v1 API
     Implements the API actions
     """
+    # Define request scope (must match what is in policy.json)
+    REQUEST_SCOPE = 'events'
 
     def __init__(self, options):
         self.options = options

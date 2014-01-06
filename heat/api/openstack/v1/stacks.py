@@ -142,6 +142,8 @@ class StackController(object):
     WSGI controller for stacks resource in Heat v1 API
     Implements the API actions
     """
+    # Define request scope (must match what is in policy.json)
+    REQUEST_SCOPE = 'stacks'
 
     def __init__(self, options):
         self.options = options
@@ -150,7 +152,7 @@ class StackController(object):
     def default(self, req, **args):
         raise exc.HTTPNotFound()
 
-    @util.tenant_local
+    @util.policy_enforce
     def index(self, req):
         """
         Lists summary information for all stacks
@@ -184,7 +186,7 @@ class StackController(object):
 
         return stacks_view.collection(req, stacks=stacks, count=count)
 
-    @util.tenant_local
+    @util.policy_enforce
     def detail(self, req):
         """
         Lists detailed information for all stacks
@@ -193,12 +195,11 @@ class StackController(object):
 
         return {'stacks': [stacks_view.format_stack(req, s) for s in stacks]}
 
-    @util.tenant_local
+    @util.policy_enforce
     def create(self, req, body):
         """
         Create a new stack
         """
-
         data = InstantiationData(body)
 
         result = self.engine.create_stack(req.context,
@@ -214,7 +215,7 @@ class StackController(object):
         )
         return {'stack': formatted_stack}
 
-    @util.tenant_local
+    @util.policy_enforce
     def lookup(self, req, stack_name, path='', body=None):
         """
         Redirect to the canonical URL for a stack
@@ -302,7 +303,7 @@ class StackController(object):
         return self.engine.abandon_stack(req.context,
                                          identity)
 
-    @util.tenant_local
+    @util.policy_enforce
     def validate_template(self, req, body):
         """
         Implements the ValidateTemplate API action
@@ -319,21 +320,21 @@ class StackController(object):
 
         return result
 
-    @util.tenant_local
+    @util.policy_enforce
     def list_resource_types(self, req):
         """
         Returns a list of valid resource types that may be used in a template.
         """
         return {'resource_types': self.engine.list_resource_types(req.context)}
 
-    @util.tenant_local
+    @util.policy_enforce
     def resource_schema(self, req, type_name):
         """
         Returns the schema of the given resource type.
         """
         return self.engine.resource_schema(req.context, type_name)
 
-    @util.tenant_local
+    @util.policy_enforce
     def generate_template(self, req, type_name):
         """
         Generates a template based on the specified type.

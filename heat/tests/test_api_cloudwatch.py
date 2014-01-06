@@ -77,7 +77,7 @@ class WatchControllerTest(HeatTestCase):
         dummy_req.context.roles = ['heat_stack_user']
 
         self.m.StubOutWithMock(policy.Enforcer, 'enforce')
-        policy.Enforcer.enforce(dummy_req.context, 'ListMetrics', {}
+        policy.Enforcer.enforce(dummy_req.context, 'ListMetrics'
                                 ).AndRaise(AttributeError)
         self.m.ReplayAll()
 

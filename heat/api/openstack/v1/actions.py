@@ -25,6 +25,8 @@ class ActionController(object):
     WSGI controller for Actions in Heat v1 API
     Implements the API for stack actions
     """
+    # Define request scope (must match what is in policy.json)
+    REQUEST_SCOPE = 'actions'
 
     ACTIONS = (SUSPEND, RESUME) = ('suspend', 'resume')
 
