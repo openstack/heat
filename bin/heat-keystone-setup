@@ -27,6 +27,73 @@ unset_admin_token() {
     unalias keystone
 }
 
+#### utilities functions merged from devstack to check required parameter is not empty
+# Prints line number and "message" in error format
+# err $LINENO "message"
+function err() {
+    local exitcode=$?
+    errXTRACE=$(set +o | grep xtrace)
+    set +o xtrace
+    local msg="[ERROR] ${BASH_SOURCE[2]}:$1 $2"
+    echo $msg 1>&2;
+    if [[ -n ${SCREEN_LOGDIR} ]]; then
+        echo $msg >> "${SCREEN_LOGDIR}/error.log"
+    fi
+    $errXTRACE
+    return $exitcode
+}
+# Prints backtrace info
+# filename:lineno:function
+function backtrace {
+    local level=$1
+    local deep=$((${#BASH_SOURCE[@]} - 1))
+    echo "[Call Trace]"
+    while [ $level -le $deep ]; do
+        echo "${BASH_SOURCE[$deep]}:${BASH_LINENO[$deep-1]}:${FUNCNAME[$deep-1]}"
+        deep=$((deep - 1))
+    done
+}
+
+
+# Prints line number and "message" then exits
+# die $LINENO "message"
+function die() {
+    local exitcode=$?
+    set +o xtrace
+    local line=$1; shift
+    if [ $exitcode == 0 ]; then
+        exitcode=1
+    fi
+    backtrace 2
+    err $line "$*"
+    exit $exitcode
+}
+
+
+# Checks an environment variable is not set or has length 0 OR if the
+# exit code is non-zero and prints "message" and exits
+# NOTE: env-var is the variable name without a '$'
+# die_if_not_set $LINENO env-var "message"
+function die_if_not_set() {
+    local exitcode=$?
+    FXTRACE=$(set +o | grep xtrace)
+    set +o xtrace
+    local line=$1; shift
+    local evar=$1; shift
+    if ! is_set $evar || [ $exitcode != 0 ]; then
+        die $line "$*"
+    fi
+    $FXTRACE
+}
+
+# Test if the named environment variable is set and not zero length
+# is_set env-var
+function is_set() {
+    local var=\$"$1"
+    eval "[ -n \"$var\" ]" # For ex.: sh -c "[ -n \"$var\" ]" would be better, but several exercises depends on this
+}
+
+#######################################
 
 get_data() {
     local match_column=$(($1 + 1))
@@ -34,10 +101,13 @@ get_data() {
     local output_column=$(($3 + 1))
     shift 3
 
-    echo $("$@" | \
+    output=$("$@" | \
            awk -F'|' \
                "! /^\+/ && \$${match_column} ~ \"^ *${regex} *\$\" \
                 { print \$${output_column} }")
+
+    die_if_not_set $LINENO output "Fail to get_data from '$@'"
+    echo "$output"
 }
 
 get_id () {
@@ -57,8 +127,10 @@ get_user() {
     # folsom - the columns have been re-ordered (!?), so detect what
     # column to pass to get_data via get_column_num
     namecol=$(get_column_num name keystone user-list)
+    die_if_not_set $LINENO namecol "Fail to get namecol for name by 'keystone user-list' "
 
     local user_id=$(get_data $namecol $username 1 keystone user-list)
+    die_if_not_set $LINENO user_id "Fail to get user_id for $username by 'keystone user-list' "
 
     if [ -n "$user_id" ]; then
         echo "Found existing $username user" >&2
@@ -86,6 +158,7 @@ add_role() {
     user_roles=$(keystone user-role-list \
                           --user_id $user_id\
                           --tenant_id $tenant 2>/dev/null)
+    die_if_not_set $LINENO user_roles "Fail to get user_roles for tenant($tenant) and user_id($user_id)"
     if [ $? == 0 ]; then
         # Folsom
         existing_role=$(get_data 1 $role_id 1 echo "$user_roles")
@@ -195,10 +268,13 @@ add_endpoint() {
 
 keystone_setup() {
     TENANT_ID=$(get_data 1 tenant_id 2 keystone token-get)
+    die_if_not_set $LINENO TENANT_ID "Fail to get TENANT_ID by 'token-get' "
     set_admin_token
 
     ADMIN_ROLE=$(get_data 2 admin 1 keystone role-list)
+    die_if_not_set $LINENO TENANT_ID "Fail to get ADMIN_ROLE by 'keystone role-list' "
     SERVICE_TENANT=$(get_data 2 service 1 keystone tenant-list)
+    die_if_not_set $LINENO SERVICE_TENANT "Fail to get service tenant 'keystone tenant-list' "
     SERVICE_PASSWORD=${SERVICE_PASSWORD:-$OS_PASSWORD}
     SERVICE_HOST=${SERVICE_HOST:-localhost}
 
@@ -219,6 +295,7 @@ keystone_setup() {
 
     HEAT_USERNAME="heat"
     HEAT_USERID=$(get_user $HEAT_USERNAME)
+    die_if_not_set $LINENO HEAT_USERID "Fail to get user for $HEAT_USERNAME"
     echo HEAT_USERID $HEAT_USERID
     add_role $HEAT_USERID $SERVICE_TENANT $ADMIN_ROLE $HEAT_USERNAME
 
