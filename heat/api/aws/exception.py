@@ -194,7 +194,7 @@ class HeatServiceUnavailableError(HeatAPIException):
     '''
     code = 503
     title = "ServiceUnavailable"
-    explanation = _("Service temporarily unvavailable")
+    explanation = _("Service temporarily unavailable")
     err_type = "Server"
 
 
