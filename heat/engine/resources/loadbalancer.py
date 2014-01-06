@@ -12,7 +12,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import os
 
+from oslo.config import cfg
+
+from heat.common import exception
 from heat.common import template_format
 from heat.engine import constraints
 from heat.engine import properties
@@ -24,7 +28,7 @@ from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
-lb_template = r'''
+lb_template_default = r'''
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Built in HAProxy server",
@@ -192,11 +196,15 @@ lb_template = r'''
 '''
 
 
-#
-# TODO(asalkeld) the above inline template _could_ be placed in an external
-# file at the moment this is because we will probably need to implement a
-# LoadBalancer based on keepalived as well (for for ssl support).
-#
+# Allow user to provide alternative nested stack template to the above
+loadbalancer_opts = [
+    cfg.StrOpt('loadbalancer_template',
+               default=None,
+               help='Custom template for the built-in '
+                    'loadbalancer nested stack')]
+cfg.CONF.register_opts(loadbalancer_opts)
+
+
 class LoadBalancer(stack_resource.StackResource):
 
     PROPERTIES = (
@@ -414,8 +422,18 @@ class LoadBalancer(stack_resource.StackResource):
 
         return '%s%s%s%s\n' % (gl, frontend, backend, '\n'.join(servers))
 
+    def get_parsed_template(self):
+        if cfg.CONF.loadbalancer_template:
+            with open(cfg.CONF.loadbalancer_template) as templ_fd:
+                logger.info(_('Using custom loadbalancer template %s')
+                            % cfg.CONF.loadbalancer_template)
+                contents = templ_fd.read()
+        else:
+            contents = lb_template_default
+        return template_format.parse(contents)
+
     def handle_create(self):
-        templ = template_format.parse(lb_template)
+        templ = self.get_parsed_template()
 
         if self.properties[self.INSTANCES]:
             md = templ['Resources']['LB_instance']['Metadata']
@@ -441,7 +459,7 @@ class LoadBalancer(stack_resource.StackResource):
         rely on the cfn-hup to reconfigure HAProxy
         '''
         if self.INSTANCES in prop_diff:
-            templ = template_format.parse(lb_template)
+            templ = self.get_parsed_template()
             cfg = self._haproxy_config(templ, prop_diff[self.INSTANCES])
 
             md = self.nested()['LB_instance'].metadata
@@ -460,6 +478,11 @@ class LoadBalancer(stack_resource.StackResource):
         res = super(LoadBalancer, self).validate()
         if res:
             return res
+
+        if cfg.CONF.loadbalancer_template and \
+                not os.access(cfg.CONF.loadbalancer_template, os.R_OK):
+            msg = _('Custom LoadBalancer template can not be found')
+            raise exception.StackValidationFailed(message=msg)
 
         health_chk = self.properties[self.HEALTH_CHECK]
         if health_chk:
