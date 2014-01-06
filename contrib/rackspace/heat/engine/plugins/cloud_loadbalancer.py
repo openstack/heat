@@ -104,14 +104,12 @@ class CloudLoadBalancer(resource.Resource):
     )
 
     _SSL_TERMINATION_KEYS = (
-        SSL_TERMINATION_ENABLED, SSL_TERMINATION_SECURE_PORT,
-        SSL_TERMINATION_PRIVATEKEY, SSL_TERMINATION_CERTIFICATE,
-        SSL_TERMINATION_INTERMEDIATE_CERTIFICATE,
+        SSL_TERMINATION_SECURE_PORT, SSL_TERMINATION_PRIVATEKEY,
+        SSL_TERMINATION_CERTIFICATE, SSL_TERMINATION_INTERMEDIATE_CERTIFICATE,
         SSL_TERMINATION_SECURE_TRAFFIC_ONLY,
     ) = (
-        'enabled', 'securePort',
-        'privatekey', 'certificate',
-        'intermediateCertificate',
+        'securePort', 'privatekey',
+        'certificate', 'intermediateCertificate',
         'secureTrafficOnly',
     )
 
@@ -329,18 +327,18 @@ class CloudLoadBalancer(resource.Resource):
         SSL_TERMINATION: properties.Schema(
             properties.Schema.MAP,
             schema={
-                SSL_TERMINATION_ENABLED: properties.Schema(
-                    properties.Schema.BOOLEAN,
-                    required=True
-                ),
                 SSL_TERMINATION_SECURE_PORT: properties.Schema(
-                    properties.Schema.NUMBER
+                    properties.Schema.NUMBER,
+                    required=True,
+                    default=443
                 ),
                 SSL_TERMINATION_PRIVATEKEY: properties.Schema(
-                    properties.Schema.STRING
+                    properties.Schema.STRING,
+                    required=True
                 ),
                 SSL_TERMINATION_CERTIFICATE: properties.Schema(
-                    properties.Schema.STRING
+                    properties.Schema.STRING,
+                    required=True
                 ),
                 # only required if configuring intermediate ssl termination
                 # add to custom validation
@@ -349,7 +347,8 @@ class CloudLoadBalancer(resource.Resource):
                 ),
                 # pyrax will default to false
                 SSL_TERMINATION_SECURE_TRAFFIC_ONLY: properties.Schema(
-                    properties.Schema.BOOLEAN
+                    properties.Schema.BOOLEAN,
+                    default=False
                 ),
             }
         ),
@@ -388,7 +387,7 @@ class CloudLoadBalancer(resource.Resource):
                                    self.properties[self.SESSION_PERSISTENCE]}
         connection_logging = None
         if self.CONNECTION_LOGGING in self.properties.data:
-            connection_logging = {self.SSL_TERMINATION_ENABLED:
+            connection_logging = {"enabled":
                                   self.properties[self.CONNECTION_LOGGING]}
         metadata = None
         if self.METADATA in self.properties.data:
@@ -429,7 +428,7 @@ class CloudLoadBalancer(resource.Resource):
                 ssl_term[self.SSL_TERMINATION_CERTIFICATE],
                 intermediateCertificate=ssl_term[
                     self.SSL_TERMINATION_INTERMEDIATE_CERTIFICATE],
-                enabled=ssl_term[self.SSL_TERMINATION_ENABLED],
+                enabled=True,
                 secureTrafficOnly=ssl_term[
                     self.SSL_TERMINATION_SECURE_TRAFFIC_ONLY])
 
@@ -587,7 +586,7 @@ class CloudLoadBalancer(resource.Resource):
 
             schema = self._health_monitor_schema
             if health_monitor[self.HEALTH_MONITOR_TYPE] == 'CONNECT':
-                schema = dict((k, v) for k, v in schema
+                schema = dict((k, v) for k, v in schema.items()
                               if k in self._HEALTH_MONITOR_CONNECT_KEYS)
             try:
                 Properties(schema,
@@ -596,19 +595,6 @@ class CloudLoadBalancer(resource.Resource):
                            self.name).validate()
             except exception.StackValidationFailed as svf:
                 return {'Error': str(svf)}
-
-        if self.properties.get(self.SSL_TERMINATION):
-            ssl_termination = self._remove_none(
-                self.properties[self.SSL_TERMINATION])
-
-            if ssl_termination[self.SSL_TERMINATION_ENABLED]:
-                for key in (self.SSL_TERMINATION_SECURE_PORT,
-                            self.SSL_TERMINATION_PRIVATE_KEY,
-                            self.SSL_TERMINATION_CERTIFICATE):
-                    if key not in ssl_termination.get(key):
-                        svf = exception.StackValidationFailed(
-                            _('Property %s not assigned') % key)
-                        return {'Error': str(svf)}
 
     def _public_ip(self):
         #TODO(andrew-plunk) return list here and let caller choose ip
