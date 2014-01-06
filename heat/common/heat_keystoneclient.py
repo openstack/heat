@@ -18,6 +18,7 @@ from heat.common import exception
 
 import eventlet
 
+import keystoneclient.exceptions as kc_exception
 from keystoneclient.v2_0 import client as kc
 from keystoneclient.v3 import client as kc_v3
 from oslo.config import cfg
@@ -229,7 +230,10 @@ class KeystoneClient(object):
         """
         Delete the specified trust.
         """
-        self.client_v3.trusts.delete(trust_id)
+        try:
+            self.client_v3.trusts.delete(trust_id)
+        except kc_exception.NotFound:
+            pass
 
     def create_stack_user(self, username, password=''):
         """
