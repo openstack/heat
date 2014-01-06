@@ -221,7 +221,9 @@ class OpenStackClients(object):
             'auth_url': con.auth_url,
             'proxy_token': con.auth_token,
             'username': None,
-            'password': None
+            'password': None,
+            'cacert': self._get_client_option('trove', 'ca_file'),
+            'insecure': self._get_client_option('trove', 'insecure')
         }
 
         self._trove = troveclient.Client('1.0', **args)
@@ -281,7 +283,11 @@ class OpenStackClients(object):
             'auth_url': con.auth_url,
             'token': self.auth_token,
             'username': None,
-            'password': None
+            'password': None,
+            'ca_file': self._get_client_option('heat', 'ca_file'),
+            'cert_file': self._get_client_option('heat', 'cert_file'),
+            'key_file': self._get_client_option('heat', 'key_file'),
+            'insecure': self._get_client_option('heat', 'insecure')
         }
 
         endpoint = self.url_for(service_type='orchestration')

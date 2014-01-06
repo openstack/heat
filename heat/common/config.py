@@ -146,7 +146,7 @@ clients_opts = [
 def register_clients_opts():
     cfg.CONF.register_opts(clients_opts, group='clients')
     for client in ('nova', 'swift', 'neutron', 'cinder',
-                   'ceilometer', 'keystone'):
+                   'ceilometer', 'keystone', 'heat', 'trove'):
         client_specific_group = 'clients_' + client
         # register opts copy and put it to globals in order to
         # generate_sample.sh to work

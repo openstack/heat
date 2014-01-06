@@ -563,6 +563,28 @@
 #insecure=false
 
 
+[clients_heat]
+
+#
+# Options defined in heat.common.config
+#
+
+# Optional CA cert file to use in SSL connections (string
+# value)
+#ca_file=<None>
+
+# Optional PEM-formatted certificate chain file (string value)
+#cert_file=<None>
+
+# Optional PEM-formatted file that contains the private key
+# (string value)
+#key_file=<None>
+
+# If set then the server's certificate will not be verified
+# (boolean value)
+#insecure=false
+
+
 [clients_keystone]
 
 #
@@ -630,6 +652,28 @@
 
 
 [clients_swift]
+
+#
+# Options defined in heat.common.config
+#
+
+# Optional CA cert file to use in SSL connections (string
+# value)
+#ca_file=<None>
+
+# Optional PEM-formatted certificate chain file (string value)
+#cert_file=<None>
+
+# Optional PEM-formatted file that contains the private key
+# (string value)
+#key_file=<None>
+
+# If set then the server's certificate will not be verified
+# (boolean value)
+#insecure=false
+
+
+[clients_trove]
 
 #
 # Options defined in heat.common.config
