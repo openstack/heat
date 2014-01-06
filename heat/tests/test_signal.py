@@ -246,6 +246,30 @@ class SignalTest(HeatTestCase):
         self.m.VerifyAll()
 
     @utils.stack_delete_after
+    def test_delete_not_found(self):
+        self.stack = self.create_stack(stack_name='test_delete_not_found',
+                                       stub=False)
+
+        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
+            def delete_stack_user(self, name):
+                raise kc_exceptions.NotFound()
+
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
+            FakeKeystoneClientFail())
+        self.m.ReplayAll()
+
+        self.stack.create()
+
+        rsrc = self.stack['signal_handler']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
     def test_signal(self):
         test_d = {'Data': 'foo', 'Reason': 'bar',
                   'Status': 'SUCCESS', 'UniqueId': '123'}
