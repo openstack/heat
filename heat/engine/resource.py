@@ -37,9 +37,9 @@ logger = logging.getLogger(__name__)
 DELETION_POLICY = (DELETE, RETAIN, SNAPSHOT) = ('Delete', 'Retain', 'Snapshot')
 
 
-def get_types():
-    '''Return an iterator over the list of valid resource types.'''
-    return iter(resources.global_env().get_types())
+def get_types(support_status):
+    '''Return a list of valid resource types.'''
+    return resources.global_env().get_types(support_status)
 
 
 def get_class(resource_type, resource_name=None):

@@ -1294,6 +1294,15 @@ class StackServiceTest(HeatTestCase):
         self.assertTrue(isinstance(resources, list))
         self.assertIn('AWS::EC2::Instance', resources)
 
+    def test_list_resource_types_deprecated(self):
+        resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
+        self.assertEqual(['OS::Neutron::RouterGateway'], resources)
+
+    def test_list_resource_types_supported(self):
+        resources = self.eng.list_resource_types(self.ctx, "SUPPORTED")
+        self.assertNotIn(['OS::Neutron::RouterGateway'], resources)
+        self.assertIn('AWS::EC2::Instance', resources)
+
     def test_resource_schema(self):
         type_name = 'ResourceWithPropsType'
         expected = {

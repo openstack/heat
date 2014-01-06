@@ -87,6 +87,9 @@ class EngineService(service.Service):
     are also dynamically added and will be named as keyword arguments
     by the RPC caller.
     """
+
+    RPC_API_VERSION = '1.1'
+
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__(host, topic)
         # stg == "Stack Thread Groups"
@@ -531,13 +534,13 @@ class EngineService(service.Service):
         self._start_thread_with_lock(cnxt, stack, stack.delete)
         return stack_info
 
-    def list_resource_types(self, cnxt):
+    def list_resource_types(self, cnxt, support_status=None):
         """
         Get a list of supported resource types.
 
         :param cnxt: RPC context.
         """
-        return list(resource.get_types())
+        return resource.get_types(support_status)
 
     def resource_schema(self, cnxt, type_name):
         """

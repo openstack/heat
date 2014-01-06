@@ -131,7 +131,8 @@ class EngineRpcAPITestCase(testtools.TestCase):
                               template={u'Foo': u'bar'})
 
     def test_list_resource_types(self):
-        self._test_engine_api('list_resource_types', 'call')
+        self._test_engine_api('list_resource_types', 'call',
+                              support_status=None, version='1.1')
 
     def test_resource_schema(self):
         self._test_engine_api('resource_schema', 'call', type_name="TYPE")

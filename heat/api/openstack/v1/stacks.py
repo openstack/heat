@@ -325,7 +325,10 @@ class StackController(object):
         """
         Returns a list of valid resource types that may be used in a template.
         """
-        return {'resource_types': self.engine.list_resource_types(req.context)}
+        support_status = req.params.get('support_status', None)
+        return {
+            'resource_types':
+            self.engine.list_resource_types(req.context, support_status)}
 
     @util.policy_enforce
     def resource_schema(self, req, type_name):
