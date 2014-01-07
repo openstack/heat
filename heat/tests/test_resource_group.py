@@ -150,11 +150,7 @@ class ResourceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(template2)
         snip = stack.t['Resources']['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
-        try:
-            resgrp.validate()
-        except exception.StackValidationFailed as exc:
-            # this is not a normal exception failure but a test failure.
-            self.fail(str(exc))
+        self.assertIsNone(resgrp.validate())
 
     @utils.stack_delete_after
     def test_delete(self):

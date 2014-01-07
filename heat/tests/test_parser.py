@@ -126,12 +126,7 @@ class TemplateTest(HeatTestCase):
 
     def test_defaults(self):
         empty = parser.Template({})
-        try:
-            empty[template.VERSION]
-        except KeyError:
-            pass
-        else:
-            self.fail('Expected KeyError for version not present')
+        self.assertNotIn(template.VERSION, empty)
         self.assertEqual(empty[template.DESCRIPTION], 'No description')
         self.assertEqual(empty[template.MAPPINGS], {})
         self.assertEqual(empty[template.PARAMETERS], {})
@@ -156,12 +151,7 @@ Mappings:
 
     def test_invalid_section(self):
         tmpl = parser.Template({'Foo': ['Bar']})
-        try:
-            tmpl['Foo']
-        except KeyError:
-            pass
-        else:
-            self.fail('Expected KeyError for invalid template key')
+        self.assertNotIn('Foo', tmpl)
 
     def test_find_in_map(self):
         tmpl = parser.Template(mapping_template)

@@ -114,11 +114,8 @@ class s3Test(HeatTestCase):
 
         self.assertEqual(url, rsrc.FnGetAtt('WebsiteURL'))
 
-        try:
-            rsrc.FnGetAtt('Foo')
-            raise Exception('Expected InvalidTemplateAttribute')
-        except exception.InvalidTemplateAttribute:
-            pass
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          rsrc.FnGetAtt, 'Foo')
 
         self.assertRaises(resource.UpdateReplace,
                           rsrc.handle_update, {}, {}, {})
