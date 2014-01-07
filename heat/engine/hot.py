@@ -268,10 +268,10 @@ class HOTParamSchema(parameters.Schema):
 
     KEYS = (
         TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS,
-        HIDDEN
+        HIDDEN, LABEL
     ) = (
         'type', 'description', 'default', 'schema', 'constraints',
-        'hidden'
+        'hidden', 'label'
     )
 
     # For Parameters the type name for Schema.LIST is comma_delimited_list

@@ -105,12 +105,15 @@ follows:
   parameters:
     key_name:
       type: string
+      label: Key Name
       description: Name of key-pair to be used for compute instance
     image_id:
       type: string
+      label: Image ID
       description: Image to be used for compute instance
     instance_type:
       type: string
+      label: Instance Type
       description: Type of instance (flavor) to be used
 
   resources:
@@ -137,6 +140,7 @@ the 'm1.small' flavor unless specified otherwise be the user.
   parameters:
     instance_type:
       type: string
+      label: Instance Type
       description: Type of instance (flavor) to be used
       default: m1.small
 
@@ -150,6 +154,7 @@ passwords as user input:
   parameters:
     database_password:
       type: string
+      label: Database Password
       description: Password to be used for database
       hidden: true
 
@@ -170,6 +175,7 @@ for the *instance_type* parameter:
   parameters:
     instance_type:
       type: string
+      label: Instance Type
       description: Type of instance (flavor) to be used
       constraints:
         - allow_values: [ m1.medium, m1.large, m1.xlarge ]
@@ -185,6 +191,7 @@ provided by users:
   parameters:
     database_password:
       type: string
+      label: Database Password
       description: Password to be used for database
       hidden: true
       constraints:
