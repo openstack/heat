@@ -1944,11 +1944,17 @@ class StackTest(HeatTestCase):
 
     def test_stack_name_valid(self):
         stack = parser.Stack(self.ctx, 's', parser.Template({}))
+        self.assertIsInstance(stack, parser.Stack)
         stack = parser.Stack(self.ctx, 'stack123', parser.Template({}))
+        self.assertIsInstance(stack, parser.Stack)
         stack = parser.Stack(self.ctx, 'test.stack', parser.Template({}))
+        self.assertIsInstance(stack, parser.Stack)
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
+        self.assertIsInstance(stack, parser.Stack)
         stack = parser.Stack(self.ctx, 'TEST', parser.Template({}))
+        self.assertIsInstance(stack, parser.Stack)
         stack = parser.Stack(self.ctx, 'test-stack', parser.Template({}))
+        self.assertIsInstance(stack, parser.Stack)
 
     def test_stack_name_invalid(self):
         self.assertRaises(ValueError, parser.Stack, self.ctx, '_foo',

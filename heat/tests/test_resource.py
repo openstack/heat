@@ -57,6 +57,7 @@ class ResourceTest(HeatTestCase):
     def test_resource_new_ok(self):
         snippet = {'Type': 'GenericResourceType'}
         res = resource.Resource('aresource', snippet, self.stack)
+        self.assertIsInstance(res, generic_rsrc.GenericResource)
 
     def test_resource_new_err(self):
         snippet = {'Type': 'NoExistResourceType'}
@@ -330,7 +331,8 @@ class ResourceTest(HeatTestCase):
 
         estr = 'Property error : test_resource: Property Foo not assigned'
         create = scheduler.TaskRunner(res.create)
-        self.assertRaises(exception.ResourceFailure, create)
+        err = self.assertRaises(exception.ResourceFailure, create)
+        self.assertIn(estr, str(err))
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
     def test_create_fail_prop_typo(self):
@@ -338,9 +340,10 @@ class ResourceTest(HeatTestCase):
         rname = 'test_resource'
         res = generic_rsrc.ResourceWithProps(rname, tmpl, self.stack)
 
-        estr = 'Property error : test_resource: Property Foo not assigned'
+        estr = 'StackValidationFailed: Unknown Property Food'
         create = scheduler.TaskRunner(res.create)
-        self.assertRaises(exception.ResourceFailure, create)
+        err = self.assertRaises(exception.ResourceFailure, create)
+        self.assertIn(estr, str(err))
         self.assertEqual((res.CREATE, res.FAILED), res.state)
 
     def test_create_fail_metadata_parse_error(self):

@@ -659,7 +659,7 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
 
         old_stack = parser.Stack(self.ctx, stack_name, template)
         sid = old_stack.store()
-        s = db_api.stack_get(self.ctx, sid)
+        self.assertIsNotNone(sid)
 
         cfg.CONF.set_override('max_resources_per_stack', 2)
 
