@@ -77,8 +77,9 @@ class Schema(collections.Mapping):
 
     def __init__(self, data_type, description=None,
                  default=None, schema=None,
-                 required=False, constraints=[]):
+                 required=False, constraints=[], label=None):
         self._len = None
+        self.label = label
         self.type = data_type
         if self.type not in self.TYPES:
             raise InvalidSchemaError(_('Invalid type (%s)') % self.type)
