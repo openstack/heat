@@ -48,7 +48,8 @@ class SignalResponder(resource.Resource):
         # Create a keystone user so we can create a signed URL via FnGetRefId
         user_id = self.keystone().create_stack_user(
             self.physical_resource_name())
-        self.resource_id_set(user_id)
+
+        db_api.resource_data_set(self, 'user_id', user_id)
 
         kp = self.keystone().create_ec2_keypair(user_id)
         if not kp:
@@ -60,11 +61,23 @@ class SignalResponder(resource.Resource):
             db_api.resource_data_set(self, 'secret_key', kp.secret,
                                      redact=True)
 
+    def _get_user_id(self):
+        try:
+            return db_api.resource_data_get(self, 'user_id')
+        except exception.NotFound:
+            # Assume this is a resource that was created with
+            # a previous version of heat and that the resource_id
+            # is the user_id
+            if self.resource_id:
+                db_api.resource_data_set(self, 'user_id', self.resource_id)
+                return self.resource_id
+
     def handle_delete(self):
-        if self.resource_id is None:
+        user_id = self._get_user_id()
+        if user_id is None:
             return
         try:
-            self.keystone().delete_stack_user(self.resource_id)
+            self.keystone().delete_stack_user(user_id)
         except clients.hkc.kc.exceptions.NotFound:
             pass
         for data_key in ('ec2_signed_url', 'access_key', 'secret_key'):

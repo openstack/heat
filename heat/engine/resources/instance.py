@@ -62,6 +62,10 @@ class Restarter(signal_responder.SignalResponder):
                 return resource
         return None
 
+    def handle_create(self):
+        super(Restarter, self).handle_create()
+        self.resource_id_set(self._get_user_id())
+
     def handle_signal(self, details=None):
         if details is None:
             alarm_state = 'alarm'

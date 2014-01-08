@@ -38,6 +38,10 @@ class WaitConditionHandle(signal_responder.SignalResponder):
     '''
     properties_schema = {}
 
+    def handle_create(self):
+        super(WaitConditionHandle, self).handle_create()
+        self.resource_id_set(self._get_user_id())
+
     def FnGetRefId(self):
         '''
         Override the default resource FnGetRefId so we return the signed URL

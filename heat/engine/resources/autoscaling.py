@@ -783,6 +783,10 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
                       "(Heat extension).")
     }
 
+    def handle_create(self):
+        super(ScalingPolicy, self).handle_create()
+        self.resource_id_set(self._get_user_id())
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """
         If Properties has changed, update self.properties, so we get the new
