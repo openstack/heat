@@ -48,8 +48,6 @@ yaml_loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 # until jsonutils can handle dates.
 yaml_loader.add_constructor(u'tag:yaml.org,2002:timestamp',
                             _construct_yaml_str)
-yaml_loader.add_constructor(u'tag:yaml.org,2002:timestamp',
-                            _construct_yaml_str)
 
 
 def parse(tmpl_str):
