@@ -24,6 +24,7 @@ import os
 import shutil
 import sqlalchemy
 import tempfile
+import uuid
 
 from migrate.versioning import repository
 
@@ -111,3 +112,35 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
                 break
 
         self.assertEqual(sorted(members), sorted(index_columns))
+
+    def _pre_upgrade_031(self, engine):
+        raw_template = get_table(engine, 'raw_template')
+        templ = [dict(id=3, template='{}')]
+        engine.execute(raw_template.insert(), templ)
+
+        user_creds = get_table(engine, 'user_creds')
+        user = [dict(id=4, username='angus', password='notthis',
+                     tenant='mine', auth_url='bla',
+                     tenant_id=str(uuid.uuid4()),
+                     trust_id='',
+                     trustor_user_id='')]
+        engine.execute(user_creds.insert(), user)
+
+        stack = get_table(engine, 'stack')
+        stack_ids = ['967aaefb-152e-405d-b13a-35d4c816390c',
+                     '9e9deba9-a303-4f29-84d3-c8165647c47e',
+                     '9a4bd1ec-8b21-46cd-964a-f66cb1cfa2f9']
+        data = [dict(id=ll_id, name='fruity',
+                     raw_template_id=templ[0]['id'],
+                     user_creds_id=user[0]['id'],
+                     username='angus', disable_rollback=True)
+                for ll_id in stack_ids]
+
+        engine.execute(stack.insert(), data)
+        return data
+
+    def _check_031(self, engine, data):
+        self.assertColumnExists(engine, 'stack_lock', 'stack_id')
+        self.assertColumnExists(engine, 'stack_lock', 'engine_id')
+        self.assertColumnExists(engine, 'stack_lock', 'created_at')
+        self.assertColumnExists(engine, 'stack_lock', 'updated_at')
