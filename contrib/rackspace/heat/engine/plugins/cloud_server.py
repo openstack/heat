@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import socket
 import tempfile
 
 import json
@@ -196,6 +197,7 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
 
     def __init__(self, name, json_snippet, stack):
         super(CloudServer, self).__init__(name, json_snippet, stack)
+        self.stack = stack
         self._private_key = None
         self._server = None
         self._distro = None
@@ -313,8 +315,19 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
                         username="root",
                         key_filename=private_key_file.name)
             chan = ssh.get_transport().open_session()
+            chan.settimeout(self.stack.timeout_mins * 60.0)
             chan.exec_command(command)
-            return chan.recv_exit_status()
+            try:
+                # The channel timeout only works for read/write operations
+                chan.recv(1024)
+            except socket.timeout:
+                raise exception.Error("SSH command timed out after %s minutes"
+                                      % self.stack.timeout_mins)
+            else:
+                return chan.recv_exit_status()
+            finally:
+                ssh.close()
+                chan.close()
 
     def _sftp_files(self, files):
         """Transfer files to the Cloud Server via SFTP."""
@@ -325,10 +338,16 @@ zypper --non-interactive in cloud-init python-boto python-pip gcc python-devel
             transport = paramiko.Transport((self.public_ip, 22))
             transport.connect(hostkey=None, username="root", pkey=pkey)
             sftp = paramiko.SFTPClient.from_transport(transport)
-            for remote_file in files:
-                sftp_file = sftp.open(remote_file['path'], 'w')
-                sftp_file.write(remote_file['data'])
-                sftp_file.close()
+            try:
+                for remote_file in files:
+                    sftp_file = sftp.open(remote_file['path'], 'w')
+                    sftp_file.write(remote_file['data'])
+                    sftp_file.close()
+            except:
+                raise
+            finally:
+                sftp.close()
+                transport.close()
 
     def handle_create(self):
         """Create a Rackspace Cloud Servers container.
