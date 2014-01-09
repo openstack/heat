@@ -241,7 +241,8 @@ class StackResourceTest(HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource).AndReturn('s')
+                          parent_resource=self.parent_resource,
+                          show_deleted=False).AndReturn('s')
         self.m.ReplayAll()
 
         self.parent_resource.nested()
@@ -257,7 +258,8 @@ class StackResourceTest(HeatTestCase):
         self.m.StubOutWithMock(parser.Stack, 'load')
         parser.Stack.load(self.parent_resource.context,
                           self.parent_resource.resource_id,
-                          parent_resource=self.parent_resource)
+                          parent_resource=self.parent_resource,
+                          show_deleted=False)
         self.m.ReplayAll()
 
         self.assertRaises(exception.NotFound, self.parent_resource.nested)
@@ -272,6 +274,21 @@ class StackResourceTest(HeatTestCase):
 
         self.parent_resource.delete_nested()
         self.m.VerifyAll()
+
+    def test_delete_nested_not_found_nested_stack(self):
+        self.parent_resource.create_with_template(self.templ,
+                                                  {"KeyName": "key"})
+        self.stack = self.parent_resource.nested()
+
+        self.parent_resource._nested = None
+        self.m.StubOutWithMock(parser.Stack, 'load')
+        parser.Stack.load(self.parent_resource.context,
+                          self.parent_resource.resource_id,
+                          parent_resource=self.parent_resource,
+                          show_deleted=False).AndRaise(exception.NotFound)
+        self.m.ReplayAll()
+
+        self.assertIsNone(self.parent_resource.delete_nested())
 
     def test_get_output_ok(self):
         nested = self.m.CreateMockAnything()

@@ -65,7 +65,8 @@ class StackResource(resource.Resource):
         if self._nested is None and self.resource_id is not None:
             self._nested = parser.Stack.load(self.context,
                                              self.resource_id,
-                                             parent_resource=self)
+                                             parent_resource=self,
+                                             show_deleted=False)
 
             if self._nested is None:
                 raise exception.NotFound(_('Nested stack not found in DB'))
