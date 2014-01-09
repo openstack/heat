@@ -126,10 +126,10 @@ class Schema(constr.Schema):
         Schema for the corresponding resource facade.
         """
         param_type_map = {
-            parameters.STRING: Schema.STRING,
-            parameters.NUMBER: Schema.NUMBER,
-            parameters.COMMA_DELIMITED_LIST: Schema.LIST,
-            parameters.JSON: Schema.MAP
+            parameters.ParamSchema.STRING: Schema.STRING,
+            parameters.ParamSchema.NUMBER: Schema.NUMBER,
+            parameters.ParamSchema.COMMA_DELIMITED_LIST: Schema.LIST,
+            parameters.ParamSchema.JSON: Schema.MAP
         }
 
         def get_num(key, context=param):
@@ -395,12 +395,12 @@ class Properties(collections.Mapping):
         Return a template parameter definition corresponding to a property.
         """
         param_type_map = {
-            schema.INTEGER: parameters.NUMBER,
-            schema.STRING: parameters.STRING,
-            schema.NUMBER: parameters.NUMBER,
-            schema.BOOLEAN: parameters.STRING,
-            schema.MAP: parameters.JSON,
-            schema.LIST: parameters.COMMA_DELIMITED_LIST,
+            schema.INTEGER: parameters.ParamSchema.NUMBER,
+            schema.STRING: parameters.ParamSchema.STRING,
+            schema.NUMBER: parameters.ParamSchema.NUMBER,
+            schema.BOOLEAN: parameters.ParamSchema.STRING,
+            schema.MAP: parameters.ParamSchema.JSON,
+            schema.LIST: parameters.ParamSchema.COMMA_DELIMITED_LIST,
         }
 
         def param_items():

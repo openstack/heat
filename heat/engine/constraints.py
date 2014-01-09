@@ -55,14 +55,22 @@ class Schema(collections.Mapping):
         'type', 'description', 'default', 'schema', 'required', 'constraints',
     )
 
-    TYPES = (
-        INTEGER,
-        STRING, NUMBER, BOOLEAN,
-        MAP, LIST
+    # Keywords for data types; each Schema subclass can define its respective
+    # type name used in templates
+    TYPE_KEYS = (
+        INTEGER_TYPE, STRING_TYPE, NUMBER_TYPE, BOOLEAN_TYPE, MAP_TYPE,
+        LIST_TYPE,
     ) = (
-        'Integer',
-        'String', 'Number', 'Boolean',
-        'Map', 'List'
+        'INTEGER', 'STRING', 'NUMBER', 'BOOLEAN', 'MAP',
+        'LIST',
+    )
+
+    # Default type names for data types used in templates; can be overridden by
+    # subclasses
+    TYPES = (
+        INTEGER, STRING, NUMBER, BOOLEAN, MAP, LIST,
+    ) = (
+        'Integer', 'String', 'Number', 'Boolean', 'Map', 'List',
     )
 
     def __init__(self, data_type, description=None,
@@ -70,33 +78,33 @@ class Schema(collections.Mapping):
                  required=False, constraints=[]):
         self._len = None
         self.type = data_type
-        if self.type not in Schema.TYPES:
+        if self.type not in self.TYPES:
             raise InvalidSchemaError(_('Invalid type (%s)') % self.type)
 
         self.description = description
         self.required = required
 
         if isinstance(schema, type(self)):
-            if self.type != Schema.LIST:
+            if self.type != self.LIST:
                 msg = _('Single schema valid only for '
-                        '%(ltype)s, not %(utype)s') % dict(ltype=Schema.LIST,
+                        '%(ltype)s, not %(utype)s') % dict(ltype=self.LIST,
                                                            utype=self.type)
                 raise InvalidSchemaError(msg)
 
             self.schema = AnyIndexDict(schema)
         else:
             self.schema = schema
-        if self.schema is not None and self.type not in (Schema.LIST,
-                                                         Schema.MAP):
+        if self.schema is not None and self.type not in (self.LIST,
+                                                         self.MAP):
             msg = _('Schema valid only for %(ltype)s or '
-                    '%(mtype)s, not %(utype)s') % dict(ltype=Schema.LIST,
-                                                       mtype=Schema.MAP,
+                    '%(mtype)s, not %(utype)s') % dict(ltype=self.LIST,
+                                                       mtype=self.MAP,
                                                        utype=self.type)
             raise InvalidSchemaError(msg)
 
         self.constraints = constraints
         for c in constraints:
-            if self.type not in c.valid_types:
+            if not self._is_valid_constraint(c):
                 err_msg = _('%(name)s constraint '
                             'invalid for %(utype)s') % dict(
                                 name=type(c).__name__,
@@ -104,6 +112,9 @@ class Schema(collections.Mapping):
                 raise InvalidSchemaError(err_msg)
 
         self.default = default
+        self._validate_default()
+
+    def _validate_default(self):
         if self.default is not None:
             try:
                 self.validate_constraints(self.default)
@@ -111,6 +122,10 @@ class Schema(collections.Mapping):
                 raise InvalidSchemaError(_('Invalid default '
                                            '%(default)s (%(exc)s)') %
                                          dict(default=self.default, exc=exc))
+
+    def _is_valid_constraint(self, constraint):
+        valid_types = getattr(constraint, 'valid_types', [])
+        return any(self.type == getattr(self, t, None) for t in valid_types)
 
     @staticmethod
     def str_to_num(value):
@@ -256,7 +271,7 @@ class Range(Constraint):
 
     (MIN, MAX) = ('min', 'max')
 
-    valid_types = (Schema.INTEGER, Schema.NUMBER)
+    valid_types = (Schema.INTEGER_TYPE, Schema.NUMBER_TYPE,)
 
     def __init__(self, min=None, max=None, description=None):
         super(Range, self).__init__(description)
@@ -319,7 +334,7 @@ class Length(Range):
         }
     """
 
-    valid_types = (Schema.STRING, Schema.LIST)
+    valid_types = (Schema.STRING_TYPE, Schema.LIST_TYPE,)
 
     def __init__(self, min=None, max=None, description=None):
         super(Length, self).__init__(min, max, description)
@@ -359,8 +374,8 @@ class AllowedValues(Constraint):
         }
     """
 
-    valid_types = (Schema.STRING, Schema.INTEGER, Schema.NUMBER,
-                   Schema.BOOLEAN)
+    valid_types = (Schema.STRING_TYPE, Schema.INTEGER_TYPE, Schema.NUMBER_TYPE,
+                   Schema.BOOLEAN_TYPE,)
 
     def __init__(self, allowed, description=None):
         super(AllowedValues, self).__init__(description)
@@ -396,7 +411,7 @@ class AllowedPattern(Constraint):
         }
     """
 
-    valid_types = (Schema.STRING,)
+    valid_types = (Schema.STRING_TYPE,)
 
     def __init__(self, pattern, description=None):
         super(AllowedPattern, self).__init__(description)
