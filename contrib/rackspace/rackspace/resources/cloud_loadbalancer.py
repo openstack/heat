@@ -10,16 +10,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-from heat.common import exception
-from heat.engine import constraints
-from heat.engine import properties
-from heat.engine.properties import Properties
-from heat.engine import resource
-from heat.engine import scheduler
-from heat.openstack.common.gettextutils import _
-from heat.openstack.common import log as logging
-
 try:
     from pyrax.exceptions import NotFound
     PYRAX_INSTALLED = True
@@ -29,6 +19,18 @@ except ImportError:
         pass
 
     PYRAX_INSTALLED = False
+
+import copy
+import itertools
+
+from heat.openstack.common import log as logging
+from heat.openstack.common.gettextutils import _
+from heat.engine import scheduler
+from heat.engine import constraints
+from heat.engine import properties
+from heat.engine import resource
+from heat.engine.properties import Properties
+from heat.common import exception
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +54,10 @@ class CloudLoadBalancer(resource.Resource):
     )
 
     _NODE_KEYS = (
-        NODE_ADDRESS, NODE_REF, NODE_PORT, NODE_CONDITION, NODE_TYPE,
+        NODE_ADDRESSES, NODE_PORT, NODE_CONDITION, NODE_TYPE,
         NODE_WEIGHT,
     ) = (
-        'address', 'ref', 'port', 'condition', 'type',
+        'addresses', 'port', 'condition', 'type',
         'weight',
     )
 
@@ -161,11 +163,15 @@ class CloudLoadBalancer(resource.Resource):
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
-                    NODE_ADDRESS: properties.Schema(
-                        properties.Schema.STRING
-                    ),
-                    NODE_REF: properties.Schema(
-                        properties.Schema.STRING
+                    NODE_ADDRESSES: properties.Schema(
+                        properties.Schema.LIST,
+                        required=True,
+                        description=(_("IP addresses for the load balancer "
+                                     "node. Must have at least one "
+                                     "address.")),
+                        schema=properties.Schema(
+                            properties.Schema.STRING
+                        )
                     ),
                     NODE_PORT: properties.Schema(
                         properties.Schema.NUMBER,
@@ -174,7 +180,6 @@ class CloudLoadBalancer(resource.Resource):
                     NODE_CONDITION: properties.Schema(
                         properties.Schema.STRING,
                         default='ENABLED',
-                        required=True,
                         constraints=[
                             constraints.AllowedValues(['ENABLED',
                                                        'DISABLED']),
@@ -325,7 +330,6 @@ class CloudLoadBalancer(resource.Resource):
             schema={
                 SSL_TERMINATION_SECURE_PORT: properties.Schema(
                     properties.Schema.NUMBER,
-                    required=True,
                     default=443
                 ),
                 SSL_TERMINATION_PRIVATEKEY: properties.Schema(
@@ -434,16 +438,22 @@ class CloudLoadBalancer(resource.Resource):
                 yield
             loadbalancer.content_caching = enabled
 
-    def handle_create(self):
-        node_list = []
-        for node in self.properties[self.NODES]:
-            # resolve references to stack resource IP's
-            if node.get(self.NODE_REF):
-                resource = self.stack.resource_by_refid(node[self.NODE_REF])
-                node[self.NODE_ADDRESS] = resource.FnGetAtt('PublicIp')
-            del node[self.NODE_REF]
-            node_list.append(node)
+    def _process_node(self, node):
+        if not node.get(self.NODE_ADDRESSES):
+            yield node
+        else:
+            for addr in node.get(self.NODE_ADDRESSES):
+                norm_node = copy.deepcopy(node)
+                norm_node['address'] = addr
+                del norm_node[self.NODE_ADDRESSES]
+                yield norm_node
 
+    def _process_nodes(self, node_list):
+        node_itr = itertools.imap(self._process_node, node_list)
+        return itertools.chain.from_iterable(node_itr)
+
+    def handle_create(self):
+        node_list = self._process_nodes(self.properties.get(self.NODES))
         nodes = [self.clb.Node(**node) for node in node_list]
         vips = self.properties.get(self.VIRTUAL_IPS)
         virtual_ips = self._setup_properties(vips, self.clb.VirtualIP)
@@ -488,21 +498,16 @@ class CloudLoadBalancer(resource.Resource):
         loadbalancer = self.clb.get(self.resource_id)
         if self.NODES in prop_diff:
             current_nodes = loadbalancer.nodes
+            diff_nodes = self._process_nodes(prop_diff[self.NODES])
             #Loadbalancers can be uniquely identified by address and port.
             #Old is a dict of all nodes the loadbalancer currently knows about.
-            for node in prop_diff[self.NODES]:
-                # resolve references to stack resource IP's
-                if node.get(self.NODE_REF):
-                    res = self.stack.resource_by_refid(node[self.NODE_REF])
-                    node[self.NODE_ADDRESS] = res.FnGetAtt('PublicIp')
-                    del node[self.NODE_REF]
             old = dict(("{0.address}{0.port}".format(node), node)
                        for node in current_nodes)
             #New is a dict of the nodes the loadbalancer will know about after
             #this update.
-            new = dict(("%s%s" % (node[self.NODE_ADDRESS],
+            new = dict(("%s%s" % (node["address"],
                                   node[self.NODE_PORT]), node)
-                       for node in prop_diff[self.NODES])
+                       for node in diff_nodes)
 
             old_set = set(old.keys())
             new_set = set(new.keys())

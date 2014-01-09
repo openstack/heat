@@ -165,7 +165,8 @@ class LoadBalancerTest(HeatTestCase):
                     "Type": "Rackspace::Cloud::LoadBalancer",
                     "Properties": {
                         "name": "test-clb",
-                        "nodes": [{"address": "166.78.103.141", "port": 80,
+                        "nodes": [{"addresses": ["166.78.103.141"],
+                                   "port": 80,
                                    "condition": "ENABLED"}],
                         "protocol": "HTTP",
                         "port": 80,
@@ -254,6 +255,19 @@ class LoadBalancerTest(HeatTestCase):
         for k, v in kwargs.iteritems():
             expected[k] = v
         return expected
+
+    def test_process_node(self):
+        nodes = [{'addresses': ['1234'], 'port': 80, 'enabled': True},
+                 {'addresses': ['4567', '8901', '8903'], 'port': 80,
+                  'enabled': True}]
+        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
+                                                          self.lb_name,
+                                                          self.expected_body)
+        expected_nodes = [{'address': '1234', 'port': 80, 'enabled': True},
+                          {'address': '4567', 'port': 80, 'enabled': True},
+                          {'address': '8901', 'port': 80, 'enabled': True},
+                          {'address': '8903', 'port': 80, 'enabled': True}]
+        self.assertEqual(expected_nodes, list(rsrc._process_nodes(nodes)))
 
     def test_nodeless(self):
         """It's possible to create a LoadBalancer resource with no nodes."""
@@ -472,45 +486,10 @@ class LoadBalancerTest(HeatTestCase):
     def test_post_creation_content_caching(self):
         template = self._set_template(self.lb_template,
                                       contentCaching='ENABLED')
-        rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
-                                                          self.lb_name,
-                                                          self.expected_body)
+        rsrc = self._mock_loadbalancer(template, self.lb_name,
+                                       self.expected_body)[0]
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-        self.m.VerifyAll()
-
-    def test_update_add_node_by_ref(self):
-        added_node = {'nodes': [
-            {"address": "166.78.103.141", "port": 80, "condition": "ENABLED"},
-            {"ref": "TEST_NODE_REF", "port": 80, "condition": "ENABLED"}]}
-        expected_ip = '172.168.1.4'
-        rsrc, fake_loadbalancer = self._mock_loadbalancer(self.lb_template,
-                                                          self.lb_name,
-                                                          self.expected_body)
-        fake_loadbalancer.nodes = self.expected_body['nodes']
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-        self.m.VerifyAll()
-
-        self.m.StubOutWithMock(rsrc.clb, 'get')
-        rsrc.clb.get(rsrc.resource_id).AndReturn(fake_loadbalancer)
-
-        self.m.StubOutWithMock(rsrc.stack, 'resource_by_refid')
-
-        class FakeFn(object):
-            def FnGetAtt(self, attr):
-                return expected_ip
-
-        rsrc.stack.resource_by_refid('TEST_NODE_REF').AndReturn(FakeFn())
-
-        self.m.StubOutWithMock(fake_loadbalancer, 'add_nodes')
-        fake_loadbalancer.add_nodes([
-            fake_loadbalancer.Node(address=expected_ip,
-                                   port=80,
-                                   condition='ENABLED')])
-
-        self.m.ReplayAll()
-        rsrc.handle_update({}, {}, added_node)
         self.m.VerifyAll()
 
     def test_update_add_node_by_address(self):
