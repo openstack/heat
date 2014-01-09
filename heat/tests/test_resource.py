@@ -552,8 +552,7 @@ class ResourceTest(HeatTestCase):
                            'Default': 42},
                 'list': {'Type': 'List', 'Schema': {'Type': 'Map',
                          'Schema': list_schema}},
-                'map': {'Type': 'Map', 'Schema': {'Type': 'Map',
-                        'Schema': map_schema}},
+                'map': {'Type': 'Map', 'Schema': map_schema},
             }
 
             attributes_schema = {

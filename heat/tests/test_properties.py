@@ -1445,8 +1445,7 @@ class PropertiesValidationTest(testtools.TestCase):
                          'Value': {'Type': 'String',
                                    'Required': True,
                                    'Default': 'fewaf'}}
-        schema = {'foo': {'Type': 'Map', 'Schema': {'Type': 'Map',
-                  'Schema': nested_schema}}}
+        schema = {'foo': {'Type': 'Map', 'Schema': nested_schema}}
 
         prop_expected = {'foo': {'Ref': 'foo'}}
         param_expected = {'foo': {'Type': 'Json'}}
@@ -1457,8 +1456,7 @@ class PropertiesValidationTest(testtools.TestCase):
 
     def test_schema_to_template_nested_map_list_map_schema(self):
         key_schema = {'bar': {'Type': 'Number'}}
-        nested_schema = {'Key': {'Type': 'Map', 'Schema': {'Type': 'Map',
-                         'Schema': key_schema}},
+        nested_schema = {'Key': {'Type': 'Map', 'Schema': key_schema},
                          'Value': {'Type': 'String',
                                    'Required': True}}
         schema = {'foo': {'Type': 'List', 'Schema': {'Type': 'Map',
