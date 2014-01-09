@@ -360,3 +360,9 @@ class FakeHTTPClient(base_client.HTTPClient):
                   'id': '42'},
                  {'label': 'foo',
                   'id': '42'}]})
+
+    #
+    # Limits
+    #
+    def get_limits(self, *kw):
+        return (200, {'limits': {'absolute': {'maxServerMeta': 3}}})

@@ -293,3 +293,9 @@ def server_to_ipaddress(client, server):
         for n in server.networks:
             if len(server.networks[n]) > 0:
                 return server.networks[n][0]
+
+
+def absolute_limits(nova_client):
+    """Return the absolute limits as a dictionary."""
+    limits = nova_client.limits.get()
+    return dict([(limit.name, limit.value) for limit in list(limits.absolute)])

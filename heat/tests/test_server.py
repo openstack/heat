@@ -1156,3 +1156,57 @@ class ServersTest(HeatTestCase):
         self.assertEqual(msg, str(ex))
 
         self.m.VerifyAll()
+
+    def test_validate_metadata_too_many(self):
+        stack_name = 'srv_val_metadata'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['metadata'] = {'a': 1,
+                                                                 'b': 2,
+                                                                 'c': 3,
+                                                                 'd': 4}
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+
+        limits = self.m.CreateMockAnything()
+        max_server_meta = self.m.CreateMockAnything()
+        max_server_meta.name = 'maxServerMeta'
+        max_server_meta.value = 3
+        limits.absolute = [max_server_meta]
+        self.m.StubOutWithMock(self.fc.limits, 'get')
+        self.fc.limits.get().AndReturn(limits)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               server.validate)
+        self.assertIn('Instance metadata must not contain greater than 3 '
+                      'entries', str(ex))
+        self.m.VerifyAll()
+
+    def test_validate_metadata_okay(self):
+        stack_name = 'srv_val_metadata'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['metadata'] = {'a': 1,
+                                                                 'b': 2,
+                                                                 'c': 3}
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+
+        limits = self.m.CreateMockAnything()
+        max_server_meta = self.m.CreateMockAnything()
+        max_server_meta.name = 'maxServerMeta'
+        max_server_meta.value = 3
+        limits.absolute = [max_server_meta]
+        self.m.StubOutWithMock(self.fc.limits, 'get')
+        self.fc.limits.get().AndReturn(limits)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
+        self.m.VerifyAll()
