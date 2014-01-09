@@ -829,9 +829,9 @@ class ScalingPolicy(signal_responder.SignalResponder, CooldownMixin):
                                            'alarm': self.name,
                                            'group': asgn_id})
 
-        logger.info(_('%(name)s Alarm, adjusting Group %(group)s '
-                    'by %(filter)s') % {
-                    'name': self.name, 'group': group.name,
+        logger.info(_('%(name)s Alarm, adjusting Group %(group)s with id '
+                    '%(asgn_id)s by %(filter)s') % {
+                    'name': self.name, 'group': group.name, 'asgn_id': asgn_id,
                     'filter': self.properties[self.SCALING_ADJUSTMENT]})
         group.adjust(int(self.properties[self.SCALING_ADJUSTMENT]),
                      self.properties[self.ADJUSTMENT_TYPE])
