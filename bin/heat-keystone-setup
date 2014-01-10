@@ -283,8 +283,8 @@ keystone_setup() {
     fi
 
     if [[ "$SERVICE_HOST" == "localhost" ]]; then
-        echo "Endpoints will be registered as localhost, but this usually won't work."
-        echo  "Set SERVICE_HOST to a publically accessible hostname/IP instead."
+        echo "Warning: Endpoints will be registered as localhost, but this usually won't work."
+        echo "Set SERVICE_HOST to a publically accessible hostname/IP instead."
     fi
 
     echo ADMIN_ROLE $ADMIN_ROLE
