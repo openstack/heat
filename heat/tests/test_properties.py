@@ -1469,6 +1469,26 @@ class PropertiesValidationTest(testtools.TestCase):
         self.assertEqual(param_expected, parameters)
         self.assertEqual(prop_expected, props)
 
+    def test_schema_object_to_template_nested_map_list_map_schema(self):
+        key_schema = {'bar': properties.Schema(properties.Schema.NUMBER)}
+        nested_schema = {
+            'Key': properties.Schema(properties.Schema.MAP, schema=key_schema),
+            'Value': properties.Schema(properties.Schema.STRING, required=True)
+        }
+        schema = {
+            'foo': properties.Schema(properties.Schema.LIST,
+                                     schema=properties.Schema(
+                                         properties.Schema.MAP,
+                                         schema=nested_schema))
+        }
+
+        prop_expected = {'foo': {'Fn::Split': {'Ref': 'foo'}}}
+        param_expected = {'foo': {'Type': 'CommaDelimitedList'}}
+        (parameters, props) = \
+            properties.Properties.schema_to_parameters_and_properties(schema)
+        self.assertEqual(param_expected, parameters)
+        self.assertEqual(prop_expected, props)
+
     def test_schema_invalid_parameters_stripped(self):
         schema = {'foo': {'Type': 'String',
                           'Required': True,
