@@ -395,7 +395,7 @@ class Properties(collections.Mapping):
             schema.INTEGER: parameters.NUMBER,
             schema.STRING: parameters.STRING,
             schema.NUMBER: parameters.NUMBER,
-            schema.BOOLEAN: 'Boolean',
+            schema.BOOLEAN: parameters.STRING,
             schema.MAP: parameters.JSON,
             schema.LIST: parameters.COMMA_DELIMITED_LIST,
         }
@@ -424,6 +424,10 @@ class Properties(collections.Mapping):
                     yield parameters.ALLOWED_VALUES, list(constraint.allowed)
                 elif isinstance(constraint, constr.AllowedPattern):
                     yield parameters.ALLOWED_PATTERN, constraint.pattern
+
+            if schema.type == schema.BOOLEAN:
+                yield parameters.ALLOWED_VALUES, ['True', 'true',
+                                                  'False', 'false']
 
         return dict(param_items())
 
