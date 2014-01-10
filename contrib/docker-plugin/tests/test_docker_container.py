@@ -28,7 +28,7 @@ from ..plugin import docker_container  # noqa
 
 template = '''
 {
-    "AWSTemplateFormatVersion" : "2010-09-09",
+    "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Test template",
     "Parameters": {},
     "Resources": {

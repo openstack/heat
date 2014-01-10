@@ -3,10 +3,6 @@
 
   "Description" : "Template to test Neutron resources",
 
-  "Parameters" : {
-
-  },
-
   "Resources" : {
     "network": {
       "Type": "OS::Neutron::Net",

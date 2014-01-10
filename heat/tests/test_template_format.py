@@ -60,8 +60,6 @@ class JsonToYamlTest(HeatTestCase):
         del(yml[u'HeatTemplateFormatVersion'])
 
         jsn = template_format.parse(json_str)
-        template_format.default_for_missing(jsn, 'AWSTemplateFormatVersion',
-                                            template_format.CFN_VERSIONS)
 
         if u'AWSTemplateFormatVersion' in jsn:
             del(jsn[u'AWSTemplateFormatVersion'])
@@ -81,18 +79,6 @@ class JsonToYamlTest(HeatTestCase):
 
 class YamlMinimalTest(HeatTestCase):
 
-    def test_minimal_yaml(self):
-        yaml1 = ''
-        yaml2 = '''HeatTemplateFormatVersion: '2012-12-12'
-Parameters: {}
-Mappings: {}
-Resources: {}
-Outputs: {}
-'''
-        tpl1 = template_format.parse(yaml1)
-        tpl2 = template_format.parse(yaml2)
-        self.assertEqual(tpl1, tpl2)
-
     def test_long_yaml(self):
         template = {'HeatTemplateVersion': '2012-12-12'}
         config.cfg.CONF.set_override('max_template_size', 1024)
@@ -104,6 +90,16 @@ Outputs: {}
                                template_format.parse, long_yaml)
         msg = 'Request limit exceeded: Template exceeds maximum allowed size.'
         self.assertEqual(msg, str(ex))
+
+    def test_parse_no_version_format(self):
+        yaml = ''
+        self.assertRaises(ValueError, template_format.parse, yaml)
+        yaml2 = '''Parameters: {}
+Mappings: {}
+Resources: {}
+Outputs: {}
+'''
+        self.assertRaises(ValueError, template_format.parse, yaml2)
 
 
 class YamlParseExceptions(HeatTestCase):
@@ -143,13 +139,9 @@ class JsonYamlResolvedCompareTest(HeatTestCase):
 
     def compare_stacks(self, json_file, yaml_file, parameters):
         t1 = self.load_template(json_file)
-        template_format.default_for_missing(t1, 'AWSTemplateFormatVersion',
-                                            template_format.CFN_VERSIONS)
-        del(t1[u'AWSTemplateFormatVersion'])
-
         t2 = self.load_template(yaml_file)
         del(t2[u'HeatTemplateFormatVersion'])
-
+        del(t1[u'AWSTemplateFormatVersion'])
         stack1 = utils.parse_stack(t1, parameters)
         stack2 = utils.parse_stack(t2, parameters)
 

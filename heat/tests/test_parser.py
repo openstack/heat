@@ -104,6 +104,7 @@ class ParserTest(HeatTestCase):
 
 
 mapping_template = template_format.parse('''{
+  "AWSTemplateFormatVersion" : "2010-09-09",
   "Mappings" : {
     "ValidMapping" : {
       "TestKey" : { "TestValue" : "wibble" }
@@ -787,10 +788,12 @@ class StackTest(HeatTestCase):
         self.assertEqual(1, stack.total_resources())
 
     def _setup_nested(self, name):
-        nested_tpl = ('{"Resources":{'
+        nested_tpl = ('{"HeatTemplateFormatVersion" : "2012-12-12",'
+                      '"Resources":{'
                       '"A": {"Type": "GenericResourceType"},'
                       '"B": {"Type": "GenericResourceType"}}}')
-        tpl = {'Resources':
+        tpl = {'HeatTemplateFormatVersion': "2012-12-12",
+               'Resources':
                {'A': {'Type': 'AWS::CloudFormation::Stack',
                       'Properties':
                       {'TemplateURL': 'http://server.test/nested.json'}},

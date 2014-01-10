@@ -92,6 +92,7 @@ class ProviderTemplateTest(HeatTestCase):
     def test_to_parameters(self):
         """Tests property conversion to parameter values."""
         provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Parameters': {
                 'Foo': {'Type': 'String'},
                 'AList': {'Type': 'CommaDelimitedList'},
@@ -163,6 +164,7 @@ class ProviderTemplateTest(HeatTestCase):
 
     def test_attributes_extra(self):
         provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Outputs': {
                 'Foo': {'Value': 'bar'},
                 'Blarg': {'Value': 'wibble'},
@@ -221,6 +223,7 @@ class ProviderTemplateTest(HeatTestCase):
 
     def test_properties_normal(self):
         provider = {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Parameters': {
                 'Foo': {'Type': 'String'},
                 'Blarg': {'Type': 'String', 'Default': 'wibble'},
@@ -417,7 +420,9 @@ class ProviderTemplateTest(HeatTestCase):
                              parser.Template({}),
                              stack_id=str(uuid.uuid4()))
 
-        minimal_temp = json.dumps({'Parameters': {}, 'Resources': {}})
+        minimal_temp = json.dumps({'HeatTemplateFormatVersion': '2012-12-12',
+                                   'Parameters': {},
+                                   'Resources': {}})
         self.m.StubOutWithMock(urlfetch, "get")
         urlfetch.get(test_templ_name,
                      allowed_schemes=('http', 'https',

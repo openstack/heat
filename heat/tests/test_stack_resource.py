@@ -35,6 +35,7 @@ ws_res_snippet = {"Type": "some_magic_type",
 
 param_template = '''
 {
+  "AWSTemplateFormatVersion" : "2010-09-09",
   "Parameters" : {
     "KeyName" : {
       "Description" : "KeyName",
@@ -54,6 +55,7 @@ param_template = '''
 
 simple_template = '''
 {
+  "AWSTemplateFormatVersion" : "2010-09-09",
   "Parameters" : {},
   "Resources" : {
     "WebServer": {

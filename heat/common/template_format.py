@@ -69,26 +69,12 @@ def parse(tmpl_str):
         else:
             if tpl is None:
                 tpl = {}
-            if u'heat_template_version' not in tpl:
-                default_for_missing(tpl, u'HeatTemplateFormatVersion',
-                                    HEAT_VERSIONS)
+    # Looking for supported version keys in the loaded template
+    if not ('HeatTemplateFormatVersion' in tpl
+            or 'heat_template_version' in tpl
+            or 'AWSTemplateFormatVersion' in tpl):
+        raise ValueError(_("Template format version not found."))
     return tpl
-
-
-def default_for_missing(tpl, version_param, versions):
-    '''
-    Checks a parsed template for missing version and sections.
-
-    This is currently only applied to YAML templates.
-    '''
-    # if version is missing, implicitly use the lastest one
-    if version_param not in tpl:
-        tpl[version_param] = versions[-1]
-
-    # create empty placeholders for any of the main dict sections
-    for param in (u'Parameters', u'Mappings', u'Resources', u'Outputs'):
-        if param not in tpl:
-            tpl[param] = {}
 
 
 def convert_json_to_yaml(json_str):

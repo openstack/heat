@@ -64,8 +64,12 @@ def to_remote_error(error):
 class InstantiationDataTest(HeatTestCase):
 
     def test_format_parse(self):
-        data = {"key1": ["val1[0]", "val1[1]"], "key2": "val2"}
-        json_repr = '{ "key1": [ "val1[0]", "val1[1]" ], "key2": "val2" }'
+        data = {"AWSTemplateFormatVersion": "2010-09-09",
+                "key1": ["val1[0]", "val1[1]"],
+                "key2": "val2"}
+        json_repr = '{"AWSTemplateFormatVersion" : "2010-09-09",' \
+                    '"key1": [ "val1[0]", "val1[1]" ], ' \
+                    '"key2": "val2" }'
         parsed = stacks.InstantiationData.format_parse(json_repr, 'foo')
         self.assertEqual(parsed, data)
 
@@ -77,6 +81,7 @@ class InstantiationDataTest(HeatTestCase):
     def test_format_parse_invalid_message(self):
         # make sure the parser error gets through to the caller.
         bad_temp = '''
+heat_template_version: '2012-12-12'
 parameters:
   KeyName:
      type: string
@@ -86,7 +91,7 @@ parameters:
         parse_ex = self.assertRaises(webob.exc.HTTPBadRequest,
                                      stacks.InstantiationData.format_parse,
                                      bad_temp, 'foo')
-        self.assertIn('line 3, column 3', str(parse_ex))
+        self.assertIn('line 4, column 3', str(parse_ex))
 
     def test_stack_name(self):
         body = {'stack_name': 'wibble'}
@@ -105,20 +110,18 @@ parameters:
         self.assertEqual(data.template(), template)
 
     def test_template_string_json(self):
-        template = '{"foo": "bar", "blarg": "wibble"}'
+        template = '{"heat_template_version": "2012-12-12",' \
+                   '"foo": "bar", "blarg": "wibble"}'
         body = {'template': template}
         data = stacks.InstantiationData(body)
         self.assertEqual(data.template(), json.loads(template))
 
     def test_template_string_yaml(self):
-        template = '''foo: bar
+        template = '''HeatTemplateFormatVersion: 2012-12-12
+foo: bar
 blarg: wibble
 '''
         parsed = {u'HeatTemplateFormatVersion': u'2012-12-12',
-                  u'Mappings': {},
-                  u'Outputs': {},
-                  u'Parameters': {},
-                  u'Resources': {},
                   u'blarg': u'wibble',
                   u'foo': u'bar'}
 
@@ -127,7 +130,9 @@ blarg: wibble
         self.assertEqual(data.template(), parsed)
 
     def test_template_url(self):
-        template = {'foo': 'bar', 'blarg': 'wibble'}
+        template = {'heat_template_version': '2013-05-23',
+                    'foo': 'bar',
+                    'blarg': 'wibble'}
         url = 'http://example.com/template'
         body = {'template_url': url}
         data = stacks.InstantiationData(body)
