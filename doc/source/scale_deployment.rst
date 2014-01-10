@@ -11,18 +11,20 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-================
-Scaling Out APIs
-================
+====================
+Scaling a Deployment
+====================
 
-Working in an architecture where a large number of incoming requests need to be
-handled, the API services can be overloaded. In those scenarios, in order to
-increase the system performance, it can be helpful to run multiple APIs and use
-a load balancing mechanism.
+When deploying in an environment where a large number of incoming requests need
+to be handled, the API and engine services can be overloaded. In those
+scenarios, in order to increase the system performance, it can be helpful to run
+multiple load-balanced APIs and engines.
 
-This guide details how to scale out the ReST and CFN APIs, also known as the
-*heat-api* and *heat-api-cfn* services, respectively.
+This guide details how to scale out the ReST API, the CFN API, and the engine,
+also known as the *heat-api*, *heat-api-cfn*, and *heat-engine* services,
+respectively.
 
+.. _scale_deployment_assumptions:
 
 Assumptions
 ===========
@@ -41,7 +43,7 @@ Architecture
 ============
 
 This section shows the basic Heat architecture, the load balancing mechanism
-used and the target scaling out architecture.
+used and the target scaled out architecture.
 
 Basic Architecture
 ------------------
@@ -52,9 +54,9 @@ diagram below, where we have a CLI that sends HTTP requests to the ReST and CFN
 APIs, which in turn make calls using AMQP to the Heat engine.
 ::
 
-                       |- [ REST API ] -|
- [ CLI ] -- < HTTP > --                  -- < AMQP > -- [ ENGINE ]
-                       |- [ CFN API ]  -|
+                   |- [REST API] -|
+ [CLI] -- <HTTP> --                -- <AMQP> -- [ENGINE]
+                   |- [CFN API]  -|
 
 Load Balancing
 --------------
@@ -70,19 +72,23 @@ This way, the proxy will take the CLIs requests to the APIs and act on their
 behalf. Once the proxy receives a response, it will be redirected to the caller
 CLI.
 
+A round-robin distribution of messages from the AMQP queue will act as the load
+balancer for multiple engines. Check that your AMQP service is configured to
+distribute messages round-robin (RabbitMQ does this by default).
+
 Target Architecture
 -------------------
 
-A scaling out Heat architecture is represented in the diagram below:
+A scaled out Heat architecture is represented in the diagram below:
 ::
 
-                                    |- [ REST-API ] -|
-                                    |-     ...      -|
-                                    |- [ REST-API ] -|
- [ CLI ] -- < HTTP > -- [ PROXY ] --                  -- < AMQP > -- [ ENGINE ]
-                                    |- [ API-CFN ]  -|
-                                    |-     ...      -|
-                                    |- [ API-CFN ]  -|
+                              |- [REST-API] -|
+                              |-    ...     -|
+                              |- [REST-API] -|             |- [ENGINE] -|
+ [CLI] -- <HTTP> -- [PROXY] --                -- <AMQP> -- |-    ...   -|
+                              |- [API-CFN]  -|             |- [ENGINE] -|
+                              |-    ...     -|
+                              |- [API-CFN]  -|
 
 
 Thus, a request sent from the CLI looks like:
@@ -90,8 +96,8 @@ Thus, a request sent from the CLI looks like:
     1. CLI contacts the proxy;
     2. The HAProxy server, acting as a load balancer, redirects the call to an
        API instance;
-    3. The API server sends messages to RabbitMQ, and the engine server picks up
-       messages from the RabbitMQ queue.
+    3. The API server sends messages to the AMQP queue, and the engines pick up
+       messages in round-robin fashion.
 
 Deploying Multiple APIs
 =======================
@@ -106,9 +112,6 @@ new ReST and CFN API services, you must run:
 
     python bin/heat-api --config-file=/etc/heat/heat.conf
     python bin/heat-api-cfn --config-file=/etc/heat/heat.conf
-
-Running multiple APIs require that you create as many copies of this file as the
-number of instances you want to deploy.
 
 Each API service must have a unique address to listen. This address have to be
 defined in the configuration file. For ReST and CFN APIs, modify the
@@ -125,10 +128,34 @@ defined in the configuration file. For ReST and CFN APIs, modify the
     bind_port = {API_CFN_PORT}
     bind_host = {API_CFN_HOST}
 
+If you wish to run multiple API processes on the same machine, you must create
+multiple copies of the heat.conf file, each containing a unique port number.
+
 In addition, if you want to run some API services in different machines than
 the devstack server, you have to update the loopback addresses found at the
 *sql_connection* and *rabbit_host* properties to the devstack server's IP,
 which must be reachable from the remote machine.
+
+Deploying Multiple Engines
+==========================
+
+All engines must be configured to use the same AMQP service.  Ensure that all of
+the *rabbit_*\* and *kombu_*\* configuration options in the *[DEFAULT]* section
+of */etc/heat/heat.conf* match across each machine that will be running an
+engine.  By using the same AMQP configuration, each engine will subscribe to the
+same AMQP *engine* queue and pick up work in round-robin fashion with the other
+engines.
+
+One or more engines can be deployed per host.  Depending on the host's CPU
+architecture, it may be beneficial to deploy several engines on a single
+machine.
+
+To start multiple engines on the same machine, simply start multiple
+*heat-engine* processes:
+::
+
+    python bin/heat-engine --config-file=/etc/heat/heat.conf &
+    python bin/heat-engine --config-file=/etc/heat/heat.conf &
 
 Deploying the Proxy
 ===================
@@ -201,8 +228,8 @@ as to show more details of the configuration by describing a concrete sample.
 Architecture
 ------------
 
-This subsection shows a basic OpenStack architecture and the target one that
-will be meet.
+This section shows a basic OpenStack architecture and the target one
+that will be used for testing of the scaled-out heat services.
 
 Basic Architecture
 ^^^^^^^^^^^^^^^^^^
@@ -212,7 +239,8 @@ For this sample, consider that:
     1. We have an architecture composed by 3 machines configured in a LAN, with
        the addresses A: 10.0.0.1; B: 10.0.0.2; and C: 10.0.0.3;
     2. The OpenStack devstack installation, including the Heat module, has been
-       done in the machine A, as shown in the Assumptions section.
+       done in the machine A, as shown in the
+       :ref:`scale_deployment_assumptions` section.
 
 Target Architecture
 ^^^^^^^^^^^^^^^^^^^
@@ -223,8 +251,8 @@ subsections show how to deploy a scaling out Heat architecture by:
     1. Running one ReST and one CFN API on the machines B and C;
     2. Setting up the HAProxy server on the machine A.
 
-Running API Services
---------------------
+Running the API and Engine Services
+-----------------------------------
 
 For each machine, B and C, you must do the following steps:
 
@@ -234,10 +262,19 @@ For each machine, B and C, you must do the following steps:
     3. Make required changes on the configuration file;
     4. Enter the Heat local repository and run:
 
-::
+    ::
 
-    python bin/heat-api --config-file=/etc/heat/heat.conf
-    python bin/heat-api-cfn --config-file=/etc/heat/heat.conf
+        python bin/heat-api --config-file=/etc/heat/heat.conf
+        python bin/heat-api-cfn --config-file=/etc/heat/heat.conf
+
+    5. Start as many *heat-engine* processes as you want running on that
+       machine:
+
+    ::
+
+        python bin/heat-engine --config-file=/etc/heat/heat.conf &
+        python bin/heat-engine --config-file=/etc/heat/heat.conf &
+        ...
 
 Changes On Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^
