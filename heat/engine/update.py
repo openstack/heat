@@ -146,8 +146,10 @@ class StackUpdate(object):
         # of the existing stack (which is the stack being updated)
         existing_snippet = self.existing_snippets[existing_res.name]
         new_snippet = self.existing_stack.resolve_runtime_data(new_res.t)
+        prev_res = self.previous_stack.get(new_res.name)
 
-        return existing_res.update(new_snippet, existing_snippet)
+        return existing_res.update(new_snippet, existing_snippet,
+                                   prev_resource=prev_res)
 
     @scheduler.wrappertask
     def _process_existing_resource_update(self, existing_res):

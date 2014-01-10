@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import hashlib
 import json
 from requests import exceptions
 
@@ -126,6 +127,14 @@ class TemplateResource(stack_resource.StackResource):
             self._parsed_nested = template_format.parse(self.template_data())
         return self._parsed_nested
 
+    def implementation_signature(self):
+        self._generate_schema(self.t.get('Properties', {}))
+        schema_names = ([prop for prop in self.properties_schema] +
+                        [at for at in self.attributes_schema])
+        schema_hash = hashlib.sha1(';'.join(schema_names))
+        templ_hash = hashlib.sha1(self.template_data())
+        return (schema_hash.hexdigest(), templ_hash.hexdigest())
+
     def template_data(self):
         # we want to have the latest possible template.
         # 1. look in files
@@ -216,13 +225,7 @@ class TemplateResource(stack_resource.StackResource):
                                          self._to_parameters())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        # The stack template may be changed even if the prop_diff is empty.
-        self.properties = properties.Properties(
-            self.properties_schema,
-            json_snippet.get('Properties', {}),
-            self.stack.resolve_runtime_data,
-            self.name)
-
+        self._generate_schema(json_snippet.get('Properties', {}))
         return self.update_with_template(self.parsed_nested(),
                                          self._to_parameters())
 
