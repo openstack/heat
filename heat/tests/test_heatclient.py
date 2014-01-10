@@ -157,6 +157,22 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.create_stack_user(long_user_name, password='password')
 
+    def test_delete_stack_user(self):
+
+        """Test deleting a stack user."""
+
+        self._stubs_v3()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client delete function
+        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.users.delete(user='atestuser').AndReturn(None)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_user('atestuser')
+
     def test_init_v2_password(self):
 
         """Test creating the client, user/password context."""
