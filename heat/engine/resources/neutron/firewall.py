@@ -91,8 +91,7 @@ class Firewall(neutron.NeutronResource):
         try:
             client.delete_firewall(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 
@@ -167,8 +166,7 @@ class FirewallPolicy(neutron.NeutronResource):
         try:
             client.delete_firewall_policy(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 
@@ -291,8 +289,7 @@ class FirewallRule(neutron.NeutronResource):
         try:
             client.delete_firewall_rule(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 

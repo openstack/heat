@@ -120,8 +120,7 @@ class Router(neutron.NeutronResource):
         try:
             client.delete_router(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 
@@ -204,8 +203,7 @@ class RouterInterface(neutron.NeutronResource):
                 router_id,
                 {key: value})
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
 
 
 class RouterGateway(neutron.NeutronResource):
@@ -276,8 +274,7 @@ class RouterGateway(neutron.NeutronResource):
         try:
             client.remove_gateway_router(router_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
 
 
 class RouterL3Agent(neutron.NeutronResource):

@@ -139,8 +139,7 @@ class HealthMonitor(neutron.NeutronResource):
         try:
             self.neutron().delete_health_monitor(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 
@@ -336,8 +335,7 @@ class Pool(neutron.NeutronResource):
                 yield
                 client.show_vip(self.metadata['vip'])
             except NeutronClientException as ex:
-                if ex.status_code != 404:
-                    raise ex
+                self._handle_not_found_exception(ex)
                 break
 
     def handle_delete(self):
@@ -346,15 +344,13 @@ class Pool(neutron.NeutronResource):
             try:
                 self.neutron().delete_vip(self.metadata['vip'])
             except NeutronClientException as ex:
-                if ex.status_code != 404:
-                    raise ex
+                self._handle_not_found_exception(ex)
             else:
                 checkers.append(scheduler.TaskRunner(self._confirm_vip_delete))
         try:
             self.neutron().delete_pool(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             checkers.append(scheduler.TaskRunner(self._confirm_delete))
         return checkers
@@ -464,8 +460,7 @@ class PoolMember(neutron.NeutronResource):
         try:
             client.delete_member(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 
