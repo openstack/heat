@@ -50,7 +50,7 @@ class SignalResponder(resource.Resource):
             self.physical_resource_name())
         self.resource_id_set(user_id)
 
-        kp = self.keystone().get_ec2_keypair(user_id)
+        kp = self.keystone().create_ec2_keypair(user_id)
         if not kp:
             raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user_id)

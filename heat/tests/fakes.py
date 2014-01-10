@@ -94,7 +94,16 @@ class FakeKeystoneClient(object):
     def delete_stack_user(self, user_id):
         self.user_id = None
 
-    def get_ec2_keypair(self, user_id):
+    def get_ec2_keypair(self, access, user_id):
+        if user_id == self.user_id:
+            if access == self.access:
+                return self.creds
+            else:
+                raise ValueError("Unexpected access %s" % access)
+        else:
+            raise ValueError("Unexpected user_id %s" % user_id)
+
+    def create_ec2_keypair(self, user_id):
         if user_id == self.user_id:
             if not self.creds:
                 class FakeCred(object):

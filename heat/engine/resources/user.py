@@ -212,7 +212,7 @@ class AccessKey(resource.Resource):
             raise exception.NotFound(_('could not find user %s') %
                                      self.properties[self.USER_NAME])
 
-        kp = self.keystone().get_ec2_keypair(user.resource_id)
+        kp = self.keystone().create_ec2_keypair(user.resource_id)
         if not kp:
             raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user)
@@ -264,7 +264,8 @@ class AccessKey(resource.Resource):
                 except exception.NotFound:
                     try:
                         user_id = self._get_user().resource_id
-                        kp = self.keystone().get_ec2_keypair(user_id)
+                        kp = self.keystone().get_ec2_keypair(
+                            user_id=user_id, access=self.resource_id)
                         self._secret = kp.secret
                         # Store the key in resource_data
                         db_api.resource_data_set(self, 'secret_key',
