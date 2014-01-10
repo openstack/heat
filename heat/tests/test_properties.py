@@ -683,7 +683,20 @@ class PropertyTest(testtools.TestCase):
     def test_int_bad(self):
         schema = {'Type': 'Integer'}
         p = properties.Property(schema)
-        self.assertRaises(TypeError, p.validate_data, '3')
+        ex = self.assertRaises(TypeError, p.validate_data, [1])
+        self.assertEqual("int() argument must be a string or a number, "
+                         "not 'list'", str(ex))
+
+    def test_int_from_str_good(self):
+        schema = {'Type': 'Integer'}
+        p = properties.Property(schema)
+        self.assertEqual(3, p.validate_data('3'))
+
+    def test_int_from_str_bad(self):
+        schema = {'Type': 'Integer'}
+        p = properties.Property(schema)
+        ex = self.assertRaises(TypeError, p.validate_data, '3a')
+        self.assertEqual("Value '3a' is not an integer", str(ex))
 
     def test_integer_low(self):
         schema = {'Type': 'Integer',
