@@ -561,6 +561,7 @@ class ResourceTest(HeatTestCase):
             }
 
         expected_template = {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Parameters': {
                 'name': {'Type': 'String'},
                 'bool': {'Type': 'String',
