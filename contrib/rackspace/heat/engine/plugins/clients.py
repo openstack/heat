@@ -94,8 +94,6 @@ class Clients(clients.OpenStackClients):
         return super(Clients, self).trove(service_type="rax:database")
 
     def __authenticate(self):
-        # current implemenation shown below authenticates using
-        # username and password. Need make it work with auth-token
         pyrax.set_setting("identity_type", "keystone")
         pyrax.set_setting("auth_endpoint", self.context.auth_url)
         logger.info("Authenticating with username:%s" %
