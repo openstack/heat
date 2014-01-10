@@ -145,7 +145,7 @@ lb_template_default = r'''
         }
       },
       "Properties": {
-        "ImageId": "F17-x86_64-cfntools",
+        "ImageId": "F20-x86_64-cfntools",
         "InstanceType": "m1.small",
         "KeyName": { "Ref": "KeyName" },
         "UserData": { "Fn::Base64": { "Fn::Join": ["", [

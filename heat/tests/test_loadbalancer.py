@@ -139,7 +139,7 @@ class LoadBalancerTest(HeatTestCase):
         clients.OpenStackClients.nova(
             "compute").MultipleTimes().AndReturn(self.fc)
         self.fc.servers.create(
-            flavor=2, image=745, key_name=key_name,
+            flavor=2, image=746, key_name=key_name,
             meta=None, nics=None, name=server_name,
             scheduler_hints=None, userdata=mox.IgnoreArg(),
             security_groups=None, availability_zone=None).AndReturn(
