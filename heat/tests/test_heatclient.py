@@ -128,31 +128,32 @@ class KeystoneClientTest(HeatTestCase):
     def test_username_length(self):
         """Test that user names >64 characters are properly truncated."""
 
-        self._stubs_v2()
+        self._stubs_v3()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
 
         # a >64 character user name and the expected version
         long_user_name = 'U' * 64 + 'S'
         good_user_name = long_user_name[-64:]
         # mock keystone client user functions
-        self.mock_ks_client.users = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         # when keystone is called, the name should have been truncated
         # to the last 64 characters of the long name
-        (self.mock_ks_client.users.create(good_user_name, 'password',
-                                          mox.IgnoreArg(), enabled=True,
-                                          tenant_id=mox.IgnoreArg())
-         .AndReturn(mock_user))
+        self.mock_ks_v3_client.users.create(name=good_user_name,
+                                            password='password',
+                                            default_project=ctx.tenant_id
+                                            ).AndReturn(mock_user)
         # mock out the call to roles; will send an error log message but does
         # not raise an exception
-        self.mock_ks_client.roles = self.m.CreateMockAnything()
-        self.mock_ks_client.roles.list().AndReturn([])
+        self.mock_ks_v3_client.roles = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.roles.list(name='heat_stack_user').AndReturn([])
         self.m.ReplayAll()
         # call create_stack_user with a long user name.
         # the cleanup VerifyAll should verify that though we passed
         # long_user_name, keystone was actually called with a truncated
         # user name
-        ctx = utils.dummy_context()
-        ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.create_stack_user(long_user_name, password='password')
 
