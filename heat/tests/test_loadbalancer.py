@@ -215,6 +215,7 @@ class LoadBalancerTest(HeatTestCase):
         s.store()
 
         rsrc = self.create_loadbalancer(t, s, 'LoadBalancer')
+        self.assertEqual('LoadBalancer', rsrc.name)
         self.m.VerifyAll()
 
     def assertRegexpMatches(self, text, expected_regexp, msg=None):
