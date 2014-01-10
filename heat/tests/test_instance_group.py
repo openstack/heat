@@ -100,7 +100,7 @@ class InstanceGroupTest(HeatTestCase):
         instance.Instance.FnGetAtt('PublicIp').AndReturn('1.2.3.4')
 
         self.m.ReplayAll()
-        conf = self.create_resource(t, stack, 'JobServerConfig')
+        self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
         self.assertEqual(utils.PhysName(stack.name, rsrc.name),
                          rsrc.FnGetRefId())
@@ -133,7 +133,7 @@ class InstanceGroupTest(HeatTestCase):
         self._stub_create(1, instance_class=MyInstance)
 
         self.m.ReplayAll()
-        conf = self.create_resource(t, stack, 'JobServerConfig')
+        self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
         self.assertEqual(utils.PhysName(stack.name, rsrc.name),
                          rsrc.FnGetRefId())
@@ -145,7 +145,7 @@ class InstanceGroupTest(HeatTestCase):
         t = template_format.parse(ig_template)
         stack = utils.parse_stack(t)
 
-        conf = self.create_resource(t, stack, 'JobServerConfig')
+        self.create_resource(t, stack, 'JobServerConfig')
         rsrc = stack['JobServerGroup']
 
         self.m.StubOutWithMock(instance.Instance, 'handle_create')
@@ -170,7 +170,7 @@ class InstanceGroupTest(HeatTestCase):
 
         self._stub_create(2)
         self.m.ReplayAll()
-        conf = self.create_resource(t, stack, 'JobServerConfig')
+        self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
 
         self.m.VerifyAll()
@@ -213,7 +213,7 @@ class InstanceGroupTest(HeatTestCase):
         instance.Instance.handle_create().AndRaise(Exception)
 
         self.m.ReplayAll()
-        conf = self.create_resource(t, stack, 'JobServerConfig')
+        self.create_resource(t, stack, 'JobServerConfig')
         self.assertRaises(
             exception.ResourceFailure,
             self.create_resource, t, stack, 'JobServerGroup')
@@ -240,7 +240,7 @@ class InstanceGroupTest(HeatTestCase):
 
         self._stub_create(1)
         self.m.ReplayAll()
-        conf = self.create_resource(t, stack, 'JobServerConfig')
+        self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
         self.assertEqual(len(rsrc.nested().resources), 1)
         succeeded_instance = rsrc.nested().resources.values()[0]
@@ -257,8 +257,6 @@ class InstanceGroupTest(HeatTestCase):
 
         update_snippet = copy.deepcopy(rsrc.parsed_template())
         update_snippet['Properties']['Size'] = '2'
-        tmpl_diff = {'Properties': {'Size': '2'}}
-        prop_diff = {'Size': '2'}
         updater = scheduler.TaskRunner(rsrc.update, update_snippet)
         self.assertRaises(exception.ResourceFailure, updater)
 
@@ -281,7 +279,7 @@ class InstanceGroupTest(HeatTestCase):
 
         self._stub_create(2)
         self.m.ReplayAll()
-        conf = self.create_resource(t, stack, 'JobServerConfig')
+        self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
 
         self.m.ReplayAll()
@@ -302,7 +300,7 @@ class InstanceGroupTest(HeatTestCase):
 
         self._stub_create(2)
         self.m.ReplayAll()
-        conf = self.create_resource(t, stack, 'JobServerConfig')
+        self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
 
         self.m.ReplayAll()

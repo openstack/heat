@@ -50,7 +50,7 @@ class WatchController(object):
         except heat_exception.Forbidden:
             msg = _("Action %s not allowed for user") % action
             raise exception.HeatAccessDeniedError(msg)
-        except Exception as ex:
+        except Exception:
             # We expect policy.enforce to either pass or raise Forbidden
             # however, if anything else happens, we want to raise
             # HeatInternalFailureError, failure to do this results in
@@ -326,15 +326,6 @@ class WatchController(object):
                         'expect': state_map.keys()}
             logger.error(msg)
             return exception.HeatInvalidParameterValueError(msg)
-
-        # Check for optional parameters
-        # FIXME : We don't actually do anything with these in the engine yet..
-        state_reason = None
-        state_reason_data = None
-        if 'StateReason' in parms:
-            state_reason = parms['StateReason']
-        if 'StateReasonData' in parms:
-            state_reason_data = parms['StateReasonData']
 
         logger.debug(_("setting %(name)s to %(state)s") % {
                      'name': name, 'state': state_map[state]})

@@ -247,7 +247,6 @@ Outputs:
 
         rsrc = stack['the_nested']
 
-        original_nested_id = rsrc.resource_id
         t = template_format.parse(self.test_template)
         new_res = copy.deepcopy(t['Resources']['the_nested'])
         new_res['Properties']['TemplateURL'] = (
@@ -289,7 +288,6 @@ Outputs:
 
         rsrc = stack['the_nested']
 
-        original_nested_id = rsrc.resource_id
         t = template_format.parse(self.test_template)
         new_res = copy.deepcopy(t['Resources']['the_nested'])
         new_res['Properties']['TemplateURL'] = (

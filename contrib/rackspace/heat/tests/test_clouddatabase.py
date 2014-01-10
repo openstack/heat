@@ -175,8 +175,7 @@ class CloudDBInstanceTest(HeatTestCase):
     def test_clouddbinstance_delete(self):
         instance = self._setup_test_clouddbinstance('dbinstance_delete')
         fake_client = self.m.CreateMockAnything()
-        cloud_db = instance.cloud_db().AndReturn(fake_client)
-        fakedbinstance = FakeDBInstance()
+        instance.cloud_db().AndReturn(fake_client)
         fake_client.delete(1234).AndReturn(None)
         self.m.ReplayAll()
         instance.handle_delete()

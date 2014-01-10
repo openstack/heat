@@ -197,7 +197,6 @@ class OSDBInstanceTest(HeatTestCase):
         self.m.VerifyAll()
 
     def test_osdatabase_invalid_attribute(self):
-        fake_dbinstance = FakeDBInstance()
         t = template_format.parse(wp_template)
         instance = self._setup_test_clouddbinstance("db_invalid_attrib", t)
         attrib = instance._resolve_attribute("invalid_attrib")

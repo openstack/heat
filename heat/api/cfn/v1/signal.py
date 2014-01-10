@@ -42,7 +42,7 @@ class SignalController(object):
         con = req.context
         identity = identifier.ResourceIdentifier.from_arn(arn)
         try:
-            md = self.engine.resource_signal(
+            self.engine.resource_signal(
                 con,
                 stack_identity=dict(identity.stack()),
                 resource_name=identity.resource_name,

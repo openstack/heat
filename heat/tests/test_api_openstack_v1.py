@@ -392,7 +392,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/stacks', params=params)
         mock_call.return_value = []
 
-        result = self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.tenant)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[2]['args']
@@ -415,7 +415,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         req = self._get('/stacks', params=params)
         mock_call.return_value = []
 
-        result = self.controller.index(req, tenant_id=self.tenant)
+        self.controller.index(req, tenant_id=self.tenant)
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[2]['args']
@@ -587,7 +587,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
         template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
         parameters = {u'InstanceType': u'm1.xlarge'}
         body = {'template': template,
                 'stack_name': identity.stack_name,
@@ -625,7 +624,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
         template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
         parameters = {u'InstanceType': u'm1.xlarge'}
         body = {'template': template,
                 'stack_name': identity.stack_name,
@@ -664,7 +662,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         stack_name = "wordpress"
         template = {u'Foo': u'bar'}
         parameters = {u'InstanceType': u'm1.xlarge'}
-        json_template = json.dumps(template)
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': parameters,
@@ -736,7 +733,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         stack_name = "wordpress"
         template = {u'Foo': u'bar'}
         parameters = {u'InstanceType': u'm1.xlarge'}
-        json_template = json.dumps(template)
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': parameters,
@@ -772,7 +768,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         stack_name = "wordpress"
         template = {u'Foo': u'bar'}
         parameters = {u'InstanceType': u'm1.xlarge'}
-        json_template = json.dumps(template)
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': parameters,
@@ -792,7 +787,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         stack_name = "wordpress"
         template = {u'Foo': u'bar'}
         parameters = {u'InstanceType': u'm1.xlarge'}
-        json_template = json.dumps(template)
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': parameters,
@@ -1186,10 +1180,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_update(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        stack_name = u'wordpress'
-        stack_id = u'6'
         template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
         parameters = {u'InstanceType': u'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
@@ -1225,7 +1216,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
         template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
         parameters = {u'InstanceType': u'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
@@ -1265,7 +1255,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'update', False)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
         template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
         parameters = {u'InstanceType': u'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
@@ -1288,12 +1277,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_delete(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
-        parameters = {u'InstanceType': u'm1.xlarge'}
-        body = {'template': template,
-                'parameters': parameters,
-                'timeout_mins': 30}
 
         req = self._delete('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
@@ -1317,12 +1300,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_delete_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', False)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
-        parameters = {u'InstanceType': u'm1.xlarge'}
-        body = {'template': template,
-                'parameters': parameters,
-                'timeout_mins': 30}
 
         req = self._delete('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
@@ -1338,9 +1315,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_abandon(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'abandon', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
-        parameters = {u'InstanceType': u'm1.xlarge'}
         req = self._abandon('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
         self.m.StubOutWithMock(rpc, 'call')
@@ -1364,12 +1338,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_abandon_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'abandon', False)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
-        parameters = {u'InstanceType': u'm1.xlarge'}
-        body = {'template': template,
-                'parameters': parameters,
-                'timeout_mins': 30}
 
         req = self._abandon('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
@@ -1385,12 +1353,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_delete_bad_name(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
-        template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
-        parameters = {u'InstanceType': u'm1.xlarge'}
-        body = {'template': template,
-                'parameters': parameters,
-                'timeout_mins': 30}
 
         req = self._delete('/stacks/%(stack_name)s/%(stack_id)s' % identity)
 
@@ -1418,7 +1380,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_validate_template(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate_template', True)
         template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
         body = {'template': template}
 
         req = self._post('/validate', json.dumps(body))
@@ -1452,7 +1413,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_validate_template_error(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate_template', True)
         template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
         body = {'template': template}
 
         req = self._post('/validate', json.dumps(body))
@@ -1474,7 +1434,6 @@ class StackControllerTest(ControllerTest, HeatTestCase):
     def test_validate_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate_template', False)
         template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
         body = {'template': template}
 
         req = self._post('/validate', json.dumps(body))
@@ -1531,11 +1490,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
     def test_list_resource_types_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'list_resource_types', False)
-        template = {u'Foo': u'bar'}
-        json_template = json.dumps(template)
-
         req = self._get('/resource_types')
-
         resp = request_with_middleware(fault.FaultWrapper,
                                        self.controller.list_resource_types,
                                        req, tenant_id=self.tenant)
@@ -1779,8 +1734,8 @@ class ResourceControllerTest(ControllerTest, HeatTestCase):
         res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
-        res_identity = identifier.ResourceIdentifier(resource_name=res_name,
-                                                     **stack_identity)
+        identifier.ResourceIdentifier(resource_name=res_name,
+                                      **stack_identity)
 
         req = self._get(stack_identity._tenant_path() + '/resources')
 
@@ -2922,7 +2877,6 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
 
     def test_action_suspend(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
         body = {'suspend': None}
@@ -2947,7 +2901,6 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
 
     def test_action_resume(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
         body = {'resume': None}
@@ -2972,7 +2925,6 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
 
     def test_action_badaction(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
         body = {'notallowed': None}
@@ -2990,7 +2942,6 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
 
     def test_action_badaction_empty(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
         body = {}
@@ -3008,7 +2959,6 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
 
     def test_action_badaction_multiple(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
         body = {'one': None, 'two': None}
@@ -3026,7 +2976,6 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
 
     def test_action_rmt_aterr(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
         body = {'suspend': None}
@@ -3055,7 +3004,6 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
 
     def test_action_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', False)
-        res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
         body = {'suspend': None}
@@ -3073,7 +3021,6 @@ class ActionControllerTest(ControllerTest, HeatTestCase):
 
     def test_action_badaction_ise(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
-        res_name = 'WikiDatabase'
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
         body = {'oops': None}

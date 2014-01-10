@@ -174,5 +174,5 @@ class KeystonePasswordAuthProtocolTest(HeatTestCase):
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'
         req.headers['X_AUTH_KEY'] = 'goodpassword'
-        response = self.middleware(req.environ, self._start_fake_response)
+        self.middleware(req.environ, self._start_fake_response)
         self.assertEqual(self.response_status, 400)

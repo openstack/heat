@@ -262,11 +262,6 @@ class AutoScalingTest(HeatTestCase):
                 self.id = id
                 self.name = name
 
-        image_list = [id_type(id='768b5464-3df5-4abf-be33-63b60f8b99d0',
-                              name='foo')]
-        flavor_list = [id_type(id='768b5464-3df5-4abf-be33-63b60f8b99d1',
-                               name='bar')]
-
         instances = {}
 
         clients.OpenStackClients.keystone().AndReturn(

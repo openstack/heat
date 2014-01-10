@@ -113,7 +113,7 @@ class ElasticIp(resource.Resource):
         instance_id = self.properties[self.INSTANCE_ID]
         if instance_id:
             server = self.nova().servers.get(instance_id)
-            res = server.add_floating_ip(self._ipaddress())
+            server.add_floating_ip(self._ipaddress())
 
     def handle_delete(self):
         instance_id = self.properties[self.INSTANCE_ID]
@@ -122,7 +122,7 @@ class ElasticIp(resource.Resource):
                 server = self.nova().servers.get(instance_id)
                 if server:
                     server.remove_floating_ip(self._ipaddress())
-            except clients.novaclient.exceptions.NotFound as ex:
+            except clients.novaclient.exceptions.NotFound:
                 pass
 
         """De-allocate a floating IP."""
@@ -240,7 +240,7 @@ class ElasticIpAssociation(resource.Resource):
                 server = self.nova().servers.get(instance_id)
                 if server:
                     server.remove_floating_ip(self.properties[self.EIP])
-            except clients.novaclient.exceptions.NotFound as ex:
+            except clients.novaclient.exceptions.NotFound:
                 pass
         elif self.properties[self.ALLOCATION_ID]:
             float_id = self.properties[self.ALLOCATION_ID]

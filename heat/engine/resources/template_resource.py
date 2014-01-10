@@ -204,7 +204,7 @@ class TemplateResource(stack_resource.StackResource):
             raise exception.StackValidationFailed(message=msg)
 
         try:
-            td = self.template_data()
+            self.template_data()
         except ValueError as ex:
             msg = _("Failed to retrieve template data: %s") % str(ex)
             raise exception.StackValidationFailed(message=msg)

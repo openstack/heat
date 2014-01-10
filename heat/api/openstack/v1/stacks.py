@@ -270,12 +270,12 @@ class StackController(object):
         """
         data = InstantiationData(body)
 
-        res = self.engine.update_stack(req.context,
-                                       identity,
-                                       data.template(),
-                                       data.environment(),
-                                       data.files(),
-                                       data.args())
+        self.engine.update_stack(req.context,
+                                 identity,
+                                 data.template(),
+                                 data.environment(),
+                                 data.files(),
+                                 data.args())
 
         raise exc.HTTPAccepted()
 

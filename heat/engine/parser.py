@@ -418,7 +418,6 @@ class Stack(collections.Mapping):
 
         stack_status = self.COMPLETE
         reason = 'Stack %s completed successfully' % action.lower()
-        res = None
 
         def resource_action(r):
             # Find e.g resource.create and call it

@@ -267,9 +267,8 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(1, len(st_db))
 
     def test_stack_get_all_by_tenant_and_filters(self):
-        stack1 = self._setup_test_stack('foo', UUID1)
-        stack2 = self._setup_test_stack('bar', UUID2)
-        stacks = [stack1, stack2]
+        self._setup_test_stack('foo', UUID1)
+        self._setup_test_stack('bar', UUID2)
 
         filters = {'name': 'foo'}
         results = db_api.stack_get_all_by_tenant(self.ctx,
@@ -279,9 +278,8 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual('foo', results[0]['name'])
 
     def test_stack_get_all_by_tenant_filter_matches_in_list(self):
-        stack1 = self._setup_test_stack('foo', UUID1)
-        stack2 = self._setup_test_stack('bar', UUID2)
-        stacks = [stack1, stack2]
+        self._setup_test_stack('foo', UUID1)
+        self._setup_test_stack('bar', UUID2)
 
         filters = {'name': ['bar', 'quux']}
         results = db_api.stack_get_all_by_tenant(self.ctx,
@@ -291,9 +289,8 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual('bar', results[0]['name'])
 
     def test_stack_get_all_by_tenant_returns_all_if_no_filters(self):
-        stack1 = self._setup_test_stack('foo', UUID1)
-        stack2 = self._setup_test_stack('bar', UUID2)
-        stacks = [stack1, stack2]
+        self._setup_test_stack('foo', UUID1)
+        self._setup_test_stack('bar', UUID2)
 
         filters = None
         results = db_api.stack_get_all_by_tenant(self.ctx,
@@ -332,8 +329,8 @@ class SqlAlchemyTest(HeatTestCase):
     @mock.patch.object(db_api.utils, 'paginate_query')
     def test_stack_get_all_by_tenant_filters_sort_keys(self, mock_paginate):
         sort_keys = ['name', 'status', 'created_at', 'updated_at', 'username']
-        st_db = db_api.stack_get_all_by_tenant(self.ctx,
-                                               sort_keys=sort_keys)
+        db_api.stack_get_all_by_tenant(self.ctx,
+                                       sort_keys=sort_keys)
 
         args, _ = mock_paginate.call_args
         used_sort_keys = set(args[3])
@@ -349,17 +346,17 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(stacks[0].id, st_db[0].id)
 
     def test_stack_get_all_by_tenant_non_existing_marker(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        [self._setup_test_stack('stack', x)[1] for x in UUIDs]
 
         uuid = 'this stack doesnt exist'
         st_db = db_api.stack_get_all_by_tenant(self.ctx, marker=uuid)
         self.assertEqual(3, len(st_db))
 
     def test_stack_get_all_by_tenant_doesnt_mutate_sort_keys(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        [self._setup_test_stack('stack', x)[1] for x in UUIDs]
         sort_keys = ['id']
 
-        st_db = db_api.stack_get_all_by_tenant(self.ctx, sort_keys=sort_keys)
+        db_api.stack_get_all_by_tenant(self.ctx, sort_keys=sort_keys)
         self.assertEqual(['id'], sort_keys)
 
     def test_stack_count_all_by_tenant(self):
@@ -377,9 +374,9 @@ class SqlAlchemyTest(HeatTestCase):
         self.assertEqual(1, st_db)
 
     def test_stack_count_all_by_tenant_with_filters(self):
-        stack1 = self._setup_test_stack('foo', UUID1)
-        stack2 = self._setup_test_stack('bar', UUID2)
-        stack3 = self._setup_test_stack('bar', UUID3)
+        self._setup_test_stack('foo', UUID1)
+        self._setup_test_stack('bar', UUID2)
+        self._setup_test_stack('bar', UUID3)
         filters = {'name': 'bar'}
 
         st_db = db_api.stack_count_all_by_tenant(self.ctx, filters=filters)
