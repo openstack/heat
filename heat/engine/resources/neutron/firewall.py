@@ -16,7 +16,6 @@ from heat.engine import clients
 from heat.engine.resources.neutron import neutron
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import scheduler
 
 if clients.neutronclient is not None:
     from neutronclient.common.exceptions import NeutronClientException
@@ -95,7 +94,7 @@ class Firewall(neutron.NeutronResource):
             if ex.status_code != 404:
                 raise ex
         else:
-            return scheduler.TaskRunner(self._confirm_delete)()
+            return self._delete_task()
 
 
 class FirewallPolicy(neutron.NeutronResource):
@@ -171,7 +170,7 @@ class FirewallPolicy(neutron.NeutronResource):
             if ex.status_code != 404:
                 raise ex
         else:
-            return scheduler.TaskRunner(self._confirm_delete)()
+            return self._delete_task()
 
 
 class FirewallRule(neutron.NeutronResource):
@@ -295,7 +294,7 @@ class FirewallRule(neutron.NeutronResource):
             if ex.status_code != 404:
                 raise ex
         else:
-            return scheduler.TaskRunner(self._confirm_delete)()
+            return self._delete_task()
 
 
 def resource_mapping():

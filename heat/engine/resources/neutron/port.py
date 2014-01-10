@@ -18,7 +18,6 @@ from heat.openstack.common import log as logging
 from heat.engine.resources.neutron import neutron
 from heat.engine.resources.neutron import subnet
 from heat.engine import properties
-from heat.engine import scheduler
 
 if clients.neutronclient is not None:
     import neutronclient.common.exceptions as neutron_exp
@@ -198,7 +197,7 @@ class Port(neutron.NeutronResource):
         except neutron_exp.NeutronClientException as ex:
             self._handle_not_found_exception(ex)
         else:
-            return scheduler.TaskRunner(self._confirm_delete)()
+            return self._delete_task()
 
     def _handle_not_found_exception(self, ex):
         # raise any exception which is not for a not found port

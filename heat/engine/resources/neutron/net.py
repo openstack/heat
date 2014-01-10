@@ -17,7 +17,6 @@ from heat.engine import clients
 from heat.openstack.common import log as logging
 from heat.engine.resources.neutron import neutron
 from heat.engine import properties
-from heat.engine import scheduler
 
 if clients.neutronclient is not None:
     import neutronclient.common.exceptions as neutron_exp
@@ -103,7 +102,7 @@ class Net(neutron.NeutronResource):
         except neutron_exp.NeutronClientException as ex:
             self._handle_not_found_exception(ex)
         else:
-            return scheduler.TaskRunner(self._confirm_delete)()
+            return self._delete_task()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         props = self.prepare_update_properties(json_snippet)
