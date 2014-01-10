@@ -125,6 +125,43 @@ policy_template = '''
 }
 '''
 
+user_policy_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Just a User",
+  "Parameters" : {},
+  "Resources" : {
+    "CfnUser" : {
+      "Type" : "AWS::IAM::User",
+      "Properties" : {
+        "Policies" : [ { "Ref": "WebServerAccessPolicy"} ]
+      }
+    },
+    "WebServerAccessPolicy" : {
+      "Type" : "OS::Heat::AccessPolicy",
+      "Properties" : {
+        "AllowedResources" : [ "WebServer" ]
+      }
+    },
+    "HostKeys" : {
+      "Type" : "AWS::IAM::AccessKey",
+      "Properties" : {
+        "UserName" : {"Ref": "CfnUser"}
+      }
+    },
+    "WebServer": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId" : "F17-x86_64-gold",
+        "InstanceType"   : "m1.large",
+        "KeyName"        : "test",
+        "UserData"       : "wordpress"
+      }
+    }
+  }
+}
+'''
+
 
 def get_wordpress_stack(stack_name, ctx):
     t = template_format.parse(wp_template)
@@ -928,6 +965,80 @@ class StackServiceSuspendResumeTest(HeatTestCase):
         self.m.VerifyAll()
 
 
+class StackServiceAuthorizeTest(HeatTestCase):
+
+    def setUp(self):
+        super(StackServiceAuthorizeTest, self).setUp()
+
+        self.ctx = utils.dummy_context(tenant_id='stack_service_test_tenant')
+        self.m.StubOutWithMock(service.EngineListener, 'start')
+        service.EngineListener.start().AndReturn(None)
+        self.m.ReplayAll()
+
+        self.eng = service.EngineService('a-host', 'a-topic')
+        cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
+        _register_class('ResourceWithPropsType',
+                        generic_rsrc.ResourceWithProps)
+
+        utils.setup_dummy_db()
+
+    @stack_context('service_authorize_stack_user_nocreds_test_stack')
+    def test_stack_authorize_stack_user_nocreds(self):
+        self.assertFalse(self.eng._authorize_stack_user(self.ctx,
+                                                        self.stack,
+                                                        'foo'))
+
+    @stack_context('service_authorize_user_attribute_error_test_stack')
+    def test_stack_authorize_stack_user_attribute_error(self):
+        self.m.StubOutWithMock(json, 'loads')
+        json.loads(None).AndRaise(AttributeError)
+        self.m.ReplayAll()
+        self.assertFalse(self.eng._authorize_stack_user(self.ctx,
+                                                        self.stack,
+                                                        'foo'))
+        self.m.VerifyAll()
+
+    @stack_context('service_authorize_stack_user_type_error_test_stack')
+    def test_stack_authorize_stack_user_type_error(self):
+        self.m.StubOutWithMock(json, 'loads')
+        json.loads(mox.IgnoreArg()).AndRaise(TypeError)
+        self.m.ReplayAll()
+
+        self.assertFalse(self.eng._authorize_stack_user(self.ctx,
+                                                        self.stack,
+                                                        'foo'))
+
+        self.m.VerifyAll()
+
+    def test_stack_authorize_stack_user(self):
+        self.ctx = utils.dummy_context()
+        self.ctx.aws_creds = '{"ec2Credentials": {"access": "4567"}}'
+        stack = get_stack('stack_authorize_stack_user',
+                          self.ctx,
+                          user_policy_template)
+        self.stack = stack
+        fc = setup_mocks(self.m, stack)
+        self.m.StubOutWithMock(fc.client, 'get_servers_9999')
+        get = fc.client.get_servers_9999
+        get().AndRaise(service.clients.novaclient.exceptions.NotFound(404))
+
+        self.m.ReplayAll()
+        stack.store()
+        stack.create()
+
+        self.assertTrue(self.eng._authorize_stack_user(
+            self.ctx, self.stack, 'WebServer'))
+
+        self.assertFalse(self.eng._authorize_stack_user(
+            self.ctx, self.stack, 'CfnUser'))
+
+        self.assertFalse(self.eng._authorize_stack_user(
+            self.ctx, self.stack, 'NoSuchResource'))
+
+        self.stack.delete()
+        self.m.VerifyAll()
+
+
 class StackServiceTest(HeatTestCase):
 
     def setUp(self):
@@ -1397,34 +1508,6 @@ class StackServiceTest(HeatTestCase):
         self.assertRaises(exception.Forbidden,
                           self.eng.describe_stack_resource,
                           self.ctx, self.stack.identifier(), 'foo')
-
-        self.m.VerifyAll()
-
-    @stack_context('service_authorize_stack_user_nocreds_test_stack')
-    def test_stack_authorize_stack_user_nocreds(self):
-        self.assertFalse(self.eng._authorize_stack_user(self.ctx,
-                                                        self.stack,
-                                                        'foo'))
-
-    @stack_context('service_authorize_user_attribute_error_test_stack')
-    def test_stack_authorize_stack_user_attribute_error(self):
-        self.m.StubOutWithMock(json, 'loads')
-        json.loads(None).AndRaise(AttributeError)
-        self.m.ReplayAll()
-        self.assertFalse(self.eng._authorize_stack_user(self.ctx,
-                                                        self.stack,
-                                                        'foo'))
-        self.m.VerifyAll()
-
-    @stack_context('service_authorize_stack_user_type_error_test_stack')
-    def test_stack_authorize_stack_user_type_error(self):
-        self.m.StubOutWithMock(json, 'loads')
-        json.loads(mox.IgnoreArg()).AndRaise(TypeError)
-        self.m.ReplayAll()
-
-        self.assertFalse(self.eng._authorize_stack_user(self.ctx,
-                                                        self.stack,
-                                                        'foo'))
 
         self.m.VerifyAll()
 

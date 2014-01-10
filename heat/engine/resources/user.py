@@ -188,6 +188,8 @@ class AccessKey(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(AccessKey, self).__init__(name, json_snippet, stack)
         self._secret = None
+        if self.resource_id:
+            self._register_access_key()
 
     def _get_user(self):
         """
@@ -216,6 +218,7 @@ class AccessKey(resource.Resource):
 
         self.resource_id_set(kp.access)
         self._secret = kp.secret
+        self._register_access_key()
 
     def handle_delete(self):
         self._secret = None
@@ -282,8 +285,12 @@ class AccessKey(resource.Resource):
                                              key, log_res))
         return unicode(res)
 
-    def access_allowed(self, resource_name):
-        return self._get_user().access_allowed(resource_name)
+    def _register_access_key(self):
+
+        def access_allowed(resource_name):
+            return self._get_user().access_allowed(resource_name)
+        self.stack.register_access_allowed_handler(
+            self.resource_id, access_allowed)
 
 
 class AccessPolicy(resource.Resource):
