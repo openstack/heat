@@ -14,6 +14,8 @@
 
 import mox
 
+import keystoneclient.exceptions as kc_exception
+
 from oslo.config import cfg
 
 from heat.common import exception
@@ -375,6 +377,22 @@ class KeystoneClientTest(HeatTestCase):
         self._stubs_v3()
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.delete('atrust123').AndReturn(None)
+
+        self.m.ReplayAll()
+        ctx = utils.dummy_context()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertIsNone(heat_ks_client.delete_trust(trust_id='atrust123'))
+
+    def test_delete_trust_not_found(self):
+
+        """Test delete_trust when trust already deleted."""
+
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+
+        self._stubs_v3()
+        self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.trusts.delete('atrust123').AndRaise(
+            kc_exception.NotFound)
 
         self.m.ReplayAll()
         ctx = utils.dummy_context()
