@@ -24,6 +24,7 @@ from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
 from ..engine.plugins import cloud_loadbalancer as lb  # noqa
+from heat.common.exception import StackValidationFailed
 
 # The following fakes are for pyrax
 
@@ -371,7 +372,6 @@ class LoadBalancerTest(HeatTestCase):
         ssl_termination = {
             'enabled': True,
             'privatekey': 'ewfawe',
-            'certificate': 'dfaewfwef',
             'intermediateCertificate': 'fwaefawe',
             'secureTrafficOnly': True
         }
@@ -384,12 +384,10 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEqual(rsrc.validate(),
-                         {'Error':
-                          'Property error : %s: Property securePort not '
-                          'assigned' % rsrc.name})
+        exc = self.assertRaises(StackValidationFailed, rsrc.validate)
+        self.assertIn("Property certificate not assigned", str(exc))
 
-        ssl_termination['securePort'] = 443
+        ssl_termination['certificate'] = 'dfaewfwef'
         template = self._set_template(template,
                                       sslTermination=ssl_termination)
         expected = self._set_expected(expected,
