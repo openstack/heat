@@ -85,7 +85,8 @@ class TemplateResource(stack_resource.StackResource):
         self.properties = properties.Properties(self.properties_schema,
                                                 props,
                                                 self._resolve_runtime_data,
-                                                self.name)
+                                                self.name,
+                                                self.context)
         self.attributes = attributes.Attributes(self.name,
                                                 self.attributes_schema,
                                                 self._resolve_attribute)

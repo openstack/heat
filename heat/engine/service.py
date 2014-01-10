@@ -495,7 +495,8 @@ class EngineService(service.Service):
                 continue
 
             props = properties.Properties(ResourceClass.properties_schema,
-                                          res.get('Properties', {}))
+                                          res.get('Properties', {}),
+                                          context=cnxt)
             try:
                 ResourceClass.validate_deletion_policy(res)
                 props.validate(with_value=False)

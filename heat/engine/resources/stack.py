@@ -100,7 +100,8 @@ class NestedStack(stack_resource.StackResource):
         self.properties = Properties(self.properties_schema,
                                      json_snippet.get('Properties', {}),
                                      self.stack.resolve_runtime_data,
-                                     self.name)
+                                     self.name,
+                                     self.context)
 
         try:
             template_data = urlfetch.get(self.properties[self.TEMPLATE_URL])

@@ -84,7 +84,8 @@ class NeutronResource(resource.Resource):
         p = Properties(self.properties_schema,
                        json_snippet.get('Properties', {}),
                        self._resolve_runtime_data,
-                       self.name)
+                       self.name,
+                       self.context)
         update_props = dict((k, v) for k, v in p.items()
                             if p.props.get(k).schema.update_allowed)
 

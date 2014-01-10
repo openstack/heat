@@ -252,7 +252,7 @@ class WaitCondition(resource.Resource):
         if prop_diff:
             self.properties = properties.Properties(
                 self.properties_schema, json_snippet.get('Properties', {}),
-                self.stack.resolve_runtime_data, self.name)
+                self.stack.resolve_runtime_data, self.name, self.context)
 
         handle_res_name = self._get_handle_resource_name()
         handle = self.stack[handle_res_name]
