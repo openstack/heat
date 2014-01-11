@@ -32,10 +32,6 @@ logger = logging.getLogger(__name__)
 
 
 class Volume(resource.Resource):
-    tags_schema = {'Key': {'Type': 'String',
-                           'Required': True},
-                   'Value': {'Type': 'String',
-                             'Required': True}}
 
     PROPERTIES = (
         AVAILABILITY_ZONE, SIZE, BACKUP_ID, TAGS,
