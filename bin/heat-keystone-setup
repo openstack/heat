@@ -117,7 +117,7 @@ get_id () {
 get_column_num() {
     local name=$1
     shift
-    $@ | awk -F'|' "NR == 2 { for (i=2; i<NF; i++) if (\$i ~ \"^ *${name} *\$\") print (i - 1) }"
+    $@ | awk -F'|' "NR == 2 && /^|/ { for (i=2; i<NF; i++) if (\$i ~ \"^ *${name} *\$\") print (i - 1) }"
 }
 
 get_user() {
