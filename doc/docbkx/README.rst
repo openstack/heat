@@ -29,7 +29,3 @@ Build the Heat admin guide:
   cd heat-admin
   mvn clean generate-sources
 
-Build the Heat CLI guide:
-
-  cd heat-cli-guide
-  mvn clean generate-sources
