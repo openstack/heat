@@ -28,4 +28,4 @@ class ClientsTest(HeatTestCase):
         self.backend = clients.ClientBackend('fake_context')
 
     def test_client_plugin_loads(self):
-        self.assertTrue(isinstance(self.backend, rackspace_clients.Clients))
+        self.assertIsInstance(self.backend, rackspace_clients.Clients)

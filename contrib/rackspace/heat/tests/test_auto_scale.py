@@ -325,7 +325,7 @@ class ScalingGroupTest(HeatTestCase):
         resource = self.stack['my_group']
         err = self.assertRaises(
             exception.ResourceFailure, scheduler.TaskRunner(resource.delete))
-        self.assertIs(type(err.exc), ZeroDivisionError)
+        self.assertIsInstance(err.exc, ZeroDivisionError)
 
 
 class PolicyTest(HeatTestCase):

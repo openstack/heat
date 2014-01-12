@@ -171,7 +171,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.Length, type(c))
+        self.assertIsInstance(c, constraints.Length)
         self.assertEqual(4, c.min)
         self.assertEqual(None, c.max)
 
@@ -182,7 +182,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.Length, type(c))
+        self.assertIsInstance(c, constraints.Length)
         self.assertEqual(None, c.min)
         self.assertEqual(8, c.max)
 
@@ -194,7 +194,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.Length, type(c))
+        self.assertIsInstance(c, constraints.Length)
         self.assertEqual(4, c.min)
         self.assertEqual(8, c.max)
 
@@ -206,7 +206,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.Length, type(c))
+        self.assertIsInstance(c, constraints.Length)
         self.assertEqual(4, c.min)
         self.assertEqual(8, c.max)
 
@@ -217,7 +217,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.Range, type(c))
+        self.assertIsInstance(c, constraints.Range)
         self.assertEqual(4, c.min)
         self.assertEqual(None, c.max)
 
@@ -228,7 +228,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.Range, type(c))
+        self.assertIsInstance(c, constraints.Range)
         self.assertEqual(None, c.min)
         self.assertEqual(8, c.max)
 
@@ -240,7 +240,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.Range, type(c))
+        self.assertIsInstance(c, constraints.Range)
         self.assertEqual(4, c.min)
         self.assertEqual(8, c.max)
 
@@ -252,7 +252,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.Range, type(c))
+        self.assertIsInstance(c, constraints.Range)
         self.assertEqual(4, c.min)
         self.assertEqual(8, c.max)
 
@@ -263,7 +263,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.AllowedValues, type(c))
+        self.assertIsInstance(c, constraints.AllowedValues)
         self.assertEqual(('blarg', 'wibble'), c.allowed)
 
     def test_from_legacy_allowed_pattern(self):
@@ -273,7 +273,7 @@ class PropertySchemaTest(testtools.TestCase):
         })
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
-        self.assertEqual(constraints.AllowedPattern, type(c))
+        self.assertIsInstance(c, constraints.AllowedPattern)
         self.assertEqual('[a-z]*', c.pattern)
 
     def test_from_legacy_list(self):
