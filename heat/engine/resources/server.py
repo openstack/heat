@@ -21,6 +21,8 @@ from heat.common import exception
 from heat.engine import clients
 from heat.engine import scheduler
 from heat.engine.resources import nova_utils
+from heat.engine import constraints
+from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
@@ -31,154 +33,202 @@ logger = logging.getLogger(__name__)
 
 class Server(resource.Resource):
 
-    block_mapping_schema = {
-        'device_name': {
-            'Type': 'String',
-            'Required': True,
-            'Description': _('A device name where the volume will be '
-                             'attached in the system at /dev/device_name. '
-                             'This value is typically vda.')},
-        'volume_id': {
-            'Type': 'String',
-            'Description': _('The ID of the volume to boot from. Only one of '
-                             'volume_id or snapshot_id should be provided.')},
-        'snapshot_id': {
-            'Type': 'String',
-            'Description': _('The ID of the snapshot to create a volume '
-                             'from.')},
-        'volume_size': {
-            'Type': 'String',
-            'Description': _('The size of the volume, in GB. It is safe to '
-                             'leave this blank and have the Compute service '
-                             'infer the size.')},
-        'delete_on_termination': {
-            'Type': 'Boolean',
-            'Description': _('Indicate whether the volume should be deleted '
-                             'when the server is terminated.')}
-    }
+    PROPERTIES = (
+        NAME, IMAGE, BLOCK_DEVICE_MAPPING, FLAVOR,
+        FLAVOR_UPDATE_POLICY, IMAGE_UPDATE_POLICY, KEY_NAME,
+        ADMIN_USER, AVAILABILITY_ZONE, SECURITY_GROUPS, NETWORKS,
+        SCHEDULER_HINTS, METADATA, USER_DATA_FORMAT, USER_DATA,
+        RESERVATION_ID, CONFIG_DRIVE, DISK_CONFIG,
+    ) = (
+        'name', 'image', 'block_device_mapping', 'flavor',
+        'flavor_update_policy', 'image_update_policy', 'key_name',
+        'admin_user', 'availability_zone', 'security_groups', 'networks',
+        'scheduler_hints', 'metadata', 'user_data_format', 'user_data',
+        'reservation_id', 'config_drive', 'diskConfig',
+    )
 
-    networks_schema = {
-        'uuid': {
-            'Type': 'String',
-            'Description': _('DEPRECATED! ID of network '
-                             'to create a port on.')},
-        'network': {
-            'Type': 'String',
-            'Description': _('Name or ID of network to create a port on.')},
-        'fixed_ip': {
-            'Type': 'String',
-            'Description': _('Fixed IP address to specify for the port '
-                             'created on the requested network.')},
-        'port': {
-            'Type': 'String',
-            'Description': _('ID of an existing port to associate with '
-                             'this server.')},
-    }
+    _BLOCK_DEVICE_MAPPING_KEYS = (
+        BLOCK_DEVICE_MAPPING_DEVICE_NAME, BLOCK_DEVICE_MAPPING_VOLUME_ID,
+        BLOCK_DEVICE_MAPPING_SNAPSHOT_ID,
+        BLOCK_DEVICE_MAPPING_VOLUME_SIZE,
+        BLOCK_DEVICE_MAPPING_DELETE_ON_TERM,
+    ) = (
+        'device_name', 'volume_id',
+        'snapshot_id',
+        'volume_size',
+        'delete_on_termination',
+    )
+
+    _NETWORK_KEYS = (
+        NETWORK_UUID, NETWORK_ID, NETWORK_FIXED_IP, NETWORK_PORT,
+    ) = (
+        'uuid', 'network', 'fixed_ip', 'port',
+    )
 
     properties_schema = {
-        'name': {
-            'Type': 'String',
-            'Description': _('Server name.')},
-        'image': {
-            'Type': 'String',
-            'Description': _('The ID or name of the image to boot with.'),
-            'UpdateAllowed': True},
-        'block_device_mapping': {
-            'Type': 'List',
-            'Description': _('Block device mappings for this server.'),
-            'Schema': {
-                'Type': 'Map',
-                'Schema': block_mapping_schema
-            }
-        },
-        'flavor': {
-            'Type': 'String',
-            'Description': _('The ID or name of the flavor to boot onto.'),
-            'Required': True,
-            'UpdateAllowed': True},
-        'flavor_update_policy': {
-            'Type': 'String',
-            'Description': _('Policy on how to apply a flavor update; either '
-                             'by requesting a server resize or by replacing '
-                             'the entire server.'),
-            'Default': 'RESIZE',
-            'AllowedValues': ['RESIZE', 'REPLACE'],
-            'UpdateAllowed': True},
-        'image_update_policy': {
-            'Type': 'String',
-            'Default': 'REPLACE',
-            'Description': _('Policy on how to apply an image-id update; '
-                             'either by requesting a server rebuild or by '
-                             'replacing the entire server'),
-            'AllowedValues': ['REBUILD', 'REPLACE',
-                              'REBUILD_PRESERVE_EPHEMERAL'],
-            'UpdateAllowed': True},
-        'key_name': {
-            'Type': 'String',
-            'Description': _('Name of keypair to inject into the server.')},
-        'admin_user': {
-            'Type': 'String',
-            'Default': cfg.CONF.instance_user,
-            'Description': _('Name of the administrative user to use '
-                             'on the server.')},
-        'availability_zone': {
-            'Type': 'String',
-            'Description': _('Name of the availability zone for server '
-                             'placement.')},
-        'security_groups': {
-            'Type': 'List',
-            'Description': _('List of security group names or IDs.'),
-            'Default': []},
-        'networks': {
-            'Type': 'List',
-            'Description': _('An ordered list of nics to be '
-                             'added to this server, with information about '
-                             'connected networks, fixed ips, port etc.'),
-            'Schema': {
-                'Type': 'Map',
-                'Schema': networks_schema
-            }
-        },
-        'scheduler_hints': {
-            'Type': 'Map',
-            'Description': _('Arbitrary key-value pairs specified by the '
-                             'client to help boot a server.')},
-        'metadata': {
-            'Type': 'Map',
-            'UpdateAllowed': True,
-            'Description': _('Arbitrary key/value metadata to store for this '
-                             'server.  Both keys and values must be 255 '
-                             'characters or less.')},
-        'user_data_format': {
-            'Type': 'String',
-            'Default': 'HEAT_CFNTOOLS',
-            'Description': _('How the user_data should be formatted for the '
-                             'server. For HEAT_CFNTOOLS, the user_data is '
-                             'bundled as part of the heat-cfntools '
-                             'cloud-init boot configuration data. For RAW, '
-                             'the user_data is passed to Nova unmodified.'),
-            'AllowedValues': ['HEAT_CFNTOOLS', 'RAW']},
-        'user_data': {
-            'Type': 'String',
-            'Description': _('User data script to be executed by '
-                             'cloud-init.'),
-            'Default': ""},
-        'reservation_id': {
-            'Type': 'String',
-            'Description': _('A UUID for the set of servers being requested.')
-        },
-        'config_drive': {
-            'Type': 'String',
-            'Description': _('value for config drive either boolean, or '
-                             'volume-id.')
-        },
-        # diskConfig translates to API attribute OS-DCF:diskConfig
-        # hence the camel case instead of underscore to separate the words
-        'diskConfig': {
-            'Type': 'String',
-            'Description': _('Control how the disk is partitioned when the '
-                             'server is created.'),
-            'AllowedValues': ['AUTO', 'MANUAL']}
+        NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Server name.')
+        ),
+        IMAGE: properties.Schema(
+            properties.Schema.STRING,
+            _('The ID or name of the image to boot with.'),
+            update_allowed=True
+        ),
+        BLOCK_DEVICE_MAPPING: properties.Schema(
+            properties.Schema.LIST,
+            _('Block device mappings for this server.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    BLOCK_DEVICE_MAPPING_DEVICE_NAME: properties.Schema(
+                        properties.Schema.STRING,
+                        _('A device name where the volume will be '
+                          'attached in the system at /dev/device_name. '
+                          'This value is typically vda.'),
+                        required=True
+                    ),
+                    BLOCK_DEVICE_MAPPING_VOLUME_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The ID of the volume to boot from. Only one '
+                          'of volume_id or snapshot_id should be '
+                          'provided.')
+                    ),
+                    BLOCK_DEVICE_MAPPING_SNAPSHOT_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The ID of the snapshot to create a volume '
+                          'from.')
+                    ),
+                    BLOCK_DEVICE_MAPPING_VOLUME_SIZE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The size of the volume, in GB. It is safe to '
+                          'leave this blank and have the Compute service '
+                          'infer the size.')
+                    ),
+                    BLOCK_DEVICE_MAPPING_DELETE_ON_TERM: properties.Schema(
+                        properties.Schema.BOOLEAN,
+                        _('Indicate whether the volume should be deleted '
+                          'when the server is terminated.')
+                    ),
+                },
+            )
+        ),
+        FLAVOR: properties.Schema(
+            properties.Schema.STRING,
+            _('The ID or name of the flavor to boot onto.'),
+            required=True,
+            update_allowed=True
+        ),
+        FLAVOR_UPDATE_POLICY: properties.Schema(
+            properties.Schema.STRING,
+            _('Policy on how to apply a flavor update; either by requesting '
+              'a server resize or by replacing the entire server.'),
+            default='RESIZE',
+            constraints=[
+                constraints.AllowedValues(['RESIZE', 'REPLACE']),
+            ],
+            update_allowed=True
+        ),
+        IMAGE_UPDATE_POLICY: properties.Schema(
+            properties.Schema.STRING,
+            _('Policy on how to apply an image-id update; either by '
+              'requesting a server rebuild or by replacing the entire server'),
+            default='REPLACE',
+            constraints=[
+                constraints.AllowedValues(['REBUILD', 'REPLACE',
+                                           'REBUILD_PRESERVE_EPHEMERAL']),
+            ],
+            update_allowed=True
+        ),
+        KEY_NAME: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of keypair to inject into the server.')
+        ),
+        ADMIN_USER: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of the administrative user to use on the server.'),
+            default=cfg.CONF.instance_user
+        ),
+        AVAILABILITY_ZONE: properties.Schema(
+            properties.Schema.STRING,
+            _('Name of the availability zone for server placement.')
+        ),
+        SECURITY_GROUPS: properties.Schema(
+            properties.Schema.LIST,
+            _('List of security group names or IDs.'),
+            default=[]
+        ),
+        NETWORKS: properties.Schema(
+            properties.Schema.LIST,
+            _('An ordered list of nics to be added to this server, with '
+              'information about connected networks, fixed ips, port etc.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    NETWORK_UUID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('DEPRECATED! ID of network to create a port on.'),
+                    ),
+                    NETWORK_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Name or ID of network to create a port on.')
+                    ),
+                    NETWORK_FIXED_IP: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Fixed IP address to specify for the port '
+                          'created on the requested network.')
+                    ),
+                    NETWORK_PORT: properties.Schema(
+                        properties.Schema.STRING,
+                        _('ID of an existing port to associate with this '
+                          'server.')
+                    ),
+                },
+            )
+        ),
+        SCHEDULER_HINTS: properties.Schema(
+            properties.Schema.MAP,
+            _('Arbitrary key-value pairs specified by the client to help '
+              'boot a server.')
+        ),
+        METADATA: properties.Schema(
+            properties.Schema.MAP,
+            _('Arbitrary key/value metadata to store for this server. Both '
+              'keys and values must be 255 characters or less.'),
+            update_allowed=True
+        ),
+        USER_DATA_FORMAT: properties.Schema(
+            properties.Schema.STRING,
+            _('How the user_data should be formatted for the server. For '
+              'HEAT_CFNTOOLS, the user_data is bundled as part of the '
+              'heat-cfntools cloud-init boot configuration data. For RAW, '
+              'the user_data is passed to Nova unmodified.'),
+            default='HEAT_CFNTOOLS',
+            constraints=[
+                constraints.AllowedValues(['HEAT_CFNTOOLS', 'RAW']),
+            ]
+        ),
+        USER_DATA: properties.Schema(
+            properties.Schema.STRING,
+            _('User data script to be executed by cloud-init.'),
+            default=''
+        ),
+        RESERVATION_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('A UUID for the set of servers being requested.')
+        ),
+        CONFIG_DRIVE: properties.Schema(
+            properties.Schema.STRING,
+            _('value for config drive either boolean, or volume-id.')
+        ),
+        DISK_CONFIG: properties.Schema(
+            properties.Schema.STRING,
+            _('Control how the disk is partitioned when the server is '
+              'created.'),
+            constraints=[
+                constraints.AllowedValues(['AUTO', 'MANUAL']),
+            ]
+        ),
     }
 
     attributes_schema = {
@@ -210,48 +260,48 @@ class Server(resource.Resource):
         super(Server, self).__init__(name, json_snippet, stack)
 
     def physical_resource_name(self):
-        name = self.properties.get('name')
+        name = self.properties.get(self.NAME)
         if name:
             return name
 
         return super(Server, self).physical_resource_name()
 
     def handle_create(self):
-        security_groups = self.properties.get('security_groups')
+        security_groups = self.properties.get(self.SECURITY_GROUPS)
 
-        user_data_format = self.properties.get('user_data_format')
+        user_data_format = self.properties.get(self.USER_DATA_FORMAT)
         userdata = nova_utils.build_userdata(
             self,
-            self.properties.get('user_data'),
-            instance_user=self.properties['admin_user'],
+            self.properties.get(self.USER_DATA),
+            instance_user=self.properties[self.ADMIN_USER],
             user_data_format=user_data_format)
 
-        flavor = self.properties['flavor']
-        availability_zone = self.properties['availability_zone']
+        flavor = self.properties[self.FLAVOR]
+        availability_zone = self.properties[self.AVAILABILITY_ZONE]
 
-        key_name = self.properties['key_name']
+        key_name = self.properties[self.KEY_NAME]
         if key_name:
             # confirm keypair exists
             nova_utils.get_keypair(self.nova(), key_name)
 
-        image = self.properties.get('image')
+        image = self.properties.get(self.IMAGE)
         if image:
             image = nova_utils.get_image_id(self.nova(), image)
 
         flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
 
-        instance_meta = self.properties.get('metadata')
+        instance_meta = self.properties.get(self.METADATA)
         if instance_meta is not None:
             instance_meta = dict((key, str(value)) for (key, value) in
                                  instance_meta.items())
 
-        scheduler_hints = self.properties.get('scheduler_hints')
-        nics = self._build_nics(self.properties.get('networks'))
+        scheduler_hints = self.properties.get(self.SCHEDULER_HINTS)
+        nics = self._build_nics(self.properties.get(self.NETWORKS))
         block_device_mapping = self._build_block_device_mapping(
-            self.properties.get('block_device_mapping'))
-        reservation_id = self.properties.get('reservation_id')
-        config_drive = self.properties.get('config_drive')
-        disk_config = self.properties.get('diskConfig')
+            self.properties.get(self.BLOCK_DEVICE_MAPPING))
+        reservation_id = self.properties.get(self.RESERVATION_ID)
+        config_drive = self.properties.get(self.CONFIG_DRIVE)
+        disk_config = self.properties.get(self.DISK_CONFIG)
 
         server = None
         try:
@@ -303,26 +353,31 @@ class Server(resource.Resource):
                                        status=server.status))
             raise exc
 
-    @staticmethod
-    def _build_block_device_mapping(bdm):
+    @classmethod
+    def _build_block_device_mapping(cls, bdm):
         if not bdm:
             return None
         bdm_dict = {}
         for mapping in bdm:
             mapping_parts = []
-            if mapping.get('snapshot_id'):
-                mapping_parts.append(mapping.get('snapshot_id'))
+            snapshot_id = mapping.get(cls.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
+            if snapshot_id:
+                mapping_parts.append(snapshot_id)
                 mapping_parts.append('snap')
             else:
-                mapping_parts.append(mapping.get('volume_id'))
+                volume_id = mapping.get(cls.BLOCK_DEVICE_MAPPING_VOLUME_ID)
+                mapping_parts.append(volume_id)
                 mapping_parts.append('')
-            if (mapping.get('volume_size') or
-                    mapping.get('delete_on_termination')):
 
-                mapping_parts.append(mapping.get('volume_size', '0'))
-            if mapping.get('delete_on_termination'):
-                mapping_parts.append(str(mapping.get('delete_on_termination')))
-            bdm_dict[mapping.get('device_name')] = ':'.join(mapping_parts)
+            volume_size = mapping.get(cls.BLOCK_DEVICE_MAPPING_VOLUME_SIZE)
+            delete = mapping.get(cls.BLOCK_DEVICE_MAPPING_DELETE_ON_TERM)
+            if volume_size or delete:
+                mapping_parts.append(volume_size or '0')
+            if delete:
+                mapping_parts.append(str(delete))
+
+            device_name = mapping.get(cls.BLOCK_DEVICE_MAPPING_DEVICE_NAME)
+            bdm_dict[device_name] = ':'.join(mapping_parts)
 
         return bdm_dict
 
@@ -334,19 +389,19 @@ class Server(resource.Resource):
 
         for net_data in networks:
             nic_info = {}
-            if net_data.get('uuid'):
-                nic_info['net-id'] = net_data['uuid']
-            label_or_uuid = net_data.get('network')
+            if net_data.get(self.NETWORK_UUID):
+                nic_info['net-id'] = net_data[self.NETWORK_UUID]
+            label_or_uuid = net_data.get(self.NETWORK_ID)
             if label_or_uuid:
                 if uuidutils.is_uuid_like(label_or_uuid):
                     nic_info['net-id'] = label_or_uuid
                 else:
                     network = self.nova().networks.find(label=label_or_uuid)
                     nic_info['net-id'] = network.id
-            if net_data.get('fixed_ip'):
-                nic_info['v4-fixed-ip'] = net_data['fixed_ip']
-            if net_data.get('port'):
-                nic_info['port-id'] = net_data['port']
+            if net_data.get(self.NETWORK_FIXED_IP):
+                nic_info['v4-fixed-ip'] = net_data[self.NETWORK_FIXED_IP]
+            if net_data.get(self.NETWORK_PORT):
+                nic_info['port-id'] = net_data[self.NETWORK_PORT]
             nics.append(nic_info)
         return nics
 
@@ -375,22 +430,22 @@ class Server(resource.Resource):
         checkers = []
         server = None
 
-        if 'metadata' in prop_diff:
+        if self.METADATA in prop_diff:
             server = self.nova().servers.get(self.resource_id)
             nova_utils.meta_update(self.nova(),
                                    server,
-                                   prop_diff['metadata'])
+                                   prop_diff[self.METADATA])
 
-        if 'flavor' in prop_diff:
+        if self.FLAVOR in prop_diff:
 
             flavor_update_policy = (
-                prop_diff.get('flavor_update_policy') or
-                self.properties.get('flavor_update_policy'))
+                prop_diff.get(self.FLAVOR_UPDATE_POLICY) or
+                self.properties.get(self.FLAVOR_UPDATE_POLICY))
 
             if flavor_update_policy == 'REPLACE':
                 raise resource.UpdateReplace(self.name)
 
-            flavor = prop_diff['flavor']
+            flavor = prop_diff[self.FLAVOR]
             flavor_id = nova_utils.get_flavor_id(self.nova(), flavor)
             if not server:
                 server = self.nova().servers.get(self.resource_id)
@@ -398,13 +453,13 @@ class Server(resource.Resource):
                                            flavor_id)
             checkers.append(checker)
 
-        if 'image' in prop_diff:
+        if self.IMAGE in prop_diff:
             image_update_policy = (
-                prop_diff.get('image_update_policy') or
-                self.properties.get('image_update_policy'))
+                prop_diff.get(self.IMAGE_UPDATE_POLICY) or
+                self.properties.get(self.IMAGE_UPDATE_POLICY))
             if image_update_policy == 'REPLACE':
                 raise resource.UpdateReplace(self.name)
-            image = prop_diff['image']
+            image = prop_diff[self.IMAGE]
             image_id = nova_utils.get_image_id(self.nova(), image)
             if not server:
                 server = self.nova().servers.get(self.resource_id)
@@ -445,28 +500,32 @@ class Server(resource.Resource):
         super(Server, self).validate()
 
         # check validity of key
-        key_name = self.properties.get('key_name')
+        key_name = self.properties.get(self.KEY_NAME)
         if key_name:
             nova_utils.get_keypair(self.nova(), key_name)
 
         # either volume_id or snapshot_id needs to be specified, but not both
         # for block device mapping.
-        bdm = self.properties.get('block_device_mapping') or []
+        bdm = self.properties.get(self.BLOCK_DEVICE_MAPPING) or []
         bootable_vol = False
         for mapping in bdm:
-            if mapping['device_name'] == 'vda':
-                    bootable_vol = True
+            device_name = mapping[self.BLOCK_DEVICE_MAPPING_DEVICE_NAME]
+            if device_name == 'vda':
+                bootable_vol = True
 
-            if mapping.get('volume_id') and mapping.get('snapshot_id'):
-                raise exception.ResourcePropertyConflict('volume_id',
-                                                         'snapshot_id')
-            if not mapping.get('volume_id') and not mapping.get('snapshot_id'):
+            volume_id = mapping.get(self.BLOCK_DEVICE_MAPPING_VOLUME_ID)
+            snapshot_id = mapping.get(self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
+            if volume_id and snapshot_id:
+                raise exception.ResourcePropertyConflict(
+                    self.BLOCK_DEVICE_MAPPING_VOLUME_ID,
+                    self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
+            if not volume_id and not snapshot_id:
                 msg = _('Either volume_id or snapshot_id must be specified for'
-                        ' device mapping %s') % mapping['device_name']
+                        ' device mapping %s') % device_name
                 raise exception.StackValidationFailed(message=msg)
 
         # make sure the image exists if specified.
-        image = self.properties.get('image')
+        image = self.properties.get(self.IMAGE)
         if image:
             nova_utils.get_image_id(self.nova(), image)
         elif not image and not bootable_vol:
@@ -475,22 +534,26 @@ class Server(resource.Resource):
             raise exception.StackValidationFailed(message=msg)
         # network properties 'uuid' and 'network' shouldn't be used
         # both at once for all networks
-        networks = self.properties.get('networks') or []
+        networks = self.properties.get(self.NETWORKS) or []
         for network in networks:
-            if network.get('uuid') and network.get('network'):
-                msg = _('Properties "uuid" and "network" are both set '
+            if network.get(self.NETWORK_UUID) and network.get(self.NETWORK_ID):
+                msg = _('Properties "%(uuid)s" and "%(id)s" are both set '
                         'to the network "%(network)s" for the server '
-                        '"%(server)s". The "uuid" property is deprecated. '
-                        'Use only "network" property.'
-                        '') % dict(network=network['network'],
+                        '"%(server)s". The "%(uuid)s" property is deprecated. '
+                        'Use only "%(id)s" property.'
+                        '') % dict(uuid=self.NETWORK_UUID,
+                                   id=self.NETWORK_ID,
+                                   network=network[self.NETWORK_ID],
                                    server=self.name)
                 raise exception.StackValidationFailed(message=msg)
-            elif network.get('uuid'):
-                logger.info(_('For the server "%(server)s" the "uuid" '
+            elif network.get(self.NETWORK_UUID):
+                logger.info(_('For the server "%(server)s" the "%(uuid)s" '
                               'property is set to network "%(network)s". '
-                              '"uuid" property is deprecated. Use "network" '
-                              'property instead.'
-                              '') % dict(network=network['network'],
+                              '"%(uuid)s" property is deprecated. Use '
+                              '"%(id)s"  property instead.'
+                              '') % dict(uuid=self.NETWORK_UUID,
+                                         id=self.NETWORK_ID,
+                                         network=network[self.NETWORK_ID],
                                          server=self.name))
 
         # verify that the number of metadata entries is not greater
