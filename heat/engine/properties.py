@@ -387,78 +387,83 @@ class Properties(collections.Mapping):
         return iter(self.props)
 
     @staticmethod
-    def _generate_input(schema, params=None, path=None):
-        '''Generate an input based on a path in the schema or property
-        defaults.
+    def _param_def_from_prop(schema):
+        """
+        Return a template parameter definition corresponding to a property.
+        """
+        param_type_map = {
+            schema.INTEGER: parameters.NUMBER,
+            schema.STRING: parameters.STRING,
+            schema.NUMBER: parameters.NUMBER,
+            schema.BOOLEAN: 'Boolean',
+            schema.MAP: parameters.JSON,
+            schema.LIST: parameters.COMMA_DELIMITED_LIST,
+        }
 
-        :param schema: The schema to generate a parameter or value for.
-        :param params: A dict to map a schema to a parameter path.
-        :param path: Required if params != None. The params key
-            to save the schema at.
-        :returns: A Ref to the parameter if path != None and params != None
-        :returns: The property default if params == None or path == None
-        '''
-        if schema.get('Implemented') is False:
-            return
+        def param_items():
+            yield parameters.TYPE, param_type_map[schema.type]
 
-        if schema[TYPE] == Schema.LIST:
-            params[path] = {parameters.TYPE: parameters.COMMA_DELIMITED_LIST}
-            return {'Fn::Split': {'Ref': path}}
+            if schema.description is not None:
+                yield parameters.DESCRIPTION, schema.description
 
-        elif schema[TYPE] == Schema.MAP:
-            params[path] = {parameters.TYPE: parameters.JSON}
-            return {'Ref': path}
+            if schema.default is not None:
+                yield parameters.DEFAULT, schema.default
 
-        elif params is not None and path is not None:
-            for prop in schema.keys():
-                if prop not in parameters.PARAMETER_KEYS and prop in schema:
-                    del schema[prop]
-            params[path] = schema
-            return {'Ref': path}
+            for constraint in schema.constraints:
+                if isinstance(constraint, constr.Length):
+                    if constraint.min is not None:
+                        yield parameters.MIN_LENGTH, constraint.min
+                    if constraint.max is not None:
+                        yield parameters.MAX_LENGTH, constraint.max
+                elif isinstance(constraint, constr.Range):
+                    if constraint.min is not None:
+                        yield parameters.MIN_VALUE, constraint.min
+                    if constraint.max is not None:
+                        yield parameters.MAX_VALUE, constraint.max
+                elif isinstance(constraint, constr.AllowedValues):
+                    yield parameters.ALLOWED_VALUES, list(constraint.allowed)
+                elif isinstance(constraint, constr.AllowedPattern):
+                    yield parameters.ALLOWED_PATTERN, constraint.pattern
+
+        return dict(param_items())
+
+    @staticmethod
+    def _prop_def_from_prop(name, schema):
+        """
+        Return a provider template property definition for a property.
+        """
+        if schema.type == Schema.LIST:
+            return {'Fn::Split': {'Ref': name}}
         else:
-            prop = Property(schema)
-            return prop.has_default() and prop.default() or None
+            return {'Ref': name}
 
-    @staticmethod
-    def _schema_to_params_and_props(schema, params=None):
-        '''Generates a default template based on the provided schema.
-        ::
+    @classmethod
+    def schema_to_parameters_and_properties(cls, schema):
 
-        ex: input: schema = {'foo': {'Type': 'String'}}, params = {}
-            output: {'foo': {'Ref': 'foo'}},
-                params = {'foo': {'Type': 'String'}}
-
-        ex: input: schema = {'foo' :{'Type': 'List'}, 'bar': {'Type': 'Map'}}
-                    ,params={}
-            output: {'foo': {'Fn::Split': {'Ref': 'foo'}},
-                     'bar': {'Ref': 'bar'}},
-                params = {'foo' : {parameters.TYPE:
-                          parameters.COMMA_DELIMITED_LIST},
-                          'bar': {parameters.TYPE: parameters.JSON}}
-
-        :param schema: The schema to generate a parameter or value for.
-        :param params: A dict to map a schema to a parameter path.
-        :returns: A dict of properties resolved for a template's schema
-        '''
-        properties = {}
-        for prop, nested_schema in schema.iteritems():
-            properties[prop] = Properties._generate_input(nested_schema,
-                                                          params,
-                                                          prop)
-            #remove not implemented properties
-            if properties[prop] is None:
-                del properties[prop]
-        return properties
-
-    @staticmethod
-    def schema_to_parameters_and_properties(schema):
         '''Generates properties with params resolved for a resource's
         properties_schema.
 
-        :param schema: A resource's properties_schema
+        :param schema: A resource type's properties_schema
         :returns: A tuple of params and properties dicts
+
+        ex: input:  {'foo': {'Type': 'String'}}
+            output: {'foo': {'Type': 'String'}},
+                    {'foo': {'Ref': 'foo'}}
+
+        ex: input:  {'foo': {'Type': 'List'}, 'bar': {'Type': 'Map'}}
+            output: {'foo': {'Type': 'CommaDelimitedList'}
+                     'bar': {'Type': 'Json'}},
+                    {'foo': {'Fn::Split': {'Ref': 'foo'}},
+                     'bar': {'Ref': 'bar'}}
         '''
-        params = {}
-        properties = (Properties.
-                      _schema_to_params_and_props(schema, params=params))
-        return (params, properties)
+        def param_prop_def_items(name, schema):
+            param_def = cls._param_def_from_prop(schema)
+            prop_def = cls._prop_def_from_prop(name, schema)
+
+            return (name, param_def), (name, prop_def)
+
+        param_prop_defs = [param_prop_def_items(n, s)
+                           for n, s in schemata(schema).iteritems()
+                           if s.implemented]
+        param_items, prop_items = zip(*param_prop_defs)
+        return dict(param_items), dict(prop_items)
