@@ -891,6 +891,7 @@ class Resource(object):
 
         resource_name = cls.__name__
         return {
+            'HeatTemplateFormatVersion': '2012-12-12',
             'Parameters': parameters,
             'Resources': {
                 resource_name: {
