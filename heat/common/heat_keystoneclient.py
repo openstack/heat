@@ -289,8 +289,8 @@ class KeystoneClient(object):
         self.client_v3.users.update(user=user_id, enabled=True)
 
     def url_for(self, **kwargs):
-        return self.client_v2.service_catalog.url_for(**kwargs)
+        return self.client_v3.service_catalog.url_for(**kwargs)
 
     @property
     def auth_token(self):
-        return self.client_v2.auth_token
+        return self.client_v3.auth_token
