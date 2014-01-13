@@ -566,7 +566,8 @@ class ResourceTest(HeatTestCase):
         expected_template = {
             'Parameters': {
                 'name': {'Type': 'String'},
-                'bool': {'Type': 'Boolean'},
+                'bool': {'Type': 'String',
+                         'AllowedValues': ['True', 'true', 'False', 'false']},
                 'implemented': {
                     'Type': 'String',
                     'AllowedPattern': '.*',
