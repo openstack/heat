@@ -415,3 +415,37 @@ class KeystoneClientTest(HeatTestCase):
         ctx = utils.dummy_context()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertIsNone(heat_ks_client.delete_trust(trust_id='atrust123'))
+
+    def test_disable_stack_user(self):
+
+        """Test disabling a stack user."""
+
+        self._stubs_v3()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client update function
+        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.users.update(user='atestuser', enabled=False
+                                            ).AndReturn(None)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.disable_stack_user('atestuser')
+
+    def test_enable_stack_user(self):
+
+        """Test enabling a stack user."""
+
+        self._stubs_v3()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client update function
+        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.users.update(user='atestuser', enabled=True
+                                            ).AndReturn(None)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.enable_stack_user('atestuser')
