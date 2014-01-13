@@ -93,6 +93,15 @@ class Clients(clients.OpenStackClients):
         '''Rackspace trove client.'''
         return super(Clients, self).trove(service_type="rax:database")
 
+    def cinder(self):
+        """Override the region for the cinder client."""
+        if not self._cinder:
+            super(Clients, self).cinder()
+            management_url = self.url_for(service_type='volume',
+                                          region_name=cfg.CONF.region_name)
+            self._cinder.client.management_url = management_url
+        return self._cinder
+
     def __authenticate(self):
         pyrax.set_setting("identity_type", "keystone")
         pyrax.set_setting("auth_endpoint", self.context.auth_url)
