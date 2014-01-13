@@ -1462,7 +1462,7 @@ class PropertiesValidationTest(testtools.TestCase):
         schema = {'foo': {'Type': 'List', 'Schema': {'Type': 'Map',
                   'Schema': nested_schema}}}
 
-        prop_expected = {'foo': {'Fn::Split': {'Ref': 'foo'}}}
+        prop_expected = {'foo': {'Fn::Split': [",", {'Ref': 'foo'}]}}
         param_expected = {'foo': {'Type': 'CommaDelimitedList'}}
         (parameters, props) = \
             properties.Properties.schema_to_parameters_and_properties(schema)
@@ -1482,7 +1482,7 @@ class PropertiesValidationTest(testtools.TestCase):
                                          schema=nested_schema))
         }
 
-        prop_expected = {'foo': {'Fn::Split': {'Ref': 'foo'}}}
+        prop_expected = {'foo': {'Fn::Split': [",", {'Ref': 'foo'}]}}
         param_expected = {'foo': {'Type': 'CommaDelimitedList'}}
         (parameters, props) = \
             properties.Properties.schema_to_parameters_and_properties(schema)

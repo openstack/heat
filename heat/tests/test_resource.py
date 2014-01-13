@@ -588,7 +588,7 @@ class ResourceTest(HeatTestCase):
                         'bool': {'Ref': 'bool'},
                         'implemented': {'Ref': 'implemented'},
                         'number': {'Ref': 'number'},
-                        'list': {'Fn::Split': {'Ref': 'list'}},
+                        'list': {'Fn::Split': [",", {'Ref': 'list'}]},
                         'map': {'Ref': 'map'}
                     }
                 }

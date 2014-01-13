@@ -433,7 +433,7 @@ class Properties(collections.Mapping):
         Return a provider template property definition for a property.
         """
         if schema.type == Schema.LIST:
-            return {'Fn::Split': {'Ref': name}}
+            return {'Fn::Split': [',', {'Ref': name}]}
         else:
             return {'Ref': name}
 
