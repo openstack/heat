@@ -20,6 +20,7 @@
 import functools
 import sys
 
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common.py3kcompat import urlutils
 
@@ -312,7 +313,7 @@ class NotFound(Error):
 
 
 class InvalidContentType(HeatException):
-    msg_fmt = "Invalid content type %(content_type)s"
+    msg_fmt = _("Invalid content type %(content_type)s")
 
 
 class RequestLimitExceeded(HeatException):
