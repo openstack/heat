@@ -276,12 +276,6 @@ def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
     return result
 
 
-def stack_get_all(context):
-    results = soft_delete_aware_query(context, models.Stack).\
-        filter_by(owner_id=None).all()
-    return results
-
-
 def stack_get_all_by_owner_id(context, owner_id):
     results = soft_delete_aware_query(context, models.Stack).\
         filter_by(owner_id=owner_id).all()
@@ -329,15 +323,35 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
 
 
 def _query_stack_get_all_by_tenant(context):
-    query = soft_delete_aware_query(context, models.Stack).\
-        filter_by(owner_id=None).\
+    query = _query_stack_get_all(context).\
         filter_by(tenant=context.tenant_id)
 
     return query
 
 
+def _query_stack_get_all(context):
+    query = soft_delete_aware_query(context, models.Stack).\
+        filter_by(owner_id=None)
+
+    return query
+
+
+def stack_get_all(context, limit=None, sort_keys=None, marker=None,
+                  sort_dir=None, filters=None):
+    query = _query_stack_get_all(context)
+    return _filter_and_page_query(context, query, limit, sort_keys,
+                                  marker, sort_dir, filters).all()
+
+
 def stack_get_all_by_tenant(context, limit=None, sort_keys=None, marker=None,
                             sort_dir=None, filters=None):
+    query = _query_stack_get_all_by_tenant(context)
+    return _filter_and_page_query(context, query, limit, sort_keys,
+                                  marker, sort_dir, filters).all()
+
+
+def _filter_and_page_query(context, query, limit=None, sort_keys=None,
+                           marker=None, sort_dir=None, filters=None):
     if filters is None:
         filters = {}
 
@@ -345,12 +359,11 @@ def stack_get_all_by_tenant(context, limit=None, sort_keys=None, marker=None,
                          models.Stack.status.key,
                          models.Stack.created_at.key,
                          models.Stack.updated_at.key]
-    filtered_keys = _filter_sort_keys(sort_keys, allowed_sort_keys)
+    whitelisted_sort_keys = _filter_sort_keys(sort_keys, allowed_sort_keys)
 
-    query = _query_stack_get_all_by_tenant(context)
     query = db_filters.exact_filter(query, models.Stack, filters)
-    return _paginate_query(context, query, models.Stack, limit, filtered_keys,
-                           marker, sort_dir).all()
+    return _paginate_query(context, query, models.Stack, limit,
+                           whitelisted_sort_keys, marker, sort_dir)
 
 
 def stack_count_all_by_tenant(context, filters=None):
