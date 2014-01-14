@@ -138,8 +138,6 @@ class swiftTest(HeatTestCase):
         container_name = utils.PhysName('test_stack', 'test_resource')
         swiftclient.Connection.put_container(
             container_name, {}).AndReturn(None)
-        swiftclient.Connection.get_auth().MultipleTimes().AndReturn(
-            ('http://server.test:8080/v_2', None))
         swiftclient.Connection.head_container(
             mox.IgnoreArg()).MultipleTimes().AndReturn(headers)
         swiftclient.Connection.delete_container(container_name).AndReturn(None)
@@ -152,8 +150,8 @@ class swiftTest(HeatTestCase):
         ref_id = rsrc.FnGetRefId()
         self.assertEqual(container_name, ref_id)
 
-        self.assertEqual('server.test', rsrc.FnGetAtt('DomainName'))
-        url = 'http://server.test:8080/v_2/%s' % ref_id
+        self.assertEqual('example.com', rsrc.FnGetAtt('DomainName'))
+        url = 'http://example.com:1234/v1/%s' % ref_id
 
         self.assertEqual(url, rsrc.FnGetAtt('WebsiteURL'))
         self.assertEqual('82', rsrc.FnGetAtt('ObjectCount'))
