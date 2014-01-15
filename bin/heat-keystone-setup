@@ -10,8 +10,8 @@ if [[ -r "$KEYSTONE_CONF" ]]; then
     CONFIG_ADMIN_PORT=$(sed 's/[[:space:]]//g' $KEYSTONE_CONF | grep ^admin_port= | cut -d'=' -f2)
 fi
 
-SERVICE_TOKEN=${SERVICE_TOKEN:-$CONFIG_SERVICE_TOKEN}
-SERVICE_ENDPOINT=${SERVICE_ENDPOINT:-http://127.0.0.1:${CONFIG_ADMIN_PORT:-35357}/v2.0}
+SERVICE_TOKEN=${OS_SERVICE_TOKEN:-$CONFIG_SERVICE_TOKEN}
+SERVICE_ENDPOINT=${OS_SERVICE_ENDPOINT:-http://127.0.0.1:${CONFIG_ADMIN_PORT:-35357}/v2.0}
 if [[ -z "$SERVICE_TOKEN" ]]; then
     echo "No service token found." >&2
     echo "Set SERVICE_TOKEN manually from keystone.conf admin_token." >&2
@@ -106,7 +106,6 @@ get_data() {
                "! /^\+/ && \$${match_column} ~ \"^ *${regex} *\$\" \
                 { print \$${output_column} }")
 
-    die_if_not_set $LINENO output "Fail to get_data from '$@'"
     echo "$output"
 }
 
@@ -130,7 +129,6 @@ get_user() {
     die_if_not_set $LINENO namecol "Fail to get namecol for name by 'keystone user-list' "
 
     local user_id=$(get_data $namecol $username 1 keystone user-list)
-    die_if_not_set $LINENO user_id "Fail to get user_id for $username by 'keystone user-list' "
 
     if [ -n "$user_id" ]; then
         echo "Found existing $username user" >&2
@@ -267,12 +265,19 @@ add_endpoint() {
 }
 
 keystone_setup() {
+    # Make sure we can use keystone command without OS_SERVICE_TOKEN and OS_SERVICE_ENDPOINT
+    # credential, because we need to use keystone endpoint-get command below, and the
+    # keystone endpoint-get command can not run correctly
+    # using OS_SERVICE_TOKEN and OS_SERVICE_ENDPOINT credential.
+    unset OS_SERVICE_TOKEN
+    unset OS_SERVICE_ENDPOINT
     TENANT_ID=$(get_data 1 tenant_id 2 keystone token-get)
     die_if_not_set $LINENO TENANT_ID "Fail to get TENANT_ID by 'token-get' "
+
     set_admin_token
 
     ADMIN_ROLE=$(get_data 2 admin 1 keystone role-list)
-    die_if_not_set $LINENO TENANT_ID "Fail to get ADMIN_ROLE by 'keystone role-list' "
+    die_if_not_set $LINENO ADMIN_ROLE "Fail to get ADMIN_ROLE by 'keystone role-list' "
     SERVICE_TENANT=$(get_data 2 service 1 keystone tenant-list)
     die_if_not_set $LINENO SERVICE_TENANT "Fail to get service tenant 'keystone tenant-list' "
     SERVICE_PASSWORD=${SERVICE_PASSWORD:-$OS_PASSWORD}
