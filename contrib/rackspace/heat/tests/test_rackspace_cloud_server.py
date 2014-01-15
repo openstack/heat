@@ -110,8 +110,12 @@ class RackspaceCloudServerTest(HeatTestCase):
         chan = ssh.get_transport().AndReturn(fake_chan)
         fake_chan_session = self.m.CreateMockAnything()
         chan_session = chan.open_session().AndReturn(fake_chan_session)
+        fake_chan_session.settimeout(3600.0)
         chan_session.exec_command(mox.IgnoreArg())
+        fake_chan_session.recv(1024)
         chan_session.recv_exit_status().AndReturn(exit_code)
+        fake_chan_session.close()
+        ssh.close()
 
         # SFTP
         self.m.StubOutWithMock(paramiko, "Transport")
@@ -122,13 +126,11 @@ class RackspaceCloudServerTest(HeatTestCase):
         self.m.StubOutWithMock(paramiko, "SFTPClient")
         paramiko.SFTPClient.from_transport(transport).AndReturn(sftp)
         sftp_file = self.m.CreateMockAnything()
-        sftp.open(mox.IgnoreArg(), 'w').AndReturn(sftp_file)
-        sftp_file.write(mox.IgnoreArg())
-        sftp_file.close()
-        sftp_file = self.m.CreateMockAnything()
-        sftp.open(mox.IgnoreArg(), 'w').AndReturn(sftp_file)
-        sftp_file.write(mox.IgnoreArg())
-        sftp_file.close()
+        sftp.open(mox.IgnoreArg(), 'w').MultipleTimes().AndReturn(sftp_file)
+        sftp_file.write(mox.IgnoreArg()).MultipleTimes()
+        sftp_file.close().MultipleTimes()
+        sftp.close()
+        transport.close()
 
     def _setup_test_cs(self, return_server, name, exit_code=0):
         stack_name = '%s_stack' % name
