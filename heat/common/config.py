@@ -151,6 +151,11 @@ def register_clients_opts():
         # register opts copy and put it to globals in order to
         # generate_sample.sh to work
         opts_copy = copy.deepcopy(clients_opts)
+        if client == 'heat':
+            opts_copy.append(
+                cfg.StrOpt('url',
+                           help=_('Optional heat url in format like'
+                                  ' http://0.0.0.0:8004/v1/%(tenant_id)s.')))
         globals()[client_specific_group + '_opts'] = opts_copy
         cfg.CONF.register_opts(opts_copy, group=client_specific_group)
 

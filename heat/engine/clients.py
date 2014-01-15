@@ -270,6 +270,13 @@ class OpenStackClients(object):
             cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
             return getattr(cfg.CONF.clients, option)
 
+    def _get_heat_url(self):
+        heat_url = self._get_client_option('heat', 'url')
+        if heat_url:
+            tenant_id = self.context.tenant_id
+            heat_url = heat_url % {'tenant_id': tenant_id}
+        return heat_url
+
     def heat(self):
         if self._heat:
             return self._heat
@@ -290,7 +297,10 @@ class OpenStackClients(object):
             'insecure': self._get_client_option('heat', 'insecure')
         }
 
-        endpoint = self.url_for(service_type='orchestration')
+        endpoint = self._get_heat_url()
+        if not endpoint:
+            endpoint = self.url_for(service_type='orchestration')
+
         self._heat = heatclient.Client('1', endpoint, **args)
 
         return self._heat
