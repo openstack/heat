@@ -15,7 +15,7 @@
 
 import collections
 import json
-import re
+from heat.engine import constraints as constr
 
 from heat.common import exception
 
@@ -37,103 +37,109 @@ PSEUDO_PARAMETERS = (
 )
 
 
-class ParamSchema(dict):
+class Schema(constr.Schema):
     '''Parameter schema.'''
 
+    KEYS = (
+        TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS, HIDDEN
+    ) = (
+        'Type', 'Description', 'Default', 'Schema', 'Constraints', 'NoEcho'
+    )
+
+    # For Parameters the type name for Schema.LIST is CommaDelimitedList
+    # and the type name for Schema.MAP is Json
     TYPES = (
-        STRING, NUMBER, COMMA_DELIMITED_LIST, JSON,
+        STRING, NUMBER, LIST, MAP,
     ) = (
         'String', 'Number', 'CommaDelimitedList', 'Json',
     )
 
-    def __init__(self, schema):
-        super(ParamSchema, self).__init__(schema)
+    def __init__(self, data_type, description=None, default=None, schema=None,
+                 constraints=[], hidden=False):
+        super(Schema, self).__init__(data_type=data_type,
+                                     description=description,
+                                     default=default,
+                                     schema=schema,
+                                     required=default is None,
+                                     constraints=constraints)
+        self.hidden = hidden
 
-    def do_check(self, name, value, keys):
-        for k in keys:
-            check = self.check(k)
-            const = self.get(k)
-            if check is None or const is None:
-                continue
-            check(name, value, const)
+    # Schema class validates default value for lists assuming list type. For
+    # comma delimited list string supported in paramaters Schema class, the
+    # default value has to be parsed into a list if necessary so that
+    # validation works.
+    def _validate_default(self):
+        if self.default is not None:
+            default_value = self.default
+            if self.type == self.LIST and not isinstance(self.default, list):
+                try:
+                    default_value = self.default.split(',')
+                except (KeyError, AttributeError) as err:
+                    raise constr.InvalidSchemaError(_('Default must be a '
+                                                      'comma-delimited list '
+                                                      'string: %s') % str(err))
+            try:
+                self.validate_constraints(default_value)
+            except (ValueError, TypeError) as exc:
+                raise constr.InvalidSchemaError(_('Invalid default '
+                                                  '%(default)s (%(exc)s)') %
+                                                dict(default=self.default,
+                                                     exc=exc))
 
-    def constraints(self):
-        ptype = self[TYPE]
-        keys = {
-            self.STRING: [ALLOWED_VALUES, ALLOWED_PATTERN, MAX_LENGTH,
-                          MIN_LENGTH],
-            self.NUMBER: [ALLOWED_VALUES, MAX_VALUE, MIN_VALUE],
-            self.JSON: [MAX_LENGTH, MIN_LENGTH]
-        }.get(ptype)
-        list_keys = {
-            self.COMMA_DELIMITED_LIST: [ALLOWED_VALUES],
-            self.JSON: [ALLOWED_VALUES]
-        }.get(ptype)
-        return (keys, list_keys)
+    def set_default(self, default=None):
+        super(Schema, self).set_default(default)
+        self.required = default is None
+
+    @staticmethod
+    def get_num(key, context):
+        val = context.get(key)
+        if val is not None:
+            val = Schema.str_to_num(val)
+        return val
+
+    @classmethod
+    def from_dict(cls, schema_dict):
+        """
+        Return a Parameter Schema object from a legacy schema dictionary.
+        """
+
+        def constraints():
+            desc = schema_dict.get(CONSTRAINT_DESCRIPTION)
+
+            if MIN_VALUE in schema_dict or MAX_VALUE in schema_dict:
+                yield constr.Range(Schema.get_num(MIN_VALUE, schema_dict),
+                                   Schema.get_num(MAX_VALUE, schema_dict),
+                                   desc)
+            if MIN_LENGTH in schema_dict or MAX_LENGTH in schema_dict:
+                yield constr.Length(Schema.get_num(MIN_LENGTH, schema_dict),
+                                    Schema.get_num(MAX_LENGTH, schema_dict),
+                                    desc)
+            if ALLOWED_VALUES in schema_dict:
+                yield constr.AllowedValues(schema_dict[ALLOWED_VALUES], desc)
+            if ALLOWED_PATTERN in schema_dict:
+                yield constr.AllowedPattern(schema_dict[ALLOWED_PATTERN], desc)
+
+        # make update_allowed true by default on TemplateResources
+        # as the template should deal with this.
+        return cls(schema_dict[TYPE],
+                   description=schema_dict.get(DESCRIPTION),
+                   default=schema_dict.get(DEFAULT),
+                   constraints=list(constraints()),
+                   hidden=str(schema_dict.get(NO_ECHO,
+                                              'false')).lower() == 'true')
 
     def validate(self, name, value):
-        (keys, list_keys) = self.constraints()
-        if keys:
-            self.do_check(name, value, keys)
-        if list_keys:
-            values = value
-            for value in values:
-                self.do_check(name, value, list_keys)
+        super(Schema, self).validate_constraints(value)
 
-    def raise_error(self, name, message, desc=True):
-        if desc:
-            message = self.get(CONSTRAINT_DESCRIPTION) or message
-        raise ValueError('%s %s' % (name, message))
+    def __getitem__(self, key):
+        if key == self.TYPE:
+            return self.type
+        if key == self.HIDDEN:
+            return self.hidden
+        else:
+            return super(Schema, self).__getitem__(key)
 
-    def check_allowed_values(self, name, val, const, desc=None):
-        vals = list(const)
-        if val not in vals:
-            err = '"%s" not in %s "%s"' % (val, ALLOWED_VALUES, vals)
-            self.raise_error(name, desc or err)
-
-    def check_allowed_pattern(self, name, val, p, desc=None):
-        m = re.match(p, val)
-        if m is None or m.end() != len(val):
-            err = '"%s" does not match %s "%s"' % (val, ALLOWED_PATTERN, p)
-            self.raise_error(name, desc or err)
-
-    def check_max_length(self, name, val, const, desc=None):
-        max_len = int(const)
-        val_len = len(val)
-        if val_len > max_len:
-            err = 'length (%d) overflows %s (%d)' % (val_len,
-                                                     MAX_LENGTH, max_len)
-            self.raise_error(name, desc or err)
-
-    def check_min_length(self, name, val, const, desc=None):
-        min_len = int(const)
-        val_len = len(val)
-        if val_len < min_len:
-            err = 'length (%d) underflows %s (%d)' % (val_len,
-                                                      MIN_LENGTH, min_len)
-            self.raise_error(name, desc or err)
-
-    def check_max_value(self, name, val, const, desc=None):
-        max_val = float(const)
-        val = float(val)
-        if val > max_val:
-            err = '%d overflows %s %d' % (val, MAX_VALUE, max_val)
-            self.raise_error(name, desc or err)
-
-    def check_min_value(self, name, val, const, desc=None):
-        min_val = float(const)
-        val = float(val)
-        if val < min_val:
-            err = '%d underflows %s %d' % (val, MIN_VALUE, min_val)
-            self.raise_error(name, desc or err)
-
-    def check(self, const_key):
-        return {ALLOWED_VALUES: self.check_allowed_values,
-                ALLOWED_PATTERN: self.check_allowed_pattern,
-                MAX_LENGTH: self.check_max_length,
-                MIN_LENGTH: self.check_min_length,
-                MAX_VALUE: self.check_max_value,
-                MIN_VALUE: self.check_min_value}.get(const_key)
+        raise KeyError(key)
 
 
 class Parameter(object):
@@ -144,17 +150,20 @@ class Parameter(object):
         if cls is not Parameter:
             return super(Parameter, cls).__new__(cls)
 
-        param_type = schema[TYPE]
-        if param_type == schema.STRING:
+        # Check for fully-fledged Schema objects
+        if not isinstance(schema, Schema):
+            schema = Schema.from_dict(schema)
+
+        if schema.type == schema.STRING:
             ParamClass = StringParam
-        elif param_type == schema.NUMBER:
+        elif schema.type == schema.NUMBER:
             ParamClass = NumberParam
-        elif param_type == schema.COMMA_DELIMITED_LIST:
+        elif schema.type == schema.LIST:
             ParamClass = CommaDelimitedListParam
-        elif param_type == schema.JSON:
+        elif schema.type == schema.MAP:
             ParamClass = JsonParam
         else:
-            raise ValueError(_('Invalid Parameter type "%s"') % param_type)
+            raise ValueError(_('Invalid Parameter type "%s"') % schema.type)
 
         return ParamClass(name, schema, value, validate_value)
 
@@ -185,29 +194,29 @@ class Parameter(object):
 
         raise KeyError(_('Missing parameter %s') % self.name)
 
-    def no_echo(self):
+    def hidden(self):
         '''
         Return whether the parameter should be sanitised in any output to
         the user.
         '''
-        return str(self.schema.get(NO_ECHO, 'false')).lower() == 'true'
+        return self.schema.hidden
 
     def description(self):
         '''Return the description of the parameter.'''
-        return self.schema.get(DESCRIPTION, '')
+        return self.schema.description or ''
 
     def has_default(self):
         '''Return whether the parameter has a default value.'''
-        return DEFAULT in self.schema
+        return self.schema.default is not None
 
     def default(self):
         '''Return the default value of the parameter.'''
-        return self.schema.get(DEFAULT)
+        return self.schema.default
 
     def __str__(self):
         '''Return a string representation of the parameter'''
         value = self.value()
-        if self.no_echo():
+        if self.hidden():
             return '******'
         else:
             return str(value)
@@ -250,6 +259,10 @@ class CommaDelimitedListParam(Parameter, collections.Sequence):
         self.parsed = self.parse(self.user_value or self.default())
 
     def parse(self, value):
+        # only parse when value is not already a list
+        if isinstance(value, list):
+            return value
+
         try:
             if value:
                 return value.split(',')
@@ -324,25 +337,24 @@ class Parameters(collections.Mapping):
         '''
         def parameters():
             yield Parameter(PARAM_STACK_ID,
-                            ParamSchema({TYPE: ParamSchema.STRING,
-                                         DESCRIPTION: 'Stack ID',
-                                         DEFAULT: str(stack_id)}))
+                            Schema(Schema.STRING, _('Stack ID'),
+                                   default=str(stack_id)))
             if stack_name is not None:
                 yield Parameter(PARAM_STACK_NAME,
-                                ParamSchema({TYPE: ParamSchema.STRING,
-                                             DESCRIPTION: 'Stack Name',
-                                             DEFAULT: stack_name}))
+                                Schema(Schema.STRING, _('Stack Name'),
+                                       default=stack_name))
                 yield Parameter(PARAM_REGION,
-                                ParamSchema({TYPE: ParamSchema.STRING,
-                                             DEFAULT: 'ap-southeast-1',
-                                             ALLOWED_VALUES:
-                                             ['us-east-1',
-                                              'us-west-1',
-                                              'us-west-2',
-                                              'sa-east-1',
-                                              'eu-west-1',
-                                              'ap-southeast-1',
-                                              'ap-northeast-1']}))
+                                Schema(Schema.STRING,
+                                       default='ap-southeast-1',
+                                       constraints=
+                                       [constr.AllowedValues(['us-east-1',
+                                                              'us-west-1',
+                                                              'us-west-2',
+                                                              'sa-east-1',
+                                                              'eu-west-1',
+                                                              'ap-southeast-1',
+                                                              'ap-northeast-1']
+                                                             )]))
 
             schemata = self.tmpl.param_schemata().iteritems()
             for name, schema in schemata:
@@ -382,7 +394,7 @@ class Parameters(collections.Mapping):
         '''
         Set the AWS::StackId pseudo parameter value
         '''
-        self.params[PARAM_STACK_ID].schema[DEFAULT] = stack_id
+        self.params[PARAM_STACK_ID].schema.set_default(stack_id)
 
     def _validate(self, user_params):
         schemata = self.tmpl.param_schemata()

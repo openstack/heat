@@ -15,7 +15,7 @@
 from heat.rpc import api
 from heat.openstack.common import timeutils
 from heat.engine import template
-from heat.engine import hot
+from heat.engine import constraints as constr
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
@@ -236,35 +236,44 @@ def format_validate_parameter(param):
     to be compatible to CFN syntax).
     """
 
-    # build basic param schema dictionary; exclude HOT constraints since they
-    # will be handled differently
-    res = dict((k, v)
-               for k, v in param.schema.iteritems() if k != hot.CONSTRAINTS)
+    # map of Schema object types to API expected types
+    schema_to_api_types = {
+        param.schema.STRING: api.PARAM_TYPE_STRING,
+        param.schema.NUMBER: api.PARAM_TYPE_NUMBER,
+        param.schema.LIST: api.PARAM_TYPE_COMMA_DELIMITED_LIST,
+        param.schema.MAP: api.PARAM_TYPE_JSON
+    }
 
-    if not isinstance(param.schema, hot.HOTParamSchema):
-        return res
+    res = {
+        api.PARAM_TYPE: schema_to_api_types.get(param.schema.type,
+                                                param.schema.type),
+        api.PARAM_DESCRIPTION: param.description(),
+        api.PARAM_NO_ECHO: 'true' if param.hidden() else 'false'
+    }
 
-    # build constraints - formating only necessary for HOT since API is
-    # currently CFN oriented
-    constraints = param.schema.get(hot.CONSTRAINTS, [])
-    for constraint in constraints:
-        if hot.RANGE in constraint:
-            const_def = constraint.get(hot.RANGE)
-            if const_def.get(hot.MIN):
-                res[api.PARAM_MIN_VALUE] = const_def.get(hot.MIN)
-            if const_def.get(hot.MAX):
-                res[api.PARAM_MAX_VALUE] = const_def.get(hot.MAX)
-        if hot.LENGTH in constraint:
-            const_def = constraint.get(hot.LENGTH)
-            if const_def.get(hot.MIN):
-                res[api.PARAM_MIN_LENGTH] = const_def.get(hot.MIN)
-            if const_def.get(hot.MAX):
-                res[api.PARAM_MAX_LENGTH] = const_def.get(hot.MAX)
-        if hot.ALLOWED_VALUES in constraint:
-            const_def = constraint.get(hot.ALLOWED_VALUES)
-            res[api.PARAM_ALLOWED_VALUES] = const_def
-        if hot.ALLOWED_PATTERN in constraint:
-            const_def = constraint.get(hot.ALLOWED_PATTERN)
-            res[api.PARAM_ALLOWED_PATTERN] = const_def
+    if param.has_default():
+        res[api.PARAM_DEFAULT] = param.default()
+
+    # build constraints
+    for c in param.schema.constraints:
+        if isinstance(c, constr.Length):
+            if c.min is not None:
+                res[api.PARAM_MIN_LENGTH] = c.min
+
+            if c.max is not None:
+                res[api.PARAM_MAX_LENGTH] = c.max
+
+        elif isinstance(c, constr.Range):
+            if c.min is not None:
+                res[api.PARAM_MIN_VALUE] = c.min
+
+            if c.max is not None:
+                res[api.PARAM_MAX_VALUE] = c.max
+
+        elif isinstance(c, constr.AllowedValues):
+            res[api.PARAM_ALLOWED_VALUES] = list(c.allowed)
+
+        elif isinstance(c, constr.AllowedPattern):
+            res[api.PARAM_ALLOWED_PATTERN] = c.pattern
 
     return res

@@ -15,6 +15,7 @@
 from heat.common import exception
 from heat.engine import template
 from heat.engine import parameters
+from heat.engine import constraints as constr
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
@@ -74,9 +75,6 @@ class HOTemplate(template.Template):
         # engine can cope with it.
         # This is a shortcut for now and might be changed in the future.
 
-        if section == PARAMETERS:
-            return self._translate_parameters(the_section)
-
         if section == RESOURCES:
             return self._translate_resources(the_section)
 
@@ -91,25 +89,6 @@ class HOTemplate(template.Template):
             return mapping[value]
 
         return default
-
-    def _translate_parameters(self, parameters):
-        """Get the parameters of the template translated into CFN format."""
-        params = {}
-        for name, attrs in parameters.iteritems():
-            param = {}
-            for key, val in attrs.iteritems():
-                # Do not translate 'constraints' since we want to handle this
-                # specifically in HOT and not in common code.
-                if key != CONSTRAINTS:
-                    key = snake_to_camel(key)
-                if key == 'Type':
-                    val = snake_to_camel(val)
-                elif key == 'Hidden':
-                    key = 'NoEcho'
-                param[key] = val
-            if len(param) > 0:
-                params[name] = param
-        return params
 
     def _translate_resources(self, resources):
         """Get the resources of the template translated into CFN format."""
@@ -148,18 +127,18 @@ class HOTemplate(template.Template):
         return cfn_outputs
 
     @staticmethod
-    def resolve_param_refs(s, parameters, transform=None):
+    def resolve_param_refs(s, params, transform=None):
         """
         Resolve constructs of the form { get_param: my_param }
         """
         def match_param_ref(key, value):
             return (key in ['get_param', 'Ref'] and
                     value is not None and
-                    value in parameters)
+                    value in params)
 
         def handle_param_ref(ref):
             try:
-                return parameters[ref]
+                return params[ref]
             except (KeyError, ValueError):
                 raise exception.UserParameterMissing(key=ref)
 
@@ -260,35 +239,63 @@ class HOTemplate(template.Template):
 
     def param_schemata(self):
         params = self[PARAMETERS].iteritems()
-        return dict((name, HOTParamSchema(schema)) for name, schema in params)
+        return dict((name, HOTParamSchema.from_dict(schema))
+                    for name, schema in params)
 
 
-class HOTParamSchema(parameters.ParamSchema):
+class HOTParamSchema(parameters.Schema):
     """HOT parameter schema."""
 
-    def do_check(self, name, value, keys):
-        # map ParamSchema constraint type to keys used in HOT constraints
-        constraint_map = {
-            parameters.ALLOWED_PATTERN: [ALLOWED_PATTERN],
-            parameters.ALLOWED_VALUES: [ALLOWED_VALUES],
-            parameters.MIN_LENGTH: [LENGTH, MIN],
-            parameters.MAX_LENGTH: [LENGTH, MAX],
-            parameters.MIN_VALUE: [RANGE, MIN],
-            parameters.MAX_VALUE: [RANGE, MAX]
-        }
+    KEYS = (
+        TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS,
+        HIDDEN
+    ) = (
+        'type', 'description', 'default', 'schema', 'constraints',
+        'hidden'
+    )
 
-        for const_type in keys:
-            # get constraint type specific check function
-            check = self.check(const_type)
-            # get constraint type specific keys in HOT
-            const_keys = constraint_map[const_type]
+    # For Parameters the type name for Schema.LIST is comma_delimited_list
+    # and the type name for Schema.MAP is json
+    TYPES = (
+        STRING, NUMBER, LIST, MAP,
+    ) = (
+        'string', 'number', 'comma_delimited_list', 'json',
+    )
 
-            for constraint in self.get(CONSTRAINTS, []):
-                const_descr = constraint.get(DESCRIPTION)
+    @classmethod
+    def from_dict(cls, schema_dict):
+        """
+        Return a Parameter Schema object from a legacy schema dictionary.
+        """
 
-                for const_key in const_keys:
-                    if const_key not in constraint:
-                        break
-                    constraint = constraint[const_key]
-                else:
-                    check(name, value, constraint, const_descr)
+        def constraints():
+            constraints = schema_dict.get(CONSTRAINTS)
+            if constraints is None:
+                return
+
+            for constraint in constraints:
+                desc = constraint.get(DESCRIPTION)
+                if RANGE in constraint:
+                    cdef = constraint.get(RANGE)
+                    yield constr.Range(parameters.Schema.get_num(MIN, cdef),
+                                       parameters.Schema.get_num(MAX, cdef),
+                                       desc)
+                if LENGTH in constraint:
+                    cdef = constraint.get(LENGTH)
+                    yield constr.Length(parameters.Schema.get_num(MIN, cdef),
+                                        parameters.Schema.get_num(MAX, cdef),
+                                        desc)
+                if ALLOWED_VALUES in constraint:
+                    cdef = constraint.get(ALLOWED_VALUES)
+                    yield constr.AllowedValues(cdef, desc)
+                if ALLOWED_PATTERN in constraint:
+                    cdef = constraint.get(ALLOWED_PATTERN)
+                    yield constr.AllowedPattern(cdef, desc)
+
+        # make update_allowed true by default on TemplateResources
+        # as the template should deal with this.
+        return cls(schema_dict[cls.TYPE],
+                   description=schema_dict.get(HOTParamSchema.DESCRIPTION),
+                   default=schema_dict.get(HOTParamSchema.DEFAULT),
+                   constraints=list(constraints()),
+                   hidden=schema_dict.get(HOTParamSchema.HIDDEN, False))

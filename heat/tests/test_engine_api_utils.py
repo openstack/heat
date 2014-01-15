@@ -216,7 +216,8 @@ class FormatValidateParameterTest(HeatTestCase):
                     ''',
               expected={
                   'Type': 'String',
-                  'Description': 'Name of SSH key pair'
+                  'Description': 'Name of SSH key pair',
+                  'NoEcho': 'false'
               })
          ),
         ('default',
@@ -232,7 +233,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'Default': 'dummy'
+                  'Default': 'dummy',
+                  'NoEcho': 'false'
               })
          ),
         ('min_length_constraint',
@@ -248,7 +250,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'MinLength': 4
+                  'MinLength': 4,
+                  'NoEcho': 'false'
               })
          ),
         ('max_length_constraint',
@@ -264,7 +267,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'MaxLength': 10
+                  'MaxLength': 10,
+                  'NoEcho': 'false'
               })
          ),
         ('min_max_length_constraint',
@@ -282,7 +286,8 @@ class FormatValidateParameterTest(HeatTestCase):
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
                   'MinLength': 4,
-                  'MaxLength': 10
+                  'MaxLength': 10,
+                  'NoEcho': 'false'
               })
          ),
         ('min_value_constraint',
@@ -298,7 +303,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'Number',
                   'Description': 'A number',
-                  'MinValue': 4
+                  'MinValue': 4,
+                  'NoEcho': 'false'
               })
          ),
         ('max_value_constraint',
@@ -314,7 +320,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'Number',
                   'Description': 'A number',
-                  'MaxValue': 10
+                  'MaxValue': 10,
+                  'NoEcho': 'false'
               })
          ),
         ('min_max_value_constraint',
@@ -332,7 +339,8 @@ class FormatValidateParameterTest(HeatTestCase):
                   'Type': 'Number',
                   'Description': 'A number',
                   'MinValue': 4,
-                  'MaxValue': 10
+                  'MaxValue': 10,
+                  'NoEcho': 'false'
               })
          ),
         ('allowed_values_constraint',
@@ -348,7 +356,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'AllowedValues': ['foo', 'bar', 'blub']
+                  'AllowedValues': ['foo', 'bar', 'blub'],
+                  'NoEcho': 'false'
               })
          ),
         ('allowed_pattern_constraint',
@@ -364,7 +373,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'AllowedPattern': "[a-zA-Z0-9]+"
+                  'AllowedPattern': "[a-zA-Z0-9]+",
+                  'NoEcho': 'false'
               })
          ),
         ('multiple_constraints',
@@ -388,7 +398,8 @@ class FormatValidateParameterTest(HeatTestCase):
                   'MinLength': 4,
                   'MaxLength': 10,
                   'AllowedValues': ['foo', 'bar', 'blub'],
-                  'AllowedPattern': "[a-zA-Z0-9]+"
+                  'AllowedPattern': "[a-zA-Z0-9]+",
+                  'NoEcho': 'false'
               })
          ),
         ('simple_hot',
@@ -403,6 +414,7 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
+                  'NoEcho': 'false'
               })
          ),
         ('default_hot',
@@ -418,7 +430,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'Default': 'dummy'
+                  'Default': 'dummy',
+                  'NoEcho': 'false'
               })
          ),
         ('min_length_constraint_hot',
@@ -436,7 +449,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'MinLength': 4
+                  'MinLength': 4,
+                  'NoEcho': 'false'
               })
          ),
         ('max_length_constraint_hot',
@@ -454,7 +468,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'MaxLength': 10
+                  'MaxLength': 10,
+                  'NoEcho': 'false'
               })
          ),
         ('min_max_length_constraint_hot',
@@ -473,7 +488,8 @@ class FormatValidateParameterTest(HeatTestCase):
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
                   'MinLength': 4,
-                  'MaxLength': 10
+                  'MaxLength': 10,
+                  'NoEcho': 'false'
               })
          ),
         ('min_value_constraint_hot',
@@ -491,7 +507,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'Number',
                   'Description': 'A number',
-                  'MinValue': 4
+                  'MinValue': 4,
+                  'NoEcho': 'false'
               })
          ),
         ('max_value_constraint_hot',
@@ -509,7 +526,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'Number',
                   'Description': 'A number',
-                  'MaxValue': 10
+                  'MaxValue': 10,
+                  'NoEcho': 'false'
               })
          ),
         ('min_max_value_constraint_hot',
@@ -528,7 +546,8 @@ class FormatValidateParameterTest(HeatTestCase):
                   'Type': 'Number',
                   'Description': 'A number',
                   'MinValue': 4,
-                  'MaxValue': 10
+                  'MaxValue': 10,
+                  'NoEcho': 'false'
               })
          ),
         ('allowed_values_constraint_hot',
@@ -549,7 +568,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'AllowedValues': ['foo', 'bar', 'blub']
+                  'AllowedValues': ['foo', 'bar', 'blub'],
+                  'NoEcho': 'false'
               })
          ),
         ('allowed_pattern_constraint_hot',
@@ -567,7 +587,8 @@ class FormatValidateParameterTest(HeatTestCase):
               expected={
                   'Type': 'String',
                   'Description': 'Name of SSH key pair',
-                  'AllowedPattern': "[a-zA-Z0-9]+"
+                  'AllowedPattern': "[a-zA-Z0-9]+",
+                  'NoEcho': 'false'
               })
          ),
         ('multiple_constraints_hot',
@@ -593,7 +614,8 @@ class FormatValidateParameterTest(HeatTestCase):
                   'MinLength': 4,
                   'MaxLength': 10,
                   'AllowedValues': ['foo', 'bar', 'blub'],
-                  'AllowedPattern': "[a-zA-Z0-9]+"
+                  'AllowedPattern': "[a-zA-Z0-9]+",
+                  'NoEcho': 'false'
               })
          ),
     ]

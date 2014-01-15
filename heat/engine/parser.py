@@ -752,7 +752,7 @@ def resolve_static_data(template, stack, parameters, snippet):
     '''
     return transform(snippet,
                      [functools.partial(template.resolve_param_refs,
-                                        parameters=parameters),
+                                        params=parameters),
                       functools.partial(template.resolve_availability_zones,
                                         stack=stack),
                       functools.partial(template.resolve_resource_facade,

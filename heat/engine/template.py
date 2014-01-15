@@ -19,7 +19,7 @@ import json
 from heat.api.aws import utils as aws_utils
 from heat.db import api as db_api
 from heat.common import exception
-from heat.engine.parameters import ParamSchema
+from heat.engine import parameters
 
 SECTIONS = (VERSION, DESCRIPTION, MAPPINGS,
             PARAMETERS, RESOURCES, OUTPUTS) = \
@@ -121,18 +121,18 @@ class Template(collections.Mapping):
         return _resolve(match_get_az, handle_get_az, s, transform)
 
     @staticmethod
-    def resolve_param_refs(s, parameters, transform=None):
+    def resolve_param_refs(s, params, transform=None):
         '''
         Resolve constructs of the form { "Ref" : "string" }
         '''
         def match_param_ref(key, value):
             return (key == 'Ref' and
                     isinstance(value, basestring) and
-                    value in parameters)
+                    value in params)
 
         def handle_param_ref(ref):
             try:
-                return parameters[ref]
+                return params[ref]
             except (KeyError, ValueError):
                 raise exception.UserParameterMissing(key=ref)
 
@@ -472,8 +472,9 @@ class Template(collections.Mapping):
                         s, transform)
 
     def param_schemata(self):
-        parameters = self[PARAMETERS].iteritems()
-        return dict((name, ParamSchema(schema)) for name, schema in parameters)
+        params = self[PARAMETERS].iteritems()
+        return dict((name, parameters.Schema.from_dict(schema))
+                    for name, schema in params)
 
 
 def _resolve(match, handle, snippet, transform=None):

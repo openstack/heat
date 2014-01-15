@@ -19,6 +19,7 @@ import json
 from heat.common import exception
 from heat.engine import parameters
 from heat.engine import template
+from heat.engine import constraints as constr
 
 
 class ParameterTest(testtools.TestCase):
@@ -49,8 +50,8 @@ class ParameterTest(testtools.TestCase):
         self.assertIsInstance(p, parameters.JsonParam)
 
     def test_new_bad_type(self):
-        self.assertRaises(ValueError, self.new_parameter, 'p',
-                          {'Type': 'List'})
+        self.assertRaises(constr.InvalidSchemaError, self.new_parameter, 'p',
+                          {'Type': 'List'}, validate_value=False)
 
     def test_new_no_type(self):
         self.assertRaises(KeyError, self.new_parameter,
@@ -77,7 +78,7 @@ class ParameterTest(testtools.TestCase):
                   'AllowedValues': ['foo'],
                   'ConstraintDescription': 'wibble',
                   'Default': 'bar'}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(constr.InvalidSchemaError,
                                 self.new_parameter, 'p', schema, 'foo')
         self.assertIn('wibble', str(err))
 
@@ -86,7 +87,7 @@ class ParameterTest(testtools.TestCase):
                                {'Type': 'String',
                                 'NoEcho': 'true'},
                                'wibble')
-        self.assertTrue(p.no_echo())
+        self.assertTrue(p.hidden())
         self.assertNotEqual(str(p), 'wibble')
 
     def test_no_echo_true_caps(self):
@@ -94,7 +95,7 @@ class ParameterTest(testtools.TestCase):
                                {'Type': 'String',
                                 'NoEcho': 'TrUe'},
                                'wibble')
-        self.assertTrue(p.no_echo())
+        self.assertTrue(p.hidden())
         self.assertNotEqual(str(p), 'wibble')
 
     def test_no_echo_false(self):
@@ -102,7 +103,7 @@ class ParameterTest(testtools.TestCase):
                                {'Type': 'String',
                                 'NoEcho': 'false'},
                                'wibble')
-        self.assertFalse(p.no_echo())
+        self.assertFalse(p.hidden())
         self.assertEqual('wibble', str(p))
 
     def test_description(self):
@@ -274,25 +275,6 @@ class ParameterTest(testtools.TestCase):
                                 self.new_parameter, 'p', schema, val)
         self.assertIn('Value must be valid JSON', str(err))
 
-    def test_map_values_good(self):
-        '''Happy path for map keys.'''
-        schema = {'Type': 'Json',
-                  'AllowedValues': ["foo", "bar", "baz"]}
-        val = {"foo": "bar", "baz": [1, 2, 3]}
-        val_s = json.dumps(val)
-        p = self.new_parameter('p', schema, val_s)
-        self.assertEqual(val, p.value())
-        self.assertEqual(val, p.parsed)
-
-    def test_map_values_bad(self):
-        '''Test failure of invalid map keys.'''
-        schema = {'Type': 'Json',
-                  'AllowedValues': ["foo", "bar", "baz"]}
-        val = {"foo": "bar", "items": [1, 2, 3]}
-        err = self.assertRaises(ValueError,
-                                self.new_parameter, 'p', schema, val)
-        self.assertIn("items", str(err))
-
     def test_map_underrun(self):
         '''Test map length under MIN_LEN.'''
         schema = {'Type': 'Json',
@@ -300,7 +282,7 @@ class ParameterTest(testtools.TestCase):
         val = {"foo": "bar", "items": [1, 2, 3]}
         err = self.assertRaises(ValueError,
                                 self.new_parameter, 'p', schema, val)
-        self.assertIn('underflows', str(err))
+        self.assertIn('out of range', str(err))
 
     def test_map_overrun(self):
         '''Test map length over MAX_LEN.'''
@@ -309,7 +291,7 @@ class ParameterTest(testtools.TestCase):
         val = {"foo": "bar", "items": [1, 2, 3]}
         err = self.assertRaises(ValueError,
                                 self.new_parameter, 'p', schema, val)
-        self.assertIn('overflows', str(err))
+        self.assertIn('out of range', str(err))
 
     def test_missing_param(self):
         '''Test missing user parameter.'''

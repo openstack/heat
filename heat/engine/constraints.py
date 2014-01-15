@@ -123,6 +123,10 @@ class Schema(collections.Mapping):
                                            '%(default)s (%(exc)s)') %
                                          dict(default=self.default, exc=exc))
 
+    def set_default(self, default=None):
+        """Set the default value for this Schema object."""
+        self.default = default
+
     def _is_valid_constraint(self, constraint):
         valid_types = getattr(constraint, 'valid_types', [])
         return any(self.type == getattr(self, t, None) for t in valid_types)
@@ -334,7 +338,7 @@ class Length(Range):
         }
     """
 
-    valid_types = (Schema.STRING_TYPE, Schema.LIST_TYPE,)
+    valid_types = (Schema.STRING_TYPE, Schema.LIST_TYPE, Schema.MAP_TYPE,)
 
     def __init__(self, min=None, max=None, description=None):
         super(Length, self).__init__(min, max, description)
@@ -375,7 +379,7 @@ class AllowedValues(Constraint):
     """
 
     valid_types = (Schema.STRING_TYPE, Schema.INTEGER_TYPE, Schema.NUMBER_TYPE,
-                   Schema.BOOLEAN_TYPE,)
+                   Schema.BOOLEAN_TYPE, Schema.LIST_TYPE,)
 
     def __init__(self, allowed, description=None):
         super(AllowedValues, self).__init__(description)
@@ -393,6 +397,11 @@ class AllowedValues(Constraint):
         return '"%s" is not an allowed value %s' % (value, allowed)
 
     def _is_valid(self, value):
+        # For list values, check if all elements of the list are contained
+        # in allowed list.
+        if isinstance(value, list):
+            return all(v in self.allowed for v in value)
+
         return value in self.allowed
 
     def _constraint(self):

@@ -17,6 +17,7 @@ from heat.engine import parser
 from heat.engine import hot
 from heat.engine import parameters
 from heat.engine import template
+from heat.engine import constraints
 
 from heat.tests.common import HeatTestCase
 from heat.tests import test_parser
@@ -46,67 +47,6 @@ class HOTemplateTest(HeatTestCase):
         self.assertEqual({}, tmpl[hot.PARAMETERS])
         self.assertEqual({}, tmpl[hot.RESOURCES])
         self.assertEqual({}, tmpl[hot.OUTPUTS])
-
-    def test_translate_parameters(self):
-        """Test translation of parameters into internal engine format."""
-
-        hot_tpl = template_format.parse('''
-        heat_template_version: 2013-05-23
-        parameters:
-          param1:
-            description: foo
-            type: string
-            default: boo
-        ''')
-
-        expected = {'param1': {'Description': 'foo',
-                               'Type': 'String',
-                               'Default': 'boo'}}
-
-        tmpl = parser.Template(hot_tpl)
-        self.assertEqual(expected, tmpl[hot.PARAMETERS])
-
-    def test_translate_parameters_unsupported_type(self):
-        """Test translation of parameters into internal engine format
-
-        This tests if parameters with a type not yet supported by engine
-        are also parsed.
-        """
-
-        hot_tpl = template_format.parse('''
-        heat_template_version: 2013-05-23
-        parameters:
-          param1:
-            description: foo
-            type: unsupported_type
-        ''')
-
-        expected = {'param1': {'Description': 'foo',
-                               'Type': 'UnsupportedType'}}
-
-        tmpl = parser.Template(hot_tpl)
-        self.assertEqual(expected, tmpl[hot.PARAMETERS])
-
-    def test_translate_parameters_hidden(self):
-        hot_tpl = template_format.parse('''
-        heat_template_version: 2013-05-23
-        parameters:
-          user_roles:
-            description: User roles
-            type: comma_delimited_list
-            default: guest,newhire
-            hidden: TRUE
-        ''')
-        expected = {
-            'user_roles': {
-                'Description': 'User roles',
-                'Type': 'CommaDelimitedList',
-                'Default': 'guest,newhire',
-                'NoEcho': True
-            }}
-
-        tmpl = parser.Template(hot_tpl)
-        self.assertEqual(expected, tmpl[hot.PARAMETERS])
 
     def test_translate_resources(self):
         """Test translation of resources into internal engine format."""
@@ -329,9 +269,9 @@ class HOTParamValidatorTest(HeatTestCase):
         pattern_desc2 = 'Value must start with a lowercase character'
         param = {
             'db_name': {
-                'Description': 'The WordPress database name',
-                'Type': 'String',
-                'Default': 'wordpress',
+                'description': 'The WordPress database name',
+                'type': 'string',
+                'default': 'wordpress',
                 'constraints': [
                     {'length': {'min': 6, 'max': 16},
                      'description': len_desc},
@@ -344,7 +284,7 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_name']
 
         def v(value):
-            hot.HOTParamSchema(schema).validate(name, value)
+            hot.HOTParamSchema.from_dict(schema).validate(name, value)
             return True
 
         value = 'wp'
@@ -420,9 +360,9 @@ class HOTParamValidatorTest(HeatTestCase):
         range_desc = 'Value must be between 30000 and 50000'
         param = {
             'db_port': {
-                'Description': 'The database port',
-                'Type': 'Number',
-                'Default': 15,
+                'description': 'The database port',
+                'type': 'number',
+                'default': 31000,
                 'constraints': [
                     {'range': {'min': 30000, 'max': 50000},
                      'description': range_desc}]}}
@@ -431,7 +371,7 @@ class HOTParamValidatorTest(HeatTestCase):
         schema = param['db_port']
 
         def v(value):
-            hot.HOTParamSchema(schema).validate(name, value)
+            hot.HOTParamSchema.from_dict(schema).validate(name, value)
             return True
 
         value = 29999
@@ -450,3 +390,20 @@ class HOTParamValidatorTest(HeatTestCase):
 
         value = 50000
         self.assertTrue(v(value))
+
+    def test_range_constraint_invalid_default(self):
+        range_desc = 'Value must be between 30000 and 50000'
+        param = {
+            'db_port': {
+                'description': 'The database port',
+                'type': 'number',
+                'default': 15,
+                'constraints': [
+                    {'range': {'min': 30000, 'max': 50000},
+                     'description': range_desc}]}}
+
+        schema = param['db_port']
+
+        err = self.assertRaises(constraints.InvalidSchemaError,
+                                hot.HOTParamSchema.from_dict, schema)
+        self.assertIn(range_desc, str(err))

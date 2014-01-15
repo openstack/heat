@@ -18,7 +18,6 @@ import collections
 from heat.common import exception
 from heat.engine import parameters
 from heat.engine import constraints as constr
-from heat.engine import hot
 
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
@@ -101,7 +100,7 @@ class Schema(constr.Schema):
                 ss = dict((n, cls.from_legacy(sd)) for n, sd in schema_dicts)
             else:
                 raise constr.InvalidSchemaError(_('%(schema)s supplied for '
-                                                  ' for %(type)s %(data)s') %
+                                                  ' %(type)s %(data)s') %
                                                 dict(schema=SCHEMA,
                                                      type=TYPE,
                                                      data=data_type))
@@ -120,74 +119,26 @@ class Schema(constr.Schema):
     @classmethod
     def from_parameter(cls, param):
         """
-        Return a Property Schema corresponding to a parameter.
+        Return a Property Schema corresponding to a Parameter Schema.
 
         Convert a parameter schema from a provider template to a property
         Schema for the corresponding resource facade.
         """
+
+        # map param types to property types
         param_type_map = {
-            parameters.ParamSchema.STRING: Schema.STRING,
-            parameters.ParamSchema.NUMBER: Schema.NUMBER,
-            parameters.ParamSchema.COMMA_DELIMITED_LIST: Schema.LIST,
-            parameters.ParamSchema.JSON: Schema.MAP
+            param.STRING: cls.STRING,
+            param.NUMBER: cls.NUMBER,
+            param.LIST: cls.LIST,
+            param.MAP: cls.MAP
         }
-
-        def get_num(key, context=param):
-            val = context.get(key)
-            if val is not None:
-                val = Schema.str_to_num(val)
-            return val
-
-        def constraints():
-            desc = param.get(parameters.CONSTRAINT_DESCRIPTION)
-
-            if parameters.MIN_VALUE in param or parameters.MAX_VALUE in param:
-                yield constr.Range(get_num(parameters.MIN_VALUE),
-                                   get_num(parameters.MAX_VALUE))
-            if (parameters.MIN_LENGTH in param or
-                    parameters.MAX_LENGTH in param):
-                yield constr.Length(get_num(parameters.MIN_LENGTH),
-                                    get_num(parameters.MAX_LENGTH))
-            if parameters.ALLOWED_VALUES in param:
-                yield constr.AllowedValues(param[parameters.ALLOWED_VALUES],
-                                           desc)
-            if parameters.ALLOWED_PATTERN in param:
-                yield constr.AllowedPattern(param[parameters.ALLOWED_PATTERN],
-                                            desc)
-
-        def constraints_hot():
-            constraints = param.get(hot.CONSTRAINTS)
-            if constraints is None:
-                return
-
-            for constraint in constraints:
-                desc = constraint.get(hot.DESCRIPTION)
-                if hot.RANGE in constraint:
-                    const_def = constraint.get(hot.RANGE)
-                    yield constr.Range(get_num(hot.MIN, const_def),
-                                       get_num(hot.MAX, const_def), desc)
-                if hot.LENGTH in constraint:
-                    const_def = constraint.get(hot.LENGTH)
-                    yield constr.Length(get_num(hot.MIN, const_def),
-                                        get_num(hot.MAX, const_def), desc)
-                if hot.ALLOWED_VALUES in constraint:
-                    const_def = constraint.get(hot.ALLOWED_VALUES)
-                    yield constr.AllowedValues(const_def, desc)
-                if hot.ALLOWED_PATTERN in constraint:
-                    const_def = constraint.get(hot.ALLOWED_PATTERN)
-                    yield constr.AllowedPattern(const_def, desc)
-
-        if isinstance(param, hot.HOTParamSchema):
-            constraint_list = list(constraints_hot())
-        else:
-            constraint_list = list(constraints())
 
         # make update_allowed true by default on TemplateResources
         # as the template should deal with this.
-        return cls(param_type_map.get(param[parameters.TYPE], Schema.MAP),
-                   description=param.get(parameters.DESCRIPTION),
-                   required=parameters.DEFAULT not in param,
-                   constraints=constraint_list,
+        return cls(data_type=param_type_map.get(param.type, cls.MAP),
+                   description=param.description,
+                   required=param.required,
+                   constraints=param.constraints,
                    update_allowed=True)
 
     def __getitem__(self, key):
@@ -395,12 +346,12 @@ class Properties(collections.Mapping):
         Return a template parameter definition corresponding to a property.
         """
         param_type_map = {
-            schema.INTEGER: parameters.ParamSchema.NUMBER,
-            schema.STRING: parameters.ParamSchema.STRING,
-            schema.NUMBER: parameters.ParamSchema.NUMBER,
-            schema.BOOLEAN: parameters.ParamSchema.STRING,
-            schema.MAP: parameters.ParamSchema.JSON,
-            schema.LIST: parameters.ParamSchema.COMMA_DELIMITED_LIST,
+            schema.INTEGER: parameters.Schema.NUMBER,
+            schema.STRING: parameters.Schema.STRING,
+            schema.NUMBER: parameters.Schema.NUMBER,
+            schema.BOOLEAN: parameters.Schema.STRING,
+            schema.MAP: parameters.Schema.MAP,
+            schema.LIST: parameters.Schema.LIST,
         }
 
         def param_items():

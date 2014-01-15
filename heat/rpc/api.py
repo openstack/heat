@@ -171,3 +171,11 @@ VALIDATE_PARAM_KEYS = (
     'MinLength', 'MaxValue', 'MinValue',
     'Description', 'ConstraintDescription'
 )
+
+VALIDATE_PARAM_TYPES = (
+    PARAM_TYPE_STRING, PARAM_TYPE_NUMBER, PARAM_TYPE_COMMA_DELIMITED_LIST,
+    PARAM_TYPE_JSON
+) = (
+    'String', 'Number', 'CommaDelimitedList',
+    'Json'
+)
