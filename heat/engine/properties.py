@@ -236,9 +236,12 @@ class Property(object):
     def _validate_integer(self, value):
         if value is None:
             value = self.has_default() and self.default() or 0
-        if not isinstance(value, (int, long)):
-            raise TypeError(_('value is not an integer'))
-        return self._validate_number(value)
+        try:
+            value = int(value)
+        except ValueError:
+            raise TypeError(_("Value '%s' is not an integer") % value)
+        else:
+            return value
 
     def _validate_number(self, value):
         if value is None:
