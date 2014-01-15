@@ -85,8 +85,8 @@ class Clients(clients.OpenStackClients):
             raise ValueError(_("service_type should be compute."))
         return self._get_client(service_type)
 
-    def neutron(self):
-        '''Rackspace neutron client.'''
+    def cloud_networks(self):
+        '''Rackspace cloud networks client.'''
         return self._get_client("network")
 
     def trove(self):
