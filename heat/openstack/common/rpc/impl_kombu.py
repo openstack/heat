@@ -30,6 +30,7 @@ import kombu.entity
 import kombu.messaging
 from oslo.config import cfg
 
+from heat.openstack.common import excutils
 from heat.openstack.common.gettextutils import _
 from heat.openstack.common import network_utils
 from heat.openstack.common.rpc import amqp as rpc_amqp
@@ -723,6 +724,7 @@ class Connection(object):
 
     def consume_in_thread(self):
         """Consumer from all queues/consumers in a greenthread"""
+        @excutils.forever_retry_uncaught_exceptions
         def _consumer_thread():
             try:
                 self.consume()
