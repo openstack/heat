@@ -13,6 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from collections import namedtuple
+import json
+import uuid
+
 from heat.common import context
 from heat.common import exception
 
@@ -279,8 +283,22 @@ class KeystoneClient(object):
         return self.client_v2.ec2.get(uid, access)
 
     def create_ec2_keypair(self, user_id=None):
-        uid = user_id or self.client_v2.auth_ref.user_id
-        return self.client_v2.ec2.create(uid, self.context.tenant_id)
+        user_id = user_id or self.client_v3.auth_ref.user_id
+        project_id = self.context.tenant_id
+        data_blob = {'access': uuid.uuid4().hex,
+                     'secret': uuid.uuid4().hex}
+        ec2_creds = self.client_v3.credentials.create(
+            user=user_id, type='ec2', data=json.dumps(data_blob),
+            project=project_id)
+
+        # Return a namedtuple for easier access to the blob contents
+        # We return the id as the v3 api provides no way to filter by
+        # access in the blob contents, so it will be much more efficient
+        # if we manage credentials by ID instead
+        AccessKey = namedtuple('AccessKey', ['id', 'access', 'secret'])
+        return AccessKey(id=ec2_creds.id,
+                         access=data_blob['access'],
+                         secret=data_blob['secret'])
 
     def disable_stack_user(self, user_id):
         self.client_v3.users.update(user=user_id, enabled=False)
