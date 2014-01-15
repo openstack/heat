@@ -15,10 +15,9 @@
 
 import base64
 from Crypto.Cipher import AES
-from os import urandom
-
 from oslo.config import cfg
 
+from heat.openstack.common.crypto import utils
 from heat.openstack.common import log as logging
 
 
@@ -36,13 +35,29 @@ logger = logging.getLogger(__name__)
 def encrypt(auth_info):
     if auth_info is None:
         return None, None
-    iv = urandom(AES.block_size)
-    cipher = AES.new(cfg.CONF.auth_encryption_key[:32], AES.MODE_CFB, iv)
-    res = base64.b64encode(iv + cipher.encrypt(auth_info))
-    return 'heat_decrypt', res
+    sym = utils.SymmetricCrypto()
+    res = sym.encrypt(cfg.CONF.auth_encryption_key[:32],
+                      auth_info, b64encode=True)
+    return 'oslo_decrypt_v1', res
+
+
+def oslo_decrypt_v1(auth_info):
+    if auth_info is None:
+        return None
+    sym = utils.SymmetricCrypto()
+    return sym.decrypt(cfg.CONF.auth_encryption_key[:32],
+                       auth_info, b64decode=True)
 
 
 def heat_decrypt(auth_info):
+    """Decrypt function for data that has been encrypted using an older
+    version of Heat.
+    Note: the encrypt function returns the function that is needed to
+    decrypt the data. The database then stores this. When the data is
+    then retrieved (potentially by a later version of Heat) the decrypt
+    function must still exist. So whilst it my seem that this function
+    is not referenced, it will be referenced from the database.
+    """
     if auth_info is None:
         return None
     auth = base64.b64decode(auth_info)
