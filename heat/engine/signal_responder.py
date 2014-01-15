@@ -56,6 +56,8 @@ class SignalResponder(resource.Resource):
             raise exception.Error(_("Error creating ec2 keypair for user %s") %
                                   user_id)
         else:
+            db_api.resource_data_set(self, 'credential_id', kp.id,
+                                     redact=True)
             db_api.resource_data_set(self, 'access_key', kp.access,
                                      redact=True)
             db_api.resource_data_set(self, 'secret_key', kp.secret,
@@ -80,7 +82,8 @@ class SignalResponder(resource.Resource):
             self.keystone().delete_stack_user(user_id)
         except clients.hkc.kc.exceptions.NotFound:
             pass
-        for data_key in ('ec2_signed_url', 'access_key', 'secret_key'):
+        for data_key in ('ec2_signed_url', 'access_key', 'secret_key',
+                         'credential_id'):
             try:
                 db_api.resource_data_delete(self, data_key)
             except exception.NotFound:

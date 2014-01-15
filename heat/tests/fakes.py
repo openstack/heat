@@ -78,12 +78,14 @@ class FakeClient(object):
 
 class FakeKeystoneClient(object):
     def __init__(self, username='test_user', password='apassword',
-                 user_id='1234', access='4567', secret='8901'):
+                 user_id='1234', access='4567', secret='8901',
+                 credential_id='abcdxyz'):
         self.username = username
         self.password = password
         self.user_id = user_id
         self.access = access
         self.secret = secret
+        self.credential_id = credential_id
         self.creds = None
         self.auth_token = 'abcd1234'
 
@@ -107,6 +109,7 @@ class FakeKeystoneClient(object):
         if user_id == self.user_id:
             if not self.creds:
                 class FakeCred(object):
+                    id = self.credential_id
                     access = self.access
                     secret = self.secret
                 self.creds = FakeCred()
