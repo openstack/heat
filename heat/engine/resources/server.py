@@ -100,7 +100,7 @@ class Server(resource.Resource):
                           'from.')
                     ),
                     BLOCK_DEVICE_MAPPING_VOLUME_SIZE: properties.Schema(
-                        properties.Schema.STRING,
+                        properties.Schema.INTEGER,
                         _('The size of the volume, in GB. It is safe to '
                           'leave this blank and have the Compute service '
                           'infer the size.')
@@ -372,7 +372,7 @@ class Server(resource.Resource):
             volume_size = mapping.get(cls.BLOCK_DEVICE_MAPPING_VOLUME_SIZE)
             delete = mapping.get(cls.BLOCK_DEVICE_MAPPING_DELETE_ON_TERM)
             if volume_size or delete:
-                mapping_parts.append(volume_size or '0')
+                mapping_parts.append(str(volume_size or 0))
             if delete:
                 mapping_parts.append(str(delete))
 
