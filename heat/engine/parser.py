@@ -282,7 +282,7 @@ class Stack(collections.Mapping):
 
     def __str__(self):
         '''Return a human-readable string representation of the stack.'''
-        return 'Stack "%s"' % self.name
+        return 'Stack "%s" [%s]' % (self.name, self.id)
 
     def resource_by_refid(self, refid):
         '''

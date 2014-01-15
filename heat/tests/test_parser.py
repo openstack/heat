@@ -714,6 +714,12 @@ class StackTest(HeatTestCase):
 
         self.m.ReplayAll()
 
+    def test_stack_string_repr(self):
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
+        expected = 'Stack "%s" [%s]' % (stack.name, stack.id)
+        observed = str(stack)
+        self.assertEqual(expected, observed)
+
     def test_state_defaults(self):
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}))
         self.assertEqual(stack.state, (None, None))

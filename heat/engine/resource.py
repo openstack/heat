@@ -323,6 +323,12 @@ class Resource(object):
                     for k in changed_properties_set)
 
     def __str__(self):
+        if self.stack.id:
+            if self.resource_id:
+                return '%s "%s" [%s] %s' % (self.__class__.__name__, self.name,
+                                            self.resource_id, str(self.stack))
+            return '%s "%s" %s' % (self.__class__.__name__, self.name,
+                                   str(self.stack))
         return '%s "%s"' % (self.__class__.__name__, self.name)
 
     def _add_dependencies(self, deps, path, fragment):
