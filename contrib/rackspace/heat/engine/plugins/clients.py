@@ -26,18 +26,18 @@ from heat.openstack.common.gettextutils import _
 try:
     import pyrax
 except ImportError:
-    logger.info('pyrax not available')
+    logger.info(_('pyrax not available'))
 
 try:
     from swiftclient import client as swiftclient
 except ImportError:
     swiftclient = None
-    logger.info('swiftclient not available')
+    logger.info(_('swiftclient not available'))
 try:
     from ceilometerclient.v2 import client as ceilometerclient
 except ImportError:
     ceilometerclient = None
-    logger.info('ceilometerclient not available')
+    logger.info(_('ceilometerclient not available'))
 
 cloud_opts = [
     cfg.StrOpt('region_name',
@@ -82,7 +82,7 @@ class Clients(clients.OpenStackClients):
         actually a valid option to change within pyrax.
         '''
         if service_type is not "compute":
-            raise ValueError("service_type should be compute.")
+            raise ValueError(_("service_type should be compute."))
         return self._get_client(service_type)
 
     def neutron(self):
@@ -96,7 +96,7 @@ class Clients(clients.OpenStackClients):
     def __authenticate(self):
         pyrax.set_setting("identity_type", "keystone")
         pyrax.set_setting("auth_endpoint", self.context.auth_url)
-        logger.info("Authenticating with username:%s" %
+        logger.info(_("Authenticating username:%s") %
                     self.context.username)
         self.pyrax = pyrax.auth_with_token(self.context.auth_token,
                                            tenant_id=self.context.tenant_id,
@@ -105,5 +105,5 @@ class Clients(clients.OpenStackClients):
                                                    or None))
         if not self.pyrax:
             raise exception.AuthorizationFailure("No services available.")
-        logger.info("User %s authenticated successfully."
+        logger.info(_("User %s authenticated successfully.")
                     % self.context.username)

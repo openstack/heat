@@ -473,7 +473,7 @@ class CloudLoadBalancer(resource.Resource):
 
         lb_name = (self.properties.get(self.NAME) or
                    self.physical_resource_name())
-        logger.debug('Creating loadbalancer: %s' % {lb_name: lb_body})
+        logger.debug(_("Creating loadbalancer: %s") % {lb_name: lb_body})
         loadbalancer = self.clb.create(lb_name, **lb_body)
         self.resource_id_set(str(loadbalancer.id))
 
@@ -516,8 +516,8 @@ class CloudLoadBalancer(resource.Resource):
             updated = new_set.intersection(old_set)
 
             if len(current_nodes) + len(added) - len(deleted) < 1:
-                raise ValueError("The loadbalancer:%s requires at least one "
-                                 "node." % self.name)
+                raise ValueError(_("The loadbalancer:%s requires at least one "
+                                 "node.") % self.name)
             """
             Add loadbalancers in the new map that are not in the old map.
             Add before delete to avoid deleting the last node and getting in
