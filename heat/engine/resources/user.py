@@ -15,12 +15,13 @@
 
 from heat.common import exception
 from heat.db import api as db_api
-from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
+
+import keystoneclient.exceptions as kc_exception
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +121,7 @@ class User(resource.Resource):
             return
         try:
             self.keystone().delete_stack_user(self.resource_id)
-        except clients.hkc.kc.exceptions.NotFound:
+        except kc_exception.NotFound:
             pass
 
     def handle_suspend(self):
@@ -244,7 +245,7 @@ class AccessKey(resource.Resource):
         if user_id:
             try:
                 self.keystone().delete_ec2_keypair(user_id, self.resource_id)
-            except clients.hkc.kc.exceptions.NotFound:
+            except kc_exception.NotFound:
                 pass
 
         self.resource_id_set(None)
