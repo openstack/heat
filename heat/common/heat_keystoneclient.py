@@ -282,8 +282,28 @@ class KeystoneClient(object):
     def delete_stack_user(self, user_id):
         self.client_v3.users.delete(user=user_id)
 
-    def delete_ec2_keypair(self, user_id, accesskey):
-        self.client_v2.ec2.delete(user_id, accesskey)
+    def _find_ec2_keypair(self, access, user_id=None):
+        '''Lookup an ec2 keypair by access ID.'''
+        # FIXME(shardy): add filtering for user_id when keystoneclient
+        # extensible-crud-manager-operations bp lands
+        credentials = self.client_v3.credentials.list()
+        for cr in credentials:
+            ec2_creds = json.loads(cr.blob)
+            if ec2_creds.get('access') == access:
+                return AccessKey(id=cr.id,
+                                 access=ec2_creds['access'],
+                                 secret=ec2_creds['secret'])
+
+    def delete_ec2_keypair(self, credential_id=None, access=None,
+                           user_id=None):
+        '''Delete credential containing ec2 keypair.'''
+        if credential_id:
+            self.client_v3.credentials.delete(credential_id)
+        elif access:
+            cred = self._find_ec2_keypair(access=access, user_id=user_id)
+            self.client_v3.credentials.delete(cred.id)
+        else:
+            raise ValueError("Must specify either credential_id or access")
 
     def get_ec2_keypair(self, credential_id=None, access=None, user_id=None):
         '''Get an ec2 keypair via v3/credentials, by id or access.'''
@@ -299,15 +319,7 @@ class KeystoneClient(object):
                              access=ec2_creds['access'],
                              secret=ec2_creds['secret'])
         elif access:
-            # FIXME(shardy): add filtering for user_id when keystoneclient
-            # extensible-crud-manager-operations bp lands
-            credentials = self.client_v3.credentials.list()
-            for cr in credentials:
-                ec2_creds = json.loads(cr.blob)
-                if ec2_creds.get('access') == access:
-                    return AccessKey(id=cr.id,
-                                     access=ec2_creds['access'],
-                                     secret=ec2_creds['secret'])
+            return self._find_ec2_keypair(access=access, user_id=user_id)
         else:
             raise ValueError("Must specify either credential_id or access")
 
