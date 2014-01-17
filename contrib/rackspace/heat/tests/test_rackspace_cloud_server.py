@@ -243,7 +243,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         cs = cloud_server.CloudServer('cs_create_image_err',
                                       t['Resources']['WebServer'], stack)
 
-        self.assertEqual(None, cs.validate())
+        self.assertIsNone(cs.validate())
         self.m.VerifyAll()
 
     def test_cs_create_heatscript_nonzero_exit_status(self):
@@ -316,7 +316,7 @@ class RackspaceCloudServerTest(HeatTestCase):
         mox.Replay(get)
 
         scheduler.TaskRunner(cs.delete)()
-        self.assertTrue(cs.resource_id is None)
+        self.assertIsNone(cs.resource_id)
         self.assertEqual(cs.state, (cs.DELETE, cs.COMPLETE))
         self.m.VerifyAll()
 

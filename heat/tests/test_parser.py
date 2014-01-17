@@ -50,14 +50,14 @@ class ParserTest(HeatTestCase):
         parsed = join(raw)
         for i in xrange(len(raw)):
             self.assertEqual(parsed[i], raw[i])
-        self.assertTrue(parsed is not raw)
+        self.assertIsNot(raw, parsed)
 
     def test_dict(self):
         raw = {'foo': 'bar', 'blarg': 'wibble'}
         parsed = join(raw)
         for k in raw:
             self.assertEqual(parsed[k], raw[k])
-        self.assertTrue(parsed is not raw)
+        self.assertIsNot(raw, parsed)
 
     def test_dict_list(self):
         raw = {'foo': ['bar', 'baz'], 'blarg': 'wibble'}
@@ -65,8 +65,8 @@ class ParserTest(HeatTestCase):
         self.assertEqual(parsed['blarg'], raw['blarg'])
         for i in xrange(len(raw['foo'])):
             self.assertEqual(parsed['foo'][i], raw['foo'][i])
-        self.assertTrue(parsed is not raw)
-        self.assertTrue(parsed['foo'] is not raw['foo'])
+        self.assertIsNot(raw, parsed)
+        self.assertIsNot(raw['foo'], parsed['foo'])
 
     def test_list_dict(self):
         raw = [{'foo': 'bar', 'blarg': 'wibble'}, 'baz', 'quux']
@@ -75,8 +75,8 @@ class ParserTest(HeatTestCase):
             self.assertEqual(parsed[i], raw[i])
         for k in raw[0]:
             self.assertEqual(parsed[0][k], raw[0][k])
-        self.assertTrue(parsed is not raw)
-        self.assertTrue(parsed[0] is not raw[0])
+        self.assertIsNot(raw, parsed)
+        self.assertIsNot(raw[0], parsed[0])
 
     def test_join(self):
         raw = {'Fn::Join': [' ', ['foo', 'bar', 'baz']]}
@@ -92,7 +92,7 @@ class ParserTest(HeatTestCase):
         self.assertEqual(parsed[0], 'foo bar baz')
         for i in xrange(1, len(raw)):
             self.assertEqual(parsed[i], raw[i])
-        self.assertTrue(parsed is not raw)
+        self.assertIsNot(raw, parsed)
 
     def test_join_dict_val(self):
         raw = {'quux': {'Fn::Join': [' ', ['foo', 'bar', 'baz']]},
@@ -100,7 +100,7 @@ class ParserTest(HeatTestCase):
         parsed = join(raw)
         self.assertEqual(parsed['quux'], 'foo bar baz')
         self.assertEqual(parsed['blarg'], raw['blarg'])
-        self.assertTrue(parsed is not raw)
+        self.assertIsNot(raw, parsed)
 
 
 mapping_template = template_format.parse('''{
@@ -807,7 +807,7 @@ class StackTest(HeatTestCase):
     def test_total_resources_nested(self):
         self._setup_nested('zyzzyx')
         self.assertEqual(4, self.stack.total_resources())
-        self.assertNotEqual(None, self.stack['A'].nested())
+        self.assertIsNotNone(self.stack['A'].nested())
         self.assertEqual(
             2, self.stack['A'].nested().total_resources())
         self.assertEqual(
@@ -818,7 +818,7 @@ class StackTest(HeatTestCase):
     def test_root_stack(self):
         self._setup_nested('toor')
         self.assertEqual(self.stack, self.stack.root_stack)
-        self.assertNotEqual(None, self.stack['A'].nested())
+        self.assertIsNotNone(self.stack['A'].nested())
         self.assertEqual(
             self.stack, self.stack['A'].nested().root_stack)
 
@@ -877,11 +877,11 @@ class StackTest(HeatTestCase):
                                   parser.Template(tpl))
         self.stack.store()
         info = self.stack.get_abandon_data()
-        self.assertEqual(None, info['action'])
+        self.assertIsNone(info['action'])
         self.assertIn('id', info)
         self.assertEqual('stack_details_test', info['name'])
         self.assertEqual(json.loads(resources), info['resources'])
-        self.assertEqual(None, info['status'])
+        self.assertIsNone(info['status'])
         self.assertEqual(tpl, info['template'])
 
     @utils.stack_delete_after
@@ -962,19 +962,19 @@ class StackTest(HeatTestCase):
     def test_created_time(self):
         self.stack = parser.Stack(self.ctx, 'creation_time_test',
                                   parser.Template({}))
-        self.assertEqual(self.stack.created_time, None)
+        self.assertIsNone(self.stack.created_time)
         self.stack.store()
-        self.assertNotEqual(self.stack.created_time, None)
+        self.assertIsNotNone(self.stack.created_time)
 
     @utils.stack_delete_after
     def test_updated_time(self):
         self.stack = parser.Stack(self.ctx, 'update_time_test',
                                   parser.Template({}))
-        self.assertEqual(self.stack.updated_time, None)
+        self.assertIsNone(self.stack.updated_time)
         self.stack.store()
         stored_time = self.stack.updated_time
         self.stack.state_set(self.stack.CREATE, self.stack.IN_PROGRESS, 'test')
-        self.assertNotEqual(self.stack.updated_time, None)
+        self.assertIsNotNone(self.stack.updated_time)
         self.assertNotEqual(self.stack.updated_time, stored_time)
 
     @utils.stack_delete_after
@@ -984,12 +984,12 @@ class StackTest(HeatTestCase):
         stack_id = self.stack.store()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
-        self.assertNotEqual(db_s, None)
+        self.assertIsNotNone(db_s)
 
         self.stack.delete()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
-        self.assertEqual(db_s, None)
+        self.assertIsNone(db_s)
         self.assertEqual(self.stack.state,
                          (parser.Stack.DELETE, parser.Stack.COMPLETE))
 
@@ -1007,12 +1007,12 @@ class StackTest(HeatTestCase):
         stack_id = self.stack.store()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
-        self.assertNotEqual(db_s, None)
+        self.assertIsNotNone(db_s)
 
         self.stack.delete()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
-        self.assertEqual(db_s, None)
+        self.assertIsNone(db_s)
         self.assertEqual(self.stack.state,
                          (parser.Stack.DELETE, parser.Stack.COMPLETE))
 
@@ -1178,12 +1178,12 @@ class StackTest(HeatTestCase):
         stack_id = self.stack.store()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
-        self.assertNotEqual(db_s, None)
+        self.assertIsNotNone(db_s)
 
         self.stack.delete(action=self.stack.ROLLBACK)
 
         db_s = db_api.stack_get(self.ctx, stack_id)
-        self.assertEqual(db_s, None)
+        self.assertIsNone(db_s)
         self.assertEqual(self.stack.state,
                          (parser.Stack.ROLLBACK, parser.Stack.COMPLETE))
 
@@ -1194,12 +1194,12 @@ class StackTest(HeatTestCase):
         stack_id = self.stack.store()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
-        self.assertNotEqual(db_s, None)
+        self.assertIsNotNone(db_s)
 
         self.stack.delete(action="wibble")
 
         db_s = db_api.stack_get(self.ctx, stack_id)
-        self.assertNotEqual(db_s, None)
+        self.assertIsNotNone(db_s)
         self.assertEqual(self.stack.state,
                          (parser.Stack.DELETE, parser.Stack.FAILED))
 
@@ -1228,7 +1228,7 @@ class StackTest(HeatTestCase):
         self.assertIn('AResource', self.stack)
         rsrc = self.stack['AResource']
         rsrc.resource_id_set('aaaa')
-        self.assertNotEqual(None, resource)
+        self.assertIsNotNone(resource)
 
         for action, status in (
                 (rsrc.CREATE, rsrc.IN_PROGRESS),
@@ -1242,8 +1242,8 @@ class StackTest(HeatTestCase):
 
         rsrc.state_set(rsrc.DELETE, rsrc.IN_PROGRESS)
         try:
-            self.assertEqual(None, self.stack.resource_by_refid('aaaa'))
-            self.assertEqual(None, self.stack.resource_by_refid('bbbb'))
+            self.assertIsNone(self.stack.resource_by_refid('aaaa'))
+            self.assertIsNone(self.stack.resource_by_refid('bbbb'))
         finally:
             rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE)
 
@@ -1896,7 +1896,7 @@ class StackTest(HeatTestCase):
         stack_id = stack.store()
 
         db_s = db_api.stack_get(self.ctx, stack_id)
-        self.assertNotEqual(db_s, None)
+        self.assertIsNotNone(db_s)
 
         self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
         self.m.StubOutWithMock(scheduler, 'wallclock')
@@ -2026,7 +2026,7 @@ class StackTest(HeatTestCase):
                 (rsrc.DELETE, rsrc.COMPLETE),
                 (rsrc.UPDATE, rsrc.FAILED)):
             rsrc.state_set(action, status)
-            self.assertEqual(None, self.stack.output('TestOutput'))
+            self.assertIsNone(self.stack.output('TestOutput'))
 
     @utils.stack_delete_after
     def test_resource_required_by(self):

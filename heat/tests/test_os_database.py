@@ -166,7 +166,7 @@ class OSDBInstanceTest(HeatTestCase):
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.delete)()
-        self.assertEqual(None, instance.resource_id)
+        self.assertIsNone(instance.resource_id)
         self.m.VerifyAll()
 
     def test_osdatabase_delete_resource_none(self):
@@ -179,7 +179,7 @@ class OSDBInstanceTest(HeatTestCase):
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.delete)()
-        self.assertEqual(None, instance.resource_id)
+        self.assertIsNone(instance.resource_id)
         self.m.VerifyAll()
 
     def test_osdatabase_resource_not_found(self):
@@ -193,14 +193,14 @@ class OSDBInstanceTest(HeatTestCase):
 
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.delete)()
-        self.assertEqual(None, instance.resource_id)
+        self.assertIsNone(instance.resource_id)
         self.m.VerifyAll()
 
     def test_osdatabase_invalid_attribute(self):
         t = template_format.parse(wp_template)
         instance = self._setup_test_clouddbinstance("db_invalid_attrib", t)
         attrib = instance._resolve_attribute("invalid_attrib")
-        self.assertEqual(None, attrib)
+        self.assertIsNone(attrib)
         self.m.VerifyAll()
 
     def test_osdatabase_get_hostname(self):
@@ -245,13 +245,13 @@ class OSDBInstanceTest(HeatTestCase):
         self.fc.instances.get(12345).AndReturn(fake_dbinstance)
         self.m.ReplayAll()
         attrib = instance._resolve_attribute('href')
-        self.assertEqual(None, attrib)
+        self.assertIsNone(attrib)
 
     def test_osdatabase_prop_validation_success(self):
         t = template_format.parse(wp_template)
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         ret = instance.validate()
-        self.assertEqual(None, ret)
+        self.assertIsNone(ret)
 
     def test_osdatabase_prop_validation_invaliddb(self):
         t = template_format.parse(wp_template)
@@ -269,7 +269,7 @@ class OSDBInstanceTest(HeatTestCase):
         t['Resources']['MySqlCloudDB']['Properties']['users'] = []
         instance = self._setup_test_clouddbinstance('dbinstance_test', t)
         ret = instance.validate()
-        self.assertEqual(None, ret)
+        self.assertIsNone(ret)
 
     def test_osdatabase_prop_validation_databases_none(self):
         t = template_format.parse(wp_template)

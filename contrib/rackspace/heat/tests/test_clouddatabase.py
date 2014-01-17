@@ -122,8 +122,8 @@ class CloudDBInstanceTest(HeatTestCase):
 
     def test_clouddbinstance(self):
         instance = self._setup_test_clouddbinstance('dbinstance')
-        self.assertEqual(instance.hostname, None)
-        self.assertEqual(instance.href, None)
+        self.assertIsNone(instance.hostname)
+        self.assertIsNone(instance.href)
 
     def test_clouddbinstance_create(self):
         instance = self._setup_test_clouddbinstance('dbinstance_create')
@@ -169,7 +169,7 @@ class CloudDBInstanceTest(HeatTestCase):
                            volume=30).AndReturn(fakedbinstance)
         self.m.ReplayAll()
         instance.handle_create()
-        self.assertEqual(instance._resolve_attribute('invalid-attrib'), None)
+        self.assertIsNone(instance._resolve_attribute('invalid-attrib'))
         self.m.VerifyAll()
 
     def test_clouddbinstance_delete(self):
@@ -187,7 +187,7 @@ class CloudDBInstanceTest(HeatTestCase):
             inject_property_error=False)
         self.m.ReplayAll()
         ret = instance.validate()
-        self.assertEqual(ret, None)
+        self.assertIsNone(ret)
         self.m.VerifyAll()
 
     def test_clouddbinstance_param_validation_fail(self):

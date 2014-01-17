@@ -141,8 +141,8 @@ class PropertySchemaTest(testtools.TestCase):
             'Type': 'String',
         })
         self.assertEqual(properties.Schema.STRING, s.type)
-        self.assertEqual(None, s.description)
-        self.assertEqual(None, s.default)
+        self.assertIsNone(s.description)
+        self.assertIsNone(s.default)
         self.assertFalse(s.required)
         self.assertEqual(0, len(s.constraints))
 
@@ -173,7 +173,7 @@ class PropertySchemaTest(testtools.TestCase):
         c = s.constraints[0]
         self.assertIsInstance(c, constraints.Length)
         self.assertEqual(4, c.min)
-        self.assertEqual(None, c.max)
+        self.assertIsNone(c.max)
 
     def test_from_legacy_max_length(self):
         s = properties.Schema.from_legacy({
@@ -183,7 +183,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
         self.assertIsInstance(c, constraints.Length)
-        self.assertEqual(None, c.min)
+        self.assertIsNone(c.min)
         self.assertEqual(8, c.max)
 
     def test_from_legacy_minmax_length(self):
@@ -219,7 +219,7 @@ class PropertySchemaTest(testtools.TestCase):
         c = s.constraints[0]
         self.assertIsInstance(c, constraints.Range)
         self.assertEqual(4, c.min)
-        self.assertEqual(None, c.max)
+        self.assertIsNone(c.max)
 
     def test_from_legacy_max_value(self):
         s = properties.Schema.from_legacy({
@@ -229,7 +229,7 @@ class PropertySchemaTest(testtools.TestCase):
         self.assertEqual(1, len(s.constraints))
         c = s.constraints[0]
         self.assertIsInstance(c, constraints.Range)
-        self.assertEqual(None, c.min)
+        self.assertIsNone(c.min)
         self.assertEqual(8, c.max)
 
     def test_from_legacy_minmax_value(self):
@@ -332,7 +332,7 @@ class PropertySchemaTest(testtools.TestCase):
 
         self.assertEqual(properties.Schema.STRING, schema.type)
         self.assertEqual(description, schema.description)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -357,7 +357,7 @@ class PropertySchemaTest(testtools.TestCase):
 
         self.assertEqual(properties.Schema.STRING, schema.type)
         self.assertEqual(description, schema.description)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -383,7 +383,7 @@ class PropertySchemaTest(testtools.TestCase):
 
         self.assertEqual(properties.Schema.STRING, schema.type)
         self.assertEqual(description, schema.description)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(2, len(schema.constraints))
 
@@ -391,7 +391,7 @@ class PropertySchemaTest(testtools.TestCase):
         allowed_constraint = schema.constraints[1]
 
         self.assertEqual(7, len_constraint.min)
-        self.assertEqual(None, len_constraint.max)
+        self.assertIsNone(len_constraint.max)
         self.assertEqual(allowed_pattern, allowed_constraint.pattern)
         self.assertEqual(constraint_desc, allowed_constraint.description)
 
@@ -410,7 +410,7 @@ class PropertySchemaTest(testtools.TestCase):
         len_constraint = schema.constraints[0]
 
         self.assertEqual(7, len_constraint.min)
-        self.assertEqual(None, len_constraint.max)
+        self.assertIsNone(len_constraint.max)
 
     def test_from_param_string_max_len(self):
         param = parameters.ParamSchema({
@@ -426,7 +426,7 @@ class PropertySchemaTest(testtools.TestCase):
 
         len_constraint = schema.constraints[0]
 
-        self.assertEqual(None, len_constraint.min)
+        self.assertIsNone(len_constraint.min)
         self.assertEqual(11, len_constraint.max)
 
     def test_from_param_string_min_max_len(self):
@@ -455,7 +455,7 @@ class PropertySchemaTest(testtools.TestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertTrue(schema.required)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertEqual(0, len(schema.constraints))
 
     def test_from_number_param_min(self):
@@ -469,14 +469,14 @@ class PropertySchemaTest(testtools.TestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
         value_constraint = schema.constraints[0]
 
         self.assertEqual(10, value_constraint.min)
-        self.assertEqual(None, value_constraint.max)
+        self.assertIsNone(value_constraint.max)
 
     def test_from_number_param_max(self):
         default = "42"
@@ -489,13 +489,13 @@ class PropertySchemaTest(testtools.TestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
         value_constraint = schema.constraints[0]
 
-        self.assertEqual(None, value_constraint.min)
+        self.assertIsNone(value_constraint.min)
         self.assertEqual(100, value_constraint.max)
 
     def test_from_number_param_min_max(self):
@@ -510,7 +510,7 @@ class PropertySchemaTest(testtools.TestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -532,7 +532,7 @@ class PropertySchemaTest(testtools.TestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.NUMBER, schema.type)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
         self.assertEqual(1, len(schema.constraints))
 
@@ -550,7 +550,7 @@ class PropertySchemaTest(testtools.TestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.LIST, schema.type)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
 
     def test_from_json_param(self):
@@ -562,7 +562,7 @@ class PropertySchemaTest(testtools.TestCase):
         schema = properties.Schema.from_parameter(param)
 
         self.assertEqual(properties.Schema.MAP, schema.type)
-        self.assertEqual(None, schema.default)
+        self.assertIsNone(schema.default)
         self.assertFalse(schema.required)
 
 
@@ -763,15 +763,15 @@ class PropertyTest(testtools.TestCase):
 
     def test_boolean_true(self):
         p = properties.Property({'Type': 'Boolean'})
-        self.assertEqual(p.validate_data('True'), True)
-        self.assertEqual(p.validate_data('true'), True)
-        self.assertEqual(p.validate_data(True), True)
+        self.assertIs(True, p.validate_data('True'))
+        self.assertIs(True, p.validate_data('true'))
+        self.assertIs(True, p.validate_data(True))
 
     def test_boolean_false(self):
         p = properties.Property({'Type': 'Boolean'})
-        self.assertEqual(p.validate_data('False'), False)
-        self.assertEqual(p.validate_data('false'), False)
-        self.assertEqual(p.validate_data(False), False)
+        self.assertIs(False, p.validate_data('False'))
+        self.assertIs(False, p.validate_data('false'))
+        self.assertIs(False, p.validate_data(False))
 
     def test_boolean_invalid(self):
         p = properties.Property({'Type': 'Boolean'})
@@ -908,7 +908,7 @@ class PropertiesTest(testtools.TestCase):
         self.assertRaises(ValueError, self.props.get, 'bad_int')
 
     def test_missing(self):
-        self.assertEqual(self.props['missing'], None)
+        self.assertIsNone(self.props['missing'])
 
     def test_default(self):
         self.assertEqual(self.props['defaulted'], 1)
@@ -937,7 +937,7 @@ class PropertiesTest(testtools.TestCase):
     def test_none_boolean(self):
         schema = {'foo': {'Type': 'Boolean'}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(False, props['foo'])
+        self.assertIs(False, props['foo'])
 
     def test_none_map(self):
         schema = {'foo': {'Type': 'Map'}}
@@ -983,7 +983,7 @@ class PropertiesTest(testtools.TestCase):
     def test_none_default_boolean(self):
         schema = {'foo': {'Type': 'Boolean', 'Default': True}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(True, props['foo'])
+        self.assertIs(True, props['foo'])
 
     def test_none_default_map(self):
         schema = {'foo': {'Type': 'Map', 'Default': {'bar': 'baz'}}}
@@ -1360,7 +1360,7 @@ class PropertiesValidationTest(testtools.TestCase):
     def test_required(self):
         schema = {'foo': {'Type': 'String', 'Required': True}}
         props = properties.Properties(schema, {'foo': 'bar'})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_missing_required(self):
         schema = {'foo': {'Type': 'String', 'Required': True}}
@@ -1370,7 +1370,7 @@ class PropertiesValidationTest(testtools.TestCase):
     def test_missing_unimplemented(self):
         schema = {'foo': {'Type': 'String', 'Implemented': False}}
         props = properties.Properties(schema, {})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_present_unimplemented(self):
         schema = {'foo': {'Type': 'String', 'Implemented': False}}
@@ -1380,7 +1380,7 @@ class PropertiesValidationTest(testtools.TestCase):
     def test_missing(self):
         schema = {'foo': {'Type': 'String'}}
         props = properties.Properties(schema, {})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_bad_data(self):
         schema = {'foo': {'Type': 'String'}}
@@ -1395,62 +1395,62 @@ class PropertiesValidationTest(testtools.TestCase):
     def test_none_string(self):
         schema = {'foo': {'Type': 'String'}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_integer(self):
         schema = {'foo': {'Type': 'Integer'}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_number(self):
         schema = {'foo': {'Type': 'Number'}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_boolean(self):
         schema = {'foo': {'Type': 'Boolean'}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_map(self):
         schema = {'foo': {'Type': 'Map'}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_list(self):
         schema = {'foo': {'Type': 'List'}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_default_string(self):
         schema = {'foo': {'Type': 'String', 'Default': 'bar'}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_default_integer(self):
         schema = {'foo': {'Type': 'Integer', 'Default': 42}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_default_number(self):
         schema = {'foo': {'Type': 'Number', 'Default': 42.0}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_default_boolean(self):
         schema = {'foo': {'Type': 'Boolean', 'Default': True}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_default_map(self):
         schema = {'foo': {'Type': 'Map', 'Default': {'bar': 'baz'}}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_none_default_list(self):
         schema = {'foo': {'Type': 'List', 'Default': ['one', 'two']}}
         props = properties.Properties(schema, {'foo': None})
-        self.assertEqual(props.validate(), None)
+        self.assertIsNone(props.validate())
 
     def test_schema_to_template_nested_map_map_schema(self):
         nested_schema = {'Key': {'Type': 'String',

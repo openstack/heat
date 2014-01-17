@@ -94,13 +94,13 @@ class RequestTest(HeatTestCase):
         self.stubs.SmartSet(request.accept_language,
                             'best_match', fake_best_match)
 
-        self.assertEqual(request.best_match_language(), None)
+        self.assertIsNone(request.best_match_language())
 
         # If Accept-Language is missing or empty, match should be None
         request.headers = {'Accept-Language': ''}
-        self.assertEqual(request.best_match_language(), None)
+        self.assertIsNone(request.best_match_language())
         request.headers.pop('Accept-Language')
-        self.assertEqual(request.best_match_language(), None)
+        self.assertIsNone(request.best_match_language())
 
 
 class ResourceTest(HeatTestCase):

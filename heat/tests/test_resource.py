@@ -188,9 +188,9 @@ class ResourceTest(HeatTestCase):
     def test_created_time(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_res_new', tmpl, self.stack)
-        self.assertEqual(res.created_time, None)
+        self.assertIsNone(res.created_time)
         res._store()
-        self.assertNotEqual(res.created_time, None)
+        self.assertIsNotNone(res.created_time)
 
     def test_updated_time(self):
         tmpl = {'Type': 'Foo'}
@@ -198,17 +198,17 @@ class ResourceTest(HeatTestCase):
         res._store()
         stored_time = res.updated_time
         res.state_set(res.CREATE, res.IN_PROGRESS, 'testing')
-        self.assertNotEqual(res.updated_time, None)
+        self.assertIsNotNone(res.updated_time)
         self.assertNotEqual(res.updated_time, stored_time)
 
     def test_store_or_update(self):
         tmpl = {'Type': 'Foo'}
         res = generic_rsrc.GenericResource('test_res_upd', tmpl, self.stack)
         res._store_or_update(res.CREATE, res.IN_PROGRESS, 'test_store')
-        self.assertNotEqual(None, res.id)
-        self.assertEqual(res.action, res.CREATE)
-        self.assertEqual(res.status, res.IN_PROGRESS)
-        self.assertEqual(res.status_reason, 'test_store')
+        self.assertIsNotNone(res.id)
+        self.assertEqual(res.CREATE, res.action)
+        self.assertEqual(res.IN_PROGRESS, res.status)
+        self.assertEqual('test_store', res.status_reason)
 
         db_res = db_api.resource_get(res.context, res.id)
         self.assertEqual(db_res.action, res.CREATE)
@@ -1198,4 +1198,4 @@ class SupportStatusTest(HeatTestCase):
         self.assertEqual('UNKNOWN', status.status)
         self.assertEqual('Specified status is invalid, defaulting to UNKNOWN',
                          status.message)
-        self.assertEqual(None, status.version)
+        self.assertIsNone(status.version)

@@ -552,7 +552,7 @@ class validateTest(HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template(t))
 
         volumeattach = stack['MountPoint']
-        self.assertTrue(volumeattach.validate() is None)
+        self.assertIsNone(volumeattach.validate())
 
     def test_validate_volumeattach_invalid(self):
         t = template_format.parse(test_template_volumeattach % 'sda')

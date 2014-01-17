@@ -789,7 +789,7 @@ class DBAPIStackTest(HeatTestCase):
         self.assertEqual(self.user_creds.id, stack.user_creds_id)
         self.assertIsNone(stack.owner_id)
         self.assertEqual('60', stack.timeout)
-        self.assertEqual(False, stack.disable_rollback)
+        self.assertFalse(stack.disable_rollback)
 
     def test_stack_delete(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)

@@ -217,7 +217,7 @@ class ServerTagsTest(HeatTestCase):
 
         # create the launch configuration
         conf = stack['Config']
-        self.assertEqual(None, conf.validate())
+        self.assertIsNone(conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
 
@@ -264,7 +264,7 @@ class ServerTagsTest(HeatTestCase):
 
         # create the launch configuration
         conf = stack['Config']
-        self.assertEqual(None, conf.validate())
+        self.assertIsNone(conf.validate())
         scheduler.TaskRunner(conf.create)()
         self.assertEqual((conf.CREATE, conf.COMPLETE), conf.state)
         group = stack['WebServer']

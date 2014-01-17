@@ -68,7 +68,7 @@ class VPCTestBase(HeatTestCase):
     def create_stack(self, template):
         t = template_format.parse(template)
         stack = self.parse_stack(t)
-        self.assertEqual(None, stack.create())
+        self.assertIsNone(stack.create())
         return stack
 
     def parse_stack(self, t):
@@ -341,7 +341,7 @@ class VPCTestBase(HeatTestCase):
         neutronclient.Client.remove_gateway_router('ffff').AndReturn(None)
 
     def assertResourceState(self, resource, ref_id):
-        self.assertEqual(None, resource.validate())
+        self.assertIsNone(resource.validate())
         self.assertEqual((resource.CREATE, resource.COMPLETE), resource.state)
         self.assertEqual(ref_id, resource.FnGetRefId())
 

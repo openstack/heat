@@ -521,7 +521,7 @@ class WebHookTest(HeatTestCase):
         self.stack = utils.parse_stack(template)
         self.stack.create()
         resource = self.stack['my_webhook']
-        self.assertIs(resource.FnGetAtt('capabilityUrl'), None)
+        self.assertIsNone(resource.FnGetAtt('capabilityUrl'))
 
     def test_update(self):
         self._setup_test_stack(self.webhook_template)

@@ -186,8 +186,8 @@ class StackResourceTest(HeatTestCase):
         updater = self.parent_resource.update_with_template(
             new_templ, {})
         updater.run_to_completion()
-        self.assertEqual(True,
-                         self.parent_resource.check_update_complete(updater))
+        self.assertIs(True,
+                      self.parent_resource.check_update_complete(updater))
         self.assertEqual(self.stack.state, ('UPDATE', 'COMPLETE'))
         self.assertEqual(set(self.stack.keys()),
                          set(["WebServer", "WebServer2"]))
