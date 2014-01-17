@@ -96,7 +96,7 @@ class KeystoneClientTest(HeatTestCase):
             self.mock_ks_client.auth_ref.auth_token = 'atrusttoken'
             self.mock_ks_client.auth_ref.user_id = user_id
 
-    def _stubs_v3(self, method='token', auth_ok=True):
+    def _stubs_v3(self, method='token', auth_ok=True, user_id=None):
         self._stub_config()
         self.m.StubOutClassWithMocks(heat_keystoneclient.kc_v3, "Client")
 
@@ -132,6 +132,9 @@ class KeystoneClientTest(HeatTestCase):
                 insecure=False,
                 key=None)
         self.mock_ks_v3_client.authenticate().AndReturn(auth_ok)
+        if user_id:
+            self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
+            self.mock_ks_v3_client.auth_ref.user_id = user_id
 
     def test_username_length(self):
         """Test that user names >64 characters are properly truncated."""
@@ -505,3 +508,78 @@ class KeystoneClientTest(HeatTestCase):
         self.assertEqual('123456', ec2_cred.id)
         self.assertEqual('dummy_access', ec2_cred.access)
         self.assertEqual('dummy_secret', ec2_cred.secret)
+
+    def test_get_ec2_keypair_id(self):
+
+        """Test getting ec2 credential by id."""
+
+        user_id = 'atestuser'
+        self._stubs_v3(user_id=user_id)
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        ex_data = {'access': 'access123',
+                   'secret': 'secret456'}
+        ex_data_json = json.dumps(ex_data)
+
+        # Create a mock credential response
+        credential_id = 'acredential123'
+        mock_credential = self.m.CreateMockAnything()
+        mock_credential.id = credential_id
+        mock_credential.user_id = user_id
+        mock_credential.blob = ex_data_json
+        mock_credential.type = 'ec2'
+
+        # mock keystone client get function
+        self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.credentials.get(
+            credential_id).AndReturn(mock_credential)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        ec2_cred = heat_ks_client.get_ec2_keypair(credential_id=credential_id)
+        self.assertEqual(credential_id, ec2_cred.id)
+        self.assertEqual('access123', ec2_cred.access)
+        self.assertEqual('secret456', ec2_cred.secret)
+
+    def test_get_ec2_keypair_access(self):
+
+        """Test getting ec2 credential by access."""
+
+        user_id = 'atestuser'
+        self._stubs_v3(user_id=user_id)
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # Create a mock credential list response
+        mock_credential_list = []
+        for x in (1, 2, 3):
+            mock_credential = self.m.CreateMockAnything()
+            mock_credential.id = 'credential_id%s' % x
+            mock_credential.user_id = user_id
+            mock_credential.blob = json.dumps({'access': 'access%s' % x,
+                                               'secret': 'secret%s' % x})
+            mock_credential.type = 'ec2'
+            mock_credential_list.append(mock_credential)
+
+        # mock keystone client list function
+        self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.credentials.list().AndReturn(
+            mock_credential_list)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        ec2_cred = heat_ks_client.get_ec2_keypair(access='access2')
+        self.assertEqual('credential_id2', ec2_cred.id)
+        self.assertEqual('access2', ec2_cred.access)
+        self.assertEqual('secret2', ec2_cred.secret)
+
+    def test_get_ec2_keypair_error(self):
+
+        """Test getting ec2 credential error path."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertRaises(ValueError, heat_ks_client.get_ec2_keypair)
