@@ -17,6 +17,7 @@ import uuid
 import mox
 
 import keystoneclient.exceptions as kc_exception
+from keystoneclient.v3 import client as kc_v3
 
 from heat.common import exception
 from heat.common import heat_keystoneclient
@@ -52,56 +53,14 @@ class KeystoneClientTest(HeatTestCase):
         self.mock_config = mock_config
         heat_keystoneclient.KeystoneClient.conf = mock_config
 
-    def _stubs_v2(self, method='token', auth_ok=True, trust_scoped=True,
-                  user_id='trustor_user_id'):
+    def _stubs_v3(self, method='token', auth_ok=True, trust_scoped=True,
+                  user_id='trustor_user_id', mock_client=True):
         self._stub_config()
-        self.m.StubOutClassWithMocks(heat_keystoneclient.kc, "Client")
-        if method == 'token':
-            self.mock_ks_client = heat_keystoneclient.kc.Client(
-                auth_url=mox.IgnoreArg(),
-                tenant_name='test_tenant',
-                token='abcd1234',
-                cacert=None,
-                cert=None,
-                insecure=False,
-                key=None)
-            self.mock_ks_client.authenticate().AndReturn(auth_ok)
-        elif method == 'password':
-            self.mock_ks_client = heat_keystoneclient.kc.Client(
-                auth_url=mox.IgnoreArg(),
-                tenant_name='test_tenant',
-                tenant_id='test_tenant_id',
-                username='test_username',
-                password='password',
-                cacert=None,
-                cert=None,
-                insecure=False,
-                key=None)
-            self.mock_ks_client.authenticate().AndReturn(auth_ok)
-        if method == 'trust':
-            self.mock_ks_client = heat_keystoneclient.kc.Client(
-                auth_url='http://server.test:5000/v2.0',
-                password='verybadpass',
-                tenant_name='service',
-                username='heat',
-                cacert=None,
-                cert=None,
-                insecure=False,
-                key=None)
-            self.mock_ks_client.authenticate(trust_id='atrust123',
-                                             tenant_id='test_tenant_id'
-                                             ).AndReturn(auth_ok)
-            self.mock_ks_client.auth_ref = self.m.CreateMockAnything()
-            self.mock_ks_client.auth_ref.trust_scoped = trust_scoped
-            self.mock_ks_client.auth_ref.auth_token = 'atrusttoken'
-            self.mock_ks_client.auth_ref.user_id = user_id
-
-    def _stubs_v3(self, method='token', auth_ok=True, user_id=None):
-        self._stub_config()
-        self.m.StubOutClassWithMocks(heat_keystoneclient.kc_v3, "Client")
+        if mock_client:
+            self.m.StubOutClassWithMocks(kc_v3, "Client")
 
         if method == 'token':
-            self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
+            self.mock_ks_v3_client = kc_v3.Client(
                 token='abcd1234', project_name='test_tenant',
                 auth_url='http://server.test:5000/v3',
                 endpoint='http://server.test:5000/v3',
@@ -110,7 +69,7 @@ class KeystoneClientTest(HeatTestCase):
                 insecure=False,
                 key=None)
         elif method == 'password':
-            self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
+            self.mock_ks_v3_client = kc_v3.Client(
                 username='test_username',
                 password='password',
                 project_name='test_tenant',
@@ -122,19 +81,23 @@ class KeystoneClientTest(HeatTestCase):
                 insecure=False,
                 key=None)
         elif method == 'trust':
-            self.mock_ks_v3_client = heat_keystoneclient.kc_v3.Client(
+            self.mock_ks_v3_client = kc_v3.Client(
                 username='heat',
                 password='verybadpass',
                 project_name='service',
                 auth_url='http://server.test:5000/v3',
+                endpoint='http://server.test:5000/v3',
+                trust_id='atrust123',
                 cacert=None,
                 cert=None,
                 insecure=False,
                 key=None)
-        self.mock_ks_v3_client.authenticate().AndReturn(auth_ok)
-        if user_id:
             self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
             self.mock_ks_v3_client.auth_ref.user_id = user_id
+            self.mock_ks_v3_client.auth_ref.trust_scoped = trust_scoped
+            self.mock_ks_v3_client.auth_ref.auth_token = 'atrusttoken'
+
+        self.mock_ks_v3_client.authenticate().AndReturn(auth_ok)
 
     def test_username_length(self):
         """Test that user names >64 characters are properly truncated."""
@@ -196,33 +159,6 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.delete_stack_user('atestuser')
 
-    def test_init_v2_password(self):
-
-        """Test creating the client, user/password context."""
-
-        self._stubs_v2(method='password')
-        self.m.ReplayAll()
-
-        ctx = utils.dummy_context()
-        ctx.auth_token = None
-        ctx.trust_id = None
-        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertIsNotNone(heat_ks_client.client_v2)
-        self.assertIsNone(heat_ks_client._client_v3)
-
-    def test_init_v2_bad_nocreds(self):
-
-        """Test creating the client without trusts, no credentials."""
-
-        ctx = utils.dummy_context()
-        ctx.auth_token = None
-        ctx.username = None
-        ctx.password = None
-        ctx.trust_id = None
-        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertRaises(exception.AuthorizationFailure,
-                          heat_ks_client._v2_client_init)
-
     def test_init_v3_token(self):
 
         """Test creating the client, token auth."""
@@ -237,7 +173,6 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.client_v3
         self.assertIsNotNone(heat_ks_client._client_v3)
-        self.assertIsNone(heat_ks_client._client_v2)
 
     def test_init_v3_password(self):
 
@@ -252,7 +187,6 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         client_v3 = heat_ks_client.client_v3
         self.assertIsNotNone(client_v3)
-        self.assertIsNone(heat_ks_client._client_v2)
 
     def test_init_v3_bad_nocreds(self):
 
@@ -271,7 +205,7 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test create_trust_context with existing trust_id."""
 
-        self._stubs_v2(method='trust')
+        self._stubs_v3(method='trust')
         self.mock_config.deferred_auth_method = 'trusts'
         self.m.ReplayAll()
 
@@ -290,17 +224,19 @@ class KeystoneClientTest(HeatTestCase):
         class MockTrust(object):
             id = 'atrust123'
 
-        self.m.StubOutClassWithMocks(heat_keystoneclient.kc, "Client")
-        mock_admin_client = heat_keystoneclient.kc.Client(
+        self.m.StubOutClassWithMocks(kc_v3, "Client")
+        mock_admin_client = kc_v3.Client(
             auth_url=mox.IgnoreArg(),
             username='heat',
             password='verybadpass',
-            tenant_name='service')
+            project_name='service')
         mock_admin_client.auth_ref = self.m.CreateMockAnything()
         mock_admin_client.auth_ref.user_id = '1234'
-        self._stubs_v3()
+
+        self._stubs_v3(mock_client=False)
         self.mock_config.deferred_auth_method = 'trusts'
         self.mock_config.trusts_delegated_roles = ['heat_stack_owner']
+
         self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
         self.mock_ks_v3_client.auth_ref.user_id = '5678'
         self.mock_ks_v3_client.auth_ref.project_id = '42'
@@ -325,7 +261,7 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test consuming a trust when initializing."""
 
-        self._stubs_v2(method='trust')
+        self._stubs_v3(method='trust')
         self.mock_config.deferred_auth_method = 'trusts'
         self.m.ReplayAll()
 
@@ -336,14 +272,13 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = 'atrust123'
         ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        client_v2 = heat_ks_client.client_v2
-        self.assertIsNotNone(client_v2)
+        self.assertIsNotNone(heat_ks_client.client_v3)
 
     def test_trust_init_fail(self):
 
         """Test consuming a trust when initializing, error scoping."""
 
-        self._stubs_v2(method='trust', trust_scoped=False)
+        self._stubs_v3(method='trust', trust_scoped=False)
         self.mock_config.deferred_auth_method = 'trusts'
         self.m.ReplayAll()
 
@@ -360,7 +295,7 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test consuming a trust when initializing, impersonation error."""
 
-        self._stubs_v2(method='trust', user_id='wrong_user_id')
+        self._stubs_v3(method='trust', user_id='wrong_user_id')
         self.mock_config.deferred_auth_method = 'trusts'
         self.m.ReplayAll()
 
@@ -377,7 +312,7 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test trust_id is takes precedence username/password specified."""
 
-        self._stubs_v2(method='trust')
+        self._stubs_v3(method='trust')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -385,14 +320,13 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = 'atrust123'
         ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertIsNotNone(heat_ks_client._client_v2)
-        self.assertIsNone(heat_ks_client._client_v3)
+        self.assertIsNotNone(heat_ks_client._client_v3)
 
     def test_trust_init_token(self):
 
         """Test trust_id takes precedence when token specified."""
 
-        self._stubs_v2(method='trust')
+        self._stubs_v3(method='trust')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -401,8 +335,7 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = 'atrust123'
         ctx.trustor_user_id = 'trustor_user_id'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertIsNotNone(heat_ks_client._client_v2)
-        self.assertIsNone(heat_ks_client._client_v3)
+        self.assertIsNotNone(heat_ks_client._client_v3)
 
     def test_delete_trust(self):
 
