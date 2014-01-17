@@ -14,6 +14,7 @@
 from heat.common import template_format
 from heat.common import exception
 from heat.engine import parser
+from heat.engine import resource
 from heat.engine import hot
 from heat.engine import parameters
 from heat.engine import template
@@ -22,10 +23,25 @@ from heat.engine import constraints
 from heat.tests.common import HeatTestCase
 from heat.tests import test_parser
 from heat.tests import utils
+from heat.tests import generic_resource as generic_rsrc
 
 
 hot_tpl_empty = template_format.parse('''
 heat_template_version: 2013-05-23
+''')
+
+hot_tpl_generic_resource = template_format.parse('''
+heat_template_version: 2013-05-23
+resources:
+  resource1:
+    type: GenericResourceType
+''')
+
+hot_tpl_complex_attrs = template_format.parse('''
+heat_template_version: 2013-05-23
+resources:
+  resource1:
+    type: ResourceWithComplexAttributesType
 ''')
 
 
@@ -195,16 +211,10 @@ class StackTest(test_parser.StackTest):
     """Test stack function when stack was created from HOT template."""
 
     @utils.stack_delete_after
-    def test_get_attr(self):
+    def test_get_attr_multiple_rsrc_status(self):
         """Test resolution of get_attr occurrences in HOT template."""
 
-        hot_tpl = template_format.parse('''
-        heat_template_version: 2013-05-23
-        resources:
-          resource1:
-            type: GenericResourceType
-        ''')
-
+        hot_tpl = hot_tpl_generic_resource
         self.stack = parser.Stack(self.ctx, 'test_get_attr',
                                   template.Template(hot_tpl))
         self.stack.store()
@@ -227,27 +237,45 @@ class StackTest(test_parser.StackTest):
             # GenericResourceType has an attribute 'foo' which yields the
             # resource name.
             self.assertEqual({'Value': 'resource1'}, resolved)
-            # test invalid reference
+
+    @utils.stack_delete_after
+    def test_get_attr_invalid(self):
+        """Test resolution of get_attr occurrences in HOT template."""
+
+        hot_tpl = hot_tpl_generic_resource
+        self.stack = parser.Stack(self.ctx, 'test_get_attr',
+                                  template.Template(hot_tpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
         self.assertRaises(exception.InvalidTemplateAttribute,
                           hot.HOTemplate.resolve_attributes,
                           {'Value': {'get_attr': ['resource1', 'NotThere']}},
                           self.stack)
 
-        snippet = {'Value': {'Fn::GetAtt': ['resource1', 'foo']}}
+    @utils.stack_delete_after
+    def test_get_attr_invalid_resource(self):
+        """Test resolution of get_attr occurrences in HOT template."""
+
+        hot_tpl = hot_tpl_complex_attrs
+        self.stack = parser.Stack(self.ctx,
+                                  'test_get_attr_invalid_none',
+                                  template.Template(hot_tpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        snippet = {'Value': {'get_attr': ['resource2', 'who_cares']}}
         resolved = hot.HOTemplate.resolve_attributes(snippet, self.stack)
-        self.assertEqual({'Value': 'resource1'}, resolved)
+        self.assertEqual(snippet, resolved)
 
     @utils.stack_delete_after
     def test_get_resource(self):
         """Test resolution of get_resource occurrences in HOT template."""
 
-        hot_tpl = template_format.parse('''
-        heat_template_version: 2013-05-23
-        resources:
-          resource1:
-            type: GenericResourceType
-        ''')
-
+        hot_tpl = hot_tpl_generic_resource
         self.stack = parser.Stack(self.ctx, 'test_get_resource',
                                   template.Template(hot_tpl))
         self.stack.store()
@@ -258,6 +286,131 @@ class StackTest(test_parser.StackTest):
         snippet = {'value': {'get_resource': 'resource1'}}
         resolved = hot.HOTemplate.resolve_resource_refs(snippet, self.stack)
         self.assertEqual({'value': 'resource1'}, resolved)
+
+
+class StackAttributesTest(HeatTestCase):
+    """
+    Test stack get_attr function when stack was created from HOT template.
+    """
+    def setUp(self):
+        super(StackAttributesTest, self).setUp()
+
+        utils.setup_dummy_db()
+        self.ctx = utils.dummy_context()
+
+        resource._register_class('GenericResourceType',
+                                 generic_rsrc.GenericResource)
+        resource._register_class('ResourceWithComplexAttributesType',
+                                 generic_rsrc.ResourceWithComplexAttributes)
+
+        self.m.ReplayAll()
+
+    scenarios = [
+        ('get_flat_attr',
+         dict(hot_tpl=hot_tpl_generic_resource,
+              snippet={'Value': {'get_attr': ['resource1', 'foo']}},
+              resource_name='resource1',
+              expected={'Value': 'resource1'})),
+        ('get_list_attr',
+         dict(hot_tpl=hot_tpl_complex_attrs,
+              snippet={'Value': {'get_attr': ['resource1', 'list', 0]}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.list[0]})),
+        ('get_flat_dict_attr',
+         dict(hot_tpl=hot_tpl_complex_attrs,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'flat_dict',
+                                              'key2']}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.
+                  flat_dict['key2']})),
+        ('get_nested_attr_list',
+         dict(hot_tpl=hot_tpl_complex_attrs,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'nested_dict',
+                                              'list',
+                                              0]}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.
+                  nested_dict['list'][0]})),
+        ('get_nested_attr_dict',
+         dict(hot_tpl=hot_tpl_complex_attrs,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'nested_dict',
+                                              'dict',
+                                              'a']}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.
+                  nested_dict['dict']['a']})),
+        ('get_simple_object',
+         dict(hot_tpl=hot_tpl_complex_attrs,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'simple_object',
+                                              'first']}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.
+                  simple_object.first})),
+        ('get_complex_object',
+         dict(hot_tpl=hot_tpl_complex_attrs,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'complex_object',
+                                              'second',
+                                              'key1']}},
+              resource_name='resource1',
+              expected={
+                  'Value':
+                  generic_rsrc.ResourceWithComplexAttributes.
+                  complex_object.second['key1']})),
+        ('get_complex_object_invalid_argument',
+         dict(hot_tpl=hot_tpl_complex_attrs,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'complex_object',
+                                              'not_there']}},
+              resource_name='resource1',
+              expected={'Value': ''})),
+        ('get_attr_none',
+         dict(hot_tpl=hot_tpl_complex_attrs,
+              snippet={'Value': {'get_attr': ['resource1',
+                                              'none',
+                                              'who_cares']}},
+              resource_name='resource1',
+              expected={'Value': ''}))
+    ]
+
+    @utils.stack_delete_after
+    def test_get_attr(self):
+        """Test resolution of get_attr occurrences in HOT template."""
+
+        self.stack = parser.Stack(self.ctx, 'test_get_attr',
+                                  template.Template(self.hot_tpl))
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+
+        rsrc = self.stack[self.resource_name]
+        for action, status in (
+                (rsrc.CREATE, rsrc.IN_PROGRESS),
+                (rsrc.CREATE, rsrc.COMPLETE),
+                (rsrc.RESUME, rsrc.IN_PROGRESS),
+                (rsrc.RESUME, rsrc.COMPLETE),
+                (rsrc.UPDATE, rsrc.IN_PROGRESS),
+                (rsrc.UPDATE, rsrc.COMPLETE)):
+            rsrc.state_set(action, status)
+
+            resolved = hot.HOTemplate.resolve_attributes(self.snippet,
+                                                         self.stack)
+            self.assertEqual(self.expected, resolved)
 
 
 class HOTParamValidatorTest(HeatTestCase):

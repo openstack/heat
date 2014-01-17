@@ -714,6 +714,8 @@ class StackTest(HeatTestCase):
                                  generic_rsrc.GenericResource)
         resource._register_class('ResourceWithPropsType',
                                  generic_rsrc.ResourceWithProps)
+        resource._register_class('ResourceWithComplexAttributesType',
+                                 generic_rsrc.ResourceWithComplexAttributes)
 
         self.m.ReplayAll()
 
