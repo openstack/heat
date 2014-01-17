@@ -49,13 +49,13 @@ class EnvironmentTest(common.HeatTestCase):
         self.assertEqual(new_env, env.user_env_as_dict())
 
     def test_global_registry(self):
-        self.g_env.register_class('CloudX::Compute::Server',
+        self.g_env.register_class('CloudX::Nova::Server',
                                   generic_resource.GenericResource)
         new_env = {u'parameters': {u'a': u'ff', u'b': u'ss'},
                    u'resource_registry': {u'OS::*': 'CloudX::*'}}
         env = environment.Environment(new_env)
-        self.assertEqual('CloudX::Compute::Server',
-                         env.get_resource_info('OS::Compute::Server',
+        self.assertEqual('CloudX::Nova::Server',
+                         env.get_resource_info('OS::Nova::Server',
                                                'my_db_server').name)
 
     def test_map_one_resource_type(self):
