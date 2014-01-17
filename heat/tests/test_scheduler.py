@@ -163,11 +163,41 @@ class PollingTaskGroupTest(HeatTestCase):
                 dummy.do_step(1, i, i * i)
 
 
-class DependencyTaskGroupTest(HeatTestCase):
+class ExceptionGroupTest(HeatTestCase):
 
+    def test_contains_exceptions(self):
+        exception_group = scheduler.ExceptionGroup()
+        self.assertIsInstance(exception_group.exceptions, list)
+
+    def test_can_be_initialized_with_a_list_of_exceptions(self):
+        ex1 = Exception("ex 1")
+        ex2 = Exception("ex 2")
+
+        exception_group = scheduler.ExceptionGroup([ex1, ex2])
+        self.assertIn(ex1, exception_group.exceptions)
+        self.assertIn(ex2, exception_group.exceptions)
+
+    def test_can_add_exceptions_after_init(self):
+        ex = Exception()
+        exception_group = scheduler.ExceptionGroup()
+
+        exception_group.exceptions.append(ex)
+        self.assertIn(ex, exception_group.exceptions)
+
+    def test_str_representation_aggregates_all_exceptions(self):
+        ex1 = Exception("ex 1")
+        ex2 = Exception("ex 2")
+
+        exception_group = scheduler.ExceptionGroup([ex1, ex2])
+        self.assertEqual("['ex 1', 'ex 2']", str(exception_group))
+
+
+class DependencyTaskGroupTest(HeatTestCase):
     def setUp(self):
         super(DependencyTaskGroupTest, self).setUp()
         self.addCleanup(self.m.VerifyAll)
+        self.aggregate_exceptions = False
+        self.reverse_order = False
 
     @contextlib.contextmanager
     def _dep_test(self, *edges):
@@ -175,7 +205,9 @@ class DependencyTaskGroupTest(HeatTestCase):
 
         deps = dependencies.Dependencies(edges)
 
-        tg = scheduler.DependencyTaskGroup(deps, dummy)
+        tg = scheduler.DependencyTaskGroup(
+            deps, dummy, aggregate_exceptions=self.aggregate_exceptions,
+            reverse=self.reverse_order)
 
         self.m.StubOutWithMock(dummy, 'do_step')
 
@@ -319,6 +351,54 @@ class DependencyTaskGroupTest(HeatTestCase):
                                        ('third', 'first')])
         self.assertRaises(dependencies.CircularDependencyException,
                           scheduler.DependencyTaskGroup, d)
+
+    def test_aggregate_exceptions_raises_all_at_the_end(self):
+        def run_tasks_with_exceptions(e1=None, e2=None):
+            self.aggregate_exceptions = True
+            tasks = (('A', None), ('B', None), ('C', None))
+            with self._dep_test(*tasks) as dummy:
+                dummy.do_step(1, 'A').InAnyOrder('1')
+                dummy.do_step(1, 'B').InAnyOrder('1')
+                dummy.do_step(1, 'C').InAnyOrder('1').AndRaise(e1)
+
+                dummy.do_step(2, 'A').InAnyOrder('2')
+                dummy.do_step(2, 'B').InAnyOrder('2').AndRaise(e2)
+
+                dummy.do_step(3, 'A').InAnyOrder('3')
+
+        e1 = Exception('e1')
+        e2 = Exception('e2')
+
+        exc = self.assertRaises(scheduler.ExceptionGroup,
+                                run_tasks_with_exceptions, e1, e2)
+        self.assertEqual(set([e1, e2]), set(exc.exceptions))
+
+    def test_aggregate_exceptions_cancels_dependent_tasks_recursively(self):
+        def run_tasks_with_exceptions(e1=None, e2=None):
+            self.aggregate_exceptions = True
+            tasks = (('A', None), ('B', 'A'), ('C', 'B'))
+            with self._dep_test(*tasks) as dummy:
+                dummy.do_step(1, 'A').AndRaise(e1)
+
+        e1 = Exception('e1')
+
+        exc = self.assertRaises(scheduler.ExceptionGroup,
+                                run_tasks_with_exceptions, e1)
+        self.assertEqual([e1], exc.exceptions)
+
+    def test_aggregate_exceptions_cancels_tasks_in_reverse_order(self):
+        def run_tasks_with_exceptions(e1=None, e2=None):
+            self.reverse_order = True
+            self.aggregate_exceptions = True
+            tasks = (('A', None), ('B', 'A'), ('C', 'B'))
+            with self._dep_test(*tasks) as dummy:
+                dummy.do_step(1, 'C').AndRaise(e1)
+
+        e1 = Exception('e1')
+
+        exc = self.assertRaises(scheduler.ExceptionGroup,
+                                run_tasks_with_exceptions, e1)
+        self.assertEqual([e1], exc.exceptions)
 
 
 class TaskTest(HeatTestCase):
