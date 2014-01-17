@@ -81,7 +81,7 @@ class InstantiationDataTest(HeatTestCase):
     def test_format_parse_invalid_message(self):
         # make sure the parser error gets through to the caller.
         bad_temp = '''
-heat_template_version: '2012-12-12'
+heat_template_version: '2013-05-23'
 parameters:
   KeyName:
      type: string
@@ -110,7 +110,7 @@ parameters:
         self.assertEqual(data.template(), template)
 
     def test_template_string_json(self):
-        template = '{"heat_template_version": "2012-12-12",' \
+        template = '{"heat_template_version": "2013-05-23",' \
                    '"foo": "bar", "blarg": "wibble"}'
         body = {'template': template}
         data = stacks.InstantiationData(body)
