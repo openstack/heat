@@ -1526,3 +1526,49 @@ class AutoScalingTest(HeatTestCase):
 
         self.assertRaises(exception.NotSupported, self.create_scaling_group, t,
                           stack, 'WebServerGroup')
+
+    def test_invalid_min_size(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '-1'
+        properties['MaxSize'] = '2'
+
+        stack = utils.parse_stack(t, params=self.params)
+
+        e = self.assertRaises(exception.StackValidationFailed,
+                              self.create_scaling_group, t,
+                              stack, 'WebServerGroup')
+
+        expected_msg = "The size of AutoScalingGroup can not be less than zero"
+        self.assertEqual(expected_msg, str(e))
+
+    def test_invalid_max_size(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '3'
+        properties['MaxSize'] = '1'
+
+        stack = utils.parse_stack(t, params=self.params)
+
+        e = self.assertRaises(exception.StackValidationFailed,
+                              self.create_scaling_group, t,
+                              stack, 'WebServerGroup')
+
+        expected_msg = "MinSize can not be greater than MaxSize"
+        self.assertEqual(expected_msg, str(e))
+
+    def test_invalid_desiredcapacity(self):
+        t = template_format.parse(as_template)
+        properties = t['Resources']['WebServerGroup']['Properties']
+        properties['MinSize'] = '1'
+        properties['MaxSize'] = '3'
+        properties['DesiredCapacity'] = '4'
+
+        stack = utils.parse_stack(t, params=self.params)
+
+        e = self.assertRaises(exception.StackValidationFailed,
+                              self.create_scaling_group, t,
+                              stack, 'WebServerGroup')
+
+        expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
+        self.assertEqual(expected_msg, str(e))
