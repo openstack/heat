@@ -327,3 +327,7 @@ class StackResourceLimitExceeded(HeatException):
 class ActionInProgress(HeatException):
     msg_fmt = _("Stack %(stack_name)s already has an action (%(action)s) "
                 "in progress.")
+
+
+class SoftwareConfigMissing(HeatException):
+    msg_fmt = _("The config (%(software_config_id)s) could not be found.")
