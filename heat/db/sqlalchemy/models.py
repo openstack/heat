@@ -87,6 +87,7 @@ class RawTemplate(BASE, HeatBase):
     __tablename__ = 'raw_template'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     template = sqlalchemy.Column(Json)
+    files = sqlalchemy.Column(Json)
 
 
 class Stack(BASE, HeatBase, SoftDelete):

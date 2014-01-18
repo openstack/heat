@@ -755,6 +755,7 @@ def create_raw_template(context, **kwargs):
     t = template_format.parse(wp_template)
     template = {
         'template': t,
+        'files': {'foo': 'bar'}
     }
     template.update(kwargs)
     return db_api.raw_template_create(context, template)
@@ -856,6 +857,7 @@ class DBAPIRawTemplateTest(HeatTestCase):
         tp = create_raw_template(self.ctx, template=t)
         self.assertIsNotNone(tp.id)
         self.assertEqual(t, tp.template)
+        self.assertEqual({'foo': 'bar'}, tp.files)
 
     def test_raw_template_get(self):
         t = template_format.parse(wp_template)

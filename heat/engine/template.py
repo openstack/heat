@@ -57,12 +57,15 @@ class Template(collections.Mapping):
     def load(cls, context, template_id):
         '''Retrieve a Template with the given ID from the database.'''
         t = db_api.raw_template_get(context, template_id)
-        return cls(t.template, template_id)
+        return cls(t.template, template_id=template_id, files=t.files)
 
     def store(self, context=None):
         '''Store the Template in the database and return its ID.'''
         if self.id is None:
-            rt = {'template': self.t}
+            rt = {
+                'template': self.t,
+                'files': self.files
+            }
             new_rt = db_api.raw_template_create(context, rt)
             self.id = new_rt.id
         return self.id
