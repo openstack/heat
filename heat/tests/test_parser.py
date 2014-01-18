@@ -18,6 +18,7 @@ import time
 from keystoneclient import exceptions as kc_exceptions
 from mox import IgnoreArg
 from oslo.config import cfg
+from six.moves import xrange
 
 from heat.engine import environment
 from heat.common import exception
