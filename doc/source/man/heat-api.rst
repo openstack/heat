@@ -15,7 +15,7 @@ heat-api provides an external REST API to the heat project.
 INVENTORY
 =========
 heat-api is a service that exposes an external REST based api to the
-heat-engine service.  The communication between the heat-api 
+heat-engine service. The communication between the heat-api and
 heat-engine uses message queue based RPC.
 
 OPTIONS
