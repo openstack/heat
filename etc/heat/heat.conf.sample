@@ -1,6 +1,16 @@
 [DEFAULT]
 
 #
+# Options defined in heat.api.middleware.ssl
+#
+
+# The HTTP Header that will be used to determine which the
+# original request protocol scheme was, even if it was removed
+# by an SSL terminator proxy. (string value)
+#secure_proxy_ssl_header=X-Forwarded-Proto
+
+
+#
 # Options defined in heat.common.config
 #
 
