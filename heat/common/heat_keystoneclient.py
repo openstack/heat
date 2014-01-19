@@ -247,26 +247,22 @@ class KeystoneClient(object):
                            "characters.") % username)
             #get the last 64 characters of the username
             username = username[-64:]
-        user = self.client_v2.users.create(username,
-                                           password,
-                                           '%s@openstack.org' %
-                                           username,
-                                           tenant_id=self.context.tenant_id,
-                                           enabled=True)
+        user = self.client_v3.users.create(
+            name=username, password=password,
+            default_project=self.context.tenant_id)
 
         # We add the new user to a special keystone role
         # This role is designed to allow easier differentiation of the
         # heat-generated "stack users" which will generally have credentials
         # deployed on an instance (hence are implicitly untrusted)
-        roles = self.client_v2.roles.list()
-        stack_user_role = [r.id for r in roles
-                           if r.name == cfg.CONF.heat_stack_user_role]
+        stack_user_role = self.client_v3.roles.list(
+            name=cfg.CONF.heat_stack_user_role)
         if len(stack_user_role) == 1:
             role_id = stack_user_role[0]
             logger.debug(_("Adding user %(user)s to role %(role)s") % {
                          'user': user.id, 'role': role_id})
-            self.client_v2.roles.add_user_role(user.id, role_id,
-                                               self.context.tenant_id)
+            self.client_v3.roles.grant(role=role_id, user=user.id,
+                                       project=self.context.tenant_id)
         else:
             logger.error(_("Failed to add user %(user)s to role %(role)s, "
                          "check role exists!") % {'user': username,
