@@ -283,12 +283,10 @@ class KeystoneClient(object):
         return self.client_v2.ec2.create(uid, self.context.tenant_id)
 
     def disable_stack_user(self, user_id):
-        # FIXME : This won't work with the v3 keystone API
-        self.client_v2.users.update_enabled(user_id, False)
+        self.client_v3.users.update(user=user_id, enabled=False)
 
     def enable_stack_user(self, user_id):
-        # FIXME : This won't work with the v3 keystone API
-        self.client_v2.users.update_enabled(user_id, True)
+        self.client_v3.users.update(user=user_id, enabled=True)
 
     def url_for(self, **kwargs):
         return self.client_v2.service_catalog.url_for(**kwargs)
