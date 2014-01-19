@@ -106,7 +106,6 @@ class CeilometerAlarm(resource.Resource):
         COMPARISON_OPERATOR: properties.Schema(
             properties.Schema.STRING,
             _('Operator used to compare specified statistic with threshold.'),
-            required=True,
             constraints=[
                 constraints.AllowedValues(['ge', 'gt', 'eq', 'ne', 'lt',
                                            'le']),
@@ -114,9 +113,8 @@ class CeilometerAlarm(resource.Resource):
             update_allowed=True
         ),
         EVALUATION_PERIODS: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.INTEGER,
             _('Number of periods to evaluate over.'),
-            required=True,
             update_allowed=True
         ),
         METER_NAME: properties.Schema(
@@ -125,15 +123,13 @@ class CeilometerAlarm(resource.Resource):
             required=True
         ),
         PERIOD: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.INTEGER,
             _('Period (seconds) to evaluate over.'),
-            required=True,
             update_allowed=True
         ),
         STATISTIC: properties.Schema(
             properties.Schema.STRING,
             _('Meter statistic to evaluate.'),
-            required=True,
             constraints=[
                 constraints.AllowedValues(['count', 'avg', 'sum', 'min',
                                            'max']),
@@ -141,7 +137,7 @@ class CeilometerAlarm(resource.Resource):
             update_allowed=True
         ),
         THRESHOLD: properties.Schema(
-            properties.Schema.STRING,
+            properties.Schema.NUMBER,
             _('Threshold to evaluate against.'),
             required=True,
             update_allowed=True

@@ -66,6 +66,33 @@ alarm_template = '''
 }
 '''
 
+not_string_alarm_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Alarm Test",
+  "Parameters" : {},
+  "Resources" : {
+    "MEMAlarmHigh": {
+     "Type": "OS::Ceilometer::Alarm",
+     "Properties": {
+        "description": "Scale-up if MEM > 50% for 1 minute",
+        "meter_name": "MemoryUtilization",
+        "statistic": "avg",
+        "period": 60,
+        "evaluation_periods": 1,
+        "threshold": 50,
+        "alarm_actions": [],
+        "matching_metadata": {},
+        "comparison_operator": "gt"
+      }
+    },
+    "signal_handler" : {
+      "Type" : "SignalResourceType"
+    }
+  }
+}
+'''
+
 combination_alarm_template = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -239,6 +266,73 @@ class CeilometerAlarmTest(HeatTestCase):
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_mem_alarm_high_correct_int_parameters(self):
+        self.stack = self.create_stack(not_string_alarm_template)
+
+        self.m.ReplayAll()
+        self.stack.create()
+        rsrc = self.stack['MEMAlarmHigh']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertIsNone(rsrc.validate())
+
+        self.assertIsInstance(rsrc.properties['evaluation_periods'], int)
+        self.assertIsInstance(rsrc.properties['period'], int)
+        self.assertIsInstance(rsrc.properties['threshold'], int)
+
+        self.m.VerifyAll()
+
+    def test_mem_alarm_high_not_correct_string_parameters(self):
+        snippet = template_format.parse(not_string_alarm_template)
+        for p in ('period', 'evaluation_periods'):
+            snippet['Resources']['MEMAlarmHigh']['Properties'][p] = '60a'
+            stack = utils.parse_stack(snippet)
+
+            rsrc = alarm.CeilometerAlarm(
+                'MEMAlarmHigh', snippet['Resources']['MEMAlarmHigh'], stack)
+            error = self.assertRaises(exception.StackValidationFailed,
+                                      rsrc.validate)
+            self.assertEqual(
+                "Property error : MEMAlarmHigh: %s Value '60a' is not an "
+                "integer" % p, str(error))
+
+    def test_mem_alarm_high_not_integer_parameters(self):
+        snippet = template_format.parse(not_string_alarm_template)
+        for p in ('period', 'evaluation_periods'):
+            snippet['Resources']['MEMAlarmHigh']['Properties'][p] = [60]
+            stack = utils.parse_stack(snippet)
+
+            rsrc = alarm.CeilometerAlarm(
+                'MEMAlarmHigh', snippet['Resources']['MEMAlarmHigh'], stack)
+            error = self.assertRaises(exception.StackValidationFailed,
+                                      rsrc.validate)
+            self.assertEqual(
+                "Property error : MEMAlarmHigh: %s int() argument must be "
+                "a string or a number, not 'list'" % p, str(error))
+
+    def test_mem_alarm_high_check_not_required_parameters(self):
+        snippet = template_format.parse(not_string_alarm_template)
+        snippet['Resources']['MEMAlarmHigh']['Properties'].pop('meter_name')
+        stack = utils.parse_stack(snippet)
+
+        rsrc = alarm.CeilometerAlarm(
+            'MEMAlarmHigh', snippet['Resources']['MEMAlarmHigh'], stack)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  rsrc.validate)
+        self.assertEqual(
+            "Property error : MEMAlarmHigh: Property meter_name not assigned",
+            str(error))
+
+        for p in ('period', 'evaluation_periods', 'statistic',
+                  'comparison_operator'):
+            snippet = template_format.parse(not_string_alarm_template)
+            snippet['Resources']['MEMAlarmHigh']['Properties'].pop(p)
+            stack = utils.parse_stack(snippet)
+
+            rsrc = alarm.CeilometerAlarm(
+                'MEMAlarmHigh', snippet['Resources']['MEMAlarmHigh'], stack)
+            self.assertIsNone(rsrc.validate())
 
 
 @testtools.skipIf(ceilometerclient is None, 'ceilometerclient unavailable')
