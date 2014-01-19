@@ -16,8 +16,6 @@
 from heat.common import context
 from heat.common import exception
 
-import eventlet
-
 import keystoneclient.exceptions as kc_exception
 from keystoneclient.v2_0 import client as kc
 from keystoneclient.v3 import client as kc_v3
@@ -271,40 +269,7 @@ class KeystoneClient(object):
         return user.id
 
     def delete_stack_user(self, user_id):
-
-        user = self.client_v2.users.get(user_id)
-
-        # FIXME (shardy) : need to test, do we still need this retry logic?
-        # Copied from user.py, but seems like something we really shouldn't
-        # need to do, no bug reference in the original comment (below)...
-        # tempory hack to work around an openstack bug.
-        # seems you can't delete a user first time - you have to try
-        # a couple of times - go figure!
-        tmo = eventlet.Timeout(10)
-        status = 'WAITING'
-        reason = 'Timed out trying to delete user'
-        try:
-            while status == 'WAITING':
-                try:
-                    user.delete()
-                    status = 'DELETED'
-                except Exception as ce:
-                    reason = str(ce)
-                    logger.warning(_("Problem deleting user %(user)s: "
-                                     "%(reason)s") % {'user': user_id,
-                                                      'reason': reason})
-                    eventlet.sleep(1)
-        except eventlet.Timeout as t:
-            if t is not tmo:
-                # not my timeout
-                raise
-            else:
-                status = 'TIMEDOUT'
-        finally:
-            tmo.cancel()
-
-        if status != 'DELETED':
-            raise exception.Error(reason)
+        self.client_v3.users.delete(user=user_id)
 
     def delete_ec2_keypair(self, user_id, accesskey):
         self.client_v2.ec2.delete(user_id, accesskey)
