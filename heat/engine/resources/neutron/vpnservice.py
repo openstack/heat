@@ -105,8 +105,7 @@ class VPNService(neutron.NeutronResource):
         try:
             client.delete_vpnservice(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 
@@ -286,8 +285,7 @@ class IPsecSiteConnection(neutron.NeutronResource):
         try:
             client.delete_ipsec_site_connection(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 
@@ -425,8 +423,7 @@ class IKEPolicy(neutron.NeutronResource):
         try:
             client.delete_ikepolicy(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 
@@ -565,8 +562,7 @@ class IPsecPolicy(neutron.NeutronResource):
         try:
             client.delete_ipsecpolicy(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 

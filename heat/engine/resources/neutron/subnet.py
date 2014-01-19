@@ -147,8 +147,7 @@ class Subnet(neutron.NeutronResource):
         try:
             client.delete_subnet(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
         else:
             return self._delete_task()
 

@@ -207,16 +207,14 @@ class SecurityGroup(neutron.NeutronResource):
             sec = self.neutron().show_security_group(
                 self.resource_id)['security_group']
         except neutron_exp.NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise
+            self._handle_not_found_exception(ex)
         else:
             for rule in sec['security_group_rules']:
                 if to_delete is None or to_delete(rule):
                     try:
                         self.neutron().delete_security_group_rule(rule['id'])
                     except neutron_exp.NeutronClientException as ex:
-                        if ex.status_code != 404:
-                            raise
+                        self._handle_not_found_exception(ex)
 
     def handle_delete(self):
 
@@ -227,8 +225,7 @@ class SecurityGroup(neutron.NeutronResource):
         try:
             self.neutron().delete_security_group(self.resource_id)
         except neutron_exp.NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise
+            self._handle_not_found_exception(ex)
         self.resource_id_set(None)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):

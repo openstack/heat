@@ -95,8 +95,7 @@ class FloatingIP(neutron.NeutronResource):
         try:
             client.delete_floatingip(self.resource_id)
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
 
 
 class FloatingIPAssociation(neutron.NeutronResource):
@@ -142,8 +141,7 @@ class FloatingIPAssociation(neutron.NeutronResource):
                 floatingip_id,
                 {'floatingip': {'port_id': None}})
         except NeutronClientException as ex:
-            if ex.status_code != 404:
-                raise ex
+            self._handle_not_found_exception(ex)
 
 
 def resource_mapping():
