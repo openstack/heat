@@ -192,6 +192,9 @@ class ScalingGroupTest(HeatTestCase):
                             key_name: my-key
                             metadata:
                                 server: metadata
+                            networks:
+                                - uuid: "00000000-0000-0000-0000-000000000000"
+                                - uuid: "11111111-1111-1111-1111-111111111111"
     ''')
 
     def setUp(self):
@@ -232,7 +235,8 @@ class ScalingGroupTest(HeatTestCase):
                 'metadata': {'server': 'metadata'},
                 'min_entities': 1,
                 'name': 'My Group',
-                'networks': None,
+                'networks': [{'uuid': '00000000-0000-0000-0000-000000000000'},
+                             {'uuid': '11111111-1111-1111-1111-111111111111'}],
                 'personality': None,
                 'server_name': u'autoscaled-server'})
         resource = self.stack['my_group']
