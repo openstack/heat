@@ -25,13 +25,13 @@ from heat.openstack.common.rpc import common as rpc_common
 from heat.openstack.common.rpc import proxy
 
 logger = logging.getLogger(__name__)
-engine_id = str(uuid.uuid4())
 
 
 class StackLock(object):
-    def __init__(self, context, stack):
+    def __init__(self, context, stack, engine_id):
         self.context = context
         self.stack = stack
+        self.engine_id = engine_id
         self.listener = None
 
     def _engine_alive(self, engine_id):
@@ -44,17 +44,28 @@ class StackLock(object):
         except rpc_common.Timeout:
             return False
 
+    @staticmethod
+    def generate_engine_id():
+        return str(uuid.uuid4())
+
     @rpc_common.client_exceptions(exception.ActionInProgress)
     def acquire(self, retry=True):
-        """Acquire a lock on the stack."""
-        lock_engine_id = db_api.stack_lock_create(self.stack.id, engine_id)
+        """
+        Acquire a lock on the stack.
+
+        :param retry: When True, retry if lock was released while stealing.
+        :type retry: boolean
+        """
+        lock_engine_id = db_api.stack_lock_create(self.stack.id,
+                                                  self.engine_id)
         if lock_engine_id is None:
             logger.debug(_("Engine %(engine)s acquired lock on stack "
-                           "%(stack)s") % {'engine': engine_id,
+                           "%(stack)s") % {'engine': self.engine_id,
                                            'stack': self.stack.id})
             return
 
-        if lock_engine_id == engine_id or self._engine_alive(lock_engine_id):
+        if lock_engine_id == self.engine_id or \
+           self._engine_alive(lock_engine_id):
             logger.debug(_("Lock on stack %(stack)s is owned by engine "
                            "%(engine)s") % {'stack': self.stack.id,
                                             'engine': lock_engine_id})
@@ -63,22 +74,23 @@ class StackLock(object):
         else:
             logger.info(_("Stale lock detected on stack %(stack)s.  Engine "
                           "%(engine)s will attempt to steal the lock")
-                        % {'stack': self.stack.id, 'engine': engine_id})
+                        % {'stack': self.stack.id, 'engine': self.engine_id})
 
             result = db_api.stack_lock_steal(self.stack.id, lock_engine_id,
-                                             engine_id)
+                                             self.engine_id)
 
             if result is None:
                 logger.info(_("Engine %(engine)s successfully stole the lock "
-                              "on stack %(stack)s") % {'engine': engine_id,
-                                                       'stack': self.stack.id})
+                              "on stack %(stack)s")
+                            % {'engine': self.engine_id,
+                               'stack': self.stack.id})
                 return
             elif result is True:
                 if retry:
                     logger.info(_("The lock on stack %(stack)s was released "
                                   "while engine %(engine)s was stealing it. "
                                   "Trying again") % {'stack': self.stack.id,
-                                                     'engine': engine_id})
+                                                     'engine': self.engine_id})
                     return self.acquire(retry=False)
             else:
                 new_lock_engine_id = result
@@ -93,11 +105,11 @@ class StackLock(object):
     def release(self):
         """Release a stack lock."""
         # Only the engine that owns the lock will be releasing it.
-        result = db_api.stack_lock_release(self.stack.id, engine_id)
+        result = db_api.stack_lock_release(self.stack.id, self.engine_id)
         if result is True:
             logger.warning(_("Lock was already released on stack %s!")
                            % self.stack.id)
         else:
             logger.debug(_("Engine %(engine)s released lock on stack "
-                           "%(stack)s") % {'engine': engine_id,
+                           "%(stack)s") % {'engine': self.engine_id,
                                            'stack': self.stack.id})

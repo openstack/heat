@@ -64,6 +64,92 @@ def request_context(func):
     return wrapped
 
 
+class ThreadGroupManager(object):
+
+    def __init__(self):
+        super(ThreadGroupManager, self).__init__()
+        self.groups = {}
+
+        # Create dummy service task, because when there is nothing queued
+        # on self.tg the process exits
+        self.add_timer(cfg.CONF.periodic_interval, self._service_task)
+
+    def _service_task(self):
+        """
+        This is a dummy task which gets queued on the service.Service
+        threadgroup.  Without this service.Service sees nothing running
+        i.e has nothing to wait() on, so the process exits..
+        This could also be used to trigger periodic non-stack-specific
+        housekeeping tasks
+        """
+        pass
+
+    def start(self, stack_id, func, *args, **kwargs):
+        """
+        Run the given method in a sub-thread.
+        """
+        if stack_id not in self.groups:
+            self.groups[stack_id] = threadgroup.ThreadGroup()
+        return self.groups[stack_id].add_thread(func, *args, **kwargs)
+
+    def start_with_lock(self, cnxt, stack, engine_id, func, *args, **kwargs):
+        """
+        Try to acquire a stack lock and, if successful, run the given
+        method in a sub-thread.  Release the lock when the thread
+        finishes.
+
+        :param cnxt: RPC context
+        :param stack: Stack to be operated on
+        :type stack: heat.engine.parser.Stack
+        :param engine_id: The UUID of the engine acquiring the lock
+        :param func: Callable to be invoked in sub-thread
+        :type func: function or instancemethod
+        :param args: Args to be passed to func
+        :param kwargs: Keyword-args to be passed to func.
+        """
+        lock = stack_lock.StackLock(cnxt, stack, engine_id)
+        lock.acquire()
+        self.start_with_acquired_lock(stack, lock, func, *args, **kwargs)
+
+    def start_with_acquired_lock(self, stack, lock, func, *args, **kwargs):
+        """
+        Run the given method in a sub-thread and release the provided lock
+        when the thread finishes.
+
+        :param stack: Stack to be operated on
+        :type stack: heat.engine.parser.Stack
+        :param lock: The acquired stack lock
+        :type lock: heat.engine.stack_lock.StackLock
+        :param func: Callable to be invoked in sub-thread
+        :type func: function or instancemethod
+        :param args: Args to be passed to func
+        :param kwargs: Keyword-args to be passed to func
+
+        """
+        def release(gt, *args, **kwargs):
+            """
+            Callback function that will be passed to GreenThread.link().
+            """
+            lock.release()
+
+        try:
+            th = self.start(stack.id, func, *args)
+            th.link(release)
+        except:
+            with excutils.save_and_reraise_exception():
+                lock.release()
+
+    def add_timer(self, stack_id, func, *args, **kwargs):
+        """
+        Define a periodic task, to be run in a separate thread, in the stack
+        threadgroups.  Periodicity is cfg.CONF.periodic_interval
+        """
+        if stack_id not in self.groups:
+            self.groups[stack_id] = threadgroup.ThreadGroup()
+        self.groups[stack_id].add_timer(cfg.CONF.periodic_interval,
+                                        func, *args, **kwargs)
+
+
 class EngineListener(service.Service):
     '''
     Listen on an AMQP queue while a stack action is in-progress and
@@ -92,67 +178,13 @@ class EngineService(service.Service):
 
     def __init__(self, host, topic, manager=None):
         super(EngineService, self).__init__(host, topic)
-        # stg == "Stack Thread Groups"
-        self.stg = {}
         resources.initialise()
 
-        self.listener = EngineListener(host, stack_lock.engine_id)
-        logger.debug(_("Starting listener for engine %s")
-                     % stack_lock.engine_id)
+        self.engine_id = stack_lock.StackLock.generate_engine_id()
+        self.thread_group_mgr = ThreadGroupManager()
+        self.listener = EngineListener(host, self.engine_id)
+        logger.debug(_("Starting listener for engine %s") % self.engine_id)
         self.listener.start()
-
-    def _start_in_thread(self, stack_id, func, *args, **kwargs):
-        if stack_id not in self.stg:
-            self.stg[stack_id] = threadgroup.ThreadGroup()
-        return self.stg[stack_id].add_thread(func, *args, **kwargs)
-
-    def _start_thread_with_lock(self, cnxt, stack, func, *args):
-        """
-        Try to acquire a stack lock and, if successful, run the method in a
-        sub-thread.
-
-        :param cnxt: RPC context
-        :param stack: Stack to be operated on
-        :type stack: heat.engine.parser.Stack
-        :param func: Callable to be invoked in sub-thread
-        :type func: function or instancemethod
-        :param args: Args to be passed to func
-        """
-        lock = stack_lock.StackLock(cnxt, stack)
-
-        def release(gt, *args, **kwargs):
-            """
-            Callback function that will be passed to GreenThread.link().
-            """
-            lock.release()
-
-        lock.acquire()
-        try:
-            th = self._start_in_thread(stack.id, func, *args)
-            th.link(release)
-        except:
-            with excutils.save_and_reraise_exception():
-                lock.release()
-
-    def _timer_in_thread(self, stack_id, func, *args, **kwargs):
-        """
-        Define a periodic task, to be run in a separate thread, in the stack
-        threadgroups.  Periodicity is cfg.CONF.periodic_interval
-        """
-        if stack_id not in self.stg:
-            self.stg[stack_id] = threadgroup.ThreadGroup()
-        self.stg[stack_id].add_timer(cfg.CONF.periodic_interval,
-                                     func, *args, **kwargs)
-
-    def _service_task(self):
-        """
-        This is a dummy task which gets queued on the service.Service
-        threadgroup.  Without this service.Service sees nothing running
-        i.e has nothing to wait() on, so the process exits..
-        This could also be used to trigger periodic non-stack-specific
-        housekeeping tasks
-        """
-        pass
 
     def _start_watch_task(self, stack_id, cnxt):
 
@@ -177,16 +209,12 @@ class EngineService(service.Service):
             return start_watch_thread
 
         if stack_has_a_watchrule(stack_id):
-            self._timer_in_thread(stack_id, self._periodic_watcher_task,
-                                  sid=stack_id)
+            self.thread_group_mgr.add_timer(stack_id,
+                                            self._periodic_watcher_task,
+                                            sid=stack_id)
 
     def start(self):
         super(EngineService, self).start()
-
-        # Create dummy service task, because when there is nothing queued
-        # on self.tg the process exits
-        self.tg.add_timer(cfg.CONF.periodic_interval,
-                          self._service_task)
 
         # Create a periodic_watcher_task per-stack
         admin_context = context.get_admin_context()
@@ -363,7 +391,8 @@ class EngineService(service.Service):
 
         stack.store()
 
-        self._start_thread_with_lock(cnxt, stack, _stack_create, stack)
+        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
+                                              _stack_create, stack)
 
         return dict(stack.identifier())
 
@@ -413,8 +442,10 @@ class EngineService(service.Service):
         self._validate_deferred_auth_context(cnxt, updated_stack)
         updated_stack.validate()
 
-        self._start_thread_with_lock(cnxt, current_stack, current_stack.update,
-                                     updated_stack)
+        self.thread_group_mgr.start_with_lock(cnxt, current_stack,
+                                              self.engine_id,
+                                              current_stack.update,
+                                              updated_stack)
 
         return dict(current_stack.identifier())
 
@@ -513,7 +544,8 @@ class EngineService(service.Service):
 
         stack = parser.Stack.load(cnxt, stack=st)
 
-        self._start_thread_with_lock(cnxt, stack, stack.delete)
+        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
+                                              stack.delete)
         return None
 
     @request_context
@@ -531,7 +563,8 @@ class EngineService(service.Service):
         stack_info = stack.get_abandon_data()
         # Set deletion policy to 'Retain' for all resources in the stack.
         stack.set_deletion_policy(resource.RETAIN)
-        self._start_thread_with_lock(cnxt, stack, stack.delete)
+        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
+                                              stack.delete)
         return stack_info
 
     def list_resource_types(self, cnxt, support_status=None):
@@ -725,7 +758,8 @@ class EngineService(service.Service):
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
-        self._start_thread_with_lock(cnxt, stack, _stack_suspend, stack)
+        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
+                                              _stack_suspend, stack)
 
     @request_context
     def stack_resume(self, cnxt, stack_identity):
@@ -739,7 +773,8 @@ class EngineService(service.Service):
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
-        self._start_thread_with_lock(cnxt, stack, _stack_resume, stack)
+        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
+                                              _stack_resume, stack)
 
     def _load_user_creds(self, creds_id):
         user_creds = db_api.user_creds_get(creds_id)
@@ -821,8 +856,8 @@ class EngineService(service.Service):
             rule = watchrule.WatchRule.load(stack_context, watch=wr)
             actions = rule.evaluate()
             if actions:
-                self._start_in_thread(sid, run_alarm_action, actions,
-                                      rule.get_details())
+                self.thread_group_mgr.start(sid, run_alarm_action, actions,
+                                            rule.get_details())
 
     def _periodic_watcher_task(self, sid):
         """
@@ -922,7 +957,7 @@ class EngineService(service.Service):
             return
         actions = wr.set_watch_state(state)
         for action in actions:
-            self._start_in_thread(wr.stack_id, action)
+            self.thread_group_mgr.start(wr.stack_id, action)
 
         # Return the watch with the state overriden to indicate success
         # We do not update the timestamps as we are not modifying the DB
