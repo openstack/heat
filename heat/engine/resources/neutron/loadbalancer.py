@@ -324,6 +324,12 @@ class Pool(neutron.NeutronResource):
         vip_arguments = self.prepare_properties(
             vip_properties,
             '%s.vip' % (self.name,))
+
+        session_p = vip_arguments.get(self.VIP_SESSION_PERSISTENCE)
+        if session_p is not None:
+            prepared_props = self.prepare_properties(session_p, None)
+            vip_arguments['session_persistence'] = prepared_props
+
         vip_arguments['protocol'] = self.properties[self.PROTOCOL]
         vip_arguments['subnet_id'] = self.properties[self.SUBNET_ID]
         vip_arguments['pool_id'] = pool['id']
