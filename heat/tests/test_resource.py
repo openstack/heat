@@ -757,7 +757,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 'foo': {'Type': 'GenericResourceType'},
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['foo']
         res.add_dependencies(self.deps)
@@ -777,7 +777,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -800,7 +800,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -821,7 +821,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -843,7 +843,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -866,7 +866,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -890,7 +890,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -911,7 +911,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
@@ -929,7 +929,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
@@ -946,7 +946,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -968,7 +968,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -989,7 +989,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -1011,7 +1011,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -1035,7 +1035,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -1060,7 +1060,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -1081,7 +1081,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
@@ -1099,7 +1099,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo)', str(ex))
@@ -1121,7 +1121,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo.Fn::Join[1][3])', str(ex))
@@ -1144,7 +1144,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
         self.assertIn('"baz" (in bar.Properties.Foo.Fn::Join[1][3])', str(ex))
@@ -1159,7 +1159,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
 
         res = stack['bar']
         res.add_dependencies(self.deps)
@@ -1177,7 +1177,7 @@ class ResourceDependenciesTest(HeatTestCase):
                 }
             }
         })
-        stack = parser.Stack(None, 'test', tmpl)
+        stack = parser.Stack(utils.dummy_context(), 'test', tmpl)
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                getattr, stack, 'dependencies')
         self.assertIn('"wibble" (in foo)', str(ex))

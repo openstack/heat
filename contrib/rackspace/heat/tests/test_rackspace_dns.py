@@ -102,7 +102,7 @@ class RackspaceDnsTest(common.HeatTestCase):
         stack_name = '%s_stack' % name
         t = parsed_t
         template = parser.Template(t)
-        stack = parser.Stack(None,
+        stack = parser.Stack(utils.dummy_context(),
                              stack_name,
                              template,
                              environment.Environment({'name': 'test'}),

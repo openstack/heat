@@ -18,6 +18,7 @@ import heat.engine.api as api
 
 from heat.common import template_format
 from heat.engine import parser
+from heat.engine import parameters
 from heat.engine import resource
 from heat.engine.event import Event
 from heat.common.identifier import EventIdentifier
@@ -628,7 +629,7 @@ class FormatValidateParameterTest(HeatTestCase):
         t = template_format.parse(self.template % self.param)
         tmpl = parser.Template(t)
 
-        tmpl_params = parser.Parameters(None, tmpl, validate_value=False)
+        tmpl_params = parameters.Parameters(None, tmpl, validate_value=False)
         param = tmpl_params.params[self.param_name]
         param_formated = api.format_validate_parameter(param)
         self.assertEqual(self.expected, param_formated)

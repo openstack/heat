@@ -443,7 +443,7 @@ class EngineService(service.Service):
         env = environment.Environment(params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      env, **common_params)
-        updated_stack.parameters.set_stack_id(current_stack.identifier().arn())
+        updated_stack.parameters.set_stack_id(current_stack.identifier())
 
         self._validate_deferred_auth_context(cnxt, updated_stack)
         updated_stack.validate()
@@ -504,7 +504,7 @@ class EngineService(service.Service):
             except Exception as ex:
                 return {'Error': str(ex)}
 
-        tmpl_params = parser.Parameters(None, tmpl, validate_value=False)
+        tmpl_params = tmpl.parameters(None, {}, validate_value=False)
         is_real_param = lambda p: p.name not in parameters.PSEUDO_PARAMETERS
         params = tmpl_params.map(api.format_validate_parameter, is_real_param)
 

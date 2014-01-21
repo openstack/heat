@@ -21,12 +21,12 @@ from oslo.config import cfg
 
 from heat.engine import environment
 from heat.common import exception
+from heat.common import identifier
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import clients
 from heat.engine import resource
 from heat.engine import parser
-from heat.engine import parameters
 from heat.engine import scheduler
 from heat.engine import template
 
@@ -194,7 +194,8 @@ Mappings:
     def test_param_ref_missing(self):
         tmpl = {'Parameters': {'foo': {'Type': 'String', 'Required': True}}}
         tmpl = parser.Template(tmpl)
-        params = parameters.Parameters('test', tmpl, validate_value=False)
+        params = tmpl.parameters(identifier.HeatIdentifier('', 'test', None),
+                                 {}, validate_value=False)
         snippet = {"Ref": "foo"}
         self.assertRaises(exception.UserParameterMissing,
                           parser.Template.resolve_param_refs,
