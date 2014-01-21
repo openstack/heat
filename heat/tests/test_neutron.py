@@ -1474,7 +1474,6 @@ class NeutronFloatingIPTest(HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'security_groups': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1508,7 +1507,6 @@ class NeutronFloatingIPTest(HeatTestCase):
                     'fixed_ips': [
                         {'subnet_id': 'sub1234', 'ip_address': '10.0.0.11'}
                     ],
-                    'security_groups': [],
                     'admin_state_up': True
                 }
             }
@@ -1567,7 +1565,6 @@ class NeutronFloatingIPTest(HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName('test_stack', 'port_floating'),
-            'security_groups': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1681,7 +1678,6 @@ class NeutronPortTest(HeatTestCase):
                 {'ip_address': u'10.0.3.21'}
             ],
             'name': utils.PhysName('test_stack', 'port'),
-            'security_groups': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1714,7 +1710,6 @@ class NeutronPortTest(HeatTestCase):
                 {'subnet_id': u'sub1234'}
             ],
             'name': utils.PhysName('test_stack', 'port'),
-            'security_groups': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1743,7 +1738,6 @@ class NeutronPortTest(HeatTestCase):
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
-            'security_groups': [],
             'fixed_ips': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
@@ -1777,7 +1771,6 @@ class NeutronPortTest(HeatTestCase):
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'security_groups': [],
             'fixed_ips': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
@@ -1809,7 +1802,6 @@ class NeutronPortTest(HeatTestCase):
                 'ip_address': u'10.0.3.21',
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'security_groups': [],
             'fixed_ips': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
@@ -1833,4 +1825,40 @@ class NeutronPortTest(HeatTestCase):
 
         port = stack['port']
         scheduler.TaskRunner(port.create)()
+        self.m.VerifyAll()
+
+    def test_security_groups(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_port({'port': {
+            'network_id': u'net1234',
+            'security_groups': ['8a2f582a-e1cd-480f-b85d-b02631c10656',
+                                '024613dc-b489-4478-b46f-ada462738740'],
+            'fixed_ips': [
+                {'subnet_id': u'sub1234', 'ip_address': u'10.0.3.21'}
+            ],
+            'name': utils.PhysName('test_stack', 'port'),
+            'admin_state_up': True}}
+        ).AndReturn({'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+        neutronclient.Client.show_port(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        ).AndReturn({'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }})
+
+        self.m.ReplayAll()
+
+        t = template_format.parse(neutron_port_template)
+        t['Resources']['port']['Properties']['security_groups'] = [
+            '8a2f582a-e1cd-480f-b85d-b02631c10656',
+            '024613dc-b489-4478-b46f-ada462738740']
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+
         self.m.VerifyAll()
