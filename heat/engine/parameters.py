@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import itertools
 import json
 from heat.engine import constraints as constr
 
@@ -28,12 +29,6 @@ PARAMETER_KEYS = (
     'Type', 'Default', 'NoEcho', 'AllowedValues', 'AllowedPattern',
     'MaxLength', 'MinLength', 'MaxValue', 'MinValue',
     'Description', 'ConstraintDescription'
-)
-
-PSEUDO_PARAMETERS = (
-    PARAM_STACK_ID, PARAM_STACK_NAME, PARAM_REGION
-) = (
-    'AWS::StackId', 'AWS::StackName', 'AWS::Region'
 )
 
 
@@ -330,46 +325,35 @@ class Parameters(collections.Mapping):
     the stack's template.
     '''
 
+    PSEUDO_PARAMETERS = (
+        PARAM_STACK_ID, PARAM_STACK_NAME, PARAM_REGION
+    ) = (
+        'AWS::StackId', 'AWS::StackName', 'AWS::Region'
+    )
+
     def __init__(self, stack_identifier, tmpl, user_params={},
                  validate_value=True):
         '''
         Create the parameter container for a stack from the stack name and
         template, optionally setting the user-supplied parameter values.
         '''
-        def parameters():
-            stack_id = stack_identifier.arn() \
-                if stack_identifier is not None else 'None'
-            stack_name = stack_identifier and stack_identifier.stack_name
-
-            yield Parameter(PARAM_STACK_ID,
-                            Schema(Schema.STRING, _('Stack ID'),
-                                   default=str(stack_id)))
-            if stack_name:
-                yield Parameter(PARAM_STACK_NAME,
-                                Schema(Schema.STRING, _('Stack Name'),
-                                       default=stack_name))
-                yield Parameter(PARAM_REGION,
-                                Schema(Schema.STRING,
-                                       default='ap-southeast-1',
-                                       constraints=
-                                       [constr.AllowedValues(['us-east-1',
-                                                              'us-west-1',
-                                                              'us-west-2',
-                                                              'sa-east-1',
-                                                              'eu-west-1',
-                                                              'ap-southeast-1',
-                                                              'ap-northeast-1']
-                                                             )]))
-
-            schemata = self.tmpl.param_schemata().iteritems()
-            for name, schema in schemata:
-                value = user_params.get(name)
-                yield Parameter(name, schema, value, validate_value)
+        def user_parameter(schema_item):
+            name, schema = schema_item
+            return Parameter(name, schema,
+                             user_params.get(name),
+                             validate_value)
 
         self.tmpl = tmpl
         self._validate_tmpl_parameters()
         self._validate(user_params)
-        self.params = dict((p.name, p) for p in parameters())
+
+        schemata = self.tmpl.param_schemata()
+        user_parameters = (user_parameter(si) for si in schemata.iteritems())
+        pseudo_parameters = self._pseudo_parameters(stack_identifier)
+
+        self.params = dict((p.name,
+                            p) for p in itertools.chain(pseudo_parameters,
+                                                        user_parameters))
 
     def __contains__(self, key):
         '''Return whether the specified parameter exists.'''
@@ -400,7 +384,7 @@ class Parameters(collections.Mapping):
         Set the StackId pseudo parameter value
         '''
         if stack_identifier is not None:
-            self.params[PARAM_STACK_ID].schema.set_default(
+            self.params[self.PARAM_STACK_ID].schema.set_default(
                 stack_identifier.arn())
             return True
 
@@ -421,3 +405,28 @@ class Parameters(collections.Mapping):
             for name, attrs in template_params.iteritems():
                 if not isinstance(attrs, dict):
                     raise exception.InvalidTemplateParameter(key=name)
+
+    def _pseudo_parameters(self, stack_identifier):
+        stack_id = stack_identifier.arn() \
+            if stack_identifier is not None else 'None'
+        stack_name = stack_identifier and stack_identifier.stack_name
+
+        yield Parameter(self.PARAM_STACK_ID,
+                        Schema(Schema.STRING, _('Stack ID'),
+                               default=str(stack_id)))
+        if stack_name:
+            yield Parameter(self.PARAM_STACK_NAME,
+                            Schema(Schema.STRING, _('Stack Name'),
+                                   default=stack_name))
+            yield Parameter(self.PARAM_REGION,
+                            Schema(Schema.STRING,
+                                   default='ap-southeast-1',
+                                   constraints=
+                                   [constr.AllowedValues(['us-east-1',
+                                                          'us-west-1',
+                                                          'us-west-2',
+                                                          'sa-east-1',
+                                                          'eu-west-1',
+                                                          'ap-southeast-1',
+                                                          'ap-northeast-1']
+                                                         )]))

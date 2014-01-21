@@ -22,22 +22,10 @@ from heat.openstack.common import log as logging
 
 logger = logging.getLogger(__name__)
 
-SECTIONS = (VERSION, DESCRIPTION, PARAMETER_GROUPS, PARAMETERS,
-            RESOURCES, OUTPUTS, UNDEFINED) = \
-           ('heat_template_version', 'description', 'parameter_groups',
-            'parameters', 'resources', 'outputs', '__undefined__')
-
 PARAM_CONSTRAINTS = (CONSTRAINTS, DESCRIPTION, LENGTH, RANGE,
                      MIN, MAX, ALLOWED_VALUES, ALLOWED_PATTERN) = \
                     ('constraints', 'description', 'length', 'range',
                      'min', 'max', 'allowed_values', 'allowed_pattern')
-
-_CFN_TO_HOT_SECTIONS = {template.VERSION: VERSION,
-                        template.DESCRIPTION: DESCRIPTION,
-                        template.PARAMETERS: PARAMETERS,
-                        template.MAPPINGS: UNDEFINED,
-                        template.RESOURCES: RESOURCES,
-                        template.OUTPUTS: OUTPUTS}
 
 
 def snake_to_camel(name):
@@ -49,21 +37,34 @@ class HOTemplate(template.Template):
     A Heat Orchestration Template format stack template.
     """
 
+    SECTIONS = (VERSION, DESCRIPTION, PARAMETER_GROUPS, PARAMETERS,
+                RESOURCES, OUTPUTS, UNDEFINED) = \
+               ('heat_template_version', 'description', 'parameter_groups',
+                'parameters', 'resources', 'outputs', '__undefined__')
+
+    _CFN_TO_HOT_SECTIONS = {template.Template.VERSION: VERSION,
+                            template.Template.DESCRIPTION: DESCRIPTION,
+                            template.Template.PARAMETERS: PARAMETERS,
+                            template.Template.MAPPINGS: UNDEFINED,
+                            template.Template.RESOURCES: RESOURCES,
+                            template.Template.OUTPUTS: OUTPUTS}
+
     def __getitem__(self, section):
         """"Get the relevant section in the template."""
         #first translate from CFN into HOT terminology if necessary
-        section = HOTemplate._translate(section, _CFN_TO_HOT_SECTIONS, section)
+        section = HOTemplate._translate(section,
+                                        self._CFN_TO_HOT_SECTIONS, section)
 
-        if section not in SECTIONS:
+        if section not in self.SECTIONS:
             raise KeyError(_('"%s" is not a valid template section') % section)
 
-        if section == VERSION:
+        if section == self.VERSION:
             return self.t[section]
 
-        if section == UNDEFINED:
+        if section == self.UNDEFINED:
             return {}
 
-        if section == DESCRIPTION:
+        if section == self.DESCRIPTION:
             default = 'No description'
         else:
             default = {}
@@ -75,10 +76,10 @@ class HOTemplate(template.Template):
         # engine can cope with it.
         # This is a shortcut for now and might be changed in the future.
 
-        if section == RESOURCES:
+        if section == self.RESOURCES:
             return self._translate_resources(the_section)
 
-        if section == OUTPUTS:
+        if section == self.OUTPUTS:
             return self._translate_outputs(the_section)
 
         return the_section
@@ -238,9 +239,13 @@ class HOTemplate(template.Template):
                                  handle_str_replace, s, transform)
 
     def param_schemata(self):
-        params = self[PARAMETERS].iteritems()
+        params = self[self.PARAMETERS].iteritems()
         return dict((name, HOTParamSchema.from_dict(schema))
                     for name, schema in params)
+
+    def parameters(self, stack_identifier, user_params, validate_value=True):
+        return HOTParameters(stack_identifier, self, user_params=user_params,
+                             validate_value=validate_value)
 
 
 class HOTParamSchema(parameters.Schema):
@@ -299,3 +304,35 @@ class HOTParamSchema(parameters.Schema):
                    default=schema_dict.get(HOTParamSchema.DEFAULT),
                    constraints=list(constraints()),
                    hidden=schema_dict.get(HOTParamSchema.HIDDEN, False))
+
+
+class HOTParameters(parameters.Parameters):
+    PSEUDO_PARAMETERS = (
+        PARAM_STACK_ID, PARAM_STACK_NAME, PARAM_REGION
+    ) = (
+        'OS::stack_id', 'OS::stack_name', 'OS::region'
+    )
+
+    def set_stack_id(self, stack_identifier):
+        '''
+        Set the StackId pseudo parameter value
+        '''
+        if stack_identifier is not None:
+            self.params[self.PARAM_STACK_ID].schema.set_default(
+                stack_identifier.stack_id)
+        else:
+            raise exception.InvalidStackIdentifier()
+
+    def _pseudo_parameters(self, stack_identifier):
+        stack_id = getattr(stack_identifier, 'stack_id', '')
+        stack_name = getattr(stack_identifier, 'stack_name', '')
+
+        yield parameters.Parameter(
+            self.PARAM_STACK_ID,
+            parameters.Schema(parameters.Schema.STRING, _('Stack ID'),
+                              default=str(stack_id)))
+        if stack_name:
+            yield parameters.Parameter(
+                self.PARAM_STACK_NAME,
+                parameters.Schema(parameters.Schema.STRING, _('Stack Name'),
+                                  default=stack_name))

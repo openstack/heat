@@ -14,7 +14,6 @@
 
 from heat.rpc import api
 from heat.openstack.common import timeutils
-from heat.engine import template
 from heat.engine import constraints as constr
 
 from heat.openstack.common import log as logging
@@ -83,8 +82,8 @@ def format_stack(stack):
         api.STACK_UPDATED_TIME: timeutils.isotime(stack.updated_time),
         api.STACK_NOTIFICATION_TOPICS: [],  # TODO Not implemented yet
         api.STACK_PARAMETERS: stack.parameters.map(str),
-        api.STACK_DESCRIPTION: stack.t[template.DESCRIPTION],
-        api.STACK_TMPL_DESCRIPTION: stack.t[template.DESCRIPTION],
+        api.STACK_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
+        api.STACK_TMPL_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
         api.STACK_ACTION: stack.action or '',
         api.STACK_STATUS: stack.status or '',
         api.STACK_STATUS_DATA: stack.status_reason,

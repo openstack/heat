@@ -21,14 +21,14 @@ from heat.db import api as db_api
 from heat.common import exception
 from heat.engine import parameters
 
-SECTIONS = (VERSION, DESCRIPTION, MAPPINGS,
-            PARAMETERS, RESOURCES, OUTPUTS) = \
-           ('AWSTemplateFormatVersion', 'Description', 'Mappings',
-            'Parameters', 'Resources', 'Outputs')
-
 
 class Template(collections.Mapping):
     '''A stack template.'''
+
+    SECTIONS = (VERSION, DESCRIPTION, MAPPINGS,
+                PARAMETERS, RESOURCES, OUTPUTS) = \
+               ('AWSTemplateFormatVersion', 'Description', 'Mappings',
+                'Parameters', 'Resources', 'Outputs')
 
     def __new__(cls, template, *args, **kwargs):
         '''Create a new Template of the appropriate class.'''
@@ -49,7 +49,7 @@ class Template(collections.Mapping):
         self.id = template_id
         self.t = template
         self.files = files or {}
-        self.maps = self[MAPPINGS]
+        self.maps = self[self.MAPPINGS]
 
     @classmethod
     def load(cls, context, template_id):
@@ -67,12 +67,12 @@ class Template(collections.Mapping):
 
     def __getitem__(self, section):
         '''Get the relevant section in the template.'''
-        if section not in SECTIONS:
+        if section not in self.SECTIONS:
             raise KeyError(_('"%s" is not a valid template section') % section)
-        if section == VERSION:
+        if section == self.VERSION:
             return self.t[section]
 
-        if section == DESCRIPTION:
+        if section == self.DESCRIPTION:
             default = 'No description'
         else:
             default = {}
@@ -81,11 +81,11 @@ class Template(collections.Mapping):
 
     def __iter__(self):
         '''Return an iterator over the section names.'''
-        return iter(SECTIONS)
+        return iter(self.SECTIONS)
 
     def __len__(self):
         '''Return the number of sections.'''
-        return len(SECTIONS)
+        return len(self.SECTIONS)
 
     def resolve_find_in_map(self, s, transform=None):
         '''
@@ -472,7 +472,7 @@ class Template(collections.Mapping):
                         s, transform)
 
     def param_schemata(self):
-        params = self[PARAMETERS].iteritems()
+        params = self[self.PARAMETERS].iteritems()
         return dict((name, parameters.Schema.from_dict(schema))
                     for name, schema in params)
 

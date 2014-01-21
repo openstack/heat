@@ -127,12 +127,11 @@ class TemplateTest(HeatTestCase):
 
     def test_defaults(self):
         empty = parser.Template({})
-        self.assertNotIn(template.VERSION, empty)
-        self.assertEqual('No description', empty[template.DESCRIPTION])
-        self.assertEqual({}, empty[template.MAPPINGS])
-        self.assertEqual({}, empty[template.PARAMETERS])
-        self.assertEqual({}, empty[template.RESOURCES])
-        self.assertEqual({}, empty[template.OUTPUTS])
+        self.assertNotIn('AWSTemplateFormatVersion', empty)
+        self.assertEqual('No description', empty['Description'])
+        self.assertEqual({}, empty['Mappings'])
+        self.assertEqual({}, empty['Resources'])
+        self.assertEqual({}, empty['Outputs'])
 
     def test_invalid_template(self):
         scanner_error = '''
@@ -1428,7 +1427,8 @@ class StackTest(HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('BTemplate', self.stack.t[template.DESCRIPTION])
+        self.assertEqual('BTemplate',
+                         self.stack.t[template.Template.DESCRIPTION])
 
     @utils.stack_delete_after
     def test_update_modify_ok_replace(self):

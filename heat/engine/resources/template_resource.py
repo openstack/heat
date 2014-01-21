@@ -80,7 +80,7 @@ class TemplateResource(stack_resource.StackResource):
         self.properties_schema = (properties.Properties
                                   .schema_from_params(tmpl.param_schemata()))
         self.attributes_schema = (attributes.Attributes
-                                  .schema_from_outputs(tmpl[template.OUTPUTS]))
+                                  .schema_from_outputs(tmpl[tmpl.OUTPUTS]))
 
         self.properties = properties.Properties(self.properties_schema,
                                                 props,

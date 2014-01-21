@@ -42,11 +42,11 @@ class HOTemplateTest(HeatTestCase):
         self.assertNotIn('foobar', tmpl)
 
         # test defaults for valid sections
-        self.assertEqual('2013-05-23', tmpl[hot.VERSION])
-        self.assertEqual('No description', tmpl[hot.DESCRIPTION])
-        self.assertEqual({}, tmpl[hot.PARAMETERS])
-        self.assertEqual({}, tmpl[hot.RESOURCES])
-        self.assertEqual({}, tmpl[hot.OUTPUTS])
+        self.assertEqual('2013-05-23', tmpl[tmpl.VERSION])
+        self.assertEqual('No description', tmpl[tmpl.DESCRIPTION])
+        self.assertEqual({}, tmpl[tmpl.PARAMETERS])
+        self.assertEqual({}, tmpl[tmpl.RESOURCES])
+        self.assertEqual({}, tmpl[tmpl.OUTPUTS])
 
     def test_translate_resources(self):
         """Test translation of resources into internal engine format."""
@@ -64,7 +64,7 @@ class HOTemplateTest(HeatTestCase):
                                   'Properties': {'property1': 'value1'}}}
 
         tmpl = parser.Template(hot_tpl)
-        self.assertEqual(expected, tmpl[hot.RESOURCES])
+        self.assertEqual(expected, tmpl[tmpl.RESOURCES])
 
     def test_translate_outputs(self):
         """Test translation of outputs into internal engine format."""
@@ -80,7 +80,7 @@ class HOTemplateTest(HeatTestCase):
         expected = {'output1': {'Description': 'output1', 'Value': 'value1'}}
 
         tmpl = parser.Template(hot_tpl)
-        self.assertEqual(expected, tmpl[hot.OUTPUTS])
+        self.assertEqual(expected, tmpl[tmpl.OUTPUTS])
 
     def test_param_refs(self):
         """Test if parameter references work."""
@@ -258,6 +258,60 @@ class StackTest(test_parser.StackTest):
         snippet = {'value': {'get_resource': 'resource1'}}
         resolved = hot.HOTemplate.resolve_resource_refs(snippet, self.stack)
         self.assertEqual({'value': 'resource1'}, resolved)
+
+    @utils.stack_delete_after
+    def test_set_param_id(self):
+        tmpl = parser.Template(hot_tpl_empty)
+        self.stack = parser.Stack(self.ctx, 'param_id_test', tmpl)
+        self.assertEqual(self.stack.parameters['OS::stack_id'], 'None')
+        self.stack.store()
+        stack_identifier = self.stack.identifier()
+        self.assertEqual(self.stack.parameters['OS::stack_id'], self.stack.id)
+        self.assertEqual(self.stack.parameters['OS::stack_id'],
+                         stack_identifier.stack_id)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_set_param_id_update(self):
+        tmpl = template.Template(
+            {'heat_template_version': '2013-05-23',
+             'resources': {'AResource': {'type': 'ResourceWithPropsType',
+                           'Metadata': {'Bar': {'get_param': 'OS::stack_id'}},
+                           'properties': {'Foo': 'abc'}}}})
+        self.stack = parser.Stack(self.ctx, 'update_stack_id_test', tmpl)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+
+        stack_id = self.stack.parameters['OS::stack_id']
+
+        tmpl2 = template.Template(
+            {'heat_template_version': '2013-05-23',
+             'resources': {'AResource': {'type': 'ResourceWithPropsType',
+                           'Metadata': {'Bar': {'get_param': 'OS::stack_id'}},
+                           'properties': {'Foo': 'xyz'}}}})
+        updated_stack = parser.Stack(self.ctx, 'updated_stack', tmpl2)
+
+        self.stack.update(updated_stack)
+        self.assertEqual(self.stack.state,
+                         (parser.Stack.UPDATE, parser.Stack.COMPLETE))
+        self.assertEqual(self.stack['AResource'].properties['Foo'], 'xyz')
+
+        self.assertEqual(self.stack['AResource'].metadata['Bar'], stack_id)
+
+    @utils.stack_delete_after
+    def test_load_param_id(self):
+        tmpl = parser.Template(hot_tpl_empty)
+        self.stack = parser.Stack(self.ctx, 'param_load_id_test', tmpl)
+        self.stack.store()
+        stack_identifier = self.stack.identifier()
+        self.assertEqual(self.stack.parameters['OS::stack_id'],
+                         stack_identifier.stack_id)
+
+        newstack = parser.Stack.load(self.ctx, stack_id=self.stack.id)
+        self.assertEqual(newstack.parameters['OS::stack_id'],
+                         stack_identifier.stack_id)
 
 
 class HOTParamValidatorTest(HeatTestCase):
