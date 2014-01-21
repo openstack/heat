@@ -253,10 +253,14 @@ class KeystoneClient(object):
         # This role is designed to allow easier differentiation of the
         # heat-generated "stack users" which will generally have credentials
         # deployed on an instance (hence are implicitly untrusted)
-        stack_user_role = self.client_v3.roles.list(
-            name=cfg.CONF.heat_stack_user_role)
+        # FIXME(shardy): The v3 keystoneclient doesn't currently support
+        # filtering the results, so we have to do it locally, update when
+        # that is fixed in keystoneclient
+        roles_list = self.client_v3.roles.list()
+        stack_user_role = [r for r in roles_list
+                           if r.name == cfg.CONF.heat_stack_user_role]
         if len(stack_user_role) == 1:
-            role_id = stack_user_role[0]
+            role_id = stack_user_role[0].id
             logger.debug(_("Adding user %(user)s to role %(role)s") % {
                          'user': user.id, 'role': role_id})
             self.client_v3.roles.grant(role=role_id, user=user.id,
