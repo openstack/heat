@@ -146,7 +146,7 @@ class ProviderTemplateTest(HeatTestCase):
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       json_snippet, stack)
         temp_res.validate()
-        converted_params = temp_res._to_parameters()
+        converted_params = temp_res.child_params()
         self.assertTrue(converted_params)
         for key in DummyResource.properties_schema:
             self.assertIn(key, converted_params)

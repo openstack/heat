@@ -71,7 +71,7 @@ class TemplateResource(stack_resource.StackResource):
     def _generate_schema(self, props):
         self._parsed_nested = None
         try:
-            tmpl = template.Template(self.parsed_nested())
+            tmpl = template.Template(self.child_template())
         except ValueError as download_error:
             self.validation_exception = download_error
             tmpl = template.Template({})
@@ -91,7 +91,7 @@ class TemplateResource(stack_resource.StackResource):
                                                 self.attributes_schema,
                                                 self._resolve_attribute)
 
-    def _to_parameters(self):
+    def child_params(self):
         '''
         :return: parameter values for our nested stack based on our properties
         '''
@@ -123,7 +123,7 @@ class TemplateResource(stack_resource.StackResource):
 
         return params
 
-    def parsed_nested(self):
+    def child_template(self):
         if not self._parsed_nested:
             self._parsed_nested = template_format.parse(self.template_data())
         return self._parsed_nested
@@ -227,13 +227,13 @@ class TemplateResource(stack_resource.StackResource):
                                          adopt_data=resource_data)
 
     def handle_create(self):
-        return self.create_with_template(self.parsed_nested(),
-                                         self._to_parameters())
+        return self.create_with_template(self.child_template(),
+                                         self.child_params())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self._generate_schema(json_snippet.get('Properties', {}))
-        return self.update_with_template(self.parsed_nested(),
-                                         self._to_parameters())
+        return self.update_with_template(self.child_template(),
+                                         self.child_params())
 
     def handle_delete(self):
         return self.delete_nested()
