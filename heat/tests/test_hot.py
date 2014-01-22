@@ -44,7 +44,6 @@ class HOTemplateTest(HeatTestCase):
         # test defaults for valid sections
         self.assertEqual('2013-05-23', tmpl[tmpl.VERSION])
         self.assertEqual('No description', tmpl[tmpl.DESCRIPTION])
-        self.assertEqual({}, tmpl[tmpl.PARAMETERS])
         self.assertEqual({}, tmpl[tmpl.RESOURCES])
         self.assertEqual({}, tmpl[tmpl.OUTPUTS])
 
@@ -189,6 +188,46 @@ class HOTemplateTest(HeatTestCase):
                                    'params': ['var1', 'foo', 'var2', 'bar']}}
 
         self.assertRaises(TypeError, tmpl.resolve_replace, snippet)
+
+    def test_prevent_parameters_access(self):
+        """
+        Test that the parameters section can't be accesed using the template
+        as a dictionary.
+        """
+        expected_description = "This can be accessed"
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        description: {0}
+        parameters:
+          foo:
+            type: string
+        '''.format(expected_description))
+
+        tmpl = parser.Template(hot_tpl)
+        self.assertEqual(expected_description, tmpl['description'])
+
+        err_str = "can not be accessed directly"
+
+        #Hot template test
+        keyError = self.assertRaises(KeyError, tmpl.__getitem__, 'parameters')
+        self.assertIn(err_str, str(keyError))
+
+        #CFN template test
+        keyError = self.assertRaises(KeyError, tmpl.__getitem__, 'Parameters')
+        self.assertIn(err_str, str(keyError))
+
+    def test_parameters_section_not_iterable(self):
+        """
+        Test that the parameters section is not returned when the template is
+        used as an iterable.
+        """
+        expected_description = "This can be accessed"
+        tmpl = parser.Template({'heat_template_version': '2013-05-23',
+                                'description': expected_description,
+                                'parameters':
+                                {'foo': {'Type': 'String', 'Required': True}}})
+        self.assertEqual(expected_description, tmpl['description'])
+        self.assertNotIn('parameters', tmpl.keys())
 
 
 class StackTest(test_parser.StackTest):

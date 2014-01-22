@@ -440,6 +440,24 @@ Mappings:
                                   stack)
         self.assertIn(snippet.keys()[0], str(error))
 
+    def test_prevent_parameters_access(self):
+        expected_description = "This can be accessed"
+        tmpl = parser.Template({'Description': expected_description,
+                                'Parameters':
+                                {'foo': {'Type': 'String', 'Required': True}}})
+        self.assertEqual(expected_description, tmpl['Description'])
+        keyError = self.assertRaises(KeyError, tmpl.__getitem__, 'Parameters')
+        self.assertIn("can not be accessed directly", str(keyError))
+
+    def test_parameters_section_not_iterable(self):
+        expected_description = "This can be accessed"
+        tmpl = parser.Template({'AWSTemplateFormatVersion': '',
+                                'Description': expected_description,
+                                'Parameters':
+                                {'foo': {'Type': 'String', 'Required': True}}})
+        self.assertEqual(expected_description, tmpl['Description'])
+        self.assertNotIn('Parameters', tmpl.keys())
+
 
 class TemplateFnErrorTest(HeatTestCase):
     scenarios = [
