@@ -72,6 +72,62 @@ class StackResource(resource.Resource):
 
         return self._nested
 
+    def child_template(self):
+        '''
+        Default implementation to get the child template.
+
+        Resources that inherit from StackResource should override this method
+        with specific details about the template used by them.
+        '''
+        raise NotImplementedError()
+
+    def child_params(self):
+        '''
+        Default implementation to get the child params.
+
+        Resources that inherit from StackResource should override this method
+        with specific details about the parameters used by them.
+        '''
+        raise NotImplementedError()
+
+    def preview(self):
+        '''
+        Preview a StackResource as resources within a Stack.
+
+        This method overrides the original Resource.preview to return a preview
+        of all the resources contained in this Stack.  For this to be possible,
+        the specific resources need to override both ``child_template`` and
+        ``child_params`` with specific information to allow the stack to be
+        parsed correctly. If any of these methods is missing, the entire
+        StackResource will be returned as if it were a regular Resource.
+        '''
+        try:
+            template = parser.Template(self.child_template())
+            params = self.child_params()
+        except NotImplementedError:
+            not_implemented_msg = _("Preview of '%s' not yet implemented")
+            logger.warning(not_implemented_msg % self.__class__.__name__)
+            return self
+
+        self._validate_nested_resources(template)
+        name = "%s-%s" % (self.stack.name, self.name)
+        nested = parser.Stack(self.context,
+                              name,
+                              template,
+                              environment.Environment(params),
+                              disable_rollback=True,
+                              parent_resource=self,
+                              owner_id=self.stack.id)
+
+        return nested.preview_resources()
+
+    def _validate_nested_resources(self, template):
+        total_resources = (len(template[template.RESOURCES]) +
+                           self.stack.root_stack.total_resources())
+        if (total_resources > cfg.CONF.max_resources_per_stack):
+            message = exception.StackResourceLimitExceeded.msg_fmt
+            raise exception.RequestLimitExceeded(message=message)
+
     def create_with_template(self, child_template, user_params,
                              timeout_mins=None, adopt_data=None):
         '''
@@ -82,11 +138,7 @@ class StackResource(resource.Resource):
                 cfg.CONF.max_nested_stack_depth
             raise exception.RequestLimitExceeded(message=msg)
         template = parser.Template(child_template)
-        if ((len(template[template.RESOURCES]) +
-             self.stack.root_stack.total_resources() >
-             cfg.CONF.max_resources_per_stack)):
-            raise exception.RequestLimitExceeded(
-                message=exception.StackResourceLimitExceeded.msg_fmt)
+        self._validate_nested_resources(template)
         self._outputs_to_attribs(child_template)
 
         # Note we disable rollback for nested stacks, since they

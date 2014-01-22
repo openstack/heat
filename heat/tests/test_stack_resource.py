@@ -12,8 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
+import mock
 import mox
+import uuid
 
 from heat.common import template_format
 from heat.common import exception
@@ -88,6 +89,14 @@ class MyStackResource(stack_resource.StackResource,
         self.delete_nested()
 
 
+class MyImplementedStackResource(MyStackResource):
+    def child_template(self):
+        return self.nested_template
+
+    def child_params(self):
+        return self.nested_params
+
+
 class StackResourceTest(HeatTestCase):
 
     def setUp(self):
@@ -106,6 +115,76 @@ class StackResourceTest(HeatTestCase):
                                                self.parent_stack)
         self.templ = template_format.parse(param_template)
         self.simple_template = template_format.parse(simple_template)
+
+    def test_child_template_defaults_to_not_implemented(self):
+        self.assertRaises(NotImplementedError,
+                          self.parent_resource.child_template)
+
+    def test_child_params_defaults_to_not_implemented(self):
+        self.assertRaises(NotImplementedError,
+                          self.parent_resource.child_params)
+
+    def test_preview_defaults_to_stack_resource_itself(self):
+        preview = self.parent_resource.preview()
+        self.assertIsInstance(preview, stack_resource.StackResource)
+
+    @mock.patch.object(stack_resource.environment, 'Environment')
+    @mock.patch.object(stack_resource.parser, 'Template')
+    @mock.patch.object(stack_resource.parser, 'Stack')
+    def test_preview_with_implemented_child_resource(self, mock_stack_class,
+                                                     mock_template_class,
+                                                     mock_env_class):
+        nested_stack = mock.Mock()
+        mock_stack_class.return_value = nested_stack
+        nested_stack.preview_resources.return_value = 'preview_nested_stack'
+        mock_template_class.return_value = 'parsed_template'
+        mock_env_class.return_value = 'environment'
+        template = template_format.parse(param_template)
+        parent_resource = MyImplementedStackResource('test',
+                                                     ws_res_snippet,
+                                                     self.parent_stack)
+        params = {'KeyName': 'test'}
+        parent_resource.set_template(template, params)
+        validation_mock = mock.Mock(return_value=None)
+        parent_resource._validate_nested_resources = validation_mock
+
+        result = parent_resource.preview()
+        mock_env_class.assert_called_once_with(params)
+        mock_template_class.assert_called_once_with(template)
+        self.assertEqual('preview_nested_stack', result)
+        mock_stack_class.assert_called_once_with(
+            mock.ANY,
+            'test_stack-test',
+            'parsed_template',
+            'environment',
+            disable_rollback=mock.ANY,
+            parent_resource=parent_resource,
+            owner_id=mock.ANY
+        )
+
+    def test_preview_validates_nested_resources(self):
+        stack_resource = MyImplementedStackResource('test',
+                                                    ws_res_snippet,
+                                                    self.parent_stack)
+        stack_resource.child_template = mock.Mock(return_value={})
+        stack_resource.child_params = mock.Mock()
+        exc = exception.RequestLimitExceeded(message='Validation Failed')
+        validation_mock = mock.Mock(side_effect=exc)
+        stack_resource._validate_nested_resources = validation_mock
+
+        self.assertRaises(exception.RequestLimitExceeded,
+                          stack_resource.preview)
+
+    def test__validate_nested_resources_checks_num_of_resources(self):
+        stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)
+        tmpl = {stack_resource.parser.Template.RESOURCES: [1]}
+        template = stack_resource.parser.Template(tmpl)
+        root_resources = mock.Mock(return_value=2)
+        self.parent_resource.stack.root_stack.total_resources = root_resources
+
+        self.assertRaises(exception.RequestLimitExceeded,
+                          self.parent_resource._validate_nested_resources,
+                          template)
 
     @utils.stack_delete_after
     def test_create_with_template_ok(self):
