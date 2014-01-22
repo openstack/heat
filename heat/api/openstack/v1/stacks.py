@@ -196,6 +196,24 @@ class StackController(object):
         return {'stacks': [stacks_view.format_stack(req, s) for s in stacks]}
 
     @util.policy_enforce
+    def preview(self, req, body):
+        """
+        Preview the outcome of a template and its params
+        """
+
+        data = InstantiationData(body)
+
+        result = self.engine.preview_stack(req.context,
+                                           data.stack_name(),
+                                           data.template(),
+                                           data.environment(),
+                                           data.files(),
+                                           data.args())
+
+        formatted_stack = stacks_view.format_stack(req, result)
+        return {'stack': formatted_stack}
+
+    @util.policy_enforce
     def create(self, req, body):
         """
         Create a new stack
