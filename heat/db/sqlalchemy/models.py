@@ -19,44 +19,16 @@ import uuid
 
 import sqlalchemy
 
-from sqlalchemy.dialects import mysql
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import types
-from json import dumps
-from json import loads
 from heat.openstack.common import timeutils
 from heat.openstack.common.db.sqlalchemy import models
 from heat.openstack.common.db.sqlalchemy import session
 from sqlalchemy.orm.session import Session
+from heat.db.sqlalchemy.types import Json
 
 BASE = declarative_base()
 get_session = session.get_session
-
-
-class Json(types.TypeDecorator):
-    impl = types.Text
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == 'mysql':
-            return dialect.type_descriptor(mysql.LONGTEXT())
-        else:
-            return self.impl
-
-    def process_bind_param(self, value, dialect):
-        return dumps(value)
-
-    def process_result_value(self, value, dialect):
-        return loads(value)
-
-# TODO(leizhang) When we removed sqlalchemy 0.7 dependence
-# we can import MutableDict directly and remove ./mutable.py
-try:
-    from sqlalchemy.ext.mutable import MutableDict as sa_MutableDict
-    sa_MutableDict.associate_with(Json)
-except ImportError:
-    from heat.db.sqlalchemy.mutable import MutableDict
-    MutableDict.associate_with(Json)
 
 
 class HeatBase(models.ModelBase, models.TimestampMixin):
