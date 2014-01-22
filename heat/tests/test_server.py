@@ -1088,7 +1088,7 @@ class ServersTest(HeatTestCase):
             {
                 'device_name': 'vdc',
                 'volume_id': '1234',
-                'volume_size': '10'
+                'volume_size': 10
             },
             {
                 'device_name': 'vdd',
@@ -1096,6 +1096,51 @@ class ServersTest(HeatTestCase):
                 'delete_on_termination': True
             }
         ]))
+
+    def test_validate_block_device_mapping_volume_size_valid_int(self):
+        stack_name = 'val_vsize_valid'
+        t, stack = self._setup_test_stack(stack_name)
+        bdm = [{'device_name': 'vda', 'volume_id': '1234',
+                'volume_size': 10}]
+        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
+        self.m.VerifyAll()
+
+    def test_validate_block_device_mapping_volume_size_valid_str(self):
+        stack_name = 'val_vsize_valid'
+        t, stack = self._setup_test_stack(stack_name)
+        bdm = [{'device_name': 'vda', 'volume_id': '1234',
+                'volume_size': '10'}]
+        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
+        self.m.VerifyAll()
+
+    def test_validate_block_device_mapping_volume_size_invalid_str(self):
+        stack_name = 'val_vsize_invalid'
+        t, stack = self._setup_test_stack(stack_name)
+        bdm = [{'device_name': 'vda', 'volume_id': '1234',
+                'volume_size': '10a'}]
+        t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                server.validate)
+        self.assertIn("Value '10a' is not an integer", str(exc))
 
     def test_validate_conflict_block_device_mapping_props(self):
         stack_name = 'val_blkdev1'
@@ -1117,7 +1162,7 @@ class ServersTest(HeatTestCase):
         stack_name = 'val_blkdev2'
         (t, stack) = self._setup_test_stack(stack_name)
 
-        bdm = [{'device_name': 'vdb', 'volume_size': '1',
+        bdm = [{'device_name': 'vdb', 'volume_size': 1,
                 'delete_on_termination': True}]
         t['Resources']['WebServer']['Properties']['block_device_mapping'] = bdm
         server = servers.Server('server_create_image_err',
