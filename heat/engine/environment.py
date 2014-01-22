@@ -167,7 +167,7 @@ class ResourceRegistry(object):
 
     def _register_info(self, path, info):
         """place the new info in the correct location in the registry.
-        path: a list of keys ['resources', 'my_server', 'OS::Compute::Server']
+        path: a list of keys ['resources', 'my_server', 'OS::Nova::Server']
         """
         descriptive_path = '/'.join(path)
         name = path[-1]
@@ -226,7 +226,7 @@ class ResourceRegistry(object):
             if impl and resource_type in impl:
                 yield impl[resource_type]
 
-        # handle: "OS::Compute::Server" -> "Rackspace::Compute::Server"
+        # handle: "OS::Nova::Server" -> "Rackspace::Cloud::Server"
         impl = self._registry.get(resource_type)
         if impl:
             yield impl

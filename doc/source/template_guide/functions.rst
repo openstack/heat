@@ -114,7 +114,7 @@ Returns an IP address such as ``10.0.0.2``
 ----------
 Fn::GetAZs
 ----------
-Return the Availablity Zones within the given region.
+Return the Availability Zones within the given region.
 
 *Note: AZ's and regions are not fully implemented in Heat.*
 
@@ -262,7 +262,7 @@ Here is a top level template ``top.yaml``
 
   resources:
     my_server:
-      type: OS::Compute::Server
+      type: OS::Nova::Server
       metadata:
         key: value
         some: more stuff
@@ -273,7 +273,7 @@ Here is a resource template ``my_actual_server.yaml``
 
   resources:
     _actual_server_:
-      type: OS::Compute::Server
+      type: OS::Nova::Server
       metadata: {'Fn::ResourceFacade': Metadata}
 
 The environment file ``env.yaml``
@@ -282,7 +282,7 @@ The environment file ``env.yaml``
   resource_registry:
     resources:
       my_server:
-        "OS::Compute::Server": my_actual_server.yaml
+        "OS::Nova::Server": my_actual_server.yaml
 
 To use it
 
