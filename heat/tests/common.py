@@ -24,6 +24,8 @@ import testtools
 
 from oslo.config import cfg
 
+from heat.openstack.common.fixture import mockpatch
+
 from heat.engine import environment
 from heat.engine import resources
 from heat.engine import scheduler
@@ -80,3 +82,7 @@ class HeatTestCase(testscenarios.WithScenarios, testtools.TestCase):
 
         self.m.StubOutWithMock(scheduler, 'wallclock')
         scheduler.wallclock = fake_wallclock
+
+    def patchobject(self, obj, attr):
+        mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr))
+        return mockfixture.mock
