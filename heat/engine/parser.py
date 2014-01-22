@@ -289,6 +289,7 @@ class Stack(collections.Mapping):
         '''
         for r in self.values():
             if r.state in (
+                    (r.INIT, r.COMPLETE),
                     (r.CREATE, r.IN_PROGRESS),
                     (r.CREATE, r.COMPLETE),
                     (r.RESUME, r.IN_PROGRESS),
@@ -394,6 +395,13 @@ class Stack(collections.Mapping):
             return None
 
         return self.timeout_mins * 60
+
+    def preview_resources(self):
+        '''
+        Preview the stack with all of the resources.
+        '''
+        return [resource.preview()
+                for resource in self.resources.itervalues()]
 
     def create(self):
         '''

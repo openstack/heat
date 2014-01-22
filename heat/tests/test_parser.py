@@ -13,6 +13,7 @@
 #    under the License.
 
 import json
+import mock
 import time
 
 from keystoneclient import exceptions as kc_exceptions
@@ -1385,6 +1386,7 @@ class StackTest(HeatTestCase):
         self.assertIsNotNone(resource)
 
         for action, status in (
+                (rsrc.INIT, rsrc.COMPLETE),
                 (rsrc.CREATE, rsrc.IN_PROGRESS),
                 (rsrc.CREATE, rsrc.COMPLETE),
                 (rsrc.RESUME, rsrc.IN_PROGRESS),
@@ -2406,3 +2408,14 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.m.VerifyAll()
+
+    def test_preview_resources_returns_list_of_resource_previews(self):
+        tmpl = {'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
+        self.stack = parser.Stack(self.ctx, 'preview_stack',
+                                  template.Template(tmpl))
+        res = mock.Mock()
+        res.preview.return_value = 'foo'
+        self.stack._resources = {'r1': res}
+
+        resources = self.stack.preview_resources()
+        self.assertEqual(['foo'], resources)

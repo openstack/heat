@@ -412,6 +412,11 @@ class ResourceTest(HeatTestCase):
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
+    def test_preview(self):
+        tmpl = {'Type': 'GenericResourceType'}
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+        self.assertEqual(res, res.preview())
+
     def test_update_ok(self):
         tmpl = {'Type': 'GenericResourceType', 'Properties': {'Foo': 'abc'}}
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
