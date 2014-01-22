@@ -667,7 +667,8 @@ class ServersTest(HeatTestCase):
         self.m.StubOutWithMock(self.fc.servers, 'rebuild')
         # 744 is a static lookup from the fake images list
         if 'REBUILD' == policy:
-            self.fc.servers.rebuild(return_server, 744, password=None)
+            self.fc.servers.rebuild(
+                return_server, 744, password=None, preserve_ephemeral=False)
         else:
             self.fc.servers.rebuild(
                 return_server, 744, password=None, preserve_ephemeral=True)
@@ -717,7 +718,8 @@ class ServersTest(HeatTestCase):
         self.fc.servers.get(1234).MultipleTimes().AndReturn(return_server)
         self.m.StubOutWithMock(self.fc.servers, 'rebuild')
         # 744 is a static lookup from the fake images list
-        self.fc.servers.rebuild(return_server, 744, password=None)
+        self.fc.servers.rebuild(
+            return_server, 744, password=None, preserve_ephemeral=False)
         self.m.StubOutWithMock(self.fc.client, 'post_servers_1234_action')
 
         def activate_status(server):
