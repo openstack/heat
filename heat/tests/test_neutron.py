@@ -1770,7 +1770,6 @@ class NeutronPortTest(HeatTestCase):
         neutronclient.Client.create_port({'port': {
             'network_id': u'net1234',
             'name': utils.PhysName('test_stack', 'port'),
-            'fixed_ips': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1780,7 +1779,11 @@ class NeutronPortTest(HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         ).AndReturn({'port': {
             "status": "ACTIVE",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "fixed_ips": {
+                "subnet_id": "d0e971a6-a6b4-4f4c-8c88-b75e9c120b7e",
+                "ip_address": "10.0.0.2"
+            }
         }})
 
         self.m.ReplayAll()
@@ -1803,7 +1806,6 @@ class NeutronPortTest(HeatTestCase):
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'fixed_ips': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
@@ -1834,7 +1836,6 @@ class NeutronPortTest(HeatTestCase):
                 'ip_address': u'10.0.3.21',
             }],
             'name': utils.PhysName('test_stack', 'port'),
-            'fixed_ips': [],
             'admin_state_up': True}}
         ).AndReturn({'port': {
             "status": "BUILD",
