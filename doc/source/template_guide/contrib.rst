@@ -29,3 +29,16 @@ properly. More information about them can be found in the
 
 
 .. resourcepages:: Rackspace::
+
+
+DockerInc Resource
+------------------
+
+.. rubric:: This resource is not enabled by default.
+
+This plugin enables the use of  Docker containers in a Heat template and
+requires the `docker-py <https://pypi.python.org/pypi/docker-py>`_
+package. You can find more information in the `README
+<https://github.com/openstack/heat/blob/master/contrib/docker/README.md>`_.
+
+.. resourcepages:: DockerInc::
