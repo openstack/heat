@@ -66,6 +66,10 @@ class SignalResource(signal_responder.SignalResponder):
     properties_schema = {}
     attributes_schema = {'AlarmUrl': 'Get a signed webhook'}
 
+    def handle_create(self):
+        super(SignalResource, self).handle_create()
+        self.resource_id_set(self._get_user_id())
+
     def handle_signal(self, details=None):
         logger.warning(_('Signaled resource (Type "%(type)s") %(details)s')
                        % {'type': self.type(), 'details': details})
