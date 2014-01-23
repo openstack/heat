@@ -33,7 +33,7 @@ template = '''
     "Parameters": {},
     "Resources": {
         "Blog": {
-            "Type": "OS::Docker::Container",
+            "Type": "DockerInc::Docker::Container",
             "Properties": {
                 "image": "samalba/wordpress",
                 "env": [
@@ -51,8 +51,8 @@ class DockerContainerTest(HeatTestCase):
     def setUp(self):
         super(DockerContainerTest, self).setUp()
         utils.setup_dummy_db()
-        resource._register_class('OS::Docker::Container',
-                                 docker_container.DockerContainer)
+        for res_name, res_class in docker_container.resource_mapping().items():
+            resource._register_class(res_name, res_class)
 
     def create_container(self, resource_name):
         t = template_format.parse(template)

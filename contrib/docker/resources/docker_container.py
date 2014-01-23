@@ -273,7 +273,7 @@ class DockerContainer(resource.Resource):
 
 def resource_mapping():
     return {
-        'OS::Docker::Container': DockerContainer,
+        'DockerInc::Docker::Container': DockerContainer,
     }
 
 
