@@ -505,7 +505,7 @@ class Stack(object):
                     return
         else:
             logger.debug('Deleting backup stack')
-            backup_stack.delete()
+            backup_stack.delete(backup=True)
 
         self.state_set(action, stack_status, reason)
 
@@ -518,7 +518,7 @@ class Stack(object):
         self.outputs = self.resolve_static_data(template_outputs)
         self.store()
 
-    def delete(self, action=DELETE):
+    def delete(self, action=DELETE, backup=False):
         '''
         Delete all of the resources, and then the stack itself.
         The action parameter is used to differentiate between a user
@@ -538,7 +538,7 @@ class Stack(object):
 
         backup_stack = self._backup_stack(False)
         if backup_stack is not None:
-            backup_stack.delete()
+            backup_stack.delete(backup=True)
             if backup_stack.status != backup_stack.COMPLETE:
                 errs = backup_stack.status_reason
                 failure = 'Error deleting backup resources: %s' % errs
@@ -558,7 +558,7 @@ class Stack(object):
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
 
-        if stack_status != self.FAILED:
+        if stack_status != self.FAILED and not backup:
             # If we created a trust, delete it
             stack = db_api.stack_get(self.context, self.id)
             user_creds = db_api.user_creds_get(stack.user_creds_id)
