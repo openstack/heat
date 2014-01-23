@@ -14,6 +14,8 @@
 #    under the License.
 # -*- coding: utf-8 -*-
 
+import itertools
+
 from heat.engine import resources
 from heat.engine import properties
 from heat.engine import support
@@ -285,9 +287,16 @@ def _all_resources(prefix=None):
             yield resource_type, resource_class
 
 
-def setup(app):
+def _load_all_resources():
+    env = resources.global_env()
+    for package, modules in resources._global_modules():
+        maps = (resources._get_all_module_resources(m) for m in modules)
+        resources._register_resources(env, itertools.chain.from_iterable(maps))
 
+
+def setup(app):
     resources.initialise()
+    _load_all_resources()
     app.add_node(resourcepages)
 
     app.add_directive('resourcepages', ResourcePages)
