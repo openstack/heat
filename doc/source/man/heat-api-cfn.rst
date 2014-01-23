@@ -15,7 +15,7 @@ heat-api-cfn is a CloudFormation compatible API service to the heat project.
 INVENTORY
 =========
 heat-api-cfn is a service that exposes an external REST based api to the
-heat-engine service.  The communication between the heat-api-cfn and
+heat-engine service. The communication between the heat-api-cfn and
 heat-engine uses message queue based RPC.
 
 OPTIONS

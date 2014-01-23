@@ -10,7 +10,7 @@ SYNOPSIS
 
 DESCRIPTION
 ===========
-heat-api-cloudwatch is a CloudWatch alike API service to the heat project
+heat-api-cloudwatch is a CloudWatch-like API service to the heat project.
 
 OPTIONS
 =======

@@ -2,7 +2,7 @@
 heat-engine
 ===========
 
-.. program:: heat-api-engine
+.. program:: heat-engine
 
 SYNOPSIS
 ========
