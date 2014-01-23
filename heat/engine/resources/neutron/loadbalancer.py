@@ -294,9 +294,12 @@ class Pool(neutron.NeutronResource):
             return res
 
         session_p = self.properties[self.VIP].get(self.VIP_SESSION_PERSISTENCE)
-        persistence_type = session_p[self.VIP_SESSION_PERSISTENCE_TYPE]
+        if session_p is None:
+            # session persistence is not configured, skip validation
+            return
 
-        if session_p is not None and persistence_type == 'APP_COOKIE':
+        persistence_type = session_p[self.VIP_SESSION_PERSISTENCE_TYPE]
+        if persistence_type == 'APP_COOKIE':
             if session_p.get(self.VIP_SESSION_PERSISTENCE_COOKIE_NAME):
                 return
 

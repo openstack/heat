@@ -481,6 +481,14 @@ class PoolTest(HeatTestCase):
                                   resource.validate)
         self.assertEqual(msg, str(error))
 
+    def test_validation_not_failing_without_session_persistence(self):
+        snippet = template_format.parse(pool_template)
+        pool = snippet['Resources']['pool']
+
+        resource = loadbalancer.Pool('pool', pool, utils.parse_stack(snippet))
+
+        self.assertIsNone(resource.validate())
+
     def test_delete(self):
         rsrc = self.create_pool()
         neutronclient.Client.delete_vip('xyz')
