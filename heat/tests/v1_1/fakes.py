@@ -373,4 +373,6 @@ class FakeHTTPClient(base_client.HTTPClient):
     # Limits
     #
     def get_limits(self, *kw):
-        return (200, {'limits': {'absolute': {'maxServerMeta': 3}}})
+        return (200, {'limits': {'absolute': {'maxServerMeta': 3,
+                                              'maxPersonalitySize': 10240,
+                                              'maxPersonality': 5}}})

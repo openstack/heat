@@ -38,13 +38,13 @@ class Server(resource.Resource):
         FLAVOR_UPDATE_POLICY, IMAGE_UPDATE_POLICY, KEY_NAME,
         ADMIN_USER, AVAILABILITY_ZONE, SECURITY_GROUPS, NETWORKS,
         SCHEDULER_HINTS, METADATA, USER_DATA_FORMAT, USER_DATA,
-        RESERVATION_ID, CONFIG_DRIVE, DISK_CONFIG,
+        RESERVATION_ID, CONFIG_DRIVE, DISK_CONFIG, PERSONALITY,
     ) = (
         'name', 'image', 'block_device_mapping', 'flavor',
         'flavor_update_policy', 'image_update_policy', 'key_name',
         'admin_user', 'availability_zone', 'security_groups', 'networks',
         'scheduler_hints', 'metadata', 'user_data_format', 'user_data',
-        'reservation_id', 'config_drive', 'diskConfig',
+        'reservation_id', 'config_drive', 'diskConfig', 'personality',
     )
 
     _BLOCK_DEVICE_MAPPING_KEYS = (
@@ -231,6 +231,12 @@ class Server(resource.Resource):
                 constraints.AllowedValues(['AUTO', 'MANUAL']),
             ]
         ),
+        PERSONALITY: properties.Schema(
+            properties.Schema.MAP,
+            _('A map of files to create/overwrite on the server upon boot. '
+              'Keys are file names and values are the file contents.'),
+            default={}
+        )
     }
 
     attributes_schema = {
@@ -267,6 +273,10 @@ class Server(resource.Resource):
             return name
 
         return super(Server, self).physical_resource_name()
+
+    def _personality(self):
+        # This method is overridden by the derived CloudServer resource
+        return self.properties.get(self.PERSONALITY)
 
     def handle_create(self):
         security_groups = self.properties.get(self.SECURITY_GROUPS)
@@ -320,7 +330,8 @@ class Server(resource.Resource):
                 block_device_mapping=block_device_mapping,
                 reservation_id=reservation_id,
                 config_drive=config_drive,
-                disk_config=disk_config)
+                disk_config=disk_config,
+                files=self._personality())
         finally:
             # Avoid a race condition where the thread could be cancelled
             # before the ID is stored
@@ -570,17 +581,38 @@ class Server(resource.Resource):
                                          network=network[self.NETWORK_ID],
                                          server=self.name))
 
+        # retrieve provider's absolute limits if it will be needed
+        metadata = self.properties.get(self.METADATA)
+        personality = self._personality()
+        if metadata is not None or personality is not None:
+            limits = nova_utils.absolute_limits(self.nova())
+
         # verify that the number of metadata entries is not greater
         # than the maximum number allowed in the provider's absolute
         # limits
-        metadata = self.properties.get('metadata')
         if metadata is not None:
-            limits = nova_utils.absolute_limits(self.nova())
             if len(metadata) > limits['maxServerMeta']:
                 msg = _('Instance metadata must not contain greater than %s '
                         'entries.  This is the maximum number allowed by your '
                         'service provider') % limits['maxServerMeta']
                 raise exception.StackValidationFailed(message=msg)
+
+        # verify the number of personality files and the size of each
+        # personality file against the provider's absolute limits
+        if personality is not None:
+            if len(personality) > limits['maxPersonality']:
+                msg = _("The personality property may not contain "
+                        "greater than %s entries.") % limits['maxPersonality']
+                raise exception.StackValidationFailed(message=msg)
+
+            for path, contents in personality.items():
+                if len(bytes(contents)) > limits['maxPersonalitySize']:
+                    msg = (_("The contents of personality file \"%(path)s\" "
+                             "is larger than the maximum allowed personality "
+                             "file size (%(max_size)s bytes).") %
+                           {'path': path,
+                            'max_size': limits['maxPersonalitySize']})
+                    raise exception.StackValidationFailed(message=msg)
 
     def handle_delete(self):
         '''

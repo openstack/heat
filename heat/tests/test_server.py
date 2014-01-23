@@ -64,6 +64,22 @@ class ServersTest(HeatTestCase):
         super(ServersTest, self).setUp()
         self.fc = fakes.FakeClient()
         utils.setup_dummy_db()
+        self.limits = self.m.CreateMockAnything()
+        self.limits.absolute = self._limits_absolute()
+
+    def _limits_absolute(self):
+        max_personality = self.m.CreateMockAnything()
+        max_personality.name = 'maxPersonality'
+        max_personality.value = 5
+        max_personality_size = self.m.CreateMockAnything()
+        max_personality_size.name = 'maxPersonalitySize'
+        max_personality_size.value = 10240
+        max_server_meta = self.m.CreateMockAnything()
+        max_server_meta.name = 'maxServerMeta'
+        max_server_meta.value = 3
+        yield max_personality
+        yield max_personality_size
+        yield max_server_meta
 
     def _setup_test_stack(self, stack_name):
         t = template_format.parse(wp_template)
@@ -106,7 +122,7 @@ class ServersTest(HeatTestCase):
                 userdata=mox.IgnoreArg(), scheduler_hints=None,
                 meta=None, nics=None, availability_zone=None,
                 block_device_mapping=None, config_drive=None,
-                disk_config=None, reservation_id=None).AndReturn(
+                disk_config=None, reservation_id=None, files={}).AndReturn(
                     return_server)
 
         return server
@@ -224,7 +240,7 @@ class ServersTest(HeatTestCase):
             userdata=mox.IgnoreArg(), scheduler_hints=None,
             meta=instance_meta, nics=None, availability_zone=None,
             block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None).AndReturn(
+            disk_config=None, reservation_id=None, files={}).AndReturn(
                 return_server)
 
         self.m.StubOutWithMock(server, 'nova')
@@ -380,7 +396,7 @@ class ServersTest(HeatTestCase):
             userdata='wordpress', scheduler_hints=None,
             meta=None, nics=None, availability_zone=None,
             block_device_mapping=None, config_drive=None,
-            disk_config=None, reservation_id=None).AndReturn(
+            disk_config=None, reservation_id=None, files={}).AndReturn(
                 return_server)
 
         self.m.ReplayAll()
@@ -1300,13 +1316,8 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        limits = self.m.CreateMockAnything()
-        max_server_meta = self.m.CreateMockAnything()
-        max_server_meta.name = 'maxServerMeta'
-        max_server_meta.value = 3
-        limits.absolute = [max_server_meta]
         self.m.StubOutWithMock(self.fc.limits, 'get')
-        self.fc.limits.get().AndReturn(limits)
+        self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
@@ -1328,17 +1339,103 @@ class ServersTest(HeatTestCase):
         server = servers.Server('server_create_image_err',
                                 t['Resources']['WebServer'], stack)
 
-        limits = self.m.CreateMockAnything()
-        max_server_meta = self.m.CreateMockAnything()
-        max_server_meta.name = 'maxServerMeta'
-        max_server_meta.value = 3
-        limits.absolute = [max_server_meta]
         self.m.StubOutWithMock(self.fc.limits, 'get')
-        self.fc.limits.get().AndReturn(limits)
+        self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+        self.assertIsNone(server.validate())
+        self.m.VerifyAll()
+
+    def test_server_validate_too_many_personality(self):
+        stack_name = 'srv_val'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['personality'] = \
+            {"/fake/path1": "fake contents1",
+             "/fake/path2": "fake_contents2",
+             "/fake/path3": "fake_contents3",
+             "/fake/path4": "fake_contents4",
+             "/fake/path5": "fake_contents5",
+             "/fake/path6": "fake_contents6"}
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(self.fc.limits, 'get')
+        self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                server.validate)
+        self.assertEqual("The personality property may not contain "
+                         "greater than 5 entries.", str(exc))
+        self.m.VerifyAll()
+
+    def test_server_validate_personality_okay(self):
+        stack_name = 'srv_val'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['personality'] = \
+            {"/fake/path1": "fake contents1",
+             "/fake/path2": "fake_contents2",
+             "/fake/path3": "fake_contents3",
+             "/fake/path4": "fake_contents4",
+             "/fake/path5": "fake_contents5"}
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(self.fc.limits, 'get')
+        self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
 
         self.m.StubOutWithMock(server, 'nova')
         server.nova().MultipleTimes().AndReturn(self.fc)
         self.m.ReplayAll()
 
         self.assertIsNone(server.validate())
+        self.m.VerifyAll()
+
+    def test_server_validate_personality_file_size_okay(self):
+        stack_name = 'srv_val'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['personality'] = \
+            {"/fake/path1": "a" * 10240}
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(self.fc.limits, 'get')
+        self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
+        self.m.VerifyAll()
+
+    def test_server_validate_personality_file_size_too_big(self):
+        stack_name = 'srv_val'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        t['Resources']['WebServer']['Properties']['personality'] = \
+            {"/fake/path1": "a" * 10241}
+        server = servers.Server('server_create_image_err',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(self.fc.limits, 'get')
+        self.fc.limits.get().MultipleTimes().AndReturn(self.limits)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                server.validate)
+        self.assertEqual("The contents of personality file \"/fake/path1\" "
+                         "is larger than the maximum allowed personality "
+                         "file size (10240 bytes).", str(exc))
         self.m.VerifyAll()
