@@ -14,6 +14,8 @@
 #    under the License.
 
 import copy
+import functools
+import json
 import math
 
 from heat.engine import environment
@@ -306,8 +308,10 @@ class InstanceGroup(stack_resource.StackResource):
         """
         def changing_instances(tmpl):
             instances = self.get_instances()
-            current = set((i.name, str(i.t)) for i in instances)
-            updated = set((k, str(v)) for k, v in tmpl['Resources'].items())
+            serialize_template = functools.partial(json.dumps, sort_keys=True)
+            current = set((i.name, serialize_template(i.t)) for i in instances)
+            updated = set((k, serialize_template(v))
+                          for k, v in tmpl['Resources'].items())
             # includes instances to be updated and deleted
             affected = set(k for k, v in current ^ updated)
             return set(i.FnGetRefId() for i in instances if i.name in affected)
