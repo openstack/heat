@@ -54,6 +54,23 @@ class KeystoneClientTest(HeatTestCase):
         self.mock_config = mock_config
         heat_keystoneclient.KeystoneClient.conf = mock_config
 
+    def _stub_admin_client(self, auth_ok=True):
+        self.m.StubOutClassWithMocks(kc_v3, "Client")
+        self.mock_admin_client = kc_v3.Client(
+            auth_url='http://server.test:5000/v3',
+            cacert=None,
+            cert=None,
+            endpoint='http://server.test:5000/v3',
+            insecure=False,
+            key=None,
+            password='verybadpass',
+            project_name='service',
+            username='heat')
+        self.mock_admin_client.authenticate().AndReturn(auth_ok)
+        if auth_ok:
+            self.mock_admin_client.auth_ref = self.m.CreateMockAnything()
+            self.mock_admin_client.auth_ref.user_id = '1234'
+
     def _stubs_v3(self, method='token', auth_ok=True, trust_scoped=True,
                   user_id='trustor_user_id', mock_client=True,
                   config_multiple=1):
@@ -226,18 +243,7 @@ class KeystoneClientTest(HeatTestCase):
         class MockTrust(object):
             id = 'atrust123'
 
-        self.m.StubOutClassWithMocks(kc_v3, "Client")
-        mock_admin_client = kc_v3.Client(
-            auth_url='http://server.test:5000/v3',
-            cacert=None,
-            cert=None,
-            insecure=False,
-            key=None,
-            password='verybadpass',
-            project_name='service',
-            username='heat')
-        mock_admin_client.auth_ref = self.m.CreateMockAnything()
-        mock_admin_client.auth_ref.user_id = '1234'
+        self._stub_admin_client()
 
         self._stubs_v3(mock_client=False, config_multiple=2)
         self.mock_config.deferred_auth_method = 'trusts'
@@ -262,6 +268,44 @@ class KeystoneClientTest(HeatTestCase):
         trust_context = heat_ks_client.create_trust_context()
         self.assertEqual('atrust123', trust_context.trust_id)
         self.assertEqual('5678', trust_context.trustor_user_id)
+
+    def test_init_admin_client(self):
+
+        """Test the admin_client property."""
+
+        self._stub_config()
+        self._stub_admin_client()
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context()
+        ctx.username = None
+        ctx.password = None
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertEqual(self.mock_admin_client, heat_ks_client.admin_client)
+        self.assertEqual(self.mock_admin_client, heat_ks_client._admin_client)
+
+    def test_init_admin_client_denied(self):
+
+        """Test the admin_client property, auth failure path."""
+
+        self._stub_config()
+        self._stub_admin_client(auth_ok=False)
+        self.m.ReplayAll()
+
+        ctx = utils.dummy_context()
+        ctx.username = None
+        ctx.password = None
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+
+        # Define wrapper for property or the property raises the exception
+        # outside of the assertRaises which fails the test
+        def get_admin_client():
+            heat_ks_client.admin_client
+
+        self.assertRaises(exception.AuthorizationFailure,
+                          get_admin_client)
 
     def test_trust_init(self):
 

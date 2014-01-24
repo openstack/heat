@@ -58,6 +58,7 @@ class KeystoneClient(object):
         #   path, we will work with either a v2.0 or v3 path
         self.context = context
         self._client_v3 = None
+        self._admin_client = None
 
         if self.context.auth_url:
             self.v3_endpoint = self.context.auth_url.replace('v2.0', 'v3')
@@ -78,6 +79,20 @@ class KeystoneClient(object):
             # Create connection to v3 API
             self._client_v3 = self._v3_client_init()
         return self._client_v3
+
+    @property
+    def admin_client(self):
+        if not self._admin_client:
+            # Create admin client connection to v3 API
+            admin_creds = self._service_admin_creds()
+            admin_creds.update(self._ssl_options())
+            c = kc_v3.Client(**admin_creds)
+            if c.authenticate():
+                self._admin_client = c
+            else:
+                logger.error("Admin client authentication failed")
+                raise exception.AuthorizationFailure()
+        return self._admin_client
 
     def _v3_client_init(self):
         kwargs = {
@@ -126,11 +141,11 @@ class KeystoneClient(object):
     def _service_admin_creds(self):
         # Import auth_token to have keystone_authtoken settings setup.
         importutils.import_module('keystoneclient.middleware.auth_token')
-
         creds = {
             'username': self.conf.keystone_authtoken.admin_user,
             'password': self.conf.keystone_authtoken.admin_password,
             'auth_url': self.v3_endpoint,
+            'endpoint': self.v3_endpoint,
             'project_name': self.conf.keystone_authtoken.admin_tenant_name}
         return creds
 
@@ -164,12 +179,8 @@ class KeystoneClient(object):
 
         # We need the service admin user ID (not name), as the trustor user
         # can't lookup the ID in keystoneclient unless they're admin
-        # workaround this by creating a temporary admin client connection
-        # then getting the user ID from the auth_ref
-        admin_creds = self._service_admin_creds()
-        admin_creds.update(self._ssl_options())
-        admin_client = kc_v3.Client(**admin_creds)
-        trustee_user_id = admin_client.auth_ref.user_id
+        # workaround this by getting the user_id from admin_client
+        trustee_user_id = self.admin_client.auth_ref.user_id
         trustor_user_id = self.client_v3.auth_ref.user_id
         trustor_project_id = self.client_v3.auth_ref.project_id
         roles = self.conf.trusts_delegated_roles
