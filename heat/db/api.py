@@ -232,6 +232,38 @@ def watch_data_get_all(context):
     return IMPL.watch_data_get_all(context)
 
 
+def software_config_create(context, values):
+    return IMPL.software_config_create(context, values)
+
+
+def software_config_get(context, config_id):
+    return IMPL.software_config_get(context, config_id)
+
+
+def software_config_delete(context, config_id):
+    return IMPL.software_config_delete(context, config_id)
+
+
+def software_deployment_create(context, values):
+    return IMPL.software_deployment_create(context, values)
+
+
+def software_deployment_get(context, deployment_id):
+    return IMPL.software_deployment_get(context, deployment_id)
+
+
+def software_deployment_get_all(context, server_id=None):
+    return IMPL.software_deployment_get_all(context, server_id)
+
+
+def software_deployment_update(context, deployment_id, values):
+    return IMPL.software_deployment_update(context, deployment_id, values)
+
+
+def software_deployment_delete(context, deployment_id):
+    return IMPL.software_deployment_delete(context, deployment_id)
+
+
 def db_sync(version=None):
     """Migrate the database to `version` or the most recent version."""
     return IMPL.db_sync(version=version)
