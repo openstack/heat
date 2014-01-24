@@ -650,6 +650,24 @@ class AutoScalingGroup(InstanceGroup, CooldownMixin):
         if res:
             return res
 
+        # check validity of group size
+        min_size = int(self.properties[self.MIN_SIZE])
+        max_size = int(self.properties[self.MAX_SIZE])
+
+        if max_size < min_size:
+            msg = _("MinSize can not be greater than MaxSize")
+            raise exception.StackValidationFailed(message=msg)
+
+        if min_size < 0:
+            msg = _("The size of AutoScalingGroup can not be less than zero")
+            raise exception.StackValidationFailed(message=msg)
+
+        if self.properties[self.DESIRED_CAPACITY]:
+            desired_capacity = int(self.properties[self.DESIRED_CAPACITY])
+            if desired_capacity < min_size or desired_capacity > max_size:
+                msg = _("DesiredCapacity must be between MinSize and MaxSize")
+                raise exception.StackValidationFailed(message=msg)
+
         # TODO(pasquier-s): once Neutron is able to assign subnets to
         # availability zones, it will be possible to specify multiple subnets.
         # For now, only one subnet can be specified. The bug #1096017 tracks
