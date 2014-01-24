@@ -247,12 +247,7 @@ def check_resize(server, flavor, flavor_id):
 @scheduler.wrappertask
 def rebuild(server, image_id, preserve_ephemeral=False):
     """Rebuild the server and call check_rebuild to verify."""
-    # Only require a newer nova client if the new preserve_ephemeral feature is
-    # actually used.
-    kwargs = {}
-    if preserve_ephemeral:
-        kwargs['preserve_ephemeral'] = True
-    server.rebuild(image_id, **kwargs)
+    server.rebuild(image_id, preserve_ephemeral=preserve_ephemeral)
     yield check_rebuild(server, image_id)
 
 
