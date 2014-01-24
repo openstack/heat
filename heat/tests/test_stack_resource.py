@@ -216,14 +216,14 @@ class StackResourceTest(HeatTestCase):
         updater.run_to_completion()
         self.assertIs(True,
                       self.parent_resource.check_update_complete(updater))
-        self.assertEqual(self.stack.state, ('UPDATE', 'COMPLETE'))
-        self.assertEqual(set(self.stack.keys()),
-                         set(["WebServer", "WebServer2"]))
+        self.assertEqual(('UPDATE', 'COMPLETE'), self.stack.state)
+        self.assertEqual(set(["WebServer", "WebServer2"]),
+                         set(self.stack.keys()))
 
         # The stack's owner_id is maintained.
         saved_stack = parser.Stack.load(
             self.parent_stack.context, self.stack.id)
-        self.assertEqual(saved_stack.owner_id, self.parent_stack.id)
+        self.assertEqual(self.parent_stack.id, saved_stack.owner_id)
 
     @utils.stack_delete_after
     def test_update_with_template_state_err(self):

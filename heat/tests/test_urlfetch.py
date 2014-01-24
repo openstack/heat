@@ -75,7 +75,7 @@ class UrlFetchTest(HeatTestCase):
         response = Response(data)
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
-        self.assertEqual(urlfetch.get(url), data)
+        self.assertEqual(data, urlfetch.get(url))
         self.m.VerifyAll()
 
     def test_https_scheme(self):
@@ -84,7 +84,7 @@ class UrlFetchTest(HeatTestCase):
         response = Response(data)
         requests.get(url, stream=True).AndReturn(response)
         self.m.ReplayAll()
-        self.assertEqual(urlfetch.get(url), data)
+        self.assertEqual(data, urlfetch.get(url))
         self.m.VerifyAll()
 
     def test_http_error(self):

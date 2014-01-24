@@ -573,7 +573,7 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
-        self.assertEqual(res['Description'], 'test.')
+        self.assertEqual('test.', res['Description'])
 
     def test_validate_hot_valid(self):
         t = template_format.parse(
@@ -592,7 +592,7 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
-        self.assertEqual(res['Description'], 'test.')
+        self.assertEqual('test.', res['Description'])
 
     def test_validate_ref_invalid(self):
         t = template_format.parse(test_template_ref % 'WikiDatabasez')
@@ -618,7 +618,7 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
-        self.assertEqual(res['Description'], 'test.')
+        self.assertEqual('test.', res['Description'])
 
     def test_validate_findinmap_invalid(self):
         t = template_format.parse(test_template_findinmap_invalid)
@@ -644,10 +644,11 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
-        self.assertEqual(res['Parameters'], {'KeyName': {
+        expected = {'KeyName': {
             'Type': 'String',
             'Description': 'Name of an existing EC2KeyPair to enable SSH '
-                           'access to the instances'}})
+                           'access to the instances'}}
+        self.assertEqual(expected, res['Parameters'])
 
     def test_validate_properties(self):
         t = template_format.parse(test_template_invalid_property)
@@ -659,7 +660,7 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
-        self.assertEqual(res, {'Error': 'Unknown Property UnknownProperty'})
+        self.assertEqual({'Error': 'Unknown Property UnknownProperty'}, res)
 
     def test_invalid_resources(self):
         t = template_format.parse(test_template_invalid_resources)
@@ -686,8 +687,8 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
         self.assertEqual(
-            res,
-            {'Error': 'Property SourceDestCheck not implemented yet'})
+            {'Error': 'Property SourceDestCheck not implemented yet'},
+            res)
 
     def test_invalid_deletion_policy(self):
         t = template_format.parse(test_template_invalid_deletion_policy)
@@ -699,7 +700,7 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
-        self.assertEqual(res, {'Error': 'Invalid DeletionPolicy Destroy'})
+        self.assertEqual({'Error': 'Invalid DeletionPolicy Destroy'}, res)
 
     def test_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_snapshot_deletion_policy)
@@ -712,7 +713,7 @@ class validateTest(HeatTestCase):
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
         self.assertEqual(
-            res, {'Error': 'Snapshot DeletionPolicy not supported'})
+            {'Error': 'Snapshot DeletionPolicy not supported'}, res)
 
     @skipIf(try_import('cinderclient.v1.volume_backups') is None,
             'unable to import volume_backups')
@@ -726,7 +727,7 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
-        self.assertEqual(res, {'Description': u'test.', 'Parameters': {}})
+        self.assertEqual({'Description': u'test.', 'Parameters': {}}, res)
 
     def test_unregistered_key(self):
         t = template_format.parse(test_unregistered_key)

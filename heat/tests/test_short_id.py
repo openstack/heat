@@ -22,42 +22,42 @@ import uuid
 class ShortIdTest(testtools.TestCase):
 
     def test_byte_string_8(self):
-        self.assertEqual(short_id._to_byte_string(0xab, 8), '\xab')
-        self.assertEqual(short_id._to_byte_string(0x05, 8), '\x05')
+        self.assertEqual('\xab', short_id._to_byte_string(0xab, 8))
+        self.assertEqual('\x05', short_id._to_byte_string(0x05, 8))
 
     def test_byte_string_16(self):
-        self.assertEqual(short_id._to_byte_string(0xabcd, 16), '\xab\xcd')
-        self.assertEqual(short_id._to_byte_string(0xabc, 16), '\x0a\xbc')
+        self.assertEqual('\xab\xcd', short_id._to_byte_string(0xabcd, 16))
+        self.assertEqual('\x0a\xbc', short_id._to_byte_string(0xabc, 16))
 
     def test_byte_string_12(self):
-        self.assertEqual(short_id._to_byte_string(0xabc, 12), '\xab\xc0')
-        self.assertEqual(short_id._to_byte_string(0x0ab, 12), '\x0a\xb0')
+        self.assertEqual('\xab\xc0', short_id._to_byte_string(0xabc, 12))
+        self.assertEqual('\x0a\xb0', short_id._to_byte_string(0x0ab, 12))
 
     def test_byte_string_60(self):
         val = 0x111111111111111
         byte_string = short_id._to_byte_string(val, 60)
-        self.assertEqual(byte_string, '\x11\x11\x11\x11\x11\x11\x11\x10')
+        self.assertEqual('\x11\x11\x11\x11\x11\x11\x11\x10', byte_string)
 
     def test_get_id_string(self):
         id = short_id.get_id('11111111-1111-4111-bfff-ffffffffffff')
-        self.assertEqual(id, 'ceirceirceir')
+        self.assertEqual('ceirceirceir', id)
 
     def test_get_id_uuid_1(self):
         source = uuid.UUID('11111111-1111-4111-bfff-ffffffffffff')
-        self.assertEqual(source.time, 0x111111111111111)
-        self.assertEqual(short_id.get_id(source), 'ceirceirceir')
+        self.assertEqual(0x111111111111111, source.time)
+        self.assertEqual('ceirceirceir', short_id.get_id(source))
 
     def test_get_id_uuid_f(self):
         source = uuid.UUID('ffffffff-ffff-4fff-8000-000000000000')
-        self.assertEqual(short_id.get_id(source), '777777777777')
+        self.assertEqual('777777777777', short_id.get_id(source))
 
     def test_get_id_uuid_0(self):
         source = uuid.UUID('00000000-0000-4000-bfff-ffffffffffff')
-        self.assertEqual(short_id.get_id(source), 'aaaaaaaaaaaa')
+        self.assertEqual('aaaaaaaaaaaa', short_id.get_id(source))
 
     def test_get_id_uuid_endianness(self):
         source = uuid.UUID('ffffffff-00ff-4000-aaaa-aaaaaaaaaaaa')
-        self.assertEqual(short_id.get_id(source), 'aaaa77777777')
+        self.assertEqual('aaaa77777777', short_id.get_id(source))
 
     def test_get_id_uuid1(self):
         source = uuid.uuid1()
@@ -68,6 +68,6 @@ class ShortIdTest(testtools.TestCase):
         ids = [short_id.generate_id() for i in range(25)]
 
         for id in ids:
-            self.assertEqual(len(id), 12)
+            self.assertEqual(12, len(id))
             self.assertFalse(id.translate(None, allowed_chars))
-            self.assertEqual(ids.count(id), 1)
+            self.assertEqual(1, ids.count(id))

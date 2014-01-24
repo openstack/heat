@@ -184,7 +184,7 @@ class ServerTagsTest(HeatTestCase):
         instance = self._setup_test_instance(intags=tags, nova_tags=metadata)
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
-        self.assertEqual(instance.state, (instance.CREATE, instance.COMPLETE))
+        self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
         # we are just using mock to verify that the tags get through to the
         # nova call.
         self.m.VerifyAll()
@@ -202,7 +202,7 @@ class ServerTagsTest(HeatTestCase):
         update_template = copy.deepcopy(instance.t)
         update_template['Properties']['Tags'] = new_tags
         scheduler.TaskRunner(instance.update, update_template)()
-        self.assertEqual(instance.state, (instance.UPDATE, instance.COMPLETE))
+        self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
         self.m.VerifyAll()
 
     def _setup_test_group(self, intags=None, nova_tags=None):

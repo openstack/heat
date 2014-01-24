@@ -230,7 +230,7 @@ class SignalTest(HeatTestCase):
         rsrc = self.stack['signal_handler']
         created_time = datetime.datetime(2012, 11, 29, 13, 49, 37)
         rsrc.created_time = created_time
-        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         expected_url = "".join([
             'http://server.test:8000/v1/signal/',
@@ -255,7 +255,7 @@ class SignalTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['signal_handler']
-        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         first_url = rsrc.FnGetAtt('AlarmUrl')
         second_url = rsrc.FnGetAtt('AlarmUrl')
@@ -270,7 +270,7 @@ class SignalTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['signal_handler']
-        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         self.assertIn('http://server.test:8000/v1/signal',
                       rsrc.FnGetAtt('AlarmUrl'))
@@ -320,7 +320,7 @@ class SignalTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['signal_handler']
-        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertTrue(rsrc.requires_deferred_auth)
 
         rsrc.signal(details=test_d)
@@ -333,7 +333,7 @@ class SignalTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['signal_handler']
-        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertTrue(rsrc.requires_deferred_auth)
 
         ceilo_details = {'current': 'foo', 'reason': 'apples',
@@ -389,7 +389,7 @@ class SignalTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['resource_X']
-        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         err_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
         self.assertRaises(exception.ResourceFailure, rsrc.signal,
@@ -407,7 +407,7 @@ class SignalTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['signal_handler']
-        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         # manually override the action to DELETE
         rsrc.action = rsrc.DELETE
 
@@ -436,7 +436,7 @@ class SignalTest(HeatTestCase):
         self.stack.create()
 
         rsrc = self.stack['signal_handler']
-        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         self.assertRaises(exception.ResourceFailure,
                           rsrc.signal, details=test_d)

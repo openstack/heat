@@ -102,8 +102,8 @@ class NotificationTest(common.HeatTestCase):
         with mock.patch('heat.openstack.common.notifier.api.notify') \
                 as mock_notify:
             self.create_test_stack()
-            self.assertEqual(self.stack.state, (self.stack.CREATE,
-                                                self.stack.COMPLETE))
+            self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                             self.stack.state)
 
             self.assertEqual(self.expected['create'],
                              mock_notify.call_args_list)
@@ -113,33 +113,32 @@ class NotificationTest(common.HeatTestCase):
         with mock.patch('heat.openstack.common.notifier.api.notify') \
                 as mock_notify:
             self.create_test_stack()
-            self.assertEqual(self.stack.state, (self.stack.CREATE,
-                                                self.stack.COMPLETE))
+            self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                             self.stack.state)
 
             self.assertEqual(self.expected['create'],
                              mock_notify.call_args_list)
             self.stack.suspend()
-            self.assertEqual(self.stack.state, (self.stack.SUSPEND,
-                                                self.stack.COMPLETE))
-            expected = self.expected['create'] + self.expected['suspend']
+            self.assertEqual((self.stack.SUSPEND, self.stack.COMPLETE),
+                             self.stack.state)
 
-            self.assertEqual(expected,
-                             mock_notify.call_args_list)
+            expected = self.expected['create'] + self.expected['suspend']
+            self.assertEqual(expected, mock_notify.call_args_list)
 
     @utils.stack_delete_after
     def test_create_and_delete_stack(self):
         with mock.patch('heat.openstack.common.notifier.api.notify') \
                 as mock_notify:
             self.create_test_stack()
-            self.assertEqual(self.stack.state, (self.stack.CREATE,
-                                                self.stack.COMPLETE))
+            self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
+                             self.stack.state)
 
             self.assertEqual(self.expected['create'],
                              mock_notify.call_args_list)
             self.stack.delete()
-            self.assertEqual(self.stack.state, (self.stack.DELETE,
-                                                self.stack.COMPLETE))
+            self.assertEqual((self.stack.DELETE, self.stack.COMPLETE),
+                             self.stack.state)
             expected = self.expected['create'] + self.expected['delete']
 
-            self.assertEqual(expected,
-                             mock_notify.call_args_list)
+            expected = self.expected['create'] + self.expected['delete']
+            self.assertEqual(expected, mock_notify.call_args_list)

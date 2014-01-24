@@ -298,10 +298,11 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEqual(rsrc.validate(), {
-            'Error':
-            'The halfClosed property is only available for the '
-            'TCP or TCP_CLIENT_FIRST protocols'})
+        self.assertEqual(
+            {'Error':
+             'The halfClosed property is only available for the '
+             'TCP or TCP_CLIENT_FIRST protocols'},
+            rsrc.validate())
 
         #test TCP protocol
         template = self._set_template(template, protocol='TCP')
@@ -349,8 +350,8 @@ class LoadBalancerTest(HeatTestCase):
         rsrc, fake_loadbalancer = self._mock_loadbalancer(template,
                                                           self.lb_name,
                                                           expected)
-        self.assertEqual(rsrc.validate(),
-                         {'Error': 'Unknown Property bodyRegex'})
+        self.assertEqual({'Error': 'Unknown Property bodyRegex'},
+                         rsrc.validate())
 
         #test http fields
         health_monitor['type'] = 'HTTP'
@@ -425,7 +426,7 @@ class LoadBalancerTest(HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.m.VerifyAll()
 
-        self.assertEqual(rsrc.FnGetRefId(), rsrc.resource_id)
+        self.assertEqual(rsrc.resource_id, rsrc.FnGetRefId())
 
     def test_post_creation_error_page(self):
         error_page = "REALLY BIG ERROR"

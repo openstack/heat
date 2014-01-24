@@ -137,9 +137,9 @@ class CloudDBInstanceTest(HeatTestCase):
         instance.handle_create()
         expected_hostname = fakedbinstance.hostname
         expected_href = fakedbinstance.links[0]['href']
-        self.assertEqual(instance._resolve_attribute('hostname'),
-                         expected_hostname)
-        self.assertEqual(instance._resolve_attribute('href'), expected_href)
+        self.assertEqual(expected_hostname,
+                         instance._resolve_attribute('hostname'))
+        self.assertEqual(expected_href, instance._resolve_attribute('href'))
         self.m.VerifyAll()
 
     def test_clouddbinstance_delete_resource_notfound(self):

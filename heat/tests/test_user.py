@@ -304,8 +304,8 @@ class AccessKeyTest(UserPolicyTestCase):
         self.assertEqual(utils.PhysName(stack.name, 'CfnUser'),
                          rsrc.FnGetAtt('UserName'))
         rsrc._secret = None
-        self.assertEqual(rsrc.FnGetAtt('SecretAccessKey'),
-                         self.fc.secret)
+        self.assertEqual(self.fc.secret,
+                         rsrc.FnGetAtt('SecretAccessKey'))
 
         self.assertRaises(exception.InvalidTemplateAttribute,
                           rsrc.FnGetAtt, 'Foo')

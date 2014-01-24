@@ -207,7 +207,7 @@ class ScalingGroupTest(HeatTestCase):
         self.stack = utils.parse_stack(self.group_template)
         self.stack.create()
         self.assertEqual(
-            self.stack.state, ('CREATE', 'COMPLETE'),
+            ('CREATE', 'COMPLETE'), self.stack.state,
             self.stack.status_reason)
 
     def test_group_create(self):
@@ -216,9 +216,8 @@ class ScalingGroupTest(HeatTestCase):
         the group ID as the resource ID.
         """
         self._setup_test_stack()
-        self.assertEqual(len(self.fake_auto_scale.groups), 1)
+        self.assertEqual(1, len(self.fake_auto_scale.groups))
         self.assertEqual(
-            self.fake_auto_scale.groups['0'].kwargs,
             {
                 'cooldown': 60,
                 'disk_config': None,
@@ -234,9 +233,11 @@ class ScalingGroupTest(HeatTestCase):
                 'name': 'My Group',
                 'networks': None,
                 'personality': None,
-                'server_name': u'autoscaled-server'})
+                'server_name': u'autoscaled-server'},
+            self.fake_auto_scale.groups['0'].kwargs)
+
         resource = self.stack['my_group']
-        self.assertEqual(resource.FnGetRefId(), '0')
+        self.assertEqual('0', resource.FnGetRefId())
 
     def test_update_group_config(self):
         """
@@ -250,9 +251,9 @@ class ScalingGroupTest(HeatTestCase):
         new_template['Properties']['groupConfiguration']['minEntities'] = 5
         scheduler.TaskRunner(resource.update, new_template)()
 
-        self.assertEqual(len(self.fake_auto_scale.groups), 1)
+        self.assertEqual(1, len(self.fake_auto_scale.groups))
         self.assertEqual(
-            self.fake_auto_scale.groups['0'].kwargs['min_entities'], 5)
+            5, self.fake_auto_scale.groups['0'].kwargs['min_entities'])
 
     def test_update_launch_config(self):
         """
@@ -267,10 +268,10 @@ class ScalingGroupTest(HeatTestCase):
         lcargs['loadBalancers'] = [{'loadBalancerId': '1', 'port': 80}]
         scheduler.TaskRunner(resource.update, new_template)()
 
-        self.assertEqual(len(self.fake_auto_scale.groups), 1)
+        self.assertEqual(1, len(self.fake_auto_scale.groups))
         self.assertEqual(
-            self.fake_auto_scale.groups['0'].kwargs['load_balancers'],
-            [{'loadBalancerId': 1, 'port': 80}])
+            [{'loadBalancerId': 1, 'port': 80}],
+            self.fake_auto_scale.groups['0'].kwargs['load_balancers'])
 
     def test_delete(self):
         """
@@ -279,7 +280,7 @@ class ScalingGroupTest(HeatTestCase):
         self._setup_test_stack()
         resource = self.stack['my_group']
         scheduler.TaskRunner(resource.delete)()
-        self.assertEqual(self.fake_auto_scale.groups, {})
+        self.assertEqual({}, self.fake_auto_scale.groups)
 
     def test_delete_without_backing_group(self):
         """
@@ -290,7 +291,7 @@ class ScalingGroupTest(HeatTestCase):
         resource = self.stack['my_group']
         del self.fake_auto_scale.groups['0']
         scheduler.TaskRunner(resource.delete)()
-        self.assertEqual(self.fake_auto_scale.groups, {})
+        self.assertEqual({}, self.fake_auto_scale.groups)
 
     def test_delete_waits_for_server_deletion(self):
         """
@@ -309,7 +310,7 @@ class ScalingGroupTest(HeatTestCase):
         resource = self.stack['my_group']
         scheduler.TaskRunner(resource.delete)()
         # It really called delete until it succeeded:
-        self.assertEqual(delete_counter.next(), 4)
+        self.assertEqual(4, delete_counter.next())
 
     def test_delete_blows_up_on_other_errors(self):
         """
@@ -356,7 +357,7 @@ class PolicyTest(HeatTestCase):
         self.stack = utils.parse_stack(template)
         self.stack.create()
         self.assertEqual(
-            self.stack.state, ('CREATE', 'COMPLETE'),
+            ('CREATE', 'COMPLETE'), self.stack.state,
             self.stack.status_reason)
 
     def test_create_webhook_change(self):
@@ -366,15 +367,15 @@ class PolicyTest(HeatTestCase):
         """
         self._setup_test_stack(self.policy_template)
         resource = self.stack['my_policy']
-        self.assertEqual(resource.FnGetRefId(), 'my-group-id:0')
+        self.assertEqual('my-group-id:0', resource.FnGetRefId())
         self.assertEqual(
-            self.fake_auto_scale.policies['0'].kwargs,
             {
                 'name': '+10 on webhook',
                 'scaling_group': 'my-group-id',
                 'change': 10,
                 'cooldown': 0,
-                'policy_type': 'webhook'})
+                'policy_type': 'webhook'},
+            self.fake_auto_scale.policies['0'].kwargs)
 
     def test_webhook_change_percent(self):
         """
@@ -386,14 +387,14 @@ class PolicyTest(HeatTestCase):
         del template['Resources']['my_policy']['Properties']['change']
         self._setup_test_stack(template)
         self.assertEqual(
-            self.fake_auto_scale.policies['0'].kwargs,
             {
                 'name': '+10 on webhook',
                 'scaling_group': 'my-group-id',
                 'change': 10,
                 'is_percent': True,
                 'cooldown': 0,
-                'policy_type': 'webhook'})
+                'policy_type': 'webhook'},
+            self.fake_auto_scale.policies['0'].kwargs)
 
     def test_webhook_desired_capacity(self):
         """
@@ -405,13 +406,13 @@ class PolicyTest(HeatTestCase):
         del template['Resources']['my_policy']['Properties']['change']
         self._setup_test_stack(template)
         self.assertEqual(
-            self.fake_auto_scale.policies['0'].kwargs,
             {
                 'name': '+10 on webhook',
                 'scaling_group': 'my-group-id',
                 'desired_capacity': 1,
                 'cooldown': 0,
-                'policy_type': 'webhook'})
+                'policy_type': 'webhook'},
+            self.fake_auto_scale.policies['0'].kwargs)
 
     def test_schedule(self):
         """We can specify schedule-type policies with args."""
@@ -421,14 +422,14 @@ class PolicyTest(HeatTestCase):
         props['args'] = {'cron': '0 0 0 * *'}
         self._setup_test_stack(template)
         self.assertEqual(
-            self.fake_auto_scale.policies['0'].kwargs,
             {
                 'name': '+10 on webhook',
                 'scaling_group': 'my-group-id',
                 'change': 10,
                 'cooldown': 0,
                 'policy_type': 'schedule',
-                'args': {'cron': '0 0 0 * *'}})
+                'args': {'cron': '0 0 0 * *'}},
+            self.fake_auto_scale.policies['0'].kwargs)
 
     def test_update(self):
         """
@@ -442,21 +443,21 @@ class PolicyTest(HeatTestCase):
 
         scheduler.TaskRunner(resource.update, template)()
         self.assertEqual(
-            self.fake_auto_scale.policies['0'].kwargs,
             {
                 'name': '+10 on webhook',
                 'scaling_group': 'my-group-id',
                 'change': 50,
                 'is_percent': True,
                 'cooldown': 0,
-                'policy_type': 'webhook'})
+                'policy_type': 'webhook'},
+            self.fake_auto_scale.policies['0'].kwargs)
 
     def test_delete(self):
         """Deleting the resource deletes the policy with pyrax."""
         self._setup_test_stack(self.policy_template)
         resource = self.stack['my_policy']
         scheduler.TaskRunner(resource.delete)()
-        self.assertEqual(self.fake_auto_scale.policies, {})
+        self.assertEqual({}, self.fake_auto_scale.policies)
 
     def test_delete_policy_non_existent(self):
         """
@@ -467,7 +468,7 @@ class PolicyTest(HeatTestCase):
         resource = self.stack['my_policy']
         del self.fake_auto_scale.policies['0']
         scheduler.TaskRunner(resource.delete)()
-        self.assertEqual(self.fake_auto_scale.policies, {})
+        self.assertEqual({}, self.fake_auto_scale.policies)
 
 
 class WebHookTest(HeatTestCase):
@@ -497,7 +498,7 @@ class WebHookTest(HeatTestCase):
         self.stack = utils.parse_stack(template)
         self.stack.create()
         self.assertEqual(
-            self.stack.state, ('CREATE', 'COMPLETE'),
+            ('CREATE', 'COMPLETE'), self.stack.state,
             self.stack.status_reason)
 
     def test_create(self):
@@ -505,14 +506,14 @@ class WebHookTest(HeatTestCase):
         self._setup_test_stack(self.webhook_template)
         resource = self.stack['my_webhook']
         self.assertEqual(
-            self.fake_auto_scale.webhooks['0'].kwargs,
             {
                 'name': 'exec my policy',
                 'scaling_group': 'my-group-id',
                 'policy': 'my-policy-id',
-                'metadata': {'a': 'b'}})
-        self.assertEqual(resource.FnGetAtt("executeUrl"), "self-url")
-        self.assertEqual(resource.FnGetAtt("capabilityUrl"), "capability-url")
+                'metadata': {'a': 'b'}},
+            self.fake_auto_scale.webhooks['0'].kwargs)
+        self.assertEqual("self-url", resource.FnGetAtt("executeUrl"))
+        self.assertEqual("capability-url", resource.FnGetAtt("capabilityUrl"))
 
     def test_failed_create(self):
         """When a create fails, getting the attributes returns None."""
@@ -532,19 +533,19 @@ class WebHookTest(HeatTestCase):
 
         scheduler.TaskRunner(resource.update, template)()
         self.assertEqual(
-            self.fake_auto_scale.webhooks['0'].kwargs,
             {
                 'name': 'newhook',
                 'scaling_group': 'my-group-id',
                 'policy': 'my-policy-id',
-                'metadata': {'a': 'different!'}})
+                'metadata': {'a': 'different!'}},
+            self.fake_auto_scale.webhooks['0'].kwargs)
 
     def test_delete(self):
         """Deleting the resource deletes the webhook with pyrax."""
         self._setup_test_stack(self.webhook_template)
         resource = self.stack['my_webhook']
         scheduler.TaskRunner(resource.delete)()
-        self.assertEqual(self.fake_auto_scale.webhooks, {})
+        self.assertEqual({}, self.fake_auto_scale.webhooks)
 
     def test_delete_without_backing_webhook(self):
         """
@@ -555,4 +556,4 @@ class WebHookTest(HeatTestCase):
         resource = self.stack['my_webhook']
         del self.fake_auto_scale.webhooks['0']
         scheduler.TaskRunner(resource.delete)()
-        self.assertEqual(self.fake_auto_scale.webhooks, {})
+        self.assertEqual({}, self.fake_auto_scale.webhooks)
