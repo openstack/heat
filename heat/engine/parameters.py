@@ -29,11 +29,7 @@ PARAMETER_KEYS = (
     'MaxLength', 'MinLength', 'MaxValue', 'MinValue',
     'Description', 'ConstraintDescription'
 )
-PARAMETER_TYPES = (
-    STRING, NUMBER, COMMA_DELIMITED_LIST, JSON
-) = (
-    'String', 'Number', 'CommaDelimitedList', 'Json'
-)
+
 PSEUDO_PARAMETERS = (
     PARAM_STACK_ID, PARAM_STACK_NAME, PARAM_REGION
 ) = (
@@ -43,6 +39,12 @@ PSEUDO_PARAMETERS = (
 
 class ParamSchema(dict):
     '''Parameter schema.'''
+
+    TYPES = (
+        STRING, NUMBER, COMMA_DELIMITED_LIST, JSON,
+    ) = (
+        'String', 'Number', 'CommaDelimitedList', 'Json',
+    )
 
     def __init__(self, schema):
         super(ParamSchema, self).__init__(schema)
@@ -58,13 +60,14 @@ class ParamSchema(dict):
     def constraints(self):
         ptype = self[TYPE]
         keys = {
-            STRING: [ALLOWED_VALUES, ALLOWED_PATTERN, MAX_LENGTH, MIN_LENGTH],
-            NUMBER: [ALLOWED_VALUES, MAX_VALUE, MIN_VALUE],
-            JSON: [MAX_LENGTH, MIN_LENGTH]
+            self.STRING: [ALLOWED_VALUES, ALLOWED_PATTERN, MAX_LENGTH,
+                          MIN_LENGTH],
+            self.NUMBER: [ALLOWED_VALUES, MAX_VALUE, MIN_VALUE],
+            self.JSON: [MAX_LENGTH, MIN_LENGTH]
         }.get(ptype)
         list_keys = {
-            COMMA_DELIMITED_LIST: [ALLOWED_VALUES],
-            JSON: [ALLOWED_VALUES]
+            self.COMMA_DELIMITED_LIST: [ALLOWED_VALUES],
+            self.JSON: [ALLOWED_VALUES]
         }.get(ptype)
         return (keys, list_keys)
 
@@ -142,13 +145,13 @@ class Parameter(object):
             return super(Parameter, cls).__new__(cls)
 
         param_type = schema[TYPE]
-        if param_type == STRING:
+        if param_type == schema.STRING:
             ParamClass = StringParam
-        elif param_type == NUMBER:
+        elif param_type == schema.NUMBER:
             ParamClass = NumberParam
-        elif param_type == COMMA_DELIMITED_LIST:
+        elif param_type == schema.COMMA_DELIMITED_LIST:
             ParamClass = CommaDelimitedListParam
-        elif param_type == JSON:
+        elif param_type == schema.JSON:
             ParamClass = JsonParam
         else:
             raise ValueError(_('Invalid Parameter type "%s"') % param_type)
@@ -321,16 +324,16 @@ class Parameters(collections.Mapping):
         '''
         def parameters():
             yield Parameter(PARAM_STACK_ID,
-                            ParamSchema({TYPE: STRING,
+                            ParamSchema({TYPE: ParamSchema.STRING,
                                          DESCRIPTION: 'Stack ID',
                                          DEFAULT: str(stack_id)}))
             if stack_name is not None:
                 yield Parameter(PARAM_STACK_NAME,
-                                ParamSchema({TYPE: STRING,
+                                ParamSchema({TYPE: ParamSchema.STRING,
                                              DESCRIPTION: 'Stack Name',
                                              DEFAULT: stack_name}))
                 yield Parameter(PARAM_REGION,
-                                ParamSchema({TYPE: STRING,
+                                ParamSchema({TYPE: ParamSchema.STRING,
                                              DEFAULT: 'ap-southeast-1',
                                              ALLOWED_VALUES:
                                              ['us-east-1',
