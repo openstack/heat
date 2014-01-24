@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import glob
 import os
 import os.path
 
@@ -62,7 +63,7 @@ def global_env():
 
 def _list_environment_files(env_dir):
     try:
-        return os.listdir(env_dir)
+        return glob.glob(os.path.join(env_dir, '*'))
     except OSError as osex:
         LOG.error(_('Failed to read %s') % env_dir)
         LOG.exception(osex)
@@ -79,21 +80,20 @@ def _load_global_environment(env, env_dir=None):
         cfg.CONF.import_opt('environment_dir', 'heat.common.config')
         env_dir = cfg.CONF.environment_dir
 
-    for env_name in _list_environment_files(env_dir):
+    for file_path in _list_environment_files(env_dir):
         try:
-            file_path = os.path.join(env_dir, env_name)
             with open(file_path) as env_fd:
                 LOG.info(_('Loading %s') % file_path)
                 env_body = environment_format.parse(env_fd.read())
                 environment_format.default_for_missing(env_body)
                 env.load(env_body)
         except ValueError as vex:
-            LOG.error(_('Failed to parse %(dir)s/%(name)s') % {
-                      'dir': env_dir, 'name': env_name})
+            LOG.error(_('Failed to parse %(file_path)s') % {
+                      'file_path': file_path})
             LOG.exception(vex)
         except IOError as ioex:
-            LOG.error(_('Failed to read %(dir)s/%(name)s') % {
-                      'dir': env_dir, 'name': env_name})
+            LOG.error(_('Failed to read %(file_path)s') % {
+                      'file_path': file_path})
             LOG.exception(ioex)
 
 
