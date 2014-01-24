@@ -55,7 +55,8 @@ class Port(neutron.NeutronResource):
         ),
         NAME: properties.Schema(
             properties.Schema.STRING,
-            _('A symbolic name for this port.')
+            _('A symbolic name for this port.'),
+            update_allowed=True
         ),
         VALUE_SPECS: properties.Schema(
             properties.Schema.MAP,
@@ -95,7 +96,8 @@ class Port(neutron.NeutronResource):
         ),
         DEVICE_ID: properties.Schema(
             properties.Schema.STRING,
-            _('Device ID of this port.')
+            _('Device ID of this port.'),
+            update_allowed=True
         ),
         SECURITY_GROUPS: properties.Schema(
             properties.Schema.LIST,

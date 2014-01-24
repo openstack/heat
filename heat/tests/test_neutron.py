@@ -1507,7 +1507,9 @@ class NeutronFloatingIPTest(HeatTestCase):
                     'fixed_ips': [
                         {'subnet_id': 'sub1234', 'ip_address': '10.0.0.11'}
                     ],
-                    'admin_state_up': True
+                    'admin_state_up': True,
+                    'name': 'test_port',
+                    'device_id': 'd6b4d3a5-c700-476f-b609-1493dd9dadc2'
                 }
             }
         ).AndReturn(None)
@@ -1540,7 +1542,9 @@ class NeutronFloatingIPTest(HeatTestCase):
                 "fixed_ips": [{
                     "subnet_id": "sub1234",
                     "ip_address": "10.0.0.11"
-                }]
+                }],
+                "name": "test_port",
+                "device_id": "d6b4d3a5-c700-476f-b609-1493dd9dadc2"
             }
         }
 
