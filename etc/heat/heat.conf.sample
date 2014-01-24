@@ -513,6 +513,10 @@
 # Options defined in heat.common.config
 #
 
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
+
 # Optional CA cert file to use in SSL connections (string
 # value)
 #ca_file=<None>
@@ -534,6 +538,10 @@
 #
 # Options defined in heat.common.config
 #
+
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
 
 # Optional CA cert file to use in SSL connections (string
 # value)
@@ -557,6 +565,10 @@
 # Options defined in heat.common.config
 #
 
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
+
 # Optional CA cert file to use in SSL connections (string
 # value)
 #ca_file=<None>
@@ -578,6 +590,10 @@
 #
 # Options defined in heat.common.config
 #
+
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
 
 # Optional CA cert file to use in SSL connections (string
 # value)
@@ -605,6 +621,10 @@
 # Options defined in heat.common.config
 #
 
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
+
 # Optional CA cert file to use in SSL connections (string
 # value)
 #ca_file=<None>
@@ -626,6 +646,10 @@
 #
 # Options defined in heat.common.config
 #
+
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
 
 # Optional CA cert file to use in SSL connections (string
 # value)
@@ -649,6 +673,10 @@
 # Options defined in heat.common.config
 #
 
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
+
 # Optional CA cert file to use in SSL connections (string
 # value)
 #ca_file=<None>
@@ -671,6 +699,10 @@
 # Options defined in heat.common.config
 #
 
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
+
 # Optional CA cert file to use in SSL connections (string
 # value)
 #ca_file=<None>
@@ -692,6 +724,10 @@
 #
 # Options defined in heat.common.config
 #
+
+# Type of endpoint in Identity service catalog to use for
+# communication with the OpenStack service. (string value)
+#endpoint_type=publicURL
 
 # Optional CA cert file to use in SSL connections (string
 # value)
