@@ -78,6 +78,11 @@ class MyStackResource(stack_resource.StackResource,
         return self.create_with_template(self.nested_tempalte,
                                          self.nested_params)
 
+    def handle_adopt(self, resource_data):
+        return self.create_with_template(self.nested_tempalte,
+                                         self.nested_params,
+                                         adopt_data=resource_data)
+
     def handle_delete(self):
         self.delete_nested()
 
@@ -107,6 +112,29 @@ class StackResourceTest(HeatTestCase):
                                                   {"KeyName": "key"})
         self.stack = self.parent_resource.nested()
 
+        self.assertEqual(self.parent_resource, self.stack.parent_resource)
+        self.assertEqual("cb2f2b28-a663-4683-802c-4b40c916e1ff",
+                         self.stack.name)
+        self.assertEqual(self.templ, self.stack.t.t)
+        self.assertEqual(self.stack.id, self.parent_resource.resource_id)
+
+    @utils.stack_delete_after
+    def test_adopt_with_template_ok(self):
+        adopt_data = {
+            "resources": {
+                "WebServer": {
+                    "resource_id": "test-res-id"
+                }
+            }
+        }
+        self.parent_resource.create_with_template(self.templ,
+                                                  {"KeyName": "key"},
+                                                  adopt_data=adopt_data)
+        self.stack = self.parent_resource.nested()
+
+        self.assertEqual(self.stack.ADOPT, self.stack.action)
+        self.assertEqual('test-res-id',
+                         self.stack.resources['WebServer'].resource_id)
         self.assertEqual(self.parent_resource, self.stack.parent_resource)
         self.assertEqual("cb2f2b28-a663-4683-802c-4b40c916e1ff",
                          self.stack.name)
@@ -342,8 +370,8 @@ class StackResourceTest(HeatTestCase):
         parser.Stack(ctx, phy_id, templ, env, timeout_mins=None,
                      disable_rollback=True,
                      parent_resource=self.parent_resource,
-                     owner_id=self.parent_stack.id)\
-            .AndReturn(self.stack)
+                     owner_id=self.parent_stack.id,
+                     adopt_stack_data=None).AndReturn(self.stack)
 
         st_set = self.stack.state_set
         self.m.StubOutWithMock(self.stack, 'state_set')

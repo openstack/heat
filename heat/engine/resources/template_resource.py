@@ -220,6 +220,11 @@ class TemplateResource(stack_resource.StackResource):
 
         return super(TemplateResource, self).validate()
 
+    def handle_adopt(self, resource_data=None):
+        return self.create_with_template(self.parsed_nested(),
+                                         self._to_parameters(),
+                                         adopt_data=resource_data)
+
     def handle_create(self):
         return self.create_with_template(self.parsed_nested(),
                                          self._to_parameters())
