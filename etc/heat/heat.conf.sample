@@ -719,11 +719,6 @@
 # Deprecated group/name - [DEFAULT]/db_backend
 #backend=sqlalchemy
 
-# Enable the experimental use of thread pooling for all DB API
-# calls (boolean value)
-# Deprecated group/name - [DEFAULT]/dbapi_use_tpool
-#use_tpool=false
-
 
 #
 # Options defined in heat.openstack.common.db.sqlalchemy.session
@@ -744,6 +739,7 @@
 # value)
 # Deprecated group/name - [DEFAULT]/sql_idle_timeout
 # Deprecated group/name - [DATABASE]/sql_idle_timeout
+# Deprecated group/name - [sql]/idle_timeout
 #idle_timeout=3600
 
 # Minimum number of SQL connections to keep open in a pool

@@ -16,7 +16,7 @@
 
 """DB related custom exceptions."""
 
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 
 
 class DBError(Exception):

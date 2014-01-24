@@ -36,7 +36,7 @@ from sqlalchemy import String
 from sqlalchemy import Table
 from sqlalchemy.types import NullType
 
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
@@ -133,9 +133,9 @@ def paginate_query(query, model, limit, sort_keys, marker=None,
 
         # Build up an array of sort criteria as in the docstring
         criteria_list = []
-        for i in range(0, len(sort_keys)):
+        for i in range(len(sort_keys)):
             crit_attrs = []
-            for j in range(0, i):
+            for j in range(i):
                 model_attr = getattr(model, sort_keys[j])
                 crit_attrs.append((model_attr == marker_values[j]))
 
