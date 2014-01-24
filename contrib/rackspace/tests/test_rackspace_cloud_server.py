@@ -28,7 +28,7 @@ from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
 from heat.engine import clients
-from ..engine.plugins import cloud_server  # noqa
+from ..resources import cloud_server  # noqa
 
 
 wp_template = '''

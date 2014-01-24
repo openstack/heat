@@ -23,7 +23,7 @@ from heat.engine import resource
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-from ..engine.plugins import cloud_loadbalancer as lb  # noqa
+from ..resources import cloud_loadbalancer as lb  # noqa
 from heat.common.exception import StackValidationFailed
 
 # The following fakes are for pyrax

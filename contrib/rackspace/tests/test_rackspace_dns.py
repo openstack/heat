@@ -23,7 +23,7 @@ from heat.tests import utils
 
 from heat.openstack.common import log as logging
 
-from ..engine.plugins import cloud_dns  # noqa
+from ..resources import cloud_dns  # noqa
 
 logger = logging.getLogger(__name__)
 
