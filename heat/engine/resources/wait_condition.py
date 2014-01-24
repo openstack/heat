@@ -117,6 +117,19 @@ WAIT_STATUSES = (
 )
 
 
+class UpdateWaitConditionHandle(WaitConditionHandle):
+    '''
+    This works identically to a regular WaitConditionHandle, except that
+    on update it clears all signals received and changes the handle. Using
+    this handle means that you must setup the signal senders to send their
+    signals again any time the update handle changes. This allows us to roll
+    out new configurations and be confident that they are rolled out once
+    UPDATE COMPLETE is reached.
+    '''
+    def update(self, after, before=None, prev_resource=None):
+        raise resource.UpdateReplace(self.name)
+
+
 class WaitConditionFailure(Exception):
     def __init__(self, wait_condition, handle):
         reasons = handle.get_status_reason(STATUS_FAILURE)
@@ -278,4 +291,5 @@ def resource_mapping():
     return {
         'AWS::CloudFormation::WaitCondition': WaitCondition,
         'AWS::CloudFormation::WaitConditionHandle': WaitConditionHandle,
+        'OS::Heat::UpdateWaitConditionHandle': UpdateWaitConditionHandle,
     }

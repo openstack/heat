@@ -74,6 +74,27 @@ test_template_wc_count = '''
 }
 '''
 
+test_template_update_waitcondition = '''
+{
+  "HeatTemplateFormatVersion" : "2012-12-12",
+  "Description" : "Updatable Wait Condition",
+  "Parameters" : {},
+  "Resources" : {
+    "WaitHandle" : {
+      "Type" : "OS::Heat::UpdateWaitConditionHandle"
+    },
+    "WaitForTheHandle" : {
+      "Type" : "AWS::CloudFormation::WaitCondition",
+      "Properties" : {
+        "Handle" : {"Ref" : "WaitHandle"},
+        "Timeout" : "5",
+        "Count" : "3"
+      }
+    }
+  }
+}
+'''
+
 
 class WaitConditionTest(HeatTestCase):
 
@@ -573,8 +594,10 @@ class WaitConditionUpdateTest(HeatTestCase):
 
     # Note tests creating a stack should be decorated with @stack_delete_after
     # to ensure the stack is properly cleaned up
-    def create_stack(self):
-        temp = template_format.parse(test_template_wc_count)
+    def create_stack(self, tmpl=None):
+        if tmpl is None:
+            tmpl = test_template_wc_count
+        temp = template_format.parse(tmpl)
         template = parser.Template(temp)
         ctx = utils.dummy_context(tenant_id='test_tenant')
         stack = parser.Stack(ctx, 'test_stack', template,
@@ -738,3 +761,19 @@ class WaitConditionUpdateTest(HeatTestCase):
 
         self.m.VerifyAll()
         self.m.UnsetStubs()
+
+    @utils.stack_delete_after
+    def test_update_updatehandle(self):
+        self.stack = self.create_stack(test_template_update_waitcondition)
+        self.m.ReplayAll()
+        self.stack.create()
+
+        rsrc = self.stack['WaitForTheHandle']
+        self.assertEqual(rsrc.state, (rsrc.CREATE, rsrc.COMPLETE))
+
+        self.m.VerifyAll()
+        self.m.UnsetStubs()
+
+        wait_condition_handle = self.stack['WaitHandle']
+        self.assertRaises(
+            resource.UpdateReplace, wait_condition_handle.update, None, None)
