@@ -104,8 +104,8 @@ class Group(resource.Resource):
         'key_name',
     )
 
-    _LAUNCH_CONFIG_ARGS_SERVER_NETWORKS_KEYS = (
-        LAUNCH_CONFIG_ARGS_SERVER_NETWORKS_UUID,
+    _LAUNCH_CONFIG_ARGS_SERVER_NETWORK_KEYS = (
+        LAUNCH_CONFIG_ARGS_SERVER_NETWORK_UUID,
     ) = (
         'uuid',
     )
@@ -161,18 +161,20 @@ class Group(resource.Resource):
                     _('File path and contents.')
                 ),
                 LAUNCH_CONFIG_ARGS_SERVER_NETWORKS: properties.Schema(
-                    properties.Schema.MAP,
+                    properties.Schema.LIST,
                     _('Networks to attach to. If unspecified, the instance '
                       'will be attached to the public Internet and private '
                       'ServiceNet networks.'),
-                    schema={
-                        LAUNCH_CONFIG_ARGS_SERVER_NETWORKS_UUID:
-                        properties.Schema(
-                            properties.Schema.STRING,
-                            _('UUID of network to attach to.'),
-                            required=True
-                        ),
-                    }
+                    schema=properties.Schema(
+                        properties.Schema.MAP,
+                        schema={
+                            LAUNCH_CONFIG_ARGS_SERVER_NETWORK_UUID:
+                            properties.Schema(
+                                properties.Schema.STRING,
+                                _('UUID of network to attach to.'),
+                                required=True)
+                        }
+                    )
                 ),
                 LAUNCH_CONFIG_ARGS_SERVER_DISK_CONFIG: properties.Schema(
                     properties.Schema.STRING,
