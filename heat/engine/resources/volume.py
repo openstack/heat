@@ -370,7 +370,10 @@ class CinderVolume(Volume):
         ),
         SIZE: properties.Schema(
             properties.Schema.NUMBER,
-            _('The size of the volume in GB.')
+            _('The size of the volume in GB.'),
+            constraints=[
+                constraints.Range(min=1),
+            ]
         ),
         SNAPSHOT_ID: properties.Schema(
             properties.Schema.STRING,
