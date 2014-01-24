@@ -139,6 +139,7 @@ class KeystoneClientTest(HeatTestCase):
         # mock keystone client user functions
         self.mock_ks_v3_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
+        mock_user.id = 'auser123'
         # when keystone is called, the name should have been truncated
         # to the last 64 characters of the long name
         self.mock_ks_v3_client.users.create(name=good_user_name,
@@ -147,8 +148,18 @@ class KeystoneClientTest(HeatTestCase):
                                             ).AndReturn(mock_user)
         # mock out the call to roles; will send an error log message but does
         # not raise an exception
+        mock_roles_list = []
+        for r_id, r_name in (('1234', 'blah'), ('4546', 'heat_stack_user')):
+            mock_role = self.m.CreateMockAnything()
+            mock_role.id = r_id
+            mock_role.name = r_name
+            mock_roles_list.append(mock_role)
+
         self.mock_ks_v3_client.roles = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.roles.list(name='heat_stack_user').AndReturn([])
+        self.mock_ks_v3_client.roles.list().AndReturn(mock_roles_list)
+        self.mock_ks_v3_client.roles.grant(project=ctx.tenant_id,
+                                           role='4546',
+                                           user='auser123').AndReturn(None)
         self.m.ReplayAll()
         # call create_stack_user with a long user name.
         # the cleanup VerifyAll should verify that though we passed
