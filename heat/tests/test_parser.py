@@ -1204,6 +1204,91 @@ class StackTest(HeatTestCase):
                          (parser.Stack.DELETE, parser.Stack.FAILED))
 
     @utils.stack_delete_after
+    def test_adopt_stack(self):
+        adopt_data = '''{
+        "action": "CREATE",
+        "status": "COMPLETE",
+        "name": "my-test-stack-name",
+        "resources": {
+        "foo": {
+        "status": "COMPLETE",
+        "name": "foo",
+        "resource_data": {},
+        "metadata": {},
+        "resource_id": "test-res-id",
+        "action": "CREATE",
+        "type": "GenericResourceType"
+          }
+         }
+        }'''
+        tmpl = template.Template({
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+            }
+        })
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  tmpl,
+                                  adopt_stack_data=json.loads(adopt_data))
+        self.stack.store()
+        self.stack.adopt()
+        res = self.stack['foo']
+        self.assertEqual(u'test-res-id', res.resource_id)
+        self.assertEqual('foo', res.name)
+        self.assertEqual('COMPLETE', res.status)
+        self.assertEqual('ADOPT', res.action)
+        self.assertEqual((self.stack.ADOPT, self.stack.COMPLETE),
+                         self.stack.state)
+
+    @utils.stack_delete_after
+    def test_adopt_stack_fails(self):
+        adopt_data = '''{
+                "action": "CREATE",
+                "status": "COMPLETE",
+                "name": "my-test-stack-name",
+                "resources": {}
+                }'''
+
+        tmpl = template.Template({
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+
+            }
+        })
+        self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                                  tmpl,
+                                  adopt_stack_data=json.loads(adopt_data))
+        self.stack.store()
+        self.stack.adopt()
+        self.assertEqual((self.stack.ADOPT, self.stack.FAILED),
+                         self.stack.state)
+        expected = ('Resource adopt failed: Exception: Resource ID was not'
+                    ' provided.')
+        self.assertEqual(expected, self.stack.status_reason)
+
+    @utils.stack_delete_after
+    def test_adopt_stack_rollback(self):
+        adopt_data = '''{
+                "name": "my-test-stack-name",
+                "resources": {}
+                }'''
+
+        tmpl = template.Template({
+            'Resources': {
+                'foo': {'Type': 'GenericResourceType'},
+
+            }
+        })
+        self.stack = parser.Stack(utils.dummy_context(),
+                                  'test_stack',
+                                  tmpl,
+                                  disable_rollback=False,
+                                  adopt_stack_data=json.loads(adopt_data))
+        self.stack.store()
+        self.stack.adopt()
+        self.assertEqual((self.stack.ROLLBACK, self.stack.COMPLETE),
+                         self.stack.state)
+
+    @utils.stack_delete_after
     def test_update_badstate(self):
         self.stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
                                   action=parser.Stack.CREATE,

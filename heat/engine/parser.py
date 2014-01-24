@@ -50,9 +50,9 @@ logger = logging.getLogger(__name__)
 
 class Stack(collections.Mapping):
 
-    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME
+    ACTIONS = (CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT
                ) = ('CREATE', 'DELETE', 'UPDATE', 'ROLLBACK', 'SUSPEND',
-                    'RESUME')
+                    'RESUME', 'ADOPT')
 
     STATUSES = (IN_PROGRESS, FAILED, COMPLETE
                 ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
@@ -69,7 +69,8 @@ class Stack(collections.Mapping):
     def __init__(self, context, stack_name, tmpl, env=None,
                  stack_id=None, action=None, status=None,
                  status_reason='', timeout_mins=60, resolve_data=True,
-                 disable_rollback=True, parent_resource=None, owner_id=None):
+                 disable_rollback=True, parent_resource=None, owner_id=None,
+                 adopt_stack_data=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -98,6 +99,7 @@ class Stack(collections.Mapping):
         self._resources = None
         self._dependencies = None
         self._access_allowed_handlers = {}
+        self.adopt_stack_data = adopt_stack_data
 
         resources.initialise()
 
@@ -407,6 +409,13 @@ class Stack(collections.Mapping):
                                        post_func=rollback)
         creator(timeout=self.timeout_secs())
 
+    def _adopt_kwargs(self, resource):
+        data = self.adopt_stack_data
+        if not data or not data.get('resources'):
+            return {'resource_data': None}
+
+        return {'resource_data': data['resources'].get(resource.name)}
+
     @scheduler.wrappertask
     def stack_task(self, action, reverse=False, post_func=None):
         '''
@@ -424,7 +433,11 @@ class Stack(collections.Mapping):
             action_l = action.lower()
             handle = getattr(r, '%s' % action_l)
 
-            return handle()
+            # If a local _$action_kwargs function exists, call it to get the
+            # action specific argument list, otherwise an empty arg list
+            handle_kwargs = getattr(self,
+                                    '_%s_kwargs' % action_l, lambda x: {})
+            return handle(**handle_kwargs(r))
 
         action_task = scheduler.DependencyTaskGroup(self.dependencies,
                                                     resource_action,
@@ -465,6 +478,22 @@ class Stack(collections.Mapping):
             return prev
         else:
             return None
+
+    def adopt(self):
+        '''
+        Adopt a stack (create stack with all the existing resources).
+        '''
+        def rollback():
+            if not self.disable_rollback and self.state == (self.ADOPT,
+                                                            self.FAILED):
+                self.delete(action=self.ROLLBACK)
+
+        creator = scheduler.TaskRunner(
+            self.stack_task,
+            action=self.ADOPT,
+            reverse=False,
+            post_func=rollback)
+        creator(timeout=self.timeout_secs())
 
     def update(self, newstack):
         '''

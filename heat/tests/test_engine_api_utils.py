@@ -51,6 +51,15 @@ class EngineApiTest(HeatTestCase):
         args = api.extract_args({})
         self.assertNotIn('timeout_mins', args)
 
+    def test_adopt_stack_data_extract_present(self):
+        p = {'adopt_stack_data': {'Resources': {}}}
+        args = api.extract_args(p)
+        self.assertTrue(args.get('adopt_stack_data'))
+
+    def test_adopt_stack_data_extract_not_present(self):
+        args = api.extract_args({})
+        self.assertNotIn('adopt_stack_data', args)
+
     def test_disable_rollback_extract_true(self):
         args = api.extract_args({'disable_rollback': True})
         self.assertIn('disable_rollback', args)

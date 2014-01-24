@@ -356,9 +356,14 @@ class EngineService(service.Service):
         logger.info(_('template is %s') % template)
 
         def _stack_create(stack):
-            # Create the stack, and create the periodic task if successful
-            stack.create()
-            if stack.action == stack.CREATE and stack.status == stack.COMPLETE:
+            # Create/Adopt a stack, and create the periodic task if successful
+            if stack.adopt_stack_data:
+                stack.adopt()
+            else:
+                stack.create()
+
+            if (stack.action in (stack.CREATE, stack.ADOPT)
+                    and stack.status == stack.COMPLETE):
                 # Schedule a periodic watcher task for this stack
                 self._start_watch_task(stack.id, cnxt)
             else:
