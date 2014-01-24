@@ -13,6 +13,7 @@ ChangeLog
 templates/cloudformation-examples
 .tox
 .coverage
+.coverage.*
 cover
 .testrepository
 .project
