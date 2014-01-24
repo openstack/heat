@@ -15,12 +15,14 @@
 
 """Common utilities used in testing"""
 
+import logging
 import os
 
 import fixtures
 import testtools
 
 _TRUE_VALUES = ('True', 'true', '1', 'yes')
+_LOG_FORMAT = "%(levelname)8s [%(name)s] %(message)s"
 
 
 class BaseTestCase(testtools.TestCase):
@@ -29,7 +31,7 @@ class BaseTestCase(testtools.TestCase):
         super(BaseTestCase, self).setUp()
         self._set_timeout()
         self._fake_output()
-        self.useFixture(fixtures.FakeLogger('heat.openstack.common'))
+        self._fake_logs()
         self.useFixture(fixtures.NestedTempfile())
         self.useFixture(fixtures.TempHomeDir())
 
@@ -50,3 +52,20 @@ class BaseTestCase(testtools.TestCase):
         if os.environ.get('OS_STDERR_CAPTURE') in _TRUE_VALUES:
             stderr = self.useFixture(fixtures.StringStream('stderr')).stream
             self.useFixture(fixtures.MonkeyPatch('sys.stderr', stderr))
+
+    def _fake_logs(self):
+        if os.environ.get('OS_DEBUG') in _TRUE_VALUES:
+            level = logging.DEBUG
+        else:
+            level = logging.INFO
+        capture_logs = os.environ.get('OS_LOG_CAPTURE') in _TRUE_VALUES
+        if capture_logs:
+            self.useFixture(
+                fixtures.FakeLogger(
+                    format=_LOG_FORMAT,
+                    level=level,
+                    nuke_handlers=capture_logs,
+                )
+            )
+        else:
+            logging.basicConfig(format=_LOG_FORMAT, level=level)

@@ -23,7 +23,7 @@ from oslo.config import cfg
 import six
 
 from heat.openstack.common import excutils
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils
 from heat.openstack.common import log as logging

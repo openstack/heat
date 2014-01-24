@@ -17,7 +17,7 @@ import ssl
 
 from oslo.config import cfg
 
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 
 
 ssl_opts = [

@@ -22,7 +22,7 @@ import traceback
 from oslo.config import cfg
 import six
 
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils
 from heat.openstack.common import local
@@ -34,6 +34,7 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
+_RPC_ENVELOPE_VERSION = '2.0'
 '''RPC Envelope Version.
 
 This version number applies to the top level structure of messages sent out.
@@ -46,7 +47,7 @@ This version number applies to the message envelope that is used in the
 serialization done inside the rpc layer.  See serialize_msg() and
 deserialize_msg().
 
-The current message format (version 2.0) is very simple.  It is:
+The current message format (version 2.0) is very simple.  It is::
 
     {
         'oslo.version': <RPC Envelope Version as a String>,
@@ -64,7 +65,6 @@ We will JSON encode the application message payload.  The message envelope,
 which includes the JSON encoded application message body, will be passed down
 to the messaging libraries as a dict.
 '''
-_RPC_ENVELOPE_VERSION = '2.0'
 
 _VERSION_KEY = 'oslo.version'
 _MESSAGE_KEY = 'oslo.message'
@@ -269,6 +269,10 @@ def _safe_log(log_func, msg, msg_data):
                 d[k] = '<SANITIZED>'
             elif k.lower() in SANITIZE:
                 d[k] = '<SANITIZED>'
+            elif isinstance(d[k], list):
+                for e in d[k]:
+                    if isinstance(e, dict):
+                        _fix_passwords(e)
             elif isinstance(d[k], dict):
                 _fix_passwords(d[k])
         return d

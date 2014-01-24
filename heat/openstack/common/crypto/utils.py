@@ -17,7 +17,7 @@ import base64
 from Crypto.Hash import HMAC
 from Crypto import Random
 
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 
 
@@ -124,7 +124,7 @@ class SymmetricCrypto(object):
         :param key: The Encryption key.
         :param msg: the plain text.
 
-        :returns encblock: a block of encrypted data.
+        :returns enc: a block of encrypted data.
         """
         iv = Random.new().read(self.cipher.block_size)
         cipher = self.cipher.new(key, self.cipher.MODE_CBC, iv)
@@ -144,13 +144,15 @@ class SymmetricCrypto(object):
         return enc
 
     def decrypt(self, key, msg, b64decode=True):
-        """Decrypts the provided ciphertext, optionally base 64 encoded, and
+        """Decrypts the provided ciphertext, optionally base64 encoded, and
         returns the plaintext message, after padding is removed.
 
         Uses AES-128-CBC with an IV by default.
 
         :param key: The Encryption key.
         :param msg: the ciphetext, the first block is the IV
+
+        :returns plain: the plaintext message.
         """
         if b64decode:
             msg = base64.b64decode(msg)
@@ -169,6 +171,8 @@ class SymmetricCrypto(object):
 
         :param key: The Signing key.
         :param msg: the message to sign.
+
+        :returns out: a base64 encoded signature.
         """
         h = HMAC.new(key, msg, self.hashfn)
         out = h.digest()

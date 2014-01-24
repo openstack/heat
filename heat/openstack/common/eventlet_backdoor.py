@@ -29,7 +29,7 @@ import eventlet.backdoor
 import greenlet
 from oslo.config import cfg
 
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 
 help_for_backdoor_port = (
@@ -64,7 +64,7 @@ def _dont_use_this():
 
 
 def _find_objects(t):
-    return filter(lambda o: isinstance(o, t), gc.get_objects())
+    return [o for o in gc.get_objects() if isinstance(o, t)]
 
 
 def _print_greenthreads():

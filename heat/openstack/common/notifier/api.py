@@ -19,7 +19,7 @@ import uuid
 from oslo.config import cfg
 
 from heat.openstack.common import context
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils
 from heat.openstack.common import log as logging
