@@ -14,8 +14,8 @@ import socket
 import copy
 import tempfile
 
-import paramiko
 from Crypto.PublicKey import RSA
+import paramiko
 
 from heat.common import exception
 from heat.engine.resources import nova_utils
@@ -26,12 +26,9 @@ from heat.openstack.common.gettextutils import _
 
 try:
     import pyrax  # noqa
+    PYRAX_INSTALLED = True
 except ImportError:
-    def resource_mapping():
-        return {}
-else:
-    def resource_mapping():
-        return {'Rackspace::Cloud::Server': CloudServer}
+    PYRAX_INSTALLED = False
 
 logger = logging.getLogger(__name__)
 
@@ -417,3 +414,13 @@ bash -x /var/lib/cloud/data/cfn-userdata > /root/cfn-userdata.log 2>&1 ||
         if name == 'privateIPv4':
             return nova_utils.get_ip(self.server, 'private', 4)
         return super(CloudServer, self)._resolve_attribute(name)
+
+
+def resource_mapping():
+    return {'Rackspace::Cloud::Server': CloudServer}
+
+
+def available_resource_mapping():
+    if PYRAX_INSTALLED:
+        return resource_mapping()
+    return {}
