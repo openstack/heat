@@ -1,0 +1,49 @@
+# Copyright 2013 OpenStack Foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from oslo.config import cfg
+
+from heat.common import wsgi
+from heat.openstack.common import importutils
+
+
+class AuthUrlFilter(wsgi.Middleware):
+
+    def __init__(self, app, conf):
+        super(AuthUrlFilter, self).__init__(app)
+        self.conf = conf
+        self.auth_url = self._get_auth_url()
+
+    def _get_auth_url(self):
+        if 'auth_uri' in self.conf:
+            return self.conf['auth_uri']
+        else:
+            # Import auth_token to have keystone_authtoken settings setup.
+            auth_token_module = 'keystoneclient.middleware.auth_token'
+            importutils.import_module(auth_token_module)
+            return cfg.CONF.keystone_authtoken.auth_uri
+
+    def process_request(self, req):
+        req.headers['X-Auth-Url'] = self.auth_url
+        return None
+
+
+def filter_factory(global_conf, **local_conf):
+    conf = global_conf.copy()
+    conf.update(local_conf)
+
+    def auth_url_filter(app):
+        return AuthUrlFilter(app, conf)
+    return auth_url_filter
