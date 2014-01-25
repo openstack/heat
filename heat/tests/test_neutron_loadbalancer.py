@@ -489,6 +489,46 @@ class PoolTest(HeatTestCase):
 
         self.assertIsNone(resource.validate())
 
+    def test_properties_are_prepared_for_session_persistence(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+        neutronclient.Client.create_pool({
+            'pool': {
+                'subnet_id': 'sub123', 'protocol': u'HTTP',
+                'name': utils.PhysName('test_stack', 'pool'),
+                'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
+        ).AndReturn({'pool': {'id': '5678'}})
+        neutronclient.Client.create_vip({
+            'vip': {
+                'protocol': u'HTTP', 'name': 'pool.vip',
+                'admin_state_up': True, 'subnet_id': u'sub123',
+                'pool_id': '5678', 'protocol_port': 80,
+                'session_persistence': {'type': 'HTTP_COOKIE'}}}
+        ).AndReturn({'vip': {'id': 'xyz'}})
+        neutronclient.Client.show_pool('5678').AndReturn(
+            {'pool': {'status': 'ACTIVE'}})
+        neutronclient.Client.show_vip('xyz').AndReturn(
+            {'vip': {'status': 'ACTIVE'}})
+
+        snippet = template_format.parse(pool_with_session_persistence_template)
+        pool = snippet['Resources']['pool']
+        persistence = pool['Properties']['vip']['session_persistence']
+
+        #change persistence type to HTTP_COOKIE that not require cookie_name
+        persistence['type'] = 'HTTP_COOKIE'
+        del persistence['cookie_name']
+        resource = loadbalancer.Pool('pool', pool, utils.parse_stack(snippet))
+
+        #assert that properties contain cookie_name property with None value
+        persistence = resource.properties['vip']['session_persistence']
+        self.assertIn('cookie_name', persistence)
+        self.assertIsNone(persistence['cookie_name'])
+
+        self.m.ReplayAll()
+        scheduler.TaskRunner(resource.create)()
+        self.assertEqual((resource.CREATE, resource.COMPLETE), resource.state)
+        self.m.VerifyAll()
+
     def test_delete(self):
         rsrc = self.create_pool()
         neutronclient.Client.delete_vip('xyz')
