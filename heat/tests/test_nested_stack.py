@@ -405,7 +405,7 @@ Outputs:
 
     def test_nested_stack_three_deep(self):
         root_template = '''
-HeatTemplateFormat: 2012-12-12
+HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack
@@ -413,7 +413,7 @@ Resources:
             TemplateURL: 'https://server.test/depth1.template'
 '''
         depth1_template = '''
-HeatTemplateFormat: 2012-12-12
+HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack
@@ -421,7 +421,7 @@ Resources:
             TemplateURL: 'https://server.test/depth2.template'
 '''
         depth2_template = '''
-HeatTemplateFormat: 2012-12-12
+HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack
@@ -445,7 +445,7 @@ Resources:
 
     def test_nested_stack_four_deep(self):
         root_template = '''
-HeatTemplateFormat: 2012-12-12
+HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack
@@ -453,7 +453,7 @@ Resources:
             TemplateURL: 'https://server.test/depth1.template'
 '''
         depth1_template = '''
-HeatTemplateFormat: 2012-12-12
+HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack
@@ -461,7 +461,7 @@ Resources:
             TemplateURL: 'https://server.test/depth2.template'
 '''
         depth2_template = '''
-HeatTemplateFormat: 2012-12-12
+HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack
@@ -469,7 +469,7 @@ Resources:
             TemplateURL: 'https://server.test/depth3.template'
 '''
         depth3_template = '''
-HeatTemplateFormat: 2012-12-12
+HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack
@@ -500,7 +500,7 @@ Resources:
 
     def test_nested_stack_four_wide(self):
         root_template = '''
-HeatTemplateFormat: 2012-12-12
+HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack
@@ -545,7 +545,7 @@ Resources:
 
     def test_nested_stack_infinite_recursion(self):
         template = '''
-HeatTemplateFormat: 2012-12-12
+HeatTemplateFormatVersion: 2012-12-12
 Resources:
     Nested:
         Type: AWS::CloudFormation::Stack

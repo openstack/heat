@@ -30,6 +30,7 @@ from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
 policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
+template = {u'AWSTemplateFormatVersion': u'2010-09-09', u'Foo': u'bar'}
 
 
 class CfnStackControllerTest(HeatTestCase):
@@ -464,7 +465,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_create(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -511,7 +511,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_create_rollback(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -558,7 +557,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_create_onfailure_true(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -605,7 +603,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_create_onfailure_false_delete(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -652,7 +649,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_create_onfailure_false_rollback(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -699,7 +695,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_create_onfailure_err(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -739,7 +734,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_create_err_rpcerr(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -809,7 +803,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_create_err_exists(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -845,7 +838,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_create_err_engine(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'CreateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -881,7 +873,6 @@ class CfnStackControllerTest(HeatTestCase):
     def test_update(self):
         # Format a dummy request
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'UpdateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -929,7 +920,6 @@ class CfnStackControllerTest(HeatTestCase):
 
     def test_update_bad_name(self):
         stack_name = "wibble"
-        template = {u'Foo': u'bar'}
         json_template = json.dumps(template)
         params = {'Action': 'UpdateStack', 'StackName': stack_name,
                   'TemplateBody': '%s' % json_template,
@@ -961,7 +951,6 @@ class CfnStackControllerTest(HeatTestCase):
         # Format a dummy request
         stack_name = "wordpress"
         identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
-        template = {u'Foo': u'bar'}
         params = {'Action': 'GetTemplate', 'StackName': stack_name}
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'GetTemplate')
@@ -1092,12 +1081,10 @@ class CfnStackControllerTest(HeatTestCase):
     def test_bad_resources_in_template(self):
         # Format a dummy request
         json_template = {
-            'template': {
-                'AWSTemplateFormatVersion': '2010-09-09',
-                'Resources': {
-                    'Type': 'AWS: : EC2: : Instance',
-                },
-            }
+            'AWSTemplateFormatVersion': '2010-09-09',
+            'Resources': {
+                'Type': 'AWS: : EC2: : Instance',
+            },
         }
         params = {'Action': 'ValidateTemplate',
                   'TemplateBody': '%s' % json.dumps(json_template)}

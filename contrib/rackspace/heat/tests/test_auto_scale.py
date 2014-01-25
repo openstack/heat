@@ -169,6 +169,7 @@ class FakeAutoScale(object):
 class ScalingGroupTest(HeatTestCase):
 
     group_template = template_format.parse('''
+    HeatTemplateFormatVersion: "2012-12-12"
     Description: "Rackspace Auto Scale"
     Parameters: {}
     Resources:
@@ -335,6 +336,7 @@ class ScalingGroupTest(HeatTestCase):
 
 class PolicyTest(HeatTestCase):
     policy_template = template_format.parse('''
+    HeatTemplateFormatVersion: "2012-12-12"
     Description: "Rackspace Auto Scale"
     Parameters: {}
     Resources:
@@ -477,6 +479,7 @@ class PolicyTest(HeatTestCase):
 
 class WebHookTest(HeatTestCase):
     webhook_template = template_format.parse('''
+    HeatTemplateFormatVersion: "2012-12-12"
     Description: "Rackspace Auto Scale"
     Parameters: {}
     Resources:
