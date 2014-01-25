@@ -334,7 +334,10 @@ class Instance(resource.Resource):
                       'PrivateDnsName']:
             res = self._ipaddress()
 
-        logger.info('%s._resolve_attribute(%s) == %s' % (self.name, name, res))
+        logger.info(_('%(name)s._resolve_attribute(%(attname)s) == %(res)s'),
+                    {'name': self.name,
+                     'attname': name,
+                     'res': res})
         return unicode(res) if res else None
 
     def _build_nics(self, network_interfaces,
@@ -649,8 +652,10 @@ class Instance(resource.Resource):
                     return True
 
                 server.get()
-                logger.debug("%s check_suspend_complete status = %s" %
-                             (self.name, server.status))
+                logger.debug(_("%(name)s check_suspend_complete "
+                               "status = %(status)s"),
+                             {'name': self.name,
+                              'status': server.status})
                 if server.status in list(nova_utils.deferred_server_statuses +
                                          ['ACTIVE']):
                     return server.status == 'SUSPENDED'

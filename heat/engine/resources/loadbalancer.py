@@ -344,16 +344,18 @@ class LoadBalancer(stack_resource.StackResource):
     }
 
     attributes_schema = {
-        "CanonicalHostedZoneName": ("The name of the hosted zone that is "
-                                    "associated with the LoadBalancer."),
-        "CanonicalHostedZoneNameID": ("The ID of the hosted zone name that is "
-                                      "associated with the LoadBalancer."),
-        "DNSName": "The DNS name for the LoadBalancer.",
-        "SourceSecurityGroup.GroupName": ("The security group that you can use"
-                                          " as part of your inbound rules for "
-                                          "your LoadBalancer's back-end "
-                                          "instances."),
-        "SourceSecurityGroup.OwnerAlias": "Owner of the source security group."
+        "CanonicalHostedZoneName": _("The name of the hosted zone that is "
+                                     "associated with the LoadBalancer."),
+        "CanonicalHostedZoneNameID": _("The ID of the hosted zone name "
+                                       "that is associated with the "
+                                       "LoadBalancer."),
+        "DNSName": _("The DNS name for the LoadBalancer."),
+        "SourceSecurityGroup.GroupName": _("The security group that you can "
+                                           "use as part of your inbound "
+                                           "rules for your LoadBalancer's "
+                                           "back-end instances."),
+        "SourceSecurityGroup.OwnerAlias": _("Owner of the source "
+                                            "security group.")
     }
 
     update_allowed_keys = ('Properties',)

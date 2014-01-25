@@ -281,5 +281,5 @@ def available_resource_mapping():
     if DOCKER_INSTALLED:
         return resource_mapping()
     else:
-        logger.warn("Docker plug-in loaded, but docker lib not installed.")
+        logger.warn(_("Docker plug-in loaded, but docker lib not installed."))
         return {}

@@ -354,8 +354,8 @@ class CloudLoadBalancer(resource.Resource):
     }
 
     attributes_schema = {
-        'PublicIp': ('Public IP address of the specified '
-                     'instance.')}
+        'PublicIp': _('Public IP address of the specified '
+                      'instance.')}
 
     update_allowed_keys = ('Properties',)
 
@@ -606,7 +606,8 @@ class CloudLoadBalancer(resource.Resource):
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
         function = attribute_function[key]
-        logger.info('%s.GetAtt(%s) == %s' % (self.name, key, function))
+        logger.info(_('%(name)s.GetAtt(%(key)s) == %(function)s'),
+                    {'name': self.name, 'key': key, 'function': function})
         return unicode(function)
 
 

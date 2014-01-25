@@ -284,7 +284,10 @@ class WaitCondition(resource.Resource):
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
 
-        logger.debug('%s.GetAtt(%s) == %s' % (self.name, key, res))
+        logger.debug(_('%(name)s.GetAtt(%(key)s) == %(res)s') %
+                     {'name': self.name,
+                      'key': key,
+                      'res': res})
         return unicode(json.dumps(res))
 
 
