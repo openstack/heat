@@ -7,6 +7,7 @@ heat.egg-info
 tags
 *.log
 heat-test.db
+heat.sqlite
 .venv
 AUTHORS
 ChangeLog
