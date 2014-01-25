@@ -758,7 +758,7 @@ def log_exception(err, exc_info):
 
 def translate_exception(exc, locale):
     """Translates all translatable elements of the given exception."""
-    exc.message = gettextutils.translate(str(exc), locale)
+    exc.message = gettextutils.translate(unicode(exc), locale)
     if isinstance(exc, webob.exc.HTTPError):
         # If the explanation is not a Message, that means that the
         # explanation is the default, generic and not translatable explanation
@@ -767,7 +767,7 @@ def translate_exception(exc, locale):
         # message, since message is what gets passed in at construction time
         # in the API
         if not isinstance(exc.explanation, gettextutils.Message):
-            exc.explanation = str(exc)
+            exc.explanation = unicode(exc)
             exc.detail = ''
         else:
             exc.explanation = \
