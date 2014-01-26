@@ -37,7 +37,7 @@ import six
 
 
 from heat.openstack.common import excutils
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import local
 from heat.openstack.common import log as logging
 from heat.openstack.common.rpc import common as rpc_common
@@ -401,7 +401,7 @@ class CallbackWrapper(_ThreadPoolWithWait):
         if self.wait_for_consumers:
             self.pool.waitall()
             if self.exc_info:
-                raise self.exc_info[1], None, self.exc_info[2]
+                six.reraise(self.exc_info[1], None, self.exc_info[2])
 
 
 class ProxyCallback(_ThreadPoolWithWait):

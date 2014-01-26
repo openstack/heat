@@ -27,7 +27,7 @@ import six
 from six import moves
 
 from heat.openstack.common import excutils
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import jsonutils
 from heat.openstack.common.rpc import common as rpc_common
@@ -80,7 +80,7 @@ CONF = cfg.CONF
 CONF.register_opts(zmq_opts)
 
 ZMQ_CTX = None  # ZeroMQ Context, must be global.
-matchmaker = None  # memoized matchmaker object
+matchmaker = None  # memorized matchmaker object
 
 
 def _serialize(data):

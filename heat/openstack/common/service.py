@@ -23,14 +23,22 @@ import os
 import random
 import signal
 import sys
+import threading
 import time
 
+try:
+    # Importing just the symbol here because the io module does not
+    # exist in Python 2.6.
+    from io import UnsupportedOperation  # noqa
+except ImportError:
+    # Python 2.6
+    UnsupportedOperation = None
+
 import eventlet
-from eventlet import event
 from oslo.config import cfg
 
 from heat.openstack.common import eventlet_backdoor
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import importutils
 from heat.openstack.common import log as logging
 from heat.openstack.common import threadgroup
@@ -45,8 +53,32 @@ def _sighup_supported():
     return hasattr(signal, 'SIGHUP')
 
 
-def _is_sighup(signo):
-    return _sighup_supported() and signo == signal.SIGHUP
+def _is_daemon():
+    # The process group for a foreground process will match the
+    # process group of the controlling terminal. If those values do
+    # not match, or ioctl() fails on the stdout file handle, we assume
+    # the process is running in the background as a daemon.
+    # http://www.gnu.org/software/bash/manual/bashref.html#Job-Control-Basics
+    try:
+        is_daemon = os.getpgrp() != os.tcgetpgrp(sys.stdout.fileno())
+    except OSError as err:
+        if err.errno == errno.ENOTTY:
+            # Assume we are a daemon because there is no terminal.
+            is_daemon = True
+        else:
+            raise
+    except UnsupportedOperation:
+        # Could not get the fileno for stdout, so we must be a daemon.
+        is_daemon = True
+    return is_daemon
+
+
+def _is_sighup_and_daemon(signo):
+    if not (_sighup_supported() and signo == signal.SIGHUP):
+        # Avoid checking if we are a daemon, because the signal isn't
+        # SIGHUP.
+        return False
+    return _is_daemon()
 
 
 def _signo_to_signame(signo):
@@ -160,7 +192,7 @@ class ServiceLauncher(Launcher):
         while True:
             self.handle_signal()
             status, signo = self._wait_for_exit_or_signal(ready_callback)
-            if not _is_sighup(signo):
+            if not _is_sighup_and_daemon(signo):
                 return status
             self.restart()
 
@@ -174,10 +206,16 @@ class ServiceWrapper(object):
 
 
 class ProcessLauncher(object):
-    def __init__(self):
+    def __init__(self, wait_interval=0.01):
+        """Constructor.
+
+        :param wait_interval: The interval to sleep for between checks
+                              of child process exit.
+        """
         self.children = {}
         self.sigcaught = None
         self.running = True
+        self.wait_interval = wait_interval
         rfd, self.writepipe = os.pipe()
         self.readpipe = eventlet.greenio.GreenPipe(rfd, 'r')
         self.handle_signal()
@@ -280,7 +318,7 @@ class ProcessLauncher(object):
             while True:
                 self._child_process_handle_signal()
                 status, signo = self._child_wait_for_exit_or_signal(launcher)
-                if not _is_sighup(signo):
+                if not _is_sighup_and_daemon(signo):
                     break
                 launcher.restart()
 
@@ -335,7 +373,7 @@ class ProcessLauncher(object):
                 # Yield to other threads if no children have exited
                 # Sleep for a short time to avoid excessive CPU usage
                 # (see bug #1095346)
-                eventlet.greenthread.sleep(.01)
+                eventlet.greenthread.sleep(self.wait_interval)
                 continue
             while self.running and len(wrap.children) < wrap.workers:
                 self._start_child(wrap)
@@ -352,7 +390,7 @@ class ProcessLauncher(object):
             if self.sigcaught:
                 signame = _signo_to_signame(self.sigcaught)
                 LOG.info(_('Caught %s, stopping children'), signame)
-            if not _is_sighup(self.sigcaught):
+            if not _is_sighup_and_daemon(self.sigcaught):
                 break
 
             for pid in self.children:
@@ -381,11 +419,10 @@ class Service(object):
         self.tg = threadgroup.ThreadGroup(threads)
 
         # signal that the service is done shutting itself down:
-        self._done = event.Event()
+        self._done = threading.Event()
 
     def reset(self):
-        # NOTE(Fengqian): docs for Event.reset() recommend against using it
-        self._done = event.Event()
+        self._done = threading.Event()
 
     def start(self):
         pass
@@ -394,8 +431,7 @@ class Service(object):
         self.tg.stop()
         self.tg.wait()
         # Signal that service cleanup is done:
-        if not self._done.ready():
-            self._done.send()
+        self._done.set()
 
     def wait(self):
         self._done.wait()
@@ -406,7 +442,7 @@ class Services(object):
     def __init__(self):
         self.services = []
         self.tg = threadgroup.ThreadGroup()
-        self.done = event.Event()
+        self.done = threading.Event()
 
     def add(self, service):
         self.services.append(service)
@@ -420,8 +456,7 @@ class Services(object):
 
         # Each service has performed cleanup, now signal that the run_service
         # wrapper threads can now die:
-        if not self.done.ready():
-            self.done.send()
+        self.done.set()
 
         # reap threads:
         self.tg.stop()
@@ -431,7 +466,7 @@ class Services(object):
 
     def restart(self):
         self.stop()
-        self.done = event.Event()
+        self.done = threading.Event()
         for restart_service in self.services:
             restart_service.reset()
             self.tg.add_thread(self.run_service, restart_service, self.done)

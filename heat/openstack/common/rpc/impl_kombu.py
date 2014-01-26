@@ -29,7 +29,7 @@ from oslo.config import cfg
 import six
 
 from heat.openstack.common import excutils
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import network_utils
 from heat.openstack.common.rpc import amqp as rpc_amqp
 from heat.openstack.common.rpc import common as rpc_common

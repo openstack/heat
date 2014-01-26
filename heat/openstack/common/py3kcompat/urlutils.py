@@ -30,8 +30,10 @@ if six.PY3:
     urlencode = urllib.parse.urlencode
     urljoin = urllib.parse.urljoin
     quote = urllib.parse.quote
+    quote_plus = urllib.parse.quote_plus
     parse_qsl = urllib.parse.parse_qsl
     unquote = urllib.parse.unquote
+    unquote_plus = urllib.parse.unquote_plus
     urlparse = urllib.parse.urlparse
     urlsplit = urllib.parse.urlsplit
     urlunsplit = urllib.parse.urlunsplit
@@ -48,7 +50,9 @@ else:
 
     urlencode = urllib.urlencode
     quote = urllib.quote
+    quote_plus = urllib.quote_plus
     unquote = urllib.unquote
+    unquote_plus = urllib.unquote_plus
 
     parse = urlparse
     parse_qsl = parse.parse_qsl

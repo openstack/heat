@@ -20,7 +20,7 @@ import sys
 from eventlet import event
 from eventlet import greenthread
 
-from heat.openstack.common.gettextutils import _  # noqa
+from heat.openstack.common.gettextutils import _
 from heat.openstack.common import log as logging
 from heat.openstack.common import timeutils
 

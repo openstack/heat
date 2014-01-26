@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 """Fake RPC implementation which calls proxy methods directly with no
 queues.  Casts will block, but this is very useful for tests.
 """
@@ -24,6 +25,7 @@ import json
 import time
 
 import eventlet
+import six
 
 from heat.openstack.common.rpc import common as rpc_common
 
@@ -67,7 +69,7 @@ class Consumer(object):
                 # Caller might have called ctxt.reply() manually
                 for (reply, failure) in ctxt._response:
                     if failure:
-                        raise failure[0], failure[1], failure[2]
+                        six.reraise(failure[0], failure[1], failure[2])
                     res.append(reply)
                 # if ending not 'sent'...we might have more data to
                 # return from the function itself
