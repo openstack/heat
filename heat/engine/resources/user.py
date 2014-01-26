@@ -226,6 +226,10 @@ class AccessKey(resource.Resource):
         # SecretAccessKey attribute
         db_api.resource_data_set(self, 'secret_key', kp.secret,
                                  redact=True)
+        # Also store the credential ID as this should be used to manage
+        # the credential rather than the access key via v3/credentials
+        db_api.resource_data_set(self, 'credential_id', kp.id,
+                                 redact=True)
 
     def handle_delete(self):
         self._secret = None
@@ -270,6 +274,9 @@ class AccessKey(resource.Resource):
                         # Store the key in resource_data
                         db_api.resource_data_set(self, 'secret_key',
                                                  kp.secret, redact=True)
+                        # And the ID of the v3 credential
+                        db_api.resource_data_set(self, 'credential_id',
+                                                 kp.id, redact=True)
                     except Exception as ex:
                         logger.warn(_('could not get secret for %(username)s '
                                       'Error:%(msg)s') % {

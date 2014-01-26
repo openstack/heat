@@ -299,7 +299,8 @@ class AccessKeyTest(UserPolicyTestCase):
         # Ensure the resource data has been stored correctly
         rs_data = db_api.resource_data_get_all(rsrc)
         self.assertEqual(self.fc.secret, rs_data.get('secret_key'))
-        self.assertEqual(1, len(rs_data.keys()))
+        self.assertEqual(self.fc.credential_id, rs_data.get('credential_id'))
+        self.assertEqual(2, len(rs_data.keys()))
 
         self.assertEqual(utils.PhysName(stack.name, 'CfnUser'),
                          rsrc.FnGetAtt('UserName'))
@@ -332,6 +333,7 @@ class AccessKeyTest(UserPolicyTestCase):
         # Delete the resource data for secret_key, to test that existing
         # stacks which don't have the resource_data stored will continue
         # working via retrieving the keypair from keystone
+        db_api.resource_data_delete(rsrc, 'credential_id')
         db_api.resource_data_delete(rsrc, 'secret_key')
         rs_data = db_api.resource_data_get_all(rsrc)
         self.assertEqual(0, len(rs_data.keys()))

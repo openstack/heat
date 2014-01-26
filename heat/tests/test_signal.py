@@ -169,7 +169,9 @@ class SignalTest(HeatTestCase):
         self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
         clients.OpenStackClients.keystone().MultipleTimes().AndReturn(
             fakes.FakeKeystoneClient(
-                access='anaccesskey', secret='verysecret'))
+                access='anaccesskey',
+                secret='verysecret',
+                credential_id='mycredential'))
         self.m.ReplayAll()
 
         self.stack.create()
@@ -179,11 +181,12 @@ class SignalTest(HeatTestCase):
 
         # Ensure the resource data has been stored correctly
         rs_data = db_api.resource_data_get_all(rsrc)
+        self.assertEqual('mycredential', rs_data.get('credential_id'))
         self.assertEqual('anaccesskey', rs_data.get('access_key'))
         self.assertEqual('verysecret', rs_data.get('secret_key'))
         self.assertEqual('1234', rs_data.get('user_id'))
         self.assertEqual(rsrc.resource_id, rs_data.get('user_id'))
-        self.assertEqual(3, len(rs_data.keys()))
+        self.assertEqual(4, len(rs_data.keys()))
 
         # And that we remove it on delete
         scheduler.TaskRunner(rsrc.delete)()
