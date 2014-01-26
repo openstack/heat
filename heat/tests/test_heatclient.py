@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+import uuid
 import mox
 
 import keystoneclient.exceptions as kc_exception
@@ -460,3 +462,45 @@ class KeystoneClientTest(HeatTestCase):
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.enable_stack_user('atestuser')
+
+    def test_create_ec2_keypair(self):
+
+        """Test creating ec2 credentials."""
+
+        self._stubs_v3()
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        ex_data = {'access': 'dummy_access',
+                   'secret': 'dummy_secret'}
+        ex_data_json = json.dumps(ex_data)
+
+        # stub UUID.hex to match ex_data
+        self.m.StubOutWithMock(uuid, 'uuid4')
+        mock_uuid_access = self.m.CreateMockAnything()
+        mock_uuid_access.hex = 'dummy_access'
+        uuid.uuid4().AndReturn(mock_uuid_access)
+        mock_uuid_secret = self.m.CreateMockAnything()
+        mock_uuid_secret.hex = 'dummy_secret'
+        uuid.uuid4().AndReturn(mock_uuid_secret)
+
+        # mock keystone client credentials functions
+        self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
+        mock_credential = self.m.CreateMockAnything()
+        mock_credential.id = '123456'
+        mock_credential.user_id = 'atestuser'
+        mock_credential.blob = ex_data_json
+        mock_credential.type = 'ec2'
+
+        # mock keystone client create function
+        self.mock_ks_v3_client.users = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.credentials.create(
+            user='atestuser', type='ec2', data=ex_data_json,
+            project=ctx.tenant_id).AndReturn(mock_credential)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        ec2_cred = heat_ks_client.create_ec2_keypair(user_id='atestuser')
+        self.assertEqual('123456', ec2_cred.id)
+        self.assertEqual('dummy_access', ec2_cred.access)
+        self.assertEqual('dummy_secret', ec2_cred.secret)
