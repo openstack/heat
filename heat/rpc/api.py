@@ -76,7 +76,7 @@ EVENT_KEYS = (
 ) = (
     'event_identity',
     STACK_ID, STACK_NAME,
-    "event_time",
+    'event_time',
     RES_NAME, RES_PHYSICAL_ID, RES_ACTION,
     RES_STATUS, RES_STATUS_DATA, RES_TYPE,
     'resource_properties',

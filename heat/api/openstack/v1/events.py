@@ -84,7 +84,6 @@ class EventController(object):
                     filter_func=lambda e: True, detail=False):
         events = self.engine.list_events(req.context,
                                          identity)
-
         keys = None if detail else summary_keys
 
         return [format_event(req, e, keys) for e in events if filter_func(e)]

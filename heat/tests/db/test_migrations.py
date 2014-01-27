@@ -26,6 +26,7 @@ import sqlalchemy
 import subprocess
 import tempfile
 import uuid
+import datetime
 
 from migrate.versioning import repository
 
@@ -175,3 +176,58 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
 
     def _check_034(self, engine, data):
         self.assertColumnExists(engine, 'raw_template', 'files')
+
+    def _pre_upgrade_035(self, engine):
+        #The stacks id are for the 33 version migration
+        event_table = get_table(engine, 'event')
+        data = [{
+            'id': '22222222-152e-405d-b13a-35d4c816390c',
+            'stack_id': '967aaefb-152e-405d-b13a-35d4c816390c',
+            'resource_action': 'Test',
+            'resource_status': 'TEST IN PROGRESS',
+            'resource_name': 'Testing Resource',
+            'physical_resource_id': '3465d1ec-8b21-46cd-9dgf-f66cttrh53f9',
+            'resource_status_reason': '',
+            'resource_type': '',
+            'resource_properties': None,
+            'created_at': datetime.datetime.now()},
+            {'id': '11111111-152e-405d-b13a-35d4c816390c',
+             'stack_id': '967aaefb-152e-405d-b13a-35d4c816390c',
+             'resource_action': 'Test',
+             'resource_status': 'TEST COMPLETE',
+             'resource_name': 'Testing Resource',
+             'physical_resource_id': '3465d1ec-8b21-46cd-9dgf-f66cttrh53f9',
+             'resource_status_reason': '',
+             'resource_type': '',
+             'resource_properties': None,
+             'created_at': datetime.datetime.now() +
+                datetime.timedelta(days=5)}]
+        engine.execute(event_table.insert(), data)
+        return data
+
+    def _check_035(self, engine, data):
+        self.assertColumnExists(engine, 'event', 'id')
+        self.assertColumnExists(engine, 'event', 'uuid')
+
+        event_table = get_table(engine, 'event')
+        events_in_db = list(event_table.select().execute())
+        last_id = 0
+        for index, event in enumerate(data):
+            last_id = index + 1
+            self.assertEqual(last_id, events_in_db[index].id)
+            self.assertEqual(event['id'], events_in_db[index].uuid)
+
+        #Check that the autoincremental id is ok
+        data = [{
+            'uuid': '33333333-152e-405d-b13a-35d4c816390c',
+            'stack_id': '967aaefb-152e-405d-b13a-35d4c816390c',
+            'resource_action': 'Test',
+            'resource_status': 'TEST COMPLEATE AGAIN',
+            'resource_name': 'Testing Resource',
+            'physical_resource_id': '3465d1ec-8b21-46cd-9dgf-f66cttrh53f9',
+            'resource_status_reason': '',
+            'resource_type': '',
+            'resource_properties': None,
+            'created_at': datetime.datetime.now()}]
+        result = engine.execute(event_table.insert(), data)
+        self.assertEqual(last_id + 1, result.inserted_primary_key[0])

@@ -118,6 +118,7 @@ class FormatTest(HeatTestCase):
         return Event(utils.dummy_context(), self.stack, 'CREATE', 'COMPLETE',
                      'state changed', 'z3455xyc-9f88-404d-a85b-5315293e67de',
                      resource.properties, resource.name, resource.type(),
+                     uuid='abc123yc-9f88-404d-a85b-531529456xyz',
                      id=event_id)
 
     def test_format_stack_resource(self):
@@ -152,11 +153,8 @@ class FormatTest(HeatTestCase):
         self.assertEqual(['generic2'], res1['required_by'])
         self.assertEqual([], res2['required_by'])
 
-    def test_format_event_id_integer(self):
-        self._test_format_event('42')
-
-    def test_format_event_id_uuid(self):
-        self._test_format_event('a3455d8c-9f88-404d-a85b-5315293e67de')
+    def test_format_event_identifier_uuid(self):
+        self._test_format_event('abc123yc-9f88-404d-a85b-531529456xyz')
 
     def _test_format_event(self, event_id):
         event = self._dummy_event(event_id)
