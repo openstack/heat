@@ -15,6 +15,7 @@
 from heat.rpc import api
 from heat.openstack.common import timeutils
 from heat.engine import template
+from heat.engine import hot
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
@@ -223,3 +224,47 @@ def format_watch_data(wd):
     }
 
     return result
+
+
+def format_validate_parameter(param):
+    """
+    Format a template parameter for validate template API call
+
+    Formats a template parameter and its schema information from the engine's
+    internal representation (i.e. a Parameter object and its associated
+    Schema object) to a representation expected by the current API (for example
+    to be compatible to CFN syntax).
+    """
+
+    # build basic param schema dictionary; exclude HOT constraints since they
+    # will be handled differently
+    res = dict((k, v)
+               for k, v in param.schema.iteritems() if k != hot.CONSTRAINTS)
+
+    if not isinstance(param.schema, hot.HOTParamSchema):
+        return res
+
+    # build constraints - formating only necessary for HOT since API is
+    # currently CFN oriented
+    constraints = param.schema.get(hot.CONSTRAINTS, [])
+    for constraint in constraints:
+        if hot.RANGE in constraint:
+            const_def = constraint.get(hot.RANGE)
+            if const_def.get(hot.MIN):
+                res[api.PARAM_MIN_VALUE] = const_def.get(hot.MIN)
+            if const_def.get(hot.MAX):
+                res[api.PARAM_MAX_VALUE] = const_def.get(hot.MAX)
+        if hot.LENGTH in constraint:
+            const_def = constraint.get(hot.LENGTH)
+            if const_def.get(hot.MIN):
+                res[api.PARAM_MIN_LENGTH] = const_def.get(hot.MIN)
+            if const_def.get(hot.MAX):
+                res[api.PARAM_MAX_LENGTH] = const_def.get(hot.MAX)
+        if hot.ALLOWED_VALUES in constraint:
+            const_def = constraint.get(hot.ALLOWED_VALUES)
+            res[api.PARAM_ALLOWED_VALUES] = const_def
+        if hot.ALLOWED_PATTERN in constraint:
+            const_def = constraint.get(hot.ALLOWED_PATTERN)
+            res[api.PARAM_ALLOWED_PATTERN] = const_def
+
+    return res

@@ -16,6 +16,7 @@ import uuid
 
 import heat.engine.api as api
 
+from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine.event import Event
@@ -179,3 +180,433 @@ class FormatTest(HeatTestCase):
                                            event_id_formatted['stack_id'],
                                            event_id_formatted['path'])
         self.assertEqual(event_id, event_identifier.event_id)
+
+
+class FormatValidateParameterTest(HeatTestCase):
+
+    base_template = '''
+    {
+        "AWSTemplateFormatVersion" : "2010-09-09",
+        "Description" : "test",
+        "Parameters" : {
+            %s
+        }
+    }
+    '''
+
+    base_template_hot = '''
+    {
+        "heat_template_version" : "2013-05-23",
+        "description" : "test",
+        "parameters" : {
+            %s
+        }
+    }
+    '''
+
+    scenarios = [
+        ('simple',
+         dict(template=base_template,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "Type": "String",
+                        "Description": "Name of SSH key pair"
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair'
+              })
+         ),
+        ('default',
+         dict(template=base_template,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "Type": "String",
+                        "Description": "Name of SSH key pair",
+                        "Default": "dummy"
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'Default': 'dummy'
+              })
+         ),
+        ('min_length_constraint',
+         dict(template=base_template,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "Type": "String",
+                        "Description": "Name of SSH key pair",
+                        "MinLength": 4
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MinLength': 4
+              })
+         ),
+        ('max_length_constraint',
+         dict(template=base_template,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "Type": "String",
+                        "Description": "Name of SSH key pair",
+                        "MaxLength": 10
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MaxLength': 10
+              })
+         ),
+        ('min_max_length_constraint',
+         dict(template=base_template,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "Type": "String",
+                        "Description": "Name of SSH key pair",
+                        "MinLength": 4,
+                        "MaxLength": 10
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MinLength': 4,
+                  'MaxLength': 10
+              })
+         ),
+        ('min_value_constraint',
+         dict(template=base_template,
+              param_name='MyNumber',
+              param='''
+                    "MyNumber": {
+                        "Type": "Number",
+                        "Description": "A number",
+                        "MinValue": 4
+                    }
+                    ''',
+              expected={
+                  'Type': 'Number',
+                  'Description': 'A number',
+                  'MinValue': 4
+              })
+         ),
+        ('max_value_constraint',
+         dict(template=base_template,
+              param_name='MyNumber',
+              param='''
+                    "MyNumber": {
+                        "Type": "Number",
+                        "Description": "A number",
+                        "MaxValue": 10
+                    }
+                    ''',
+              expected={
+                  'Type': 'Number',
+                  'Description': 'A number',
+                  'MaxValue': 10
+              })
+         ),
+        ('min_max_value_constraint',
+         dict(template=base_template,
+              param_name='MyNumber',
+              param='''
+                    "MyNumber": {
+                        "Type": "Number",
+                        "Description": "A number",
+                        "MinValue": 4,
+                        "MaxValue": 10
+                    }
+                    ''',
+              expected={
+                  'Type': 'Number',
+                  'Description': 'A number',
+                  'MinValue': 4,
+                  'MaxValue': 10
+              })
+         ),
+        ('allowed_values_constraint',
+         dict(template=base_template,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "Type": "String",
+                        "Description": "Name of SSH key pair",
+                        "AllowedValues": [ "foo", "bar", "blub" ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'AllowedValues': ['foo', 'bar', 'blub']
+              })
+         ),
+        ('allowed_pattern_constraint',
+         dict(template=base_template,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "Type": "String",
+                        "Description": "Name of SSH key pair",
+                        "AllowedPattern": "[a-zA-Z0-9]+"
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'AllowedPattern': "[a-zA-Z0-9]+"
+              })
+         ),
+        ('multiple_constraints',
+         dict(template=base_template,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "Type": "String",
+                        "Description": "Name of SSH key pair",
+                        "MinLength": 4,
+                        "MaxLength": 10,
+                        "AllowedValues": [
+                            "foo", "bar", "blub"
+                        ],
+                        "AllowedPattern": "[a-zA-Z0-9]+"
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MinLength': 4,
+                  'MaxLength': 10,
+                  'AllowedValues': ['foo', 'bar', 'blub'],
+                  'AllowedPattern': "[a-zA-Z0-9]+"
+              })
+         ),
+        ('simple_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair"
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+              })
+         ),
+        ('default_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair",
+                        "default": "dummy"
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'Default': 'dummy'
+              })
+         ),
+        ('min_length_constraint_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair",
+                        "constraints": [
+                            { "length": { "min": 4} }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MinLength': 4
+              })
+         ),
+        ('max_length_constraint_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair",
+                        "constraints": [
+                            { "length": { "max": 10} }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MaxLength': 10
+              })
+         ),
+        ('min_max_length_constraint_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair",
+                        "constraints": [
+                            { "length": { "min":4, "max": 10} }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MinLength': 4,
+                  'MaxLength': 10
+              })
+         ),
+        ('min_value_constraint_hot',
+         dict(template=base_template_hot,
+              param_name='MyNumber',
+              param='''
+                    "MyNumber": {
+                        "type": "number",
+                        "description": "A number",
+                        "constraints": [
+                            { "range": { "min": 4} }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'Number',
+                  'Description': 'A number',
+                  'MinValue': 4
+              })
+         ),
+        ('max_value_constraint_hot',
+         dict(template=base_template_hot,
+              param_name='MyNumber',
+              param='''
+                    "MyNumber": {
+                        "type": "number",
+                        "description": "A number",
+                        "constraints": [
+                            { "range": { "max": 10} }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'Number',
+                  'Description': 'A number',
+                  'MaxValue': 10
+              })
+         ),
+        ('min_max_value_constraint_hot',
+         dict(template=base_template_hot,
+              param_name='MyNumber',
+              param='''
+                    "MyNumber": {
+                        "type": "number",
+                        "description": "A number",
+                        "constraints": [
+                            { "range": { "min": 4, "max": 10} }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'Number',
+                  'Description': 'A number',
+                  'MinValue': 4,
+                  'MaxValue': 10
+              })
+         ),
+        ('allowed_values_constraint_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair",
+                        "constraints": [
+                            { "allowed_values": [
+                                "foo", "bar", "blub"
+                              ]
+                            }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'AllowedValues': ['foo', 'bar', 'blub']
+              })
+         ),
+        ('allowed_pattern_constraint_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair",
+                        "constraints": [
+                            { "allowed_pattern": "[a-zA-Z0-9]+" }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'AllowedPattern': "[a-zA-Z0-9]+"
+              })
+         ),
+        ('multiple_constraints_hot',
+         dict(template=base_template_hot,
+              param_name='KeyName',
+              param='''
+                    "KeyName": {
+                        "type": "string",
+                        "description": "Name of SSH key pair",
+                        "constraints": [
+                            { "length": { "min": 4, "max": 10} },
+                            { "allowed_values": [
+                                "foo", "bar", "blub"
+                              ]
+                            },
+                            { "allowed_pattern": "[a-zA-Z0-9]+" }
+                        ]
+                    }
+                    ''',
+              expected={
+                  'Type': 'String',
+                  'Description': 'Name of SSH key pair',
+                  'MinLength': 4,
+                  'MaxLength': 10,
+                  'AllowedValues': ['foo', 'bar', 'blub'],
+                  'AllowedPattern': "[a-zA-Z0-9]+"
+              })
+         ),
+    ]
+
+    def test_format_validate_parameter(self):
+        """
+        Test format of a parameter.
+        """
+
+        t = template_format.parse(self.template % self.param)
+        tmpl = parser.Template(t)
+
+        tmpl_params = parser.Parameters(None, tmpl, validate_value=False)
+        param = tmpl_params.params[self.param_name]
+        param_formated = api.format_validate_parameter(param)
+        self.assertEqual(self.expected, param_formated)
