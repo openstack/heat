@@ -355,7 +355,8 @@ class FakeHTTPClient(base_client.HTTPClient):
     #
     def get_os_keypairs(self, *kw):
         return (200, {"keypairs": [{'fingerprint': 'FAKE_KEYPAIR',
-                                    'name': 'test'}]})
+                                    'name': 'test',
+                                    'public_key': 'foo'}]})
 
     def get_os_availability_zone(self, *kw):
         return (200, {"availabilityZoneInfo": [{'zoneName': 'nova1'}]})
