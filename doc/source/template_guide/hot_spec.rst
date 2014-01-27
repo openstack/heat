@@ -398,7 +398,11 @@ to the syntax below.
       type: <resource type>
       properties:
         <property name>: <property value>
-      # more resource specific metadata
+      metadata:
+        <resource specific metadata>
+      depends_on: <resource ID or list of ID>
+      update_poliy: <update policy>
+      deletion_policy: <deletion policy>
 
 resource ID
     A resource block is headed by the resource ID, which must be unique within
@@ -406,12 +410,28 @@ resource ID
 type
     This attribute specifies the type of resource, such as OS::Nova::Server.
 properties
-    This section contains a list of resource specific properties. The property
-    value can be provided in place, or can be provided via a function
-    (see :ref:`hot_spec_intrinsic_functions`).
+    This *optional* section contains a list of resource specific properties.
+    The property value can be provided in place, or can be provided via a
+    function (see :ref:`hot_spec_intrinsic_functions`).
+metadata
+    This *optional* section contains resource type specific metadata.
+depends_on
+    This *optional* attribute allows for specifying dependencies of the current
+    resource on one or more other resources. Please refer to section
+    :ref:`hot_spec_resources_dependencies` for details.
+update_policy:
+   This *optional* attribute allows for specifying an update policy for the
+   resource in the form of a nested dictionary (name-value pairs). Whether
+   update policies are supported and what the exact semantics are depends on
+   the type of the current resource.
+deletion_policy:
+   This *optional* attribute allows for specifying a deletion policy for the
+   resource (one of the values Delete, Retain or Snapshot). Which type of
+   deletion policy is supported depends on the type of the current resource.
+
 
 Depending on the type of resource, the resource block might include more
-resource specific metadata. Basically all resource types that can be used in
+resource specific data. Basically all resource types that can be used in
 CFN templates can also be used in HOT templates, adapted to the YAML structure
 as outlined above.
 Below is an example of a simple compute resource definition with some fixed
@@ -425,6 +445,45 @@ property values.
       properties:
         flavor: m1.small
         image: F18-x86_64-cfntools
+
+
+.. _hot_spec_resources_dependencies:
+
+Resource Dependencies
+~~~~~~~~~~~~~~~~~~~~~
+
+By means of the *depends_on* attribute within a resource section it is possible
+to define a dependency between a resource and one or more other resources. If
+a resource depends on just one other resource, the ID of the other resource is
+specified as value of the *depends_on* attribute as shown in the following
+example.
+
+::
+
+  resources:
+    server1:
+      type: OS::Nova::Server
+      depends_on: server2
+
+    server2:
+      type: OS::Nova::Server
+
+If a resource depends on more than one other resource, the value of the
+*depends_on* attribute is specified as a list of resource IDs as shown in the
+following example:
+
+::
+
+  resources:
+    server1:
+      type: OS::Nova::Server
+      depends_on: [ server2, server3 ]
+
+    server2:
+      type: OS::Nova::Server
+
+    server3:
+      type: OS::Nova::Server
 
 
 .. _hot_spec_outputs:

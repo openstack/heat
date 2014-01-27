@@ -44,8 +44,10 @@ class HOTemplate(template.Template):
     def __getitem__(self, section):
         """"Get the relevant section in the template."""
         #first translate from CFN into HOT terminology if necessary
-        section = HOTemplate._translate(section,
-                                        self._CFN_TO_HOT_SECTIONS, section)
+        if section not in self.SECTIONS:
+            section = HOTemplate._translate(section, self._CFN_TO_HOT_SECTIONS,
+                                            _('"%s" is not a valid template '
+                                              'section'))
 
         if section not in self.SECTIONS:
             raise KeyError(_('"%s" is not a valid template section') % section)
@@ -77,16 +79,23 @@ class HOTemplate(template.Template):
         return the_section
 
     @staticmethod
-    def _translate(value, mapping, default=None):
-        if value in mapping:
+    def _translate(value, mapping, err_msg=None):
+        try:
             return mapping[value]
-
-        return default
+        except KeyError as ke:
+            if err_msg:
+                raise KeyError(err_msg % value)
+            else:
+                raise ke
 
     def _translate_resources(self, resources):
         """Get the resources of the template translated into CFN format."""
         HOT_TO_CFN_ATTRS = {'type': 'Type',
-                            'properties': 'Properties'}
+                            'properties': 'Properties',
+                            'metadata': 'Metadata',
+                            'depends_on': 'DependsOn',
+                            'deletion_policy': 'DeletionPolicy',
+                            'update_policy': 'UpdatePolicy'}
 
         cfn_resources = {}
 
@@ -94,7 +103,9 @@ class HOTemplate(template.Template):
             cfn_resource = {}
 
             for attr, attr_value in attrs.iteritems():
-                cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS, attr)
+                cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
+                                           _('"%s" is not a valid keyword '
+                                             'inside a resource definition'))
                 cfn_resource[cfn_attr] = attr_value
 
             cfn_resources[resource_name] = cfn_resource
@@ -112,7 +123,9 @@ class HOTemplate(template.Template):
             cfn_output = {}
 
             for attr, attr_value in attrs.iteritems():
-                cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS, attr)
+                cfn_attr = self._translate(attr, HOT_TO_CFN_ATTRS,
+                                           _('"%s" is not a valid keyword '
+                                             'inside an output definition'))
                 cfn_output[cfn_attr] = attr_value
 
             cfn_outputs[output_name] = cfn_output
