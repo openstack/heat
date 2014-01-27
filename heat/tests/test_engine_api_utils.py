@@ -30,7 +30,7 @@ class EngineApiTest(HeatTestCase):
     def test_timeout_extract(self):
         p = {'timeout_mins': '5'}
         args = api.extract_args(p)
-        self.assertEqual(args['timeout_mins'], 5)
+        self.assertEqual(5, args['timeout_mins'])
 
     def test_timeout_extract_zero(self):
         p = {'timeout_mins': '0'}
@@ -145,8 +145,8 @@ class FormatTest(HeatTestCase):
     def test_format_stack_resource_required_by(self):
         res1 = api.format_stack_resource(self.stack['generic1'])
         res2 = api.format_stack_resource(self.stack['generic2'])
-        self.assertEqual(res1['required_by'], ['generic2'])
-        self.assertEqual(res2['required_by'], [])
+        self.assertEqual(['generic2'], res1['required_by'])
+        self.assertEqual([], res2['required_by'])
 
     def test_format_event_id_integer(self):
         self._test_format_event('42')

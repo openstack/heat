@@ -272,7 +272,7 @@ class KeystoneClientTest(HeatTestCase):
 
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         trust_context = heat_ks_client.create_trust_context()
-        self.assertEqual(trust_context.to_dict(), ctx.to_dict())
+        self.assertEqual(ctx.to_dict(), trust_context.to_dict())
 
     def test_create_trust_context_trust_create(self):
 
@@ -309,8 +309,8 @@ class KeystoneClientTest(HeatTestCase):
         ctx.trust_id = None
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         trust_context = heat_ks_client.create_trust_context()
-        self.assertEqual(trust_context.trust_id, 'atrust123')
-        self.assertEqual(trust_context.trustor_user_id, '5678')
+        self.assertEqual('atrust123', trust_context.trust_id)
+        self.assertEqual('5678', trust_context.trustor_user_id)
 
     def test_trust_init(self):
 

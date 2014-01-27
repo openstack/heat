@@ -131,22 +131,22 @@ class CloudWatchAlarmTest(HeatTestCase):
         self.m.ReplayAll()
         rsrc = self.create_alarm(t, stack, 'MEMAlarmHigh')
         scheduler.TaskRunner(rsrc.suspend)()
-        self.assertEqual(rsrc.state, (rsrc.SUSPEND, rsrc.COMPLETE))
+        self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
 
         self.ctx = utils.dummy_context()
 
         wr = watchrule.WatchRule.load(
             self.ctx, watch_name="test_stack-MEMAlarmHigh")
 
-        self.assertEqual(wr.state, watchrule.WatchRule.SUSPENDED)
+        self.assertEqual(watchrule.WatchRule.SUSPENDED, wr.state)
 
         scheduler.TaskRunner(rsrc.resume)()
-        self.assertEqual(rsrc.state, (rsrc.RESUME, rsrc.COMPLETE))
+        self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
 
         wr = watchrule.WatchRule.load(
             self.ctx, watch_name="test_stack-MEMAlarmHigh")
 
-        self.assertEqual(wr.state, watchrule.WatchRule.NODATA)
+        self.assertEqual(watchrule.WatchRule.NODATA, wr.state)
 
         scheduler.TaskRunner(rsrc.delete)()
         self.m.VerifyAll()

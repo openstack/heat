@@ -41,11 +41,11 @@ class HOTemplateTest(HeatTestCase):
         self.assertNotIn('foobar', tmpl)
 
         # test defaults for valid sections
-        self.assertEqual(tmpl[hot.VERSION], '2013-05-23')
-        self.assertEqual(tmpl[hot.DESCRIPTION], 'No description')
-        self.assertEqual(tmpl[hot.PARAMETERS], {})
-        self.assertEqual(tmpl[hot.RESOURCES], {})
-        self.assertEqual(tmpl[hot.OUTPUTS], {})
+        self.assertEqual('2013-05-23', tmpl[hot.VERSION])
+        self.assertEqual('No description', tmpl[hot.DESCRIPTION])
+        self.assertEqual({}, tmpl[hot.PARAMETERS])
+        self.assertEqual({}, tmpl[hot.RESOURCES])
+        self.assertEqual({}, tmpl[hot.OUTPUTS])
 
     def test_translate_parameters(self):
         """Test translation of parameters into internal engine format."""
@@ -64,7 +64,7 @@ class HOTemplateTest(HeatTestCase):
                                'Default': 'boo'}}
 
         tmpl = parser.Template(hot_tpl)
-        self.assertEqual(tmpl[hot.PARAMETERS], expected)
+        self.assertEqual(expected, tmpl[hot.PARAMETERS])
 
     def test_translate_parameters_unsupported_type(self):
         """Test translation of parameters into internal engine format
@@ -85,7 +85,7 @@ class HOTemplateTest(HeatTestCase):
                                'Type': 'UnsupportedType'}}
 
         tmpl = parser.Template(hot_tpl)
-        self.assertEqual(tmpl[hot.PARAMETERS], expected)
+        self.assertEqual(expected, tmpl[hot.PARAMETERS])
 
     def test_translate_parameters_hidden(self):
         hot_tpl = template_format.parse('''
@@ -124,7 +124,7 @@ class HOTemplateTest(HeatTestCase):
                                   'Properties': {'property1': 'value1'}}}
 
         tmpl = parser.Template(hot_tpl)
-        self.assertEqual(tmpl[hot.RESOURCES], expected)
+        self.assertEqual(expected, tmpl[hot.RESOURCES])
 
     def test_translate_outputs(self):
         """Test translation of outputs into internal engine format."""
@@ -140,7 +140,7 @@ class HOTemplateTest(HeatTestCase):
         expected = {'output1': {'Description': 'output1', 'Value': 'value1'}}
 
         tmpl = parser.Template(hot_tpl)
-        self.assertEqual(tmpl[hot.OUTPUTS], expected)
+        self.assertEqual(expected, tmpl[hot.OUTPUTS])
 
     def test_param_refs(self):
         """Test if parameter references work."""
@@ -150,8 +150,8 @@ class HOTemplateTest(HeatTestCase):
         snippet_resolved = {'properties': {'key1': 'bar',
                                            'key2': 'wibble'}}
         tmpl = parser.Template(hot_tpl_empty)
-        self.assertEqual(tmpl.resolve_param_refs(snippet, params),
-                         snippet_resolved)
+        self.assertEqual(snippet_resolved,
+                         tmpl.resolve_param_refs(snippet, params))
         snippet = {'properties': {'key1': {'Ref': 'foo'},
                                   'key2': {'Ref': 'blarg'}}}
         snippet_resolved = {'properties': {'key1': 'bar',
@@ -193,7 +193,7 @@ class HOTemplateTest(HeatTestCase):
 
         tmpl = parser.Template(hot_tpl_empty)
 
-        self.assertEqual(tmpl.resolve_replace(snippet), snippet_resolved)
+        self.assertEqual(snippet_resolved, tmpl.resolve_replace(snippet))
 
     def test_str_replace_syntax(self):
         """
@@ -269,8 +269,8 @@ class StackTest(test_parser.StackTest):
                                   template.Template(hot_tpl))
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state,
-                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
 
         snippet = {'Value': {'get_attr': ['resource1', 'foo']}}
         rsrc = self.stack['resource1']
@@ -286,7 +286,7 @@ class StackTest(test_parser.StackTest):
             resolved = hot.HOTemplate.resolve_attributes(snippet, self.stack)
             # GenericResourceType has an attribute 'foo' which yields the
             # resource name.
-            self.assertEqual(resolved, {'Value': 'resource1'})
+            self.assertEqual({'Value': 'resource1'}, resolved)
             # test invalid reference
         self.assertRaises(exception.InvalidTemplateAttribute,
                           hot.HOTemplate.resolve_attributes,
@@ -312,12 +312,12 @@ class StackTest(test_parser.StackTest):
                                   template.Template(hot_tpl))
         self.stack.store()
         self.stack.create()
-        self.assertEqual(self.stack.state,
-                         (parser.Stack.CREATE, parser.Stack.COMPLETE))
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
 
         snippet = {'value': {'get_resource': 'resource1'}}
         resolved = hot.HOTemplate.resolve_resource_refs(snippet, self.stack)
-        self.assertEqual(resolved, {'value': 'resource1'})
+        self.assertEqual({'value': 'resource1'}, resolved)
 
 
 class HOTParamValidatorTest(HeatTestCase):

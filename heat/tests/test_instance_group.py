@@ -222,7 +222,7 @@ class InstanceGroupTest(HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
 
         # The failed inner resource remains
-        self.assertEqual(len(rsrc.nested().resources), 1)
+        self.assertEqual(1, len(rsrc.nested().resources))
         child_resource = rsrc.nested().resources.values()[0]
         self.assertEqual((child_resource.CREATE, child_resource.FAILED),
                          child_resource.state)
@@ -242,7 +242,7 @@ class InstanceGroupTest(HeatTestCase):
         self.m.ReplayAll()
         self.create_resource(t, stack, 'JobServerConfig')
         rsrc = self.create_resource(t, stack, 'JobServerGroup')
-        self.assertEqual(len(rsrc.nested().resources), 1)
+        self.assertEqual(1, len(rsrc.nested().resources))
         succeeded_instance = rsrc.nested().resources.values()[0]
 
         self.m.VerifyAll()
@@ -263,7 +263,7 @@ class InstanceGroupTest(HeatTestCase):
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
 
         # The failed inner resource remains
-        self.assertEqual(len(rsrc.nested().resources), 2)
+        self.assertEqual(2, len(rsrc.nested().resources))
         child_resource = [r for r in rsrc.nested().resources.values()
                           if r.name != succeeded_instance.name][0]
         self.assertEqual((child_resource.CREATE, child_resource.FAILED),

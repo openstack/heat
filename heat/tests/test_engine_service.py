@@ -2088,7 +2088,7 @@ class StackServiceTest(HeatTestCase):
 
         resources = stack.resources
         self.assertIsInstance(resources, dict)
-        self.assertEqual(len(resources), 2)
+        self.assertEqual(2, len(resources))
         self.assertIsInstance(resources.get('foo'),
                               generic_rsrc.GenericResource)
         self.assertIsInstance(resources.get('bar'),
@@ -2096,4 +2096,4 @@ class StackServiceTest(HeatTestCase):
 
         stack_dependencies = stack.dependencies
         self.assertIsInstance(stack_dependencies, dependencies.Dependencies)
-        self.assertEqual(len(stack_dependencies.graph()), 2)
+        self.assertEqual(2, len(stack_dependencies.graph()))
