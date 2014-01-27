@@ -502,6 +502,38 @@ class NeutronNetTest(HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_net_dhcp_agent_create_happens_409(self):
+        clients.OpenStackClients.keystone().AndReturn(
+            fakes.FakeKeystoneClient())
+
+        neutronclient.Client.add_network_to_dhcp_agent(
+            u'9f0df05b-4846-4d3d-971e-a2e1a06b1622',
+            {'network_id': u'66a426ef-8b77-4e25-8098-b3a7c0964b93'}
+        ).AndRaise(qe.NeutronClientException(status_code=409))
+
+        neutronclient.Client.remove_network_from_dhcp_agent(
+            u'9f0df05b-4846-4d3d-971e-a2e1a06b1622',
+            u'66a426ef-8b77-4e25-8098-b3a7c0964b93'
+        ).AndReturn(None)
+
+        neutronclient.Client.remove_network_from_dhcp_agent(
+            u'9f0df05b-4846-4d3d-971e-a2e1a06b1622',
+            u'66a426ef-8b77-4e25-8098-b3a7c0964b93'
+        ).AndRaise(qe.NeutronClientException(status_code=404))
+
+        self.m.ReplayAll()
+        t = template_format.parse(neutron_dhcp_agent_template)
+        stack = utils.parse_stack(t)
+        rsrc = net.NetDHCPAgent('test_net_dhcp_agent',
+                                t['Resources']['network_dhcp_agent'], stack)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+        rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
+        self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
+
+        self.m.VerifyAll()
+
     def test_net_dhcp_agent_create_failed(self):
         clients.OpenStackClients.keystone().AndReturn(
             fakes.FakeKeystoneClient())

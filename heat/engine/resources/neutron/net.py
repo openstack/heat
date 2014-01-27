@@ -148,8 +148,13 @@ class NetDHCPAgent(neutron.NeutronResource):
     def handle_create(self):
         network_id = self.properties[self.NETWORK_ID]
         dhcp_agent_id = self.properties[self.DHCP_AGENT_ID]
-        self.neutron().add_network_to_dhcp_agent(
-            dhcp_agent_id, {'network_id': network_id})
+        try:
+            self.neutron().add_network_to_dhcp_agent(
+                dhcp_agent_id, {'network_id': network_id})
+        except neutron_exp.NeutronClientException as ex:
+            # if 409 is happened, the agent is already associated.
+            if ex.status_code != 409:
+                raise ex
         self.resource_id_set('%(net)s:%(agt)s' %
                              {'net': network_id, 'agt': dhcp_agent_id})
 
