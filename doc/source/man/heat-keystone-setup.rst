@@ -15,7 +15,7 @@ DESCRIPTION
 ===========
 The heat-keystone-setup tool configures keystone for use with Heat. This script requires admin keystone credentials to be available in the shell environment and write access to /etc/keystone.
 
-Distributions may provide other tools to setup keystone for use with Heat, so check the distro documenation first.
+Distributions may provide other tools to setup keystone for use with Heat, so check the distro documentation first.
 
 EXAMPLES
 ========
@@ -24,4 +24,4 @@ EXAMPLES
 
 BUGS
 ====
-Heat bugs are managed through Launchpad <https://launchpad.net/heat>
+Heat bugs are managed through Launchpad `OpenStack Heat Bugs <https://bugs.launchpad.net/heat>`__
