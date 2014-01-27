@@ -41,6 +41,8 @@ class KeystoneClient(object):
     via the code in engine/client.py, so there should not be any need to
     directly instantiate instances of this class inside resources themselves
     """
+    conf = cfg.CONF
+
     def __init__(self, context):
         # We have to maintain two clients authenticated with keystone:
         # - ec2 interface is v2.0 only
@@ -130,24 +132,23 @@ class KeystoneClient(object):
 
         return client_v2
 
-    @staticmethod
-    def _service_admin_creds(api_version=2):
+    def _service_admin_creds(self, api_version=2):
         # Import auth_token to have keystone_authtoken settings setup.
         importutils.import_module('keystoneclient.middleware.auth_token')
 
         creds = {
-            'username': cfg.CONF.keystone_authtoken.admin_user,
-            'password': cfg.CONF.keystone_authtoken.admin_password,
+            'username': self.conf.keystone_authtoken.admin_user,
+            'password': self.conf.keystone_authtoken.admin_password,
         }
         if api_version >= 3:
             creds['auth_url'] =\
-                cfg.CONF.keystone_authtoken.auth_uri.replace('v2.0', 'v3')
+                self.conf.keystone_authtoken.auth_uri.replace('v2.0', 'v3')
             creds['project_name'] =\
-                cfg.CONF.keystone_authtoken.admin_tenant_name
+                self.conf.keystone_authtoken.admin_tenant_name
         else:
-            creds['auth_url'] = cfg.CONF.keystone_authtoken.auth_uri
+            creds['auth_url'] = self.conf.keystone_authtoken.auth_uri
             creds['tenant_name'] =\
-                cfg.CONF.keystone_authtoken.admin_tenant_name
+                self.conf.keystone_authtoken.admin_tenant_name
 
         return creds
 
@@ -187,12 +188,12 @@ class KeystoneClient(object):
 
     def _get_client_option(self, option):
         try:
-            cfg.CONF.import_opt(option, 'heat.common.config',
-                                group='clients_keystone')
-            return getattr(cfg.CONF.clients_keystone, option)
+            self.conf.import_opt(option, 'heat.common.config',
+                                 group='clients_keystone')
+            return getattr(self.conf.clients_keystone, option)
         except (cfg.NoSuchGroupError, cfg.NoSuchOptError):
-            cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
-            return getattr(cfg.CONF.clients, option)
+            self.conf.import_opt(option, 'heat.common.config', group='clients')
+            return getattr(self.conf.clients, option)
 
     def create_trust_context(self):
         """
@@ -215,7 +216,7 @@ class KeystoneClient(object):
         trustee_user_id = admin_client.auth_ref.user_id
         trustor_user_id = self.client_v3.auth_ref.user_id
         trustor_project_id = self.client_v3.auth_ref.project_id
-        roles = cfg.CONF.trusts_delegated_roles
+        roles = self.conf.trusts_delegated_roles
         trust = self.client_v3.trusts.create(trustor_user=trustor_user_id,
                                              trustee_user=trustee_user_id,
                                              project=trustor_project_id,
@@ -262,7 +263,7 @@ class KeystoneClient(object):
         # that is fixed in keystoneclient
         roles_list = self.client_v3.roles.list()
         stack_user_role = [r for r in roles_list
-                           if r.name == cfg.CONF.heat_stack_user_role]
+                           if r.name == self.conf.heat_stack_user_role]
         if len(stack_user_role) == 1:
             role_id = stack_user_role[0].id
             logger.debug(_("Adding user %(user)s to role %(role)s") % {
@@ -272,7 +273,7 @@ class KeystoneClient(object):
         else:
             logger.error(_("Failed to add user %(user)s to role %(role)s, "
                          "check role exists!") % {'user': username,
-                         'role': cfg.CONF.heat_stack_user_role})
+                         'role': self.conf.heat_stack_user_role})
 
         return user.id
 

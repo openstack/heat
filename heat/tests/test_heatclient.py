@@ -18,14 +18,10 @@ import mox
 
 import keystoneclient.exceptions as kc_exception
 
-from oslo.config import cfg
-
 from heat.common import exception
 from heat.common import heat_keystoneclient
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
-
-from heat.openstack.common import importutils
 
 
 class KeystoneClientTest(HeatTestCase):
@@ -33,23 +29,32 @@ class KeystoneClientTest(HeatTestCase):
 
     def setUp(self):
         super(KeystoneClientTest, self).setUp()
-
-        # Import auth_token to have keystone_authtoken settings setup.
-        importutils.import_module('keystoneclient.middleware.auth_token')
-
-        dummy_url = 'http://server.test:5000/v2.0'
-        cfg.CONF.set_override('auth_uri', dummy_url,
-                              group='keystone_authtoken')
-        cfg.CONF.set_override('admin_user', 'heat',
-                              group='keystone_authtoken')
-        cfg.CONF.set_override('admin_password', 'verybadpass',
-                              group='keystone_authtoken')
-        cfg.CONF.set_override('admin_tenant_name', 'service',
-                              group='keystone_authtoken')
         self.addCleanup(self.m.VerifyAll)
+
+    def _stub_config(self):
+        # Stub out cfg.CONF with dummy config
+        mock_config = self.m.CreateMockAnything()
+        mock_config.keystone_authtoken = self.m.CreateMockAnything()
+        dummy_url = 'http://server.test:5000/v2.0'
+        mock_config.keystone_authtoken.auth_uri = dummy_url
+        mock_config.keystone_authtoken.admin_user = 'heat'
+        mock_config.keystone_authtoken.admin_password = 'verybadpass'
+        mock_config.keystone_authtoken.admin_tenant_name = 'service'
+
+        mock_config.import_opt = self.m.CreateMockAnything()
+        mock_config.clients_keystone = self.m.CreateMockAnything()
+        for cfg, ret in (('ca_file', None), ('insecure', False),
+                         ('cert_file', None), ('key_file', None)):
+            mock_config.import_opt(cfg,
+                                   'heat.common.config',
+                                   group='clients_keystone').AndReturn(None)
+            setattr(mock_config.clients_keystone, cfg, ret)
+        self.mock_config = mock_config
+        heat_keystoneclient.KeystoneClient.conf = mock_config
 
     def _stubs_v2(self, method='token', auth_ok=True, trust_scoped=True,
                   user_id='trustor_user_id'):
+        self._stub_config()
         self.m.StubOutClassWithMocks(heat_keystoneclient.kc, "Client")
         if method == 'token':
             self.mock_ks_client = heat_keystoneclient.kc.Client(
@@ -92,6 +97,7 @@ class KeystoneClientTest(HeatTestCase):
             self.mock_ks_client.auth_ref.user_id = user_id
 
     def _stubs_v3(self, method='token', auth_ok=True):
+        self._stub_config()
         self.m.StubOutClassWithMocks(heat_keystoneclient.kc_v3, "Client")
 
         if method == 'token':
@@ -150,6 +156,7 @@ class KeystoneClientTest(HeatTestCase):
                                             ).AndReturn(mock_user)
         # mock out the call to roles; will send an error log message but does
         # not raise an exception
+        self.mock_config.heat_stack_user_role = 'heat_stack_user'
         mock_roles_list = []
         for r_id, r_name in (('1234', 'blah'), ('4546', 'heat_stack_user')):
             mock_role = self.m.CreateMockAnything()
@@ -262,9 +269,8 @@ class KeystoneClientTest(HeatTestCase):
         """Test create_trust_context with existing trust_id."""
 
         self._stubs_v2(method='trust')
+        self.mock_config.deferred_auth_method = 'trusts'
         self.m.ReplayAll()
-
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
         ctx = utils.dummy_context()
         ctx.trust_id = 'atrust123'
@@ -278,8 +284,6 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test create_trust_context when creating a trust."""
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         class MockTrust(object):
             id = 'atrust123'
 
@@ -292,6 +296,8 @@ class KeystoneClientTest(HeatTestCase):
         mock_admin_client.auth_ref = self.m.CreateMockAnything()
         mock_admin_client.auth_ref.user_id = '1234'
         self._stubs_v3()
+        self.mock_config.deferred_auth_method = 'trusts'
+        self.mock_config.trusts_delegated_roles = ['heat_stack_owner']
         self.mock_ks_v3_client.auth_ref = self.m.CreateMockAnything()
         self.mock_ks_v3_client.auth_ref.user_id = '5678'
         self.mock_ks_v3_client.auth_ref.project_id = '42'
@@ -316,9 +322,8 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test consuming a trust when initializing."""
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         self._stubs_v2(method='trust')
+        self.mock_config.deferred_auth_method = 'trusts'
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -335,9 +340,8 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test consuming a trust when initializing, error scoping."""
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         self._stubs_v2(method='trust', trust_scoped=False)
+        self.mock_config.deferred_auth_method = 'trusts'
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -353,9 +357,8 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test consuming a trust when initializing, impersonation error."""
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         self._stubs_v2(method='trust', user_id='wrong_user_id')
+        self.mock_config.deferred_auth_method = 'trusts'
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -402,9 +405,8 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test delete_trust when deleting trust."""
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         self._stubs_v3()
+        self.mock_config.deferred_auth_method = 'trusts'
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.delete('atrust123').AndReturn(None)
 
@@ -417,9 +419,8 @@ class KeystoneClientTest(HeatTestCase):
 
         """Test delete_trust when trust already deleted."""
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts')
-
         self._stubs_v3()
+        self.mock_config.deferred_auth_method = 'trusts'
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.delete('atrust123').AndRaise(
             kc_exception.NotFound)
