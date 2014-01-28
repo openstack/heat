@@ -11,7 +11,8 @@ function usage {
     echo "  -F, --force              Force a clean re-build of the virtual environment. Useful when dependencies have been added."
     echo "  -f, --func               Functional tests have been removed."
     echo "  -u, --unit               Run unit tests (default when nothing specified)"
-    echo "  -p, --pep8               Run pep8 tests"
+    echo "  -p, --pep8               Only run flake8 and HACKING compliance check"
+    echo "  -P, --no-pep8            Don't run flake8 and HACKING compliance check"
     echo "  --all                    Run pep8 and unit tests"
     echo "  -c, --coverage           Generate coverage report"
     echo "  -d, --debug              Run tests with testtools instead of testr. This allows you to use the debugger."
@@ -28,6 +29,7 @@ function process_option {
         -f|--func) test_func=1;;
         -u|--unit) test_unit=1;;
         -p|--pep8) test_pep8=1;;
+        -P|--no-pep8) test_pep8=0;;
         --all) test_unit=1; test_pep8=1;;
         -c|--coverage) coverage=1;;
         -d|--debug) debug=1;;
