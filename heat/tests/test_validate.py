@@ -644,10 +644,15 @@ class validateTest(HeatTestCase):
 
         engine = service.EngineService('a', 't')
         res = dict(engine.validate_template(None, t))
+        # Note: the assertion below does not expect a CFN dict of the parameter
+        # but a dict of the parameters.Schema object.
+        # For API CFN backward compatibility, formating to CFN is done in the
+        # API layer in heat.engine.api.format_validate_parameter.
         expected = {'KeyName': {
             'Type': 'String',
             'Description': 'Name of an existing EC2KeyPair to enable SSH '
-                           'access to the instances'}}
+                           'access to the instances',
+            'NoEcho': 'false'}}
         self.assertEqual(expected, res['Parameters'])
 
     def test_validate_properties(self):
