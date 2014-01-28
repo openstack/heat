@@ -25,13 +25,13 @@ from heat.engine import environment
 from heat.common import exception
 from heat.engine import dependencies
 from heat.common import identifier
-from heat.engine import notification
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
 from heat.engine import template
 from heat.engine import timestamp
 from heat.engine import update
+from heat.engine.notification import stack as notification
 from heat.engine.parameters import Parameters
 from heat.engine.template import Template
 from heat.engine.clients import Clients

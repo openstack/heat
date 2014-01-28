@@ -11,33 +11,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.config import cfg
-
-from heat.openstack.common import log
 from heat.openstack.common.notifier import api as notifier_api
-from heat.engine import api as engine_api
 
-LOG = log.getLogger(__name__)
-SERVICE = 'orchestration'
-CONF = cfg.CONF
-CONF.import_opt('default_notification_level',
-                'heat.openstack.common.notifier.api')
-CONF.import_opt('default_publisher_id',
-                'heat.openstack.common.notifier.api')
+from heat.engine import api as engine_api
+from heat.engine import notification
 
 
 def send(stack):
     """Send usage notifications to the configured notification driver."""
 
-    publisher_id = CONF.default_publisher_id
-    if publisher_id is None:
-        publisher_id = notifier_api.publisher_id(SERVICE)
-
     # The current notifications have a start/end:
     # see: https://wiki.openstack.org/wiki/SystemUsageData
     # so to be consistant we translate our status into a known start/end/error
     # suffix.
-    level = CONF.default_notification_level.upper()
+    level = notification.get_default_level()
     if stack.status == stack.IN_PROGRESS:
         suffix = 'start'
     elif stack.status == stack.COMPLETE:
@@ -46,8 +33,8 @@ def send(stack):
         suffix = 'error'
         level = notifier_api.ERROR
 
-    event_type = '%s.%s.%s' % (SERVICE, stack.action.lower(), suffix)
+    event_type = '%s.%s' % (stack.action.lower(),
+                            suffix)
 
-    notifier_api.notify(stack.context, publisher_id,
-                        event_type, level,
+    notification.notify(stack.context, event_type, level,
                         engine_api.format_notification_body(stack))
