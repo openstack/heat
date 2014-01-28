@@ -42,6 +42,8 @@ class Schema(constr.Schema):
         'Label'
     )
 
+    PARAMETER_KEYS = PARAMETER_KEYS
+
     # For Parameters the type name for Schema.LIST is CommaDelimitedList
     # and the type name for Schema.MAP is Json
     TYPES = (
@@ -94,11 +96,30 @@ class Schema(constr.Schema):
             val = Schema.str_to_num(val)
         return val
 
+    @staticmethod
+    def _check_dict(schema_dict, allowed_keys, entity):
+        if not isinstance(schema_dict, dict):
+            raise constr.InvalidSchemaError(
+                _("Invalid %s, expected a mapping") % entity)
+        for key in schema_dict:
+            if key not in allowed_keys:
+                raise constr.InvalidSchemaError(
+                    _("Invalid key '%(key)s' for %(entity)s") % {
+                        "key": key, "entity": entity})
+
+    @classmethod
+    def _validate_dict(cls, schema_dict):
+        cls._check_dict(schema_dict, cls.PARAMETER_KEYS, "parameter")
+
+        if cls.TYPE not in schema_dict:
+            raise constr.InvalidSchemaError(_("Missing parameter type"))
+
     @classmethod
     def from_dict(cls, schema_dict):
         """
         Return a Parameter Schema object from a legacy schema dictionary.
         """
+        cls._validate_dict(schema_dict)
 
         def constraints():
             desc = schema_dict.get(CONSTRAINT_DESCRIPTION)

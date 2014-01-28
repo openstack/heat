@@ -22,6 +22,7 @@ from heat.engine import hot
 from heat.engine import resources
 from heat.engine import template
 from heat.engine import constraints
+from heat.engine import parameters
 
 from heat.tests.common import HeatTestCase
 from heat.tests import test_parser
@@ -820,3 +821,182 @@ class HOTParamValidatorTest(HeatTestCase):
         err = self.assertRaises(constraints.InvalidSchemaError,
                                 hot.HOTParamSchema.from_dict, schema)
         self.assertIn(range_desc, str(err))
+
+    def test_validate_schema_wrong_key(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                foo: bar
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual("Invalid key 'foo' for parameter", str(error))
+
+    def test_validate_schema_no_type(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                description: Hi!
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual("Missing parameter type", str(error))
+
+    def test_validate_schema_unknown_type(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: Unicode
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual(
+            "Invalid type (Unicode)", str(error))
+
+    def test_validate_schema_constraints(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                constraints:
+                   - allowed_valus: [foo, bar]
+                default: foo
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual(
+            "Invalid key 'allowed_valus' for parameter constraints",
+            str(error))
+
+    def test_validate_schema_constraints_not_list(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                constraints: 1
+                default: foo
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual(
+            "Invalid parameter constraints, expected a list", str(error))
+
+    def test_validate_schema_constraints_not_mapping(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                constraints: [foo]
+                default: foo
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual(
+            "Invalid parameter constraints, expected a mapping", str(error))
+
+    def test_validate_schema_empty_constraints(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                constraints:
+                    - description: a constraint
+                default: foo
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual("No constraint expressed", str(error))
+
+    def test_validate_schema_constraints_range_wrong_format(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: number
+                constraints:
+                   - range: foo
+                default: foo
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual(
+            "Invalid range constraint, expected a mapping", str(error))
+
+    def test_validate_schema_constraints_range_invalid_key(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: number
+                constraints:
+                    - range: {min: 1, foo: bar}
+                default: 1
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual(
+            "Invalid key 'foo' for range constraint", str(error))
+
+    def test_validate_schema_constraints_length_wrong_format(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                constraints:
+                   - length: foo
+                default: foo
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual(
+            "Invalid length constraint, expected a mapping", str(error))
+
+    def test_validate_schema_constraints_length_invalid_key(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                constraints:
+                    - length: {min: 1, foo: bar}
+                default: foo
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual(
+            "Invalid key 'foo' for length constraint", str(error))
+
+    def test_validate_schema_constraints_wrong_allowed_pattern(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                constraints:
+                    - allowed_pattern: [foo, bar]
+                default: foo
+        ''')
+        error = self.assertRaises(
+            constraints.InvalidSchemaError, parameters.Parameters,
+            "stack_testit", parser.Template(hot_tpl))
+        self.assertEqual(
+            "AllowedPattern must be a string", str(error))

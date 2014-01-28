@@ -53,10 +53,6 @@ class ParameterTest(testtools.TestCase):
         self.assertRaises(constr.InvalidSchemaError, self.new_parameter, 'p',
                           {'Type': 'List'}, validate_value=False)
 
-    def test_new_no_type(self):
-        self.assertRaises(KeyError, self.new_parameter,
-                          'p', {'Default': 'blarg'})
-
     def test_default_no_override(self):
         p = self.new_parameter('defaulted', {'Type': 'String',
                                              'Default': 'blarg'})
@@ -417,3 +413,17 @@ class ParametersTest(testtools.TestCase):
                           self.new_parameters,
                           'test',
                           params)
+
+
+class ParameterSchemaTest(testtools.TestCase):
+
+    def test_validate_schema_wrong_key(self):
+        error = self.assertRaises(constr.InvalidSchemaError,
+                                  parameters.Schema.from_dict, {"foo": "bar"})
+        self.assertEqual("Invalid key 'foo' for parameter", str(error))
+
+    def test_validate_schema_no_type(self):
+        error = self.assertRaises(constr.InvalidSchemaError,
+                                  parameters.Schema.from_dict,
+                                  {"Description": "Hi!"})
+        self.assertEqual("Missing parameter type", str(error))

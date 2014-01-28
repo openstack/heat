@@ -289,7 +289,9 @@ class Range(Constraint):
                 raise InvalidSchemaError(_('min/max must be numeric'))
 
         if min is max is None:
-            raise InvalidSchemaError(_('range must have min and/or max'))
+            raise InvalidSchemaError(
+                _('A range constraint must have a min value and/or a max '
+                  'value specified.'))
 
     def _str(self):
         if self.max is None:
@@ -343,6 +345,11 @@ class Length(Range):
     valid_types = (Schema.STRING_TYPE, Schema.LIST_TYPE, Schema.MAP_TYPE,)
 
     def __init__(self, min=None, max=None, description=None):
+        if min is max is None:
+            raise InvalidSchemaError(
+                _('A length constraint must have a min value and/or a max '
+                  'value specified.'))
+
         super(Length, self).__init__(min, max, description)
 
         for param in (min, max):
@@ -426,6 +433,8 @@ class AllowedPattern(Constraint):
 
     def __init__(self, pattern, description=None):
         super(AllowedPattern, self).__init__(description)
+        if not isinstance(pattern, basestring):
+            raise InvalidSchemaError(_('AllowedPattern must be a string'))
         self.pattern = pattern
         self.match = re.compile(pattern).match
 
