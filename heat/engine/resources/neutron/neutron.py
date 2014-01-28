@@ -114,9 +114,10 @@ class NeutronResource(resource.Resource):
         if attributes['status'] in ('ACTIVE', 'DOWN'):
             return True
         else:
-            raise exception.Error('%s resource[%s] status[%s]' %
-                                  ('neutron reported unexpected',
-                                   attributes['name'], attributes['status']))
+            raise exception.Error(_('neutron reported unexpected '
+                                    'resource[%(name)s] status[%(status)s]') %
+                                  {'name': attributes['name'],
+                                   'status': attributes['status']})
 
     def _resolve_attribute(self, name):
         try:

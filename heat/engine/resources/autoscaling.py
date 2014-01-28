@@ -398,7 +398,7 @@ class InstanceGroup(stack_resource.StackResource):
                         id_list)
                 else:
                     raise exception.Error(
-                        "Unsupported resource '%s' in LoadBalancerNames" %
+                        _("Unsupported resource '%s' in LoadBalancerNames") %
                         (lb,))
                 resolved_snippet = self.stack.resolve_static_data(
                     lb_resource.json_snippet)

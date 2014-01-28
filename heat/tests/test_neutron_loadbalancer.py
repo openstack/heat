@@ -370,7 +370,7 @@ class PoolTest(HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
-            'Error: neutron report unexpected pool '
+            'Error: neutron reported unexpected pool '
             'resource[5678] status[ERROR]',
             str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
