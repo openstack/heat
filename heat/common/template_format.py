@@ -59,9 +59,9 @@ def parse(tmpl_str):
     if len(tmpl_str) > cfg.CONF.max_template_size:
         msg = _('Template exceeds maximum allowed size.')
         raise exception.RequestLimitExceeded(message=msg)
-    if tmpl_str.startswith('{'):
+    try:
         tpl = json.loads(tmpl_str)
-    else:
+    except ValueError:
         try:
             tpl = yaml.load(tmpl_str, Loader=yaml_loader)
         except yaml.YAMLError as yea:
@@ -69,6 +69,9 @@ def parse(tmpl_str):
         else:
             if tpl is None:
                 tpl = {}
+    if not isinstance(tpl, dict):
+        raise ValueError(_('The template is not a JSON object '
+                           'or YAML mapping.'))
     # Looking for supported version keys in the loaded template
     if not ('HeatTemplateFormatVersion' in tpl
             or 'heat_template_version' in tpl
