@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013 Mirantis.inc
 # All Rights Reserved.
 #
@@ -22,6 +20,7 @@ import os
 import random
 import string
 
+from six import moves
 import sqlalchemy
 
 from heat.openstack.common.db import exception as exc
@@ -34,7 +33,8 @@ def _gen_credentials(*names):
     """Generate credentials."""
     auth_dict = {}
     for name in names:
-        val = ''.join(random.choice(string.lowercase) for i in xrange(10))
+        val = ''.join(random.choice(string.ascii_lowercase)
+                      for i in moves.range(10))
         auth_dict[name] = val
     return auth_dict
 
