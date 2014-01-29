@@ -45,6 +45,9 @@ parameters: }
 '''
         self.assertRaises(ValueError, environment_format.parse, env)
 
+    def test_yaml_none(self):
+        self.assertEqual({}, environment_format.parse(None))
+
 
 class YamlParseExceptions(common.HeatTestCase):
 

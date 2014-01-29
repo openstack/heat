@@ -24,9 +24,10 @@ SECTIONS = (PARAMETERS, RESOURCE_REGISTRY) = \
 def parse(env_str):
     '''
     Takes a string and returns a dict containing the parsed structure.
-    This includes determination of whether the string is using the
-    JSON or YAML format.
     '''
+    if env_str is None:
+        return {}
+
     try:
         env = yaml.load(env_str, Loader=yaml_loader)
     except yaml.YAMLError as yea:
