@@ -60,4 +60,4 @@ EXAMPLES
 
 BUGS
 ====
-Heat bugs are managed through Launchpad <https://launchpad.net/heat>
+Heat bugs are managed through Launchpad `OpenStack Heat Bugs <https://bugs.launchpad.net/heat>`__
