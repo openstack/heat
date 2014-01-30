@@ -542,17 +542,8 @@ class KeystoneClientTest(HeatTestCase):
         self.assertEqual('access123', ec2_cred.access)
         self.assertEqual('secret456', ec2_cred.secret)
 
-    def test_get_ec2_keypair_access(self):
-
-        """Test getting ec2 credential by access."""
-
-        user_id = 'atestuser'
-        self._stubs_v3(user_id=user_id)
-
-        ctx = utils.dummy_context()
-        ctx.trust_id = None
-
-        # Create a mock credential list response
+    def _mock_credential_list(self, user_id):
+        """Create a mock credential list response."""
         mock_credential_list = []
         for x in (1, 2, 3):
             mock_credential = self.m.CreateMockAnything()
@@ -567,6 +558,18 @@ class KeystoneClientTest(HeatTestCase):
         self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
         self.mock_ks_v3_client.credentials.list().AndReturn(
             mock_credential_list)
+
+    def test_get_ec2_keypair_access(self):
+
+        """Test getting ec2 credential by access."""
+
+        user_id = 'atestuser'
+        self._stubs_v3(user_id=user_id)
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        self._mock_credential_list(user_id=user_id)
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         ec2_cred = heat_ks_client.get_ec2_keypair(access='access2')
@@ -583,3 +586,55 @@ class KeystoneClientTest(HeatTestCase):
 
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertRaises(ValueError, heat_ks_client.get_ec2_keypair)
+
+    def test_delete_ec2_keypair_id(self):
+
+        """Test deleting ec2 credential by id."""
+
+        user_id = 'atestuser'
+        self._stubs_v3(user_id=user_id)
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client credentials functions
+        credential_id = 'acredential123'
+        self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
+
+        # mock keystone client delete function
+        self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
+        self.mock_ks_v3_client.credentials.delete(credential_id)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertIsNone(heat_ks_client.delete_ec2_keypair(
+                          credential_id=credential_id))
+
+    def test_delete_ec2_keypair_access(self):
+
+        """Test deleting ec2 credential by access."""
+
+        user_id = 'atestuser'
+        self._stubs_v3(user_id=user_id)
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        self._mock_credential_list(user_id=user_id)
+
+        # mock keystone client delete function
+        self.mock_ks_v3_client.credentials.delete(
+            'credential_id2').AndReturn(None)
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertIsNone(heat_ks_client.delete_ec2_keypair(access='access2'))
+
+    def test_deleting_ec2_keypair_error(self):
+
+        """Test deleting ec2 credential error path."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        self.m.ReplayAll()
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertRaises(ValueError, heat_ks_client.delete_ec2_keypair)
