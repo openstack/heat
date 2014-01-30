@@ -31,6 +31,8 @@ from heat.openstack.common.gettextutils import _
 
 logger = logging.getLogger('heat.common.keystoneclient')
 
+AccessKey = namedtuple('AccessKey', ['id', 'access', 'secret'])
+
 
 class KeystoneClient(object):
     """
@@ -283,9 +285,31 @@ class KeystoneClient(object):
     def delete_ec2_keypair(self, user_id, accesskey):
         self.client_v2.ec2.delete(user_id, accesskey)
 
-    def get_ec2_keypair(self, access, user_id=None):
-        uid = user_id or self.client_v2.auth_ref.user_id
-        return self.client_v2.ec2.get(uid, access)
+    def get_ec2_keypair(self, credential_id=None, access=None, user_id=None):
+        '''Get an ec2 keypair via v3/credentials, by id or access.'''
+        # Note v3/credentials does not support filtering by access
+        # because it's stored in the credential blob, so we expect
+        # all resources to pass credential_id except where backwards
+        # compatibility is required (resource only has acccess stored)
+        # then we'll have to to a brute-force lookup locally
+        if credential_id:
+            cred = self.client_v3.credentials.get(credential_id)
+            ec2_creds = json.loads(cred.blob)
+            return AccessKey(id=cred.id,
+                             access=ec2_creds['access'],
+                             secret=ec2_creds['secret'])
+        elif access:
+            # FIXME(shardy): add filtering for user_id when keystoneclient
+            # extensible-crud-manager-operations bp lands
+            credentials = self.client_v3.credentials.list()
+            for cr in credentials:
+                ec2_creds = json.loads(cr.blob)
+                if ec2_creds.get('access') == access:
+                    return AccessKey(id=cr.id,
+                                     access=ec2_creds['access'],
+                                     secret=ec2_creds['secret'])
+        else:
+            raise ValueError("Must specify either credential_id or access")
 
     def create_ec2_keypair(self, user_id=None):
         user_id = user_id or self.client_v3.auth_ref.user_id
@@ -296,11 +320,10 @@ class KeystoneClient(object):
             user=user_id, type='ec2', data=json.dumps(data_blob),
             project=project_id)
 
-        # Return a namedtuple for easier access to the blob contents
+        # Return a AccessKey namedtuple for easier access to the blob contents
         # We return the id as the v3 api provides no way to filter by
         # access in the blob contents, so it will be much more efficient
         # if we manage credentials by ID instead
-        AccessKey = namedtuple('AccessKey', ['id', 'access', 'secret'])
         return AccessKey(id=ec2_creds.id,
                          access=data_blob['access'],
                          secret=data_blob['secret'])
