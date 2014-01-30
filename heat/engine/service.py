@@ -443,6 +443,7 @@ class EngineService(service.Service):
         env = environment.Environment(params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      env, **common_params)
+        updated_stack.parameters.set_stack_id(current_stack.identifier().arn())
 
         self._validate_deferred_auth_context(cnxt, updated_stack)
         updated_stack.validate()
