@@ -16,10 +16,10 @@
 from oslo.config import cfg
 
 from keystoneclient.contrib.ec2 import utils as ec2_utils
+import keystoneclient.exceptions as kc_exception
 
 from heat.db import api as db_api
 from heat.common import exception
-from heat.engine import clients
 from heat.engine import resource
 
 from heat.openstack.common import log as logging
@@ -80,7 +80,7 @@ class SignalResponder(resource.Resource):
             return
         try:
             self.keystone().delete_stack_user(user_id)
-        except clients.hkc.kc.exceptions.NotFound:
+        except kc_exception.NotFound:
             pass
         for data_key in ('ec2_signed_url', 'access_key', 'secret_key',
                          'credential_id'):
