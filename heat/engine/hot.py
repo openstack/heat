@@ -165,14 +165,14 @@ class HOTemplate(template.Template):
         Resolve constructs of the form { get_attr: [my_resource, my_attr] }
         """
         def match_get_attr(key, value):
-            return (key in ['get_attr', 'Fn::GetAtt'] and
+            return (key in ['get_attr'] and
                     isinstance(value, list) and
-                    len(value) == 2 and
+                    len(value) >= 2 and
                     None not in value and
                     value[0] in resources)
 
         def handle_get_attr(args):
-            resource, att = args
+            resource = args[0]
             try:
                 r = resources[resource]
                 if r.state in (
@@ -182,10 +182,20 @@ class HOTemplate(template.Template):
                         (r.RESUME, r.COMPLETE),
                         (r.UPDATE, r.IN_PROGRESS),
                         (r.UPDATE, r.COMPLETE)):
-                    return r.FnGetAtt(att)
-            except KeyError:
+                    rsrc_attr = args[1]
+                    attr = r.FnGetAtt(rsrc_attr)
+                    try:
+                        for inner_attr in args[2:]:
+                            if hasattr(attr, str(inner_attr)):
+                                attr = getattr(attr, inner_attr)
+                            else:
+                                attr = attr[inner_attr]
+                        return attr
+                    except (KeyError, IndexError, TypeError):
+                        return ''
+            except (KeyError, IndexError):
                 raise exception.InvalidTemplateAttribute(resource=resource,
-                                                         key=att)
+                                                         key=rsrc_attr)
 
         return template._resolve(match_get_attr, handle_get_attr, s,
                                  transform)

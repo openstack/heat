@@ -54,12 +54,51 @@ class GenericResource(resource.Resource):
 
 
 class ResourceWithProps(GenericResource):
-        properties_schema = {'Foo': {'Type': 'String'}}
+    properties_schema = {'Foo': {'Type': 'String'}}
+
+
+class ResourceWithComplexAttributes(GenericResource):
+    attributes_schema = {'list': 'A list',
+                         'flat_dict': 'A flat dictionary',
+                         'nested_dict': 'A nested dictionary',
+                         'simple_object': 'An object',
+                         'complex_object': 'A really complex object',
+                         'none': 'A None'
+                         }
+
+    list = ['foo', 'bar']
+    flat_dict = {'key1': 'val1', 'key2': 'val2', 'key3': 'val3'}
+    nested_dict = {'list': [1, 2, 3],
+                   'string': 'abc',
+                   'dict': {'a': 1, 'b': 2, 'c': 3}}
+
+    class AnObject(object):
+        def __init__(self, first, second, third):
+            self.first = first
+            self.second = second
+            self.third = third
+
+    simple_object = AnObject('a', 'b', 'c')
+    complex_object = AnObject('a', flat_dict, simple_object)
+
+    def _resolve_attribute(self, name):
+        if name == 'list':
+            return self.list
+        if name == 'flat_dict':
+            return self.flat_dict
+        if name == 'nested_dict':
+            return self.nested_dict
+        if name == 'simple_object':
+            return self.simple_object
+        if name == 'complex_object':
+            return self.complex_object
+        if name == 'none':
+            return None
 
 
 class ResourceWithRequiredProps(GenericResource):
-        properties_schema = {'Foo': {'Type': 'String',
-                                     'Required': True}}
+    properties_schema = {'Foo': {'Type': 'String',
+                                 'Required': True}}
 
 
 class SignalResource(signal_responder.SignalResponder):

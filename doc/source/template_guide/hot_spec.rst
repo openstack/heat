@@ -472,23 +472,31 @@ resource definition is shown below.
 
 get_attr
 --------
-The *get_attr* function allows for referencing an attribute of a resource. At
+The *get_attr* function allows referencing an attribute of a resource. At
 runtime, it will be resolved to the value of an attribute of a resource instance
 created from the respective resource definition of the template.
 The syntax of the get_attr function is as follows:
 
 ::
 
-  get_attr: [ <resource ID>, <attribute name> ]
+  get_attr:
+    - <resource ID>
+    - <attribute name>
+    - <key/index 1> (optional)
+    - <key/index 2> (optional)
+    - ...
 
 resource ID
-    This parameter specifies the resource the attribute of which shall be
+    This parameter specifies the resource for which the attributes shall be
     resolved. This resource must be defined within the *resources* section of
     the template (see also :ref:`hot_spec_resources`).
 attribute name
-    This parameter specifies the attribute to be resolved.
+    The attribute name is required as it specifies the attribute 
+    to be resolved. If the attribute returns a complex data structure
+    such as a list or a map, then subsequent keys or indexes can be specified
+    which navigate the data structure to return the desired value.
 
-An example of using the get_attr function is shown below:
+Some examples of how to use the get_attr function are shown below:
 
 ::
 
@@ -501,7 +509,18 @@ An example of using the get_attr function is shown below:
     instance_ip:
       description: IP address of the deployed compute instance
       value: { get_attr: [my_instance, first_address] }
+    instance_private_ip:
+      description: Private IP address of the deployed compute instance
+      value: { get_attr: [my_instance, networks, private, 0] }
 
+In this example, if the networks attribute contained the following data:
+
+::
+
+   {"public": ["2001:0db8:0000:0000:0000:ff00:0042:8329", "1.2.3.4"],
+    "private": ["10.0.0.1"]}
+
+then the value of the get_attr function would resolve to "10.0.0.1".
 
 get_resource
 ------------
