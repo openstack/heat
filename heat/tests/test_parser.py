@@ -754,6 +754,22 @@ class StackTest(HeatTestCase):
         self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
                          stack.state)
 
+    def test_state_deleted(self):
+        stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
+                             action=parser.Stack.CREATE,
+                             status=parser.Stack.IN_PROGRESS)
+        stack.id = '1234'
+
+        # Simulate a deleted stack
+        self.m.StubOutWithMock(db_api, 'stack_get')
+        db_api.stack_get(stack.context, stack.id).AndReturn(None)
+
+        self.m.ReplayAll()
+
+        self.assertIsNone(stack.state_set(parser.Stack.CREATE,
+                                          parser.Stack.COMPLETE, 'test'))
+        self.m.VerifyAll()
+
     def test_state_bad(self):
         stack = parser.Stack(self.ctx, 'test_stack', parser.Template({}),
                              action=parser.Stack.CREATE,
