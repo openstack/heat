@@ -151,7 +151,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
     def test_happy_path(self):
         list_dir = 'heat.engine.resources._list_environment_files'
         with mock.patch(list_dir) as m_ldir:
-            m_ldir.return_value = ['a.yaml']
+            m_ldir.return_value = ['/etc_etc/heat/enviroment.d/a.yaml']
             env_dir = '/etc_etc/heat/enviroment.d'
             env_content = '{"resource_registry": {}}'
 
@@ -180,7 +180,8 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         """
         list_dir = 'heat.engine.resources._list_environment_files'
         with mock.patch(list_dir) as m_ldir:
-            m_ldir.return_value = ['a.yaml', 'b.yaml']
+            m_ldir.return_value = ['/etc_etc/heat/enviroment.d/a.yaml',
+                                   '/etc_etc/heat/enviroment.d/b.yaml']
             env_dir = '/etc_etc/heat/enviroment.d'
             env_content = '{}'
 
@@ -202,7 +203,8 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         """
         list_dir = 'heat.engine.resources._list_environment_files'
         with mock.patch(list_dir) as m_ldir:
-            m_ldir.return_value = ['a.yaml', 'b.yaml']
+            m_ldir.return_value = ['/etc_etc/heat/enviroment.d/a.yaml',
+                                   '/etc_etc/heat/enviroment.d/b.yaml']
             env_dir = '/etc_etc/heat/enviroment.d'
             env_content = '{@$%#$%'
 
@@ -307,3 +309,34 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         self.assertEqual(
             resources.instance.Instance,
             u_env.get_resource_info('AWS::EC2::Instance').value)
+
+    def test_env_ignore_files_starting_dot(self):
+        # prove we can disable a resource in the global environment
+
+        g_env_content = ''
+        # 1. fake an environment file
+        envdir = self.useFixture(fixtures.TempDir())
+        with open(os.path.join(envdir.path, 'a.yaml'), 'w+') as ef:
+            ef.write(g_env_content)
+        with open(os.path.join(envdir.path, '.test.yaml'), 'w+') as ef:
+            ef.write(g_env_content)
+        with open(os.path.join(envdir.path, 'b.yaml'), 'w+') as ef:
+            ef.write(g_env_content)
+        cfg.CONF.set_override('environment_dir', envdir.path)
+
+        # 2. load global env
+        g_env = environment.Environment({}, user_env=False)
+        with mock.patch('heat.engine.resources.open',
+                        mock.mock_open(read_data=g_env_content),
+                        create=True) as m_open:
+            resources._load_all(g_env)
+
+        # 3. assert that the file were ignored
+        expected = [mock.call('%s/a.yaml' % envdir.path),
+                    mock.call('%s/b.yaml' % envdir.path)]
+        call_list = m_open.call_args_list
+
+        expected.sort()
+        call_list.sort()
+
+        self.assertEqual(expected, call_list)
