@@ -126,3 +126,46 @@ class NovaUtilsUserdataTests(HeatTestCase):
         self.assertIn("[Boto]", data)
         self.assertIn(self.expect, data)
         self.m.VerifyAll()
+
+
+class NovaUtilsMetadataTests(HeatTestCase):
+
+    def test_serialize_string(self):
+        original = {'test_key': 'simple string value'}
+        self.assertEqual(original, nova_utils.meta_serialize(original))
+
+    def test_serialize_int(self):
+        original = {'test_key': 123}
+        expected = {'test_key': '123'}
+        self.assertEqual(expected, nova_utils.meta_serialize(original))
+
+    def test_serialize_list(self):
+        original = {'test_key': [1, 2, 3]}
+        expected = {'test_key': '[1, 2, 3]'}
+        self.assertEqual(expected, nova_utils.meta_serialize(original))
+
+    def test_serialize_dict(self):
+        original = {'test_key': {'a': 'b', 'c': 'd'}}
+        expected = {'test_key': '{"a": "b", "c": "d"}'}
+        self.assertEqual(expected, nova_utils.meta_serialize(original))
+
+    def test_serialize_none(self):
+        original = {'test_key': None}
+        expected = {'test_key': 'null'}
+        self.assertEqual(expected, nova_utils.meta_serialize(original))
+
+    def test_serialize_combined(self):
+        original = {
+            'test_key_1': 123,
+            'test_key_2': 'a string',
+            'test_key_3': {'a': 'b'},
+            'test_key_4': None,
+        }
+        expected = {
+            'test_key_1': '123',
+            'test_key_2': 'a string',
+            'test_key_3': '{"a": "b"}',
+            'test_key_4': 'null',
+        }
+
+        self.assertEqual(expected, nova_utils.meta_serialize(original))

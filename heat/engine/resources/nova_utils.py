@@ -20,6 +20,7 @@ from email.mime.text import MIMEText
 import json
 import os
 import pkgutil
+import six
 
 from oslo.config import cfg
 
@@ -265,8 +266,20 @@ def check_rebuild(server, image_id):
             _("Rebuilding server failed, status '%s'") % server.status)
 
 
+def meta_serialize(metadata):
+    """
+    Serialize non-string metadata values before sending them to
+    Nova.
+    """
+    return dict((key, (value if isinstance(value,
+                                           six.string_types)
+                       else json.dumps(value))
+                 ) for (key, value) in metadata.items())
+
+
 def meta_update(client, server, metadata):
     """Delete/Add the metadata in nova as needed."""
+    metadata = meta_serialize(metadata)
     current_md = server.metadata
     to_del = [key for key in current_md.keys() if key not in metadata]
     if len(to_del) > 0:
