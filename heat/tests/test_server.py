@@ -23,6 +23,7 @@ from heat.common import template_format
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine.resources import nova_utils
 from heat.engine.resources import server as servers
 from heat.openstack.common import uuidutils
 from heat.openstack.common.gettextutils import _
@@ -491,7 +492,33 @@ class ServersTest(HeatTestCase):
         new_meta = {'test': 123}
         self.m.StubOutWithMock(self.fc.servers, 'set_meta')
         self.fc.servers.set_meta(return_server,
-                                 new_meta).AndReturn(None)
+                                 nova_utils.meta_serialize(
+                                     new_meta)).AndReturn(None)
+        self.m.ReplayAll()
+        update_template = copy.deepcopy(server.t)
+        update_template['Properties']['metadata'] = new_meta
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.m.VerifyAll()
+
+    def test_server_update_nova_metadata_complex(self):
+        """
+        Test that complex metadata values are correctly serialized
+        to JSON when sent to Nova.
+        """
+
+        return_server = self.fc.servers.list()[1]
+        server = self._create_test_server(return_server,
+                                          'md_update')
+
+        new_meta = {'test': {'testkey': 'testvalue'}}
+        self.m.StubOutWithMock(self.fc.servers, 'set_meta')
+
+        # If we're going to call set_meta() directly we
+        # need to handle the serialization ourselves.
+        self.fc.servers.set_meta(return_server,
+                                 nova_utils.meta_serialize(
+                                     new_meta)).AndReturn(None)
         self.m.ReplayAll()
         update_template = copy.deepcopy(server.t)
         update_template['Properties']['metadata'] = new_meta

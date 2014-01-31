@@ -194,7 +194,9 @@ class Server(resource.Resource):
         METADATA: properties.Schema(
             properties.Schema.MAP,
             _('Arbitrary key/value metadata to store for this server. Both '
-              'keys and values must be 255 characters or less.'),
+              'keys and values must be 255 characters or less.  Non-string '
+              'values will be serialized to JSON (and the serialized '
+              'string must be 255 characters or less).'),
             update_allowed=True
         ),
         USER_DATA_FORMAT: properties.Schema(
@@ -292,8 +294,7 @@ class Server(resource.Resource):
 
         instance_meta = self.properties.get(self.METADATA)
         if instance_meta is not None:
-            instance_meta = dict((key, str(value)) for (key, value) in
-                                 instance_meta.items())
+            instance_meta = nova_utils.meta_serialize(instance_meta)
 
         scheduler_hints = self.properties.get(self.SCHEDULER_HINTS)
         nics = self._build_nics(self.properties.get(self.NETWORKS))
