@@ -13,17 +13,14 @@
 #    under the License.
 
 import sqlalchemy
-from sqlalchemy.dialects import mysql
+
+from heat.db.sqlalchemy.types import Json
+from heat.db.sqlalchemy.types import LongText
 
 
 def upgrade(migrate_engine):
     meta = sqlalchemy.MetaData()
     meta.bind = migrate_engine
-
-    if migrate_engine.name == 'mysql':
-        long_text = mysql.LONGTEXT()
-    else:
-        long_text = sqlalchemy.Text
 
     software_config = sqlalchemy.Table(
         'software_config', meta,
@@ -35,8 +32,8 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('name', sqlalchemy.String(255),
                           nullable=True),
         sqlalchemy.Column('group', sqlalchemy.String(255)),
-        sqlalchemy.Column('config', long_text),
-        sqlalchemy.Column('io', long_text),
+        sqlalchemy.Column('config', LongText),
+        sqlalchemy.Column('io', Json),
         sqlalchemy.Column('tenant', sqlalchemy.String(256),
                           nullable=False,
                           index=True),
@@ -60,8 +57,8 @@ def upgrade(migrate_engine):
                           sqlalchemy.String(36),
                           sqlalchemy.ForeignKey('software_config.id'),
                           nullable=False),
-        sqlalchemy.Column('input_values', long_text),
-        sqlalchemy.Column('output_values', long_text),
+        sqlalchemy.Column('input_values', Json),
+        sqlalchemy.Column('output_values', Json),
         sqlalchemy.Column('signal_id', sqlalchemy.String(1024)),
         sqlalchemy.Column('action', sqlalchemy.String(255)),
         sqlalchemy.Column('status', sqlalchemy.String(255)),
