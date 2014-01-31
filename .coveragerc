@@ -1,7 +1,7 @@
 [run]
 branch = True
-source = heat
-omit = heat/tests/*,heat/openstack/*
+source = heat,contrib
+omit = */tests/*,heat/openstack/*
 
 [report]
 ignore-errors = True
