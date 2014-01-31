@@ -97,24 +97,6 @@ class HOTemplateTest(HeatTestCase):
         tmpl = parser.Template(hot_tpl)
         self.assertEqual(expected, tmpl[tmpl.OUTPUTS])
 
-    def test_param_refs(self):
-        """Test if parameter references work."""
-        params = {'foo': 'bar', 'blarg': 'wibble'}
-        snippet = {'properties': {'key1': {'get_param': 'foo'},
-                                  'key2': {'get_param': 'blarg'}}}
-        snippet_resolved = {'properties': {'key1': 'bar',
-                                           'key2': 'wibble'}}
-        tmpl = parser.Template(hot_tpl_empty)
-        self.assertEqual(snippet_resolved,
-                         tmpl.resolve_param_refs(snippet, params))
-        snippet = {'properties': {'key1': {'Ref': 'foo'},
-                                  'key2': {'Ref': 'blarg'}}}
-        snippet_resolved = {'properties': {'key1': 'bar',
-                                           'key2': 'wibble'}}
-        tmpl = parser.Template(hot_tpl_empty)
-        self.assertEqual(snippet_resolved,
-                         tmpl.resolve_param_refs(snippet, params))
-
     def test_str_replace(self):
         """Test str_replace function."""
 
@@ -504,6 +486,98 @@ class StackAttributesTest(HeatTestCase):
             resolved = hot.HOTemplate.resolve_attributes(self.snippet,
                                                          self.stack)
             self.assertEqual(self.expected, resolved)
+
+
+class StackParametersTest(HeatTestCase):
+    """
+    Test stack get_param function when stack was created from HOT template.
+    """
+    class AnObject(object):
+        def __init__(self, first, second, third):
+            self.first = first
+            self.second = second
+            self.third = third
+
+    simple_object = AnObject('a', 'b', 'c')
+    complex_object = AnObject('a',
+                              {'key1': 'val1', 'key2': 'val2', 'key3': 'val3'},
+                              simple_object)
+
+    scenarios = [
+        ('Ref_string',
+         dict(params={'foo': 'bar', 'blarg': 'wibble'},
+              snippet={'properties': {'prop1': {'Ref': 'foo'},
+                                      'prop2': {'Ref': 'blarg'}}},
+              expected={'properties': {'prop1': 'bar',
+                                       'prop2': 'wibble'}})),
+        ('get_param_string',
+         dict(params={'foo': 'bar', 'blarg': 'wibble'},
+              snippet={'properties': {'prop1': {'get_param': 'foo'},
+                                      'prop2': {'get_param': 'blarg'}}},
+              expected={'properties': {'prop1': 'bar',
+                                       'prop2': 'wibble'}})),
+        ('get_list_attr',
+         dict(params={'list': ['foo', 'bar']},
+              snippet={'properties': {'prop1': {'get_param': ['list', 1]}}},
+              expected={'properties': {'prop1': 'bar'}})),
+        ('get_flat_dict_attr',
+         dict(params={'flat_dict':
+                      {'key1': 'val1', 'key2': 'val2', 'key3': 'val3'}},
+              snippet={'properties': {'prop1': {'get_param':
+                                                ['flat_dict', 'key2']}}},
+              expected={'properties': {'prop1': 'val2'}})),
+        ('get_nested_attr_list',
+         dict(params={'nested_dict':
+                      {'list': [1, 2, 3],
+                       'string': 'abc',
+                       'dict': {'a': 1, 'b': 2, 'c': 3}}},
+              snippet={'properties': {'prop1': {'get_param':
+                                                ['nested_dict',
+                                                 'list',
+                                                 0]}}},
+              expected={'properties': {'prop1': 1}})),
+        ('get_nested_attr_dict',
+         dict(params={'nested_dict':
+                      {'list': [1, 2, 3],
+                       'string': 'abc',
+                       'dict': {'a': 1, 'b': 2, 'c': 3}}},
+              snippet={'properties': {'prop1': {'get_param':
+                                                ['nested_dict',
+                                                 'dict',
+                                                 'a']}}},
+              expected={'properties': {'prop1': 1}})),
+        ('get_simple_object',
+         dict(params={'simple_object': simple_object},
+              snippet={'properties': {'prop1': {'get_param':
+                                                ['simple_object',
+                                                 'first']}}},
+              expected={'properties': {'prop1': 'a'}})),
+        ('get_complex_object',
+         dict(params={'complex_object': complex_object},
+              snippet={'properties': {'prop1': {'get_param':
+                                                ['complex_object',
+                                                 'second',
+                                                 'key1']}}},
+              expected={'properties': {'prop1': 'val1'}})),
+        ('get_complex_object_invalid_argument',
+         dict(params={'complex_object': complex_object},
+              snippet={'properties': {'prop1': {'get_param':
+                                                ['complex_object',
+                                                 'not_there']}}},
+              expected={'properties': {'prop1': ''}})),
+        ('get_attr_none',
+         dict(params={'none': None},
+              snippet={'properties': {'prop1': {'get_param':
+                                                ['none',
+                                                 'who_cares']}}},
+              expected={'properties': {'prop1': ''}})),
+    ]
+
+    def test_param_refs(self):
+        """Test if parameter references work."""
+        tmpl = parser.Template(hot_tpl_empty)
+        self.assertEqual(self.expected,
+                         tmpl.resolve_param_refs(self.snippet, self.params))
 
 
 class HOTParamValidatorTest(HeatTestCase):

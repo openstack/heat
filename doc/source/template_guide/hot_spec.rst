@@ -450,11 +450,20 @@ follows:
 
 ::
 
-  get_param: <parameter name>
+  get_param:
+    - <parameter name>
+    - <key/index 1> (optional)
+    - <key/index 2> (optional)
+    - ...
 
-The *parameter name* of the input parameter to be resolved is given as single
-parameter to this function. A sample use of this function in context of a
-resource definition is shown below.
+parameter name
+    The parameter name is required as it specifies the parameter
+    to be resolved. If the parameter returns a complex data structure
+    such as a list or a map, then subsequent keys or indexes can be specified
+    which navigate the data structure to return the desired value.
+
+A sample use of this function in context of a resource definition
+is shown below.
 
 ::
 
@@ -462,13 +471,29 @@ resource definition is shown below.
     instance_type:
       type: string
       description: Instance type to be used.
+    server_data:
+      type: json
 
   resources:
     my_instance:
       type: OS::Nova::Server
       properties:
         flavor: { get_param: instance_type}
+        metadata: { get_param: [ server_data, metadata ] }
+        key_name: { get_param: [ server_data, keys, 0 ] }
 
+
+In this example, if the instance_type/server_data parameters contained
+the following data:
+
+::
+
+   {"instance_type": "m1.tiny",
+   {"server_data": {"metadata": {"foo": "bar"},
+                    "keys": ["a_key","other_key"]}}}
+
+then the value of the property 'flavor' would resolve to "m1.tiny", 'metadata'
+would resolve to {"foo": "bar"} and 'key_name' would resolve to "a_key".
 
 get_attr
 --------

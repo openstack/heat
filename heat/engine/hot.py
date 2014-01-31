@@ -133,12 +133,12 @@ class HOTemplate(template.Template):
         return cfn_outputs
 
     @staticmethod
-    def resolve_param_refs(s, params, transform=None):
+    def _resolve_ref(s, params, transform=None):
         """
-        Resolve constructs of the form { get_param: my_param }
+        Resolve constructs of the form { Ref: my_param }
         """
         def match_param_ref(key, value):
-            return (key in ['get_param', 'Ref'] and
+            return (key == 'Ref' and
                     value is not None and
                     value in params)
 
@@ -150,6 +150,41 @@ class HOTemplate(template.Template):
 
         return template._resolve(match_param_ref, handle_param_ref, s,
                                  transform)
+
+    @staticmethod
+    def _resolve_get_param(s, params, transform=None):
+        """
+        Resolve constructs of the form { get_param: my_param }
+        """
+        def match_param_ref(key, value):
+            return (key == 'get_param' and
+                    value is not None)
+
+        def handle_param_ref(args):
+            try:
+                if not isinstance(args, list):
+                    args = [args]
+
+                parameter = params[args[0]]
+                try:
+                    for inner_param in args[1:]:
+                        if hasattr(parameter, str(inner_param)):
+                            parameter = getattr(parameter, inner_param)
+                        else:
+                            parameter = parameter[inner_param]
+                    return parameter
+                except (KeyError, IndexError, TypeError):
+                    return ''
+            except (KeyError, ValueError):
+                raise exception.UserParameterMissing(key=args[0])
+
+        return template._resolve(match_param_ref, handle_param_ref, s,
+                                 transform)
+
+    @staticmethod
+    def resolve_param_refs(s, params, transform=None):
+        resolved = HOTemplate._resolve_ref(s, params, transform)
+        return HOTemplate._resolve_get_param(resolved, params, transform)
 
     @staticmethod
     def resolve_resource_refs(s, resources, transform=None):
