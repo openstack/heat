@@ -27,8 +27,7 @@ class ParameterTest(testtools.TestCase):
 
     def new_parameter(self, name, schema, value=None,
                       validate_value=True):
-        tmpl = template.Template({template.PARAMETERS: {name:
-                                                        schema}})
+        tmpl = template.Template({'Parameters': {name: schema}})
         schema = tmpl.param_schemata()[name]
         return parameters.Parameter(name, schema, value,
                                     validate_value)

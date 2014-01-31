@@ -21,7 +21,6 @@ from heat.engine import environment
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import scheduler
-from heat.engine import template as tmpl
 
 from heat.openstack.common import log as logging
 from heat.openstack.common.gettextutils import _
@@ -83,7 +82,7 @@ class StackResource(resource.Resource):
                 cfg.CONF.max_nested_stack_depth
             raise exception.RequestLimitExceeded(message=msg)
         template = parser.Template(child_template)
-        if ((len(template[tmpl.RESOURCES]) +
+        if ((len(template[template.RESOURCES]) +
              self.stack.root_stack.total_resources() >
              cfg.CONF.max_resources_per_stack)):
             raise exception.RequestLimitExceeded(
@@ -138,7 +137,7 @@ class StackResource(resource.Resource):
             raise exception.Error(_('Cannot update %s, stack not created')
                                   % self.name)
         res_diff = (
-            len(template[tmpl.RESOURCES]) - len(nested_stack.resources))
+            len(template[template.RESOURCES]) - len(nested_stack.resources))
         new_size = nested_stack.root_stack.total_resources() + res_diff
         if new_size > cfg.CONF.max_resources_per_stack:
             raise exception.RequestLimitExceeded(

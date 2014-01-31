@@ -28,7 +28,6 @@ from heat.common import identifier
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
-from heat.engine import template
 from heat.engine import timestamp
 from heat.engine import update
 from heat.engine.notification import stack as notification
@@ -107,14 +106,14 @@ class Stack(collections.Mapping):
         self._set_param_stackid()
 
         if resolve_data:
-            self.outputs = self.resolve_static_data(self.t[template.OUTPUTS])
+            self.outputs = self.resolve_static_data(self.t[self.t.OUTPUTS])
         else:
             self.outputs = {}
 
     @property
     def resources(self):
         if self._resources is None:
-            template_resources = self.t[template.RESOURCES]
+            template_resources = self.t[self.t.RESOURCES]
             self._resources = dict((name, resource.Resource(name, data, self))
                                    for (name, data) in
                                    template_resources.items())
@@ -571,7 +570,7 @@ class Stack(collections.Mapping):
         # stack resources are stored, even if one is in a failed
         # state (otherwise we won't remove them on delete)
         self.t = newstack.t
-        template_outputs = self.t[template.OUTPUTS]
+        template_outputs = self.t[self.t.OUTPUTS]
         self.outputs = self.resolve_static_data(template_outputs)
         self.store()
 

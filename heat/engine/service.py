@@ -34,13 +34,11 @@ from heat.engine import environment
 from heat.common import exception
 from heat.common import identifier
 from heat.common import heat_keystoneclient as hkc
-from heat.engine import parameters
 from heat.engine import parser
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import stack_lock
-from heat.engine import template as tpl
 from heat.engine import watchrule
 
 from heat.openstack.common import log as logging
@@ -380,7 +378,7 @@ class EngineService(service.Service):
 
         tmpl = parser.Template(template, files=files)
 
-        if len(tmpl[tpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
+        if len(tmpl[tmpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
             raise exception.RequestLimitExceeded(
                 message=exception.StackResourceLimitExceeded.msg_fmt)
 
@@ -435,7 +433,7 @@ class EngineService(service.Service):
         # Now parse the template and any parameters for the updated
         # stack definition.
         tmpl = parser.Template(template, files=files)
-        if len(tmpl[tpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
+        if len(tmpl[tmpl.RESOURCES]) > cfg.CONF.max_resources_per_stack:
             raise exception.RequestLimitExceeded(
                 message=exception.StackResourceLimitExceeded.msg_fmt)
         stack_name = current_stack.name
@@ -505,7 +503,7 @@ class EngineService(service.Service):
                 return {'Error': str(ex)}
 
         tmpl_params = tmpl.parameters(None, {}, validate_value=False)
-        is_real_param = lambda p: p.name not in parameters.PSEUDO_PARAMETERS
+        is_real_param = lambda p: p.name not in tmpl_params.PSEUDO_PARAMETERS
         params = tmpl_params.map(api.format_validate_parameter, is_real_param)
 
         result = {
