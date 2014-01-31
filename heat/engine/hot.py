@@ -42,6 +42,8 @@ class HOTemplate(template.Template):
                ('heat_template_version', 'description', 'parameter_groups',
                 'parameters', 'resources', 'outputs', '__undefined__')
 
+    SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS])
+
     _CFN_TO_HOT_SECTIONS = {template.Template.VERSION: VERSION,
                             template.Template.DESCRIPTION: DESCRIPTION,
                             template.Template.PARAMETERS: PARAMETERS,
@@ -57,6 +59,9 @@ class HOTemplate(template.Template):
 
         if section not in self.SECTIONS:
             raise KeyError(_('"%s" is not a valid template section') % section)
+        if section in self.SECTIONS_NO_DIRECT_ACCESS:
+            raise KeyError(
+                _('Section %s can not be accessed directly.') % section)
 
         if section == self.VERSION:
             return self.t[section]
@@ -249,7 +254,7 @@ class HOTemplate(template.Template):
                                  handle_str_replace, s, transform)
 
     def param_schemata(self):
-        params = self[self.PARAMETERS].iteritems()
+        params = self.t.get(self.PARAMETERS, {}).iteritems()
         return dict((name, HOTParamSchema.from_dict(schema))
                     for name, schema in params)
 

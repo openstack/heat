@@ -595,8 +595,6 @@ class StackServiceCreateUpdateDeleteTest(HeatTestCase):
         stack = get_wordpress_stack(stack_name, self.ctx)
         setup_mocks(self.m, stack)
 
-        template = dict(stack.t)
-        template['Parameters']['KeyName']['Default'] = 'test'
         resource = stack['WebServer']
 
         self.m.ReplayAll()

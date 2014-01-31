@@ -30,6 +30,8 @@ class Template(collections.Mapping):
                ('AWSTemplateFormatVersion', 'Description', 'Mappings',
                 'Parameters', 'Resources', 'Outputs')
 
+    SECTIONS_NO_DIRECT_ACCESS = set([PARAMETERS])
+
     def __new__(cls, template, *args, **kwargs):
         '''Create a new Template of the appropriate class.'''
 
@@ -69,6 +71,10 @@ class Template(collections.Mapping):
         '''Get the relevant section in the template.'''
         if section not in self.SECTIONS:
             raise KeyError(_('"%s" is not a valid template section') % section)
+        if section in self.SECTIONS_NO_DIRECT_ACCESS:
+            raise KeyError(
+                _('Section %s can not be accessed directly.') % section)
+
         if section == self.VERSION:
             return self.t[section]
 
@@ -81,11 +87,12 @@ class Template(collections.Mapping):
 
     def __iter__(self):
         '''Return an iterator over the section names.'''
-        return iter(self.SECTIONS)
+        return (s for s in self.SECTIONS
+                if s not in self.SECTIONS_NO_DIRECT_ACCESS)
 
     def __len__(self):
         '''Return the number of sections.'''
-        return len(self.SECTIONS)
+        return len(self.SECTIONS) - len(self.SECTIONS_NO_DIRECT_ACCESS)
 
     def resolve_find_in_map(self, s, transform=None):
         '''
@@ -472,7 +479,7 @@ class Template(collections.Mapping):
                         s, transform)
 
     def param_schemata(self):
-        params = self[self.PARAMETERS].iteritems()
+        params = self.t.get(self.PARAMETERS, {}).iteritems()
         return dict((name, parameters.Schema.from_dict(schema))
                     for name, schema in params)
 
