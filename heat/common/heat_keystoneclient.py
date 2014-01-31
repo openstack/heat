@@ -224,6 +224,23 @@ class KeystoneClient(object):
         except kc_exception.NotFound:
             pass
 
+    def _get_username(self, username):
+        if(len(username) > 64):
+            logger.warning(_("Truncating the username %s to the last 64 "
+                           "characters.") % username)
+        #get the last 64 characters of the username
+        return username[-64:]
+
+    def _get_stack_user_role(self, roles_list):
+        # FIXME(shardy): The currently released v3 keystoneclient doesn't
+        # support filtering the results, so we have to do it locally,
+        # update when a new keystoneclient release happens containing
+        # the extensible-crud-manager-operations patch
+        stack_user_role = [r for r in roles_list
+                           if r.name == self.conf.heat_stack_user_role]
+        if len(stack_user_role) == 1:
+            return stack_user_role[0].id
+
     def create_stack_user(self, username, password=''):
         """
         Create a user defined as part of a stack, either via template
@@ -231,30 +248,18 @@ class KeystoneClient(object):
         the heat_stack_user_role as defined in the config
         Returns the keystone ID of the resulting user
         """
-        if(len(username) > 64):
-            logger.warning(_("Truncating the username %s to the last 64 "
-                           "characters.") % username)
-            #get the last 64 characters of the username
-            username = username[-64:]
-
-        # We add the new user to a special keystone role
-        # This role is designed to allow easier differentiation of the
-        # heat-generated "stack users" which will generally have credentials
-        # deployed on an instance (hence are implicitly untrusted)
-        # FIXME(shardy): The v3 keystoneclient doesn't currently support
-        # filtering the results, so we have to do it locally, update when
-        # that is fixed in keystoneclient
+        # FIXME(shardy): There's duplicated logic between here and
+        # create_stack_domain user, but this function is expected to
+        # be removed after the transition of all resources to domain
+        # users has been completed
         roles_list = self.client_v3.roles.list()
-        stack_user_role = [r for r in roles_list
-                           if r.name == self.conf.heat_stack_user_role]
-        if len(stack_user_role) == 1:
+        role_id = self._get_stack_user_role(roles_list)
+        if role_id:
             # Create the user
             user = self.client_v3.users.create(
-                name=username, password=password,
+                name=self._get_username(username), password=password,
                 default_project=self.context.tenant_id)
-
             # Add user to heat_stack_user_role
-            role_id = stack_user_role[0].id
             logger.debug(_("Adding user %(user)s to role %(role)s") % {
                          'user': user.id, 'role': role_id})
             self.client_v3.roles.grant(role=role_id, user=user.id,
@@ -264,6 +269,40 @@ class KeystoneClient(object):
                          "check role exists!") % {
                              'user': username,
                              'role': self.conf.heat_stack_user_role})
+            raise exception.Error(_("Can't find role %s")
+                                  % self.conf.heat_stack_user_role)
+
+        return user.id
+
+    def create_stack_domain_user(self, username, project_id, password=None):
+        """
+        Create a user defined as part of a stack, either via template
+        or created internally by a resource.  This user will be added to
+        the heat_stack_user_role as defined in the config, and created in
+        the specified project (which is expected to be in the stack_domain.
+        Returns the keystone ID of the resulting user
+        """
+
+        # We add the new user to a special keystone role
+        # This role is designed to allow easier differentiation of the
+        # heat-generated "stack users" which will generally have credentials
+        # deployed on an instance (hence are implicitly untrusted)
+        roles_list = self.admin_client.roles.list()
+        role_id = self._get_stack_user_role(roles_list)
+        if role_id:
+            # Create user
+            user = self.admin_client.users.create(
+                name=self._get_username(username), password=password,
+                default_project=project_id, domain=self.stack_domain_id)
+            # Add to stack user role
+            logger.debug(_("Adding user %(user)s to role %(role)s") % {
+                         'user': user.id, 'role': role_id})
+            self.admin_client.roles.grant(role=role_id, user=user.id,
+                                          project=project_id)
+        else:
+            logger.error(_("Failed to add user %(user)s to role %(role)s, "
+                         "check role exists!") % {'user': username,
+                         'role': self.conf.heat_stack_user_role})
             raise exception.Error(_("Can't find role %s")
                                   % self.conf.heat_stack_user_role)
 
