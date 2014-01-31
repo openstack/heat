@@ -21,7 +21,7 @@ from heat.engine import parser
 from heat.engine import scheduler
 from heat.engine.resources import os_database
 from heat.tests.common import HeatTestCase
-from heat.tests.utils import setup_dummy_db
+from heat.tests import utils
 
 
 wp_template = '''
@@ -90,13 +90,13 @@ class OSDBInstanceTest(HeatTestCase):
     def setUp(self):
         super(OSDBInstanceTest, self).setUp()
         self.fc = self.m.CreateMockAnything()
-        setup_dummy_db()
+        utils.setup_dummy_db()
 
     def _setup_test_clouddbinstance(self, name, parsed_t):
         stack_name = '%s_stack' % name
         t = parsed_t
         template = parser.Template(t)
-        stack = parser.Stack(None,
+        stack = parser.Stack(utils.dummy_context(),
                              stack_name,
                              template,
                              environment.Environment({'name': 'test'}),

@@ -13,10 +13,10 @@
 #    under the License.
 from heat.common import template_format
 from heat.common import exception
+from heat.common import identifier
 from heat.engine import parser
 from heat.engine import resource
 from heat.engine import hot
-from heat.engine import parameters
 from heat.engine import template
 from heat.engine import constraints
 
@@ -484,7 +484,9 @@ class HOTParamValidatorTest(HeatTestCase):
         tmpl = parser.Template(hot_tpl)
 
         def run_parameters(value):
-            parameters.Parameters("stack_testit", tmpl, {'db_name': value})
+            tmpl.parameters(
+                identifier.HeatIdentifier('', "stack_testit", None),
+                {'db_name': value})
             return True
 
         value = 'wp'

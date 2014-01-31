@@ -32,7 +32,6 @@ from heat.engine import template
 from heat.engine import timestamp
 from heat.engine import update
 from heat.engine.notification import stack as notification
-from heat.engine.parameters import Parameters
 from heat.engine.template import Template
 from heat.engine.clients import Clients
 from heat.db import api as db_api
@@ -44,8 +43,6 @@ from heat.openstack.common import strutils
 from heat.common.exception import StackValidationFailed
 
 logger = logging.getLogger(__name__)
-
-(PARAM_STACK_NAME, PARAM_REGION) = ('AWS::StackName', 'AWS::Region')
 
 
 class Stack(collections.Mapping):
@@ -104,8 +101,8 @@ class Stack(collections.Mapping):
         resources.initialise()
 
         self.env = env or environment.Environment({})
-        self.parameters = Parameters(self.name, self.t,
-                                     user_params=self.env.params)
+        self.parameters = self.t.parameters(self.identifier(),
+                                            user_params=self.env.params)
 
         self._set_param_stackid()
 
@@ -160,16 +157,10 @@ class Stack(collections.Mapping):
     def _set_param_stackid(self):
         '''
         Update self.parameters with the current ARN which is then provided
-        via the Parameters class as the AWS::StackId pseudo parameter
+        via the Parameters class as the StackId pseudo parameter
         '''
-        # This can fail if constructor called without a valid context,
-        # as it is in many tests
-        try:
-            stack_arn = self.identifier().arn()
-        except (AttributeError, ValueError, TypeError):
+        if not self.parameters.set_stack_id(self.identifier()):
             logger.warning(_("Unable to set parameters StackId identifier"))
-        else:
-            self.parameters.set_stack_id(stack_arn)
 
     @staticmethod
     def _get_dependencies(resources):
@@ -744,9 +735,12 @@ def resolve_static_data(template, stack, parameters, snippet):
     Example:
 
     >>> from heat.common import template_format
+    >>> from heat.common import identifier
     >>> template_str = '# JSON or YAML encoded template'
     >>> template = Template(template_format.parse(template_str))
-    >>> parameters = Parameters('stack', template, {'KeyName': 'my_key'})
+    >>> parameters = template.parameters(
+    ...     identifier.HeatIdentifier('tenant_id', 'stack', 'stack_id'),
+    ...     {}, {'KeyName': 'my_key'})
     >>> resolve_static_data(template, None, parameters, {'Ref': 'KeyName'})
     'my_key'
     '''

@@ -394,8 +394,8 @@ class ProviderTemplateTest(HeatTestCase):
                 "LinuxDistribution": "U10"
             }
         }
-        stack = parser.Stack(None, 'test_stack', parser.Template({}),
-                             stack_id=str(uuid.uuid4()))
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             parser.Template({}), stack_id=str(uuid.uuid4()))
         templ_resource = resource.Resource("test_templ_resource", json_snippet,
                                            stack)
         self.m.VerifyAll()

@@ -17,6 +17,7 @@ import testtools
 import json
 
 from heat.common import exception
+from heat.common import identifier
 from heat.engine import parameters
 from heat.engine import template
 from heat.engine import constraints as constr
@@ -315,23 +316,32 @@ class ParametersTest(testtools.TestCase):
     def new_parameters(self, stack_name, tmpl, user_params={}, stack_id=None,
                        validate_value=True):
         tmpl = template.Template(tmpl)
-        return parameters.Parameters(stack_name, tmpl, user_params, stack_id,
-                                     validate_value)
+        return tmpl.parameters(
+            identifier.HeatIdentifier('', stack_name, stack_id),
+            user_params, validate_value)
 
     def test_pseudo_params(self):
-        params = self.new_parameters('test_stack', {"Parameters": {}})
+        stack_name = 'test_stack'
+        params = self.new_parameters(stack_name, {"Parameters": {}})
 
         self.assertEqual('test_stack', params['AWS::StackName'])
-        self.assertEqual('None', params['AWS::StackId'])
+        self.assertEqual(
+            'arn:openstack:heat:::stacks/{0}/{1}'.format(stack_name, 'None'),
+            params['AWS::StackId'])
+
         self.assertIn('AWS::Region', params)
 
     def test_pseudo_param_stackid(self):
-        params = self.new_parameters('test_stack', {'Parameters': {}},
-                                     stack_id='123::foo')
+        stack_name = 'test_stack'
+        params = self.new_parameters(stack_name, {'Parameters': {}},
+                                     stack_id='abc123')
 
-        self.assertEqual('123::foo', params['AWS::StackId'])
-        params.set_stack_id('456::bar')
-        self.assertEqual('456::bar', params['AWS::StackId'])
+        self.assertEqual(
+            'arn:openstack:heat:::stacks/{0}/{1}'.format(stack_name, 'abc123'),
+            params['AWS::StackId'])
+        stack_identifier = identifier.HeatIdentifier('', '', 'def456')
+        params.set_stack_id(stack_identifier)
+        self.assertEqual(stack_identifier.arn(), params['AWS::StackId'])
 
     def test_schema_invariance(self):
         params1 = self.new_parameters('test', params_schema,
@@ -369,13 +379,17 @@ class ParametersTest(testtools.TestCase):
     def test_map_str(self):
         template = {'Parameters': {'Foo': {'Type': 'String'},
                                    'Bar': {'Type': 'Number'}}}
-        params = self.new_parameters('test_params', template,
+        stack_name = 'test_params'
+        params = self.new_parameters(stack_name, template,
                                      {'Foo': 'foo', 'Bar': '42'})
 
         expected = {'Foo': 'foo',
                     'Bar': '42',
                     'AWS::Region': 'ap-southeast-1',
-                    'AWS::StackId': 'None',
+                    'AWS::StackId':
+                    'arn:openstack:heat:::stacks/{0}/{1}'.format(
+                        stack_name,
+                        'None'),
                     'AWS::StackName': 'test_params'}
 
         self.assertEqual(expected, params.map(str))

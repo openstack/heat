@@ -463,7 +463,7 @@ class Resource(object):
         logger.info('creating %s' % str(self))
 
         # Re-resolve the template, since if the resource Ref's
-        # the AWS::StackId pseudo parameter, it will change after
+        # the StackId pseudo parameter, it will change after
         # the parser.Stack is stored (which is after the resources
         # are __init__'d, but before they are create()'d)
         self.t = self.stack.resolve_static_data(self.json_snippet)

@@ -154,7 +154,7 @@ class StackResource(resource.Resource):
                              disable_rollback=True,
                              parent_resource=self,
                              owner_id=self.stack.id)
-        stack.parameters.set_stack_id(nested_stack.identifier().arn())
+        stack.parameters.set_stack_id(nested_stack.identifier())
         stack.validate()
 
         if not hasattr(type(self), 'attributes_schema'):

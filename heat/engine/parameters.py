@@ -329,17 +329,22 @@ class Parameters(collections.Mapping):
     The parameters of a stack, with type checking, defaults &c. specified by
     the stack's template.
     '''
-    def __init__(self, stack_name, tmpl, user_params={}, stack_id=None,
+
+    def __init__(self, stack_identifier, tmpl, user_params={},
                  validate_value=True):
         '''
         Create the parameter container for a stack from the stack name and
         template, optionally setting the user-supplied parameter values.
         '''
         def parameters():
+            stack_id = stack_identifier.arn() \
+                if stack_identifier is not None else 'None'
+            stack_name = stack_identifier and stack_identifier.stack_name
+
             yield Parameter(PARAM_STACK_ID,
                             Schema(Schema.STRING, _('Stack ID'),
                                    default=str(stack_id)))
-            if stack_name is not None:
+            if stack_name:
                 yield Parameter(PARAM_STACK_NAME,
                                 Schema(Schema.STRING, _('Stack Name'),
                                        default=stack_name))
@@ -390,11 +395,14 @@ class Parameters(collections.Mapping):
         return dict((n, func(p))
                     for n, p in self.params.iteritems() if filter_func(p))
 
-    def set_stack_id(self, stack_id):
+    def set_stack_id(self, stack_identifier):
         '''
-        Set the AWS::StackId pseudo parameter value
+        Set the StackId pseudo parameter value
         '''
-        self.params[PARAM_STACK_ID].schema.set_default(stack_id)
+        if stack_identifier is not None:
+            self.params[PARAM_STACK_ID].schema.set_default(
+                stack_identifier.arn())
+            return True
 
     def _validate(self, user_params):
         schemata = self.tmpl.param_schemata()
