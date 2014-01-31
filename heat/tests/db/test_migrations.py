@@ -231,3 +231,6 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
             'created_at': datetime.datetime.now()}]
         result = engine.execute(event_table.insert(), data)
         self.assertEqual(last_id + 1, result.inserted_primary_key[0])
+
+    def _check_036(self, engine, data):
+        self.assertColumnExists(engine, 'stack', 'stack_user_project_id')

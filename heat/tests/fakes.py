@@ -139,3 +139,6 @@ class FakeKeystoneClient(object):
 
     def delete_trust(self, trust_id):
         pass
+
+    def delete_stack_domain_project(self, project_id):
+        pass

@@ -66,7 +66,7 @@ class Stack(collections.Mapping):
                  stack_id=None, action=None, status=None,
                  status_reason='', timeout_mins=60, resolve_data=True,
                  disable_rollback=True, parent_resource=None, owner_id=None,
-                 adopt_stack_data=None):
+                 adopt_stack_data=None, stack_user_project_id=None):
         '''
         Initialise from a context, name, Template object and (optionally)
         Environment object. The database ID may also be initialised, if the
@@ -96,6 +96,7 @@ class Stack(collections.Mapping):
         self._dependencies = None
         self._access_allowed_handlers = {}
         self.adopt_stack_data = adopt_stack_data
+        self.stack_user_project_id = stack_user_project_id
 
         resources.initialise()
 
@@ -186,7 +187,8 @@ class Stack(collections.Mapping):
         stack = cls(context, stack.name, template, env,
                     stack.id, stack.action, stack.status, stack.status_reason,
                     stack.timeout, resolve_data, stack.disable_rollback,
-                    parent_resource, owner_id=stack.owner_id)
+                    parent_resource, owner_id=stack.owner_id,
+                    stack_user_project_id=stack.stack_user_project_id)
 
         return stack
 
@@ -208,6 +210,7 @@ class Stack(collections.Mapping):
             'status_reason': self.status_reason,
             'timeout': self.timeout_mins,
             'disable_rollback': self.disable_rollback,
+            'stack_user_project_id': self.stack_user_project_id,
         }
         if self.id:
             db_api.stack_update(self.context, self.id, s)
@@ -220,6 +223,7 @@ class Stack(collections.Mapping):
             else:
                 new_creds = db_api.user_creds_create(self.context)
             s['user_creds_id'] = new_creds.id
+
             new_s = db_api.stack_create(self.context, s)
             self.id = new_s.id
 
@@ -628,6 +632,16 @@ class Stack(collections.Mapping):
                     stack_status = self.FAILED
                     reason = "Error deleting trust: %s" % str(ex)
 
+            # If the stack has a domain project, delete it
+            if self.stack_user_project_id:
+                try:
+                    self.clients.keystone().delete_stack_domain_project(
+                        project_id=self.stack_user_project_id)
+                except Exception as ex:
+                    logger.exception(ex)
+                    stack_status = self.FAILED
+                    reason = "Error deleting project: %s" % str(ex)
+
         self.state_set(action, stack_status, reason)
 
         if stack_status != self.FAILED:
@@ -709,6 +723,10 @@ class Stack(collections.Mapping):
     def set_deletion_policy(self, policy):
         for res in self.resources.values():
             res.set_deletion_policy(policy)
+
+    def set_stack_user_project_id(self, project_id):
+        self.stack_user_project_id = project_id
+        self.store()
 
     def get_abandon_data(self):
         return {

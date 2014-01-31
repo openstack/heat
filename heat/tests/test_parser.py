@@ -882,7 +882,8 @@ class StackTest(HeatTestCase):
         parser.Stack.__init__(self.ctx, stack.name, t, env, stack.id,
                               stack.action, stack.status, stack.status_reason,
                               stack.timeout, True, stack.disable_rollback,
-                              'parent', owner_id=None)
+                              'parent', owner_id=None,
+                              stack_user_project_id=None)
 
         self.m.ReplayAll()
         parser.Stack.load(self.ctx, stack_id=self.stack.id,
@@ -2332,3 +2333,76 @@ class StackTest(HeatTestCase):
 
         self.stack['CResource'].requires_deferred_auth = True
         self.assertTrue(self.stack.requires_deferred_auth())
+
+    @utils.stack_delete_after
+    def test_stack_user_project_id_default(self):
+        self.stack = parser.Stack(self.ctx, 'user_project_none',
+                                  template.Template({}))
+        self.stack.store()
+        self.assertIsNone(self.stack.stack_user_project_id)
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        self.assertIsNone(db_stack.stack_user_project_id)
+
+    @utils.stack_delete_after
+    def test_stack_user_project_id_constructor(self):
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClient())
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(self.ctx, 'user_project_init',
+                                  template.Template({}),
+                                  stack_user_project_id='aproject1234')
+        self.stack.store()
+        self.assertEqual('aproject1234', self.stack.stack_user_project_id)
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        self.assertEqual('aproject1234', db_stack.stack_user_project_id)
+
+        self.stack.delete()
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_stack_user_project_id_delete_fail(self):
+
+        class FakeKeystoneClientFail(FakeKeystoneClient):
+            def delete_stack_domain_project(self, project_id):
+                raise kc_exceptions.Forbidden("Denied!")
+
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClientFail())
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(self.ctx, 'user_project_init',
+                                  template.Template({}),
+                                  stack_user_project_id='aproject1234')
+        self.stack.store()
+        self.assertEqual('aproject1234', self.stack.stack_user_project_id)
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        self.assertEqual('aproject1234', db_stack.stack_user_project_id)
+
+        self.stack.delete()
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.FAILED),
+                         self.stack.state)
+        self.assertIn('Error deleting project', self.stack.status_reason)
+        self.m.VerifyAll()
+
+    @utils.stack_delete_after
+    def test_stack_user_project_id_setter(self):
+        self.m.StubOutWithMock(clients.OpenStackClients, 'keystone')
+        clients.OpenStackClients.keystone().AndReturn(FakeKeystoneClient())
+        self.m.ReplayAll()
+
+        self.stack = parser.Stack(self.ctx, 'user_project_init',
+                                  template.Template({}))
+        self.stack.store()
+        self.assertIsNone(self.stack.stack_user_project_id)
+        self.stack.set_stack_user_project_id(project_id='aproject456')
+        self.assertEqual('aproject456', self.stack.stack_user_project_id)
+        db_stack = db_api.stack_get(self.ctx, self.stack.id)
+        self.assertEqual('aproject456', db_stack.stack_user_project_id)
+
+        self.stack.delete()
+        self.assertEqual((parser.Stack.DELETE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.m.VerifyAll()
