@@ -364,10 +364,11 @@ class Stack(collections.Mapping):
             return
 
         stack = db_api.stack_get(self.context, self.id)
-        stack.update_and_save({'action': action,
-                               'status': status,
-                               'status_reason': reason})
-        notification.send(self)
+        if stack is not None:
+            stack.update_and_save({'action': action,
+                                   'status': status,
+                                   'status_reason': reason})
+            notification.send(self)
 
     @property
     def state(self):
