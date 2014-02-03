@@ -1657,8 +1657,54 @@ class StackServiceTest(HeatTestCase):
                                                    mock.ANY,
                                                    mock.ANY,
                                                    mock.ANY,
-                                                   filters
+                                                   filters,
+                                                   mock.ANY,
                                                    )
+
+    @mock.patch.object(db_api, 'stack_get_all')
+    def test_stack_list_tenant_safe_defaults_to_true(self, mock_stack_get_all):
+        self.eng.list_stacks(self.ctx)
+        mock_stack_get_all.assert_called_once_with(mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   True,
+                                                   )
+
+    @mock.patch.object(db_api, 'stack_get_all')
+    def test_stack_list_passes_tenant_safe_info(self, mock_stack_get_all):
+        self.eng.list_stacks(self.ctx, tenant_safe=False)
+        mock_stack_get_all.assert_called_once_with(mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   mock.ANY,
+                                                   False,
+                                                   )
+
+    @mock.patch.object(db_api, 'stack_count_all')
+    def test_count_stacks_passes_filter_info(self, mock_stack_count_all):
+        self.eng.count_stacks(self.ctx, filters={'foo': 'bar'})
+        mock_stack_count_all.assert_called_once_with(mock.ANY,
+                                                     filters={'foo': 'bar'},
+                                                     tenant_safe=mock.ANY)
+
+    @mock.patch.object(db_api, 'stack_count_all')
+    def test_count_stacks_tenant_safe_default_true(self, mock_stack_count_all):
+        self.eng.count_stacks(self.ctx)
+        mock_stack_count_all.assert_called_once_with(mock.ANY,
+                                                     filters=mock.ANY,
+                                                     tenant_safe=True)
+
+    @mock.patch.object(db_api, 'stack_count_all')
+    def test_count_stacks_passes_tenant_safe_info(self, mock_stack_count_all):
+        self.eng.count_stacks(self.ctx, tenant_safe=False)
+        mock_stack_count_all.assert_called_once_with(mock.ANY,
+                                                     filters=mock.ANY,
+                                                     tenant_safe=False)
 
     @stack_context('service_abandon_stack')
     def test_abandon_stack(self):

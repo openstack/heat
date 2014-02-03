@@ -303,7 +303,7 @@ class EngineService(service.Service):
 
     @request_context
     def list_stacks(self, cnxt, limit=None, marker=None, sort_keys=None,
-                    sort_dir=None, filters=None):
+                    sort_dir=None, filters=None, tenant_safe=True):
         """
         The list_stacks method returns attributes of all stacks.  It supports
         pagination (``limit`` and ``marker``), sorting (``sort_keys`` and
@@ -315,6 +315,7 @@ class EngineService(service.Service):
         :param sort_keys: an array of fields used to sort the list
         :param sort_dir: the direction of the sort ('asc' or 'desc')
         :param filters: a dict with attribute:value to filter the list
+        :param tenant_safe: if true, scope the request by the current tenant
         :returns: a list of formatted stacks
         """
 
@@ -331,18 +332,19 @@ class EngineService(service.Service):
                     yield api.format_stack(stack)
 
         stacks = db_api.stack_get_all(cnxt, limit, sort_keys, marker,
-                                      sort_dir, filters) or []
+                                      sort_dir, filters, tenant_safe) or []
         return list(format_stack_details(stacks))
 
     @request_context
-    def count_stacks(self, cnxt, filters=None):
+    def count_stacks(self, cnxt, filters=None, tenant_safe=True):
         """
         Return the number of stacks that match the given filters
         :param ctxt: RPC context.
         :param filters: a dict of ATTR:VALUE to match against stacks
         :returns: a integer representing the number of matched stacks
         """
-        return db_api.stack_count_all(cnxt, filters=filters)
+        return db_api.stack_count_all(cnxt, filters=filters,
+                                      tenant_safe=tenant_safe)
 
     def _validate_deferred_auth_context(self, cnxt, stack):
         if cfg.CONF.deferred_auth_method != 'password':

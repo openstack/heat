@@ -377,7 +377,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         }
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None, 'filters': {}}
+                        'sort_dir': None, 'filters': {}, 'tenant_safe': True}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',
@@ -402,12 +402,13 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         rpc_call_args, _ = mock_call.call_args
         engine_args = rpc_call_args[2]['args']
-        self.assertEqual(5, len(engine_args))
+        self.assertEqual(6, len(engine_args))
         self.assertIn('limit', engine_args)
         self.assertIn('sort_keys', engine_args)
         self.assertIn('marker', engine_args)
         self.assertIn('sort_dir', engine_args)
         self.assertIn('filters', engine_args)
+        self.assertIn('tenant_safe', engine_args)
         self.assertNotIn('balrog', engine_args)
 
     @mock.patch.object(rpc, 'call')
@@ -474,6 +475,31 @@ class StackControllerTest(ControllerTest, HeatTestCase):
         result = self.controller.index(req, tenant_id=self.tenant)
         self.assertNotIn('count', result)
 
+    def test_index_enforces_global_index_if_global_tenant(self, mock_enforce):
+        params = {'global_tenant': 'True'}
+        req = self._get('/stacks', params=params)
+        rpc_client = self.controller.rpc_client
+
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock()
+
+        self.controller.index(req, tenant_id=self.tenant)
+        mock_enforce.assert_called_with(action='global_index',
+                                        scope=self.controller.REQUEST_SCOPE,
+                                        context=self.context)
+
+    def test_global_index_sets_tenant_safe_to_false(self, mock_enforce):
+        rpc_client = self.controller.rpc_client
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock()
+
+        params = {'global_tenant': 'True'}
+        req = self._get('/stacks', params=params)
+        self.controller.index(req, tenant_id=self.tenant)
+        rpc_client.list_stacks.assert_called_once_with(mock.ANY,
+                                                       filters=mock.ANY,
+                                                       tenant_safe=False)
+
     @mock.patch.object(rpc, 'call')
     def test_detail(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'detail', True)
@@ -529,7 +555,7 @@ class StackControllerTest(ControllerTest, HeatTestCase):
 
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
-                        'sort_dir': None, 'filters': None}
+                        'sort_dir': None, 'filters': None, 'tenant_safe': True}
         mock_call.assert_called_once_with(req.context, self.topic,
                                           {'namespace': None,
                                            'method': 'list_stacks',
