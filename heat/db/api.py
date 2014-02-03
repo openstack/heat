@@ -121,19 +121,13 @@ def stack_get_by_name(context, stack_name):
 
 
 def stack_get_all(context, limit=None, sort_keys=None, marker=None,
-                  sort_dir=None, filters=None):
+                  sort_dir=None, filters=None, tenant_safe=True):
     return IMPL.stack_get_all(context, limit, sort_keys,
-                              marker, sort_dir, filters)
+                              marker, sort_dir, filters, tenant_safe)
 
 
 def stack_get_all_by_owner_id(context, owner_id):
     return IMPL.stack_get_all_by_owner_id(context, owner_id)
-
-
-def stack_get_all_by_tenant(context, limit=None, sort_keys=None,
-                            marker=None, sort_dir=None, filters=None):
-    return IMPL.stack_get_all_by_tenant(context, limit, sort_keys,
-                                        marker, sort_dir, filters)
 
 
 def stack_count_all_by_tenant(context, filters=None):
