@@ -457,27 +457,27 @@ class SqlAlchemyTest(HeatTestCase):
         db_api.stack_get_all(self.ctx, sort_keys=sort_keys)
         self.assertEqual(['id'], sort_keys)
 
-    def test_stack_count_all_by_tenant(self):
+    def test_stack_count_all(self):
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
 
-        st_db = db_api.stack_count_all_by_tenant(self.ctx)
+        st_db = db_api.stack_count_all(self.ctx)
         self.assertEqual(3, st_db)
 
         stacks[0].delete()
-        st_db = db_api.stack_count_all_by_tenant(self.ctx)
+        st_db = db_api.stack_count_all(self.ctx)
         self.assertEqual(2, st_db)
 
         stacks[1].delete()
-        st_db = db_api.stack_count_all_by_tenant(self.ctx)
+        st_db = db_api.stack_count_all(self.ctx)
         self.assertEqual(1, st_db)
 
-    def test_stack_count_all_by_tenant_with_filters(self):
+    def test_stack_count_all_with_filters(self):
         self._setup_test_stack('foo', UUID1)
         self._setup_test_stack('bar', UUID2)
         self._setup_test_stack('bar', UUID3)
         filters = {'name': 'bar'}
 
-        st_db = db_api.stack_count_all_by_tenant(self.ctx, filters=filters)
+        st_db = db_api.stack_count_all(self.ctx, filters=filters)
         self.assertEqual(2, st_db)
 
     def test_event_get_all_by_stack(self):
@@ -1066,15 +1066,36 @@ class DBAPIStackTest(HeatTestCase):
         stacks = db_api.stack_get_all(self.ctx, tenant_safe=False)
         self.assertEqual(5, len(stacks))
 
-    def test_stack_count_all_by_tenant(self):
+    def test_stack_count_all_with_regular_tenant(self):
         values = [
-            {'tenant': self.ctx.tenant_id},
-            {'tenant': self.ctx.tenant_id},
+            {'tenant': UUID1},
+            {'tenant': UUID1},
+            {'tenant': UUID2},
+            {'tenant': UUID2},
+            {'tenant': UUID2},
         ]
         [create_stack(self.ctx, self.template, self.user_creds,
                       **val) for val in values]
 
-        self.assertEqual(2, db_api.stack_count_all_by_tenant(self.ctx))
+        self.ctx.tenant_id = UUID1
+        self.assertEqual(2, db_api.stack_count_all(self.ctx))
+
+        self.ctx.tenant_id = UUID2
+        self.assertEqual(3, db_api.stack_count_all(self.ctx))
+
+    def test_stack_count_all_with_tenant_safe_false(self):
+        values = [
+            {'tenant': UUID1},
+            {'tenant': UUID1},
+            {'tenant': UUID2},
+            {'tenant': UUID2},
+            {'tenant': UUID2},
+        ]
+        [create_stack(self.ctx, self.template, self.user_creds,
+                      **val) for val in values]
+
+        self.assertEqual(5,
+                         db_api.stack_count_all(self.ctx, tenant_safe=False))
 
     def test_purge_deleted(self):
         now = datetime.now()

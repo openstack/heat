@@ -130,8 +130,9 @@ def stack_get_all_by_owner_id(context, owner_id):
     return IMPL.stack_get_all_by_owner_id(context, owner_id)
 
 
-def stack_count_all_by_tenant(context, filters=None):
-    return IMPL.stack_count_all_by_tenant(context, filters=filters)
+def stack_count_all(context, filters=None, tenant_safe=True):
+    return IMPL.stack_count_all(context, filters=filters,
+                                tenant_safe=tenant_safe)
 
 
 def stack_create(context, values):
