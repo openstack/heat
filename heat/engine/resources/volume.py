@@ -232,43 +232,50 @@ class VolumeAttachTask(object):
 class VolumeDetachTask(object):
     """A task for detaching a volume from a Nova server."""
 
-    def __init__(self, stack, server_id, volume_id):
+    def __init__(self, stack, server_id, attachment_id):
         """
         Initialise with the stack (for obtaining the clients), and the IDs of
         the server and volume.
         """
         self.clients = stack.clients
         self.server_id = server_id
-        self.volume_id = volume_id
+        self.attachment_id = attachment_id
 
     def __str__(self):
         """Return a human-readable string description of the task."""
-        return 'Detaching Volume %s from Instance %s' % (self.volume_id,
-                                                         self.server_id)
+        return _('Removing attachment %(att)s from Instance %(srv)s') % {
+            'att': self.attachment_id, 'srv': self.server_id}
 
     def __repr__(self):
         """Return a brief string description of the task."""
         return '%s(%s -/> %s)' % (type(self).__name__,
-                                  self.volume_id,
+                                  self.attachment_id,
                                   self.server_id)
 
     def __call__(self):
         """Return a co-routine which runs the task."""
         logger.debug(str(self))
 
+        server_api = self.clients.nova().volumes
+
+        # get reference to the volume while it is attached
         try:
-            vol = self.clients.cinder().volumes.get(self.volume_id)
-        except clients.cinderclient.exceptions.NotFound:
+            nova_vol = server_api.get_server_volume(self.server_id,
+                                                    self.attachment_id)
+            vol = self.clients.cinder().volumes.get(nova_vol.id)
+        except (clients.cinderclient.exceptions.NotFound,
+                clients.novaclient.exceptions.BadRequest,
+                clients.novaclient.exceptions.NotFound):
             logger.warning(_('%s - volume not found') % str(self))
             return
 
-        server_api = self.clients.nova().volumes
-
+        # detach the volume using volume_attachment
         try:
-            server_api.delete_server_volume(self.server_id, self.volume_id)
+            server_api.delete_server_volume(self.server_id, self.attachment_id)
         except (clients.novaclient.exceptions.BadRequest,
                 clients.novaclient.exceptions.NotFound) as e:
-            logger.warning('%s - %s' % (str(self), str(e)))
+            logger.warning('%(res)s - %(err)s' % {'res': str(self),
+                                                  'err': str(e)})
 
         yield
 
@@ -280,7 +287,7 @@ class VolumeDetachTask(object):
 
                 try:
                     server_api.delete_server_volume(self.server_id,
-                                                    self.volume_id)
+                                                    self.attachment_id)
                 except (clients.novaclient.exceptions.BadRequest,
                         clients.novaclient.exceptions.NotFound):
                     pass
@@ -294,6 +301,27 @@ class VolumeDetachTask(object):
         except clients.cinderclient.exceptions.NotFound:
             logger.warning(_('%s - volume not found') % str(self))
 
+        # The next check is needed for immediate reattachment when updating:
+        # as the volume info is taken from cinder, but the detach
+        # request is sent to nova, there might be some time
+        # between cinder marking volume as 'available' and
+        # nova removing attachment from it's own objects, so we
+        # check that nova already knows that the volume is detached
+        def server_has_attachment(server_id, attachment_id):
+            try:
+                server_api.get_server_volume(server_id, attachment_id)
+            except clients.novaclient.exceptions.NotFound:
+                return False
+            return True
+
+        while server_has_attachment(self.server_id, self.attachment_id):
+            logger.info(_("Server %(srv)s still has attachment %(att)s.") %
+                        {'att': self.attachment_id, 'srv': self.server_id})
+            yield
+
+        logger.info(_("Volume %(vol)s is detached from server %(srv)s") %
+                    {'vol': vol.id, 'srv': self.server_id})
+
 
 class VolumeAttachment(resource.Resource):
     PROPERTIES = (
@@ -306,12 +334,14 @@ class VolumeAttachment(resource.Resource):
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the instance to which the volume attaches.'),
-            required=True
+            required=True,
+            update_allowed=True
         ),
         VOLUME_ID: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the volume to be attached.'),
-            required=True
+            required=True,
+            update_allowed=True
         ),
         DEVICE: properties.Schema(
             properties.Schema.STRING,
@@ -319,11 +349,14 @@ class VolumeAttachment(resource.Resource):
               'assignment may not be honored and it is advised that the path '
               '/dev/disk/by-id/virtio-<VolumeId> be used instead.'),
             required=True,
+            update_allowed=True,
             constraints=[
                 constraints.AllowedPattern('/dev/vd[b-z]'),
             ]
         ),
     }
+
+    update_allowed_keys = ('Properties',)
 
     def handle_create(self):
         server_id = self.properties[self.INSTANCE_ID]
@@ -344,9 +377,48 @@ class VolumeAttachment(resource.Resource):
 
     def handle_delete(self):
         server_id = self.properties[self.INSTANCE_ID]
-        volume_id = self.properties[self.VOLUME_ID]
-        detach_task = VolumeDetachTask(self.stack, server_id, volume_id)
+        detach_task = VolumeDetachTask(self.stack, server_id, self.resource_id)
         scheduler.TaskRunner(detach_task)()
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        checkers = []
+        if prop_diff:
+            # Even though some combinations of changed properties
+            # could be updated in UpdateReplace manner,
+            # we still first detach the old resource so that
+            # self.resource_id is not replaced prematurely
+            volume_id = self.properties.get(self.VOLUME_ID)
+            if self.VOLUME_ID in prop_diff:
+                volume_id = prop_diff.get(self.VOLUME_ID)
+
+            device = self.properties.get(self.DEVICE)
+            if self.DEVICE in prop_diff:
+                device = prop_diff.get(self.DEVICE)
+
+            server_id = self.properties.get(self.INSTANCE_ID)
+            detach_task = VolumeDetachTask(self.stack, server_id,
+                                           self.resource_id)
+            checkers.append(scheduler.TaskRunner(detach_task))
+
+            if self.INSTANCE_ID in prop_diff:
+                server_id = prop_diff.get(self.INSTANCE_ID)
+            attach_task = VolumeAttachTask(self.stack, server_id,
+                                           volume_id, device)
+
+            checkers.append(scheduler.TaskRunner(attach_task))
+
+        if checkers:
+            checkers[0].start()
+        return checkers
+
+    def check_update_complete(self, checkers):
+        for checker in checkers:
+            if not checker.started():
+                checker.start()
+            if not checker.step():
+                return False
+        self.resource_id_set(checkers[-1]._task.attachment_id)
+        return True
 
 
 class CinderVolume(Volume):
@@ -483,18 +555,21 @@ class CinderVolumeAttachment(VolumeAttachment):
         INSTANCE_ID: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the server to which the volume attaches.'),
-            required=True
+            required=True,
+            update_allowed=True
         ),
         VOLUME_ID: properties.Schema(
             properties.Schema.STRING,
             _('The ID of the volume to be attached.'),
-            required=True
+            required=True,
+            update_allowed=True
         ),
         DEVICE: properties.Schema(
             properties.Schema.STRING,
             _('The location where the volume is exposed on the instance. This '
               'assignment may not be honored and it is advised that the path '
-              '/dev/disk/by-id/virtio-<VolumeId> be used instead.')
+              '/dev/disk/by-id/virtio-<VolumeId> be used instead.'),
+            update_allowed=True
         ),
     }
 
