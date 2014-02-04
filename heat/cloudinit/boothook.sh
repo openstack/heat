@@ -1,5 +1,5 @@
 #!/bin/bash
-setenforce 0
+command -v setenforce >/dev/null 2>&1 && setenforce 0
 useradd -m @INSTANCE_USER@
 echo -e '@INSTANCE_USER@\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
