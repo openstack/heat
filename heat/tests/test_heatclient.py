@@ -14,7 +14,6 @@
 
 import json
 import uuid
-import mox
 
 import keystoneclient.exceptions as kc_exception
 from keystoneclient.v3 import client as kc_v3
@@ -32,7 +31,7 @@ class KeystoneClientTest(HeatTestCase):
         super(KeystoneClientTest, self).setUp()
         self.addCleanup(self.m.VerifyAll)
 
-    def _stub_config(self):
+    def _stub_config(self, multiple=1):
         # Stub out cfg.CONF with dummy config
         mock_config = self.m.CreateMockAnything()
         mock_config.keystone_authtoken = self.m.CreateMockAnything()
@@ -44,18 +43,21 @@ class KeystoneClientTest(HeatTestCase):
 
         mock_config.import_opt = self.m.CreateMockAnything()
         mock_config.clients_keystone = self.m.CreateMockAnything()
-        for cfg, ret in (('ca_file', None), ('insecure', False),
-                         ('cert_file', None), ('key_file', None)):
-            mock_config.import_opt(cfg,
-                                   'heat.common.config',
-                                   group='clients_keystone').AndReturn(None)
-            setattr(mock_config.clients_keystone, cfg, ret)
+        for i in range(0, multiple):
+            for cfg, ret in (('ca_file', None), ('insecure', False),
+                             ('cert_file', None), ('key_file', None)):
+                mock_config.import_opt(cfg,
+                                       'heat.common.config',
+                                       group='clients_keystone'
+                                       ).AndReturn(None)
+                setattr(mock_config.clients_keystone, cfg, ret)
         self.mock_config = mock_config
         heat_keystoneclient.KeystoneClient.conf = mock_config
 
     def _stubs_v3(self, method='token', auth_ok=True, trust_scoped=True,
-                  user_id='trustor_user_id', mock_client=True):
-        self._stub_config()
+                  user_id='trustor_user_id', mock_client=True,
+                  config_multiple=1):
+        self._stub_config(multiple=config_multiple)
         if mock_client:
             self.m.StubOutClassWithMocks(kc_v3, "Client")
 
@@ -226,14 +228,18 @@ class KeystoneClientTest(HeatTestCase):
 
         self.m.StubOutClassWithMocks(kc_v3, "Client")
         mock_admin_client = kc_v3.Client(
-            auth_url=mox.IgnoreArg(),
-            username='heat',
+            auth_url='http://server.test:5000/v3',
+            cacert=None,
+            cert=None,
+            insecure=False,
+            key=None,
             password='verybadpass',
-            project_name='service')
+            project_name='service',
+            username='heat')
         mock_admin_client.auth_ref = self.m.CreateMockAnything()
         mock_admin_client.auth_ref.user_id = '1234'
 
-        self._stubs_v3(mock_client=False)
+        self._stubs_v3(mock_client=False, config_multiple=2)
         self.mock_config.deferred_auth_method = 'trusts'
         self.mock_config.trusts_delegated_roles = ['heat_stack_owner']
 

@@ -104,10 +104,7 @@ class KeystoneClient(object):
             logger.error(_("Keystone v3 API connection failed, no password "
                          "trust or auth_token!"))
             raise exception.AuthorizationFailure()
-        kwargs['cacert'] = self._get_client_option('ca_file')
-        kwargs['insecure'] = self._get_client_option('insecure')
-        kwargs['cert'] = self._get_client_option('cert_file')
-        kwargs['key'] = self._get_client_option('key_file')
+        kwargs.update(self._ssl_options())
         client_v3 = kc_v3.Client(**kwargs)
         client_v3.authenticate()
         # If we are authenticating with a trust set the context auth_token
@@ -139,6 +136,13 @@ class KeystoneClient(object):
             'project_name': self.conf.keystone_authtoken.admin_tenant_name}
         return creds
 
+    def _ssl_options(self):
+        opts = {'cacert': self._get_client_option('ca_file'),
+                'insecure': self._get_client_option('insecure'),
+                'cert': self._get_client_option('cert_file'),
+                'key': self._get_client_option('key_file')}
+        return opts
+
     def _get_client_option(self, option):
         try:
             self.conf.import_opt(option, 'heat.common.config',
@@ -165,6 +169,7 @@ class KeystoneClient(object):
         # workaround this by creating a temporary admin client connection
         # then getting the user ID from the auth_ref
         admin_creds = self._service_admin_creds()
+        admin_creds.update(self._ssl_options())
         admin_client = kc_v3.Client(**admin_creds)
         trustee_user_id = admin_client.auth_ref.user_id
         trustor_user_id = self.client_v3.auth_ref.user_id
