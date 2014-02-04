@@ -393,6 +393,16 @@ class KeystoneClient(object):
                          access=data_blob['access'],
                          secret=data_blob['secret'])
 
+    def create_stack_domain_user_keypair(self, user_id, project_id):
+        data_blob = {'access': uuid.uuid4().hex,
+                     'secret': uuid.uuid4().hex}
+        creds = self.admin_client.credentials.create(
+            user=user_id, type='ec2', data=json.dumps(data_blob),
+            project=project_id)
+        return AccessKey(id=creds.id,
+                         access=data_blob['access'],
+                         secret=data_blob['secret'])
+
     def disable_stack_user(self, user_id):
         self.client_v3.users.update(user=user_id, enabled=False)
 
