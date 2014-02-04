@@ -210,7 +210,6 @@ class KeystoneClientTest(HeatTestCase):
 
     def test_create_stack_domain_user_error_norole(self):
         """Test creating a stack domain user, no role error path."""
-
         ctx = utils.dummy_context()
         ctx.trust_id = None
 
@@ -228,6 +227,71 @@ class KeystoneClientTest(HeatTestCase):
                                 heat_ks_client.create_stack_domain_user,
                                 username='duser', project_id='aproject')
         self.assertIn('Can\'t find role heat_stack_user', err)
+
+    def test_delete_stack_domain_user(self):
+        """Test deleting a stack domain user."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self.mock_admin_client.users = self.m.CreateMockAnything()
+        mock_user = self.m.CreateMockAnything()
+        mock_user.id = 'duser123'
+        mock_user.domain_id = 'adomain123'
+        mock_user.default_project_id = 'aproject'
+        self.mock_admin_client.users.get('duser123').AndReturn(mock_user)
+        self.mock_admin_client.users.delete('duser123').AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.delete_stack_domain_user(user_id='duser123',
+                                                project_id='aproject')
+
+    def test_delete_stack_domain_user_error_domain(self):
+        """Test deleting a stack domain user, wrong domain."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self.mock_admin_client.users = self.m.CreateMockAnything()
+        mock_user = self.m.CreateMockAnything()
+        mock_user.id = 'duser123'
+        mock_user.domain_id = 'notadomain123'
+        mock_user.default_project_id = 'aproject'
+        self.mock_admin_client.users.get('duser123').AndReturn(mock_user)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        err = self.assertRaises(ValueError,
+                                heat_ks_client.delete_stack_domain_user,
+                                user_id='duser123', project_id='aproject')
+        self.assertIn('User delete in invalid domain', err)
+
+    def test_delete_stack_domain_user_error_project(self):
+        """Test deleting a stack domain user, wrong project."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self.mock_admin_client.users = self.m.CreateMockAnything()
+        mock_user = self.m.CreateMockAnything()
+        mock_user.id = 'duser123'
+        mock_user.domain_id = 'adomain123'
+        mock_user.default_project_id = 'notaproject'
+        self.mock_admin_client.users.get('duser123').AndReturn(mock_user)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        err = self.assertRaises(ValueError,
+                                heat_ks_client.delete_stack_domain_user,
+                                user_id='duser123', project_id='aproject')
+        self.assertIn('User delete in invalid project', err)
 
     def test_delete_stack_user(self):
 
