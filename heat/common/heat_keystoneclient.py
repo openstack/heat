@@ -59,6 +59,14 @@ class KeystoneClient(object):
         self.context = context
         self._client_v3 = None
 
+        if self.context.auth_url:
+            self.v3_endpoint = self.context.auth_url.replace('v2.0', 'v3')
+        else:
+            # Import auth_token to have keystone_authtoken settings setup.
+            importutils.import_module('keystoneclient.middleware.auth_token')
+            self.v3_endpoint = self.conf.keystone_authtoken.auth_uri.replace(
+                'v2.0', 'v3')
+
         if self.context.trust_id:
             # Create a client with the specified trust_id, this
             # populates self.context.auth_token with a trust-scoped token
@@ -72,18 +80,9 @@ class KeystoneClient(object):
         return self._client_v3
 
     def _v3_client_init(self):
-        if self.context.auth_url:
-            v3_endpoint = self.context.auth_url.replace('v2.0', 'v3')
-        else:
-            # Import auth_token to have keystone_authtoken settings setup.
-            importutils.import_module('keystoneclient.middleware.auth_token')
-
-            v3_endpoint = self.conf.keystone_authtoken.auth_uri.replace(
-                'v2.0', 'v3')
-
         kwargs = {
-            'auth_url': v3_endpoint,
-            'endpoint': v3_endpoint
+            'auth_url': self.v3_endpoint,
+            'endpoint': self.v3_endpoint
         }
         # Note try trust_id first, as we can't reuse auth_token in that case
         if self.context.trust_id is not None:
@@ -131,8 +130,7 @@ class KeystoneClient(object):
         creds = {
             'username': self.conf.keystone_authtoken.admin_user,
             'password': self.conf.keystone_authtoken.admin_password,
-            'auth_url': self.conf.keystone_authtoken.auth_uri.replace(
-                'v2.0', 'v3'),
+            'auth_url': self.v3_endpoint,
             'project_name': self.conf.keystone_authtoken.admin_tenant_name}
         return creds
 
