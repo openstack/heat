@@ -5,7 +5,7 @@ coverage>=3.6
 discover
 mock>=1.0
 mox>=0.5.3
-testtools>=0.9.32
+testtools>=0.9.34
 testrepository>=0.0.17
 testscenarios>=0.4
 python-glanceclient>=0.9.0
