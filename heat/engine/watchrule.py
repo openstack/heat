@@ -78,7 +78,7 @@ class WatchRule(object):
             except Exception as ex:
                 logger.warn(_('WatchRule.load (%(watch_name)s) db error '
                             '%(ex)s') % {
-                            'watch_name': watch_name, 'ex': str(ex)})
+                                'watch_name': watch_name, 'ex': str(ex)})
         if watch is None:
             raise exception.WatchRuleNotFound(watch_name=watch_name)
         else:
@@ -310,7 +310,7 @@ class WatchRule(object):
             # so just ignore any data which doesn't contain MetricName
             logger.debug(_('Ignoring metric data (only accept %(metric)s) '
                          ': %(data)s') % {
-                         'metric': self.rule['MetricName'], 'data': data})
+                             'metric': self.rule['MetricName'], 'data': data})
             return
 
         watch_data = {
@@ -346,12 +346,12 @@ class WatchRule(object):
             if actions:
                 logger.debug(_("Overriding state %(self_state)s for watch "
                              "%(name)s with %(state)s") % {
-                             'self_state': self.state, 'name': self.name,
-                             'state': state})
+                                 'self_state': self.state, 'name': self.name,
+                                 'state': state})
             else:
                 logger.warning(_("Unable to override state %(state)s for "
                                "watch %(name)s") % {
-                               'state': self.state, 'name': self.name})
+                                   'state': self.state, 'name': self.name})
         return actions
 
 

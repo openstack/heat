@@ -621,7 +621,7 @@ class Server(resource.Resource):
             server.get()
             logger.debug(_('%(name)s check_suspend_complete status '
                          '= %(status)s') % {
-                         'name': self.name, 'status': server.status})
+                             'name': self.name, 'status': server.status})
             if server.status in list(nova_utils.deferred_server_statuses +
                                      ['ACTIVE']):
                 return server.status == 'SUSPENDED'

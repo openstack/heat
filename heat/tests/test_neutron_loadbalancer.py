@@ -447,8 +447,9 @@ class PoolTest(HeatTestCase):
                 'protocol': u'HTTP', 'name': 'pool.vip',
                 'admin_state_up': True, 'subnet_id': u'sub123',
                 'pool_id': '5678', 'protocol_port': 80,
-                'session_persistence': {'type': 'APP_COOKIE',
-                'cookie_name': 'cookie'}}}
+                'session_persistence': {
+                    'type': 'APP_COOKIE',
+                    'cookie_name': 'cookie'}}}
         ).AndReturn({'vip': {'id': 'xyz'}})
         neutronclient.Client.show_pool('5678').AndReturn(
             {'pool': {'status': 'ACTIVE'}})

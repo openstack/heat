@@ -179,8 +179,8 @@ class TemplateResource(stack_resource.StackResource):
                 # Type mismatch
                 msg = (_("Property %(n)s type mismatch between facade %(type)s"
                        " (%(fs_type)s) and provider (%(ps_type)s)") % {
-                       'n': n, 'type': self.type(),
-                       'fs_type': fs.type, 'ps_type': ps.type})
+                           'n': n, 'type': self.type(),
+                           'fs_type': fs.type, 'ps_type': ps.type})
                 raise exception.StackValidationFailed(message=msg)
 
         for n, ps in self.properties_schema.items():
@@ -188,14 +188,14 @@ class TemplateResource(stack_resource.StackResource):
                 # Required property for template not present in facade
                 msg = (_("Provider requires property %(n)s "
                        "unknown in facade %(type)s") % {
-                       'n': n, 'type': self.type()})
+                           'n': n, 'type': self.type()})
                 raise exception.StackValidationFailed(message=msg)
 
         for attr in facade_cls.attributes_schema:
             if attr not in self.attributes_schema:
                 msg = (_("Attribute %(attr)s for facade %(type)s "
                        "missing in provider") % {
-                       'attr': attr, 'type': self.type()})
+                           'attr': attr, 'type': self.type()})
                 raise exception.StackValidationFailed(message=msg)
 
     def validate(self):

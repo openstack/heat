@@ -111,9 +111,9 @@ class SwiftContainer(resource.Resource):
         logger.debug(_('SwiftContainer create container %(container)s with '
                      'container headers %(container_headers)s and '
                      'account headers %(account_headers)s') % {
-                     'container': container,
-                     'account_headers': account_headers,
-                     'container_headers': container_headers})
+                         'container': container,
+                         'account_headers': account_headers,
+                         'container_headers': container_headers})
 
         self.swift().put_container(container, container_headers)
 

@@ -132,8 +132,9 @@ auth_password_opts = [
 clients_opts = [
     cfg.StrOpt('endpoint_type',
                default='publicURL',
-               help=_('Type of endpoint in Identity service catalog to use '
-               'for communication with the OpenStack service.')),
+               help=_(
+                   'Type of endpoint in Identity service catalog to use '
+                   'for communication with the OpenStack service.')),
     cfg.StrOpt('ca_file',
                help=_('Optional CA cert file to use in SSL connections')),
     cfg.StrOpt('cert_file',

@@ -384,8 +384,8 @@ def stack_update(context, stack_id, values):
     if not stack:
         raise exception.NotFound(_('Attempt to update a stack with id: '
                                  '%(id)s %(msg)s') % {
-                                 'id': stack_id,
-                                 'msg': 'that does not exist'})
+                                     'id': stack_id,
+                                     'msg': 'that does not exist'})
 
     stack.update(values)
     stack.save(_session(context))
@@ -396,8 +396,8 @@ def stack_delete(context, stack_id):
     if not s:
         raise exception.NotFound(_('Attempt to delete a stack with id: '
                                  '%(id)s %(msg)s') % {
-                                 'id': stack_id,
-                                 'msg': 'that does not exist'})
+                                     'id': stack_id,
+                                     'msg': 'that does not exist'})
 
     session = Session.object_session(s)
 
@@ -581,8 +581,8 @@ def watch_rule_update(context, watch_id, values):
     if not wr:
         raise exception.NotFound(_('Attempt to update a watch with id: '
                                  '%(id)s %(msg)s') % {
-                                 'id': watch_id,
-                                 'msg': 'that does not exist'})
+                                     'id': watch_id,
+                                     'msg': 'that does not exist'})
 
     wr.update(values)
     wr.save(_session(context))
@@ -593,8 +593,8 @@ def watch_rule_delete(context, watch_id):
     if not wr:
         raise exception.NotFound(_('Attempt to delete watch_rule: '
                                  '%(id)s %(msg)s') % {
-                                 'id': watch_id,
-                                 'msg': 'that does not exist'})
+                                     'id': watch_id,
+                                     'msg': 'that does not exist'})
     session = Session.object_session(wr)
 
     for d in wr.watch_data:

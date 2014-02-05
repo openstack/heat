@@ -239,8 +239,9 @@ class KeystoneClient(object):
                                        project=self.context.tenant_id)
         else:
             logger.error(_("Failed to add user %(user)s to role %(role)s, "
-                         "check role exists!") % {'user': username,
-                         'role': self.conf.heat_stack_user_role})
+                         "check role exists!") % {
+                             'user': username,
+                             'role': self.conf.heat_stack_user_role})
 
         return user.id
 

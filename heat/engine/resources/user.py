@@ -89,7 +89,8 @@ class User(resource.Resource):
             except KeyError:
                 logger.error(_("Policy %(policy)s does not exist in stack "
                              "%(stack)s") % {
-                             'policy': policy, 'stack': self.stack.name})
+                                 'policy': policy,
+                                 'stack': self.stack.name})
                 return False
 
             if not callable(getattr(policy_rsrc, 'access_allowed', None)):
@@ -258,8 +259,8 @@ class AccessKey(resource.Resource):
             if not self.resource_id:
                 logger.warn(_('could not get secret for %(username)s '
                             'Error:%(msg)s') % {
-                            'username': self.properties[self.USER_NAME],
-                            'msg': "resource_id not yet set"})
+                                'username': self.properties[self.USER_NAME],
+                                'msg': "resource_id not yet set"})
             else:
                 # First try to retrieve the secret from resource_data, but
                 # for backwards compatibility, fall back to requesting from
@@ -279,11 +280,11 @@ class AccessKey(resource.Resource):
                         db_api.resource_data_set(self, 'credential_id',
                                                  kp.id, redact=True)
                     except Exception as ex:
-                        logger.warn(_('could not get secret for %(username)s '
-                                      'Error:%(msg)s') % {
-                                    'username':
-                                    self.properties[self.USER_NAME],
-                                    'msg': str(ex)})
+                        logger.warn(
+                            _('could not get secret for %(username)s '
+                              'Error:%(msg)s') % {
+                                  'username': self.properties[self.USER_NAME],
+                                  'msg': str(ex)})
 
         return self._secret or '000-000-000'
 
