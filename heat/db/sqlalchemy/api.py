@@ -269,8 +269,11 @@ def stack_get(context, stack_id, show_deleted=False, tenant_safe=True):
     if result is None or result.deleted_at is not None and not deleted_ok:
         return None
 
+    # One exception to normal project scoping is users created by the
+    # stacks in the stack_user_project_id (in the heat stack user domain)
     if (tenant_safe and result is not None and context is not None and
-            result.tenant != context.tenant_id):
+        context.tenant_id not in (result.tenant,
+                                  result.stack_user_project_id)):
         return None
 
     return result

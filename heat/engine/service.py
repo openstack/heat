@@ -263,15 +263,16 @@ class EngineService(service.Service):
     def _get_stack(self, cnxt, stack_identity, show_deleted=False):
         identity = identifier.HeatIdentifier(**stack_identity)
 
-        if identity.tenant != cnxt.tenant_id:
-            raise exception.InvalidTenant(target=identity.tenant,
-                                          actual=cnxt.tenant_id)
-
         s = db_api.stack_get(cnxt, identity.stack_id,
                              show_deleted=show_deleted)
 
         if s is None:
             raise exception.StackNotFound(stack_name=identity.stack_name)
+
+        if cnxt.tenant_id not in (identity.tenant, s.stack_user_project_id):
+            # The DB API should not allow this, but sanity-check anyway..
+            raise exception.InvalidTenant(target=identity.tenant,
+                                          actual=cnxt.tenant_id)
 
         if identity.path or s.name != identity.stack_name:
             raise exception.StackNotFound(stack_name=identity.stack_name)
