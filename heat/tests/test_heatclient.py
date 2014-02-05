@@ -585,6 +585,108 @@ class KeystoneClientTest(HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         heat_ks_client.enable_stack_user('atestuser')
 
+    def _stub_admin_user_get(self, user_id, domain_id, project_id):
+        self.mock_admin_client.users = self.m.CreateMockAnything()
+        mock_user = self.m.CreateMockAnything()
+        mock_user.id = user_id
+        mock_user.domain_id = domain_id
+        mock_user.default_project_id = project_id
+        self.mock_admin_client.users.get(user_id).AndReturn(mock_user)
+
+    def test_enable_stack_domain_user(self):
+        """Test enabling a stack domain user."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_user_get('duser123', 'adomain123', 'aproject')
+        self.mock_admin_client.users.update(user='duser123', enabled=True
+                                            ).AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.enable_stack_domain_user(user_id='duser123',
+                                                project_id='aproject')
+
+    def test_enable_stack_domain_user_error_project(self):
+        """Test enabling a stack domain user, wrong project."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_user_get('duser123', 'adomain123', 'notaproject')
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertRaises(ValueError, heat_ks_client.enable_stack_domain_user,
+                          user_id='duser123', project_id='aproject')
+
+    def test_enable_stack_domain_user_error_domain(self):
+        """Test enabling a stack domain user, wrong domain."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_user_get('duser123', 'notadomain123', 'aproject')
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertRaises(ValueError, heat_ks_client.enable_stack_domain_user,
+                          user_id='duser123', project_id='aproject')
+
+    def test_disable_stack_domain_user(self):
+        """Test disabling a stack domain user."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_user_get('duser123', 'adomain123', 'aproject')
+        self.mock_admin_client.users.update(user='duser123', enabled=False
+                                            ).AndReturn(None)
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        heat_ks_client.disable_stack_domain_user(user_id='duser123',
+                                                 project_id='aproject')
+
+    def test_disable_stack_domain_user_error_project(self):
+        """Test disabling a stack domain user, wrong project."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_user_get('duser123', 'adomain123', 'notaproject')
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertRaises(ValueError, heat_ks_client.disable_stack_domain_user,
+                          user_id='duser123', project_id='aproject')
+
+    def test_disable_stack_domain_user_error_domain(self):
+        """Test disabling a stack domain user, wrong domain."""
+
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+
+        # mock keystone client functions
+        self._stub_domain(ret_id='adomain123')
+        self._stub_admin_user_get('duser123', 'notadomain123', 'aproject')
+        self.m.ReplayAll()
+
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        self.assertRaises(ValueError, heat_ks_client.disable_stack_domain_user,
+                          user_id='duser123', project_id='aproject')
+
     def _stub_uuid(self, values=[]):
         # stub UUID.hex to return the values specified
         self.m.StubOutWithMock(uuid, 'uuid4')

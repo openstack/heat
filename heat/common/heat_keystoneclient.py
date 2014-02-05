@@ -308,13 +308,16 @@ class KeystoneClient(object):
 
         return user.id
 
-    def delete_stack_domain_user(self, user_id, project_id):
+    def _check_stack_domain_user(self, user_id, project_id, action):
         # Sanity check that domain/project is correct
         user = self.admin_client.users.get(user_id)
         if user.domain_id != self.stack_domain_id:
-            raise ValueError(_('User delete in invalid domain'))
+            raise ValueError(_('User %s in invalid domain') % action)
         if user.default_project_id != project_id:
-            raise ValueError(_('User delete in invalid project'))
+            raise ValueError(_('User %s in invalid project') % action)
+
+    def delete_stack_domain_user(self, user_id, project_id):
+        self._check_stack_domain_user(user_id, project_id, 'delete')
         self.admin_client.users.delete(user_id)
 
     def delete_stack_user(self, user_id):
@@ -408,6 +411,14 @@ class KeystoneClient(object):
 
     def enable_stack_user(self, user_id):
         self.client_v3.users.update(user=user_id, enabled=True)
+
+    def disable_stack_domain_user(self, user_id, project_id):
+        self._check_stack_domain_user(user_id, project_id, 'disable')
+        self.admin_client.users.update(user=user_id, enabled=False)
+
+    def enable_stack_domain_user(self, user_id, project_id):
+        self._check_stack_domain_user(user_id, project_id, 'enable')
+        self.admin_client.users.update(user=user_id, enabled=True)
 
     def url_for(self, **kwargs):
         default_region_name = cfg.CONF.region_name_for_services
