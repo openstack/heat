@@ -350,3 +350,59 @@ class EngineClient(heat.openstack.common.rpc.proxy.RpcProxy):
 
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))
+
+    def show_software_config(self, cnxt, config_id):
+        return self.call(cnxt, self.make_msg('show_software_config',
+                                             config_id=config_id))
+
+    def create_software_config(self, cnxt, group, name, config,
+                               inputs=[], outputs=[], options={}):
+        return self.call(cnxt, self.make_msg('create_software_config',
+                                             group=group,
+                                             name=name,
+                                             config=config,
+                                             inputs=inputs,
+                                             outputs=outputs,
+                                             options=options))
+
+    def delete_software_config(self, cnxt, config_id):
+        return self.call(cnxt, self.make_msg('delete_software_config',
+                                             config_id=config_id))
+
+    def list_software_deployments(self, cnxt, server_id=None):
+        return self.call(cnxt, self.make_msg('list_software_deployments',
+                                             server_id=server_id))
+
+    def show_software_deployment(self, cnxt, deployment_id):
+        return self.call(cnxt, self.make_msg('show_software_deployment',
+                                             deployment_id=deployment_id))
+
+    def create_software_deployment(self, cnxt, server_id, config_id=None,
+                                   input_values={}, signal_id=None,
+                                   action='INIT', status='COMPLETE',
+                                   status_reason=''):
+        return self.call(cnxt, self.make_msg('create_software_deployment',
+                                             server_id=server_id,
+                                             config_id=config_id,
+                                             input_values=input_values,
+                                             signal_id=signal_id,
+                                             action=action,
+                                             status=status,
+                                             status_reason=status_reason))
+
+    def update_software_deployment(self, cnxt, deployment_id,
+                                   config_id=None, input_values=None,
+                                   output_values=None, action=None,
+                                   status=None, status_reason=None):
+        return self.call(cnxt, self.make_msg('update_software_deployment',
+                                             deployment_id=deployment_id,
+                                             config_id=config_id,
+                                             input_values=input_values,
+                                             output_values=output_values,
+                                             action=action,
+                                             status=status,
+                                             status_reason=status_reason))
+
+    def delete_software_deployment(self, cnxt, deployment_id):
+        return self.call(cnxt, self.make_msg('delete_software_deployment',
+                                             deployment_id=deployment_id))

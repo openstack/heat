@@ -280,3 +280,41 @@ def format_validate_parameter(param):
             res[api.PARAM_ALLOWED_PATTERN] = c.pattern
 
     return res
+
+
+def format_software_config(sc):
+    if sc is None:
+        return
+    result = {
+        api.SOFTWARE_CONFIG_ID: sc.id,
+        api.SOFTWARE_CONFIG_NAME: sc.name,
+        api.SOFTWARE_CONFIG_GROUP: sc.group,
+        api.SOFTWARE_CONFIG_CONFIG: sc.config,
+        api.SOFTWARE_CONFIG_INPUTS: sc.io['inputs'],
+        api.SOFTWARE_CONFIG_OUTPUTS: sc.io['outputs'],
+        api.SOFTWARE_CONFIG_OPTIONS: sc.io['options']
+    }
+    return result
+
+
+def format_software_deployment(sd):
+    if sd is None:
+        return
+    result = {
+        api.SOFTWARE_DEPLOYMENT_ID: sd.id,
+        api.SOFTWARE_DEPLOYMENT_SERVER_ID: sd.server_id,
+        api.SOFTWARE_DEPLOYMENT_INPUT_VALUES: sd.input_values,
+        api.SOFTWARE_DEPLOYMENT_OUTPUT_VALUES: sd.output_values,
+        api.SOFTWARE_DEPLOYMENT_ACTION: sd.action,
+        api.SOFTWARE_DEPLOYMENT_STATUS: sd.status,
+        api.SOFTWARE_DEPLOYMENT_STATUS_REASON: sd.status_reason,
+        api.SOFTWARE_DEPLOYMENT_SIGNAL_ID: sd.signal_id,
+        api.SOFTWARE_DEPLOYMENT_CONFIG_ID: sd.config.id,
+        api.SOFTWARE_CONFIG_CONFIG: sd.config.config,
+        api.SOFTWARE_CONFIG_NAME: sd.config.name,
+        api.SOFTWARE_CONFIG_GROUP: sd.config.group,
+        api.SOFTWARE_CONFIG_INPUTS: sd.config.io['inputs'],
+        api.SOFTWARE_CONFIG_OUTPUTS: sd.config.io['outputs'],
+        api.SOFTWARE_CONFIG_OPTIONS: sd.config.io['options']
+    }
+    return result
