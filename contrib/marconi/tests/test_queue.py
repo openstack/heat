@@ -18,7 +18,7 @@ from heat.engine import scheduler
 from heat.tests.common import HeatTestCase
 from heat.tests import utils
 
-from ..plugin import queue  # noqa
+from ..resources import queue  # noqa
 
 wp_template = '''
 {
