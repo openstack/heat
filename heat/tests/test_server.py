@@ -379,6 +379,67 @@ class ServersTest(HeatTestCase):
                          'instance server_with_bootable_volume', str(ex))
         self.m.VerifyAll()
 
+    def test_server_validate_with_nova_keypair_resource(self):
+        stack_name = 'srv_val_test'
+        nova_keypair_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "WordPress",
+  "Resources" : {
+    "WebServer": {
+      "Type": "OS::Nova::Server",
+      "Properties": {
+        "image" : "F17-x86_64-gold",
+        "flavor"   : "m1.large",
+        "key_name"        : { "Ref": "SSHKey" },
+        "user_data"       : "wordpress"
+      }
+    },
+    "SSHKey": {
+      "Type": "OS::Nova::KeyPair",
+      "Properties": {
+        "name": "my_key"
+      }
+    }
+  }
+}
+'''
+        t = template_format.parse(nova_keypair_template)
+        template = parser.Template(t)
+        stack = parser.Stack(utils.dummy_context(), stack_name, template,
+                             stack_id=str(uuid.uuid4()))
+
+        server = servers.Server('server_validate_test',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        self.assertIsNone(server.validate())
+        self.m.VerifyAll()
+
+    def test_server_validate_with_invalid_ssh_key(self):
+        stack_name = 'srv_val_test'
+        (t, stack) = self._setup_test_stack(stack_name)
+
+        web_server = t['Resources']['WebServer']
+
+        # Make the ssh key have an invalid name
+        web_server['Properties']['key_name'] = 'test2'
+
+        server = servers.Server('server_validate_test',
+                                t['Resources']['WebServer'], stack)
+
+        self.m.StubOutWithMock(server, 'nova')
+        server.nova().MultipleTimes().AndReturn(self.fc)
+        self.m.ReplayAll()
+
+        ex = self.assertRaises(exception.UserKeyPairMissing,
+                               server.validate)
+        self.assertIn("The Key (test2) could not be found.", str(ex))
+        self.m.VerifyAll()
+
     def test_server_validate_delete_policy(self):
         stack_name = 'srv_val_delpol'
         (t, stack) = self._setup_test_stack(stack_name)
