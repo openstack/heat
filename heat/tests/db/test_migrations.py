@@ -172,3 +172,6 @@ class TestHeatMigrations(test_migrations.BaseMigrationTestCase,
         self.assertColumnExists(engine, 'stack_lock', 'engine_id')
         self.assertColumnExists(engine, 'stack_lock', 'created_at')
         self.assertColumnExists(engine, 'stack_lock', 'updated_at')
+
+    def _check_034(self, engine, data):
+        self.assertColumnExists(engine, 'raw_template', 'files')
