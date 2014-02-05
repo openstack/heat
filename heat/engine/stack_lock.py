@@ -102,14 +102,14 @@ class StackLock(object):
             raise exception.ActionInProgress(
                 stack_name=self.stack.name, action=self.stack.action)
 
-    def release(self):
+    def release(self, stack_id):
         """Release a stack lock."""
         # Only the engine that owns the lock will be releasing it.
-        result = db_api.stack_lock_release(self.stack.id, self.engine_id)
+        result = db_api.stack_lock_release(stack_id, self.engine_id)
         if result is True:
             logger.warning(_("Lock was already released on stack %s!")
-                           % self.stack.id)
+                           % stack_id)
         else:
             logger.debug(_("Engine %(engine)s released lock on stack "
                            "%(stack)s") % {'engine': self.engine_id,
-                                           'stack': self.stack.id})
+                                           'stack': stack_id})
