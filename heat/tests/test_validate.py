@@ -1099,7 +1099,7 @@ class validateTest(HeatTestCase):
                                  name='image_name')]
 
         self.m.StubOutWithMock(self.fc.images, 'list')
-        self.fc.images.list().AndReturn(image_list)
+        self.fc.images.list().MultipleTimes().AndReturn(image_list)
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)
@@ -1121,7 +1121,7 @@ class validateTest(HeatTestCase):
                                  name='image_name')]
 
         self.m.StubOutWithMock(self.fc.images, 'list')
-        self.fc.images.list().AndReturn(image_list)
+        self.fc.images.list().MultipleTimes().AndReturn(image_list)
 
         self.m.StubOutWithMock(clients.OpenStackClients, 'nova')
         clients.OpenStackClients.nova().MultipleTimes().AndReturn(self.fc)

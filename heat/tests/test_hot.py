@@ -936,19 +936,19 @@ class HOTParamValidatorTest(HeatTestCase):
             return True
 
         value = 'wp'
-        err = self.assertRaises(ValueError, v, value)
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
         self.assertIn(len_desc, str(err))
 
         value = 'abcdefghijklmnopq'
-        err = self.assertRaises(ValueError, v, value)
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
         self.assertIn(len_desc, str(err))
 
         value = 'abcdefgh1'
-        err = self.assertRaises(ValueError, v, value)
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
         self.assertIn(pattern_desc1, str(err))
 
         value = 'Abcdefghi'
-        err = self.assertRaises(ValueError, v, value)
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
         self.assertIn(pattern_desc2, str(err))
 
         value = 'abcdefghi'
@@ -985,19 +985,23 @@ class HOTParamValidatorTest(HeatTestCase):
             return True
 
         value = 'wp'
-        err = self.assertRaises(ValueError, run_parameters, value)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                run_parameters, value)
         self.assertIn(len_desc, str(err))
 
         value = 'abcdefghijklmnopq'
-        err = self.assertRaises(ValueError, run_parameters, value)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                run_parameters, value)
         self.assertIn(len_desc, str(err))
 
         value = 'abcdefgh1'
-        err = self.assertRaises(ValueError, run_parameters, value)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                run_parameters, value)
         self.assertIn(pattern_desc1, str(err))
 
         value = 'Abcdefghi'
-        err = self.assertRaises(ValueError, run_parameters, value)
+        err = self.assertRaises(exception.StackValidationFailed,
+                                run_parameters, value)
         self.assertIn(pattern_desc2, str(err))
 
         value = 'abcdefghi'
@@ -1025,11 +1029,11 @@ class HOTParamValidatorTest(HeatTestCase):
             return True
 
         value = 29999
-        err = self.assertRaises(ValueError, v, value)
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
         self.assertIn(range_desc, str(err))
 
         value = 50001
-        err = self.assertRaises(ValueError, v, value)
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
         self.assertIn(range_desc, str(err))
 
         value = 30000
@@ -1066,11 +1070,11 @@ class HOTParamValidatorTest(HeatTestCase):
             return True
 
         value = "1"
-        err = self.assertRaises(ValueError, v, value)
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
         self.assertEqual(desc, str(err))
 
         value = "2"
-        err = self.assertRaises(ValueError, v, value)
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
         self.assertEqual(desc, str(err))
 
         value = "0"

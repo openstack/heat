@@ -123,7 +123,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'MinLength': '4'}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, 'foo')
         self.assertIn('wibble', str(err))
 
@@ -131,7 +131,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'MaxLength': '2'}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, 'foo')
         self.assertIn('wibble', str(err))
 
@@ -145,7 +145,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'AllowedPattern': '[a-z]*'}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, '1foo')
         self.assertIn('wibble', str(err))
 
@@ -153,7 +153,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'AllowedPattern': '[a-z]*'}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, 'foo1')
         self.assertIn('wibble', str(err))
 
@@ -167,7 +167,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'String',
                   'ConstraintDescription': 'wibble',
                   'AllowedValues': ['foo', 'bar', 'baz']}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, 'blarg')
         self.assertIn('wibble', str(err))
 
@@ -189,7 +189,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Number',
                   'ConstraintDescription': 'wibble',
                   'MinValue': '4'}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, '3')
         self.assertIn('wibble', str(err))
 
@@ -197,7 +197,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Number',
                   'ConstraintDescription': 'wibble',
                   'MaxValue': '2'}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, '3')
         self.assertIn('wibble', str(err))
 
@@ -211,7 +211,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Number',
                   'ConstraintDescription': 'wibble',
                   'AllowedValues': ['1', '3', '5']}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, '2')
         self.assertIn('wibble', str(err))
 
@@ -231,8 +231,9 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'CommaDelimitedList',
                   'ConstraintDescription': 'wibble',
                   'AllowedValues': ['foo', 'bar', 'baz']}
-        err = self.assertRaises(ValueError, self.new_parameter,
-                                'p', schema, 'foo,baz,blarg')
+        err = self.assertRaises(exception.StackValidationFailed,
+                                self.new_parameter, 'p', schema,
+                                'foo,baz,blarg')
         self.assertIn('wibble', str(err))
 
     def test_map_value(self):
@@ -275,7 +276,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Json',
                   'MinLength': 3}
         val = {"foo": "bar", "items": [1, 2, 3]}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, val)
         self.assertIn('out of range', str(err))
 
@@ -284,7 +285,7 @@ class ParameterTest(testtools.TestCase):
         schema = {'Type': 'Json',
                   'MaxLength': 1}
         val = {"foo": "bar", "items": [1, 2, 3]}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 self.new_parameter, 'p', schema, val)
         self.assertIn('out of range', str(err))
 

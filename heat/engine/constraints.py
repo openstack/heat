@@ -18,6 +18,8 @@ import re
 
 from heat.engine import resources
 
+from heat.common import exception
+
 
 class InvalidSchemaError(Exception):
     pass
@@ -144,8 +146,11 @@ class Schema(collections.Mapping):
             return float(value)
 
     def validate_constraints(self, value, context=None):
-        for constraint in self.constraints:
-            constraint.validate(value, context)
+        try:
+            for constraint in self.constraints:
+                constraint.validate(value, context)
+        except ValueError as ex:
+            raise exception.StackValidationFailed(message=str(ex))
 
     def __getitem__(self, key):
         if key == self.TYPE:
