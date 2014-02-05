@@ -12,7 +12,7 @@ directive.
 
 To install the Marconi plugin, one needs to first make sure the
 python-marconiclient package is installed - pip install -r requirements.txt, and
-copy the plugin implementation, e.g. queue.py to wherever plugin_dirs points to.
+copy the plugin folder, e.g. marconi to wherever plugin_dirs points to.
 
 
 ### 2. Restart heat

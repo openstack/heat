@@ -12,21 +12,17 @@
 #    under the License.
 
 from heat.common import exception
-from heat.engine import clients
 from heat.engine import properties
 from heat.engine import resource
 from heat.openstack.common import log as logging
+
+from .. import clients  # noqa
 
 
 logger = logging.getLogger(__name__)
 
 
-try:
-    from marconiclient.queues.v1 import client as marconiclient
-except ImportError:
-    marconiclient = None
-    logger.info(_('marconiclient not available'))
-
+if clients.marconiclient is None:
     def resource_mapping():
         return {}
 else:
@@ -34,39 +30,6 @@ else:
         return {
             'OS::Marconi::Queue': MarconiQueue,
         }
-
-
-class Clients(clients.OpenStackClients):
-    '''
-    Convenience class to create and cache client instances.
-    '''
-    def __init__(self, context):
-        super(Clients, self).__init__(context)
-        self._marconi = None
-
-    def marconi(self, service_type="queuing"):
-        if self._marconi:
-            return self._marconi
-
-        con = self.context
-        if self.auth_token is None:
-            logger.error(_("Marconi connection failed, no auth_token!"))
-            return None
-
-        opts = {
-            'os_auth_token': con.auth_token,
-            'os_auth_url': con.auth_url,
-            'os_project_id': con.tenant,
-            'os_service_type': service_type,
-        }
-        auth_opts = {'backend': 'keystone',
-                     'options': opts}
-        conf = {'auth_opts': auth_opts}
-        endpoint = self.url_for(service_type=service_type)
-
-        self._marconi = marconiclient.Client(url=endpoint, conf=conf)
-
-        return self._marconi
 
 
 class MarconiQueue(resource.Resource):
@@ -98,7 +61,7 @@ class MarconiQueue(resource.Resource):
 
     def __init__(self, name, json_snippet, stack):
         super(MarconiQueue, self).__init__(name, json_snippet, stack)
-        self.clients = Clients(self.context)
+        self.clients = clients.Clients(self.context)
 
     def marconi(self):
         return self.clients.marconi()
