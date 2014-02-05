@@ -22,7 +22,6 @@ from heat.engine import environment
 from heat.engine import resource
 from heat.engine import signal_responder
 
-from heat.common import short_id
 from heat.common import exception
 from heat.common import timeutils as iso8601utils
 from heat.openstack.common import excutils
@@ -34,6 +33,7 @@ from heat.engine.notification import autoscaling as notification
 from heat.engine import properties
 from heat.engine import scheduler
 from heat.engine import stack_resource
+from heat.scaling import template
 
 logger = logging.getLogger(__name__)
 
@@ -281,39 +281,14 @@ class InstanceGroup(stack_resource.StackResource):
         """
         Create a template to represent autoscaled instances.
 
-        Also see _resource_templates.
+        Also see heat.scaling.template.resource_templates.
         """
         instance_definition = self._get_instance_definition()
         old_resources = [(instance.name, instance.t)
                          for instance in self.get_instances()]
-        templates = self._resource_templates(
+        templates = template.resource_templates(
             old_resources, instance_definition, num_instances, num_replace)
         return {"Resources": dict(templates)}
-
-    @staticmethod
-    def _resource_templates(old_resources, resource_definition,
-                            num_resources, num_replace):
-        """
-        Create the template for the nested stack of existing and new instances
-
-        For rolling update, if launch configuration is different, the
-        instance definition should come from the existing instance instead
-        of using the new launch configuration.
-        """
-        old_resources = old_resources[-num_resources:]
-        num_create = num_resources - len(old_resources)
-        num_replace -= num_create
-
-        for i in range(num_resources):
-            if i < len(old_resources):
-                old_name, old_template = old_resources[i]
-                if old_template != resource_definition and num_replace > 0:
-                    num_replace -= 1
-                    yield old_name, resource_definition
-                else:
-                    yield old_name, old_template
-            else:
-                yield short_id.generate_id(), resource_definition
 
     def _replace(self, min_in_service, batch_size, pause_time):
         """
