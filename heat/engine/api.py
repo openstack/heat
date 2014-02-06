@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import template_format
 from heat.rpc import api
 from heat.openstack.common import timeutils
 from heat.engine import constraints as constr
@@ -49,9 +50,14 @@ def extract_args(params):
                              dict(name=api.PARAM_DISABLE_ROLLBACK,
                                   value=disable_rollback))
 
-    if api.PARAM_ADOPT_STACK_DATA in params:
-        kwargs[api.PARAM_ADOPT_STACK_DATA] = params.get(
-            api.PARAM_ADOPT_STACK_DATA)
+    adopt_data = params.get(api.PARAM_ADOPT_STACK_DATA)
+    if adopt_data:
+        adopt_data = template_format.simple_parse(adopt_data)
+        if not isinstance(adopt_data, dict):
+            raise ValueError(
+                _('Unexpected adopt data "%s". Adopt data must be a dict.')
+                % adopt_data)
+        kwargs[api.PARAM_ADOPT_STACK_DATA] = adopt_data
 
     return kwargs
 

@@ -51,16 +51,7 @@ yaml_loader.add_constructor(u'tag:yaml.org,2002:timestamp',
                             _construct_yaml_str)
 
 
-def parse(tmpl_str):
-    '''
-    Takes a string and returns a dict containing the parsed structure.
-    This includes determination of whether the string is using the
-    JSON or YAML format.
-    '''
-    if len(tmpl_str) > cfg.CONF.max_template_size:
-        msg = (_('Template exceeds maximum allowed size (%s bytes)') %
-               cfg.CONF.max_template_size)
-        raise exception.RequestLimitExceeded(message=msg)
+def simple_parse(tmpl_str):
     try:
         tpl = json.loads(tmpl_str)
     except ValueError:
@@ -71,6 +62,20 @@ def parse(tmpl_str):
         else:
             if tpl is None:
                 tpl = {}
+    return tpl
+
+
+def parse(tmpl_str):
+    '''
+    Takes a string and returns a dict containing the parsed structure.
+    This includes determination of whether the string is using the
+    JSON or YAML format.
+    '''
+    if len(tmpl_str) > cfg.CONF.max_template_size:
+        msg = (_('Template exceeds maximum allowed size (%s bytes)') %
+               cfg.CONF.max_template_size)
+        raise exception.RequestLimitExceeded(message=msg)
+    tpl = simple_parse(tmpl_str)
     if not isinstance(tpl, dict):
         raise ValueError(_('The template is not a JSON object '
                            'or YAML mapping.'))
