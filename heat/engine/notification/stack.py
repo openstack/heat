@@ -33,8 +33,9 @@ def send(stack):
         suffix = 'error'
         level = notifier_api.ERROR
 
-    event_type = '%s.%s' % (stack.action.lower(),
-                            suffix)
+    event_type = '%s.%s.%s' % ('stack',
+                               stack.action.lower(),
+                               suffix)
 
     notification.notify(stack.context, event_type, level,
                         engine_api.format_notification_body(stack))

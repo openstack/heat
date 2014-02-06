@@ -90,7 +90,7 @@ class NotificationTest(common.HeatTestCase):
         self.expected[action] = [
             mock.call(self.ctx,
                       'orchestration.test_host',
-                      'orchestration.%s.start' % action,
+                      'orchestration.stack.%s.start' % action,
                       'INFO',
                       {'state_reason': 'Stack %s started' % action.upper(),
                        'user_id': 'test_username',
@@ -100,7 +100,7 @@ class NotificationTest(common.HeatTestCase):
                        'stack_name': self.stack_name,
                        'state': '%s_IN_PROGRESS' % action.upper()}),
             mock.call(self.ctx, 'orchestration.test_host',
-                      'orchestration.%s.end' % action,
+                      'orchestration.stack.%s.end' % action,
                       'INFO',
                       {'state_reason':
                        'Stack %s completed successfully' % action,
